@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./packages/shared/src/*"]
+    }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./apps/web" },
+    { "path": "./apps/server" },
+    { "path": "./apps/mcp" }
+  ]
+}

@@ -1,0 +1,83 @@
+import React, { useEffect, useMemo, useRef } from 'react';
+import "./index.css";
+import { jsx as _jsx } from "react/jsx-runtime";
+var DragBar = props => {
+  var {
+    prefixCls,
+    onChange
+  } = props || {};
+  var $dom = useRef(null);
+  var dragRef = useRef();
+  var heightRef = useRef(props.height);
+  useEffect(() => {
+    if (heightRef.current !== props.height) {
+      heightRef.current = props.height;
+    }
+  }, [props.height]);
+  function handleMouseMove(event) {
+    if (dragRef.current) {
+      var _changedTouches$;
+      var clientY = event.clientY || ((_changedTouches$ = event.changedTouches[0]) == null ? void 0 : _changedTouches$.clientY);
+      var newHeight = dragRef.current.height + clientY - dragRef.current.dragY;
+      if (newHeight >= props.minHeight && newHeight <= props.maxHeight) {
+        onChange && onChange(dragRef.current.height + (clientY - dragRef.current.dragY));
+      }
+    }
+  }
+  function handleMouseUp() {
+    var _$dom$current, _$dom$current2;
+    dragRef.current = undefined;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    (_$dom$current = $dom.current) == null || _$dom$current.removeEventListener('touchmove', handleMouseMove);
+    (_$dom$current2 = $dom.current) == null || _$dom$current2.removeEventListener('touchend', handleMouseUp);
+  }
+  function handleMouseDown(event) {
+    var _changedTouches$2, _$dom$current3, _$dom$current4;
+    event.preventDefault();
+    var clientY = event.clientY || ((_changedTouches$2 = event.changedTouches[0]) == null ? void 0 : _changedTouches$2.clientY);
+    dragRef.current = {
+      height: heightRef.current,
+      dragY: clientY
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    (_$dom$current3 = $dom.current) == null || _$dom$current3.addEventListener('touchmove', handleMouseMove, {
+      passive: false
+    });
+    (_$dom$current4 = $dom.current) == null || _$dom$current4.addEventListener('touchend', handleMouseUp, {
+      passive: false
+    });
+  }
+  useEffect(() => {
+    if (document) {
+      var _$dom$current5, _$dom$current6;
+      (_$dom$current5 = $dom.current) == null || _$dom$current5.addEventListener('touchstart', handleMouseDown, {
+        passive: false
+      });
+      (_$dom$current6 = $dom.current) == null || _$dom$current6.addEventListener('mousedown', handleMouseDown);
+    }
+    return () => {
+      if (document) {
+        var _$dom$current7;
+        (_$dom$current7 = $dom.current) == null || _$dom$current7.removeEventListener('touchstart', handleMouseDown);
+        document.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  var svg = useMemo(() => /*#__PURE__*/_jsx("svg", {
+    viewBox: "0 0 512 512",
+    height: "100%",
+    children: /*#__PURE__*/_jsx("path", {
+      fill: "currentColor",
+      d: "M304 256c0 26.5-21.5 48-48 48s-48-21.5-48-48 21.5-48 48-48 48 21.5 48 48zm120-48c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm-336 0c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48z"
+    })
+  }), []);
+  return /*#__PURE__*/_jsx("div", {
+    className: prefixCls + "-bar",
+    ref: $dom,
+    children: svg
+  });
+};
+export default DragBar;
