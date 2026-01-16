@@ -1,0 +1,77 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# bun
+bun.lockb
+
+# yarn (we use Bun)
+yarn.lock
+.yarn
+
+# testing
+coverage
+*.lcov
+.nyc_output
+test-results/
+playwright-report/
+
+# next.js
+.next/
+out/
+build
+dist
+
+# production builds
+*.tsbuildinfo
+
+# misc
+.DS_Store
+*.pem
+.env
+.env*.local
+.env.production
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+bun-debug.log*
+*.log
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.iml
+
+# Cache
+.turbo
+.cache
+.eslintcache
+
+# File uploads
+uploads/
+*.uploaded
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
