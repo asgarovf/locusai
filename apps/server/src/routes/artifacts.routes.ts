@@ -49,6 +49,30 @@ export function createArtifactsRouter(db: Database, workspaceDir: string) {
     res.json({ id: result.lastInsertRowid });
   });
 
+  router.get("/artifacts", (req, res) => {
+    const taskId = req.query.taskId;
+    if (taskId) {
+      const artifacts = db
+        .prepare(
+          "SELECT * FROM artifacts WHERE taskId = ? ORDER BY createdAt DESC"
+        )
+        .all(String(taskId));
+      return res.json(artifacts);
+    }
+    const artifacts = db
+      .prepare("SELECT * FROM artifacts ORDER BY createdAt DESC")
+      .all();
+    res.json(artifacts);
+  });
+
+  router.get("/artifacts/:id", (req, res) => {
+    const artifact = db
+      .prepare("SELECT * FROM artifacts WHERE id = ?")
+      .get(req.params.id);
+    if (!artifact) return res.status(404).json({ error: "Artifact not found" });
+    res.json(artifact);
+  });
+
   router.get("/tasks/:id/artifacts", (req, res) => {
     const artifacts = db
       .prepare(

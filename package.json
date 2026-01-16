@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "./scripts/dev.sh",
     "workspace:init": "bun run scripts/workspace-init.ts",
+    "create-project": "bun run packages/create-locus-project/index.ts",
     "seed": "bun run scripts/seed.ts",
     "server": "bun run apps/server/src/index.ts",
     "mcp": "bun run --cwd apps/mcp src/index.ts",

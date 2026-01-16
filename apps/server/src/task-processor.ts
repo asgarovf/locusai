@@ -6,6 +6,14 @@ export interface ProcessorConfig {
   repoPath: string;
 }
 
+interface RawTask {
+  id: number;
+  title: string;
+  description: string;
+  labels: string;
+  acceptanceChecklist: string;
+}
+
 export class TaskProcessor {
   constructor(
     private db: Database,
@@ -21,24 +29,109 @@ export class TaskProcessor {
   }
 
   private async handleInProgress(taskId: string) {
-    // Check if there are any specific conditions to run CI, e.g., a "quick" preset
-    // For now, we'll automatically run "quick" CI if it exists in presets
     try {
+      const rawTask = this.db
+        .prepare("SELECT * FROM tasks WHERE id = ?")
+        .get(taskId) as RawTask | undefined;
+      if (!rawTask) return;
+
+      const labels = JSON.parse(rawTask.labels || "[]");
+
+      // 1. Create a "Technical Implementation Draft" artifact
+      await this.createTechnicalDraft(
+        taskId,
+        rawTask.title,
+        rawTask.description
+      );
+
+      // 2. Update acceptance checklist if empty
+      await this.initChecklist(taskId, rawTask.acceptanceChecklist);
+
+      // 3. (Optional) Trigger CI if requested via labels
       const presets = JSON.parse(
         readFileSync(this.config.ciPresetsPath, "utf-8")
       );
-      if (presets.quick) {
-        console.log(
-          `[TaskProcessor] Automatically triggering 'quick' CI for task ${taskId}`
-        );
+      if (presets.quick && labels.includes("auto-ci")) {
         await this.runCi(taskId, "quick");
       }
     } catch (err) {
       console.error(
-        "[TaskProcessor] Failed to read CI presets or trigger CI:",
+        "[TaskProcessor] Failed to process In Progress transition:",
         err
       );
     }
+  }
+
+  private async createTechnicalDraft(
+    taskId: string,
+    title: string,
+    description: string
+  ) {
+    const draftContent = `
+# Implementation Plan: ${title}
+
+## Objective
+${description || "No description provided."}
+
+## Suggested Steps
+1. [ ] Analyze current codebase for related components.
+2. [ ] Research potential side effects of the change.
+3. [ ] Implement the core logic.
+4. [ ] Run automated tests to verify.
+5. [ ] Perform manual verification.
+
+## Quality Gates
+- [ ] Code follows project style guidelines.
+- [ ] No regression in existing functionality.
+- [ ] Documentation updated if necessary.
+
+---
+*This is an automatically generated draft to kickstart the task.*
+`.trim();
+
+    this.db
+      .prepare(
+        `
+      INSERT INTO artifacts (taskId, type, title, contentText, createdBy, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `
+      )
+      .run(
+        taskId,
+        "TECH_DRAFT",
+        `Draft: ${title}`,
+        draftContent,
+        "system",
+        Date.now()
+      );
+  }
+
+  private async initChecklist(taskId: string, currentChecklistJson: string) {
+    const current = JSON.parse(currentChecklistJson || "[]");
+    if (current.length > 0) return; // Don't overwrite existing checklist
+
+    const defaultChecklist = [
+      { id: "step-1", text: "Research & Planning", done: false },
+      { id: "step-2", text: "Implementation", done: false },
+      { id: "step-3", text: "Testing & Verification", done: false },
+    ];
+
+    this.db
+      .prepare(
+        "UPDATE tasks SET acceptanceChecklist = ?, updatedAt = ? WHERE id = ?"
+      )
+      .run(JSON.stringify(defaultChecklist), Date.now(), taskId);
+
+    this.db
+      .prepare(
+        "INSERT INTO events (taskId, type, payload, createdAt) VALUES (?, ?, ?, ?)"
+      )
+      .run(
+        taskId,
+        "CHECKLIST_INITIALIZED",
+        JSON.stringify({ itemCount: defaultChecklist.length }),
+        Date.now()
+      );
   }
 
   private async runCi(taskId: string, preset: string) {

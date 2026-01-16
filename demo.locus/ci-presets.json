@@ -1,4 +1,0 @@
-{
-  "quick": ["bun run lint", "bun run typecheck"],
-  "full": ["bun run lint", "bun run typecheck", "bun run test"]
-}

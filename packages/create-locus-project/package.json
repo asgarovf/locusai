@@ -1,0 +1,21 @@
+{
+  "name": "create-locus-project",
+  "version": "0.1.0",
+  "description": "CLI to create new Locus-managed projects",
+  "type": "module",
+  "bin": {
+    "create-locus-project": "./index.ts"
+  },
+  "files": [
+    "index.ts"
+  ],
+  "keywords": [
+    "locus",
+    "project-management",
+    "monorepo",
+    "cli",
+    "scaffold"
+  ],
+  "author": "",
+  "license": "MIT"
+}
