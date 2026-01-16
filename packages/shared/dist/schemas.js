@@ -1,17 +1,22 @@
 import { z } from "zod";
-import { AssigneeRole, TaskStatus } from "./index.js";
+import { AssigneeRole, TaskPriority, TaskStatus } from "./types.js";
 export const TaskSchema = z.object({
     title: z.string().min(1),
     description: z.string().optional().default(""),
+    status: z.nativeEnum(TaskStatus).optional().default(TaskStatus.BACKLOG),
+    priority: z.nativeEnum(TaskPriority).optional().default(TaskPriority.MEDIUM),
     labels: z.array(z.string()).optional().default([]),
     assigneeRole: z.nativeEnum(AssigneeRole).optional(),
+    parentId: z.number().optional().nullable(),
 });
 export const TaskUpdateSchema = z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     labels: z.array(z.string()).optional(),
     status: z.nativeEnum(TaskStatus).optional(),
+    priority: z.nativeEnum(TaskPriority).optional(),
     assigneeRole: z.nativeEnum(AssigneeRole).optional(),
+    parentId: z.number().optional().nullable(),
     acceptanceChecklist: z
         .array(z.object({
         id: z.string(),

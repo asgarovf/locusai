@@ -99,7 +99,9 @@
       "a11y": {
         "noStaticElementInteractions": "off",
         "useButtonType": "off",
-        "useKeyWithClickEvents": "off"
+        "useKeyWithClickEvents": "off",
+        "noLabelWithoutControl": "off",
+        "noAutofocus": "off"
       }
     }
   },

@@ -1,27 +1,38 @@
 import { z } from "zod";
-import { AssigneeRole, TaskStatus } from "./index.js";
+import { AssigneeRole, TaskPriority, TaskStatus } from "./types.js";
 export declare const TaskSchema: z.ZodObject<{
     title: z.ZodString;
     description: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    status: z.ZodDefault<z.ZodOptional<z.ZodNativeEnum<typeof TaskStatus>>>;
+    priority: z.ZodDefault<z.ZodOptional<z.ZodNativeEnum<typeof TaskPriority>>>;
     labels: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
     assigneeRole: z.ZodOptional<z.ZodNativeEnum<typeof AssigneeRole>>;
+    parentId: z.ZodNullable<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     description: string;
+    status: TaskStatus;
+    priority: TaskPriority;
     labels: string[];
     assigneeRole?: AssigneeRole | undefined;
+    parentId?: number | null | undefined;
 }, {
     title: string;
     description?: string | undefined;
+    status?: TaskStatus | undefined;
+    priority?: TaskPriority | undefined;
     labels?: string[] | undefined;
     assigneeRole?: AssigneeRole | undefined;
+    parentId?: number | null | undefined;
 }>;
 export declare const TaskUpdateSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     labels: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     status: z.ZodOptional<z.ZodNativeEnum<typeof TaskStatus>>;
+    priority: z.ZodOptional<z.ZodNativeEnum<typeof TaskPriority>>;
     assigneeRole: z.ZodOptional<z.ZodNativeEnum<typeof AssigneeRole>>;
+    parentId: z.ZodNullable<z.ZodOptional<z.ZodNumber>>;
     acceptanceChecklist: z.ZodOptional<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         text: z.ZodString;
@@ -39,8 +50,10 @@ export declare const TaskUpdateSchema: z.ZodObject<{
     title?: string | undefined;
     description?: string | undefined;
     status?: TaskStatus | undefined;
+    priority?: TaskPriority | undefined;
     labels?: string[] | undefined;
     assigneeRole?: AssigneeRole | undefined;
+    parentId?: number | null | undefined;
     acceptanceChecklist?: {
         id: string;
         text: string;
@@ -50,8 +63,10 @@ export declare const TaskUpdateSchema: z.ZodObject<{
     title?: string | undefined;
     description?: string | undefined;
     status?: TaskStatus | undefined;
+    priority?: TaskPriority | undefined;
     labels?: string[] | undefined;
     assigneeRole?: AssigneeRole | undefined;
+    parentId?: number | null | undefined;
     acceptanceChecklist?: {
         id: string;
         text: string;

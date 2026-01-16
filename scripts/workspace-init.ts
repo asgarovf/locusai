@@ -70,13 +70,16 @@ async function init() {
       title TEXT NOT NULL,
       description TEXT,
       status TEXT NOT NULL,
+      priority TEXT NOT NULL DEFAULT 'MEDIUM',
       labels TEXT, -- JSON array
       assigneeRole TEXT,
+      parentId INTEGER,
       lockedBy TEXT,
       lockExpiresAt INTEGER,
       acceptanceChecklist TEXT, -- JSON array
       createdAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
+      updatedAt INTEGER NOT NULL,
+      FOREIGN KEY(parentId) REFERENCES tasks(id)
     );
 
     CREATE TABLE IF NOT EXISTS comments (

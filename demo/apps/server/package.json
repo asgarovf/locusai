@@ -1,0 +1,12 @@
+{
+  "name": "@demo/server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@demo/shared": "workspace:*"
+  }
+}
