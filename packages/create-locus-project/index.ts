@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { homedir } from "node:os";
 import { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 

@@ -3,14 +3,33 @@ import { isAbsolute, join } from "node:path";
 import { parseArgs } from "node:util";
 import cors from "cors";
 import express from "express";
-
+import { ArtifactController } from "./controllers/artifact.controller.js";
+import { CiController } from "./controllers/ci.controller.js";
+import { DocController } from "./controllers/doc.controller.js";
+import { EventController } from "./controllers/event.controller.js";
+import { SprintController } from "./controllers/sprint.controller.js";
+// Controllers
+import { TaskController } from "./controllers/task.controller.js";
 import { initDb } from "./db.js";
+// Middleware
+import { errorHandler } from "./middleware/error.middleware.js";
+import { ArtifactRepository } from "./repositories/artifact.repository.js";
+import { CommentRepository } from "./repositories/comment.repository.js";
+import { EventRepository } from "./repositories/event.repository.js";
+import { SprintRepository } from "./repositories/sprint.repository.js";
+// Repositories
+import { TaskRepository } from "./repositories/task.repository.js";
 import { createArtifactsRouter } from "./routes/artifacts.routes.js";
 import { createCiRouter } from "./routes/ci.routes.js";
 import { createDocsRouter } from "./routes/docs.routes.js";
 import { createEventsRouter } from "./routes/events.routes.js";
 import { createSprintsRouter } from "./routes/sprints.routes.js";
+// Routes
 import { createTaskRouter } from "./routes/tasks.routes.js";
+import { CiService } from "./services/ci.service.js";
+import { SprintService } from "./services/sprint.service.js";
+// Services
+import { TaskService } from "./services/task.service.js";
 import { TaskProcessor } from "./task-processor.js";
 
 const { values } = parseArgs({
@@ -34,47 +53,61 @@ const configPath = join(workspaceDir, "workspace.config.json");
 const config = JSON.parse(readFileSync(configPath, "utf-8"));
 
 const db = initDb(workspaceDir);
+
+// Initialize Repositories
+const taskRepo = new TaskRepository(db);
+const eventRepo = new EventRepository(db);
+const commentRepo = new CommentRepository(db);
+const artifactRepo = new ArtifactRepository(db);
+const sprintRepo = new SprintRepository(db);
+
 const processor = new TaskProcessor(db, {
   ciPresetsPath: config.ciPresetsPath,
   repoPath: workspaceDir,
 });
 
+// Initialize Services
+const taskService = new TaskService(
+  taskRepo,
+  eventRepo,
+  commentRepo,
+  artifactRepo,
+  processor
+);
+const sprintService = new SprintService(sprintRepo);
+const ciService = new CiService(artifactRepo, eventRepo, {
+  ciPresetsPath: config.ciPresetsPath,
+  repoPath: workspaceDir,
+});
+
+// Initialize Controllers
+const taskController = new TaskController(taskService);
+const sprintController = new SprintController(sprintService);
+const ciController = new CiController(ciService);
+const artifactController = new ArtifactController(artifactRepo, workspaceDir);
+const docController = new DocController({
+  repoPath: config.repoPath,
+  docsPath: config.docsPath,
+});
+const eventController = new EventController(eventRepo);
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
-// Routes
-app.use("/api/tasks", createTaskRouter(db, processor));
-app.use("/api/docs", createDocsRouter(config));
-app.use("/api", createArtifactsRouter(db, workspaceDir));
-app.use("/api/events", createEventsRouter(db));
-app.use("/api/sprints", createSprintsRouter(db));
-app.use(
-  "/api/ci",
-  createCiRouter(db, {
-    ciPresetsPath: config.ciPresetsPath,
-    repoPath: workspaceDir,
-  })
-);
+// Routes Implementation
+app.use("/api/tasks", createTaskRouter(taskController));
+app.use("/api/docs", createDocsRouter(docController));
+app.use("/api/sprints", createSprintsRouter(sprintController));
+app.use("/api/ci", createCiRouter(ciController));
+app.use("/api/events", createEventsRouter(eventController));
+app.use("/api", createArtifactsRouter(artifactController));
 
+// Health Check
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ) => {
-    console.error("Server Error:", err);
-    res.status(500).json({
-      error: {
-        message: err.message,
-        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-      },
-    });
-  }
-);
+// Error Handling
+app.use(errorHandler);
 
 const PORT = 3080;
 app.listen(PORT, () =>
