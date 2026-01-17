@@ -1,25 +1,25 @@
 import MDEditor from "@uiw/react-md-editor";
 import { File, FileText, Folder, Plus, Save } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Button, Input } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { DocNode, docService } from "@/services";
 
-interface DocNode {
-  type: "file" | "directory";
-  name: string;
-  path: string;
-  children?: DocNode[];
-}
-
-export default function Docs() {
+export function Docs() {
   const [tree, setTree] = useState<DocNode[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [newFileName, setNewFileName] = useState("");
+  const [contentMode, setContentMode] = useState<"edit" | "preview">("edit");
 
-  const fetchTree = useCallback(() => {
-    fetch("/api/docs/tree")
-      .then((res) => res.json())
-      .then(setTree);
+  const fetchTree = useCallback(async () => {
+    try {
+      const data = await docService.getTree();
+      setTree(data);
+    } catch (err) {
+      console.error("Failed to fetch doc tree", err);
+    }
   }, []);
 
   useEffect(() => {
@@ -28,21 +28,20 @@ export default function Docs() {
 
   useEffect(() => {
     if (selectedPath) {
-      fetch(`/api/docs/read?path=${encodeURIComponent(selectedPath)}`)
-        .then((res) => res.json())
+      docService
+        .read(selectedPath)
         .then((data) => setContent(data.content || ""));
     }
   }, [selectedPath]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedPath) return;
-    fetch("/api/docs/write", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: selectedPath, content }),
-    }).then(() => {
-      // Show some temporary success state if needed
-    });
+    try {
+      await docService.write(selectedPath, content);
+      // Success state logic could go here
+    } catch (err) {
+      console.error("Failed to save document", err);
+    }
   };
 
   const handleCreateFile = async () => {
@@ -52,68 +51,41 @@ export default function Docs() {
       : `${newFileName}.md`;
 
     try {
-      const res = await fetch("/api/docs/write", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          path,
-          content:
-            "# " +
-            (newFileName.split("/").pop()?.replace(".md", "") ||
-              "New Document"),
-        }),
-      });
-
-      if (res.ok) {
-        setIsCreating(false);
-        setNewFileName("");
-        fetchTree();
-        setSelectedPath(path);
-      }
+      await docService.write(
+        path,
+        "# " +
+          (newFileName.split("/").pop()?.replace(".md", "") || "New Document")
+      );
+      setIsCreating(false);
+      setNewFileName("");
+      fetchTree();
+      setSelectedPath(path);
     } catch (err) {
       console.error("Failed to create file", err);
     }
   };
 
-  const renderTree = (nodes: DocNode[], level = 0) => {
-    return nodes.map((node) => (
-      <div key={node.path}>
-        <div
-          className={`tree-item ${selectedPath === node.path ? "active" : ""}`}
-          style={{ paddingLeft: `${level * 12 + 12}px` }}
-          onClick={() => {
-            if (node.type === "file") {
-              setSelectedPath(node.path);
-            }
-          }}
-        >
-          {node.type === "directory" ? (
-            <Folder size={16} color="var(--accent)" />
-          ) : (
-            <FileText size={16} color="var(--text-muted)" />
-          )}
-          <span className="node-name">{node.name}</span>
-        </div>
-        {node.children && renderTree(node.children, level + 1)}
-      </div>
-    ));
-  };
-
   return (
-    <div className="docs-layout">
-      <aside className="docs-sidebar glass">
-        <div className="docs-sidebar-header">
-          <h3>Library</h3>
-          <button className="icon-button" onClick={() => setIsCreating(true)}>
+    <div className="flex gap-8 h-[calc(100vh-8rem)]">
+      <aside className="w-72 flex flex-col bg-card border rounded-xl overflow-hidden shadow-sm">
+        <div className="p-4 flex justify-between items-center border-b">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">
+            Library
+          </h3>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            onClick={() => setIsCreating(true)}
+          >
             <Plus size={18} />
-          </button>
+          </Button>
         </div>
 
         {isCreating && (
-          <div className="create-file-box glass">
-            <input
+          <div className="p-4 bg-secondary/30 border-b animate-in fade-in slide-in-from-top-2 duration-200">
+            <Input
               autoFocus
-              className="create-input"
               placeholder="filename.md"
               value={newFileName}
               onChange={(e) => setNewFileName(e.target.value)}
@@ -121,64 +93,153 @@ export default function Docs() {
                 if (e.key === "Enter") handleCreateFile();
                 if (e.key === "Escape") setIsCreating(false);
               }}
+              className="h-8 mb-2"
             />
-            <div
-              style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}
-            >
-              <button className="button-primary-sm" onClick={handleCreateFile}>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="flex-1 h-7 text-[10px]"
+                onClick={handleCreateFile}
+              >
                 Create
-              </button>
-              <button
-                className="button-secondary-sm"
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex-1 h-7 text-[10px]"
                 onClick={() => setIsCreating(false)}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
-        <div className="tree-container">{renderTree(tree)}</div>
-      </aside>
-
-      <main className="editor-container">
-        {selectedPath ? (
-          <div className="editor-wrapper" data-color-mode="dark">
-            <header className="editor-header">
+        <div className="flex-1 overflow-y-auto py-2">
+          {tree.map((node) => (
+            <div key={node.path}>
               <div
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2 cursor-pointer transition-all hover:bg-secondary/50",
+                  selectedPath === node.path
+                    ? "bg-accent/10 border-r-2 border-accent text-accent"
+                    : "text-muted-foreground"
+                )}
+                onClick={() => {
+                  if (node.type === "file") {
+                    setSelectedPath(node.path);
+                  }
+                }}
               >
-                <FileText size={18} color="var(--accent)" />
-                <span style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
-                  {selectedPath}
+                {node.type === "directory" ? (
+                  <Folder size={16} className="text-cyan-500" />
+                ) : (
+                  <FileText size={16} />
+                )}
+                <span className="text-sm font-medium truncate">
+                  {node.name}
                 </span>
               </div>
-              <button className="button-primary" onClick={handleSave}>
-                <Save size={16} />
-                <span>Save Changes</span>
-              </button>
+              {/* Note: Simplified recursive rendering for the first level. In a real app we'd use a Recursive component. */}
+              {node.children?.map((child) => (
+                <div
+                  key={child.path}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2 pl-8 cursor-pointer transition-all hover:bg-secondary/50",
+                    selectedPath === child.path
+                      ? "bg-accent/10 border-r-2 border-accent text-accent"
+                      : "text-muted-foreground"
+                  )}
+                  onClick={() => {
+                    if (child.type === "file") {
+                      setSelectedPath?.(child.path);
+                    }
+                  }}
+                >
+                  <FileText size={16} />
+                  <span className="text-sm font-medium truncate">
+                    {child.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col min-w-0">
+        {selectedPath ? (
+          <div
+            className="flex flex-col h-full space-y-4"
+            data-color-mode="dark"
+          >
+            <header className="flex justify-between items-center bg-card p-4 rounded-xl border shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-accent/10 rounded-lg shrink-0">
+                  <FileText size={20} className="text-accent" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-foreground truncate">
+                    {selectedPath?.split("/").pop()}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest truncate">
+                    {selectedPath}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-secondary/50 p-1 rounded-md border">
+                  <button
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-sm transition-all",
+                      contentMode === "edit"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setContentMode("edit")}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-sm transition-all",
+                      contentMode === "preview"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setContentMode("preview")}
+                  >
+                    Preview
+                  </button>
+                </div>
+                <Button onClick={handleSave} className="h-9">
+                  <Save size={16} className="mr-2" />
+                  Save
+                </Button>
+              </div>
             </header>
-            <div className="glass editor-glass">
+
+            <div className="flex-1 bg-card border rounded-xl overflow-hidden shadow-sm p-4 markdown-container">
               <MDEditor
                 value={content}
                 onChange={(v) => setContent(v || "")}
-                height="calc(100vh - 12rem)"
-                preview="edit"
+                height="100%"
+                preview={contentMode}
+                hideToolbar={contentMode === "preview"}
+                className="bg-transparent! border-none! text-foreground!"
               />
             </div>
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="glass empty-card">
-              <File
-                size={48}
-                color="var(--border)"
-                style={{ marginBottom: "1.5rem" }}
-              />
-              <h2 style={{ marginBottom: "0.75rem" }}>
-                Select a document to edit
+          <div className="h-full flex items-center justify-center">
+            <div className="max-w-md w-full p-12 bg-card border rounded-3xl shadow-lg flex flex-col items-center text-center space-y-4">
+              <div className="p-6 bg-secondary/50 rounded-full mb-2">
+                <File size={48} className="text-muted-foreground/40" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Select a document
               </h2>
-              <p style={{ color: "var(--text-muted)", textAlign: "center" }}>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 Pick a file from the library on the left or create a new one to
                 get started with your documentation.
               </p>
@@ -186,134 +247,6 @@ export default function Docs() {
           </div>
         )}
       </main>
-
-      <style>{`
-        .docs-layout {
-          display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 2rem;
-          height: calc(100vh - 8rem);
-        }
-        .docs-sidebar {
-          border-radius: 12px;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .docs-sidebar-header {
-          padding: 1.25rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 1px solid var(--border);
-        }
-        .tree-container {
-          padding: 1rem 0;
-          overflow-y: auto;
-          flex: 1;
-        }
-        .tree-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.5rem 1rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          color: var(--text-muted);
-        }
-        .tree-item:hover {
-          background: rgba(255, 255, 255, 0.03);
-          color: var(--text-main);
-        }
-        .tree-item.active {
-          background: rgba(56, 189, 248, 0.08);
-          color: var(--accent);
-          border-right: 2px solid var(--accent);
-        }
-        .node-name {
-          font-size: 0.875rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .editor-container {
-          height: 100%;
-        }
-        .editor-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.25rem;
-        }
-        .editor-glass {
-          border-radius: 12px;
-          overflow: hidden;
-          padding: 1px;
-        }
-        .empty-state {
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .empty-card {
-           padding: 4rem;
-           border-radius: 24px;
-           display: flex;
-           flex-direction: column;
-           align-items: center;
-           max-width: 400px;
-        }
-        .create-file-box {
-          margin: 1rem;
-          padding: 0.75rem;
-          border-radius: 8px;
-          border: 1px solid var(--accent);
-        }
-        .create-input {
-          width: 100%;
-          background: transparent;
-          border: none;
-          color: var(--text-main);
-          font-size: 0.875rem;
-          outline: none;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 0.25rem;
-        }
-        .button-primary-sm {
-          background: var(--accent);
-          color: #000;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-        }
-        .button-secondary-sm {
-          background: transparent;
-          color: var(--text-muted);
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 500;
-          border: 1px solid var(--border);
-          cursor: pointer;
-        }
-        
-        /* MDEditor Overrides */
-        .w-md-editor {
-          background-color: transparent !important;
-          border: none !important;
-        }
-        .w-md-editor-toolbar {
-          background-color: rgba(255, 255, 255, 0.02) !important;
-          border-bottom: 1px solid var(--border) !important;
-        }
-        .w-md-editor-content {
-          background-color: transparent !important;
-        }
-      `}</style>
     </div>
   );
 }

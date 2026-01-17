@@ -1,10 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./packages/shared/src/*"]
-    }
+    "baseUrl": "."
   },
   "files": [],
   "include": [],
@@ -12,6 +9,7 @@
     { "path": "./packages/shared" },
     { "path": "./apps/web" },
     { "path": "./apps/server" },
-    { "path": "./apps/mcp" }
+    { "path": "./apps/mcp" },
+    { "path": "./packages/create-locus-project" }
   ]
 }

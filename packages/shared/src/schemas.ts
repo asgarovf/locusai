@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AssigneeRole, TaskPriority, TaskStatus } from "./types.js";
+import { AssigneeRole, TaskPriority, TaskStatus } from "./types";
 
 export const TaskSchema = z.object({
   title: z.string().min(1),

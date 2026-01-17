@@ -1,8 +1,10 @@
+"use client";
+
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locus/shared";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { Dropdown } from "./ui/Dropdown";
-import { Modal } from "./ui/Modal";
+import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";
+import { taskService } from "@/services";
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -89,23 +91,17 @@ export function TaskCreateModal({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description,
-          status,
-          priority,
-          labels,
-          assigneeRole,
-        }),
+      await taskService.create({
+        title: title.trim(),
+        description,
+        status,
+        priority,
+        labels,
+        assigneeRole,
       });
 
-      if (res.ok) {
-        handleClose();
-        onCreated();
-      }
+      handleClose();
+      onCreated();
     } catch (err) {
       console.error("Failed to create task:", err);
     } finally {
@@ -114,78 +110,89 @@ export function TaskCreateModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create Task" size="lg">
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">Title *</label>
-          <input
-            type="text"
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Create New Task"
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8 py-2">
+        <div className="space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+            Task Title <span className="text-destructive">*</span>
+          </label>
+          <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="What needs to be done?"
-            className="form-input"
+            placeholder="e.g. Implement authentication flow"
             autoFocus
+            className="text-lg font-medium h-12"
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Description</label>
-          <textarea
+        <div className="space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+            Description
+          </label>
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add more details about this task..."
-            className="form-textarea"
-            rows={4}
+            placeholder="Provide context for this task..."
+            rows={5}
+            className="resize-none"
           />
         </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
-            <Dropdown
-              label="Status"
-              value={status}
-              onChange={setStatus}
-              options={STATUS_OPTIONS}
-            />
-          </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <Dropdown
-              label="Priority"
-              value={priority}
-              onChange={setPriority}
-              options={PRIORITY_OPTIONS}
-            />
-          </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <Dropdown
-              label="Assignee"
-              value={assigneeRole}
-              onChange={setAssigneeRole}
-              options={ASSIGNEE_OPTIONS}
-              placeholder="Unassigned"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Dropdown
+            label="Initial Status"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_OPTIONS}
+          />
+          <Dropdown
+            label="Priority Level"
+            value={priority}
+            onChange={setPriority}
+            options={PRIORITY_OPTIONS}
+          />
+          <Dropdown
+            label="Primary Assignee"
+            value={assigneeRole}
+            onChange={setAssigneeRole}
+            options={ASSIGNEE_OPTIONS}
+            placeholder="Unassigned"
+          />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Labels</label>
-          <div className="labels-container">
+        <div className="space-y-4">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+            Task Labels
+          </label>
+          <div className="flex flex-wrap gap-2 min-h-[32px]">
+            {labels.length === 0 && (
+              <span className="text-xs text-muted-foreground/50 italic py-1">
+                No labels added...
+              </span>
+            )}
             {labels.map((label) => (
-              <span key={label} className="label-tag">
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-[11px] font-semibold border shadow-sm transition-all hover:bg-secondary/80 translate-y-0 hover:-translate-y-0.5"
+              >
                 {label}
                 <button
                   type="button"
                   onClick={() => handleRemoveLabel(label)}
-                  className="label-remove"
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
                 >
                   <X size={12} />
                 </button>
               </span>
             ))}
           </div>
-          <div className="label-input-row">
-            <input
-              type="text"
+          <div className="flex gap-3">
+            <Input
               value={labelInput}
               onChange={(e) => setLabelInput(e.target.value)}
               onKeyDown={(e) => {
@@ -194,143 +201,40 @@ export function TaskCreateModal({
                   handleAddLabel();
                 }
               }}
-              placeholder="Type label and press Enter"
-              className="form-input"
+              placeholder="Add labels (e.g. Bug, Feature)..."
+              className="flex-1 h-10"
             />
-            <button
+            <Button
               type="button"
               onClick={handleAddLabel}
-              className="button-secondary"
+              variant="secondary"
+              size="icon"
               disabled={!labelInput.trim()}
+              className="h-10 w-10 shrink-0"
             >
-              <Plus size={16} />
-            </button>
+              <Plus size={18} />
+            </Button>
           </div>
         </div>
 
-        <div className="form-actions">
-          <button
+        <div className="flex justify-end gap-3 pt-6 border-t mt-4">
+          <Button
             type="button"
             onClick={handleClose}
-            className="button-secondary"
+            variant="ghost"
+            className="px-6"
           >
-            Cancel
-          </button>
-          <button
+            Discard
+          </Button>
+          <Button
             type="submit"
-            className="button-primary"
             disabled={!title.trim() || isSubmitting}
+            className="px-8 shadow-lg shadow-primary/10"
           >
             {isSubmitting ? "Creating..." : "Create Task"}
-          </button>
+          </Button>
         </div>
       </form>
-
-      <style>{`
-        .form-group {
-          margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-          display: block;
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: var(--text-muted);
-          margin-bottom: 0.5rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .form-input {
-          width: 100%;
-          padding: 0.625rem 0.875rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-          transition: border-color 0.2s;
-        }
-
-        .form-input:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-
-        .form-textarea {
-          width: 100%;
-          padding: 0.625rem 0.875rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-          resize: vertical;
-          font-family: inherit;
-          min-height: 100px;
-          transition: border-color 0.2s;
-        }
-
-        .form-textarea:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-
-        .form-row {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .labels-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 0.5rem;
-          min-height: 24px;
-        }
-
-        .label-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 8px;
-          background: rgba(56, 189, 248, 0.15);
-          color: var(--accent);
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-
-        .label-remove {
-          background: transparent;
-          border: none;
-          color: inherit;
-          cursor: pointer;
-          padding: 0;
-          display: flex;
-          align-items: center;
-          opacity: 0.7;
-          transition: opacity 0.15s;
-        }
-
-        .label-remove:hover {
-          opacity: 1;
-        }
-
-        .label-input-row {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .form-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 0.75rem;
-          margin-top: 1.5rem;
-          padding-top: 1.25rem;
-          border-top: 1px solid var(--border);
-        }
-      `}</style>
     </Modal>
   );
 }

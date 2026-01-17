@@ -6,12 +6,12 @@ A **local-first AI development platform** that combines task management, documen
 
 ## Features
 
-🎯 **Kanban Board** - Visual task management with AI-friendly workflows  
-📚 **Documentation Hub** - Markdown docs integrated with your repo  
-🤖 **MCP Integration** - Let AI agents read/write docs, manage tasks, and run CI  
-✅ **Acceptance Checklists** - Track implementation progress automatically  
-🔧 **Secure CI** - Allowlisted commands with artifact logging  
-💾 **Local-First** - Everything stays on your machine (SQLite + Markdown)
+- **Kanban Board** - Visual task management with AI-friendly workflows  
+- **Documentation Hub** - Markdown docs integrated with your repo  
+- **MCP Integration** - Let AI agents read/write docs, manage tasks, and run CI  
+- **Acceptance Checklists** - Track implementation progress automatically  
+- **Secure CI** - Allowlisted commands with artifact logging  
+- **Local-First** - Everything stays on your machine (SQLite + Markdown)
 
 ## Quick Start
 
@@ -135,15 +135,6 @@ bun run lint
 bun run typecheck
 ```
 
-## Legacy Workspace Init
-
-If you need to initialize a workspace manually (not recommended for new projects):
-
-```bash
-bun run workspace:init -- --repo /path/to/repo --workspace /path/to/workspace.locus
-```
-
-**Note**: Use `bun run create-project` instead for new projects.
 
 ## License
 

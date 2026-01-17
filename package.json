@@ -15,7 +15,7 @@
     "mcp": "bun run --cwd apps/mcp src/index.ts",
     "lint": "biome lint .",
     "format": "biome check --write --formatter-enabled=true --assist-enabled=true ",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b --noEmit"
   },
   "type": "module",
   "workspaces": [

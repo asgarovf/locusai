@@ -1,11 +1,15 @@
+"use client";
+
 import { TaskStatus } from "@locus/shared";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { BoardFilter } from "../components/BoardFilter";
-import { TaskCard } from "../components/TaskCard";
-import { TaskCreateModal } from "../components/TaskCreateModal";
-import { TaskPanel } from "../components/TaskPanel";
-import { useTasks } from "../hooks/useTasks";
+import { BoardFilter } from "@/components/BoardFilter";
+import { TaskCard } from "@/components/TaskCard";
+import { TaskCreateModal } from "@/components/TaskCreateModal";
+import { TaskPanel } from "@/components/TaskPanel";
+import { Button } from "@/components/ui/Button";
+import { useTasks } from "@/hooks/useTasks";
+import { cn } from "@/lib/utils";
 
 const COLUMNS = [
   TaskStatus.BACKLOG,
@@ -16,19 +20,43 @@ const COLUMNS = [
   TaskStatus.BLOCKED,
 ];
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  [TaskStatus.BACKLOG]: { label: "Backlog", color: "var(--status-backlog)" },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; color: string; indicator: string }
+> = {
+  [TaskStatus.BACKLOG]: {
+    label: "Backlog",
+    color: "var(--status-backlog)",
+    indicator: "bg-slate-500",
+  },
   [TaskStatus.IN_PROGRESS]: {
     label: "In Progress",
     color: "var(--status-progress)",
+    indicator: "bg-amber-500",
   },
-  [TaskStatus.REVIEW]: { label: "Review", color: "var(--status-review)" },
-  [TaskStatus.VERIFICATION]: { label: "Verification", color: "var(--accent)" },
-  [TaskStatus.DONE]: { label: "Done", color: "var(--status-done)" },
-  [TaskStatus.BLOCKED]: { label: "Blocked", color: "var(--status-blocked)" },
+  [TaskStatus.REVIEW]: {
+    label: "Review",
+    color: "var(--status-review)",
+    indicator: "bg-purple-500",
+  },
+  [TaskStatus.VERIFICATION]: {
+    label: "Verification",
+    color: "var(--accent)",
+    indicator: "bg-cyan-500",
+  },
+  [TaskStatus.DONE]: {
+    label: "Done",
+    color: "var(--status-done)",
+    indicator: "bg-emerald-500",
+  },
+  [TaskStatus.BLOCKED]: {
+    label: "Blocked",
+    color: "var(--status-blocked)",
+    indicator: "bg-rose-500",
+  },
 };
 
-export default function Board() {
+export function Board() {
   const {
     searchQuery,
     setSearchQuery,
@@ -104,27 +132,25 @@ export default function Board() {
   };
 
   return (
-    <div className="board-container">
-      <div style={{ marginBottom: "1.5rem" }}>
-        <div className="board-header">
+    <div className="flex-1 overflow-auto bg-background">
+      <div className="mb-8">
+        <div className="flex justify-between items-center bg-card p-6 rounded-xl border shadow-sm">
           <div>
-            <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">
               Development Board
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
+            <p className="text-muted-foreground text-sm flex items-center gap-2">
               Manage tasks and track progress across the engineering pipeline.
-              <span className="keyboard-hint">
-                Press <kbd>N</kbd> for new task, <kbd>/</kbd> to search
+              <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-secondary text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">
+                Press <kbd className="bg-background px-1 rounded border">N</kbd>{" "}
+                for new task
               </span>
             </p>
           </div>
-          <button
-            className="button-primary"
-            onClick={() => handleOpenCreateModal(TaskStatus.BACKLOG)}
-          >
-            <Plus size={18} />
+          <Button onClick={() => handleOpenCreateModal(TaskStatus.BACKLOG)}>
+            <Plus size={18} className="mr-1" />
             New Task
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -139,7 +165,7 @@ export default function Board() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      <div className="board">
+      <div className="flex gap-6 min-h-[600px]">
         {COLUMNS.map((status) => {
           const columnTasks = getTasksByStatus(status);
           const isDragOver = dragOverColumn === status;
@@ -147,25 +173,37 @@ export default function Board() {
           return (
             <div
               key={status}
-              className={`column glass ${isDragOver ? "drag-over" : ""}`}
-              style={{ borderTop: `4px solid ${STATUS_CONFIG[status].color}` }}
+              className={cn(
+                "flex flex-col w-[300px] shrink-0 rounded-xl transition-all",
+                isDragOver
+                  ? "bg-accent/10 ring-2 ring-accent"
+                  : "bg-secondary/20"
+              )}
               onDrop={(e) => handleDrop(status, e)}
               onDragOver={(e) => handleDragOver(status, e)}
               onDragLeave={handleDragLeave}
             >
-              <div className="column-header">
-                <div className="column-title">
-                  <span className="column-name">
+              <div className="flex items-center justify-between p-3 border-b bg-card rounded-t-xl">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2)]",
+                      STATUS_CONFIG[status].indicator
+                    )}
+                  />
+                  <span className="text-xs font-bold uppercase tracking-widest text-foreground">
                     {STATUS_CONFIG[status].label}
                   </span>
-                  <span className="count-badge">{columnTasks.length}</span>
+                  <span className="flex items-center justify-center h-5 px-1.5 bg-secondary text-[10px] font-bold rounded-full text-muted-foreground border">
+                    {columnTasks.length}
+                  </span>
                 </div>
-                <button className="icon-button">
+                <button className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors">
                   <MoreHorizontal size={14} />
                 </button>
               </div>
 
-              <div className="task-list">
+              <div className="flex flex-col gap-3 p-3 flex-1 overflow-y-auto">
                 {columnTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -175,13 +213,14 @@ export default function Board() {
                   />
                 ))}
 
-                <button
-                  className="add-task-button"
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 h-9"
                   onClick={() => handleOpenCreateModal(status)}
                 >
-                  <Plus size={16} />
+                  <Plus size={14} className="mr-2" />
                   <span>Add task</span>
-                </button>
+                </Button>
               </div>
             </div>
           );

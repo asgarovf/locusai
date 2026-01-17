@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AssigneeRole,
   type Task,
@@ -5,6 +7,8 @@ import {
   TaskStatus,
 } from "@locus/shared";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { taskService } from "@/services";
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,9 +35,7 @@ export function useTasks() {
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/tasks");
-      if (!res.ok) throw new Error("Failed to fetch tasks");
-      const data = await res.json();
+      const data = await taskService.getAll();
       setTasks(data);
       setError(null);
     } catch (err: unknown) {
@@ -47,7 +49,7 @@ export function useTasks() {
 
   useEffect(() => {
     fetchTasks();
-    const interval = setInterval(fetchTasks, 10000);
+    const interval = setInterval(fetchTasks, 15000); // Polling interval slightly increased
     return () => clearInterval(interval);
   }, [fetchTasks]);
 
@@ -84,20 +86,24 @@ export function useTasks() {
 
   const updateTaskStatus = useCallback(
     async (taskId: number, status: TaskStatus) => {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      fetchTasks();
+      try {
+        await taskService.update(taskId, { status });
+        fetchTasks();
+      } catch (err) {
+        console.error("Failed to update task status:", err);
+      }
     },
     [fetchTasks]
   );
 
   const deleteTask = useCallback(
     async (taskId: number) => {
-      await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-      fetchTasks();
+      try {
+        await taskService.delete(taskId);
+        fetchTasks();
+      } catch (err) {
+        console.error("Failed to delete task:", err);
+      }
     },
     [fetchTasks]
   );

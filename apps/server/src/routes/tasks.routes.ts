@@ -33,6 +33,11 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
         parentId,
       } = req.body as z.infer<typeof TaskSchema>;
       const now = Date.now();
+      const mandatoryChecklist = [
+        { id: crypto.randomUUID(), text: "bun run lint", done: false },
+        { id: crypto.randomUUID(), text: "bun run typecheck", done: false },
+      ];
+
       const result = db
         .prepare(`
         INSERT INTO tasks (title, description, status, priority, labels, assigneeRole, parentId, acceptanceChecklist, createdAt, updatedAt)
@@ -46,7 +51,7 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
           JSON.stringify(labels),
           assigneeRole ?? null,
           parentId ?? null,
-          "[]",
+          JSON.stringify(mandatoryChecklist),
           now,
           now
         );

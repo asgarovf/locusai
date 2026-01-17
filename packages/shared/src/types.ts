@@ -47,10 +47,15 @@ export interface Task {
   priority: TaskPriority;
   labels: string[];
   assigneeRole?: AssigneeRole;
+  assignedTo?: string | null;
+  dueDate?: string | null;
   parentId?: number | null;
   lockedBy?: string | null;
   lockExpiresAt?: number | null;
   acceptanceChecklist: AcceptanceItem[];
+  comments: Comment[];
+  artifacts: Artifact[];
+  activityLog: Event[];
   createdAt: number;
   updatedAt: number;
 }
@@ -70,6 +75,8 @@ export interface Artifact {
   title: string;
   contentText?: string;
   filePath?: string;
+  url?: string;
+  size?: string;
   createdBy: string;
   createdAt: number;
 }

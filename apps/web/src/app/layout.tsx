@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import { Roboto } from "next/font/google";
+import "./globals.css";
+import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
+
+const roboto = Roboto({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Locus | Engineering Workspace",
+  description:
+    "Modernized task management and documentation for engineering teams.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className="dark">
+      <body className={`${roboto.className} antialiased`}>
+        <div className="flex h-screen overflow-hidden bg-background">
+          <Sidebar />
+
+          <main className="flex-1 overflow-auto bg-background p-8">
+            <div className="max-w-[1440px] mx-auto">
+              <Header />
+              {children}
+            </div>
+          </main>
+        </div>
+      </body>
+    </html>
+  );
+}

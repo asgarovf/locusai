@@ -4,56 +4,29 @@ interface BadgeProps {
   size?: "sm" | "md";
 }
 
-const VARIANT_STYLES = {
-  default: {
-    background: "rgba(255, 255, 255, 0.08)",
-    color: "var(--text-muted)",
-  },
-  success: {
-    background: "rgba(16, 185, 129, 0.15)",
-    color: "#10b981",
-  },
-  warning: {
-    background: "rgba(245, 158, 11, 0.15)",
-    color: "#f59e0b",
-  },
-  error: {
-    background: "rgba(239, 68, 68, 0.15)",
-    color: "#ef4444",
-  },
-  info: {
-    background: "rgba(56, 189, 248, 0.15)",
-    color: "#38bdf8",
-  },
-  purple: {
-    background: "rgba(168, 85, 247, 0.15)",
-    color: "#a855f7",
-  },
-};
-
 export function Badge({
   children,
   variant = "default",
   size = "sm",
 }: BadgeProps) {
-  const styles = VARIANT_STYLES[variant];
-  const padding = size === "sm" ? "2px 8px" : "4px 12px";
-  const fontSize = size === "sm" ? "0.625rem" : "0.75rem";
+  const variants = {
+    default: "bg-primary text-primary-foreground shadow hover:bg-primary/80",
+    success: "bg-status-done/15 text-status-done border-status-done/20",
+    warning:
+      "bg-status-progress/15 text-status-progress border-status-progress/20",
+    error: "bg-status-blocked/15 text-status-blocked border-status-blocked/20",
+    info: "bg-status-todo/15 text-status-todo border-status-todo/20",
+    purple: "bg-status-review/15 text-status-review border-status-review/20",
+  };
+
+  const sizes = {
+    sm: "px-2.5 py-0.5 text-xs font-semibold",
+    md: "px-3 py-1 text-sm font-semibold",
+  };
 
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding,
-        borderRadius: "4px",
-        fontSize,
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.025em",
-        ...styles,
-      }}
+      className={`inline-flex items-center rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${sizes[size]}`}
     >
       {children}
     </span>

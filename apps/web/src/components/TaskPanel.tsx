@@ -1,29 +1,36 @@
+"use client";
+
 import {
   type AcceptanceItem,
-  type Artifact,
-  AssigneeRole,
-  type Event,
+  EventType,
   type Task,
+  type Event as TaskEvent,
   TaskPriority,
   TaskStatus,
 } from "@locus/shared";
+import { format, formatDistanceToNow } from "date-fns";
 import {
-  Check,
+  CheckCircle,
   ChevronRight,
-  Clock,
+  Edit,
   FileText,
   Lock,
   MessageSquare,
-  Plus,
+  PlusSquare,
+  Tag,
   Terminal,
   Trash2,
   Unlock,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { PriorityBadge, StatusBadge } from "./ui/Badge";
-import { Checkbox } from "./ui/Checkbox";
-import { Dropdown } from "./ui/Dropdown";
+import { PropertyItem } from "@/components/PropertyItem";
+import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { taskService } from "@/services/task.service";
 
 interface TaskPanelProps {
   taskId: number;
@@ -32,23 +39,6 @@ interface TaskPanelProps {
   onUpdated: () => void;
 }
 
-const STATUS_OPTIONS = Object.values(TaskStatus).map((status) => ({
-  value: status,
-  label: status.replace(/_/g, " "),
-}));
-
-const PRIORITY_OPTIONS = [
-  { value: TaskPriority.LOW, label: "Low" },
-  { value: TaskPriority.MEDIUM, label: "Medium" },
-  { value: TaskPriority.HIGH, label: "High" },
-  { value: TaskPriority.CRITICAL, label: "Critical" },
-];
-
-const ASSIGNEE_OPTIONS = Object.values(AssigneeRole).map((role) => ({
-  value: role,
-  label: role.charAt(0) + role.slice(1).toLowerCase(),
-}));
-
 export function TaskPanel({
   taskId,
   onClose,
@@ -56,44 +46,47 @@ export function TaskPanel({
   onUpdated,
 }: TaskPanelProps) {
   const [task, setTask] = useState<Task | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [newComment, setNewComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
-  const [activeTab, setActiveTab] = useState<"activity" | "artifacts">(
-    "activity"
-  );
+  const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
 
-  const fetchTask = useCallback(() => {
-    Promise.all([
-      fetch(`/api/tasks/${taskId}`).then((res) => res.json()),
-      fetch(`/api/events?taskId=${taskId}`).then((res) => res.json()),
-      fetch(`/api/tasks/${taskId}/artifacts`).then((res) => res.json()),
-    ]).then(([taskData, eventsData, artifactsData]) => {
-      setTask(taskData);
-      setEvents(eventsData);
-      setArtifacts(artifactsData);
+  const formatDate = (date: string | number | Date) => {
+    return format(new Date(date), "MMM d, yyyy");
+  };
+
+  const fetchTask = useCallback(async () => {
+    try {
+      const taskData = await taskService.getById(taskId);
+      const initializedTask: Task = {
+        ...taskData,
+        acceptanceChecklist: taskData.acceptanceChecklist || [],
+        artifacts: taskData.artifacts || [],
+        activityLog: taskData.activityLog || [],
+        comments: taskData.comments || [],
+      };
+      setTask(initializedTask);
       setEditTitle(taskData.title);
       setEditDesc(taskData.description || "");
-    });
+    } catch (err) {
+      console.error("Failed to fetch task:", err);
+    }
   }, [taskId]);
 
   useEffect(() => {
     fetchTask();
   }, [fetchTask]);
 
-  const updateTask = async (updates: Partial<Task>) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    fetchTask();
-    onUpdated();
+  const handleUpdateTask = async (updates: Partial<Task>) => {
+    try {
+      await taskService.update(taskId, updates);
+      fetchTask();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to update task:", err);
+    }
   };
 
   const handleDelete = async () => {
@@ -104,23 +97,26 @@ export function TaskPanel({
     ) {
       return;
     }
-    await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-    onDeleted();
-    onClose();
+    try {
+      await taskService.delete(taskId);
+      onDeleted();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
   };
 
   const handleTitleSave = () => {
     if (editTitle.trim() && editTitle !== task?.title) {
-      updateTask({ title: editTitle.trim() });
+      handleUpdateTask({ title: editTitle.trim() });
     }
     setIsEditingTitle(false);
   };
 
   const handleDescSave = () => {
     if (editDesc !== task?.description) {
-      updateTask({ description: editDesc });
+      handleUpdateTask({ description: editDesc });
     }
-    setIsEditingDesc(false);
   };
 
   const handleAddChecklistItem = () => {
@@ -130,7 +126,7 @@ export function TaskPanel({
       text: newChecklistItem.trim(),
       done: false,
     };
-    updateTask({
+    handleUpdateTask({
       acceptanceChecklist: [...task.acceptanceChecklist, newItem] as never,
     });
     setNewChecklistItem("");
@@ -141,7 +137,7 @@ export function TaskPanel({
     const updated = task.acceptanceChecklist.map((item) =>
       item.id === itemId ? { ...item, done: !item.done } : item
     );
-    updateTask({ acceptanceChecklist: updated as never });
+    handleUpdateTask({ acceptanceChecklist: updated as never });
   };
 
   const handleRemoveChecklistItem = (itemId: string) => {
@@ -149,55 +145,59 @@ export function TaskPanel({
     const updated = task.acceptanceChecklist.filter(
       (item) => item.id !== itemId
     );
-    updateTask({ acceptanceChecklist: updated as never });
+    handleUpdateTask({ acceptanceChecklist: updated as never });
   };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    await fetch(`/api/tasks/${taskId}/comment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ author: "Human", text: newComment }),
-    });
-    setNewComment("");
-    fetchTask();
+    try {
+      await taskService.addComment(taskId, {
+        author: "Human",
+        text: newComment,
+      });
+      setNewComment("");
+      fetchTask();
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    }
   };
 
   const handleRunCi = async (preset: string) => {
-    const res = await fetch("/api/ci/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId, preset }),
-    });
-    const data = await res.json();
-    alert(data.summary);
-    fetchTask();
+    try {
+      const data = await taskService.runCi(taskId, preset);
+      alert(data.summary);
+      fetchTask();
+    } catch (err) {
+      console.error("Failed to run CI:", err);
+    }
   };
 
   const handleLock = async () => {
-    await fetch(`/api/tasks/${taskId}/lock`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agentId: "human", ttlSeconds: 3600 }),
-    });
-    fetchTask();
-    onUpdated();
+    try {
+      await taskService.lock(taskId, "human", 3600);
+      fetchTask();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to lock task:", err);
+    }
   };
 
   const handleUnlock = async () => {
-    await fetch(`/api/tasks/${taskId}/unlock`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agentId: "human" }),
-    });
-    fetchTask();
-    onUpdated();
+    try {
+      await taskService.unlock(taskId, "human");
+      fetchTask();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to unlock task:", err);
+    }
   };
 
   if (!task) {
     return (
-      <div className="task-panel glass">
-        <div className="panel-loading">Loading...</div>
+      <div className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex items-center justify-center">
+        <div className="text-muted-foreground animate-pulse font-medium">
+          Loading task specs...
+        </div>
       </div>
     );
   }
@@ -214,751 +214,442 @@ export function TaskPanel({
 
   return (
     <>
-      <div className="panel-overlay" onClick={onClose} />
-      <div className="task-panel glass">
-        <div className="panel-header">
-          <button className="panel-close" onClick={onClose}>
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940 transition-all duration-300"
+        onClick={onClose}
+      />
+      <div className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-[-20px_0_80px_rgba(0,0,0,0.6)] animate-in slide-in-from-right duration-400">
+        <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">
+          <button
+            className="p-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground hover:scale-105 transition-all duration-200 border border-transparent hover:border-border"
+            onClick={onClose}
+          >
             <ChevronRight size={20} />
           </button>
-          <div className="panel-badges">
-            <StatusBadge status={task.status} />
-            <PriorityBadge
-              priority={(task.priority as TaskPriority) || TaskPriority.MEDIUM}
-            />
+
+          <div className="flex-1 min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-1 block">
+              Reference: #{task.id}
+            </span>
+            <div className="flex gap-3">
+              <StatusBadge status={task.status} />
+              <PriorityBadge
+                priority={
+                  (task.priority as TaskPriority) || TaskPriority.MEDIUM
+                }
+              />
+            </div>
           </div>
-          <div className="panel-actions">
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => handleRunCi("quick")}
+              title="Run Quality Checks"
+              className="h-10 w-10 hover:bg-primary/10 hover:text-primary transition-all rounded-xl"
+            >
+              <Terminal size={18} />
+            </Button>
             {isLocked ? (
-              <button
-                className="icon-btn"
+              <Button
+                size="icon"
+                variant="ghost"
                 onClick={handleUnlock}
                 title="Unlock"
+                className="h-10 w-10 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl"
               >
-                <Unlock size={16} />
-              </button>
+                <Unlock size={18} />
+              </Button>
             ) : (
-              <button className="icon-btn" onClick={handleLock} title="Lock">
-                <Lock size={16} />
-              </button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleLock}
+                title="Lock"
+                className="h-10 w-10 hover:bg-primary/10 hover:text-primary rounded-xl"
+              >
+                <Lock size={18} />
+              </Button>
             )}
-            <button
-              className="icon-btn danger"
+            <div className="w-px h-6 bg-border mx-1" />
+            <Button
+              size="icon"
+              variant="danger"
               onClick={handleDelete}
               title="Delete"
+              className="h-10 w-10 hover:scale-105 active:scale-95 transition-transform rounded-xl"
             >
-              <Trash2 size={16} />
-            </button>
+              <Trash2 size={18} />
+            </Button>
           </div>
-        </div>
+        </header>
 
-        <div className="panel-body">
-          <div className="panel-main">
-            {/* Title */}
-            {isEditingTitle ? (
-              <input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                onBlur={handleTitleSave}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleTitleSave();
-                  if (e.key === "Escape") {
-                    setEditTitle(task.title);
-                    setIsEditingTitle(false);
-                  }
-                }}
-                className="title-input"
-                autoFocus
-              />
-            ) : (
-              <h2
-                className="task-title"
-                onClick={() => setIsEditingTitle(true)}
-              >
-                {task.title}
-              </h2>
-            )}
-
-            {/* Description */}
-            <div className="section">
-              <h4>Description</h4>
-              {isEditingDesc ? (
-                <div>
-                  <textarea
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    className="desc-textarea"
-                    rows={4}
-                    autoFocus
+        <div className="flex-1 grid grid-cols-[1fr_340px] overflow-hidden">
+          <div className="p-12 overflow-y-auto scrollbar-thin">
+            {/* Title Section */}
+            <div className="mb-12">
+              {isEditingTitle ? (
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  onBlur={handleTitleSave}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleTitleSave();
+                    if (e.key === "Escape") {
+                      setEditTitle(task.title);
+                      setIsEditingTitle(false);
+                    }
+                  }}
+                  className="text-2xl h-14 font-bold tracking-tight"
+                  autoFocus
+                />
+              ) : (
+                <h2
+                  className="text-4xl font-black tracking-tight hover:text-primary transition-all cursor-pointer leading-tight group"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  {task.title}
+                  <Edit
+                    size={18}
+                    className="inline-block ml-3 opacity-0 group-hover:opacity-40 transition-opacity"
                   />
-                  <div className="edit-actions">
-                    <button
-                      className="button-primary btn-sm"
-                      onClick={handleDescSave}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="button-secondary btn-sm"
-                      onClick={() => {
-                        setEditDesc(task.description || "");
-                        setIsEditingDesc(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
+                </h2>
+              )}
+            </div>
+
+            {/* Description Section */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <FileText size={16} />
                   </div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
+                    Documentation
+                  </h4>
+                </div>
+                <div className="flex bg-secondary/30 p-1 rounded-xl">
+                  <button
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${descMode === "preview" ? "bg-background shadow-md text-foreground scale-105" : "text-muted-foreground hover:text-foreground"}`}
+                    onClick={() => setDescMode("preview")}
+                  >
+                    Visual
+                  </button>
+                  <button
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${descMode === "edit" ? "bg-background shadow-md text-foreground scale-105" : "text-muted-foreground hover:text-foreground"}`}
+                    onClick={() => setDescMode("edit")}
+                  >
+                    Markdown
+                  </button>
+                </div>
+              </div>
+
+              {descMode === "edit" ? (
+                <div className="group border border-border rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all bg-secondary/5">
+                  <Textarea
+                    value={editDesc}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setEditDesc(e.target.value)
+                    }
+                    placeholder="Describe the implementation details, edge cases, and technical requirements..."
+                    rows={10}
+                    className="border-none focus:ring-0 text-base leading-relaxed p-6 bg-transparent"
+                    onBlur={handleDescSave}
+                  />
                 </div>
               ) : (
-                <p
-                  className="task-desc"
-                  onClick={() => setIsEditingDesc(true)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {task.description || "Click to add description..."}
-                </p>
+                <div className="prose prose-invert max-w-none bg-secondary/10 p-8 rounded-2xl border border-border/50 shadow-inner">
+                  {task.description ? (
+                    <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                      {task.description}
+                    </p>
+                  ) : (
+                    <span className="text-muted-foreground/30 italic text-sm select-none">
+                      Waiting for technical documentation...
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 
             {/* Acceptance Checklist */}
-            <div className="section">
-              <div className="section-header">
-                <h4>
-                  Acceptance Criteria
-                  {task.acceptanceChecklist.length > 0 && (
-                    <span className="progress-text">{checklistProgress}%</span>
-                  )}
-                </h4>
-              </div>
-              {task.acceptanceChecklist.length > 0 && (
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${checklistProgress}%` }}
-                  />
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-500">
+                    <CheckCircle size={16} />
+                  </div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
+                    Definition of Done
+                  </h4>
                 </div>
-              )}
-              <div className="checklist">
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                      Status
+                    </span>
+                    <span className="text-sm font-mono font-black text-sky-500">
+                      {checklistProgress}%
+                    </span>
+                  </div>
+                  <div className="w-48 h-2 bg-secondary/30 rounded-full overflow-hidden border border-border/50">
+                    <div
+                      className="h-full bg-sky-500 transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(14,165,233,0.5)]"
+                      style={{ width: `${checklistProgress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 mb-8">
+                {task.acceptanceChecklist.length === 0 && (
+                  <div className="text-center py-12 border-2 border-dashed border-border/40 rounded-2xl group hover:border-accent/40 transition-colors">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40 mb-2 italic">
+                      Standard quality checks required
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setNewChecklistItem("Add unit tests")}
+                      className="text-xs hover:text-sky-500"
+                    >
+                      Suggest Criteria
+                    </Button>
+                  </div>
+                )}
                 {task.acceptanceChecklist.map((item) => (
-                  <div key={item.id} className="checklist-item">
+                  <div
+                    key={item.id}
+                    className="group flex items-center gap-4 p-5 bg-secondary/10 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-secondary/20 transition-all duration-300 shadow-sm"
+                  >
                     <Checkbox
                       checked={item.done}
                       onChange={() => handleToggleChecklistItem(item.id)}
-                      label={item.text}
+                      className="scale-125"
                     />
-                    <button
-                      className="remove-item"
+                    <span
+                      className={`flex-1 text-sm font-semibold transition-all duration-300 ${item.done ? "line-through text-muted-foreground/40 scale-[0.98] translate-x-1" : "text-foreground"}`}
+                    >
+                      {item.text}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg"
                       onClick={() => handleRemoveChecklistItem(item.id)}
                     >
                       <X size={14} />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
-              <div className="add-item-row">
-                <input
+
+              <div className="flex gap-4 p-2 bg-secondary/5 rounded-2xl border border-border/40">
+                <Input
                   value={newChecklistItem}
-                  onChange={(e) => setNewChecklistItem(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setNewChecklistItem(e.target.value)
+                  }
+                  placeholder="Define quality metrics (e.g. Coverage > 80%, No regressions)..."
+                  className="h-12 bg-transparent border-none focus:ring-0 text-sm font-medium"
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === "Enter") handleAddChecklistItem();
                   }}
-                  placeholder="Add acceptance criteria..."
-                  className="add-item-input"
                 />
-                <button
-                  className="button-secondary btn-sm"
+                <Button
                   onClick={handleAddChecklistItem}
-                  disabled={!newChecklistItem.trim()}
+                  className="px-8 h-12 bg-foreground text-background font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
                 >
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
-
-            {/* CI Actions */}
-            <div className="section">
-              <h4>Quality Checks</h4>
-              <div className="ci-buttons">
-                <button
-                  className="button-secondary"
-                  onClick={() => handleRunCi("quick")}
-                >
-                  <Terminal size={14} />
-                  Quick Check
-                </button>
-                <button
-                  className="button-secondary"
-                  onClick={() => handleRunCi("full")}
-                >
-                  <Check size={14} />
-                  Full Check
-                </button>
+                  Append
+                </Button>
               </div>
             </div>
           </div>
 
-          <div className="panel-sidebar">
-            {/* Properties */}
-            <div className="section">
-              <h4>Properties</h4>
-              <div className="properties">
-                <Dropdown
+          <div className="p-10 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
+            {/* Properties Section */}
+            <div className="mb-12">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+                Specifications
+              </h4>
+              <div className="space-y-2">
+                <PropertyItem
                   label="Status"
                   value={task.status}
-                  onChange={(status) => updateTask({ status })}
-                  options={STATUS_OPTIONS}
+                  onEdit={(newValue: string) =>
+                    handleUpdateTask({ status: newValue as TaskStatus })
+                  }
+                  options={Object.values(TaskStatus)}
+                  type="dropdown"
                 />
-                <Dropdown
+                <PropertyItem
                   label="Priority"
-                  value={(task.priority as TaskPriority) || TaskPriority.MEDIUM}
-                  onChange={(priority) => updateTask({ priority } as never)}
-                  options={PRIORITY_OPTIONS}
+                  value={task.priority || TaskPriority.MEDIUM}
+                  onEdit={(newValue: string) =>
+                    handleUpdateTask({ priority: newValue as TaskPriority })
+                  }
+                  options={Object.values(TaskPriority)}
+                  type="dropdown"
                 />
-                <Dropdown
-                  label="Assignee"
-                  value={task.assigneeRole}
-                  onChange={(assigneeRole) => updateTask({ assigneeRole })}
-                  options={ASSIGNEE_OPTIONS}
-                  placeholder="Unassigned"
+                <PropertyItem
+                  label="Deadline"
+                  value={
+                    task.dueDate ? formatDate(task.dueDate) : "Not Defined"
+                  }
+                  onEdit={(newValue: string) =>
+                    handleUpdateTask({ dueDate: newValue || null })
+                  }
+                  type="date"
+                />
+                <PropertyItem
+                  label="Owner"
+                  value={task.assignedTo || "Open Seat"}
+                  onEdit={(newValue: string) =>
+                    handleUpdateTask({ assignedTo: newValue || null })
+                  }
+                  type="text"
                 />
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="tabs">
-              <button
-                className={`tab ${activeTab === "activity" ? "active" : ""}`}
-                onClick={() => setActiveTab("activity")}
-              >
-                <MessageSquare size={14} />
-                Activity
-              </button>
-              <button
-                className={`tab ${activeTab === "artifacts" ? "active" : ""}`}
-                onClick={() => setActiveTab("artifacts")}
-              >
-                <FileText size={14} />
-                Artifacts ({artifacts.length})
-              </button>
+            {/* Artifacts Section */}
+            <div className="mb-12">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+                Generated Assets
+              </h4>
+              <div className="grid gap-3">
+                {task.artifacts.length > 0 ? (
+                  task.artifacts.map((artifact) => (
+                    <a
+                      key={artifact.id}
+                      href={artifact.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-4 p-4 bg-background/50 border border-border/40 rounded-2xl hover:border-primary/50 hover:bg-background transition-all duration-300 shadow-sm"
+                    >
+                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
+                        <FileText size={18} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-xs font-black truncate text-foreground/90">
+                          {artifact.title}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1 block">
+                          {artifact.type} • {artifact.size}
+                        </span>
+                      </div>
+                    </a>
+                  ))
+                ) : (
+                  <div className="py-10 text-center bg-background/20 rounded-2xl border border-dashed border-border/40">
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30 italic">
+                      No output generated
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {activeTab === "activity" ? (
-              <div className="section">
-                <div className="comment-input-row">
-                  <input
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddComment();
-                    }}
-                    placeholder="Add a comment..."
-                    className="comment-input"
+            {/* Activity Feed */}
+            <div>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+                Activity Stream
+              </h4>
+
+              <div className="flex gap-2 mb-10">
+                <Input
+                  value={newComment}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setNewComment(e.target.value)
+                  }
+                  placeholder="Post an update..."
+                  className="h-11 text-xs bg-background/40 border-border/40 rounded-xl focus:bg-background"
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") handleAddComment();
+                  }}
+                />
+                <Button
+                  onClick={handleAddComment}
+                  className="h-11 px-5 rounded-xl group bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground"
+                >
+                  <MessageSquare
+                    size={14}
+                    className="group-hover:rotate-12 transition-transform"
                   />
-                  <button
-                    className="button-primary btn-sm"
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                  >
-                    Send
-                  </button>
-                </div>
-                <div className="activity-feed">
-                  {events.map((event) => (
-                    <div key={event.id} className="activity-item">
-                      <div className="activity-icon">
-                        {event.type === "COMMENT_ADDED" ? (
-                          <MessageSquare size={12} />
-                        ) : event.type === "STATUS_CHANGED" ? (
-                          <ChevronRight size={12} />
-                        ) : (
-                          <Clock size={12} />
-                        )}
-                      </div>
-                      <div className="activity-content">
-                        <span className="activity-type">
-                          {formatEventType(event.type)}
-                        </span>
-                        <span className="activity-time">
-                          {new Date(event.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                </Button>
               </div>
-            ) : (
-              <div className="section">
-                <div className="artifacts-list">
-                  {artifacts.map((artifact) => (
-                    <div key={artifact.id} className="artifact-item">
-                      <div className="artifact-icon">
-                        {artifact.type === "CI_OUTPUT" ? (
-                          <Terminal size={14} />
-                        ) : (
-                          <FileText size={14} />
-                        )}
-                      </div>
-                      <div className="artifact-info">
-                        <span className="artifact-title">{artifact.title}</span>
-                        <span className="artifact-meta">
-                          {artifact.type} •{" "}
-                          {new Date(artifact.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
+
+              <div className="space-y-8 max-h-[500px] overflow-y-auto pr-3 scrollbar-none hover:scrollbar-thin transition-all">
+                {task.activityLog.map((event: TaskEvent) => (
+                  <div key={event.id} className="relative flex gap-5 group">
+                    <div className="absolute left-[17px] top-8 bottom-[-24px] w-px bg-border/40 group-last:hidden" />
+                    <div className="h-9 w-9 rounded-xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm group-hover:border-primary/40 transition-colors">
+                      {event.type === EventType.COMMENT_ADDED && (
+                        <MessageSquare size={14} className="text-blue-500" />
+                      )}
+                      {event.type === EventType.STATUS_CHANGED && (
+                        <Tag size={14} className="text-amber-500" />
+                      )}
+                      {event.type === EventType.TASK_CREATED && (
+                        <PlusSquare size={14} className="text-emerald-400" />
+                      )}
+                      {event.type === EventType.TASK_UPDATED && (
+                        <Edit size={14} className="text-primary" />
+                      )}
+                      {event.type === EventType.ARTIFACT_ADDED && (
+                        <FileText size={14} className="text-purple-400" />
+                      )}
+                      {(event.type === EventType.LOCKED ||
+                        event.type === EventType.UNLOCKED) && (
+                        <Lock size={14} className="text-rose-400" />
+                      )}
+                      {event.type === EventType.CI_RAN && (
+                        <CheckCircle size={14} className="text-accent" />
+                      )}
                     </div>
-                  ))}
-                  {artifacts.length === 0 && (
-                    <p className="empty-state">No artifacts yet</p>
-                  )}
-                </div>
+                    <div className="pt-1.5 min-w-0">
+                      <p className="text-xs font-bold text-foreground/90 leading-snug mb-1.5">
+                        {formatActivityEvent(event)}
+                      </p>
+                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">
+                        {formatDistanceToNow(new Date(event.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        .panel-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.4);
-          z-index: 900;
-          animation: fadeIn 0.2s ease-out;
-        }
-
-        .task-panel {
-          position: fixed;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          width: 900px;
-          max-width: 90vw;
-          background: var(--sidebar-bg);
-          z-index: 950;
-          display: flex;
-          flex-direction: column;
-          animation: slideIn 0.25s ease-out;
-        }
-
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-
-        .panel-loading {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          color: var(--text-muted);
-        }
-
-        .panel-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .panel-close {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          transition: color 0.15s;
-        }
-
-        .panel-close:hover {
-          color: var(--text-main);
-        }
-
-        .panel-badges {
-          display: flex;
-          gap: 0.5rem;
-          flex: 1;
-        }
-
-        .panel-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .icon-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          transition: all 0.15s;
-        }
-
-        .icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: var(--text-main);
-        }
-
-        .icon-btn.danger:hover {
-          background: rgba(239, 68, 68, 0.1);
-          color: #ef4444;
-        }
-
-        .panel-body {
-          flex: 1;
-          display: grid;
-          grid-template-columns: 1fr 320px;
-          overflow: hidden;
-        }
-
-        .panel-main {
-          padding: 1.5rem;
-          overflow-y: auto;
-        }
-
-        .panel-sidebar {
-          padding: 1.5rem;
-          border-left: 1px solid var(--border);
-          overflow-y: auto;
-          background: rgba(0, 0, 0, 0.1);
-        }
-
-        .task-title {
-          font-size: 1.5rem;
-          margin-bottom: 1.5rem;
-          cursor: pointer;
-          transition: opacity 0.15s;
-        }
-
-        .task-title:hover {
-          opacity: 0.8;
-        }
-
-        .title-input {
-          width: 100%;
-          font-size: 1.5rem;
-          font-family: "Outfit", sans-serif;
-          font-weight: 600;
-          background: transparent;
-          border: none;
-          border-bottom: 2px solid var(--accent);
-          color: var(--text-main);
-          padding: 0;
-          margin-bottom: 1.5rem;
-          outline: none;
-        }
-
-        .section {
-          margin-bottom: 1.5rem;
-        }
-
-        .section h4 {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.75rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .progress-text {
-          font-size: 0.625rem;
-          padding: 2px 6px;
-          background: var(--accent);
-          color: #000;
-          border-radius: 4px;
-          font-weight: 700;
-        }
-
-        .progress-bar {
-          height: 4px;
-          background: var(--border);
-          border-radius: 2px;
-          margin-bottom: 1rem;
-          overflow: hidden;
-        }
-
-        .progress-fill {
-          height: 100%;
-          background: var(--accent);
-          transition: width 0.3s ease;
-        }
-
-        .task-desc {
-          color: var(--text-main);
-          line-height: 1.6;
-          font-size: 0.9375rem;
-          opacity: 0.9;
-        }
-
-        .desc-textarea {
-          width: 100%;
-          padding: 0.75rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-main);
-          font-size: 0.9375rem;
-          font-family: inherit;
-          resize: vertical;
-          min-height: 100px;
-        }
-
-        .desc-textarea:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-
-        .edit-actions {
-          display: flex;
-          gap: 0.5rem;
-          margin-top: 0.5rem;
-        }
-
-        .btn-sm {
-          padding: 0.375rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-
-        .checklist {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .checklist-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.5rem;
-          background: var(--glass-bg);
-          border-radius: 6px;
-        }
-
-        .remove-item {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-          padding: 2px;
-          opacity: 0;
-          transition: all 0.15s;
-        }
-
-        .checklist-item:hover .remove-item {
-          opacity: 1;
-        }
-
-        .remove-item:hover {
-          color: #ef4444;
-        }
-
-        .add-item-row {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .add-item-input {
-          flex: 1;
-          padding: 0.5rem 0.75rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 6px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-        }
-
-        .add-item-input:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-
-        .ci-buttons {
-          display: flex;
-          gap: 0.75rem;
-        }
-
-        .ci-buttons button {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .properties {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .tabs {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 0.75rem;
-        }
-
-        .tab {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          padding: 0.5rem 0.75rem;
-          background: transparent;
-          border: none;
-          border-radius: 6px;
-          color: var(--text-muted);
-          font-size: 0.8125rem;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-
-        .tab:hover {
-          color: var(--text-main);
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .tab.active {
-          color: var(--accent);
-          background: rgba(56, 189, 248, 0.1);
-        }
-
-        .comment-input-row {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .comment-input {
-          flex: 1;
-          padding: 0.5rem 0.75rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 6px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-        }
-
-        .comment-input:focus {
-          outline: none;
-          border-color: var(--accent);
-        }
-
-        .activity-feed {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          max-height: 300px;
-          overflow-y: auto;
-        }
-
-        .activity-item {
-          display: flex;
-          gap: 0.75rem;
-          padding: 0.5rem;
-          background: var(--glass-bg);
-          border-radius: 6px;
-        }
-
-        .activity-icon {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.05);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted);
-          flex-shrink: 0;
-        }
-
-        .activity-content {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .activity-type {
-          font-size: 0.8125rem;
-          color: var(--text-main);
-        }
-
-        .activity-time {
-          font-size: 0.6875rem;
-          color: var(--text-muted);
-        }
-
-        .artifacts-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .artifact-item {
-          display: flex;
-          gap: 0.75rem;
-          padding: 0.75rem;
-          background: var(--glass-bg);
-          border-radius: 6px;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-
-        .artifact-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .artifact-icon {
-          color: var(--accent);
-        }
-
-        .artifact-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .artifact-title {
-          font-size: 0.875rem;
-          color: var(--text-main);
-        }
-
-        .artifact-meta {
-          font-size: 0.6875rem;
-          color: var(--text-muted);
-          text-transform: uppercase;
-        }
-
-        .empty-state {
-          color: var(--text-muted);
-          font-size: 0.875rem;
-          text-align: center;
-          padding: 2rem;
-        }
-      `}</style>
     </>
   );
 }
 
-function formatEventType(type: string): string {
-  return type
-    .split("_")
-    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(" ");
+function formatActivityEvent(event: TaskEvent): string {
+  const { type, payload } = event;
+  const p = payload as Record<string, string | number | undefined>;
+  switch (type) {
+    case EventType.STATUS_CHANGED:
+      return `Status moved ${p.oldStatus} ➟ ${p.newStatus}`;
+    case EventType.COMMENT_ADDED:
+      return `${p.author}: "${p.text}"`;
+    case EventType.TASK_CREATED:
+      return "Task initialized";
+    case EventType.TASK_UPDATED:
+      return "Parameters calibrated";
+    case EventType.ARTIFACT_ADDED:
+      return `Output: ${p.title}`;
+    case EventType.LOCKED:
+      return `Protected by ${p.agentId}`;
+    case EventType.UNLOCKED:
+      return "Protection released";
+    case EventType.CI_RAN:
+      return `Valuation complete: ${p.summary}`;
+    default:
+      return (type as string).replace(/_/g, " ").toLowerCase();
+  }
 }

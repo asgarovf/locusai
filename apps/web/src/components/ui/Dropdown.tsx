@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronDown } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
@@ -46,33 +48,38 @@ export function Dropdown<T extends string>({
   const selectedOption = options.find((o) => o.value === value);
 
   return (
-    <div className="dropdown-container" ref={containerRef}>
-      {label && <label className="dropdown-label">{label}</label>}
+    <div className="relative w-full" ref={containerRef}>
+      {label && (
+        <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+          {label}
+        </label>
+      )}
       <button
         type="button"
-        className="dropdown-trigger"
+        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-background border border-input rounded-md text-foreground text-sm cursor-pointer transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
       >
-        <span className={selectedOption ? "" : "placeholder"}>
+        <span className={selectedOption ? "" : "text-muted-foreground"}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
           size={16}
-          style={{
-            transform: isOpen ? "rotate(180deg)" : "rotate(0)",
-            transition: "transform 0.2s",
-          }}
+          className={`transition-transform duration-200 text-muted-foreground ${isOpen ? "rotate-180" : "rotate-0"}`}
         />
       </button>
 
       {isOpen && (
-        <div className="dropdown-menu glass">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md p-1 z-50 max-h-[240px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 shadow-md">
           {options.map((option) => (
             <button
               key={option.value}
               type="button"
-              className={`dropdown-item ${option.value === value ? "selected" : ""}`}
+              className={`w-full flex items-center gap-2 px-3 py-2 bg-transparent border-none rounded-sm text-popover-foreground text-sm cursor-pointer transition-colors text-left hover:bg-accent hover:text-accent-foreground ${
+                option.value === value
+                  ? "bg-accent/10 text-accent-foreground"
+                  : ""
+              }`}
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);
@@ -84,7 +91,7 @@ export function Dropdown<T extends string>({
                 <>
                   {option.color && (
                     <span
-                      className="dropdown-color-dot"
+                      className="w-2 h-2 rounded-full shrink-0"
                       style={{ background: option.color }}
                     />
                   )}
@@ -95,110 +102,6 @@ export function Dropdown<T extends string>({
           ))}
         </div>
       )}
-
-      <style>{`
-        .dropdown-container {
-          position: relative;
-          width: 100%;
-        }
-
-        .dropdown-label {
-          display: block;
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: var(--text-muted);
-          margin-bottom: 0.5rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .dropdown-trigger {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 0.5rem;
-          padding: 0.625rem 0.875rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .dropdown-trigger:hover:not(:disabled) {
-          border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .dropdown-trigger:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .dropdown-trigger .placeholder {
-          color: var(--text-muted);
-        }
-
-        .dropdown-menu {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          margin-top: 4px;
-          background: var(--sidebar-bg);
-          border-radius: 8px;
-          padding: 0.375rem;
-          z-index: 100;
-          max-height: 240px;
-          overflow-y: auto;
-          animation: dropdownFadeIn 0.15s ease-out;
-        }
-
-        @keyframes dropdownFadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .dropdown-item {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 0.75rem;
-          background: transparent;
-          border: none;
-          border-radius: 6px;
-          color: var(--text-main);
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: background 0.15s;
-          text-align: left;
-        }
-
-        .dropdown-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .dropdown-item.selected {
-          background: rgba(56, 189, 248, 0.1);
-          color: var(--accent);
-        }
-
-        .dropdown-color-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-      `}</style>
     </div>
   );
 }
