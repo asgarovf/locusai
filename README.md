@@ -112,4 +112,4 @@ bun run lint && bun run typecheck
 
 ## 📄 License
 
-MIT
+[MIT](./LICENSE)
