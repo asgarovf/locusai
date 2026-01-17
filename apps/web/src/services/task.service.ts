@@ -8,6 +8,7 @@ export interface CreateTaskDto {
   priority: TaskPriority;
   labels?: string[];
   assigneeRole?: AssigneeRole;
+  sprintId?: number | null;
 }
 
 export interface UpdateTaskDto {
@@ -18,6 +19,7 @@ export interface UpdateTaskDto {
   labels?: string[];
   assigneeRole?: AssigneeRole;
   acceptanceCriteria?: { id: string; text: string; done: boolean }[];
+  sprintId?: number | null;
 }
 
 export const taskService = {

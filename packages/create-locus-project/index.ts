@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { homedir } from "node:os";
+import { existsSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
@@ -62,6 +63,21 @@ async function run() {
     await generateAppWeb(config);
     await generateAppServer(config);
     await initializeLocus(config);
+
+    // Git initialization
+    if (!existsSync(join(projectPath, ".git"))) {
+      console.log("Initializing git repository...");
+      await Bun.spawn(["git", "init"], { cwd: projectPath, stdout: "ignore" })
+        .exited;
+    }
+
+    // Formatting (sort imports, etc.)
+    console.log("Formatting project...");
+    await Bun.spawn(["bun", "run", "format"], {
+      cwd: projectPath,
+      stdout: "ignore",
+    }).exited;
+
     await logMcpConfig(config);
   } catch (error) {
     console.error("Error creating project:", error);

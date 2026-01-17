@@ -84,9 +84,24 @@ export function initDb(workspaceDir: string) {
       db.run("ALTER TABLE tasks ADD COLUMN lockExpiresAt INTEGER");
       console.log("Migration: Added lockExpiresAt column to tasks table");
     }
+
+    if (!columns.includes("sprintId")) {
+      db.run("ALTER TABLE tasks ADD COLUMN sprintId INTEGER");
+      console.log("Migration: Added sprintId column to tasks table");
+    }
   } catch (err) {
     console.error("Migration error:", err);
   }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sprints (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'PLANNED',
+      startDate INTEGER,
+      endDate INTEGER,
+      createdAt INTEGER NOT NULL
+    );`);
 
   return db;
 }

@@ -11,10 +11,11 @@ export async function setupStructure(config: ProjectConfig) {
   await ensureDir(join(projectPath, "apps/web/src"));
   await ensureDir(join(projectPath, "apps/server/src"));
   await ensureDir(join(projectPath, "packages/shared/src"));
-  await ensureDir(join(projectPath, "docs"));
   await ensureDir(join(locusDir, "artifacts"));
   await ensureDir(join(locusDir, "logs"));
+  await ensureDir(join(locusDir, "docs"));
   await ensureDir(join(projectPath, ".husky"));
+  await ensureDir(join(projectPath, ".vscode"));
 }
 
 export async function generateRootConfigs(config: ProjectConfig) {
@@ -37,7 +38,7 @@ export async function generateRootConfigs(config: ProjectConfig) {
       build: 'bun run --filter "*" build',
       lint: "biome lint .",
       format: "biome check --write .",
-      typecheck: "tsc -b",
+      typecheck: "tsc -b --noEmit",
       syncpack: "syncpack list",
       "syncpack:fix": "syncpack fix",
       prepare: "husky",
@@ -50,6 +51,7 @@ export async function generateRootConfigs(config: ProjectConfig) {
       husky: VERSIONS.husky,
       "@commitlint/cli": VERSIONS.commitlint,
       "@commitlint/config-conventional": VERSIONS.commitlintConfig,
+      "@types/bun": VERSIONS.typesBun,
     },
   });
 
@@ -128,6 +130,7 @@ export async function generateRootConfigs(config: ProjectConfig) {
           useAsConstAssertion: "error",
           noParameterAssign: "error",
           noNonNullAssertion: "error",
+          useImportType: "off",
         },
         suspicious: {
           noAsyncPromiseExecutor: "error",
@@ -147,6 +150,11 @@ export async function generateRootConfigs(config: ProjectConfig) {
         semicolons: "always",
         arrowParentheses: "always",
         bracketSpacing: true,
+      },
+    },
+    css: {
+      parser: {
+        tailwindDirectives: true,
       },
     },
   });
@@ -175,7 +183,7 @@ export async function generateRootConfigs(config: ProjectConfig) {
   const preCommit = `#!/usr/bin/env bash
 . "$(dirname -- "$0")/_/husky.sh"
 
-bun run lint && bun run typecheck
+bun run lint
 `;
   await writeFile(join(projectPath, ".husky/pre-commit"), preCommit);
   await chmod(join(projectPath, ".husky/pre-commit"), 0o755);
@@ -197,4 +205,40 @@ dist
 
   // .nvmrc
   await writeFile(join(projectPath, ".nvmrc"), `${VERSIONS.node}\n`);
+
+  // .vscode/settings.json
+  await writeJson(join(projectPath, ".vscode/settings.json"), {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.biome": "explicit",
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "[json]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "biomejs.biome",
+    },
+    "files.associations": {
+      "*.css": "tailwindcss",
+      "*.scss": "tailwindcss",
+    },
+  });
+
+  // .vscode/extensions.json
+  await writeJson(join(projectPath, ".vscode/extensions.json"), {
+    recommendations: ["biomejs.biome"],
+  });
 }

@@ -6,6 +6,9 @@
   "bin": {
     "create-locus-project": "./index.ts"
   },
+  "scripts": {
+    "start": "bun lint ."
+  },
   "files": [
     "index.ts",
     "src"

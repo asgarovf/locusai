@@ -2,6 +2,7 @@
 
 import {
   type AcceptanceItem,
+  AssigneeRole,
   EventType,
   type Task,
   type Event as TaskEvent,
@@ -9,6 +10,7 @@ import {
   TaskStatus,
 } from "@locus/shared";
 import { format, formatDistanceToNow } from "date-fns";
+import { motion } from "framer-motion";
 import {
   CheckCircle,
   ChevronRight,
@@ -24,13 +26,16 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { PropertyItem } from "@/components/PropertyItem";
-import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Checkbox } from "@/components/ui/Checkbox";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { taskService } from "@/services/task.service";
+import { PropertyItem } from "@/components";
+import {
+  Button,
+  Checkbox,
+  Input,
+  PriorityBadge,
+  StatusBadge,
+  Textarea,
+} from "@/components/ui";
+import { taskService } from "@/services";
 
 interface TaskPanelProps {
   taskId: number;
@@ -52,6 +57,8 @@ export function TaskPanel({
   const [newComment, setNewComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const formatDate = (date: string | number | Date) => {
     return format(new Date(date), "MMM d, yyyy");
@@ -127,7 +134,7 @@ export function TaskPanel({
       done: false,
     };
     handleUpdateTask({
-      acceptanceChecklist: [...task.acceptanceChecklist, newItem] as never,
+      acceptanceChecklist: [...task.acceptanceChecklist, newItem],
     });
     setNewChecklistItem("");
   };
@@ -137,7 +144,7 @@ export function TaskPanel({
     const updated = task.acceptanceChecklist.map((item) =>
       item.id === itemId ? { ...item, done: !item.done } : item
     );
-    handleUpdateTask({ acceptanceChecklist: updated as never });
+    handleUpdateTask({ acceptanceChecklist: updated });
   };
 
   const handleRemoveChecklistItem = (itemId: string) => {
@@ -145,7 +152,7 @@ export function TaskPanel({
     const updated = task.acceptanceChecklist.filter(
       (item) => item.id !== itemId
     );
-    handleUpdateTask({ acceptanceChecklist: updated as never });
+    handleUpdateTask({ acceptanceChecklist: updated });
   };
 
   const handleAddComment = async () => {
@@ -192,9 +199,38 @@ export function TaskPanel({
     }
   };
 
+  const handleReject = async () => {
+    if (!rejectReason.trim()) return;
+    try {
+      // Move back to IN_PROGRESS
+      await taskService.update(taskId, { status: TaskStatus.IN_PROGRESS });
+      // Add rejection comment
+      await taskService.addComment(taskId, {
+        author: "Manager",
+        text: `❌ **Rejected**: ${rejectReason}`,
+      });
+      setShowRejectModal(false);
+      setRejectReason("");
+      fetchTask();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to reject task:", err);
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      await taskService.update(taskId, { status: TaskStatus.DONE });
+      fetchTask();
+      onUpdated();
+    } catch (err) {
+      console.error("Failed to approve task:", err);
+    }
+  };
+
   if (!task) {
     return (
-      <div className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex items-center justify-center">
+      <div className="fixed top-0 right-0 bottom-0 w-[1152px] max-w-[95vw] bg-background border-l border-border z-950 flex items-center justify-center">
         <div className="text-muted-foreground animate-pulse font-medium">
           Loading task specs...
         </div>
@@ -214,11 +250,20 @@ export function TaskPanel({
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940 transition-all duration-300"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940"
         onClick={onClose}
       />
-      <div className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-[-20px_0_80px_rgba(0,0,0,0.6)] animate-in slide-in-from-right duration-400">
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-[-20px_0_80px_rgba(0,0,0,0.6)]"
+      >
         <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">
           <button
             className="p-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground hover:scale-105 transition-all duration-200 border border-transparent hover:border-border"
@@ -233,11 +278,7 @@ export function TaskPanel({
             </span>
             <div className="flex gap-3">
               <StatusBadge status={task.status} />
-              <PriorityBadge
-                priority={
-                  (task.priority as TaskPriority) || TaskPriority.MEDIUM
-                }
-              />
+              <PriorityBadge priority={task.priority || TaskPriority.MEDIUM} />
             </div>
           </div>
 
@@ -273,6 +314,28 @@ export function TaskPanel({
               </Button>
             )}
             <div className="w-px h-6 bg-border mx-1" />
+            {task.status === TaskStatus.VERIFICATION && (
+              <>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setShowRejectModal(true)}
+                  className="h-10 px-4 rounded-xl"
+                >
+                  Reject
+                </Button>
+                <Button
+                  size="sm"
+                  variant="success"
+                  onClick={handleApprove}
+                  className="h-10 px-4 rounded-xl"
+                >
+                  <CheckCircle size={16} className="mr-2" />
+                  Approve
+                </Button>
+                <div className="w-px h-6 bg-border mx-1" />
+              </>
+            )}
             <Button
               size="icon"
               variant="danger"
@@ -285,10 +348,10 @@ export function TaskPanel({
           </div>
         </header>
 
-        <div className="flex-1 grid grid-cols-[1fr_340px] overflow-hidden">
-          <div className="p-12 overflow-y-auto scrollbar-thin">
+        <div className="flex-1 grid grid-cols-[1fr_360px] overflow-hidden min-h-0">
+          <div className="p-6 overflow-y-auto scrollbar-thin">
             {/* Title Section */}
-            <div className="mb-12">
+            <div className="mb-6">
               {isEditingTitle ? (
                 <Input
                   value={editTitle}
@@ -306,7 +369,7 @@ export function TaskPanel({
                 />
               ) : (
                 <h2
-                  className="text-4xl font-black tracking-tight hover:text-primary transition-all cursor-pointer leading-tight group"
+                  className="text-2xl font-bold tracking-tight hover:text-primary transition-all cursor-pointer leading-tight group"
                   onClick={() => setIsEditingTitle(true)}
                 >
                   {task.title}
@@ -319,8 +382,8 @@ export function TaskPanel({
             </div>
 
             {/* Description Section */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                     <FileText size={16} />
@@ -374,8 +437,8 @@ export function TaskPanel({
             </div>
 
             {/* Acceptance Checklist */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-8">
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-500">
                     <CheckCircle size={16} />
@@ -402,9 +465,9 @@ export function TaskPanel({
                 </div>
               </div>
 
-              <div className="grid gap-3 mb-8">
+              <div className="grid gap-2 mb-4">
                 {task.acceptanceChecklist.length === 0 && (
-                  <div className="text-center py-12 border-2 border-dashed border-border/40 rounded-2xl group hover:border-accent/40 transition-colors">
+                  <div className="text-center py-6 border-2 border-dashed border-border/40 rounded-xl group hover:border-accent/40 transition-colors">
                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40 mb-2 italic">
                       Standard quality checks required
                     </p>
@@ -421,12 +484,11 @@ export function TaskPanel({
                 {task.acceptanceChecklist.map((item) => (
                   <div
                     key={item.id}
-                    className="group flex items-center gap-4 p-5 bg-secondary/10 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-secondary/20 transition-all duration-300 shadow-sm"
+                    className="group flex items-center gap-3 p-3 bg-secondary/10 border border-border/40 rounded-xl hover:border-sky-500/50 hover:bg-secondary/20 transition-all duration-300 shadow-sm"
                   >
                     <Checkbox
                       checked={item.done}
                       onChange={() => handleToggleChecklistItem(item.id)}
-                      className="scale-125"
                     />
                     <span
                       className={`flex-1 text-sm font-semibold transition-all duration-300 ${item.done ? "line-through text-muted-foreground/40 scale-[0.98] translate-x-1" : "text-foreground"}`}
@@ -445,21 +507,21 @@ export function TaskPanel({
                 ))}
               </div>
 
-              <div className="flex gap-4 p-2 bg-secondary/5 rounded-2xl border border-border/40">
+              <div className="flex gap-3 p-2 bg-secondary/5 rounded-xl border border-border/40">
                 <Input
                   value={newChecklistItem}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewChecklistItem(e.target.value)
                   }
-                  placeholder="Define quality metrics (e.g. Coverage > 80%, No regressions)..."
-                  className="h-12 bg-transparent border-none focus:ring-0 text-sm font-medium"
+                  placeholder="Add quality criteria..."
+                  className="h-10 bg-transparent border-none focus:ring-0 text-sm font-medium"
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === "Enter") handleAddChecklistItem();
                   }}
                 />
                 <Button
                   onClick={handleAddChecklistItem}
-                  className="px-8 h-12 bg-foreground text-background font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
+                  className="px-5 h-10 bg-foreground text-background font-bold text-xs tracking-wide hover:scale-105 active:scale-95 transition-all rounded-lg"
                 >
                   Append
                 </Button>
@@ -467,10 +529,10 @@ export function TaskPanel({
             </div>
           </div>
 
-          <div className="p-10 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
+          <div className="p-4 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
             {/* Properties Section */}
-            <div className="mb-12">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+            <div className="mb-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
                 Specifications
               </h4>
               <div className="space-y-2">
@@ -481,6 +543,15 @@ export function TaskPanel({
                     handleUpdateTask({ status: newValue as TaskStatus })
                   }
                   options={Object.values(TaskStatus)}
+                  type="dropdown"
+                />
+                <PropertyItem
+                  label="Assignee Group"
+                  value={task.assigneeRole || "Unassigned"}
+                  onEdit={(newValue: string) =>
+                    handleUpdateTask({ assigneeRole: newValue as AssigneeRole })
+                  }
+                  options={Object.values(AssigneeRole)}
                   type="dropdown"
                 />
                 <PropertyItem
@@ -514,11 +585,11 @@ export function TaskPanel({
             </div>
 
             {/* Artifacts Section */}
-            <div className="mb-12">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+            <div className="mb-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
                 Generated Assets
               </h4>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {task.artifacts.length > 0 ? (
                   task.artifacts.map((artifact) => (
                     <a
@@ -526,10 +597,10 @@ export function TaskPanel({
                       href={artifact.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex items-center gap-4 p-4 bg-background/50 border border-border/40 rounded-2xl hover:border-primary/50 hover:bg-background transition-all duration-300 shadow-sm"
+                      className="group flex items-center gap-3 p-3 bg-background/50 border border-border/40 rounded-xl hover:border-primary/50 hover:bg-background transition-all duration-300 shadow-sm"
                     >
-                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-                        <FileText size={18} />
+                      <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
+                        <FileText size={14} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="block text-xs font-black truncate text-foreground/90">
@@ -542,8 +613,8 @@ export function TaskPanel({
                     </a>
                   ))
                 ) : (
-                  <div className="py-10 text-center bg-background/20 rounded-2xl border border-dashed border-border/40">
-                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30 italic">
+                  <div className="py-6 text-center bg-background/20 rounded-xl border border-dashed border-border/40">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 italic">
                       No output generated
                     </p>
                   </div>
@@ -553,11 +624,11 @@ export function TaskPanel({
 
             {/* Activity Feed */}
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-8 pb-3 border-b border-border/40">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
                 Activity Stream
               </h4>
 
-              <div className="flex gap-2 mb-10">
+              <div className="flex gap-2 mb-4">
                 <Input
                   value={newComment}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -572,7 +643,7 @@ export function TaskPanel({
                 <Button
                   onClick={handleAddComment}
                   variant="secondary"
-                  className="h-11 px-5 rounded-xl group"
+                  className="h-9 px-4 rounded-lg group"
                 >
                   <MessageSquare
                     size={14}
@@ -625,7 +696,45 @@ export function TaskPanel({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-960 flex items-center justify-center">
+          <div className="bg-background border border-border rounded-2xl p-6 w-[480px] shadow-2xl">
+            <h3 className="text-lg font-bold mb-4">Reject Task</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              This task will be moved back to IN_PROGRESS. The same agent will
+              receive your feedback and can fix the issues.
+            </p>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Explain what needs to be fixed..."
+              className="min-h-[120px] mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleReject}
+                disabled={!rejectReason.trim()}
+              >
+                Reject Task
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

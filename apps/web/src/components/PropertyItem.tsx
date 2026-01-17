@@ -6,7 +6,7 @@ import { Button } from "./ui/Button";
 import { Dropdown } from "./ui/Dropdown";
 import { Input } from "./ui/Input";
 
-interface PropertyItemProps {
+export interface PropertyItemProps {
   label: string;
   value: string | number;
   onEdit: (newValue: string) => void;

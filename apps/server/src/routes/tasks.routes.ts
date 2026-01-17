@@ -1,4 +1,4 @@
-import type { Database } from "bun:sqlite";
+import type { Database, SQLQueryBindings } from "bun:sqlite";
 import { EventType, type Task, TaskSchema } from "@locus/shared";
 import { Router } from "express";
 import { z } from "zod";
@@ -31,6 +31,7 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
         labels,
         assigneeRole,
         parentId,
+        sprintId,
       } = req.body as z.infer<typeof TaskSchema>;
       const now = Date.now();
       const mandatoryChecklist = [
@@ -40,8 +41,8 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
 
       const result = db
         .prepare(`
-        INSERT INTO tasks (title, description, status, priority, labels, assigneeRole, parentId, acceptanceChecklist, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO tasks (title, description, status, priority, labels, assigneeRole, parentId, sprintId, acceptanceChecklist, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
         .run(
           title,
@@ -51,6 +52,7 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
           JSON.stringify(labels),
           assigneeRole ?? null,
           parentId ?? null,
+          sprintId ?? null,
           JSON.stringify(mandatoryChecklist),
           now,
           now
@@ -158,9 +160,24 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
     if (!oldTask)
       return res.status(404).json({ error: { message: "Task not found" } });
 
+    // Block direct transition to DONE - must go through VERIFICATION first
+    if (updates.status === "DONE" && oldTask.status !== "VERIFICATION") {
+      return res.status(400).json({
+        error: {
+          message:
+            "Cannot move directly to DONE. Tasks must be in VERIFICATION first for human review.",
+        },
+      });
+    }
+
     const fields = [];
     const vals: unknown[] = [];
     for (const [key, val] of Object.entries(updates)) {
+      if (key === "sprintId") {
+        fields.push("sprintId = ?");
+        vals.push(val); // Ensure this is null or number
+        continue;
+      }
       fields.push(`${key} = ?`);
       vals.push(typeof val === "object" ? JSON.stringify(val) : val);
     }
@@ -227,6 +244,86 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
       now
     );
     res.json({ ok: true });
+  });
+
+  // Atomic dispatch for agents
+  router.post("/dispatch", (req, res) => {
+    const { workerId, sprintId } = req.body;
+
+    // Require sprintId - agents must work on active sprint only
+    if (!sprintId) {
+      return res.status(400).json({
+        error: {
+          message:
+            "sprintId is required. Use kanban.next which automatically determines the active sprint.",
+        },
+      });
+    }
+
+    const now = Date.now();
+    const expiresAt = now + 3600 * 1000; // 1 hour lock
+    const agentName = workerId || `agent-${crypto.randomUUID().slice(0, 8)}`;
+
+    try {
+      // Transaction to ensure atomicity
+      const task = db.transaction(() => {
+        const numericSprintId = Number.parseInt(sprintId, 10);
+
+        // Find best candidate - must match sprintId
+        const query = `
+          SELECT * FROM tasks 
+          WHERE status = 'BACKLOG' 
+          AND (lockedBy IS NULL OR lockExpiresAt < ?)
+          AND sprintId = ?
+          ORDER BY 
+            CASE priority 
+              WHEN 'CRITICAL' THEN 1 
+              WHEN 'HIGH' THEN 2 
+              WHEN 'MEDIUM' THEN 3 
+              WHEN 'LOW' THEN 4 
+              ELSE 5 
+            END ASC,
+            createdAt ASC
+          LIMIT 1
+        `;
+        const params: SQLQueryBindings[] = [now, numericSprintId];
+
+        const candidate = db.prepare(query).get(...params) as Task | undefined;
+
+        if (!candidate) return null;
+
+        // Lock it
+        db.prepare(
+          "UPDATE tasks SET lockedBy = ?, lockExpiresAt = ?, updatedAt = ? WHERE id = ?"
+        ).run(agentName, expiresAt, now, candidate.id);
+
+        db.prepare(
+          "INSERT INTO events (taskId, type, payload, createdAt) VALUES (?, ?, ?, ?)"
+        ).run(
+          candidate.id,
+          "LOCKED",
+          JSON.stringify({ agentId: agentName, expiresAt }),
+          now
+        );
+
+        return {
+          ...candidate,
+          labels: JSON.parse((candidate.labels as unknown as string) || "[]"),
+          acceptanceChecklist: JSON.parse(
+            (candidate.acceptanceChecklist as unknown as string) || "[]"
+          ),
+        };
+      })();
+
+      if (!task) {
+        return res.status(404).json({ message: "No tasks available" });
+      }
+
+      res.json(task);
+    } catch (err: unknown) {
+      console.error("Dispatch error:", err);
+      res.status(500).json({ error: { message: "Failed to dispatch task" } });
+    }
   });
 
   router.post("/:id/lock", (req, res) => {

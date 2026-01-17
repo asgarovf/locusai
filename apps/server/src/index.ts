@@ -9,6 +9,7 @@ import { createArtifactsRouter } from "./routes/artifacts.routes.js";
 import { createCiRouter } from "./routes/ci.routes.js";
 import { createDocsRouter } from "./routes/docs.routes.js";
 import { createEventsRouter } from "./routes/events.routes.js";
+import { createSprintsRouter } from "./routes/sprints.routes.js";
 import { createTaskRouter } from "./routes/tasks.routes.js";
 import { TaskProcessor } from "./task-processor.js";
 
@@ -47,6 +48,7 @@ app.use("/api/tasks", createTaskRouter(db, processor));
 app.use("/api/docs", createDocsRouter(config));
 app.use("/api", createArtifactsRouter(db, workspaceDir));
 app.use("/api/events", createEventsRouter(db));
+app.use("/api/sprints", createSprintsRouter(db));
 app.use(
   "/api/ci",
   createCiRouter(db, {

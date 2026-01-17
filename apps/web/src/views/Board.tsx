@@ -1,7 +1,10 @@
 "use client";
 
-import { TaskStatus } from "@locus/shared";
+import { SprintStatus, TaskStatus } from "@locus/shared";
+import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BoardFilter } from "@/components/BoardFilter";
 import { TaskCard } from "@/components/TaskCard";
@@ -10,6 +13,7 @@ import { TaskPanel } from "@/components/TaskPanel";
 import { Button } from "@/components/ui/Button";
 import { useTasks } from "@/hooks/useTasks";
 import { cn } from "@/lib/utils";
+import { sprintService } from "@/services";
 
 const COLUMNS = [
   TaskStatus.BACKLOG,
@@ -57,6 +61,7 @@ const STATUS_CONFIG: Record<
 };
 
 export function Board() {
+  const router = useRouter();
   const {
     searchQuery,
     setSearchQuery,
@@ -71,6 +76,13 @@ export function Board() {
     deleteTask,
     refreshTasks,
   } = useTasks();
+
+  const { data: sprints = [] } = useQuery({
+    queryKey: ["sprints"],
+    queryFn: sprintService.getAll,
+  });
+
+  const activeSprint = sprints.find((s) => s.status === SprintStatus.ACTIVE);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createModalStatus, setCreateModalStatus] = useState<TaskStatus>(
@@ -131,29 +143,71 @@ export function Board() {
     setDragOverColumn(null);
   };
 
+  if (!activeSprint) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <div className="bg-primary/5 p-4 rounded-full">
+          <svg
+            className="w-12 h-12 text-primary/40"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <title>Icon</title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold">No Active Sprint</h2>
+          <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+            You need to start a sprint from the Backlog to see tasks on the
+            board.
+          </p>
+        </div>
+        <Button onClick={() => router.push("/backlog")} variant="secondary">
+          Go to Backlog
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-auto bg-background">
-      <div className="mb-8">
-        <div className="flex justify-between items-center bg-card p-6 rounded-xl border shadow-sm">
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">
-              Development Board
-            </h1>
-            <p className="text-muted-foreground text-sm flex items-center gap-2">
-              Manage tasks and track progress across the engineering pipeline.
-              <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-secondary text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">
-                Press <kbd className="bg-background px-1 rounded border">N</kbd>{" "}
-                for new task
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                {activeSprint.name}
+              </h1>
+              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
+                Active
+              </span>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1 flex items-center gap-3">
+              Track and manage engineering tasks
+              <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/60 text-[10px] font-semibold text-muted-foreground">
+                <kbd className="bg-background/80 px-1.5 py-0.5 rounded text-[9px] font-bold border">
+                  N
+                </kbd>
+                New task
               </span>
             </p>
           </div>
-          <Button onClick={() => handleOpenCreateModal(TaskStatus.BACKLOG)}>
-            <Plus size={18} className="mr-1" />
+          <Button
+            onClick={() => handleOpenCreateModal(TaskStatus.BACKLOG)}
+            className="shadow-lg shadow-primary/20"
+          >
+            <Plus size={16} className="mr-1.5" />
             New Task
           </Button>
         </div>
       </div>
-
       <BoardFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -164,46 +218,48 @@ export function Board() {
         onClearFilters={clearFilters}
         hasActiveFilters={hasActiveFilters}
       />
-
-      <div className="flex gap-6 min-h-[600px]">
+      <div className="flex gap-4 min-h-[600px] pb-4">
         {COLUMNS.map((status) => {
-          const columnTasks = getTasksByStatus(status);
+          // Filter tasks by active sprint ID
+          const columnTasks = getTasksByStatus(status).filter(
+            (t) => t.sprintId === activeSprint.id
+          );
           const isDragOver = dragOverColumn === status;
 
           return (
             <div
               key={status}
               className={cn(
-                "flex flex-col w-[300px] shrink-0 rounded-xl transition-all",
+                "flex flex-col w-[280px] shrink-0 rounded-xl transition-all border",
                 isDragOver
-                  ? "bg-accent/10 ring-2 ring-accent"
-                  : "bg-secondary/20"
+                  ? "bg-primary/5 border-primary/40 ring-1 ring-primary/20"
+                  : "bg-card/50 border-border/50"
               )}
               onDrop={(e) => handleDrop(status, e)}
               onDragOver={(e) => handleDragOver(status, e)}
               onDragLeave={handleDragLeave}
             >
-              <div className="flex items-center justify-between p-3 border-b bg-card rounded-t-xl">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between p-3 border-b border-border/50">
+                <div className="flex items-center gap-2.5">
                   <div
                     className={cn(
-                      "h-2 w-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.2)]",
+                      "h-2.5 w-2.5 rounded-full",
                       STATUS_CONFIG[status].indicator
                     )}
                   />
-                  <span className="text-xs font-bold uppercase tracking-widest text-foreground">
+                  <span className="text-xs font-semibold text-foreground">
                     {STATUS_CONFIG[status].label}
                   </span>
-                  <span className="flex items-center justify-center h-5 px-1.5 bg-secondary text-[10px] font-bold rounded-full text-muted-foreground border">
+                  <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 bg-secondary/80 text-[10px] font-bold rounded-md text-muted-foreground">
                     {columnTasks.length}
                   </span>
                 </div>
-                <button className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors">
+                <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
                   <MoreHorizontal size={14} />
                 </button>
               </div>
 
-              <div className="flex flex-col gap-3 p-3 flex-1 overflow-y-auto">
+              <div className="flex flex-col gap-2.5 p-2.5 flex-1 overflow-y-auto">
                 {columnTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -215,33 +271,36 @@ export function Board() {
 
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 h-9"
+                  className="w-full justify-center text-xs font-medium text-muted-foreground/60 hover:text-foreground hover:bg-secondary/40 h-8 border border-dashed border-border/50 hover:border-border rounded-lg"
                   onClick={() => handleOpenCreateModal(status)}
                 >
-                  <Plus size={14} className="mr-2" />
-                  <span>Add task</span>
+                  <Plus size={14} className="mr-1.5" />
+                  Add
                 </Button>
               </div>
             </div>
           );
         })}
       </div>
-
       <TaskCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreated={refreshTasks}
         initialStatus={createModalStatus}
+        sprintId={activeSprint?.id}
       />
 
-      {selectedTaskId && (
-        <TaskPanel
-          taskId={selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onDeleted={refreshTasks}
-          onUpdated={refreshTasks}
-        />
-      )}
+      <AnimatePresence>
+        {selectedTaskId && (
+          <TaskPanel
+            key="task-panel"
+            taskId={selectedTaskId}
+            onClose={() => setSelectedTaskId(null)}
+            onDeleted={refreshTasks}
+            onUpdated={refreshTasks}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

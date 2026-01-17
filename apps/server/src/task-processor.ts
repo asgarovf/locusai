@@ -25,6 +25,8 @@ export class TaskProcessor {
 
     if (to === "IN_PROGRESS") {
       await this.handleInProgress(taskId);
+    } else if (to === "VERIFICATION") {
+      await this.handleVerification(taskId);
     }
   }
 
@@ -54,6 +56,11 @@ export class TaskProcessor {
       if (presets.quick && labels.includes("auto-ci")) {
         await this.runCi(taskId, "quick");
       }
+
+      // 4. Create git branch
+      const slug = this.slugify(rawTask.title);
+      const branchName = `task/${taskId}-${slug}`;
+      await this.createBranch(branchName);
     } catch (err) {
       console.error(
         "[TaskProcessor] Failed to process In Progress transition:",
@@ -201,5 +208,97 @@ ${description || "No description provided."}
         }),
         now
       );
+  }
+
+  private async handleVerification(taskId: string) {
+    try {
+      const rawTask = this.db
+        .prepare("SELECT * FROM tasks WHERE id = ?")
+        .get(taskId) as RawTask | undefined;
+      if (!rawTask) return;
+
+      const slug = this.slugify(rawTask.title);
+      const branchName = `task/${taskId}-${slug}`;
+
+      // Create PR (Assumes agent has pushed the branch)
+      await this.createPullRequest(
+        branchName,
+        rawTask.title,
+        rawTask.description
+      );
+    } catch (err) {
+      console.error(
+        "[TaskProcessor] Failed to process Verification transition:",
+        err
+      );
+    }
+  }
+
+  private slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  private async createBranch(branchName: string) {
+    console.log(`[TaskProcessor] Creating branch ${branchName}...`);
+    try {
+      const checkProc = Bun.spawn(
+        ["git", "show-ref", "--verify", `refs/heads/${branchName}`],
+        {
+          cwd: this.config.repoPath,
+          stdout: "ignore",
+          stderr: "ignore",
+        }
+      );
+      const exists = (await checkProc.exited) === 0;
+
+      if (!exists) {
+        // Create branch from HEAD but DO NOT checkout
+        // This is safe for parallel agents working in other directories
+        await Bun.spawn(["git", "branch", branchName], {
+          cwd: this.config.repoPath,
+          stdout: "ignore",
+          stderr: "pipe",
+        }).exited;
+      }
+    } catch (error) {
+      console.error(`[TaskProcessor] Git branch operation failed: ${error}`);
+    }
+  }
+
+  private async createPullRequest(
+    branchName: string,
+    title: string,
+    description: string
+  ) {
+    console.log(`[TaskProcessor] Creating PR for ${branchName}...`);
+    try {
+      // Create PR using gh cli (headless)
+      // We assume the branch has been pushed by the agent
+      await Bun.spawn(
+        [
+          "gh",
+          "pr",
+          "create",
+          "--title",
+          `[Task] ${title}`,
+          "--body",
+          description || "Task implementation",
+          "--head",
+          branchName,
+          "--base",
+          "master",
+        ],
+        {
+          cwd: this.config.repoPath,
+          stdout: "ignore",
+          stderr: "pipe",
+        }
+      ).exited;
+    } catch (error) {
+      console.error(`[TaskProcessor] PR creation failed: ${error}`);
+    }
   }
 }

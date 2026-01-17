@@ -11,7 +11,7 @@ export async function initializeLocus(config: ProjectConfig) {
   // workspace.config.json
   const workspaceConfig = {
     repoPath: projectPath,
-    docsPath: join(projectPath, "docs"),
+    docsPath: join(locusDir, "docs"),
     ciPresetsPath: join(locusDir, "ci-presets.json"),
     projectName,
   };
@@ -78,30 +78,6 @@ export async function initializeLocus(config: ProjectConfig) {
       FOREIGN KEY(taskId) REFERENCES tasks(id)
     );`);
 
-  const now = Date.now();
-  db.prepare(`
-    INSERT INTO tasks (title, description, status, priority, labels, acceptanceChecklist, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    "Welcome to Locus!",
-    "Locus helps you manage development tasks, documentation, and CI/CD workflows.",
-    "BACKLOG",
-    "LOW",
-    JSON.stringify(["getting-started"]),
-    JSON.stringify([
-      { text: "bun run lint", completed: false },
-      { text: "bun run typecheck", completed: false },
-      { text: "Explore Locus UI", completed: false },
-    ]),
-    now,
-    now
-  );
-  db.close();
-
-  await writeFile(
-    join(projectPath, "docs/getting-started.md"),
-    `# Getting Started\n\nWelcome to ${projectName}!\n`
-  );
   await writeFile(
     join(projectPath, "README.md"),
     `# ${projectName}\n\nManaged by Locus.\n`

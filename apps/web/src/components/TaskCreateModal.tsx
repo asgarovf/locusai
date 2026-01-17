@@ -11,6 +11,7 @@ interface TaskCreateModalProps {
   onClose: () => void;
   onCreated: () => void;
   initialStatus?: TaskStatus;
+  sprintId?: number | null;
 }
 
 const STATUS_OPTIONS = Object.values(TaskStatus).map((status) => ({
@@ -48,6 +49,7 @@ export function TaskCreateModal({
   onClose,
   onCreated,
   initialStatus = TaskStatus.BACKLOG,
+  sprintId = null,
 }: TaskCreateModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -98,6 +100,7 @@ export function TaskCreateModal({
         priority,
         labels,
         assigneeRole,
+        sprintId,
       });
 
       handleClose();

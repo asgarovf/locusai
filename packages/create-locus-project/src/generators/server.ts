@@ -10,7 +10,6 @@ export async function generateAppServer(config: ProjectConfig) {
   const srcDir = join(appDir, "src");
 
   await ensureDir(srcDir);
-  await ensureDir(join(appDir, "prisma"));
 
   await writeJson(join(appDir, "package.json"), {
     name: `${scopedName}/server`,
@@ -21,14 +20,11 @@ export async function generateAppServer(config: ProjectConfig) {
       dev: "nest start --watch",
       build: "nest build",
       start: "nest start",
-      "prisma:generate": "prisma generate",
-      "prisma:push": "prisma db push",
     },
     dependencies: {
       "@nestjs/common": VERSIONS.nestjs,
       "@nestjs/core": VERSIONS.nestjs,
       "@nestjs/platform-express": VERSIONS.nestjs,
-      "@prisma/client": VERSIONS.prismas,
       "reflect-metadata": "^0.2.0",
       rxjs: "^7.8.0",
       [`${scopedName}/shared`]: "workspace:*",
@@ -37,7 +33,6 @@ export async function generateAppServer(config: ProjectConfig) {
       "@nestjs/cli": VERSIONS.nestjs,
       "@nestjs/schematics": VERSIONS.nestjs,
       "@types/node": VERSIONS.typesNode,
-      prisma: VERSIONS.prismas,
       typescript: VERSIONS.typescript,
     },
   });
@@ -64,35 +59,18 @@ export async function generateAppServer(config: ProjectConfig) {
     include: ["src"],
   });
 
-  await writeFile(
-    join(appDir, ".env.example"),
-    'DATABASE_URL="postgresql://user:password@localhost:5432/dbname?schema=public"\nPORT=8000\n'
-  );
-  await writeFile(
-    join(appDir, ".env"),
-    'DATABASE_URL="postgresql://user:password@localhost:5432/dbname?schema=public"\nPORT=8000\n'
-  );
+  await writeFile(join(appDir, ".env.example"), "PORT=8000\n");
+  await writeFile(join(appDir, ".env"), "PORT=8000\n");
 
-  await writeFile(
-    join(appDir, "prisma/schema.prisma"),
-    `generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model Task {
-  id        Int      @id @default(autoincrement())
-  title     String
-  status    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-`
-  );
+  // nest-cli.json
+  await writeJson(join(appDir, "nest-cli.json"), {
+    $schema: "https://json.schemastore.org/nest-cli",
+    collection: "@nestjs/schematics",
+    sourceRoot: "src",
+    compilerOptions: {
+      deleteOutDir: true,
+    },
+  });
 
   await writeFile(
     join(srcDir, "main.ts"),

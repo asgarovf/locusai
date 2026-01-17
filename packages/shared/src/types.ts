@@ -39,6 +39,21 @@ export interface AcceptanceItem {
   done: boolean;
 }
 
+export enum SprintStatus {
+  PLANNED = "PLANNED",
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+}
+
+export interface Sprint {
+  id: number;
+  name: string;
+  status: SprintStatus;
+  startDate?: number;
+  endDate?: number;
+  createdAt: number;
+}
+
 export interface Task {
   id: number;
   title: string;
@@ -48,6 +63,7 @@ export interface Task {
   labels: string[];
   assigneeRole?: AssigneeRole;
   assignedTo?: string | null;
+  sprintId?: number | null;
   dueDate?: string | null;
   parentId?: number | null;
   lockedBy?: string | null;

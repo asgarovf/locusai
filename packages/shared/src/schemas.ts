@@ -9,6 +9,7 @@ export const TaskSchema = z.object({
   labels: z.array(z.string()).optional().default([]),
   assigneeRole: z.nativeEnum(AssigneeRole).optional(),
   parentId: z.number().optional().nullable(),
+  sprintId: z.number().optional().nullable(),
 });
 
 export const TaskUpdateSchema = z.object({
