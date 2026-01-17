@@ -156,7 +156,7 @@ export function TaskPanel({
         text: newComment,
       });
       setNewComment("");
-      fetchTask();
+      await fetchTask();
     } catch (err) {
       console.error("Failed to add comment:", err);
     }
@@ -571,7 +571,8 @@ export function TaskPanel({
                 />
                 <Button
                   onClick={handleAddComment}
-                  className="h-11 px-5 rounded-xl group bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground"
+                  variant="secondary"
+                  className="h-11 px-5 rounded-xl group"
                 >
                   <MessageSquare
                     size={14}

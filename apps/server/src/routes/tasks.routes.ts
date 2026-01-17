@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import { type Task, TaskSchema } from "@locus/shared";
+import { EventType, type Task, TaskSchema } from "@locus/shared";
 import { Router } from "express";
 import { z } from "zod";
 import type { TaskProcessor } from "../task-processor.js";
@@ -79,10 +79,72 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
     if (!task)
       return res.status(404).json({ error: { message: "Task not found" } });
 
+    // Fetch related data
+    const events = db
+      .prepare("SELECT * FROM events WHERE taskId = ? ORDER BY createdAt DESC")
+      .all(req.params.id) as {
+      id: number;
+      taskId: string;
+      type: string;
+      payload: string;
+      createdAt: number;
+    }[];
+
+    const comments = db
+      .prepare(
+        "SELECT * FROM comments WHERE taskId = ? ORDER BY createdAt DESC"
+      )
+      .all(req.params.id) as {
+      id: number;
+      taskId: string;
+      author: string;
+      text: string;
+      createdAt: number;
+    }[];
+
+    const artifacts = db
+      .prepare(
+        "SELECT * FROM artifacts WHERE taskId = ? ORDER BY createdAt DESC"
+      )
+      .all(req.params.id) as {
+      id: number;
+      taskId: string;
+      type: string;
+      title: string;
+      url: string;
+      size: string;
+      createdBy: string;
+      createdAt: number;
+    }[];
+
     const formattedTask: Task = {
       ...task,
       labels: JSON.parse(task.labels || "[]"),
       acceptanceChecklist: JSON.parse(task.acceptanceChecklist || "[]"),
+      activityLog: events.map((e) => ({
+        id: e.id,
+        taskId: Number(e.taskId),
+        type: e.type as EventType,
+        payload: JSON.parse(e.payload || "{}"),
+        createdAt: e.createdAt,
+      })),
+      comments: comments.map((c) => ({
+        id: c.id,
+        taskId: Number(c.taskId),
+        author: c.author,
+        text: c.text,
+        createdAt: c.createdAt,
+      })),
+      artifacts: artifacts.map((a) => ({
+        id: a.id,
+        taskId: Number(a.taskId),
+        type: a.type,
+        title: a.title,
+        url: a.url,
+        size: a.size,
+        createdBy: a.createdBy || "system",
+        createdAt: a.createdAt,
+      })),
     };
     res.json(formattedTask);
   });
@@ -115,7 +177,10 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
       ).run(
         id as string,
         "STATUS_CHANGED",
-        JSON.stringify({ from: oldTask.status, to: updates.status }),
+        JSON.stringify({
+          oldStatus: oldTask.status,
+          newStatus: updates.status,
+        }),
         Date.now()
       );
 
@@ -155,7 +220,12 @@ export function createTaskRouter(db: Database, processor?: TaskProcessor) {
     ).run(taskId as string, author, text, now);
     db.prepare(
       "INSERT INTO events (taskId, type, payload, createdAt) VALUES (?, ?, ?, ?)"
-    ).run(taskId as string, "COMMENT_ADDED", JSON.stringify({ author }), now);
+    ).run(
+      taskId as string,
+      "COMMENT_ADDED",
+      JSON.stringify({ author, text }),
+      now
+    );
     res.json({ ok: true });
   });
 

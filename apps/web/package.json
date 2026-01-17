@@ -6,10 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "@locus/shared": "workspace:*",
+    "@tanstack/react-query": "^5.90.18",
+    "@tanstack/react-query-devtools": "^5.91.2",
     "@uiw/react-md-editor": "^4.0.4",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",

@@ -1,19 +1,26 @@
 "use client";
 
-import {
-  AssigneeRole,
-  type Task,
-  TaskPriority,
-  TaskStatus,
-} from "@locus/shared";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { AssigneeRole, TaskPriority, TaskStatus } from "@locus/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
 
 import { taskService } from "@/services";
 
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const {
+    data: tasks = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: refreshTasks,
+  } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => taskService.getAll(),
+    refetchInterval: 15000,
+  });
+
+  const error = queryError ? (queryError as Error).message : null;
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,26 +39,20 @@ export function useTasks() {
     [searchQuery, priorityFilter, assigneeFilter]
   );
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await taskService.getAll();
-      setTasks(data);
-      setError(null);
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: number; status: TaskStatus }) =>
+      taskService.update(taskId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
 
-  useEffect(() => {
-    fetchTasks();
-    const interval = setInterval(fetchTasks, 15000); // Polling interval slightly increased
-    return () => clearInterval(interval);
-  }, [fetchTasks]);
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: number) => taskService.delete(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
 
   const clearFilters = useCallback(() => {
     setSearchQuery("");
@@ -86,26 +87,16 @@ export function useTasks() {
 
   const updateTaskStatus = useCallback(
     async (taskId: number, status: TaskStatus) => {
-      try {
-        await taskService.update(taskId, { status });
-        fetchTasks();
-      } catch (err) {
-        console.error("Failed to update task status:", err);
-      }
+      await updateMutation.mutateAsync({ taskId, status });
     },
-    [fetchTasks]
+    [updateMutation]
   );
 
   const deleteTask = useCallback(
     async (taskId: number) => {
-      try {
-        await taskService.delete(taskId);
-        fetchTasks();
-      } catch (err) {
-        console.error("Failed to delete task:", err);
-      }
+      await deleteMutation.mutateAsync(taskId);
     },
-    [fetchTasks]
+    [deleteMutation]
   );
 
   return {
@@ -123,6 +114,6 @@ export function useTasks() {
     getTasksByStatus,
     updateTaskStatus,
     deleteTask,
-    refreshTasks: fetchTasks,
+    refreshTasks,
   };
 }
