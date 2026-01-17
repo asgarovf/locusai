@@ -1,10 +1,10 @@
 {
-  "name": "create-locus-project",
+  "name": "locus",
   "version": "0.1.0",
   "description": "CLI to create new Locus-managed projects",
   "type": "module",
   "bin": {
-    "create-locus-project": "./index.ts"
+    "locus": "./index.ts"
   },
   "scripts": {
     "start": "bun lint ."
