@@ -2,6 +2,9 @@
 
 A **local-first AI development platform** that combines task management, documentation, and CI coordination to help AI agents build your projects.
 
+> [!WARNING]
+> **Active Development**: Locus is currently in an early alpha stage and is under active development. Expect breaking changes, bugs, and evolving APIs. Use with caution in production environments.
+
 > **Locus is the platform** that manages your projects. Your actual product code lives in separate repositories.
 
 ## 🌟 Key Features
@@ -15,25 +18,39 @@ A **local-first AI development platform** that combines task management, documen
 
 ## 🚀 Quick Start
 
-Locus is powered by a unified CLI.
+The fastest way to use Locus is via `npx`. No installation required.
 
-### 1. Install Dependencies
+### 1. Initialize a new project
+Run this command in the directory where you want to create your project:
 ```bash
-bun install
+npx @locusai/cli init --name my-cool-app
 ```
 
-### 2. Initialize a new project
+### 2. Run the Locus Dashboard
+Navigate to your project folder and start the engine:
 ```bash
-bun packages/cli/index.ts init --name my-app
+cd my-cool-app
+npx @locusai/cli dev
 ```
 
-### 3. Run the Locus Dashboard
-Navigate to your project (or provide the path) and run:
+### 3. Open the Dashboard
+Locus will automatically open `http://localhost:3080` in your browser.
+
+---
+
+## 📦 Installation (Optional)
+
+If you prefer to have Locus always available as a global command:
+
 ```bash
-bun packages/cli/index.ts dev --project /path/to/my-app
+npm install -g @locusai/cli
 ```
 
-This starts the Locus engine and the dashboard at `http://localhost:3080`.
+Then you can simply use:
+```bash
+locus init --name my-app
+locus dev
+```
 
 ---
 
@@ -82,19 +99,15 @@ Your AI assistant can use these tools immediately:
 ## 📜 Documentation
 
 - [CI Presets Guide](./docs/ci-presets.md) - How to configure CI workflows.
-- [ROADMAP.md](./ROADMAP.md) - Our vision from MVP to Product.
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - How to develop the Locus platform.
 
 ## 🛠 Development
 
+For detailed instructions on how to set up the development environment, run tests, and contribute code, please see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ```bash
-# Format code
-bun run format
-
-# Type check
-bun run typecheck
-
-# Lint
-bun run lint
+# Quick check
+bun run lint && bun run typecheck
 ```
 
 ## 📄 License
