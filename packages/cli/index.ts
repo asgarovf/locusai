@@ -68,10 +68,17 @@ async function init(args: string[]) {
     }
 
     console.log("Formatting project...");
-    await Bun.spawn(["bun", "run", "format"], {
-      cwd: projectPath,
-      stdout: "ignore",
-    }).exited;
+    // Fallback if biome is not in path
+    try {
+      await Bun.spawn(["bun", "run", "format"], {
+        cwd: projectPath,
+        stdout: "ignore",
+      }).exited;
+    } catch {
+      console.log(
+        "Note: Formatting skipped (biome not found). Run 'bun install' first."
+      );
+    }
 
     await logMcpConfig(config);
   } catch (error) {
@@ -100,42 +107,75 @@ async function dev(args: string[]) {
     process.exit(1);
   }
 
-  // Find the Locus source root to run the server and web app
-  // In development, it's relative to this file
   const cliDir = import.meta.dir;
-  const locusRoot = resolve(cliDir, "../../");
+  const isBundled = cliDir.endsWith("/bin") || cliDir.endsWith("\\bin");
+  const locusRoot = isBundled ? resolve(cliDir, "../") : resolve(cliDir, "../../");
+
+  // Detection for bundled vs source mode
+  const serverSourcePath = join(locusRoot, "apps/server/src/index.ts");
+  const serverBundledPath = isBundled 
+    ? join(cliDir, "server.js") 
+    : join(locusRoot, "packages/cli/bin/server.js");
+
+  const serverExecPath = existsSync(serverSourcePath)
+    ? serverSourcePath
+    : serverBundledPath;
+
+  if (!existsSync(serverExecPath)) {
+    console.error("Error: Locus engine not found. Please reinstall the CLI.");
+    process.exit(1);
+  }
 
   console.log("🚀 Starting Locus for project:", projectPath);
 
   const serverProcess = Bun.spawn(
-    [
-      "bun",
-      "run",
-      join(locusRoot, "apps/server/src/index.ts"),
-      "--project",
-      locusDir,
-    ],
+    ["bun", "run", serverExecPath, "--project", locusDir],
     {
       stdout: "inherit",
       stderr: "inherit",
     }
   );
 
-  const webProcess = Bun.spawn(["bun", "run", "dev"], {
-    cwd: join(locusRoot, "apps/web"),
-    stdout: "inherit",
-    stderr: "inherit",
-  });
+  // Handle Dashboard
+  let webProcess: ReturnType<typeof Bun.spawn> | undefined;
+  const webSourceDir = join(locusRoot, "apps/web");
+
+  if (existsSync(webSourceDir)) {
+    // In dev mode, run Next.js dev server
+    webProcess = Bun.spawn(["bun", "run", "dev"], {
+      cwd: webSourceDir,
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+  } else {
+    // In production, the dashboard is served BY the server (coming soon)
+    // or we tell the user to open the URL
+    console.log("Dashboard UI: http://localhost:3081");
+  }
+
+  // Auto-open browser (macOS only for now)
+  setTimeout(() => {
+    try {
+      if (process.platform === "darwin") {
+        Bun.spawn(["open", "http://localhost:3080"], { stdout: "ignore" });
+      }
+    } catch {
+      // Ignore open errors
+    }
+  }, 2000);
 
   // Handle shutdown
   process.on("SIGINT", () => {
     console.log("\n🛑 Shutting down Locus...");
     serverProcess.kill();
-    webProcess.kill();
+    if (webProcess) webProcess.kill();
     process.exit();
   });
 
-  await Promise.all([serverProcess.exited, webProcess.exited]);
+  await Promise.all([
+    serverProcess.exited,
+    webProcess ? webProcess.exited : Promise.resolve(),
+  ]);
 }
 
 async function main() {

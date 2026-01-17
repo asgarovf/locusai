@@ -10,6 +10,7 @@
     { "path": "./apps/web" },
     { "path": "./apps/server" },
     { "path": "./apps/mcp" },
-    { "path": "./packages/create-locus-project" }
-  ]
+    { "path": "./packages/cli" }
+  ],
+  "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }

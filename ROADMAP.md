@@ -4,7 +4,7 @@ This document outlines the steps to take Locus from an MVP to a polished, profes
 
 ## Phase 1: DX & CLI Refinement (Current)
 - [x] Unified CLI: `locus init` and `locus dev`.
-- [ ] Global CLI installation: Allow users to run `npm install -g @locus/cli`.
+- [ ] Global CLI installation: Allow users to run `npm install -g @locusai/cli`.
 - [ ] Port Conflict Management: Gracefully handle if 3080/3081 are taken.
 - [ ] Auto-opening Browser: Automatically open the dashboard on `locus dev`.
 
@@ -19,7 +19,7 @@ This document outlines the steps to take Locus from an MVP to a polished, profes
 - [ ] **Premium Agent Hosting**: Higher compute for long-running engineering tasks.
 
 ## Phase 4: Distribution
-- [ ] **NPM Launch**: Publish `@locus/cli`, `@locus/server`, `@locus/web`.
+- [x] **NPM Launch Prep**: Scoped package `@locusai/cli` ready for publication.
 - [ ] **VSCode Extension**: A thin wrapper that runs `locus dev` in the background and provides a sidebar.
 
 ---

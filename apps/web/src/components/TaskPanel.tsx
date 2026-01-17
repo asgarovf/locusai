@@ -8,7 +8,7 @@ import {
   type Event as TaskEvent,
   TaskPriority,
   TaskStatus,
-} from "@locus/shared";
+} from "@locusai/shared";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import {

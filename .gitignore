@@ -19,6 +19,7 @@ playwright-report/
 
 # next.js
 .next/
+_next/
 out/
 build
 dist
@@ -75,3 +76,8 @@ pids
 *.seed
 *.pid.lock
 
+# Locus Build Artifacts
+packages/cli/bin/
+packages/cli/public/
+db.sqlite
+.locus/

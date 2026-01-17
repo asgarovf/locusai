@@ -1,6 +1,6 @@
 "use client";
 
-import { type Task, TaskPriority } from "@locus/shared";
+import { type Task, TaskPriority } from "@locusai/shared";
 import { Calendar, Lock, MoreHorizontal, Tag, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";

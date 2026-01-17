@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { TaskStatus } from "@locus/shared";
+import { TaskStatus } from "@locusai/shared";
 
 const { values } = parseArgs({
   args: Bun.argv,

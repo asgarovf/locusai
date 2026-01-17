@@ -1,17 +1,19 @@
 {
-  "name": "locus",
+  "name": "@locusai/cli",
   "version": "0.1.0",
-  "description": "CLI to create new Locus-managed projects",
+  "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {
-    "locus": "./index.ts"
+    "locus": "./bin/locus.js"
   },
   "scripts": {
     "start": "bun lint ."
   },
   "files": [
     "index.ts",
-    "src"
+    "src",
+    "bin",
+    "public"
   ],
   "keywords": [
     "locus",

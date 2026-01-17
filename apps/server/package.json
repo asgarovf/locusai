@@ -1,5 +1,5 @@
 {
-  "name": "@locus/server",
+  "name": "@locusai/server",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
@@ -11,7 +11,7 @@
     "express": "^4.19.2",
     "better-sqlite3": "^11.5.0",
     "zod": "^3.23.8",
-    "@locus/shared": "workspace:*",
+    "@locusai/shared": "workspace:*",
     "cors": "^2.8.5",
     "dockerode": "^4.0.2"
   },

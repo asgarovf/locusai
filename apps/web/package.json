@@ -1,5 +1,5 @@
 {
-  "name": "@locus/web",
+  "name": "@locusai/web",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@locus/shared": "workspace:*",
+    "@locusai/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.18",
     "@tanstack/react-query-devtools": "^5.91.2",
     "@uiw/react-md-editor": "^4.0.4",

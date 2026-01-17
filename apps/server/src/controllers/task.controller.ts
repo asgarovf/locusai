@@ -1,4 +1,4 @@
-import { TaskSchema } from "@locus/shared";
+import { TaskSchema } from "@locusai/shared";
 import type { NextFunction, Request, Response } from "express";
 import type { TaskService } from "../services/task.service.js";
 

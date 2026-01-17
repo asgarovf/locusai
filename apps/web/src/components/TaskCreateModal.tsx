@@ -1,6 +1,6 @@
 "use client";
 
-import { AssigneeRole, TaskPriority, TaskStatus } from "@locus/shared";
+import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";

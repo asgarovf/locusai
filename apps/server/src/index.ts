@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { parseArgs } from "node:util";
 import cors from "cors";
@@ -110,6 +110,24 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 const PORT = 3080;
+
+// Serve Dashboard UI if it exists
+const dashboardPaths = [
+  join(import.meta.dir, "../public/dashboard"), // Production (bundled)
+  join(process.cwd(), "packages/cli/public/dashboard"), // Dev (root)
+];
+
+const dashboardPath = dashboardPaths.find((p) => existsSync(p));
+
+if (dashboardPath) {
+  console.log(`Serving dashboard from ${dashboardPath}`);
+  app.use(express.static(dashboardPath));
+  // Client-side routing fallback
+  app.get("/[^api]*", (_req, res) => {
+    res.sendFile(join(dashboardPath, "index.html"));
+  });
+}
+
 app.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)
 );

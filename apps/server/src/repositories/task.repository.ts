@@ -1,5 +1,5 @@
 import type { SQLQueryBindings } from "bun:sqlite";
-import type { Task } from "@locus/shared";
+import type { Task } from "@locusai/shared";
 import { CreateTaskData } from "../services/task.service.js";
 import { BaseRepository } from "./base.repository.js";
 

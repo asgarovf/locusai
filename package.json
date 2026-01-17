@@ -15,7 +15,11 @@
     "mcp": "bun run --cwd apps/mcp src/index.ts",
     "lint": "biome lint .",
     "format": "biome check --write --formatter-enabled=true --assist-enabled=true ",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "build:server": "bun build apps/server/src/index.ts --target bun --outfile packages/cli/bin/server.js",
+    "build:mcp": "bun build apps/mcp/src/index.ts --target bun --outfile packages/cli/bin/mcp.js",
+    "build:web": "cd apps/web && bun run build && mkdir -p ../../packages/cli/public/dashboard && cp -r out/* ../../packages/cli/public/dashboard/",
+    "build:cli": "bun run build:web && bun run build:server && bun run build:mcp && bun build packages/cli/index.ts --target bun --outfile packages/cli/bin/locus.js"
   },
   "type": "module",
   "workspaces": [

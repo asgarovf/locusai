@@ -1,4 +1,4 @@
-import { AssigneeRole, Task, TaskPriority, TaskStatus } from "@locus/shared";
+import { AssigneeRole, Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import apiClient from "@/lib/api-client";
 
 export interface CreateTaskDto {

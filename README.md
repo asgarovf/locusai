@@ -33,7 +33,7 @@ Navigate to your project (or provide the path) and run:
 bun packages/cli/index.ts dev --project /path/to/my-app
 ```
 
-This starts the Locus engine and the dashboard at `http://localhost:3081`.
+This starts the Locus engine and the dashboard at `http://localhost:3080`.
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { type Sprint, SprintStatus, type Task } from "@locus/shared";
+import { type Sprint, SprintStatus, type Task } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";

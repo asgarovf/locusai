@@ -10,19 +10,19 @@
       },
     },
     "apps/mcp": {
-      "name": "@locus/mcp",
+      "name": "@locusai/mcp",
       "version": "0.1.0",
       "dependencies": {
-        "@locus/shared": "workspace:*",
+        "@locusai/shared": "workspace:*",
         "@modelcontextprotocol/sdk": "1.25.2",
         "zod": "^3.23.8",
       },
     },
     "apps/server": {
-      "name": "@locus/server",
+      "name": "@locusai/server",
       "version": "0.1.0",
       "dependencies": {
-        "@locus/shared": "workspace:*",
+        "@locusai/shared": "workspace:*",
         "better-sqlite3": "^11.5.0",
         "cors": "^2.8.5",
         "dockerode": "^4.0.2",
@@ -37,10 +37,10 @@
       },
     },
     "apps/web": {
-      "name": "@locus/web",
+      "name": "@locusai/web",
       "version": "0.1.0",
       "dependencies": {
-        "@locus/shared": "workspace:*",
+        "@locusai/shared": "workspace:*",
         "@tanstack/react-query": "^5.90.18",
         "@tanstack/react-query-devtools": "^5.91.2",
         "@uiw/react-md-editor": "^4.0.4",
@@ -65,15 +65,15 @@
         "typescript": "5.8.3",
       },
     },
-    "packages/create-locus-project": {
-      "name": "create-locus-project",
+    "packages/cli": {
+      "name": "@locusai/cli",
       "version": "0.1.0",
       "bin": {
-        "create-locus-project": "./index.ts",
+        "locus": "./bin/locus.js",
       },
     },
     "packages/shared": {
-      "name": "@locus/shared",
+      "name": "@locusai/shared",
       "version": "0.1.0",
       "dependencies": {
         "zod": "^3.23.8",
@@ -163,13 +163,15 @@
 
     "@js-sdsl/ordered-map": ["@js-sdsl/ordered-map@4.4.2", "", {}, "sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw=="],
 
-    "@locus/mcp": ["@locus/mcp@workspace:apps/mcp"],
+    "@locusai/cli": ["@locusai/cli@workspace:packages/cli"],
 
-    "@locus/server": ["@locus/server@workspace:apps/server"],
+    "@locusai/mcp": ["@locusai/mcp@workspace:apps/mcp"],
 
-    "@locus/shared": ["@locus/shared@workspace:packages/shared"],
+    "@locusai/server": ["@locusai/server@workspace:apps/server"],
 
-    "@locus/web": ["@locus/web@workspace:apps/web"],
+    "@locusai/shared": ["@locusai/shared@workspace:packages/shared"],
+
+    "@locusai/web": ["@locusai/web@workspace:apps/web"],
 
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.25.2", "", { "dependencies": { "@hono/node-server": "^1.19.7", "ajv": "^8.17.1", "ajv-formats": "^3.0.1", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "eventsource-parser": "^3.0.0", "express": "^5.0.1", "express-rate-limit": "^7.5.0", "jose": "^6.1.1", "json-schema-typed": "^8.0.2", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.25 || ^4.0", "zod-to-json-schema": "^3.25.0" }, "peerDependencies": { "@cfworker/json-schema": "^4.1.1" }, "optionalPeers": ["@cfworker/json-schema"] }, "sha512-LZFeo4F9M5qOhC/Uc1aQSrBHxMrvxett+9KLHt7OhcExtoiRN9DKgbZffMP/nxjutWDQpfMDfP3nkHI4X9ijww=="],
 
@@ -408,8 +410,6 @@
     "cors": ["cors@2.8.5", "", { "dependencies": { "object-assign": "^4", "vary": "^1" } }, "sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g=="],
 
     "cpu-features": ["cpu-features@0.0.10", "", { "dependencies": { "buildcheck": "~0.0.6", "nan": "^2.19.0" } }, "sha512-9IkYqtX3YHPCzoVg1Py+o9057a3i0fp7S530UWokCSaFVTc7CwXPRiOjRjBQQ18ZCNafx78YfnG+HALxtVmOGA=="],
-
-    "create-locus-project": ["create-locus-project@workspace:packages/create-locus-project"],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 

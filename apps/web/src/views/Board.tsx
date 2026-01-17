@@ -1,6 +1,6 @@
 "use client";
 
-import { SprintStatus, TaskStatus } from "@locus/shared";
+import { SprintStatus, TaskStatus } from "@locusai/shared";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal, Plus } from "lucide-react";

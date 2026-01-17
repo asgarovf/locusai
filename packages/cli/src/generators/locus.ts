@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { ProjectConfig } from "../types.js";
@@ -87,20 +88,21 @@ export async function initializeLocus(config: ProjectConfig) {
 export async function logMcpConfig(config: ProjectConfig) {
   const { projectPath, projectName } = config;
   const scriptDir = import.meta.dir;
-  // This might need adjustment since we moved files
-  const locusDevRoot = resolve(scriptDir, "../../../../");
+  
+  const isBundled = scriptDir.endsWith("/bin") || scriptDir.endsWith("\\bin");
+  const locusRoot = isBundled ? resolve(scriptDir, "../") : resolve(scriptDir, "../../../../");
+  
+  // Detection for bundled vs source mode
+  const mcpSourcePath = join(locusRoot, "apps/mcp/src/index.ts");
+  const mcpBundledPath = isBundled ? join(scriptDir, "mcp.js") : join(locusRoot, "packages/cli/bin/mcp.js");
+  
+  const mcpExecPath = existsSync(mcpSourcePath) ? mcpSourcePath : mcpBundledPath;
+
   const mcpConfig = {
     mcpServers: {
       [projectName]: {
         command: "bun",
-        args: [
-          "run",
-          "--cwd",
-          join(locusDevRoot, "apps/mcp"),
-          "src/index.ts",
-          "--project",
-          join(projectPath, ".locus"),
-        ],
+        args: ["run", mcpExecPath, "--project", join(projectPath, ".locus")],
         env: {},
       },
     },

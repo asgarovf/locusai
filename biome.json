@@ -11,6 +11,9 @@
       "!**/.next",
       "!**/dist",
       "!**/build",
+      "!**/out",
+      "!**/packages/cli/bin",
+      "!**/packages/cli/public",
       "!**/coverage",
       "!**/*.min.js",
       "!**/*.min.css"

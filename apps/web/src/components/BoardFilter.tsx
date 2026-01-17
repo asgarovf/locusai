@@ -1,6 +1,6 @@
 "use client";
 
-import { AssigneeRole, TaskPriority } from "@locus/shared";
+import { AssigneeRole, TaskPriority } from "@locusai/shared";
 import { Search, X } from "lucide-react";
 import { Button, Dropdown, Input } from "@/components/ui";
 

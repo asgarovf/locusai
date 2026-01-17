@@ -1,4 +1,4 @@
-import { type Sprint } from "@locus/shared";
+import { type Sprint } from "@locusai/shared";
 import axios from "axios";
 
 const API_URL = "http://localhost:3080/api/sprints";

@@ -1,6 +1,6 @@
 "use client";
 
-import { AssigneeRole, TaskPriority, TaskStatus } from "@locus/shared";
+import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 

@@ -5,7 +5,7 @@ import type {
   Task,
   TaskPriority,
   TaskStatus,
-} from "@locus/shared";
+} from "@locusai/shared";
 import type { ArtifactRepository } from "../repositories/artifact.repository.js";
 import type { CommentRepository } from "../repositories/comment.repository.js";
 import type { EventRepository } from "../repositories/event.repository.js";
