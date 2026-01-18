@@ -85,7 +85,29 @@ export class TaskService {
   }
 
   createTask(data: CreateTaskData): number {
-    const id = this.taskRepo.create(data);
+    const defaultItems = [
+      { id: `default-lint-${Date.now()}`, text: "bun run lint", done: false },
+      {
+        id: `default-typecheck-${Date.now()}`,
+        text: "bun run typecheck",
+        done: false,
+      },
+    ];
+
+    const currentChecklist = data.acceptanceChecklist || [];
+    const hasLint = currentChecklist.some((item) => item.text.includes("lint"));
+    const hasTypecheck = currentChecklist.some((item) =>
+      item.text.includes("typecheck")
+    );
+
+    const mergedChecklist = [...currentChecklist];
+    if (!hasLint) mergedChecklist.push(defaultItems[0]);
+    if (!hasTypecheck) mergedChecklist.push(defaultItems[1]);
+
+    const id = this.taskRepo.create({
+      ...data,
+      acceptanceChecklist: mergedChecklist,
+    });
     this.eventRepo.create(id, "TASK_CREATED", { title: data.title });
     return id;
   }

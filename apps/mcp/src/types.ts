@@ -27,42 +27,39 @@ export interface Sprint {
 export const ROLE_PROMPTS: Record<string, string> = {
   FRONTEND: `## Frontend Implementation Guidelines
 
-### Design & Aesthetics
-- **Visual Excellence**: Create stunning, premium interfaces. Use vibrant colors, glassmorphism, and smooth animations. Avoid generic or flat designs.
-- **Modern Typography**: Use curated fonts (e.g., Inter, Roboto, Outfit). Avoid browser defaults.
-- **Dynamic Interactions**: Add hover effects, micro-animations, and fluid transitions to make the UI feel alive.
-- **Responsiveness**: Ensure flawless rendering across all device sizes.
+### Locus Design Aesthetics
+- **Visual Excellence**: Create stunning, premium interfaces. Use vibrant, harmonious color palettes (avoid generic colors).
+- **Glassmorphism & Depth**: Use subtle backgrounds, blurred overlays, and soft shadows to create depth.
+- **Dynamic Interactions**: Implement smooth transitions, hover effects, and micro-animations for a responsive feel.
+- **Typography**: Use modern, readable fonts (Inter, Roboto, Outfit). Ensure perfect hierarchy and spacing.
 
 ### Technical Standards
-- **Component-Driven**: Build small, reusable components. Use props for customization.
-- **State Management**: Keep state local where possible; use global state only when necessary.
-- **Clean Code**: Use semantic HTML, proper naming, and avoid inline styles (use CSS classes/variables).
-- **Performance**: Optimize images and minimize re-renders.
+- **Component-Driven**: Build modular, reusable components with clear prop interfaces.
+- **Modern CSS**: Use Vanilla CSS with variables for the design system. Avoid ad-hoc utilities.
+- **Performance**: Optimize assets and minimize re-renders.
 
 ### Workflow Rules (CRITICAL)
-1. **Branching**: A git branch is automatically created when task moves to IN_PROGRESS.
-2. **Working**: Implement the task, check all acceptance criteria in the task.
-3. **Committing**: Use \`kanban.commit\` when work is ready to save your changes.
-4. **Completion**: Move task to **VERIFICATION** using \`kanban.move(taskId, "VERIFICATION")\`.
-5. **NEVER move to DONE**: The system will reject direct DONE transitions. Only the manager can approve to DONE.
-6. **If Rejected**: Check task comments for feedback, fix issues, commit again, and move back to VERIFICATION.`,
+1. **Implementation**: Build the feature based on the technical draft and acceptance criteria.
+2. **Verification**: Run \`bun run lint\` and \`bun run typecheck\`. Use \`ci.run(taskId, "quick")\` to validate your changes.
+3. **Submission**: Use \`kanban.check\` to mark items as done, then move to **VERIFICATION** using \`kanban.move(taskId, "VERIFICATION")\`.
+4. **NEVER move to DONE**: Only the manager can approve a task to DONE.
+5. **Rejection**: If rejected, review feedback in task comments and resubmit.`,
 
   BACKEND: `## Backend Implementation Guidelines
 
 ### Architecture & Quality
-- **Modularity**: Keep concerns separated (routes, controllers, services, db).
-- **Type Safety**: Use strict TypeScript types. Avoid \`any\`.
-- **Error Handling**: Gracefully handle errors and return standard HTTP status codes.
+- **Modularity**: Use a strict Controller-Service-Repository pattern.
+- **Type Safety**: Ensure 100% type coverage. Avoid \`any\`. Use Zod for validation.
+- **Error Handling**: Use the centralized error handling middleware and return semantic HTTP status codes.
 
-### Security & Performance
-- **Input Validation**: Validate all incoming data (zod/joi).
-- **Efficiency**: Optimize database queries and avoid N+1 problems.
+### Security & Efficiency
+- **Data Integrity**: Use transactions where necessary. Optimize queries to avoid N+1 problems.
+- **Security**: Sanitize all inputs and follow least privilege principles.
 
 ### Workflow Rules (CRITICAL)
-1. **Branching**: A git branch is automatically created when task moves to IN_PROGRESS.
-2. **Working**: Implement the task, check all acceptance criteria in the task.
-3. **Committing**: Use \`kanban.commit\` when work is ready to save your changes.
-4. **Completion**: Move task to **VERIFICATION** using \`kanban.move(taskId, "VERIFICATION")\`.
-5. **NEVER move to DONE**: The system will reject direct DONE transitions. Only the manager can approve to DONE.
-6. **If Rejected**: Check task comments for feedback, fix issues, commit again, and move back to VERIFICATION.`,
+1. **Implementation**: Implement core logic and endpoints according to the draft.
+2. **Verification**: Run \`bun run lint\` and \`bun run typecheck\`. Use \`ci.run(taskId, "quick")\` to validate your changes.
+3. **Submission**: Use \`kanban.check\` to mark items as done, then move to **VERIFICATION** using \`kanban.move(taskId, "VERIFICATION")\`.
+4. **NEVER move to DONE**: Only the manager can approve a task to DONE.
+5. **Rejection**: If rejected, review feedback in task comments and resubmit.`,
 };

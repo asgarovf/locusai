@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { apiGet, apiPatch, apiPost, error, success } from "../api.js";
-import { projectDir } from "../config.js";
 import { ROLE_PROMPTS, type Sprint, type Task } from "../types.js";
 
 export function registerKanbanTools(server: McpServer): void {
@@ -172,69 +171,6 @@ export function registerKanbanTools(server: McpServer): void {
       try {
         const data = await apiPatch(`/tasks/${taskId}`, { status });
         return success(data);
-      } catch (e) {
-        return error(String(e));
-      }
-    }
-  );
-
-  // Commit changes
-  server.registerTool(
-    "kanban.commit",
-    {
-      title: "Commit Task Changes",
-      description:
-        "Create a git commit with the task ID in the message. Call this BEFORE moving to VERIFICATION to save your work.",
-      inputSchema: {
-        taskId: z.number(),
-        additionalMessage: z.string().optional(),
-      },
-    },
-    async ({ taskId, additionalMessage }) => {
-      try {
-        const task = await apiGet<Task>(`/tasks/${taskId}`);
-
-        if (!task.title) {
-          return error("Task not found");
-        }
-
-        // Build commit message
-        let commitMessage = `Task #${taskId}: ${task.title}`;
-        if (additionalMessage) {
-          commitMessage += `\n\n${additionalMessage}`;
-        }
-
-        // Execute git commands
-        const addProc = Bun.spawn(["git", "add", "-A"], {
-          cwd: projectDir,
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        await addProc.exited;
-
-        const commitProc = Bun.spawn(["git", "commit", "-m", commitMessage], {
-          cwd: projectDir,
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        const exitCode = await commitProc.exited;
-        const stdout = await new Response(commitProc.stdout).text();
-        const stderr = await new Response(commitProc.stderr).text();
-
-        if (exitCode !== 0) {
-          return success({
-            success: false,
-            error: stderr || "Git commit failed",
-            hint: "Make sure there are staged changes to commit",
-          });
-        }
-
-        return success({
-          success: true,
-          message: `Committed changes for Task #${taskId}`,
-          commitMessage,
-          output: stdout,
-        });
       } catch (e) {
         return error(String(e));
       }

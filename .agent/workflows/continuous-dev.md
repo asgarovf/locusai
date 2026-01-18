@@ -4,68 +4,54 @@ description: Continuously pick up and complete tasks from the active sprint
 
 # Continuous Development Mode
 
-Autonomous workflow for picking up and completing tasks in a loop.
+Autonomous workflow for picking up and completing tasks in a loop from the active sprint.
 
 ## Flow
 
-### 0. Check Sprint Status
+### 1. Check Sprint Status
 ```
 Use kanban.sprint to verify there is an active sprint
 ```
-If no active sprint exists, stop and notify the user.
+If no active sprint exists, notify the user and wait for a sprint to be started.
 
-### 1. Get Next Task
+### 2. Get Next Task
 ```
-Use kanban.next to claim the next available task from the active sprint
+Use kanban.next to claim the next available task
 ```
+This tool automatically assigns the highest priority task from the active sprint to you. It will return:
+- New tasks from BACKLOG
+- Rejected tasks moved back to IN_PROGRESS (need rework)
 
-This returns:
-- New tasks from BACKLOG (by priority)
-- Rejected tasks in IN_PROGRESS (need to be reworked)
-
-### 2. Implement Changes
-- Read the task description and acceptance checklist
-- Check for rejection feedback in comments (if task was previously rejected)
+### 3. Implement & Verify
+- Read the task `description` and `acceptanceChecklist`
+- If the task was previously rejected, check comments for feedback using `kanban.get` (if not already in `kanban.next` output)
 - Make the required code changes
-- Run `bun run lint` and `bun run typecheck` to validate
+- **Verify Success Criteria**:
+    - Run `bun run lint` to ensure code quality
+    - Run `bun run typecheck` to ensure type safety
+    - Execute any relevant tests or manual verification steps
 
-### 3. Update Progress
+### 4. Update Progress & Submit
+- Mark completed criteria:
 ```
-Use kanban.check to mark completed acceptance criteria
-Use kanban.comment to document progress
+Use kanban.check with all items marked as 'done: true'
 ```
-
-### 4. Save and Submit
-First, commit your changes:
+- (Optional) Document your work:
 ```
-Use kanban.commit with taskId and a summary of your work
+Use kanban.comment to add notes about implementation or verification results
 ```
-
-Then, move the task to verification:
+- Move to verification:
 ```
-Use kanban.move with status VERIFICATION
+Use kanban.move with status 'VERIFICATION'
 ```
 
 > [!IMPORTANT]
-> Never move a task to **DONE** directly. All tasks must pass through **VERIFICATION** for human review.
+> Never move a task to **DONE** directly. All tasks must pass through **VERIFICATION** for final approval.
 
 ### 5. Repeat
-```
-Use kanban.next to get the next task
-```
-
-Continue until no tasks remain or a blocker is encountered.
-
+Continue to the next task using `kanban.next` until no tasks remain.
 
 ## Stopping Conditions
-
 - `kanban.next` returns no available tasks
-- Task requires human input (mark as BLOCKED)
-- Unrecoverable error occurs
-
-## Error Handling
-
-If implementation fails:
-1. Add comment explaining the issue
-2. Move task to BLOCKED
-3. Continue to next task
+- Encountered a blocker that requires human intervention (move task to `BLOCKED`)
+- Unrecoverable error in implementation environment

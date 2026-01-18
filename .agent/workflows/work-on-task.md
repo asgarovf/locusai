@@ -4,67 +4,51 @@ description: Pick up the next available task from the active sprint and work on 
 
 # Work on Task
 
-Workflow for claiming and completing a single task.
+Workflow for claiming and completing a single task from the active sprint.
 
 ## Steps
 
-### 0. Check Sprint Status
+### 1. Check Sprint Status
 ```
 Use kanban.sprint to verify there is an active sprint
 ```
-If no active sprint exists, stop and notify the user.
+If no active sprint exists, notify the user.
 
-### 1. Get Task
+### 2. Get Task Details
 ```
-Use kanban.next to claim the next available task from the active sprint
+Use kanban.next to claim the next available task
 ```
-
-This returns tasks from:
-- BACKLOG (new work)
-- IN_PROGRESS (rejected tasks needing rework)
-
-### 2. Review Details
-Read the returned task:
+This tool returns the task details including:
 - `description` - What needs to be done
-- `acceptanceChecklist` - Success criteria
-- `systemInstructions` - Role-specific guidance (if any)
+- `acceptanceChecklist` - Success criteria (includes default quality checks)
+- `systemInstructions` - Role-specific guidance
 
-**For rejected tasks**: Check the task comments for rejection feedback explaining what needs to be fixed.
+**For rejected tasks**: Check the task comments using `kanban.get` or the returned task object for rejection feedback.
 
-If an implementation draft artifact exists:
-```
-Use artifacts.get to read it
-```
-
-### 3. Implement
-- Make code changes based on the task
+### 3. Implement & Test
+- Make code changes based on the task requirements
 - Address any rejection feedback if applicable
-- Run `bun run lint` to check for issues
-- Run `bun run typecheck` if available
-- Test the changes
+- **Verify Quality**:
+    - Run `bun run lint` to check for issues
+    - Run `bun run typecheck` to validate types
+    - Perform functional testing of your changes
 
-### 4. Update Checklist
+### 4. Check Success Criteria
+Once implementation is complete and verified:
 ```
-Use kanban.check to mark acceptance items as done
-```
-
-### 5. Save and Submit
-First, commit your changes:
-```
-Use kanban.commit with taskId and a summary of your work
+Use kanban.check to mark all acceptance items as done
 ```
 
-Then, move the task to verification:
+### 5. Submit for Verification
+Add a summary of your work and move the task to verification:
 ```
-Use kanban.move with status VERIFICATION
+Use kanban.comment to document what was done
+Use kanban.move with status 'VERIFICATION'
 ```
 
 > [!IMPORTANT]
-> Never move a task to **DONE** directly. All tasks must pass through **VERIFICATION** for human review.
-
+> Never move a task to **DONE** directly. All tasks must pass through **VERIFICATION** for human review and final approval.
 
 ## Error Handling
-
-- Add comment explaining any issues
-- Move to BLOCKED if work cannot continue
-- Never move to DONE directly (requires human approval)
+- If you encounter a blocker, move the task to `BLOCKED` and add a comment explaining why.
+- If implementation fails due to environmental issues, notify the user.
