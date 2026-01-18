@@ -1,6 +1,6 @@
 {
   "name": "@locusai/cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {

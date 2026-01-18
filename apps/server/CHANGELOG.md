@@ -1,5 +1,13 @@
 # @locusai/server
 
+## 0.1.3
+
+### Patch Changes
+
+- - Fixed the cli throwing error after init
+- Updated dependencies
+  - @locusai/shared@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
