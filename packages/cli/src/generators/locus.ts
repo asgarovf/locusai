@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { ProjectConfig } from "../types.js";
 import { ensureDir, writeJson } from "../utils.js";
 
@@ -92,11 +92,31 @@ export async function initializeLocus(config: ProjectConfig) {
 export async function logMcpConfig(config: ProjectConfig) {
   const { projectPath, projectName } = config;
 
+  // Detect for bundled vs source mode
+  const scriptDir = import.meta.dir;
+  const isBundled = scriptDir.endsWith("/bin") || scriptDir.endsWith("\\bin");
+
+  // In source mode, scriptDir is packages/cli/src/generators
+  // In bundled mode, scriptDir is packages/cli/bin
+  const locusRoot = isBundled
+    ? resolve(scriptDir, "../")
+    : resolve(scriptDir, "../../../../");
+
+  const mcpSourcePath = join(locusRoot, "apps/mcp/src/index.ts");
+  const mcpBundledPath = isBundled
+    ? join(scriptDir, "mcp.js")
+    : join(locusRoot, "packages/cli/bin/mcp.js");
+
+  const mcpExecPath = existsSync(mcpSourcePath)
+    ? mcpSourcePath
+    : mcpBundledPath;
+
   const mcpConfig = {
     mcpServers: {
-      locus: {
-        command: "npx",
-        args: ["@locusai/cli", "mcp", "--project", projectPath],
+      [projectName]: {
+        command: "bun",
+        args: ["run", mcpExecPath, "--project", join(projectPath, ".locus")],
+        env: {},
       },
     },
   };
@@ -105,7 +125,7 @@ export async function logMcpConfig(config: ProjectConfig) {
   console.log("\nNext steps:");
   console.log(`  cd ${projectName}`);
   console.log("  bun install");
-  console.log("  npx @locusai/cli dev");
+  console.log("  bun run dev");
   console.log(
     "\nMCP Configuration (add to your IDE or Claude Desktop config):"
   );

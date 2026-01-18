@@ -16,12 +16,15 @@ To connect Locus to Cursor, add the following to your `.cursor/mcp.json` file in
 {
   "mcpServers": {
     "locus": {
-      "command": "npx",
-      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
+      "command": "bun",
+      "args": ["run", "/path/to/locus/bin/mcp.js", "--project", "/path/to/your/project/.locus"]
     }
   }
 }
 ```
+
+> [!TIP]
+> You can find the exact configuration for your project by running `npx @locusai/cli init` or `npx @locusai/cli dev`.
 
 After adding this configuration, restart Cursor. The Locus tools will be available to the AI assistant.
 
@@ -33,8 +36,8 @@ Antigravity automatically detects Locus if you have a `.locus` directory in your
 {
   "mcpServers": {
     "locus": {
-      "command": "npx",
-      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
+      "command": "bun",
+      "args": ["run", "/path/to/locus/bin/mcp.js", "--project", "/path/to/your/project/.locus"]
     }
   }
 }
@@ -48,8 +51,8 @@ For Claude Desktop, add the following to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "locus": {
-      "command": "npx",
-      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
+      "command": "bun",
+      "args": ["run", "/path/to/locus/bin/mcp.js", "--project", "/path/to/your/project/.locus"]
     }
   }
 }
@@ -58,6 +61,7 @@ For Claude Desktop, add the following to your `claude_desktop_config.json`:
 The config file is typically located at:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
 
 ## Verifying the Connection
 

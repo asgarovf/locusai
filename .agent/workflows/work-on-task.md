@@ -8,9 +8,15 @@ Workflow for claiming and completing a single task.
 
 ## Steps
 
+### 0. Check Sprint Status
+```
+Use kanban.sprint to verify there is an active sprint
+```
+If no active sprint exists, stop and notify the user.
+
 ### 1. Get Task
 ```
-Use kanban.next to claim the next available task
+Use kanban.next to claim the next available task from the active sprint
 ```
 
 This returns tasks from:
@@ -42,10 +48,20 @@ Use artifacts.get to read it
 Use kanban.check to mark acceptance items as done
 ```
 
-### 5. Complete
+### 5. Save and Submit
+First, commit your changes:
+```
+Use kanban.commit with taskId and a summary of your work
+```
+
+Then, move the task to verification:
 ```
 Use kanban.move with status VERIFICATION
 ```
+
+> [!IMPORTANT]
+> Never move a task to **DONE** directly. All tasks must pass through **VERIFICATION** for human review.
+
 
 ## Error Handling
 
