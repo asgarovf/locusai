@@ -13,7 +13,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write  # Required for npm Trusted Publishing (OIDC)
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -42,5 +41,5 @@ jobs:
           version: bun run version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
