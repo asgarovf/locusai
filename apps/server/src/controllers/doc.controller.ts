@@ -1,11 +1,12 @@
 import {
   existsSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { NextFunction, Request, Response } from "express";
 
 export interface DocNode {
@@ -77,6 +78,8 @@ export class DocController {
         return res.status(403).json({ error: { message: "Invalid path" } });
       }
 
+      // Ensure parent directory exists
+      mkdirSync(dirname(fullPath), { recursive: true });
       writeFileSync(fullPath, content, "utf-8");
       res.json({ ok: true });
     } catch (err) {
