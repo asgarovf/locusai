@@ -3,11 +3,13 @@ import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { ProjectConfig } from "../types.js";
-import { writeJson } from "../utils.js";
+import { ensureDir, writeJson } from "../utils.js";
 
 export async function initializeLocus(config: ProjectConfig) {
   console.log("Initializing Locus workspace...");
   const { projectPath, locusDir, projectName } = config;
+
+  await ensureDir(locusDir);
 
   // workspace.config.json
   const workspaceConfig = {
@@ -79,24 +81,32 @@ export async function initializeLocus(config: ProjectConfig) {
       FOREIGN KEY(taskId) REFERENCES tasks(id)
     );`);
 
-  await writeFile(
-    join(projectPath, "README.md"),
-    `# ${projectName}\n\nManaged by Locus.\n`
-  );
+  if (!existsSync(join(projectPath, "README.md"))) {
+    await writeFile(
+      join(projectPath, "README.md"),
+      `# ${projectName}\n\nManaged by Locus.\n`
+    );
+  }
 }
 
 export async function logMcpConfig(config: ProjectConfig) {
   const { projectPath, projectName } = config;
   const scriptDir = import.meta.dir;
-  
+
   const isBundled = scriptDir.endsWith("/bin") || scriptDir.endsWith("\\bin");
-  const locusRoot = isBundled ? resolve(scriptDir, "../") : resolve(scriptDir, "../../../../");
-  
+  const locusRoot = isBundled
+    ? resolve(scriptDir, "../")
+    : resolve(scriptDir, "../../../../");
+
   // Detection for bundled vs source mode
   const mcpSourcePath = join(locusRoot, "apps/mcp/src/index.ts");
-  const mcpBundledPath = isBundled ? join(scriptDir, "mcp.js") : join(locusRoot, "packages/cli/bin/mcp.js");
-  
-  const mcpExecPath = existsSync(mcpSourcePath) ? mcpSourcePath : mcpBundledPath;
+  const mcpBundledPath = isBundled
+    ? join(scriptDir, "mcp.js")
+    : join(locusRoot, "packages/cli/bin/mcp.js");
+
+  const mcpExecPath = existsSync(mcpSourcePath)
+    ? mcpSourcePath
+    : mcpBundledPath;
 
   const mcpConfig = {
     mcpServers: {

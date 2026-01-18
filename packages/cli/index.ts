@@ -22,28 +22,32 @@ async function init(args: string[]) {
     allowPositionals: true,
   });
 
-  if (!values.name) {
-    console.error(
-      "Usage: locus init --name <project-name> [--path <directory>]"
-    );
-    process.exit(1);
+  const projectNameInput = values.name;
+  let projectPath: string;
+  let projectName: string;
+  const isNewProject = !!projectNameInput;
+
+  if (isNewProject) {
+    projectName = projectNameInput as string;
+    const userPathInput = values.path || positionals[0];
+    let basePath = process.cwd();
+
+    if (userPathInput) {
+      const userPath = userPathInput.startsWith("~")
+        ? join(homedir(), userPathInput.slice(1))
+        : userPathInput;
+      basePath = isAbsolute(userPath)
+        ? userPath
+        : resolve(process.cwd(), userPath);
+    }
+    projectPath = join(basePath, projectName);
+  } else {
+    projectPath = process.cwd();
+    projectName = projectPath.split("/").pop() || "locus-project";
+    console.log(`Initializing Locus in current directory: ${projectName}`);
   }
 
-  const projectName = values.name;
   const scopedName = `@${projectName}`;
-  const userPathInput = values.path || positionals[0];
-  let basePath = process.cwd();
-
-  if (userPathInput) {
-    const userPath = userPathInput.startsWith("~")
-      ? join(homedir(), userPathInput.slice(1))
-      : userPathInput;
-    basePath = isAbsolute(userPath)
-      ? userPath
-      : resolve(process.cwd(), userPath);
-  }
-
-  const projectPath = join(basePath, projectName);
   const locusDir = join(projectPath, ".locus");
 
   const config: ProjectConfig = {
@@ -54,30 +58,35 @@ async function init(args: string[]) {
   };
 
   try {
-    await setupStructure(config);
-    await generateRootConfigs(config);
-    await generatePackageShared(config);
-    await generateAppWeb(config);
-    await generateAppServer(config);
-    await initializeLocus(config);
-
-    if (!existsSync(join(projectPath, ".git"))) {
-      console.log("Initializing git repository...");
-      await Bun.spawn(["git", "init"], { cwd: projectPath, stdout: "ignore" })
-        .exited;
+    if (isNewProject) {
+      await setupStructure(config);
+      await generateRootConfigs(config);
+      await generatePackageShared(config);
+      await generateAppWeb(config);
+      await generateAppServer(config);
     }
 
-    console.log("Formatting project...");
-    // Fallback if biome is not in path
-    try {
-      await Bun.spawn(["bun", "run", "format"], {
-        cwd: projectPath,
-        stdout: "ignore",
-      }).exited;
-    } catch {
-      console.log(
-        "Note: Formatting skipped (biome not found). Run 'bun install' first."
-      );
+    await initializeLocus(config);
+
+    if (isNewProject) {
+      if (!existsSync(join(projectPath, ".git"))) {
+        console.log("Initializing git repository...");
+        await Bun.spawn(["git", "init"], { cwd: projectPath, stdout: "ignore" })
+          .exited;
+      }
+
+      console.log("Formatting project...");
+      // Fallback if biome is not in path
+      try {
+        await Bun.spawn(["bun", "run", "format"], {
+          cwd: projectPath,
+          stdout: "ignore",
+        }).exited;
+      } catch {
+        console.log(
+          "Note: Formatting skipped (biome not found). Run 'bun install' first."
+        );
+      }
     }
 
     await logMcpConfig(config);
@@ -109,12 +118,14 @@ async function dev(args: string[]) {
 
   const cliDir = import.meta.dir;
   const isBundled = cliDir.endsWith("/bin") || cliDir.endsWith("\\bin");
-  const locusRoot = isBundled ? resolve(cliDir, "../") : resolve(cliDir, "../../");
+  const locusRoot = isBundled
+    ? resolve(cliDir, "../")
+    : resolve(cliDir, "../../");
 
   // Detection for bundled vs source mode
   const serverSourcePath = join(locusRoot, "apps/server/src/index.ts");
-  const serverBundledPath = isBundled 
-    ? join(cliDir, "server.js") 
+  const serverBundledPath = isBundled
+    ? join(cliDir, "server.js")
     : join(locusRoot, "packages/cli/bin/server.js");
 
   const serverExecPath = existsSync(serverSourcePath)
@@ -195,7 +206,7 @@ async function main() {
 Locus CLI - Agentic Engineering Workspace
 
 Usage:
-  locus init --name <name>    Create a new Locus project
+  locus init [--name <name>]  Create a new project or initialize in current dir
   locus dev                 Start Locus for the current project
   locus help                Show this help
       `);
