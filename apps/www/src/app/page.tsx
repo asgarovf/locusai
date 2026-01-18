@@ -1,3 +1,4 @@
+import { DemoVideo } from "@/components/landing/DemoVideo";
 import { FeatureGrid } from "@/components/landing/FeatureGrid";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/layout/Footer";
@@ -25,6 +26,7 @@ export default async function Home() {
       <Navbar />
       <main className="flex-1 bg-background">
         <Hero version={version} />
+        <DemoVideo />
         <FeatureGrid />
       </main>
       <Footer />
