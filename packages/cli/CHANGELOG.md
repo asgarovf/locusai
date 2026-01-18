@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.1.5
+
+### Patch Changes
+
+- - Fix workflow and mcp connection issues
+
 ## 0.1.4
 
 ### Patch Changes
