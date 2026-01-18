@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import { CodeBlock } from "@/components/docs/CodeBlock";
 import { getAllDocs, getDocBySlug } from "@/lib/docs";
 
 export async function generateStaticParams() {
@@ -20,7 +21,13 @@ export default async function DocPage({
     return (
       <article className="prose prose-zinc dark:prose-invert max-w-none pb-12">
         <h1 className="mb-8 font-bold text-4xl">{doc.title}</h1>
-        <ReactMarkdown>{doc.content}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            code: CodeBlock,
+          }}
+        >
+          {doc.content}
+        </ReactMarkdown>
       </article>
     );
   } catch {

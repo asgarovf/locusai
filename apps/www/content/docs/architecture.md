@@ -2,8 +2,6 @@
 title: Understanding Locus Architecture
 ---
 
-# Architecture
-
 Locus is built as a modular monorepo. It consists of three main applications and a shared package ecosystem.
 
 ## Core Components

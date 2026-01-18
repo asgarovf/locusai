@@ -47,3 +47,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Override prose code styling */
+.prose code::before,
+.prose code::after {
+  content: none !important;
+}
+
+.prose code {
+  background: transparent !important;
+  padding: 0 !important;
+  font-weight: inherit !important;
+}
+
+.prose pre {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}

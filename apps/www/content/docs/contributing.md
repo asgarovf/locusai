@@ -2,8 +2,6 @@
 title: Contributing to Locus
 ---
 
-# Contributing
-
 We welcome contributions to Locus! As a local-first platform, we value transparency, simplicity, and robustness.
 
 ## Getting Started
