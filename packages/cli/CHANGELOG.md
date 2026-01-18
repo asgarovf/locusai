@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.1.7
+
+### Patch Changes
+
+- - Workflow improvements
+
 ## 0.1.6
 
 ### Patch Changes
