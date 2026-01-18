@@ -76,11 +76,38 @@ export function Search() {
               <Command.Item
                 className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
                 onSelect={() =>
+                  runCommand(() => router.push("/docs/initialization"))
+                }
+              >
+                <Settings className="mr-3 h-4 w-4 text-cyan-400" />
+                <span>Initialization</span>
+              </Command.Item>
+              <Command.Item
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
+                onSelect={() =>
                   runCommand(() => router.push("/docs/architecture"))
                 }
               >
                 <Settings className="mr-3 h-4 w-4 text-purple-400" />
                 <span>Architecture</span>
+              </Command.Item>
+              <Command.Item
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
+                onSelect={() =>
+                  runCommand(() => router.push("/docs/mcp-configuration"))
+                }
+              >
+                <Code className="mr-3 h-4 w-4 text-yellow-400" />
+                <span>MCP Configuration</span>
+              </Command.Item>
+              <Command.Item
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
+                onSelect={() =>
+                  runCommand(() => router.push("/docs/mcp-tools"))
+                }
+              >
+                <Code className="mr-3 h-4 w-4 text-pink-400" />
+                <span>MCP Tools Reference</span>
               </Command.Item>
               <Command.Item
                 className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"

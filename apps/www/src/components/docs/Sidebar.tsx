@@ -14,8 +14,25 @@ const groups = [
         href: "/docs/getting-started",
       },
       {
+        title: "Initialization",
+        href: "/docs/initialization",
+      },
+      {
         title: "Architecture",
         href: "/docs/architecture",
+      },
+    ],
+  },
+  {
+    title: "MCP Integration",
+    items: [
+      {
+        title: "Configuration",
+        href: "/docs/mcp-configuration",
+      },
+      {
+        title: "Tools Reference",
+        href: "/docs/mcp-tools",
       },
     ],
   },

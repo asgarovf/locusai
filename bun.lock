@@ -86,6 +86,7 @@
         "react-markdown": "^10.1.0",
         "react-syntax-highlighter": "^16.1.0",
         "rehype-pretty-code": "^0.14.1",
+        "remark-gfm": "^4.0.1",
         "shiki": "^3.21.0",
         "tailwind-merge": "^2.5.2",
         "transformers": "^3.1.0",
