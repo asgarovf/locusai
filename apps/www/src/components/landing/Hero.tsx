@@ -20,7 +20,7 @@ export function Hero() {
           className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-muted-foreground mb-6 backdrop-blur-sm"
         >
           <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
-          v0.1.0 Alpha Release
+          v{process.env.NEXT_PUBLIC_APP_VERSION} Alpha Release
         </motion.div>
 
         <motion.h1
