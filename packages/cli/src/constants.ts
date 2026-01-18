@@ -5,7 +5,7 @@ export const VERSIONS = {
   typescript: "5.8.3",
   react: "^19.0.0",
   reactDom: "^19.0.0",
-  next: "15.4.7",
+  next: "15.4.10",
   nestjs: "^11.0.0",
   zod: "^3.23.8",
   lucide: "^0.453.0",
