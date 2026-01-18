@@ -15,8 +15,54 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Locus | Local-first Agentic Workspace",
-  description: "The operating system for agent-driven engineering.",
+  title: {
+    default: "Locus | Mission Control for Agentic Engineering",
+    template: "%s | Locus",
+  },
+  description:
+    "A local-first AI development platform that combines task management, documentation, and CI coordination to help AI agents build your projects.",
+  keywords: [
+    "AI agents",
+    "agentic engineering",
+    "local-first",
+    "MCP",
+    "task management",
+    "AI development",
+    "developer tools",
+    "CI/CD",
+    "documentation",
+  ],
+  authors: [{ name: "Locus Team" }],
+  creator: "Locus",
+  metadataBase: new URL("https://locusai.dev"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://locusai.dev",
+    siteName: "Locus",
+    title: "Locus | Mission Control for Agentic Engineering",
+    description:
+      "A local-first AI development platform that combines task management, documentation, and CI coordination to help AI agents build your projects.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Locus - Mission Control for Agentic Engineering",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Locus | Mission Control for Agentic Engineering",
+    description:
+      "A local-first AI development platform for AI agents to build your projects.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
