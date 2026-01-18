@@ -1,5 +1,13 @@
 # @locusai/server
 
+## 0.1.6
+
+### Patch Changes
+
+- - Fix mcp paths and workflows
+- Updated dependencies
+  - @locusai/shared@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes
