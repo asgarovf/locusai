@@ -67,28 +67,6 @@ async function init(args: string[]) {
     }
 
     await initializeLocus(config);
-
-    if (isNewProject) {
-      if (!existsSync(join(projectPath, ".git"))) {
-        console.log("Initializing git repository...");
-        await Bun.spawn(["git", "init"], { cwd: projectPath, stdout: "ignore" })
-          .exited;
-      }
-
-      console.log("Formatting project...");
-      // Fallback if biome is not in path
-      try {
-        await Bun.spawn(["bun", "run", "format"], {
-          cwd: projectPath,
-          stdout: "ignore",
-        }).exited;
-      } catch {
-        console.log(
-          "Note: Formatting skipped (biome not found). Run 'bun install' first."
-        );
-      }
-    }
-
     await logMcpConfig(config);
   } catch (error) {
     console.error("Error creating project:", error);

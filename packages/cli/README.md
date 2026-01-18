@@ -1,45 +1,53 @@
-# create-locus-project
+<p align="center">
+  <img src="https://raw.githubusercontent.com/asgarovf/locusai/refs/heads/master/assets/logo.png" alt="Locus" width="150" />
+</p>
 
-CLI tool to scaffold new Locus-managed projects.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@locusai/cli"><img src="https://img.shields.io/npm/v/@locusai/cli?color=blue" alt="npm version" /></a>
+  <a href="https://github.com/asgarovf/locusai/blob/master/LICENSE"><img src="https://img.shields.io/github/license/asgarovf/locusai?color=blue" alt="License" /></a>
+  <a href="https://github.com/asgarovf/locusai"><img src="https://img.shields.io/github/stars/asgarovf/locusai?style=flat&color=blue" alt="GitHub Stars" /></a>
+</p>
 
-## Usage
+# @locusai/cli
+
+The unified CLI for **Locus** — a local-first AI development platform that combines task management, documentation, and CI coordination to help AI agents build your projects.
+
+## Quick Start
 
 ```bash
-# Using bun create
-bun create locus-project --name my-app
+# Create a new Locus-managed project
+npx @locusai/cli init --name my-app
 
-# Or with npx (when published)
-npx create-locus-project --name my-app
+# Or initialize in an existing repo
+npx @locusai/cli init
+
+# Start the development server
+npx @locusai/cli dev
 ```
 
-## What it creates
+## Commands
 
-- **Monorepo structure**: `apps/`, `packages/`, `docs/`
+| Command | Description |
+|---------|-------------|
+| `init --name <name>` | Create a new Locus-managed monorepo project |
+| `init` | Initialize Locus in an existing repository |
+| `dev` | Start the Locus dashboard and MCP server |
+
+## What It Creates
+
+When creating a new project (`init --name`):
+- **Monorepo structure**: `apps/`, `packages/`
 - **Locus workspace**: `.locus/` directory with database and config
 - **Starter configuration**: TypeScript, Biome, Git
 - **Example task**: Getting started task in the backlog
-- **Documentation**: Basic getting started guide
 
-## Options
+When initializing existing repo (`init`):
+- **Locus workspace**: `.locus/` directory with database and config
 
-- `--name <project-name>` (required) - Name of your project
-- `--path <directory>` (optional) - Parent directory (defaults to current directory)
+## Documentation
 
-## After creation
+Visit [locusai.dev/docs](https://locusai.dev/docs) for full documentation.
 
-```bash
-cd my-app
-bun install
-bun run dev
-```
+## License
 
-## Managing with Locus
-
-Point Locus to your project:
-
-```bash
-# Update your MCP config or start Locus with:
-locus start --project /path/to/my-app/.locus
-```
-
-Then use the Locus UI, MCP server, or CLI to manage tasks, docs, and CI.
+[MIT](https://github.com/asgarovf/locusai/blob/master/LICENSE)

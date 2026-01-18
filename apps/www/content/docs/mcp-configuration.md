@@ -17,8 +17,7 @@ To connect Locus to Cursor, add the following to your `.cursor/mcp.json` file in
   "mcpServers": {
     "locus": {
       "command": "npx",
-      "args": ["@locusai/cli", "mcp"],
-      "env": {}
+      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
     }
   }
 }
@@ -35,8 +34,7 @@ Antigravity automatically detects Locus if you have a `.locus` directory in your
   "mcpServers": {
     "locus": {
       "command": "npx",
-      "args": ["@locusai/cli", "mcp"],
-      "env": {}
+      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
     }
   }
 }
@@ -51,7 +49,7 @@ For Claude Desktop, add the following to your `claude_desktop_config.json`:
   "mcpServers": {
     "locus": {
       "command": "npx",
-      "args": ["@locusai/cli", "mcp"]
+      "args": ["@locusai/cli", "mcp", "--project", "/path/to/your/project"]
     }
   }
 }
