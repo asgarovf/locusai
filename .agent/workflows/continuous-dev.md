@@ -1,102 +1,55 @@
 ---
-description: Continuously pick up and complete tasks from the backlog
+description: Continuously pick up and complete tasks from the active sprint
 ---
 
 # Continuous Development Mode
 
-This workflow enables autonomous continuous development where the agent picks up tasks, implements them, and moves to the next one.
+Autonomous workflow for picking up and completing tasks in a loop.
 
-## Quick Start
-// turbo-all
+## Flow
 
-### 1. Get Next Task from Priority Queue
+### 1. Get Next Task
 ```
-Use kanban.next to get the highest priority available task
+Use kanban.next to claim the next available task
 ```
 
 This returns:
-- The next task to work on (sorted by priority, then age)
-- How many tasks remain in the queue
+- New tasks from BACKLOG (by priority)
+- Rejected tasks in IN_PROGRESS (need to be reworked)
 
-### 2. If Task Available, Start Working
+### 2. Implement Changes
+- Read the task description and acceptance checklist
+- Check for rejection feedback in comments (if task was previously rejected)
+- Make the required code changes
+- Run `bun run lint` and `bun run typecheck` to validate
+
+### 3. Update Progress
 ```
-Use kanban.move with taskId and status="IN_PROGRESS"
-Use kanban.comment with taskId, author="Agent", text="🚀 Starting work on this task"
-```
-
-### 3. Get Full Task Details
-```
-Use kanban.get with taskId
-```
-
-Review:
-- `description` - What to implement
-- `acceptanceChecklist` - Definition of done
-- `artifacts` - Any implementation drafts
-
-### 4. Implement Changes
-Make the code changes as specified in the task.
-
-### 5. Validate Work
-Run these commands to verify:
-```bash
-bun run lint
-bun run typecheck  # if available
+Use kanban.check to mark completed acceptance criteria
+Use kanban.comment to document progress
 ```
 
-### 6. Update Acceptance Checklist
+### 4. Complete Task
 ```
-Use kanban.check with taskId and updated acceptanceChecklist
-```
-
-### 7. Commit & Complete
-```
-Use kanban.commit with taskId to auto-commit with task reference
-Use kanban.move with taskId and status="REVIEW"
-Use kanban.comment with taskId, author="Agent", text="✅ Implementation complete, ready for review"
+Use kanban.move to set status to VERIFICATION
 ```
 
-### 8. Get Next Task
+### 5. Repeat
 ```
 Use kanban.next to get the next task
 ```
 
-Repeat from step 2.
+Continue until no tasks remain or a blocker is encountered.
 
-## Example Session
+## Stopping Conditions
 
-```
-Agent: kanban.next
-→ { task: { id: 5, title: "Add user auth", priority: "HIGH" }, remaining: 3 }
+- `kanban.next` returns no available tasks
+- Task requires human input (mark as BLOCKED)
+- Unrecoverable error occurs
 
-Agent: kanban.move(5, "IN_PROGRESS")
-Agent: kanban.comment(5, "Agent", "Starting implementation...")
-Agent: kanban.get(5)
-→ { description: "...", acceptanceChecklist: [...] }
-
-[Agent implements changes]
-
-Agent: kanban.check(5, updatedChecklist)
-Agent: kanban.commit(5, "Added JWT auth with refresh tokens")
-Agent: kanban.move(5, "REVIEW")
-Agent: kanban.comment(5, "Agent", "✅ Complete - added auth system")
-
-Agent: kanban.next
-→ { task: { id: 8, title: "Fix login bug", priority: "CRITICAL" }, remaining: 2 }
-
-[Continue...]
-```
-
-## When to Stop
-
-Stop the loop when:
-1. `kanban.next` returns "No tasks available in BACKLOG"
-2. A task is BLOCKED and needs human input
-3. An error occurs that requires human intervention
-
-## Error Recovery
+## Error Handling
 
 If implementation fails:
-1. `kanban.comment(taskId, "Agent", "❌ Error: <description>")`
-2. `kanban.move(taskId, "BLOCKED")`
-3. Continue to next task with `kanban.next`
+1. Add comment explaining the issue
+2. Move task to BLOCKED
+3. Continue to next task

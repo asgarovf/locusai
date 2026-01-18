@@ -2,12 +2,12 @@
 
 import {
   ChevronRight,
-  Command,
   FileText,
   LayoutDashboard,
   List,
   Settings,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -40,17 +40,13 @@ export function Sidebar() {
     <aside className="w-[260px] flex flex-col border-r border-border/50 bg-card/50 backdrop-blur-sm h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 p-5 border-b border-border/50">
-        <div className="bg-linear-to-br from-primary to-primary/70 text-primary-foreground p-2 rounded-xl shadow-lg shadow-primary/20">
-          <Command size={20} />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-foreground">
-            Locus
-          </h2>
-          <p className="text-[10px] text-muted-foreground font-medium">
-            Engineering Workspace
-          </p>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Locus"
+          width={97.81}
+          height={32}
+          className="rounded-xl shadow-lg"
+        />
       </div>
 
       {/* Navigation */}

@@ -167,6 +167,64 @@ async function dev(args: string[]) {
   ]);
 }
 
+async function mcp(args: string[]) {
+  const { values } = parseArgs({
+    args,
+    options: {
+      project: { type: "string" },
+    },
+    strict: false,
+  });
+
+  const projectPath = (values.project as string) || process.cwd();
+  const locusDir = isAbsolute(projectPath)
+    ? projectPath.endsWith(".locus")
+      ? projectPath
+      : join(projectPath, ".locus")
+    : resolve(process.cwd(), projectPath, ".locus");
+
+  if (!existsSync(locusDir)) {
+    console.error(`Error: .locus directory not found at ${locusDir}`);
+    process.exit(1);
+  }
+
+  // Set environment variable for the MCP server to use
+  process.env.LOCUS_PROJECT_PATH = locusDir;
+
+  const cliDir = import.meta.dir;
+  const isBundled = cliDir.endsWith("/bin") || cliDir.endsWith("\\bin");
+  const locusRoot = isBundled
+    ? resolve(cliDir, "../")
+    : resolve(cliDir, "../../");
+
+  // Detection for bundled vs source mode
+  const mcpSourcePath = join(locusRoot, "apps/mcp/src/index.ts");
+  const mcpBundledPath = isBundled
+    ? join(cliDir, "mcp.js")
+    : join(locusRoot, "packages/cli/bin/mcp.js");
+
+  const mcpExecPath = existsSync(mcpSourcePath)
+    ? mcpSourcePath
+    : mcpBundledPath;
+
+  if (!existsSync(mcpExecPath)) {
+    console.error(
+      "Error: Locus MCP server not found. Please reinstall the CLI."
+    );
+    process.exit(1);
+  }
+
+  // Spawn the MCP server with stdio passthrough for MCP protocol
+  const mcpProcess = Bun.spawn(["bun", "run", mcpExecPath], {
+    env: { ...process.env, LOCUS_PROJECT_PATH: locusDir },
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+
+  await mcpProcess.exited;
+}
+
 async function main() {
   const command = process.argv[2];
   const args = process.argv.slice(3);
@@ -178,6 +236,9 @@ async function main() {
     case "dev":
       await dev(args);
       break;
+    case "mcp":
+      await mcp(args);
+      break;
     case "help":
     case undefined:
       console.log(`
@@ -185,8 +246,9 @@ Locus CLI - Agentic Engineering Workspace
 
 Usage:
   locus init [--name <name>]  Create a new project or initialize in current dir
-  locus dev                 Start Locus for the current project
-  locus help                Show this help
+  locus dev                   Start Locus for the current project
+  locus mcp [--project <path>] Start MCP server for AI agent integration
+  locus help                  Show this help
       `);
       break;
     default:

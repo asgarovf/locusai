@@ -1,26 +1,24 @@
 import { type Sprint } from "@locusai/shared";
-import axios from "axios";
-
-const API_URL = "http://localhost:3080/api/sprints";
+import apiClient from "@/lib/api-client";
 
 export const sprintService = {
   getAll: async () => {
-    const res = await axios.get<Sprint[]>(API_URL);
+    const res = await apiClient.get<Sprint[]>("/sprints");
     return res.data;
   },
 
   create: async (data: Partial<Sprint>) => {
-    const res = await axios.post<{ id: number }>(API_URL, data);
+    const res = await apiClient.post<{ id: number }>("/sprints", data);
     return res.data;
   },
 
   update: async (id: number, data: Partial<Sprint>) => {
-    const res = await axios.patch(`${API_URL}/${id}`, data);
+    const res = await apiClient.patch(`/sprints/${id}`, data);
     return res.data;
   },
 
   delete: async (id: number) => {
-    const res = await axios.delete(`${API_URL}/${id}`);
+    const res = await apiClient.delete(`/sprints/${id}`);
     return res.data;
   },
 };

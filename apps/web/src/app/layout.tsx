@@ -12,9 +12,12 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Locus | Engineering Workspace",
+  title: "Locus Dashboard",
   description:
-    "Modernized task management and documentation for engineering teams.",
+    "Local-first task management and documentation for agentic engineering.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

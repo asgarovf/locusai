@@ -46,10 +46,27 @@ if (!values.project) {
   process.exit(1);
 }
 
-const workspaceDir = isAbsolute(values.project)
+// Resolve to absolute path
+let workspaceDir = isAbsolute(values.project)
   ? values.project
   : join(process.cwd(), values.project);
-const configPath = join(workspaceDir, "workspace.config.json");
+
+// If path doesn't contain workspace.config.json, check if .locus subdir exists
+let configPath = join(workspaceDir, "workspace.config.json");
+if (!existsSync(configPath)) {
+  const locusSubdir = join(workspaceDir, ".locus");
+  const locusConfigPath = join(locusSubdir, "workspace.config.json");
+  if (existsSync(locusConfigPath)) {
+    workspaceDir = locusSubdir;
+    configPath = locusConfigPath;
+  } else {
+    console.error(
+      `Error: workspace.config.json not found in ${workspaceDir} or ${locusSubdir}`
+    );
+    process.exit(1);
+  }
+}
+
 const config = JSON.parse(readFileSync(configPath, "utf-8"));
 
 const db = initDb(workspaceDir);

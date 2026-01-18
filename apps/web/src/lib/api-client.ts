@@ -1,7 +1,11 @@
 import axios from "axios";
 
+// In dev mode, API runs on port 3080. In production (static export), relative paths work.
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3080/api";
+
 const apiClient = axios.create({
-  baseURL: "/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
