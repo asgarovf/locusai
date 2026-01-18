@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.1.4
+
+### Patch Changes
+
+- - Fix nextjs vulnerabilities
+- Updated dependencies
+  - @locusai/shared@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
