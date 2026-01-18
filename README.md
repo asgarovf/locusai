@@ -109,11 +109,6 @@ Your AI assistant can use these tools immediately:
 
 ---
 
-## 📜 Documentation
-
-- [CI Presets Guide](./docs/ci-presets.md) - How to configure CI workflows.
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - How to develop the Locus platform.
-
 ## 🛠 Development
 
 For detailed instructions on how to set up the development environment, run tests, and contribute code, please see [CONTRIBUTING.md](./CONTRIBUTING.md).
