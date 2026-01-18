@@ -7,7 +7,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
-    environment: Production
+    environment: NPM
     name: Build & Publish
     runs-on: ubuntu-latest
     permissions:
