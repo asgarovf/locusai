@@ -1,9 +1,6 @@
-# Locus
-
 <p align="center">
   <img src="assets/logo.png" alt="Locus" width="200" />
 </p>
-
 
 A **local-first AI development platform** that combines task management, documentation, and CI coordination to help AI agents build your projects.
 
