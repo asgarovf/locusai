@@ -27,7 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${roboto.className} antialiased`}>
+      <body
+        suppressHydrationWarning
+        className={`${roboto.className} antialiased`}
+      >
         <Providers>
           <div className="flex h-screen overflow-hidden bg-background">
             <Sidebar />

@@ -1,3 +1,23 @@
+// ============================================================================
+// Multi-tenancy Enums
+// ============================================================================
+
+export enum UserRole {
+  USER = "USER",
+  ADMIN = "ADMIN",
+}
+
+export enum MembershipRole {
+  OWNER = "OWNER",
+  ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+  VIEWER = "VIEWER",
+}
+
+// ============================================================================
+// Task & Sprint Enums
+// ============================================================================
+
 export enum TaskStatus {
   BACKLOG = "BACKLOG",
   IN_PROGRESS = "IN_PROGRESS",
@@ -45,8 +65,79 @@ export enum SprintStatus {
   COMPLETED = "COMPLETED",
 }
 
+// ============================================================================
+// Multi-tenancy Entities
+// ============================================================================
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  avatarUrl?: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Project {
+  id: string;
+  orgId: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  repoUrl?: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+  role: UserRole;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Membership {
+  id: string;
+  userId: string;
+  orgId: string;
+  role: MembershipRole;
+  createdAt: number;
+}
+
+export interface APIKey {
+  id: string;
+  userId: string;
+  projectId: string;
+  name: string;
+  keyPrefix: string; // First 8 chars for display (e.g., "lk_abc123")
+  keyHash: string; // Hashed full key for validation
+  lastUsedAt?: number | null;
+  expiresAt?: number | null;
+  createdAt: number;
+}
+
+export interface Document {
+  id: string;
+  projectId: string;
+  path: string; // Virtual path, e.g., "architecture/overview.md"
+  title: string;
+  content: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ============================================================================
+// Core Entities (Updated with projectId)
+// ============================================================================
+
 export interface Sprint {
   id: number;
+  projectId?: string | null; // Optional for backward compatibility (local mode)
   name: string;
   status: SprintStatus;
   startDate?: number;
@@ -56,6 +147,7 @@ export interface Sprint {
 
 export interface Task {
   id: number;
+  projectId?: string | null; // Optional for backward compatibility (local mode)
   title: string;
   description: string;
   status: TaskStatus;

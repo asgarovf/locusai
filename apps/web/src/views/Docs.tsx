@@ -230,9 +230,9 @@ export function Docs() {
 
   useEffect(() => {
     if (selectedPath) {
-      docService.read(selectedPath).then((data) => {
-        setContent(data.content || "");
-        setOriginalContent(data.content || "");
+      docService.read(selectedPath).then((content) => {
+        setContent(content || "");
+        setOriginalContent(content || "");
       });
     }
   }, [selectedPath]);

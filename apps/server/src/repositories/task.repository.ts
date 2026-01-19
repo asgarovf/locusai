@@ -1,159 +1,133 @@
-import type { SQLQueryBindings } from "bun:sqlite";
-import type { Task } from "@locusai/shared";
-import { CreateTaskData } from "../services/task.service.js";
-import { BaseRepository } from "./base.repository.js";
+/**
+ * Task Repository - Drizzle Implementation
+ */
 
-export class TaskRepository extends BaseRepository {
-  findAll(): Task[] {
-    const tasks = this.db
-      .prepare("SELECT * FROM tasks ORDER BY createdAt DESC")
-      .all() as Task[];
+import { and, asc, eq, isNull, lt, or } from "drizzle-orm";
+import type { NewTask, Task } from "../db/schema.js";
+import { tasks } from "../db/schema.js";
+import { DrizzleRepository } from "./drizzle.repository.js";
 
-    return tasks.map((t) => this.format(t));
+export class TaskRepository extends DrizzleRepository {
+  /**
+   * Find all tasks
+   */
+  async findAll(): Promise<Task[]> {
+    return await this.db.select().from(tasks).orderBy(asc(tasks.createdAt));
   }
 
-  findById(id: number | string): Task | undefined {
-    const task = this.db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as
-      | Task
-      | undefined;
-
-    return task ? this.format(task) : undefined;
+  /**
+   * Find task by ID
+   */
+  async findById(id: number): Promise<Task | undefined> {
+    const [task] = await this.db.select().from(tasks).where(eq(tasks.id, id));
+    return task;
   }
 
-  create(data: CreateTaskData): number {
-    const {
-      title,
-      description,
-      status,
-      priority,
-      labels,
-      assigneeRole,
-      parentId,
-      sprintId,
-      acceptanceChecklist,
-    } = data;
-    const now = Date.now();
-
-    const result = this.db
-      .prepare(`
-        INSERT INTO tasks (title, description, status, priority, labels, assigneeRole, parentId, sprintId, acceptanceChecklist, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-      .run(
-        title,
-        description,
-        status,
-        priority || "MEDIUM",
-        JSON.stringify(labels || []),
-        assigneeRole ?? null,
-        parentId ?? null,
-        sprintId ?? null,
-        JSON.stringify(acceptanceChecklist || []),
-        now,
-        now
-      );
-
-    return result.lastInsertRowid as number;
+  /**
+   * Create a new task
+   */
+  async create(data: NewTask): Promise<Task> {
+    const [task] = await this.db.insert(tasks).values(data).returning();
+    return task;
   }
 
-  update(id: number | string, updates: Partial<Task>): void {
-    const fields: string[] = [];
-    const vals: unknown[] = [];
-
-    for (const [key, val] of Object.entries(updates)) {
-      if (key === "id" || key === "createdAt" || key === "updatedAt") continue;
-      fields.push(`${key} = ?`);
-      vals.push(typeof val === "object" ? JSON.stringify(val) : val);
-    }
-
-    if (fields.length === 0) return;
-
-    vals.push(Date.now(), id);
-
-    const stmt = this.db.prepare(
-      `UPDATE tasks SET ${fields.join(", ")}, updatedAt = ? WHERE id = ?`
-    );
-    (stmt.run as (...args: unknown[]) => void)(...vals);
+  /**
+   * Update a task
+   */
+  async update(id: number, data: Partial<NewTask>): Promise<Task | undefined> {
+    const [updated] = await this.db
+      .update(tasks)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(tasks.id, id))
+      .returning();
+    return updated;
   }
 
-  delete(id: number | string): void {
-    this.db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
+  /**
+   * Delete a task
+   */
+  async delete(id: number): Promise<boolean> {
+    const result = await this.db
+      .delete(tasks)
+      .where(eq(tasks.id, id))
+      .returning({ id: tasks.id });
+    return result.length > 0;
   }
 
-  findCandidateForDispatch(
-    now: number,
+  /**
+   * Find a candidate task for dispatch (locking it in the process)
+   */
+  async findCandidateForDispatch(
     sprintId: number,
     agentName: string,
-    expiresAt: number
-  ): Task | undefined {
-    return this.db.transaction(() => {
-      const query = `
-        SELECT * FROM tasks 
-        WHERE status = 'BACKLOG' 
-        AND (lockedBy IS NULL OR lockExpiresAt < ?)
-        AND sprintId = ?
-        ORDER BY 
-          CASE priority 
-            WHEN 'CRITICAL' THEN 1 
-            WHEN 'HIGH' THEN 2 
-            WHEN 'MEDIUM' THEN 3 
-            WHEN 'LOW' THEN 4 
-            ELSE 5 
-          END ASC,
-          createdAt ASC
-        LIMIT 1
-      `;
-      const params: SQLQueryBindings[] = [now, sprintId];
+    lockDurationMs: number
+  ): Promise<Task | undefined> {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + lockDurationMs);
 
-      const candidate = this.db.prepare(query).get(...params) as
-        | Task
-        | undefined;
+    // biome-ignore lint/suspicious/noExplicitAny: Transaction type complexity
+    return await this.db.transaction(async (tx: any) => {
+      // Find candidate
+      const candidates = await tx
+        .select()
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.status, "BACKLOG"),
+            eq(tasks.sprintId, sprintId),
+            or(isNull(tasks.lockedBy), lt(tasks.lockExpiresAt, now))
+          )
+        )
+        .orderBy(asc(tasks.priority), asc(tasks.createdAt))
+        .limit(1);
+
+      const candidate = candidates[0];
 
       if (!candidate) return undefined;
 
       // Lock it
-      this.db
-        .prepare(
-          "UPDATE tasks SET lockedBy = ?, lockExpiresAt = ?, updatedAt = ? WHERE id = ?"
-        )
-        .run(agentName, expiresAt, now, candidate.id);
-
-      return this.format(candidate);
-    })();
+      const [locked] = await tx
+        .update(tasks)
+        .set({
+          lockedBy: agentName,
+          lockExpiresAt: expiresAt,
+          updatedAt: now,
+        })
+        .where(eq(tasks.id, candidate.id))
+        .returning();
+      return locked;
+    });
   }
 
-  lock(
-    id: number | string,
-    agentId: string,
-    expiresAt: number,
-    now: number
-  ): void {
-    this.db
-      .prepare(
-        "UPDATE tasks SET lockedBy = ?, lockExpiresAt = ?, updatedAt = ? WHERE id = ?"
-      )
-      .run(agentId, expiresAt, now, id);
+  /**
+   * Manual lock
+   */
+  async lock(id: number, agentId: string, expiresAt: Date): Promise<boolean> {
+    const result = await this.db
+      .update(tasks)
+      .set({
+        lockedBy: agentId,
+        lockExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, id))
+      .returning({ id: tasks.id });
+    return result.length > 0;
   }
 
-  unlock(id: number | string, now: number): void {
-    this.db
-      .prepare(
-        "UPDATE tasks SET lockedBy = NULL, lockExpiresAt = NULL, updatedAt = ? WHERE id = ?"
-      )
-      .run(now, id);
-  }
-
-  private format(task: Task): Task {
-    return {
-      ...task,
-      labels:
-        typeof task.labels === "string"
-          ? JSON.parse(task.labels || "[]")
-          : task.labels || [],
-      acceptanceChecklist:
-        typeof task.acceptanceChecklist === "string"
-          ? JSON.parse(task.acceptanceChecklist || "[]")
-          : task.acceptanceChecklist || [],
-    };
+  /**
+   * Manual unlock
+   */
+  async unlock(id: number): Promise<boolean> {
+    const result = await this.db
+      .update(tasks)
+      .set({
+        lockedBy: null,
+        lockExpiresAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, id))
+      .returning({ id: tasks.id });
+    return result.length > 0;
   }
 }

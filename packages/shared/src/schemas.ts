@@ -1,7 +1,86 @@
 import { z } from "zod";
-import { AssigneeRole, TaskPriority, TaskStatus } from "./types";
+import {
+  AssigneeRole,
+  MembershipRole,
+  TaskPriority,
+  TaskStatus,
+  UserRole,
+} from "./types";
+
+// ============================================================================
+// Multi-tenancy Schemas
+// ============================================================================
+
+export const OrganizationSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/),
+});
+
+export const OrganizationUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  avatarUrl: z.string().url().optional().nullable(),
+});
+
+export const ProjectSchema = z.object({
+  orgId: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/),
+  description: z.string().max(500).optional(),
+  repoUrl: z.string().url().optional(),
+});
+
+export const ProjectUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional().nullable(),
+  repoUrl: z.string().url().optional().nullable(),
+});
+
+export const UserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1).max(100),
+  avatarUrl: z.string().url().optional(),
+  role: z.nativeEnum(UserRole).optional().default(UserRole.USER),
+});
+
+export const MembershipSchema = z.object({
+  userId: z.string().uuid(),
+  orgId: z.string().uuid(),
+  role: z.nativeEnum(MembershipRole).default(MembershipRole.MEMBER),
+});
+
+export const APIKeySchema = z.object({
+  projectId: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  expiresAt: z.number().optional(),
+});
+
+export const DocumentSchema = z.object({
+  projectId: z.string().uuid(),
+  path: z.string().min(1).max(500),
+  title: z.string().min(1).max(200),
+  content: z.string(),
+});
+
+export const DocumentUpdateSchema = z.object({
+  path: z.string().min(1).max(500).optional(),
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().optional(),
+});
+
+// ============================================================================
+// Task & Sprint Schemas
+// ============================================================================
 
 export const TaskSchema = z.object({
+  projectId: z.string().uuid().optional(), // Optional for local mode
   title: z.string().min(1),
   description: z.string().optional().default(""),
   status: z.nativeEnum(TaskStatus).optional().default(TaskStatus.BACKLOG),
@@ -30,6 +109,17 @@ export const TaskUpdateSchema = z.object({
     )
     .optional(),
 });
+
+export const SprintSchema = z.object({
+  projectId: z.string().uuid().optional(), // Optional for local mode
+  name: z.string().min(1).max(100),
+  startDate: z.number().optional(),
+  endDate: z.number().optional(),
+});
+
+// ============================================================================
+// Other Schemas
+// ============================================================================
 
 export const CommentSchema = z.object({
   author: z.string().min(1),

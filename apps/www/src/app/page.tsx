@@ -1,8 +1,5 @@
-import { DemoVideo } from "@/components/landing/DemoVideo";
-import { FeatureGrid } from "@/components/landing/FeatureGrid";
-import { Hero } from "@/components/landing/Hero";
-import { Footer } from "@/components/layout/Footer";
-import { Navbar } from "@/components/layout/Navbar";
+import { DemoVideo, FeatureGrid, Hero } from "@/components/landing";
+import { Footer, Navbar } from "@/components/layout";
 
 async function getNpmVersion(): Promise<string> {
   try {

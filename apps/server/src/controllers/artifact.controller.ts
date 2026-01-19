@@ -1,45 +1,74 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import type { NextFunction, Request, Response } from "express";
-import type { ArtifactRepository } from "../repositories/artifact.repository.js";
+/**
+ * Artifact Controller
+ */
+
+import type { Response } from "express";
+import { UnauthorizedError } from "../lib/errors.js";
+import { ResponseBuilder } from "../lib/index.js";
+import { asyncHandler } from "../middleware/index.js";
+import type { ArtifactService } from "../services/artifact.service.js";
+import type { OrganizationService } from "../services/organization.service.js";
+import type { ProjectService } from "../services/project.service.js";
+import type { TaskService } from "../services/task.service.js";
+import type { TypedRequest } from "../types/index.js";
 
 export class ArtifactController {
   constructor(
-    private artifactRepo: ArtifactRepository,
-    private workspaceDir: string
+    private artifactService: ArtifactService,
+    private taskService: TaskService,
+    private projectService: ProjectService,
+    private orgService: OrganizationService
   ) {}
 
-  getArtifactFile = (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { taskId, type, filename } = req.params;
-      const filePath = join(
-        this.workspaceDir,
-        "artifacts",
-        taskId as string,
-        type as string,
-        filename as string
+  /**
+   * GET /api/tasks/:taskId/artifacts/:type/:filename
+   */
+  getArtifactFile = asyncHandler(async (req: TypedRequest, res: Response) => {
+    if (!req.auth) throw new UnauthorizedError();
+    const taskId = Number(req.params.taskId);
+
+    // Check membership
+    const task = await this.taskService.getTaskById(taskId);
+    if (task.projectId) {
+      const project = await this.projectService.getProject(task.projectId);
+      await this.orgService.checkMembership(
+        req.auth.userId,
+        project.orgId,
+        ["MEMBER", "ADMIN"],
+        req.auth.role
       );
-
-      if (!existsSync(filePath)) {
-        return res
-          .status(404)
-          .json({ error: { message: "Artifact not found" } });
-      }
-
-      res.sendFile(filePath);
-    } catch (err) {
-      next(err);
     }
-  };
 
-  getByTaskId = (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const artifacts = this.artifactRepo.findByTaskId(
-        req.params.taskId as string
+    const { type } = req.params;
+
+    const content = await this.artifactService.getArtifactContent(
+      taskId,
+      type as string
+    );
+
+    res.type("text/plain").send(content);
+  });
+
+  /**
+   * GET /api/tasks/:taskId/artifacts
+   */
+  getByTaskId = asyncHandler(async (req: TypedRequest, res: Response) => {
+    if (!req.auth) throw new UnauthorizedError();
+    const taskId = Number(req.params.taskId);
+
+    // Check membership
+    const task = await this.taskService.getTaskById(taskId);
+    if (task.projectId) {
+      const project = await this.projectService.getProject(task.projectId);
+      await this.orgService.checkMembership(
+        req.auth.userId,
+        project.orgId,
+        ["MEMBER", "ADMIN"],
+        req.auth.role
       );
-      res.json(artifacts);
-    } catch (err) {
-      next(err);
     }
-  };
+
+    const artifacts = await this.artifactService.getByTaskId(taskId);
+    ResponseBuilder.success(res, { artifacts });
+  });
 }

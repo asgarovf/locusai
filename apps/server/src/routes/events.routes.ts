@@ -1,3 +1,7 @@
+/**
+ * Event Routes
+ */
+
 import { Router } from "express";
 import type { EventController } from "../controllers/event.controller.js";
 

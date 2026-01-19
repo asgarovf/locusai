@@ -1,32 +1,40 @@
-import { BaseRepository } from "./base.repository.js";
+/**
+ * Comment Repository - Drizzle Implementation
+ */
 
-export interface DBComment {
-  id: number;
-  taskId: number;
-  author: string;
-  text: string;
-  createdAt: number;
-}
+import { desc, eq } from "drizzle-orm";
+import type { Comment, NewComment } from "../db/schema.js";
+import { comments } from "../db/schema.js";
+import { DrizzleRepository } from "./drizzle.repository.js";
 
-export class CommentRepository extends BaseRepository {
-  findByTaskId(taskId: number | string): DBComment[] {
-    return this.db
-      .prepare(
-        "SELECT * FROM comments WHERE taskId = ? ORDER BY createdAt DESC"
-      )
-      .all(taskId) as DBComment[];
+export class CommentRepository extends DrizzleRepository {
+  /**
+   * Find comments by task ID
+   */
+  async findByTaskId(taskId: number): Promise<Comment[]> {
+    return await this.db
+      .select()
+      .from(comments)
+      .where(eq(comments.taskId, taskId))
+      .orderBy(desc(comments.createdAt));
   }
 
-  create(taskId: number | string, author: string, text: string): void {
-    const now = Date.now();
-    this.db
-      .prepare(
-        "INSERT INTO comments (taskId, author, text, createdAt) VALUES (?, ?, ?, ?)"
-      )
-      .run(taskId, author, text, now);
+  /**
+   * Create a new comment
+   */
+  async create(data: NewComment): Promise<Comment> {
+    const [comment] = await this.db.insert(comments).values(data).returning();
+    return comment;
   }
 
-  deleteByTaskId(taskId: number | string): void {
-    this.db.prepare("DELETE FROM comments WHERE taskId = ?").run(taskId);
+  /**
+   * Delete all comments for a task
+   */
+  async deleteByTaskId(taskId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(comments)
+      .where(eq(comments.taskId, taskId))
+      .returning({ id: comments.id });
+    return result.length > 0;
   }
 }

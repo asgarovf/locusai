@@ -1,8 +1,8 @@
 import { Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "@/components/docs/Search";
-import { Button } from "@/components/ui/button";
+import { Search } from "@/components/docs";
+import { Button } from "@/components/ui";
 
 export function Navbar() {
   return (

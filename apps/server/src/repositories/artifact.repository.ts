@@ -1,44 +1,56 @@
-import { BaseRepository } from "./base.repository.js";
+/**
+ * Artifact Repository - Drizzle Implementation
+ */
 
-export interface DBArtifact {
-  id: number;
-  taskId: number;
-  type: string;
-  title: string;
-  contentText?: string;
-  filePath?: string;
-  createdBy: string;
-  createdAt: number;
-}
+import { and, desc, eq } from "drizzle-orm";
+import type { Artifact, NewArtifact } from "../db/schema.js";
+import { artifacts } from "../db/schema.js";
+import { DrizzleRepository } from "./drizzle.repository.js";
 
-export class ArtifactRepository extends BaseRepository {
-  findByTaskId(taskId: number | string): DBArtifact[] {
-    return this.db
-      .prepare(
-        "SELECT * FROM artifacts WHERE taskId = ? ORDER BY createdAt DESC"
-      )
-      .all(taskId) as DBArtifact[];
+export class ArtifactRepository extends DrizzleRepository {
+  /**
+   * Find artifacts by task ID
+   */
+  async findByTaskId(taskId: number): Promise<Artifact[]> {
+    return await this.db
+      .select()
+      .from(artifacts)
+      .where(eq(artifacts.taskId, taskId))
+      .orderBy(desc(artifacts.createdAt));
   }
 
-  create(data: Omit<DBArtifact, "id" | "createdAt">): void {
-    const now = Date.now();
-    this.db
-      .prepare(`
-        INSERT INTO artifacts (taskId, type, title, contentText, filePath, createdBy, createdAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `)
-      .run(
-        data.taskId,
-        data.type,
-        data.title,
-        data.contentText ?? null,
-        data.filePath ?? null,
-        data.createdBy,
-        now
-      );
+  /**
+   * Find artifact by task ID and type
+   */
+  async findByType(
+    taskId: number,
+    type: string
+  ): Promise<Artifact | undefined> {
+    const [artifact] = await this.db
+      .select()
+      .from(artifacts)
+      .where(and(eq(artifacts.taskId, taskId), eq(artifacts.type, type)))
+      .orderBy(desc(artifacts.createdAt))
+      .limit(1);
+    return artifact;
   }
 
-  deleteByTaskId(taskId: number | string): void {
-    this.db.prepare("DELETE FROM artifacts WHERE taskId = ?").run(taskId);
+  /**
+   * Create a new artifact
+   */
+  async create(data: NewArtifact): Promise<Artifact> {
+    const [created] = await this.db.insert(artifacts).values(data).returning();
+    return created;
+  }
+
+  /**
+   * Delete all artifacts for a task
+   */
+  async deleteByTaskId(taskId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(artifacts)
+      .where(eq(artifacts.taskId, taskId))
+      .returning({ id: artifacts.id });
+    return result.length > 0;
   }
 }

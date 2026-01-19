@@ -5,20 +5,28 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun run src/index.ts",
-    "lint": "bun lint"
+    "lint": "biome lint .",
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "better-sqlite3": "^11.5.0",
-    "zod": "^3.23.8",
     "@locusai/shared": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^11.5.0",
     "cors": "^2.8.5",
-    "dockerode": "^4.0.2"
+    "dockerode": "^4.0.2",
+    "drizzle-orm": "^0.45.1",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "postgres": "^3.4.8",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.19",
     "@types/dockerode": "^3.3.33",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "drizzle-kit": "^0.31.8"
   }
 }

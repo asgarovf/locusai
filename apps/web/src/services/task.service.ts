@@ -24,23 +24,33 @@ export interface UpdateTaskDto {
 
 export const taskService = {
   getAll: async () => {
-    const response = await apiClient.get<Task[]>("/tasks");
-    return response.data;
+    const response = await apiClient.get<{ success: boolean; tasks: Task[] }>(
+      "/tasks"
+    );
+    return response.data.tasks;
   },
 
   getById: async (id: number) => {
-    const response = await apiClient.get<Task>(`/tasks/${id}`);
-    return response.data;
+    const response = await apiClient.get<{ success: boolean; task: Task }>(
+      `/tasks/${id}`
+    );
+    return response.data.task;
   },
 
   create: async (data: CreateTaskDto) => {
-    const response = await apiClient.post<Task>("/tasks", data);
-    return response.data;
+    const response = await apiClient.post<{ success: boolean; task: Task }>(
+      "/tasks",
+      data
+    );
+    return response.data.task;
   },
 
   update: async (id: number, data: UpdateTaskDto) => {
-    const response = await apiClient.patch<Task>(`/tasks/${id}`, data);
-    return response.data;
+    const response = await apiClient.patch<{ success: boolean; task: Task }>(
+      `/tasks/${id}`,
+      data
+    );
+    return response.data.task;
   },
 
   delete: async (id: number) => {

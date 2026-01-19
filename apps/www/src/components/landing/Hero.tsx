@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Github } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { BrandingElements } from "./BrandingElements";
 import { CopyCommand } from "./CopyCommand";
 

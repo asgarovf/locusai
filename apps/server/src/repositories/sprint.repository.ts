@@ -1,60 +1,66 @@
-import { BaseRepository } from "./base.repository.js";
+/**
+ * Sprint Repository - Drizzle Implementation
+ */
 
-export interface DBSprint {
-  id: number;
-  name: string;
-  status: string;
-  startDate?: number;
-  endDate?: number;
-  createdAt: number;
-}
+import { desc, eq } from "drizzle-orm";
+import type { NewSprint, Sprint } from "../db/schema.js";
+import { sprints } from "../db/schema.js";
+import { DrizzleRepository } from "./drizzle.repository.js";
 
-export class SprintRepository extends BaseRepository {
-  findAll(): DBSprint[] {
-    return this.db
-      .prepare("SELECT * FROM sprints ORDER BY createdAt DESC")
-      .all() as DBSprint[];
+export class SprintRepository extends DrizzleRepository {
+  /**
+   * Find all sprints
+   */
+  async findAll(): Promise<Sprint[]> {
+    return await this.db
+      .select()
+      .from(sprints)
+      .orderBy(desc(sprints.createdAt));
   }
 
-  findById(id: number | string): DBSprint | undefined {
-    return this.db.prepare("SELECT * FROM sprints WHERE id = ?").get(id) as
-      | DBSprint
-      | undefined;
+  /**
+   * Find sprint by ID
+   */
+  async findById(id: number): Promise<Sprint | undefined> {
+    const [sprint] = await this.db
+      .select()
+      .from(sprints)
+      .where(eq(sprints.id, id));
+    return sprint;
   }
 
-  findActive(): DBSprint | undefined {
-    return this.db
-      .prepare("SELECT * FROM sprints WHERE status = 'ACTIVE' LIMIT 1")
-      .get() as DBSprint | undefined;
+  /**
+   * Find active sprint
+   */
+  async findActive(): Promise<Sprint | undefined> {
+    const [sprint] = await this.db
+      .select()
+      .from(sprints)
+      .where(eq(sprints.status, "ACTIVE"))
+      .limit(1);
+    return sprint;
   }
 
-  create(name: string): number {
-    const now = Date.now();
-    const result = this.db
-      .prepare(
-        "INSERT INTO sprints (name, status, createdAt) VALUES (?, 'PLANNED', ?)"
-      )
-      .run(name, now);
-    return result.lastInsertRowid as number;
+  /**
+   * Create a new sprint
+   */
+  async create(data: NewSprint): Promise<Sprint> {
+    const [sprint] = await this.db.insert(sprints).values(data).returning();
+    return sprint;
   }
 
-  update(id: number | string, updates: Partial<DBSprint>): void {
-    const fields: string[] = [];
-    const vals: unknown[] = [];
-
-    for (const [key, val] of Object.entries(updates)) {
-      if (key === "id" || key === "createdAt") continue;
-      fields.push(`${key} = ?`);
-      vals.push(val);
-    }
-
-    if (fields.length === 0) return;
-
-    vals.push(id);
-
-    const stmt = this.db.prepare(
-      `UPDATE sprints SET ${fields.join(", ")} WHERE id = ?`
-    );
-    (stmt.run as (...args: unknown[]) => void)(...vals);
+  /**
+   * Update a sprint
+   */
+  async update(
+    id: number,
+    data: Partial<NewSprint>
+  ): Promise<Sprint | undefined> {
+    const [updated] = await this.db
+      .update(sprints)
+      .set(data)
+      .where(eq(sprints.id, id))
+      .returning();
+    return updated;
   }
 }

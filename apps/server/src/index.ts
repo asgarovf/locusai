@@ -1,36 +1,78 @@
-import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
+/**
+ * Locus Backend Server
+ */
+
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import cors from "cors";
 import express from "express";
-import { ArtifactController } from "./controllers/artifact.controller.js";
-import { CiController } from "./controllers/ci.controller.js";
-import { DocController } from "./controllers/doc.controller.js";
-import { EventController } from "./controllers/event.controller.js";
-import { SprintController } from "./controllers/sprint.controller.js";
+
+// Auth
+import { AuthService } from "./auth/auth.service.js";
 // Controllers
-import { TaskController } from "./controllers/task.controller.js";
-import { initDb } from "./db.js";
+import {
+  ApiKeyController,
+  ArtifactController,
+  AuthController,
+  CiController,
+  DocController,
+  EventController,
+  OrganizationController,
+  ProjectController,
+  SprintController,
+  TaskController,
+} from "./controllers/index.js";
+// Database
+import { createSqliteDb, runMigrations } from "./db/index.js";
+// Workspace Helpers
+import { resolveWorkspace } from "./lib/workspace.js";
 // Middleware
-import { errorHandler } from "./middleware/error.middleware.js";
-import { ArtifactRepository } from "./repositories/artifact.repository.js";
-import { CommentRepository } from "./repositories/comment.repository.js";
-import { EventRepository } from "./repositories/event.repository.js";
-import { SprintRepository } from "./repositories/sprint.repository.js";
+import { errorHandler, flexAuth, localAuth } from "./middleware/index.js";
 // Repositories
-import { TaskRepository } from "./repositories/task.repository.js";
-import { createArtifactsRouter } from "./routes/artifacts.routes.js";
-import { createCiRouter } from "./routes/ci.routes.js";
-import { createDocsRouter } from "./routes/docs.routes.js";
-import { createEventsRouter } from "./routes/events.routes.js";
-import { createSprintsRouter } from "./routes/sprints.routes.js";
+import {
+  ApiKeyRepository,
+  ArtifactRepository,
+  CommentRepository,
+  DocumentRepository,
+  EventRepository,
+  MembershipRepository,
+  OrganizationRepository,
+  ProjectRepository,
+  SprintRepository,
+  TaskRepository,
+} from "./repositories/index.js";
 // Routes
-import { createTaskRouter } from "./routes/tasks.routes.js";
-import { CiService } from "./services/ci.service.js";
-import { SprintService } from "./services/sprint.service.js";
+import {
+  createApiKeyRouter,
+  createArtifactsRouter,
+  createAuthRouter,
+  createCiRouter,
+  createDocsRouter,
+  createEventsRouter,
+  createOrganizationRouter,
+  createProjectRouter,
+  createSprintsRouter,
+  createTaskRouter,
+} from "./routes/index.js";
 // Services
-import { TaskService } from "./services/task.service.js";
+import {
+  ApiKeyService,
+  ArtifactService,
+  CiService,
+  DocService,
+  EventService,
+  OrganizationService,
+  ProjectService,
+  SprintService,
+  TaskService,
+} from "./services/index.js";
+// Background Processor
 import { TaskProcessor } from "./task-processor.js";
+
+// ============================================================================
+// Initialization Logic
+// ============================================================================
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -41,49 +83,68 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 
-if (!values.project) {
-  console.error("Usage: bun run dev -- --project <workspaceDir>");
-  process.exit(1);
-}
+const isCloud = process.env.DB_MODE === "cloud";
+const connectionString = process.env.DATABASE_URL;
 
-// Resolve to absolute path
-let workspaceDir = isAbsolute(values.project)
-  ? values.project
-  : join(process.cwd(), values.project);
+// biome-ignore lint/suspicious/noExplicitAny: Dynamic setup
+let db: any;
+let workspaceDir: string;
+let repoDir: string;
+// biome-ignore lint/suspicious/noExplicitAny: Dynamic config
+let config: any;
 
-// If path doesn't contain workspace.config.json, check if .locus subdir exists
-let configPath = join(workspaceDir, "workspace.config.json");
-if (!existsSync(configPath)) {
-  const locusSubdir = join(workspaceDir, ".locus");
-  const locusConfigPath = join(locusSubdir, "workspace.config.json");
-  if (existsSync(locusConfigPath)) {
-    workspaceDir = locusSubdir;
-    configPath = locusConfigPath;
-  } else {
-    console.error(
-      `Error: workspace.config.json not found in ${workspaceDir} or ${locusSubdir}`
-    );
+if (isCloud) {
+  if (!connectionString) {
+    console.error("Error: DATABASE_URL is required in cloud mode");
     process.exit(1);
   }
+  console.log("Connecting to Cloud Database (PostgreSQL)...");
+  const { createPostgresDb } = await import("./db/drizzle.js");
+  db = createPostgresDb(connectionString);
+  workspaceDir = process.cwd();
+  repoDir = "REMOTE";
+  config = {
+    ciPresetsPath: join(process.cwd(), "ci-presets.json"),
+    docsPath: join(process.cwd(), "docs"),
+  };
+} else {
+  const ws = resolveWorkspace(values.project);
+  workspaceDir = ws.workspaceDir;
+  repoDir = ws.repoDir;
+  config = ws.config;
+  db = createSqliteDb(ws.dbPath);
+
+  // Run migrations (SQLite only for now, Cloud migrations should be manual or separate)
+  runMigrations(db);
 }
 
-const config = JSON.parse(readFileSync(configPath, "utf-8"));
+// ============================================================================
+// Dependency Injection
+// ============================================================================
 
-const db = initDb(workspaceDir);
-
-// Initialize Repositories
+// Repositories
 const taskRepo = new TaskRepository(db);
 const eventRepo = new EventRepository(db);
 const commentRepo = new CommentRepository(db);
 const artifactRepo = new ArtifactRepository(db);
 const sprintRepo = new SprintRepository(db);
+const projectRepo = new ProjectRepository(db);
+const orgRepo = new OrganizationRepository(db);
+const membershipRepo = new MembershipRepository(db);
+const apiKeyRepo = new ApiKeyRepository(db);
+const documentRepo = new DocumentRepository(db);
 
-const processor = new TaskProcessor(db, {
-  ciPresetsPath: config.ciPresetsPath,
-  repoPath: workspaceDir,
-});
+// Services
+const sprintService = new SprintService(sprintRepo);
+const projectService = new ProjectService(projectRepo);
+const orgService = new OrganizationService(orgRepo, membershipRepo);
+const apiKeyService = new ApiKeyService(apiKeyRepo);
+const ciService = new CiService(artifactRepo, eventRepo);
 
-// Initialize Services
+// Background Processor (depends on CiService)
+const processor = new TaskProcessor(taskRepo, eventRepo, artifactRepo);
+
+// Task Service (depends on processor)
 const taskService = new TaskService(
   taskRepo,
   eventRepo,
@@ -91,47 +152,108 @@ const taskService = new TaskService(
   artifactRepo,
   processor
 );
-const sprintService = new SprintService(sprintRepo);
-const ciService = new CiService(artifactRepo, eventRepo, {
-  ciPresetsPath: config.ciPresetsPath,
-  repoPath: workspaceDir,
-});
 
-// Initialize Controllers
-const taskController = new TaskController(taskService);
-const sprintController = new SprintController(sprintService);
-const ciController = new CiController(ciService);
-const artifactController = new ArtifactController(artifactRepo, workspaceDir);
-const docController = new DocController({
-  repoPath: config.repoPath,
-  docsPath: config.docsPath,
-});
-const eventController = new EventController(eventRepo);
+const artifactService = new ArtifactService(artifactRepo);
+const docService = isCloud
+  ? new DocService(documentRepo)
+  : new DocService({
+      repoPath: repoDir,
+      docsPath: config.docsPath || join(workspaceDir, "docs"),
+    });
+const eventService = new EventService(eventRepo);
+
+const jwtSecret = process.env.JWT_SECRET || "locus-dev-secret-change-me";
+const authService = new AuthService(db, { jwtSecret });
+const authMiddlewareConfig = {
+  jwtSecret,
+  authService,
+};
+
+// Controllers
+const authController = new AuthController(authService);
+const apiKeyController = new ApiKeyController(
+  apiKeyService,
+  projectService,
+  orgService
+);
+const taskController = new TaskController(
+  taskService,
+  projectService,
+  orgService
+);
+const sprintController = new SprintController(
+  sprintService,
+  projectService,
+  orgService
+);
+const projectController = new ProjectController(projectService, orgService);
+const orgController = new OrganizationController(orgService);
+const ciController = new CiController(ciService, projectService, orgService);
+const artifactController = new ArtifactController(
+  artifactService,
+  taskService,
+  projectService,
+  orgService
+);
+const docController = new DocController(
+  docService,
+  isCloud,
+  projectService,
+  orgService
+);
+const eventController = new EventController(
+  eventService,
+  taskService,
+  projectService,
+  orgService
+);
+
+// ============================================================================
+// App Configuration & Routes
+// ============================================================================
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
-// Routes Implementation
-app.use("/api/tasks", createTaskRouter(taskController));
-app.use("/api/docs", createDocsRouter(docController));
-app.use("/api/sprints", createSprintsRouter(sprintController));
-app.use("/api/ci", createCiRouter(ciController));
-app.use("/api/events", createEventsRouter(eventController));
-app.use("/api", createArtifactsRouter(artifactController));
+// Use localAuth for local development (no auth required)
+// Use flexAuth for cloud mode (requires JWT or API key)
+const apiAuth = isCloud ? flexAuth(authMiddlewareConfig) : localAuth();
+
+// Routes
+app.use(
+  "/api/auth",
+  createAuthRouter({ controller: authController, authMiddlewareConfig })
+);
+
+// Protected routes
+app.use("/api/tasks", apiAuth, createTaskRouter(taskController));
+app.use("/api/projects", apiAuth, createProjectRouter(projectController));
+app.use("/api/organizations", apiAuth, createOrganizationRouter(orgController));
+app.use("/api/docs", apiAuth, createDocsRouter(docController));
+app.use("/api/sprints", apiAuth, createSprintsRouter(sprintController));
+app.use("/api/ci", apiAuth, createCiRouter(ciController));
+app.use("/api/events", apiAuth, createEventsRouter(eventController));
+app.use("/api/artifacts", apiAuth, createArtifactsRouter(artifactController));
+app.use("/api/api-keys", apiAuth, createApiKeyRouter(apiKeyController));
 
 // Health Check
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-// Error Handling
+// Error Handling (Must be last)
 app.use(errorHandler);
 
-const PORT = 3080;
+// ============================================================================
+// Server Start
+// ============================================================================
+
+const PORT = process.env.PORT || 3080;
 
 // Serve Dashboard UI if it exists
 const dashboardPaths = [
   join(import.meta.dir, "../public/dashboard"), // Production (bundled)
   join(process.cwd(), "packages/cli/public/dashboard"), // Dev (root)
+  join(process.cwd(), "apps/server/public/dashboard"), // Local dev
 ];
 
 const dashboardPath = dashboardPaths.find((p) => existsSync(p));
@@ -139,12 +261,22 @@ const dashboardPath = dashboardPaths.find((p) => existsSync(p));
 if (dashboardPath) {
   console.log(`Serving dashboard from ${dashboardPath}`);
   app.use(express.static(dashboardPath));
-  // Client-side routing fallback
-  app.get("/[^api]*", (_req, res) => {
+  // Client-side routing fallback (must be after all other routes)
+  app.get("*", (_req, res) => {
     res.sendFile(join(dashboardPath, "index.html"));
   });
 }
 
-app.listen(PORT, () =>
+const server = app.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)
 );
+
+// Graceful shutdown
+const shutdown = () => {
+  console.log("Shutting down...");
+  server.close();
+  process.exit(0);
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

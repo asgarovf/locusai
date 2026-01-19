@@ -2,7 +2,7 @@
 
 # Port cleanup just in case
 lsof -ti:3080 | xargs kill -9 2>/dev/null
-lsof -ti:5173 | xargs kill -9 2>/dev/null
+lsof -ti:3081 | xargs kill -9 2>/dev/null
 
 echo "🚀 Starting Locus in Development Mode..."
 
