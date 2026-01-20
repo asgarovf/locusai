@@ -1,7 +1,6 @@
 "use client";
 
 import { type Sprint, SprintStatus, type Task } from "@locusai/shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -12,148 +11,73 @@ import {
   Layers,
   Play,
   Plus,
-  Sparkles,
   Target,
   Trash2,
-  Zap,
 } from "lucide-react";
-import { useState } from "react";
+import React from "react";
+import { PageHeader } from "@/components/Header";
+import { SprintCreateModal } from "@/components/SprintCreateModal";
 import { TaskCreateModal } from "@/components/TaskCreateModal";
 import { TaskPanel } from "@/components/TaskPanel";
-import { Button, Input, PriorityBadge, StatusBadge } from "@/components/ui";
+import {
+  BacklogSkeleton,
+  Button,
+  EmptyState,
+  PriorityBadge,
+  StatusBadge,
+} from "@/components/ui";
+import { useBacklog } from "@/hooks/useBacklog";
 import { cn } from "@/lib/utils";
-import { sprintService } from "@/services/sprint.service";
-import { taskService } from "@/services/task.service";
 
 export function Backlog() {
-  const queryClient = useQueryClient();
-  const [selectedTask, setSelectedTask] = useState<number | null>(null);
-  const [isCreatingSprint, setIsCreatingSprint] = useState(false);
-  const [newSprintName, setNewSprintName] = useState("");
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [showCompletedSprints, setShowCompletedSprints] = useState(false);
-  const [expandedSprints, setExpandedSprints] = useState<Set<number>>(
-    new Set()
-  );
-  const [backlogExpanded, setBacklogExpanded] = useState(true);
+  const {
+    sprints,
+    sprintsLoading,
+    tasksLoading,
+    activeSprints,
+    plannedSprints,
+    completedSprints,
+    backlogTasks,
+    searchQuery,
+    setSearchQuery,
+    isCreatingSprint,
+    setIsCreatingSprint,
+    isCreateTaskOpen,
+    setIsCreateTaskOpen,
+    selectedTaskId,
+    setSelectedTaskId,
+    showCompletedSprints,
+    setShowCompletedSprints,
+    expandedSprints,
+    toggleSprintExpand,
+    backlogExpanded,
+    toggleBacklogExpand,
+    dragOverSection,
+    handleDragOver,
+    handleDrop,
+    handleCreateSprint,
+    handleStartSprint,
+    handleCompleteSprint,
+    handleDeleteSprint,
+    getTasksForSprint,
+    isSubmittingSprint,
+  } = useBacklog();
 
-  const { data: sprints = [] } = useQuery({
-    queryKey: ["sprints"],
-    queryFn: sprintService.getAll,
-  });
-
-  const { data: tasks = [] } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: taskService.getAll,
-  });
-
-  const createSprint = useMutation({
-    mutationFn: sprintService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints"] });
-      setIsCreatingSprint(false);
-      setNewSprintName("");
-    },
-  });
-
-  const updateTask = useMutation({
-    mutationFn: ({ id, updates }: { id: number; updates: Partial<Task> }) =>
-      taskService.update(id, updates),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
-  });
-
-  const updateSprint = useMutation({
-    mutationFn: ({ id, updates }: { id: number; updates: Partial<Sprint> }) =>
-      sprintService.update(id, updates),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["sprints"] }),
-  });
-
-  const deleteSprint = useMutation({
-    mutationFn: (id: number) => sprintService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    },
-  });
-
-  const handleCreateSprint = () => {
-    if (!newSprintName.trim()) return;
-    createSprint.mutate({ name: newSprintName });
-  };
-
-  const handleStartSprint = (sprint: Sprint) => {
-    updateSprint.mutate({
-      id: sprint.id,
-      updates: {
-        status: SprintStatus.ACTIVE,
-        startDate: Date.now(),
-      },
-    });
-  };
-
-  const handleCompleteSprint = (sprint: Sprint) => {
-    updateSprint.mutate({
-      id: sprint.id,
-      updates: {
-        status: SprintStatus.COMPLETED,
-        endDate: Date.now(),
-      },
-    });
-  };
-
-  const toggleSprintExpand = (sprintId: number) => {
-    setExpandedSprints((prev) => {
-      const next = new Set(prev);
-      if (next.has(sprintId)) next.delete(sprintId);
-      else next.add(sprintId);
-      return next;
-    });
-  };
-
-  const backlogTasks = tasks.filter((t: Task) => !t.sprintId);
-  const activeSprints = sprints.filter(
-    (s: Sprint) => s.status === SprintStatus.ACTIVE
-  );
-  const plannedSprints = sprints.filter(
-    (s: Sprint) => s.status === SprintStatus.PLANNED
-  );
-  const completedSprints = sprints.filter(
-    (s: Sprint) => s.status === SprintStatus.COMPLETED
-  );
-
-  const handleDeleteSprint = (sprint: Sprint) => {
-    if (
-      confirm(
-        `Delete "${sprint.name}" and all its tasks? This cannot be undone.`
-      )
-    ) {
-      deleteSprint.mutate(sprint.id);
-    }
-  };
-
-  const getTasksForSprint = (sprintId: number) =>
-    tasks.filter((t: Task) => t.sprintId === sprintId);
+  if (sprintsLoading || tasksLoading) {
+    return <BacklogSkeleton />;
+  }
 
   return (
-    <div className="h-full flex flex-col bg-linear-to-br from-background via-background to-secondary/5">
-      {/* Header */}
-      <header className="px-8 py-6 border-b border-border/30 bg-background/80 backdrop-blur-xl sticky top-0 z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-2.5 rounded-xl bg-linear-to-br from-primary/20 to-primary/5 border border-primary/20">
-              <Layers className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
-                Product Backlog
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {tasks.length} items · {sprints.length} sprints
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
+    <div className="h-full flex flex-col bg-background">
+      {/* Header Area */}
+      <PageHeader
+        title="Product Backlog"
+        subtitle={`${backlogTasks.length} items · ${sprints.length} sprints`}
+        icon={<Layers className="w-5 h-5 text-primary" />}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        actions={
+          <>
             <Button
               variant="secondary"
               onClick={() => setIsCreatingSprint(true)}
@@ -170,53 +94,13 @@ export function Backlog() {
               <Plus size={16} />
               Create Issue
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        {/* Sprint Creation Inline */}
-        <AnimatePresence>
-          {isCreatingSprint && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="flex gap-3 mt-4 pt-4 border-t border-border/30 max-w-lg">
-                <Input
-                  value={newSprintName}
-                  onChange={(e) => setNewSprintName(e.target.value)}
-                  placeholder="Sprint name (e.g. Sprint 24)"
-                  autoFocus
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateSprint()}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleCreateSprint}
-                  disabled={!newSprintName.trim()}
-                  size="sm"
-                >
-                  Create
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsCreatingSprint(false);
-                    setNewSprintName("");
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-8 py-6 space-y-4">
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="max-w-5xl mx-auto space-y-6 pb-20">
           {/* Active Sprints */}
           {activeSprints.map((sprint) => (
             <SprintSection
@@ -225,13 +109,23 @@ export function Backlog() {
               tasks={getTasksForSprint(sprint.id)}
               isExpanded={expandedSprints.has(sprint.id)}
               onToggle={() => toggleSprintExpand(sprint.id)}
-              onTaskClick={setSelectedTask}
+              onTaskClick={setSelectedTaskId}
               onMoveTask={(taskId, targetSprintId) =>
-                updateTask.mutate({
-                  id: taskId,
-                  updates: { sprintId: targetSprintId },
-                })
+                handleDrop(
+                  {
+                    preventDefault: () => {
+                      /* Mock for onMoveTask */
+                    },
+                    dataTransfer: {
+                      getData: () => String(taskId),
+                    },
+                  } as unknown as React.DragEvent,
+                  targetSprintId
+                )
               }
+              onDragOver={(e) => handleDragOver(e, sprint.id)}
+              onDrop={(e) => handleDrop(e, sprint.id)}
+              isDragOver={dragOverSection === sprint.id}
               availableSprints={sprints}
               variant="active"
               onAction={() => handleCompleteSprint(sprint)}
@@ -248,13 +142,23 @@ export function Backlog() {
               tasks={getTasksForSprint(sprint.id)}
               isExpanded={expandedSprints.has(sprint.id)}
               onToggle={() => toggleSprintExpand(sprint.id)}
-              onTaskClick={setSelectedTask}
+              onTaskClick={setSelectedTaskId}
               onMoveTask={(taskId, targetSprintId) =>
-                updateTask.mutate({
-                  id: taskId,
-                  updates: { sprintId: targetSprintId },
-                })
+                handleDrop(
+                  {
+                    preventDefault: () => {
+                      /* Mock for onMoveTask */
+                    },
+                    dataTransfer: {
+                      getData: () => String(taskId),
+                    },
+                  } as unknown as React.DragEvent,
+                  targetSprintId
+                )
               }
+              onDragOver={(e) => handleDragOver(e, sprint.id)}
+              onDrop={(e) => handleDrop(e, sprint.id)}
+              isDragOver={dragOverSection === sprint.id}
               availableSprints={sprints}
               variant="planned"
               onAction={() => handleStartSprint(sprint)}
@@ -266,12 +170,19 @@ export function Backlog() {
           {/* Backlog Section */}
           <motion.div
             layout
-            className="rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm overflow-hidden"
+            onDragOver={(e) => handleDragOver(e, "backlog")}
+            onDrop={(e) => handleDrop(e, null)}
+            className={cn(
+              "rounded-2xl border transition-all overflow-hidden",
+              dragOverSection === "backlog"
+                ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                : "border-border/40 bg-card/30 backdrop-blur-sm"
+            )}
           >
             <div className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
               <div
                 className="flex items-center gap-3 flex-1 cursor-pointer"
-                onClick={() => setBacklogExpanded(!backlogExpanded)}
+                onClick={toggleBacklogExpand}
               >
                 <motion.div
                   animate={{ rotate: backlogExpanded ? 90 : 0 }}
@@ -279,188 +190,205 @@ export function Backlog() {
                 >
                   <ChevronRight size={18} className="text-muted-foreground" />
                 </motion.div>
-                <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-amber-500" />
+                <div className="flex items-center gap-3">
+                  <Archive size={16} className="text-muted-foreground" />
                   <span className="font-semibold text-foreground">Backlog</span>
+                  <span className="px-2 py-0.5 rounded-full bg-secondary text-[11px] font-bold text-muted-foreground">
+                    {backlogTasks.length} issues
+                  </span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-secondary text-[11px] font-bold text-muted-foreground">
-                  {backlogTasks.length}
-                </span>
               </div>
+
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs gap-1.5 text-muted-foreground hover:text-primary"
-                onClick={() => setIsCreateTaskOpen(true)}
+                className="gap-1.5 text-xs hover:bg-primary/10 hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCreateTaskOpen(true);
+                }}
               >
                 <Plus size={14} />
-                Add
+                Create Issue
               </Button>
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence initial={false} mode="wait">
               {backlogExpanded && (
                 <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: "auto" }}
-                  exit={{ height: 0 }}
+                  key="backlog-content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
                   className="overflow-hidden"
                 >
                   <div className="border-t border-border/30">
-                    {backlogTasks.length === 0 ? (
-                      <div className="py-12 text-center">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
-                          <Zap className="w-5 h-5 text-muted-foreground/50" />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          No items in backlog
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2 text-primary"
-                          onClick={() => setIsCreateTaskOpen(true)}
+                    <AnimatePresence mode="wait" initial={false}>
+                      {backlogTasks.length === 0 ? (
+                        <motion.div
+                          key="empty"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.2 }}
                         >
-                          Create your first issue
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-border/20">
-                        {backlogTasks.map((task) => (
-                          <TaskRow
-                            key={task.id}
-                            task={task}
-                            onClick={() => setSelectedTask(task.id)}
-                            onMoveTask={(targetSprintId) =>
-                              updateTask.mutate({
-                                id: task.id,
-                                updates: { sprintId: targetSprintId },
-                              })
+                          <EmptyState
+                            variant="compact"
+                            title="No backlog items"
+                            description="Ready for your next big thing"
+                            className="py-12 bg-transparent border-none"
+                            action={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setIsCreateTaskOpen(true)}
+                                className="gap-2"
+                              >
+                                <Plus size={14} />
+                                New Issue
+                              </Button>
                             }
-                            availableSprints={sprints.filter(
-                              (s) => s.status !== SprintStatus.COMPLETED
-                            )}
-                            currentSprintId={null}
                           />
-                        ))}
-                      </div>
-                    )}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="list"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.2 }}
+                          className="divide-y divide-border/20"
+                        >
+                          {backlogTasks.map((task) => (
+                            <TaskRow
+                              key={task.id}
+                              task={task}
+                              onClick={() => setSelectedTaskId(task.id)}
+                              onMoveTask={(targetSprintId) =>
+                                handleDrop(
+                                  {
+                                    preventDefault: () => {
+                                      /* Mock for onMoveTask */
+                                    },
+                                    dataTransfer: {
+                                      getData: () => String(task.id),
+                                    },
+                                  } as unknown as React.DragEvent,
+                                  targetSprintId
+                                )
+                              }
+                              availableSprints={sprints}
+                              currentSprintId={null}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
 
-          {/* Completed Sprints */}
+          {/* Completed Sprints (Collapsible) */}
           {completedSprints.length > 0 && (
-            <motion.div
-              layout
-              className="rounded-2xl border border-border/30 bg-background/50 overflow-hidden"
-            >
+            <div className="mt-8 pt-8 border-t border-border/20">
               <button
                 onClick={() => setShowCompletedSprints(!showCompletedSprints)}
-                className="w-full flex items-center justify-between p-4 hover:bg-secondary/20 transition-colors"
+                className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 hover:text-foreground transition-colors uppercase tracking-widest px-4 mb-4"
               >
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: showCompletedSprints ? 90 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronRight
-                      size={18}
-                      className="text-muted-foreground/50"
-                    />
-                  </motion.div>
-                  <div className="flex items-center gap-2">
-                    <Archive size={16} className="text-muted-foreground/50" />
-                    <span className="font-medium text-muted-foreground">
-                      Completed Sprints
-                    </span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-secondary/50 text-[11px] font-bold text-muted-foreground/60">
-                    {completedSprints.length}
-                  </span>
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-5 h-5 rounded-md transition-all",
+                    showCompletedSprints
+                      ? "bg-secondary text-primary"
+                      : "bg-transparent"
+                  )}
+                >
+                  <ChevronRight
+                    size={14}
+                    className={cn(
+                      "transition-transform",
+                      showCompletedSprints && "rotate-90"
+                    )}
+                  />
                 </div>
+                Completed Sprints ({completedSprints.length})
               </button>
 
               <AnimatePresence>
                 {showCompletedSprints && (
                   <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: "auto" }}
-                    exit={{ height: 0 }}
-                    className="overflow-hidden"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="space-y-4 overflow-hidden"
                   >
-                    <div className="border-t border-border/30 divide-y divide-border/20">
-                      {completedSprints.map((sprint) => (
-                        <div
-                          key={sprint.id}
-                          className="flex items-center justify-between px-4 py-3 hover:bg-secondary/10 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <CheckCircle
-                              size={14}
-                              className="text-emerald-500/60"
-                            />
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {sprint.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground/50 font-mono">
-                              {getTasksForSprint(sprint.id).length} tasks
-                            </span>
-                            {sprint.endDate && (
-                              <span
-                                className="text-xs text-muted-foreground/40"
-                                suppressHydrationWarning
-                              >
-                                Completed{" "}
-                                {format(sprint.endDate, "MMM d, yyyy")}
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteSprint(sprint)}
-                          >
-                            <Trash2 size={14} className="mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                    {completedSprints.map((sprint) => (
+                      <SprintSection
+                        key={sprint.id}
+                        sprint={sprint}
+                        tasks={getTasksForSprint(sprint.id)}
+                        isExpanded={expandedSprints.has(sprint.id)}
+                        onToggle={() => toggleSprintExpand(sprint.id)}
+                        onTaskClick={setSelectedTaskId}
+                        onMoveTask={(taskId, targetSprintId) =>
+                          handleDrop(
+                            {
+                              preventDefault: () => {
+                                /* Mock for onMoveTask */
+                              },
+                              dataTransfer: {
+                                getData: () => String(taskId),
+                              },
+                            } as unknown as React.DragEvent,
+                            targetSprintId
+                          )
+                        }
+                        onDragOver={(e) => handleDragOver(e, sprint.id)}
+                        onDrop={(e) => handleDrop(e, sprint.id)}
+                        isDragOver={dragOverSection === sprint.id}
+                        availableSprints={sprints}
+                        variant="completed"
+                        onAction={() => handleDeleteSprint(sprint)}
+                        actionLabel="Delete"
+                        actionIcon={<Trash2 size={14} />}
+                      />
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Task Create Modal */}
+      {/* Modals & Overlays */}
+      <SprintCreateModal
+        isOpen={isCreatingSprint}
+        onClose={() => setIsCreatingSprint(false)}
+        onCreated={handleCreateSprint}
+        isSubmitting={isSubmittingSprint}
+      />
+
       <TaskCreateModal
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
         onCreated={() => {
-          queryClient.invalidateQueries({ queryKey: ["tasks"] });
-          setIsCreateTaskOpen(false);
+          /* Handled by hook invalidation */
         }}
       />
 
-      {/* Task Panel */}
       <AnimatePresence>
-        {selectedTask && (
+        {selectedTaskId && (
           <TaskPanel
-            taskId={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            onDeleted={() => {
-              setSelectedTask(null);
-              queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            taskId={selectedTaskId}
+            onClose={() => setSelectedTaskId(null)}
+            onDeleted={() => setSelectedTaskId(null)}
+            onUpdated={() => {
+              /* Handled by hook invalidation */
             }}
-            onUpdated={() =>
-              queryClient.invalidateQueries({ queryKey: ["tasks"] })
-            }
           />
         )}
       </AnimatePresence>
@@ -468,7 +396,25 @@ export function Backlog() {
   );
 }
 
-// Sprint Section Component
+// Internal Components
+
+interface SprintSectionProps {
+  sprint: Sprint;
+  tasks: Task[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onTaskClick: (id: number) => void;
+  onMoveTask: (taskId: number, targetSprintId: number | null) => void;
+  availableSprints: Sprint[];
+  variant: "active" | "planned" | "completed";
+  onAction: () => void;
+  actionLabel: string;
+  actionIcon: React.ReactNode;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragOver?: boolean;
+}
+
 function SprintSection({
   sprint,
   tasks,
@@ -481,46 +427,55 @@ function SprintSection({
   onAction,
   actionLabel,
   actionIcon,
-}: {
-  sprint: Sprint;
-  tasks: Task[];
-  isExpanded: boolean;
-  onToggle: () => void;
-  onTaskClick: (id: number) => void;
-  onMoveTask: (taskId: number, targetSprintId: number | null) => void;
-  availableSprints: Sprint[];
-  variant: "active" | "planned";
-  onAction: () => void;
-  actionLabel: string;
-  actionIcon: React.ReactNode;
-}) {
+  onDragOver,
+  onDrop,
+  isDragOver,
+}: SprintSectionProps) {
   const isActive = variant === "active";
+  const isCompleted = variant === "completed";
 
   return (
     <motion.div
       layout
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       className={cn(
         "rounded-2xl border overflow-hidden transition-all",
         isActive
           ? "border-primary/30 bg-primary/2 shadow-lg shadow-primary/5"
-          : "border-border/40 bg-card/30"
+          : isCompleted
+            ? "border-border/20 bg-secondary/5 opacity-80"
+            : "border-border/40 bg-card/30",
+        isDragOver && "border-primary ring-1 ring-primary/20 bg-primary/5"
       )}
     >
       <div
-        onClick={onToggle}
         className={cn(
           "w-full flex items-center justify-between p-4 transition-colors",
-          isActive ? "hover:bg-primary/5" : "hover:bg-secondary/30"
+          isActive
+            ? "hover:bg-primary/5"
+            : isCompleted
+              ? "hover:bg-secondary/10"
+              : "hover:bg-secondary/30"
         )}
       >
-        <div className="flex items-center gap-3">
+        <div
+          className="flex flex-1 items-center gap-3 cursor-pointer"
+          onClick={onToggle}
+        >
           <motion.div
             animate={{ rotate: isExpanded ? 90 : 0 }}
             transition={{ duration: 0.2 }}
           >
             <ChevronRight
               size={18}
-              className={isActive ? "text-primary" : "text-muted-foreground"}
+              className={
+                isActive
+                  ? "text-primary"
+                  : isCompleted
+                    ? "text-muted-foreground/40"
+                    : "text-muted-foreground"
+              }
             />
           </motion.div>
 
@@ -534,7 +489,11 @@ function SprintSection({
             <span
               className={cn(
                 "font-semibold",
-                isActive ? "text-primary" : "text-foreground"
+                isActive
+                  ? "text-primary"
+                  : isCompleted
+                    ? "text-muted-foreground"
+                    : "text-foreground"
               )}
             >
               {sprint.name}
@@ -550,6 +509,14 @@ function SprintSection({
                 Started {format(sprint.startDate, "MMM d")}
               </span>
             )}
+            {sprint.endDate && isCompleted && (
+              <span
+                className="text-xs text-muted-foreground/40 font-mono"
+                suppressHydrationWarning
+              >
+                Finished {format(sprint.endDate, "MMM d")}
+              </span>
+            )}
           </div>
         </div>
 
@@ -560,7 +527,9 @@ function SprintSection({
             "gap-1.5 text-xs",
             isActive
               ? "hover:bg-emerald-500/10 hover:text-emerald-600"
-              : "hover:bg-primary/10 hover:text-primary"
+              : isCompleted
+                ? "hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100"
+                : "hover:bg-primary/10 hover:text-primary"
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -572,39 +541,61 @@ function SprintSection({
         </Button>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence initial={false} mode="wait">
         {isExpanded && (
           <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: "auto" }}
-            exit={{ height: 0 }}
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
             className="overflow-hidden"
           >
             <div className="border-t border-border/30">
-              {tasks.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground/60">
-                  Drag issues here or move from backlog
-                </div>
-              ) : (
-                <div className="divide-y divide-border/20">
-                  {tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      onClick={() => onTaskClick(task.id)}
-                      onMoveTask={(targetSprintId) =>
-                        onMoveTask(task.id, targetSprintId)
-                      }
-                      availableSprints={availableSprints.filter(
-                        (s) =>
-                          s.id !== sprint.id &&
-                          s.status !== SprintStatus.COMPLETED
-                      )}
-                      currentSprintId={sprint.id}
+              <AnimatePresence mode="wait" initial={false}>
+                {tasks.length === 0 ? (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <EmptyState
+                      variant="minimal"
+                      title="No tasks in this sprint"
+                      description="Drag tasks here to include them in the sprint"
+                      className="py-10"
                     />
-                  ))}
-                </div>
-              )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="list"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="divide-y divide-border/20"
+                  >
+                    {tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        onClick={() => onTaskClick(task.id)}
+                        onMoveTask={(targetSprintId) =>
+                          onMoveTask(task.id, targetSprintId)
+                        }
+                        availableSprints={availableSprints.filter(
+                          (s) =>
+                            s.id !== sprint.id &&
+                            s.status !== SprintStatus.COMPLETED
+                        )}
+                        currentSprintId={sprint.id}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
@@ -613,7 +604,6 @@ function SprintSection({
   );
 }
 
-// Task Row Component
 function TaskRow({
   task,
   onClick,
@@ -630,10 +620,17 @@ function TaskRow({
   return (
     <motion.div
       layout
+      draggable
+      onDragStartCapture={(e) => {
+        if (e.dataTransfer) {
+          e.dataTransfer.setData("taskId", String(task.id));
+          e.dataTransfer.effectAllowed = "move";
+        }
+      }}
       className="group flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-all cursor-pointer"
       onClick={onClick}
     >
-      <div className="opacity-0 group-hover:opacity-40 transition-opacity cursor-grab">
+      <div className="text-muted-foreground/30 group-hover:text-primary/60 transition-colors cursor-grab active:cursor-grabbing">
         <GripVertical size={14} />
       </div>
 
@@ -659,7 +656,6 @@ function TaskRow({
         )}
       </div>
 
-      {/* Move dropdown */}
       <div
         className="opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={(e) => e.stopPropagation()}
@@ -679,11 +675,13 @@ function TaskRow({
           {currentSprintId !== null && (
             <option value="backlog">→ Backlog</option>
           )}
-          {availableSprints.map((s) => (
-            <option key={s.id} value={s.id}>
-              → {s.name}
-            </option>
-          ))}
+          {availableSprints
+            .filter((s) => s.status !== SprintStatus.COMPLETED)
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                → {s.name}
+              </option>
+            ))}
         </select>
       </div>
     </motion.div>

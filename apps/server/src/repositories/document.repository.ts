@@ -129,4 +129,34 @@ export class DocumentRepository extends DrizzleRepository {
       .returning({ id: documents.id });
     return result.length > 0;
   }
+
+  /**
+   * Delete a document by path
+   */
+  async deleteByPath(projectId: string, path: string): Promise<boolean> {
+    const result = await this.db
+      .delete(documents)
+      .where(and(eq(documents.projectId, projectId), eq(documents.path, path)))
+      .returning({ id: documents.id });
+    return result.length > 0;
+  }
+
+  /**
+   * Delete all documents by path prefix
+   */
+  async deleteByPathPrefix(
+    projectId: string,
+    pathPrefix: string
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(documents)
+      .where(
+        and(
+          eq(documents.projectId, projectId),
+          like(documents.path, `${pathPrefix}/%`)
+        )
+      )
+      .returning({ id: documents.id });
+    return result.length > 0;
+  }
 }

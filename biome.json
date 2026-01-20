@@ -69,7 +69,8 @@
         "noUselessElse": "off",
         "useImportType": "off",
         "useExponentiationOperator": "off",
-        "noNonNullAssertion": "error"
+        "noNonNullAssertion": "error",
+        "noDescendingSpecificity": "off"
       },
       "suspicious": {
         "noAsyncPromiseExecutor": "error",

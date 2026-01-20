@@ -138,6 +138,25 @@ export class DocService {
     return this.writeLocal(filePath, content);
   }
 
+  /**
+   * Delete document or directory
+   * - Local: deletes from file system
+   * - Cloud: deletes from database
+   */
+  async delete(filePath: string, projectId?: string): Promise<void> {
+    if (!filePath) {
+      throw new BadRequestError("Path is required");
+    }
+
+    if (this.isCloud) {
+      if (!projectId) {
+        throw new BadRequestError("projectId is required in cloud mode");
+      }
+      return this.deleteCloud(filePath, projectId);
+    }
+    return this.deleteLocal(filePath);
+  }
+
   // ============================================================================
   // Local Mode Implementation (File System)
   // ============================================================================
@@ -184,6 +203,33 @@ export class DocService {
     mkdirSync(dirname(fullPath), { recursive: true });
 
     writeFileSync(fullPath, content, "utf-8");
+  }
+
+  private async deleteLocal(filePath: string): Promise<void> {
+    const fullPath = this.resolveSafePath(filePath);
+
+    console.log("[DocService] Attempting to delete local file:", {
+      filePath,
+      fullPath,
+    });
+
+    if (!existsSync(fullPath)) {
+      console.error("[DocService] File not found:", fullPath);
+      throw new NotFoundError("Document");
+    }
+
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) {
+      console.log("[DocService] Deleting directory:", fullPath);
+      const { rmSync } = await import("node:fs");
+      rmSync(fullPath, { recursive: true, force: true });
+    } else {
+      console.log("[DocService] Deleting file:", fullPath);
+      const { unlinkSync } = await import("node:fs");
+      unlinkSync(fullPath);
+    }
+
+    console.log("[DocService] Successfully deleted:", fullPath);
   }
 
   private resolveSafePath(filePath: string): string {
@@ -363,5 +409,32 @@ export class DocService {
       .replace(/\.[^/.]+$/, "")
       .replace(/[-_]/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  private async deleteCloud(
+    filePath: string,
+    projectId: string
+  ): Promise<void> {
+    if (!this.documentRepo) {
+      throw new Error("Cloud mode not properly configured");
+    }
+
+    // Checking if it's a directory in cloud mode is tricky because cloud mode doesn't have explicit directory records
+    // but building the tree implies directories exist based on paths
+    // So for cloud mode, if it's a "directory", we should delete all documents that start with that path prefix.
+
+    // First try to delete exact path (file)
+    const exactDeleted = await this.documentRepo.deleteByPath(
+      projectId,
+      filePath
+    );
+
+    if (!exactDeleted) {
+      // If not deleted, it might be a directory. Delete all docs with this prefix.
+      // We need a repository method for this too, but let's see if we can use the existing one or add it.
+      // For now, let's just delete the exact path.
+      // I'll add deleteByPathPrefix to DocumentRepository as well.
+      await this.documentRepo.deleteByPathPrefix(projectId, filePath);
+    }
   }
 }

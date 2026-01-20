@@ -10,6 +10,7 @@ export function createDocsRouter(controller: DocController) {
   router.get("/tree", controller.getTree);
   router.get("/read", controller.read);
   router.post("/write", validateBody(WriteDocRequestSchema), controller.write);
+  router.delete("/", controller.delete);
 
   return router;
 }

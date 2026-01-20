@@ -2,6 +2,7 @@
  * Drizzle Schema - Hybrid (SQLite / Postgres)
  */
 
+import { sql } from "drizzle-orm";
 import {
   jsonb,
   integer as pgInteger,
@@ -25,7 +26,17 @@ const usersSqlite = sqliteTable("users", {
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("USER"),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"), // Optional for cloud mode (OTP-only)
+  // Onboarding fields
+  companyName: text("company_name"),
+  teamSize: text("team_size"), // 'solo', '2-10', '11-50', '51-200', '200+'
+  userRole: text("user_role"), // 'developer', 'designer', 'product_manager', 'other'
+  onboardingCompleted: integer("onboarding_completed", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  emailVerified: integer("email_verified", { mode: "boolean" })
+    .notNull()
+    .default(false),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
@@ -36,7 +47,19 @@ const usersPg = pgTable("users", {
   name: pgText("name").notNull(),
   avatarUrl: pgText("avatar_url"),
   role: pgText("role").notNull().default("USER"),
-  passwordHash: pgText("password_hash").notNull(),
+  passwordHash: pgText("password_hash"), // Optional for cloud mode (OTP-only)
+  // Onboarding fields
+  companyName: pgText("company_name"),
+  teamSize: pgText("team_size"), // 'solo', '2-10', '11-50', '51-200', '200+'
+  userRole: pgText("user_role"), // 'developer', 'designer', 'product_manager', 'other'
+  onboardingCompleted: pgText("onboarding_completed")
+    .$type<boolean>()
+    .notNull()
+    .default(sql`false`),
+  emailVerified: pgText("email_verified")
+    .$type<boolean>()
+    .notNull()
+    .default(sql`false`),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -158,6 +181,58 @@ const apiKeysPg = pgTable("api_keys", {
 export const apiKeys = (
   isCloud ? apiKeysPg : apiKeysSqlite
 ) as typeof apiKeysSqlite;
+
+// Workspaces (under organizations)
+const workspacesSqlite = sqliteTable("workspaces", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id")
+    .notNull()
+    .references(() => organizationsSqlite.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+const workspacesPg = pgTable("workspaces", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id")
+    .notNull()
+    .references(() => organizationsPg.id, { onDelete: "cascade" }),
+  name: pgText("name").notNull(),
+  slug: pgText("slug").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const workspaces = (
+  isCloud ? workspacesPg : workspacesSqlite
+) as typeof workspacesSqlite;
+
+// OTP Verification
+const otpVerificationSqlite = sqliteTable("otp_verification", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  verified: integer("verified", { mode: "boolean" }).notNull().default(false),
+  attempts: integer("attempts").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+const otpVerificationPg = pgTable("otp_verification", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: pgText("email").notNull(),
+  code: pgText("code").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: pgText("verified").$type<boolean>().notNull().default(sql`false`),
+  attempts: pgInteger("attempts").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const otpVerification = (
+  isCloud ? otpVerificationPg : otpVerificationSqlite
+) as typeof otpVerificationSqlite;
 
 // ============================================================================
 // Core Application Tables
@@ -385,3 +460,9 @@ export type NewEvent = typeof eventsSqlite.$inferInsert;
 
 export type Document = typeof documentsSqlite.$inferSelect;
 export type NewDocument = typeof documentsSqlite.$inferInsert;
+
+export type Workspace = typeof workspacesSqlite.$inferSelect;
+export type NewWorkspace = typeof workspacesSqlite.$inferInsert;
+
+export type OtpVerification = typeof otpVerificationSqlite.$inferSelect;
+export type NewOtpVerification = typeof otpVerificationSqlite.$inferInsert;

@@ -3,6 +3,7 @@
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";
 import { taskService } from "@/services";
 
@@ -103,10 +104,15 @@ export function TaskCreateModal({
         sprintId,
       });
 
+      toast.success("Task created", {
+        description: `"${title.trim()}" has been added`,
+      });
       handleClose();
       onCreated();
     } catch (err) {
-      console.error("Failed to create task:", err);
+      toast.error("Failed to create task", {
+        description: (err as Error).message,
+      });
     } finally {
       setIsSubmitting(false);
     }

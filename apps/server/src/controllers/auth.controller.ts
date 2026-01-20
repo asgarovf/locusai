@@ -8,9 +8,13 @@ import { NotFoundError, UnauthorizedError } from "../lib/errors.js";
 import { ResponseBuilder } from "../lib/index.js";
 import { asyncHandler } from "../middleware/index.js";
 import {
+  type CompleteRegistrationRequest,
   type CreateAPIKeyRequest,
   type LoginRequest,
   type RegisterRequest,
+  type RegisterWithOtpRequest,
+  ResendOtpRequest,
+  type VerifyOtpRequest,
 } from "../schemas/index.js";
 import type { TypedRequest } from "../types/index.js";
 
@@ -151,4 +155,94 @@ export class AuthController {
 
     ResponseBuilder.message(res, "API key revoked");
   });
+
+  // ============================================================================
+  // OTP-Based Authentication (Cloud Mode)
+  // ============================================================================
+
+  /**
+   * Register with email OTP - sends OTP to email
+   * POST /auth/register-otp
+   */
+  registerWithOtp = asyncHandler(
+    async (req: TypedRequest<RegisterWithOtpRequest>, res: Response) => {
+      const { email } = req.body;
+      await this.authService.registerWithEmailOtp(email);
+      ResponseBuilder.success(res, {
+        success: true,
+        message: "Verification code sent to your email",
+      });
+    }
+  );
+
+  /**
+   * Complete registration after OTP verification
+   * POST /auth/complete-registration
+   */
+  completeRegistration = asyncHandler(
+    async (req: TypedRequest<CompleteRegistrationRequest>, res: Response) => {
+      const { email, otp, name, companyName, teamSize, userRole } = req.body;
+      const result = await this.authService.verifyOtpAndCreateUser(email, otp, {
+        name,
+        companyName,
+        teamSize,
+        userRole,
+      });
+
+      ResponseBuilder.success(
+        res,
+        {
+          token: result.token,
+          user: result.user,
+        },
+        201
+      );
+    }
+  );
+
+  /**
+   * Login with email OTP - sends OTP to email
+   * POST /auth/login-otp
+   */
+  loginWithOtp = asyncHandler(
+    async (req: TypedRequest<RegisterWithOtpRequest>, res: Response) => {
+      const { email } = req.body;
+      await this.authService.loginWithEmailOtp(email);
+      ResponseBuilder.success(res, {
+        success: true,
+        message: "Verification code sent to your email",
+      });
+    }
+  );
+
+  /**
+   * Verify login OTP and get token
+   * POST /auth/verify-login
+   */
+  verifyLoginOtp = asyncHandler(
+    async (req: TypedRequest<VerifyOtpRequest>, res: Response) => {
+      const { email, otp } = req.body;
+      const result = await this.authService.verifyLoginOtp(email, otp);
+
+      ResponseBuilder.success(res, {
+        token: result.token,
+        user: result.user,
+      });
+    }
+  );
+
+  /**
+   * Resend OTP code
+   * POST /auth/resend-otp
+   */
+  resendOtp = asyncHandler(
+    async (req: TypedRequest<ResendOtpRequest>, res: Response) => {
+      const { email } = req.body;
+      await this.authService.resendOtp(email);
+      ResponseBuilder.success(res, {
+        success: true,
+        message: "Verification code resent to your email",
+      });
+    }
+  );
 }

@@ -29,4 +29,12 @@ export const docService = {
     }>("/docs/write", { path, content });
     return response.data;
   },
+
+  delete: async (path: string) => {
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>(`/docs?path=${encodeURIComponent(path)}`);
+    return response.data;
+  },
 };

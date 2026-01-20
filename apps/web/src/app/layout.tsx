@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { Providers } from "./providers";
 
@@ -20,13 +19,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+type Props = {
   children: React.ReactNode;
-}>) {
+};
+
+export default function RootLayout({ children }: Props) {
   return (
-    <html lang="en" className="dark">
+    <html suppressHydrationWarning lang="en" className="dark">
       <body
         suppressHydrationWarning
         className={`${roboto.className} antialiased`}
@@ -34,12 +33,8 @@ export default function RootLayout({
         <Providers>
           <div className="flex h-screen overflow-hidden bg-background">
             <Sidebar />
-
-            <main className="flex-1 overflow-auto bg-background p-8">
-              <div className="max-w-[1440px] mx-auto">
-                <Header />
-                {children}
-              </div>
+            <main className="flex-1 overflow-auto bg-background p-6">
+              {children}
             </main>
           </div>
         </Providers>

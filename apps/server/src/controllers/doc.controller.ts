@@ -107,4 +107,26 @@ export class DocController {
       ResponseBuilder.message(res, "Document updated");
     }
   );
+
+  /**
+   * DELETE /api/docs
+   */
+  delete = asyncHandler(async (req: TypedRequest, res: Response) => {
+    if (!req.auth) throw new UnauthorizedError();
+    const projectId = req.query.projectId as string | undefined;
+    const filePath = req.query.path as string;
+
+    console.log("[DocController] DELETE request received:", {
+      filePath,
+      projectId,
+    });
+
+    await this.validateProjectAccess(req.auth.userId, req.auth.role, projectId);
+
+    await this.docService.delete(filePath, projectId);
+
+    console.log("[DocController] Document deleted successfully:", filePath);
+
+    ResponseBuilder.message(res, "Document deleted");
+  });
 }

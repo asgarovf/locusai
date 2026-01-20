@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  type AcceptanceItem,
   AssigneeRole,
   EventType,
-  type Task,
   type Event as TaskEvent,
   TaskPriority,
   TaskStatus,
@@ -25,17 +23,19 @@ import {
   Unlock,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { PropertyItem } from "@/components";
 import {
   Button,
   Checkbox,
+  EmptyState,
   Input,
   PriorityBadge,
   StatusBadge,
   Textarea,
 } from "@/components/ui";
-import { taskService } from "@/services";
+import { useTaskPanel } from "@/hooks/useTaskPanel";
+import { cn } from "@/lib/utils";
 
 interface TaskPanelProps {
   taskId: number;
@@ -50,203 +50,44 @@ export function TaskPanel({
   onDeleted,
   onUpdated,
 }: TaskPanelProps) {
-  const [task, setTask] = useState<Task | null>(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editDesc, setEditDesc] = useState("");
-  const [newComment, setNewComment] = useState("");
-  const [newChecklistItem, setNewChecklistItem] = useState("");
-  const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
+  const {
+    task,
+    isEditingTitle,
+    setIsEditingTitle,
+    editTitle,
+    setEditTitle,
+    editDesc,
+    setEditDesc,
+    newComment,
+    setNewComment,
+    newChecklistItem,
+    setNewChecklistItem,
+    descMode,
+    setDescMode,
+    showRejectModal,
+    setShowRejectModal,
+    rejectReason,
+    setRejectReason,
+    isLocked,
+    checklistProgress,
+    handleUpdateTask,
+    handleDelete,
+    handleTitleSave,
+    handleDescSave,
+    handleAddChecklistItem,
+    handleToggleChecklistItem,
+    handleRemoveChecklistItem,
+    handleAddComment,
+    handleRunCi,
+    handleLock,
+    handleUnlock,
+    handleReject,
+    handleApprove,
+  } = useTaskPanel({ taskId, onUpdated, onDeleted, onClose });
 
   const formatDate = (date: string | number | Date) => {
     return format(new Date(date), "MMM d, yyyy");
   };
-
-  const fetchTask = useCallback(async () => {
-    try {
-      const taskData = await taskService.getById(taskId);
-      const initializedTask: Task = {
-        ...taskData,
-        acceptanceChecklist: taskData.acceptanceChecklist || [],
-        artifacts: taskData.artifacts || [],
-        activityLog: taskData.activityLog || [],
-        comments: taskData.comments || [],
-      };
-      setTask(initializedTask);
-      setEditTitle(taskData.title);
-      setEditDesc(taskData.description || "");
-    } catch (err) {
-      console.error("Failed to fetch task:", err);
-    }
-  }, [taskId]);
-
-  useEffect(() => {
-    fetchTask();
-  }, [fetchTask]);
-
-  const handleUpdateTask = async (updates: Partial<Task>) => {
-    try {
-      await taskService.update(taskId, updates);
-      fetchTask();
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to update task:", err);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this task? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-    try {
-      await taskService.delete(taskId);
-      onDeleted();
-      onClose();
-    } catch (err) {
-      console.error("Failed to delete task:", err);
-    }
-  };
-
-  const handleTitleSave = () => {
-    if (editTitle.trim() && editTitle !== task?.title) {
-      handleUpdateTask({ title: editTitle.trim() });
-    }
-    setIsEditingTitle(false);
-  };
-
-  const handleDescSave = () => {
-    if (editDesc !== task?.description) {
-      handleUpdateTask({ description: editDesc });
-    }
-  };
-
-  const handleAddChecklistItem = () => {
-    if (!newChecklistItem.trim() || !task) return;
-    const newItem: AcceptanceItem = {
-      id: crypto.randomUUID(),
-      text: newChecklistItem.trim(),
-      done: false,
-    };
-    handleUpdateTask({
-      acceptanceChecklist: [...task.acceptanceChecklist, newItem],
-    });
-    setNewChecklistItem("");
-  };
-
-  const handleToggleChecklistItem = (itemId: string) => {
-    if (!task) return;
-    const updated = task.acceptanceChecklist.map((item) =>
-      item.id === itemId ? { ...item, done: !item.done } : item
-    );
-    handleUpdateTask({ acceptanceChecklist: updated });
-  };
-
-  const handleRemoveChecklistItem = (itemId: string) => {
-    if (!task) return;
-    const updated = task.acceptanceChecklist.filter(
-      (item) => item.id !== itemId
-    );
-    handleUpdateTask({ acceptanceChecklist: updated });
-  };
-
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    try {
-      await taskService.addComment(taskId, {
-        author: "Human",
-        text: newComment,
-      });
-      setNewComment("");
-      await fetchTask();
-    } catch (err) {
-      console.error("Failed to add comment:", err);
-    }
-  };
-
-  const handleRunCi = async (preset: string) => {
-    try {
-      const data = await taskService.runCi(taskId, preset);
-      alert(data.summary);
-      fetchTask();
-    } catch (err) {
-      console.error("Failed to run CI:", err);
-    }
-  };
-
-  const handleLock = async () => {
-    try {
-      await taskService.lock(taskId, "human", 3600);
-      fetchTask();
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to lock task:", err);
-    }
-  };
-
-  const handleUnlock = async () => {
-    try {
-      await taskService.unlock(taskId, "human");
-      fetchTask();
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to unlock task:", err);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!rejectReason.trim()) return;
-    try {
-      // Move back to IN_PROGRESS
-      await taskService.update(taskId, { status: TaskStatus.IN_PROGRESS });
-      // Add rejection comment
-      await taskService.addComment(taskId, {
-        author: "Manager",
-        text: `❌ **Rejected**: ${rejectReason}`,
-      });
-      setShowRejectModal(false);
-      setRejectReason("");
-      fetchTask();
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to reject task:", err);
-    }
-  };
-
-  const handleApprove = async () => {
-    try {
-      await taskService.update(taskId, { status: TaskStatus.DONE });
-      fetchTask();
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to approve task:", err);
-    }
-  };
-
-  if (!task) {
-    return (
-      <div className="fixed top-0 right-0 bottom-0 w-[1152px] max-w-[95vw] bg-background border-l border-border z-950 flex items-center justify-center">
-        <div className="text-muted-foreground animate-pulse font-medium">
-          Loading task specs...
-        </div>
-      </div>
-    );
-  }
-
-  const isLocked =
-    task.lockedBy && (!task.lockExpiresAt || task.lockExpiresAt > Date.now());
-  const checklistProgress = task.acceptanceChecklist.length
-    ? Math.round(
-        (task.acceptanceChecklist.filter((i) => i.done).length /
-          task.acceptanceChecklist.length) *
-          100
-      )
-    : 0;
 
   return (
     <>
@@ -254,6 +95,7 @@ export function TaskPanel({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940"
         onClick={onClose}
       />
@@ -261,466 +103,534 @@ export function TaskPanel({
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-[-20px_0_80px_rgba(0,0,0,0.6)]"
+        transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.5 }}
+        className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-2xl"
       >
-        <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">
-          <button
-            className="p-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground hover:scale-105 transition-all duration-200 border border-transparent hover:border-border"
-            onClick={onClose}
-          >
-            <ChevronRight size={20} />
-          </button>
-
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-1 block">
-              Reference: #{task.id}
-            </span>
-            <div className="flex gap-3">
-              <StatusBadge status={task.status} />
-              <PriorityBadge priority={task.priority || TaskPriority.MEDIUM} />
+        {!task ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <div className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">
+                Synchronizing Task Stream...
+              </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => handleRunCi("quick")}
-              title="Run Quality Checks"
-              className="h-10 w-10 hover:bg-primary/10 hover:text-primary transition-all rounded-xl"
-            >
-              <Terminal size={18} />
-            </Button>
-            {isLocked ? (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleUnlock}
-                title="Unlock"
-                className="h-10 w-10 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl"
+        ) : (
+          <>
+            <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">
+              <button
+                className="p-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground hover:scale-105 transition-all duration-200 border border-transparent hover:border-border"
+                onClick={onClose}
               >
-                <Unlock size={18} />
-              </Button>
-            ) : (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleLock}
-                title="Lock"
-                className="h-10 w-10 hover:bg-primary/10 hover:text-primary rounded-xl"
-              >
-                <Lock size={18} />
-              </Button>
-            )}
-            <div className="w-px h-6 bg-border mx-1" />
-            {task.status === TaskStatus.VERIFICATION && (
-              <>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => setShowRejectModal(true)}
-                  className="h-10 px-4 rounded-xl"
-                >
-                  Reject
-                </Button>
-                <Button
-                  size="sm"
-                  variant="success"
-                  onClick={handleApprove}
-                  className="h-10 px-4 rounded-xl"
-                >
-                  <CheckCircle size={16} className="mr-2" />
-                  Approve
-                </Button>
-                <div className="w-px h-6 bg-border mx-1" />
-              </>
-            )}
-            <Button
-              size="icon"
-              variant="danger"
-              onClick={handleDelete}
-              title="Delete"
-              className="h-10 w-10 hover:scale-105 active:scale-95 transition-transform rounded-xl"
-            >
-              <Trash2 size={18} />
-            </Button>
-          </div>
-        </header>
+                <ChevronRight size={20} />
+              </button>
 
-        <div className="flex-1 grid grid-cols-[1fr_360px] overflow-hidden min-h-0">
-          <div className="p-6 overflow-y-auto scrollbar-thin">
-            {/* Title Section */}
-            <div className="mb-6">
-              {isEditingTitle ? (
-                <Input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  onBlur={handleTitleSave}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleTitleSave();
-                    if (e.key === "Escape") {
-                      setEditTitle(task.title);
-                      setIsEditingTitle(false);
-                    }
-                  }}
-                  className="text-2xl h-14 font-bold tracking-tight"
-                  autoFocus
-                />
-              ) : (
-                <h2
-                  className="text-2xl font-bold tracking-tight hover:text-primary transition-all cursor-pointer leading-tight group"
-                  onClick={() => setIsEditingTitle(true)}
-                >
-                  {task.title}
-                  <Edit
-                    size={18}
-                    className="inline-block ml-3 opacity-0 group-hover:opacity-40 transition-opacity"
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-1.5 block">
+                  Reference: #{task.id}
+                </span>
+                <div className="flex gap-3">
+                  <StatusBadge status={task.status} />
+                  <PriorityBadge
+                    priority={task.priority || TaskPriority.MEDIUM}
                   />
-                </h2>
-              )}
-            </div>
-
-            {/* Description Section */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <FileText size={16} />
-                  </div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
-                    Documentation
-                  </h4>
-                </div>
-                <div className="flex bg-secondary/30 p-1 rounded-xl">
-                  <button
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${descMode === "preview" ? "bg-background shadow-md text-foreground scale-105" : "text-muted-foreground hover:text-foreground"}`}
-                    onClick={() => setDescMode("preview")}
-                  >
-                    Visual
-                  </button>
-                  <button
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${descMode === "edit" ? "bg-background shadow-md text-foreground scale-105" : "text-muted-foreground hover:text-foreground"}`}
-                    onClick={() => setDescMode("edit")}
-                  >
-                    Markdown
-                  </button>
                 </div>
               </div>
 
-              {descMode === "edit" ? (
-                <div className="group border border-border rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all bg-secondary/5">
-                  <Textarea
-                    value={editDesc}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setEditDesc(e.target.value)
-                    }
-                    placeholder="Describe the implementation details, edge cases, and technical requirements..."
-                    rows={10}
-                    className="border-none focus:ring-0 text-base leading-relaxed p-6 bg-transparent"
-                    onBlur={handleDescSave}
-                  />
-                </div>
-              ) : (
-                <div className="prose prose-invert max-w-none bg-secondary/10 p-8 rounded-2xl border border-border/50 shadow-inner">
-                  {task.description ? (
-                    <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                      {task.description}
-                    </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleRunCi("quick")}
+                  title="Run Quality Checks"
+                  className="h-10 w-10 hover:bg-primary/10 hover:text-primary transition-all rounded-xl"
+                >
+                  <Terminal size={18} />
+                </Button>
+                {isLocked ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleUnlock}
+                    title="Unlock"
+                    className="h-10 w-10 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl"
+                  >
+                    <Unlock size={18} />
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleLock}
+                    title="Lock"
+                    className="h-10 w-10 hover:bg-primary/10 hover:text-primary rounded-xl"
+                  >
+                    <Lock size={18} />
+                  </Button>
+                )}
+                <div className="w-px h-6 bg-border mx-2" />
+                {task.status === TaskStatus.VERIFICATION && (
+                  <>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setShowRejectModal(true)}
+                      className="h-10 px-5 rounded-xl font-black uppercase tracking-widest text-[10px]"
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={handleApprove}
+                      className="h-10 px-5 rounded-xl font-black uppercase tracking-widest text-[10px]"
+                    >
+                      <CheckCircle size={16} className="mr-2" />
+                      Approve
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-2" />
+                  </>
+                )}
+                <Button
+                  size="icon"
+                  variant="danger"
+                  onClick={handleDelete}
+                  title="Delete"
+                  className="h-10 w-10 hover:scale-105 active:scale-95 transition-transform rounded-xl"
+                >
+                  <Trash2 size={18} />
+                </Button>
+              </div>
+            </header>
+
+            <div className="flex-1 grid grid-cols-[1fr_360px] overflow-hidden min-h-0">
+              <div className="p-8 overflow-y-auto scrollbar-thin">
+                {/* Title Section */}
+                <div className="mb-8">
+                  {isEditingTitle ? (
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onBlur={handleTitleSave}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleTitleSave();
+                        if (e.key === "Escape") {
+                          setEditTitle(task.title);
+                          setIsEditingTitle(false);
+                        }
+                      }}
+                      className="text-3xl h-16 font-black tracking-tight bg-secondary/20 border-primary/20 rounded-2xl px-6"
+                      autoFocus
+                    />
                   ) : (
-                    <span className="text-muted-foreground/30 italic text-sm select-none">
-                      Waiting for technical documentation...
-                    </span>
+                    <h2
+                      className="text-3xl font-black tracking-tight hover:text-primary transition-all cursor-pointer leading-tight group flex items-start"
+                      onClick={() => setIsEditingTitle(true)}
+                    >
+                      {task.title}
+                      <Edit
+                        size={18}
+                        className="ml-4 mt-1.5 opacity-0 group-hover:opacity-40 transition-opacity"
+                      />
+                    </h2>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Acceptance Checklist */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-500">
-                    <CheckCircle size={16} />
+                {/* Description Section */}
+                <div className="mb-10">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        <FileText size={16} />
+                      </div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60">
+                        Technical Documentation
+                      </h4>
+                    </div>
+                    <div className="flex bg-secondary/40 p-1 rounded-xl border border-border/20 shadow-inner">
+                      <button
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                          descMode === "preview"
+                            ? "bg-background shadow-md text-primary scale-105"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setDescMode("preview")}
+                      >
+                        Visual
+                      </button>
+                      <button
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                          descMode === "edit"
+                            ? "bg-background shadow-md text-primary scale-105"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setDescMode("edit")}
+                      >
+                        Markdown
+                      </button>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
-                    Definition of Done
+
+                  {descMode === "edit" ? (
+                    <div className="group border border-border/40 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all bg-secondary/5 shadow-inner">
+                      <Textarea
+                        value={editDesc}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          setEditDesc(e.target.value)
+                        }
+                        placeholder="Define implementation architecture, requirements, and scope..."
+                        rows={12}
+                        className="border-none focus:ring-0 text-base leading-relaxed p-8 bg-transparent scrollbar-thin"
+                        onBlur={handleDescSave}
+                      />
+                    </div>
+                  ) : (
+                    <div className="prose prose-invert max-w-none bg-secondary/10 p-10 rounded-3xl border border-border/40 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] relative group">
+                      {task.description ? (
+                        <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap font-medium">
+                          {task.description}
+                        </p>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10 opacity-30 select-none">
+                          <FileText size={32} className="mb-4" />
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">
+                            Waiting for Specs
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Acceptance Checklist */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
+                        <CheckCircle size={16} />
+                      </div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60">
+                        Definition of Done
+                      </h4>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-1.5">
+                          Calibration
+                        </span>
+                        <span className="text-sm font-mono font-black text-sky-500">
+                          {checklistProgress}%
+                        </span>
+                      </div>
+                      <div className="w-48 h-2 bg-secondary/40 rounded-full overflow-hidden border border-border/30 shadow-inner">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${checklistProgress}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="h-full bg-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.4)]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 mb-6">
+                    {task.acceptanceChecklist.length === 0 && (
+                      <EmptyState
+                        variant="compact"
+                        title="Zero Quality Gates"
+                        description="Deployment requires standard validation criteria."
+                        className="bg-secondary/5 border-dashed border-2 border-border/40 py-8"
+                        action={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setNewChecklistItem("Initialize unit validation")
+                            }
+                            className="text-[10px] font-black uppercase tracking-widest hover:text-sky-500"
+                          >
+                            Suggest Criteria
+                          </Button>
+                        }
+                      />
+                    )}
+                    {task.acceptanceChecklist.map((item) => (
+                      <motion.div
+                        layout
+                        key={item.id}
+                        className="group flex items-center gap-4 p-4 bg-card/30 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-card/50 transition-all duration-300 shadow-sm"
+                      >
+                        <Checkbox
+                          checked={item.done}
+                          onChange={() => handleToggleChecklistItem(item.id)}
+                          className="scale-110"
+                        />
+                        <span
+                          className={cn(
+                            "flex-1 text-sm font-bold transition-all duration-300",
+                            item.done
+                              ? "line-through text-muted-foreground/30 scale-[0.98] translate-x-1"
+                              : "text-foreground/90"
+                          )}
+                        >
+                          {item.text}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg"
+                          onClick={() => handleRemoveChecklistItem(item.id)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-4 p-2.5 bg-secondary/5 rounded-2xl border border-border/40 focus-within:border-primary/40 transition-all shadow-inner">
+                    <Input
+                      value={newChecklistItem}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setNewChecklistItem(e.target.value)
+                      }
+                      placeholder="Add validation gate..."
+                      className="h-10 bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        if (e.key === "Enter") handleAddChecklistItem();
+                      }}
+                    />
+                    <Button
+                      onClick={handleAddChecklistItem}
+                      className="px-6 h-10 bg-foreground text-background font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
+                    >
+                      Append
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
+                {/* Properties Section */}
+                <div className="mb-10">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+                    Mission Specs
                   </h4>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                      Status
-                    </span>
-                    <span className="text-sm font-mono font-black text-sky-500">
-                      {checklistProgress}%
-                    </span>
-                  </div>
-                  <div className="w-48 h-2 bg-secondary/30 rounded-full overflow-hidden border border-border/50">
-                    <div
-                      className="h-full bg-sky-500 transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(14,165,233,0.5)]"
-                      style={{ width: `${checklistProgress}%` }}
+                  <div className="space-y-3">
+                    <PropertyItem
+                      label="State"
+                      value={task.status}
+                      onEdit={(newValue: string) =>
+                        handleUpdateTask({ status: newValue as TaskStatus })
+                      }
+                      options={Object.values(TaskStatus)}
+                      type="dropdown"
+                    />
+                    <PropertyItem
+                      label="Role"
+                      value={task.assigneeRole || "Unassigned"}
+                      onEdit={(newValue: string) =>
+                        handleUpdateTask({
+                          assigneeRole: newValue as AssigneeRole,
+                        })
+                      }
+                      options={Object.values(AssigneeRole)}
+                      type="dropdown"
+                    />
+                    <PropertyItem
+                      label="Priority"
+                      value={task.priority || TaskPriority.MEDIUM}
+                      onEdit={(newValue: string) =>
+                        handleUpdateTask({ priority: newValue as TaskPriority })
+                      }
+                      options={Object.values(TaskPriority)}
+                      type="dropdown"
+                    />
+                    <PropertyItem
+                      label="Deadline"
+                      value={
+                        task.dueDate ? formatDate(task.dueDate) : "Undetermined"
+                      }
+                      onEdit={(newValue: string) =>
+                        handleUpdateTask({ dueDate: newValue || null })
+                      }
+                      type="date"
+                    />
+                    <PropertyItem
+                      label="Operator"
+                      value={task.assignedTo || "Available"}
+                      onEdit={(newValue: string) =>
+                        handleUpdateTask({ assignedTo: newValue || null })
+                      }
+                      type="text"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid gap-2 mb-4">
-                {task.acceptanceChecklist.length === 0 && (
-                  <div className="text-center py-6 border-2 border-dashed border-border/40 rounded-xl group hover:border-accent/40 transition-colors">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40 mb-2 italic">
-                      Standard quality checks required
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setNewChecklistItem("Add unit tests")}
-                      className="text-xs hover:text-sky-500"
-                    >
-                      Suggest Criteria
-                    </Button>
+                {/* Artifacts Section */}
+                <div className="mb-10">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+                    Output Pipeline
+                  </h4>
+                  <div className="grid gap-3">
+                    {task.artifacts.length > 0 ? (
+                      task.artifacts.map((artifact) => (
+                        <a
+                          key={artifact.id}
+                          href={artifact.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-center gap-4 p-4 bg-background/40 border border-border/30 rounded-2xl hover:border-primary/50 hover:bg-background transition-all duration-300 shadow-sm"
+                        >
+                          <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 border border-primary/5">
+                            <FileText size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-xs font-black truncate text-foreground/90 tracking-wide">
+                              {artifact.title}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground/50 font-black uppercase tracking-widest mt-1.5 block">
+                              {artifact.type} • {artifact.size}
+                            </span>
+                          </div>
+                        </a>
+                      ))
+                    ) : (
+                      <EmptyState
+                        variant="minimal"
+                        title="Draft Phase"
+                        className="py-10 border-dashed border-2 border-border/30 rounded-2xl opacity-40"
+                      />
+                    )}
                   </div>
-                )}
-                {task.acceptanceChecklist.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group flex items-center gap-3 p-3 bg-secondary/10 border border-border/40 rounded-xl hover:border-sky-500/50 hover:bg-secondary/20 transition-all duration-300 shadow-sm"
-                  >
-                    <Checkbox
-                      checked={item.done}
-                      onChange={() => handleToggleChecklistItem(item.id)}
+                </div>
+
+                {/* Activity Feed */}
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+                    Neural Stream
+                  </h4>
+
+                  <div className="flex gap-3 mb-6 bg-background/30 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/30 transition-all">
+                    <Input
+                      value={newComment}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setNewComment(e.target.value)
+                      }
+                      placeholder="Transmit logs..."
+                      className="h-10 text-xs font-bold bg-transparent border-none focus:ring-0 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em]"
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        if (e.key === "Enter") handleAddComment();
+                      }}
                     />
-                    <span
-                      className={`flex-1 text-sm font-semibold transition-all duration-300 ${item.done ? "line-through text-muted-foreground/40 scale-[0.98] translate-x-1" : "text-foreground"}`}
-                    >
-                      {item.text}
-                    </span>
                     <Button
-                      size="icon"
+                      onClick={handleAddComment}
                       variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg"
-                      onClick={() => handleRemoveChecklistItem(item.id)}
+                      className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group shrink-0"
                     >
-                      <X size={14} />
+                      <MessageSquare
+                        size={16}
+                        className="group-hover:rotate-12 transition-transform"
+                      />
                     </Button>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex gap-3 p-2 bg-secondary/5 rounded-xl border border-border/40">
-                <Input
-                  value={newChecklistItem}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setNewChecklistItem(e.target.value)
-                  }
-                  placeholder="Add quality criteria..."
-                  className="h-10 bg-transparent border-none focus:ring-0 text-sm font-medium"
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === "Enter") handleAddChecklistItem();
-                  }}
-                />
-                <Button
-                  onClick={handleAddChecklistItem}
-                  className="px-5 h-10 bg-foreground text-background font-bold text-xs tracking-wide hover:scale-105 active:scale-95 transition-all rounded-lg"
-                >
-                  Append
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
-            {/* Properties Section */}
-            <div className="mb-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
-                Specifications
-              </h4>
-              <div className="space-y-2">
-                <PropertyItem
-                  label="Status"
-                  value={task.status}
-                  onEdit={(newValue: string) =>
-                    handleUpdateTask({ status: newValue as TaskStatus })
-                  }
-                  options={Object.values(TaskStatus)}
-                  type="dropdown"
-                />
-                <PropertyItem
-                  label="Assignee Group"
-                  value={task.assigneeRole || "Unassigned"}
-                  onEdit={(newValue: string) =>
-                    handleUpdateTask({ assigneeRole: newValue as AssigneeRole })
-                  }
-                  options={Object.values(AssigneeRole)}
-                  type="dropdown"
-                />
-                <PropertyItem
-                  label="Priority"
-                  value={task.priority || TaskPriority.MEDIUM}
-                  onEdit={(newValue: string) =>
-                    handleUpdateTask({ priority: newValue as TaskPriority })
-                  }
-                  options={Object.values(TaskPriority)}
-                  type="dropdown"
-                />
-                <PropertyItem
-                  label="Deadline"
-                  value={
-                    task.dueDate ? formatDate(task.dueDate) : "Not Defined"
-                  }
-                  onEdit={(newValue: string) =>
-                    handleUpdateTask({ dueDate: newValue || null })
-                  }
-                  type="date"
-                />
-                <PropertyItem
-                  label="Owner"
-                  value={task.assignedTo || "Open Seat"}
-                  onEdit={(newValue: string) =>
-                    handleUpdateTask({ assignedTo: newValue || null })
-                  }
-                  type="text"
-                />
-              </div>
-            </div>
-
-            {/* Artifacts Section */}
-            <div className="mb-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
-                Generated Assets
-              </h4>
-              <div className="grid gap-2">
-                {task.artifacts.length > 0 ? (
-                  task.artifacts.map((artifact) => (
-                    <a
-                      key={artifact.id}
-                      href={artifact.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-center gap-3 p-3 bg-background/50 border border-border/40 rounded-xl hover:border-primary/50 hover:bg-background transition-all duration-300 shadow-sm"
-                    >
-                      <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-                        <FileText size={14} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-xs font-black truncate text-foreground/90">
-                          {artifact.title}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1 block">
-                          {artifact.type} • {artifact.size}
-                        </span>
-                      </div>
-                    </a>
-                  ))
-                ) : (
-                  <div className="py-6 text-center bg-background/20 rounded-xl border border-dashed border-border/40">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 italic">
-                      No output generated
-                    </p>
+                  <div className="space-y-10 max-h-[600px] overflow-y-auto pr-4 scrollbar-thin">
+                    {task.activityLog.length > 0 ? (
+                      task.activityLog.map((event: TaskEvent) => (
+                        <div
+                          key={event.id}
+                          className="relative flex gap-6 group"
+                        >
+                          <div className="absolute left-[19px] top-10 bottom-[-28px] w-px bg-border/40 group-last:hidden" />
+                          <div className="h-10 w-10 rounded-2xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm group-hover:border-primary/40 transition-all group-hover:scale-110">
+                            {event.type === EventType.COMMENT_ADDED && (
+                              <MessageSquare
+                                size={14}
+                                className="text-blue-500"
+                              />
+                            )}
+                            {event.type === EventType.STATUS_CHANGED && (
+                              <Tag size={14} className="text-amber-500" />
+                            )}
+                            {event.type === EventType.TASK_CREATED && (
+                              <PlusSquare
+                                size={14}
+                                className="text-emerald-400"
+                              />
+                            )}
+                            {event.type === EventType.TASK_UPDATED && (
+                              <Edit size={14} className="text-primary" />
+                            )}
+                            {event.type === EventType.ARTIFACT_ADDED && (
+                              <FileText size={14} className="text-purple-400" />
+                            )}
+                            {(event.type === EventType.LOCKED ||
+                              event.type === EventType.UNLOCKED) && (
+                              <Lock size={14} className="text-rose-400" />
+                            )}
+                            {event.type === EventType.CI_RAN && (
+                              <CheckCircle size={14} className="text-accent" />
+                            )}
+                          </div>
+                          <div className="pt-2 min-w-0">
+                            <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
+                              {formatActivityEvent(event)}
+                            </p>
+                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/30">
+                              {formatDistanceToNow(new Date(event.createdAt), {
+                                addSuffix: true,
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <EmptyState
+                        variant="minimal"
+                        title="Silent Stream"
+                        className="py-12 opacity-30"
+                      />
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
-
-            {/* Activity Feed */}
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4 pb-2 border-b border-border/40">
-                Activity Stream
-              </h4>
-
-              <div className="flex gap-2 mb-4">
-                <Input
-                  value={newComment}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setNewComment(e.target.value)
-                  }
-                  placeholder="Post an update..."
-                  className="h-11 text-xs bg-background/40 border-border/40 rounded-xl focus:bg-background"
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === "Enter") handleAddComment();
-                  }}
-                />
-                <Button
-                  onClick={handleAddComment}
-                  variant="secondary"
-                  className="h-9 px-4 rounded-lg group"
-                >
-                  <MessageSquare
-                    size={14}
-                    className="group-hover:rotate-12 transition-transform"
-                  />
-                </Button>
-              </div>
-
-              <div className="space-y-8 max-h-[500px] overflow-y-auto pr-3 scrollbar-none hover:scrollbar-thin transition-all">
-                {task.activityLog.map((event: TaskEvent) => (
-                  <div key={event.id} className="relative flex gap-5 group">
-                    <div className="absolute left-[17px] top-8 bottom-[-24px] w-px bg-border/40 group-last:hidden" />
-                    <div className="h-9 w-9 rounded-xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm group-hover:border-primary/40 transition-colors">
-                      {event.type === EventType.COMMENT_ADDED && (
-                        <MessageSquare size={14} className="text-blue-500" />
-                      )}
-                      {event.type === EventType.STATUS_CHANGED && (
-                        <Tag size={14} className="text-amber-500" />
-                      )}
-                      {event.type === EventType.TASK_CREATED && (
-                        <PlusSquare size={14} className="text-emerald-400" />
-                      )}
-                      {event.type === EventType.TASK_UPDATED && (
-                        <Edit size={14} className="text-primary" />
-                      )}
-                      {event.type === EventType.ARTIFACT_ADDED && (
-                        <FileText size={14} className="text-purple-400" />
-                      )}
-                      {(event.type === EventType.LOCKED ||
-                        event.type === EventType.UNLOCKED) && (
-                        <Lock size={14} className="text-rose-400" />
-                      )}
-                      {event.type === EventType.CI_RAN && (
-                        <CheckCircle size={14} className="text-accent" />
-                      )}
-                    </div>
-                    <div className="pt-1.5 min-w-0">
-                      <p className="text-xs font-bold text-foreground/90 leading-snug mb-1.5">
-                        {formatActivityEvent(event)}
-                      </p>
-                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">
-                        {formatDistanceToNow(new Date(event.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </motion.div>
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-960 flex items-center justify-center">
-          <div className="bg-background border border-border rounded-2xl p-6 w-[480px] shadow-2xl">
-            <h3 className="text-lg font-bold mb-4">Reject Task</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              This task will be moved back to IN_PROGRESS. The same agent will
-              receive your feedback and can fix the issues.
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-960 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-border/40 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl shadow-black"
+          >
+            <h3 className="text-xl font-black uppercase tracking-widest text-destructive mb-4">
+              Reject Mission
+            </h3>
+            <p className="text-sm text-muted-foreground/80 mb-6 font-medium leading-relaxed">
+              This task will be demoted to IN_PROGRESS. Assigned operators will
+              receive your feedback for recalibration.
             </p>
             <Textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Explain what needs to be fixed..."
-              className="min-h-[120px] mb-4"
+              placeholder="Detailed failure report and corrective actions..."
+              className="min-h-[140px] mb-6 bg-secondary/20 border-border/40 rounded-2xl p-4 font-bold text-sm focus:ring-destructive/20"
               autoFocus
             />
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-4 justify-end">
               <Button
                 variant="ghost"
                 onClick={() => {
                   setShowRejectModal(false);
                   setRejectReason("");
                 }}
+                className="px-6 rounded-xl font-black uppercase tracking-widest text-[10px]"
               >
                 Cancel
               </Button>
@@ -728,11 +638,12 @@ export function TaskPanel({
                 variant="danger"
                 onClick={handleReject}
                 disabled={!rejectReason.trim()}
+                className="px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-destructive/20"
               >
-                Reject Task
+                Confirm Rejection
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>

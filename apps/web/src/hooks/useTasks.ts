@@ -3,6 +3,7 @@
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { taskService } from "@/services";
 
@@ -44,6 +45,14 @@ export function useTasks() {
       taskService.update(taskId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task updated", {
+        description: "Status changed successfully",
+      });
+    },
+    onError: (err) => {
+      toast.error("Failed to update task", {
+        description: (err as Error).message,
+      });
     },
   });
 
@@ -51,6 +60,14 @@ export function useTasks() {
     mutationFn: (taskId: number) => taskService.delete(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task deleted", {
+        description: "The task has been removed",
+      });
+    },
+    onError: (err) => {
+      toast.error("Failed to delete task", {
+        description: (err as Error).message,
+      });
     },
   });
 
