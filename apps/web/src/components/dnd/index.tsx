@@ -16,7 +16,7 @@ export function DroppableSection({ id, children }: DroppableSectionProps) {
     <div
       ref={setNodeRef}
       className={cn(
-        "min-h-[60px] rounded-lg transition-all duration-200",
+        "rounded-lg transition-all duration-200",
         isOver && "bg-primary/10 ring-2 ring-primary/30 ring-dashed"
       )}
     >

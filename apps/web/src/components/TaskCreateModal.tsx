@@ -9,6 +9,7 @@ import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";
 import { useWorkspaceId } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { capitalize } from "@/lib/utils";
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ const PRIORITY_OPTIONS = [
 
 const ASSIGNEE_OPTIONS = Object.values(AssigneeRole).map((role) => ({
   value: role,
-  label: role.charAt(0) + role.slice(1).toLowerCase(),
+  label: capitalize(role),
 }));
 
 function getStatusColor(status: TaskStatus): string {

@@ -148,9 +148,6 @@ export function Sidebar() {
               >
                 <span className="text-base">{"🚀"}</span>
                 <span className="font-medium">{workspace.name}</span>
-                {workspace.id === currentWorkspace?.id && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
-                )}
               </button>
             ))}
             <div className="border-t border-border/30 mt-2 pt-2">

@@ -10,11 +10,11 @@ interface TaskCardProps {
   onClick?: () => void;
   onDelete?: (id: string) => void;
   isDragging?: boolean;
-  compact?: boolean;
+  variant?: "card" | "list";
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  [TaskPriority.LOW]: "var(--text-muted)",
+  [TaskPriority.LOW]: "#94a3b8",
   [TaskPriority.MEDIUM]: "#38bdf8",
   [TaskPriority.HIGH]: "#f59e0b",
   [TaskPriority.CRITICAL]: "#ef4444",
@@ -25,7 +25,7 @@ export function TaskCard({
   onClick,
   onDelete,
   isDragging,
-  compact = false,
+  variant = "card",
 }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,87 +46,160 @@ export function TaskCard({
       new Date(task.lockExpiresAt).getTime() > Date.now());
   const priority = (task.priority as TaskPriority) || TaskPriority.MEDIUM;
 
+  if (variant === "list") {
+    return (
+      <div
+        className={cn(
+          "group relative bg-card/40 border border-border/40 rounded-lg overflow-hidden transition-all hover:bg-secondary/20 hover:border-border cursor-pointer flex items-center h-10 px-3 gap-4",
+          isDragging && "opacity-50 scale-[0.98] shadow-lg"
+        )}
+        onClick={onClick}
+      >
+        <div className="flex items-center gap-2 min-w-[70px]">
+          <div
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: PRIORITY_COLORS[priority] }}
+          />
+          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+            {priority.slice(0, 3)}
+          </span>
+        </div>
+
+        <h4 className="text-[13px] font-medium text-foreground/90 truncate flex-1">
+          {task.title}
+        </h4>
+
+        <div className="flex items-center gap-4 text-muted-foreground/50">
+          {task.acceptanceChecklist?.length > 0 && (
+            <div className="flex items-center gap-1 text-[10px] font-bold">
+              <span
+                className={cn(
+                  "h-1 w-1 rounded-full",
+                  task.acceptanceChecklist.every((i) => i.done)
+                    ? "bg-emerald-500"
+                    : "bg-primary/40"
+                )}
+              />
+              {task.acceptanceChecklist.filter((i) => i.done).length}/
+              {task.acceptanceChecklist.length}
+            </div>
+          )}
+
+          {task.assigneeRole && (
+            <div className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20">
+              {task.assigneeRole}
+            </div>
+          )}
+
+          <div className="flex items-center gap-1 text-[10px]">
+            <Calendar size={10} />
+            <span>
+              {new Date(task.createdAt).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
+        </div>
+
+        {onDelete && (
+          <div className="flex items-center ml-2" ref={menuRef}>
+            <button
+              className="p-1 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm("Delete task?")) onDelete(task.id);
+              }}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
         "group relative bg-card border rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-muted-foreground/20 cursor-pointer",
-        isDragging && "opacity-50 scale-95 rotate-1 shadow-lg",
-        compact && "rounded-lg"
+        isDragging && "opacity-50 scale-95 rotate-1 shadow-lg"
       )}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("taskId", String(task.id));
-        e.dataTransfer.effectAllowed = "move";
-      }}
+      onClick={onClick}
     >
-      <div className={cn("p-4", compact && "p-3")} onClick={onClick}>
-        <div className={cn("flex items-start gap-2", !compact && "mb-3")}>
-          <div className="flex flex-col items-center gap-1.5 pt-1">
-            <span
-              className="h-2 w-2 rounded-full shrink-0"
-              style={{ background: PRIORITY_COLORS[priority] }}
-              title={`Priority: ${priority}`}
-            />
+      <div className="p-3.5">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2">
+            <div
+              className="px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider"
+              style={{
+                backgroundColor: `${PRIORITY_COLORS[priority]}20`,
+                color: PRIORITY_COLORS[priority],
+                border: `1px solid ${PRIORITY_COLORS[priority]}30`,
+              }}
+            >
+              {priority}
+            </div>
             {isLocked && (
-              <span title={`Locked by ${task.lockedBy}`}>
-                <Lock size={12} className="text-muted-foreground" />
+              <span
+                title={`Locked by ${task.lockedBy}`}
+                className="animate-pulse"
+              >
+                <Lock size={12} className="text-amber-500" />
               </span>
             )}
           </div>
-          <h4
-            className={cn(
-              "font-semibold leading-tight text-foreground flex-1",
-              compact ? "text-[13px]" : "text-[14px]"
-            )}
-          >
-            {task.title}
-          </h4>
+          {task.assigneeRole && (
+            <div className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono font-bold border border-primary/20">
+              {task.assigneeRole}
+            </div>
+          )}
         </div>
 
-        {!compact && task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {task.labels.slice(0, 3).map((l) => (
-              <span
-                key={l}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-secondary text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
-              >
-                <Tag size={10} /> {l}
-              </span>
-            ))}
-            {task.labels.length > 3 && (
-              <span className="px-1.5 py-0.5 rounded-sm bg-secondary text-[10px] font-bold text-muted-foreground">
-                +{task.labels.length - 3}
-              </span>
-            )}
-          </div>
-        )}
+        <h4 className="font-semibold leading-snug text-foreground mb-1.5 text-[14px]">
+          {task.title}
+        </h4>
 
-        {!compact && (
-          <div className="flex justify-between items-center pt-2 border-t mt-auto">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-              <Calendar size={12} />
-              <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+        <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+              <Calendar size={10} />
+              <span>
+                {new Date(task.createdAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
             </div>
-            {task.assigneeRole && (
-              <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border shadow-sm">
-                {task.assigneeRole.charAt(0).toUpperCase()}
+            {task.acceptanceChecklist?.length > 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold">
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    task.acceptanceChecklist.every((i) => i.done)
+                      ? "bg-emerald-500"
+                      : "bg-primary/40"
+                  )}
+                />
+                {task.acceptanceChecklist.filter((i) => i.done).length}/
+                {task.acceptanceChecklist.length}
               </div>
             )}
           </div>
-        )}
 
-        {compact && task.labels.length > 0 && (
-          <div className="flex gap-1 mt-2">
-            {task.labels.slice(0, 2).map((l) => (
-              <span
-                key={l}
-                className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-medium text-muted-foreground"
-              >
-                {l}
-              </span>
-            ))}
-          </div>
-        )}
+          {task.labels.length > 0 && (
+            <div className="flex gap-1">
+              {task.labels.slice(0, 1).map((l) => (
+                <span
+                  key={l}
+                  className="text-[9px] font-medium text-muted-foreground/70 flex items-center gap-1"
+                >
+                  <Tag size={9} /> {l}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {onDelete && (

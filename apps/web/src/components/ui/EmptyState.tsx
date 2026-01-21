@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { type LucideIcon, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -55,9 +54,7 @@ export function EmptyState({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
         "flex flex-col items-center justify-center p-12 text-center",
         className
@@ -77,11 +74,7 @@ export function EmptyState({
         </p>
       )}
 
-      {action && (
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          {action}
-        </motion.div>
-      )}
-    </motion.div>
+      {action && <div>{action}</div>}
+    </div>
   );
 }

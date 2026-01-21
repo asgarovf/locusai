@@ -1,0 +1,64 @@
+"use client";
+
+import { type Task } from "@locusai/shared";
+import { DraggableTask, DroppableSection } from "@/components/dnd";
+import { TaskCard } from "@/components/TaskCard";
+import { cn } from "@/lib/utils";
+import { BOARD_STATUSES } from "./constants";
+
+interface BoardColumnProps {
+  statusKey: string;
+  title: string;
+  tasks: Task[];
+  onTaskClick: (taskId: string) => void;
+  onTaskDelete: (taskId: string) => void;
+}
+
+export function BoardColumn({
+  statusKey,
+  title,
+  tasks,
+  onTaskClick,
+  onTaskDelete,
+}: BoardColumnProps) {
+  const statusConfig = BOARD_STATUSES.find((s) => s.key === statusKey);
+  const colorClass = statusConfig?.className || "bg-slate-500";
+
+  return (
+    <div className="flex flex-col w-80 shrink-0 h-full">
+      {/* Column Header */}
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <div className={cn("w-2 h-2 rounded-full", colorClass)} />
+        <span className="text-sm font-semibold text-foreground tracking-tight">
+          {title}
+        </span>
+        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full font-medium">
+          {tasks.length}
+        </span>
+      </div>
+
+      {/* Column Content */}
+      <DroppableSection id={statusKey}>
+        <div className="flex-1 rounded-xl bg-secondary/10 border border-border/40 p-2 min-h-[calc(100vh-220px)] backdrop-blur-sm transition-colors hover:bg-secondary/20">
+          {tasks.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground/60 gap-2 opacity-0 hover:opacity-100 transition-opacity">
+              <span>Drop tasks here</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <DraggableTask key={task.id} task={task}>
+                  <TaskCard
+                    task={task}
+                    onClick={() => onTaskClick(task.id)}
+                    onDelete={onTaskDelete}
+                  />
+                </DraggableTask>
+              ))}
+            </div>
+          )}
+        </div>
+      </DroppableSection>
+    </div>
+  );
+}

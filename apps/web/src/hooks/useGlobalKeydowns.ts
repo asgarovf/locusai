@@ -3,15 +3,21 @@
 import { useEffect } from "react";
 
 type UseGlobalKeydownsProps = {
-  onOpenCreateTask: () => void;
-  onOpenCreateSprint: () => void;
-  onCloseCreateTask: () => void;
+  onOpenCreateTask?: () => void;
+  onOpenCreateSprint?: () => void;
+  onCloseCreateTask?: () => void;
 };
 
 export const useGlobalKeydowns = ({
-  onOpenCreateTask,
-  onOpenCreateSprint,
-  onCloseCreateTask,
+  onOpenCreateTask = () => {
+    /* no-op */
+  },
+  onOpenCreateSprint = () => {
+    /* no-op */
+  },
+  onCloseCreateTask = () => {
+    /* no-op */
+  },
 }: UseGlobalKeydownsProps) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

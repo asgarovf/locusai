@@ -4,6 +4,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | "primary"
     | "secondary"
+    | "subtle"
     | "outline"
     | "ghost"
     | "danger"
@@ -14,22 +15,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", ...props }, ref) => {
     const variants = {
-      primary: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-      secondary:
-        "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-      outline:
-        "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
-      danger:
-        "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-      success: "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700",
+      primary:
+        "bg-primary text-primary-foreground shadow-sm hover:translate-y-[-1px] hover:shadow-md",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      subtle: "bg-primary/10 text-primary hover:bg-primary/20",
+      outline: "border border-border bg-transparent hover:bg-secondary/50",
+      ghost: "hover:bg-secondary text-muted-foreground hover:text-foreground",
+      danger: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
+      success: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20",
     };
 
     const sizes = {
-      sm: "h-8 px-3 text-xs",
-      md: "h-9 px-4 py-2 text-sm",
-      lg: "h-10 px-8 text-base",
-      icon: "h-9 w-9",
+      sm: "h-8 px-3 text-[10px] uppercase tracking-wider",
+      md: "h-10 px-5 text-sm",
+      lg: "h-12 px-8 text-base",
+      icon: "h-10 w-10 p-0",
     };
 
     return (
