@@ -7,8 +7,9 @@
   "include": [],
   "references": [
     { "path": "./packages/shared" },
+    { "path": "./packages/sdk" },
+    { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./apps/server" },
     { "path": "./apps/mcp" },
     { "path": "./packages/cli" }
   ],

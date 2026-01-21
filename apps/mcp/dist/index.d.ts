@@ -1,3 +1,3 @@
 #!/usr/bin/env bun
-export {};
+import "./config.js";
 //# sourceMappingURL=index.d.ts.map

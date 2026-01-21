@@ -1,23 +1,43 @@
 "use client";
 
 import { type AcceptanceItem, type Task, TaskStatus } from "@locusai/shared";
-import { useCallback, useEffect, useState } from "react";
-import { taskService } from "@/services";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useWorkspaceId } from "@/hooks/useWorkspaceId";
+import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 interface UseTaskPanelProps {
-  taskId: number;
+  taskId: string;
   onUpdated: () => void;
   onDeleted: () => void;
   onClose: () => void;
 }
 
+/**
+ * Task Panel Hook
+ * Handles detailed task view, checklist logic, and operations.
+ */
 export function useTaskPanel({
   taskId,
   onUpdated,
   onDeleted,
   onClose,
 }: UseTaskPanelProps) {
-  const [task, setTask] = useState<Task | null>(null);
+  const { user } = useAuth();
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  // Fetch task details
+  // Note: workspaceId is guaranteed by WorkspaceProtected wrapper
+  const { data: task, refetch: fetchTask } = useQuery({
+    queryKey: queryKeys.tasks.detail(taskId),
+    queryFn: () => locusClient.tasks.getById(taskId, workspaceId),
+    enabled: !!workspaceId,
+  });
+
+  // UI State
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
@@ -27,33 +47,47 @@ export function useTaskPanel({
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
-  const fetchTask = useCallback(async () => {
-    try {
-      const taskData = await taskService.getById(taskId);
-      const initializedTask: Task = {
-        ...taskData,
-        acceptanceChecklist: taskData.acceptanceChecklist || [],
-        artifacts: taskData.artifacts || [],
-        activityLog: taskData.activityLog || [],
-        comments: taskData.comments || [],
-      };
-      setTask(initializedTask);
-      setEditTitle(taskData.title);
-      setEditDesc(taskData.description || "");
-    } catch (err) {
-      console.error("Failed to fetch task:", err);
-    }
-  }, [taskId]);
-
   useEffect(() => {
-    fetchTask();
-  }, [fetchTask]);
+    if (task) {
+      setEditTitle(task.title);
+      setEditDesc(task.description || "");
+    }
+  }, [task]);
+
+  // Mutations
+  const updateTaskMutation = useMutation({
+    mutationFn: (updates: Partial<Task>) =>
+      locusClient.tasks.update(taskId, workspaceId as string, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.detail(taskId),
+      });
+      onUpdated();
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: () => locusClient.tasks.delete(taskId, workspaceId as string),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all() });
+      onDeleted();
+      onClose();
+    },
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: (data: { author: string; text: string }) =>
+      locusClient.tasks.addComment(taskId, workspaceId as string, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.detail(taskId),
+      });
+    },
+  });
 
   const handleUpdateTask = async (updates: Partial<Task>) => {
     try {
-      await taskService.update(taskId, updates);
-      await fetchTask();
-      onUpdated();
+      await updateTaskMutation.mutateAsync(updates);
     } catch (err) {
       console.error("Failed to update task:", err);
     }
@@ -68,9 +102,7 @@ export function useTaskPanel({
       return;
     }
     try {
-      await taskService.delete(taskId);
-      onDeleted();
-      onClose();
+      await deleteTaskMutation.mutateAsync();
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
@@ -97,13 +129,13 @@ export function useTaskPanel({
       done: false,
     };
     handleUpdateTask({
-      acceptanceChecklist: [...task.acceptanceChecklist, newItem],
+      acceptanceChecklist: [...(task.acceptanceChecklist || []), newItem],
     });
     setNewChecklistItem("");
   };
 
   const handleToggleChecklistItem = (itemId: string) => {
-    if (!task) return;
+    if (!task?.acceptanceChecklist) return;
     const updated = task.acceptanceChecklist.map((item) =>
       item.id === itemId ? { ...item, done: !item.done } : item
     );
@@ -111,7 +143,7 @@ export function useTaskPanel({
   };
 
   const handleRemoveChecklistItem = (itemId: string) => {
-    if (!task) return;
+    if (!task?.acceptanceChecklist) return;
     const updated = task.acceptanceChecklist.filter(
       (item) => item.id !== itemId
     );
@@ -121,30 +153,22 @@ export function useTaskPanel({
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     try {
-      await taskService.addComment(taskId, {
-        author: "Human",
+      await addCommentMutation.mutateAsync({
+        author: user?.name || "Anonymous",
         text: newComment,
       });
       setNewComment("");
-      await fetchTask();
     } catch (err) {
       console.error("Failed to add comment:", err);
     }
   };
 
-  const handleRunCi = async (preset: string) => {
-    try {
-      const data = await taskService.runCi(taskId, preset);
-      alert(data.summary);
-      await fetchTask();
-    } catch (err) {
-      console.error("Failed to run CI:", err);
-    }
-  };
-
   const handleLock = async () => {
     try {
-      await taskService.lock(taskId, "human", 3600);
+      await locusClient.tasks.lock(taskId, workspaceId as string, {
+        agentId: "human",
+        ttlSeconds: 3600,
+      });
       await fetchTask();
       onUpdated();
     } catch (err) {
@@ -154,7 +178,9 @@ export function useTaskPanel({
 
   const handleUnlock = async () => {
     try {
-      await taskService.unlock(taskId, "human");
+      await locusClient.tasks.unlock(taskId, workspaceId as string, {
+        agentId: "human",
+      });
       await fetchTask();
       onUpdated();
     } catch (err) {
@@ -165,14 +191,15 @@ export function useTaskPanel({
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     try {
-      await taskService.update(taskId, { status: TaskStatus.IN_PROGRESS });
-      await taskService.addComment(taskId, {
+      await updateTaskMutation.mutateAsync({
+        status: TaskStatus.IN_PROGRESS,
+      });
+      await addCommentMutation.mutateAsync({
         author: "Manager",
         text: `❌ **Rejected**: ${rejectReason}`,
       });
       setShowRejectModal(false);
       setRejectReason("");
-      await fetchTask();
       onUpdated();
     } catch (err) {
       console.error("Failed to reject task:", err);
@@ -181,8 +208,7 @@ export function useTaskPanel({
 
   const handleApprove = async () => {
     try {
-      await taskService.update(taskId, { status: TaskStatus.DONE });
-      await fetchTask();
+      await updateTaskMutation.mutateAsync({ status: TaskStatus.DONE });
       onUpdated();
     } catch (err) {
       console.error("Failed to approve task:", err);
@@ -190,8 +216,10 @@ export function useTaskPanel({
   };
 
   const isLocked =
-    task?.lockedBy && (!task.lockExpiresAt || task.lockExpiresAt > Date.now());
-  const checklistProgress = task?.acceptanceChecklist.length
+    task?.lockedBy &&
+    (!task.lockExpiresAt ||
+      new Date(task.lockExpiresAt).getTime() > Date.now());
+  const checklistProgress = task?.acceptanceChecklist?.length
     ? Math.round(
         (task.acceptanceChecklist.filter((i) => i.done).length /
           task.acceptanceChecklist.length) *
@@ -227,7 +255,6 @@ export function useTaskPanel({
     handleToggleChecklistItem,
     handleRemoveChecklistItem,
     handleAddComment,
-    handleRunCi,
     handleLock,
     handleUnlock,
     handleReject,

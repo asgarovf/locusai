@@ -1,5 +1,7 @@
 "use client";
 
+import { type Workspace } from "@locusai/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
@@ -10,33 +12,41 @@ import {
   LogOut,
   Plus,
   Settings,
-  User,
+  User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 import { useGlobalKeydowns } from "@/hooks";
+import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-
-// Mock user data - will be replaced with real auth
-const mockUser = {
-  name: "Local Developer",
-  email: "dev@localhost",
-  avatar: null,
-};
-
-// Mock workspaces - will be replaced with real data
-const mockWorkspaces = [{ id: "demo", name: "Demo Project", icon: "🚀" }];
+import { WorkspaceCreateModal } from "./WorkspaceCreateModal";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user, logout, switchWorkspace } = useAuth();
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const currentWorkspace = mockWorkspaces[0];
+  const { data: workspaces = [] } = useQuery<Workspace[]>({
+    queryKey: queryKeys.workspaces.all(),
+    queryFn: () => locusClient.workspaces.listAll(),
+    enabled: !!user,
+  });
+
+  const currentWorkspace =
+    workspaces.find((w) => w.id === user?.workspaceId) || workspaces[0];
+
+  const invalidateWorkspaces = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
+  };
 
   useGlobalKeydowns({
     onOpenCreateTask: () => {
@@ -49,14 +59,21 @@ export function Sidebar() {
       // Global escape could handle closing menus or global UI
       setIsWorkspaceOpen(false);
       setIsUserMenuOpen(false);
+      setIsCreateModalOpen(false);
     },
   });
 
   const mainMenuItems = [
     {
       href: "/",
-      label: "Board",
+      label: "Dashboard",
       icon: LayoutDashboard,
+      description: "Overview",
+    },
+    {
+      href: "/board",
+      label: "Board",
+      icon: FolderKanban,
       description: "Sprint board",
     },
     {
@@ -93,11 +110,11 @@ export function Sidebar() {
           className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/50 transition-all group"
         >
           <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-linear-to-br from-primary/20 to-primary/5 border border-border/50 text-lg">
-            {currentWorkspace.icon}
+            {"🚀"}
           </div>
           <div className="flex-1 text-left min-w-0">
             <div className="text-sm font-semibold text-foreground truncate">
-              {currentWorkspace.name}
+              {currentWorkspace?.name || "Select Workspace"}
             </div>
             <div className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
               Workspace
@@ -115,26 +132,35 @@ export function Sidebar() {
         {/* Workspace Dropdown */}
         {isWorkspaceOpen && (
           <div className="mt-2 p-2 bg-secondary/30 rounded-xl border border-border/30 animate-in fade-in slide-in-from-top-2 duration-200">
-            {mockWorkspaces.map((workspace) => (
+            {workspaces.map((workspace) => (
               <button
                 key={workspace.id}
                 className={cn(
                   "w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-sm",
-                  workspace.id === currentWorkspace.id
+                  workspace.id === currentWorkspace?.id
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                 )}
-                onClick={() => setIsWorkspaceOpen(false)}
+                onClick={() => {
+                  switchWorkspace(workspace.id as string);
+                  setIsWorkspaceOpen(false);
+                }}
               >
-                <span className="text-base">{workspace.icon}</span>
+                <span className="text-base">{"🚀"}</span>
                 <span className="font-medium">{workspace.name}</span>
-                {workspace.id === currentWorkspace.id && (
+                {workspace.id === currentWorkspace?.id && (
                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </button>
             ))}
             <div className="border-t border-border/30 mt-2 pt-2">
-              <button className="w-full flex items-center gap-2 p-2 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors text-sm">
+              <button
+                onClick={() => {
+                  setIsCreateModalOpen(true);
+                  setIsWorkspaceOpen(false);
+                }}
+                className="w-full flex items-center gap-2 p-2 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors text-sm"
+              >
                 <Plus size={16} />
                 <span>New Workspace</span>
               </button>
@@ -215,13 +241,17 @@ export function Sidebar() {
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/50 transition-all group"
           >
-            <Avatar name={mockUser.name} src={mockUser.avatar} size="md" />
+            <Avatar
+              name={user?.name || "User"}
+              src={user?.avatarUrl}
+              size="md"
+            />
             <div className="flex-1 text-left min-w-0">
               <div className="text-sm font-semibold text-foreground truncate">
-                {mockUser.name}
+                {user?.name}
               </div>
               <div className="text-[11px] text-muted-foreground truncate">
-                {mockUser.email}
+                {user?.email}
               </div>
             </div>
             <ChevronDown
@@ -241,7 +271,7 @@ export function Sidebar() {
                 className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
                 onClick={() => setIsUserMenuOpen(false)}
               >
-                <User size={16} />
+                <UserIcon size={16} />
                 <span>Profile</span>
               </Link>
               <Link
@@ -253,7 +283,13 @@ export function Sidebar() {
                 <span>Settings</span>
               </Link>
               <div className="border-t border-border/50 mt-1 pt-1">
-                <button className="w-full flex items-center gap-2 p-2 rounded-lg text-sm text-rose-400 hover:bg-rose-500/10 transition-colors">
+                <button
+                  onClick={() => {
+                    logout();
+                    router.push("/login");
+                  }}
+                  className="w-full flex items-center gap-2 p-2 rounded-lg text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
+                >
                   <LogOut size={16} />
                   <span>Sign Out</span>
                 </button>
@@ -262,6 +298,12 @@ export function Sidebar() {
           )}
         </div>
       </div>
+
+      <WorkspaceCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={invalidateWorkspaces}
+      />
     </aside>
   );
 }

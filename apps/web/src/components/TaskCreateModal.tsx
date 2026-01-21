@@ -1,18 +1,22 @@
 "use client";
 
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";
-import { taskService } from "@/services";
+import { useWorkspaceId } from "@/hooks";
+import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 interface TaskCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated: () => void;
   initialStatus?: TaskStatus;
-  sprintId?: number | null;
+  sprintId?: string | null;
+  defaultSprintId?: string;
 }
 
 const STATUS_OPTIONS = Object.values(TaskStatus).map((status) => ({
@@ -22,7 +26,7 @@ const STATUS_OPTIONS = Object.values(TaskStatus).map((status) => ({
 }));
 
 const PRIORITY_OPTIONS = [
-  { value: TaskPriority.LOW, label: "Low", color: "var(--text-muted)" },
+  { value: TaskPriority.LOW, label: "Low", color: "#64748b" },
   { value: TaskPriority.MEDIUM, label: "Medium", color: "#38bdf8" },
   { value: TaskPriority.HIGH, label: "High", color: "#f59e0b" },
   { value: TaskPriority.CRITICAL, label: "Critical", color: "#ef4444" },
@@ -51,7 +55,10 @@ export function TaskCreateModal({
   onCreated,
   initialStatus = TaskStatus.BACKLOG,
   sprintId = null,
+  defaultSprintId = undefined,
 }: TaskCreateModalProps) {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>(initialStatus);
@@ -59,7 +66,21 @@ export function TaskCreateModal({
   const [assigneeRole, setAssigneeRole] = useState<AssigneeRole | undefined>();
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data: Parameters<typeof locusClient.tasks.create>[1]) =>
+      locusClient.tasks.create(workspaceId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all() });
+      toast.success("Task created successfully");
+      resetForm();
+      onClose();
+      onCreated();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create task");
+    },
+  });
 
   const resetForm = () => {
     setTitle("");
@@ -92,30 +113,15 @@ export function TaskCreateModal({
     e.preventDefault();
     if (!title.trim()) return;
 
-    setIsSubmitting(true);
-    try {
-      await taskService.create({
-        title: title.trim(),
-        description,
-        status,
-        priority,
-        labels,
-        assigneeRole,
-        sprintId,
-      });
-
-      toast.success("Task created", {
-        description: `"${title.trim()}" has been added`,
-      });
-      handleClose();
-      onCreated();
-    } catch (err) {
-      toast.error("Failed to create task", {
-        description: (err as Error).message,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    createTaskMutation.mutate({
+      title: title.trim(),
+      description,
+      status,
+      priority,
+      labels,
+      assigneeRole,
+      sprintId: defaultSprintId || sprintId || undefined,
+    });
   };
 
   return (
@@ -237,10 +243,10 @@ export function TaskCreateModal({
           </Button>
           <Button
             type="submit"
-            disabled={!title.trim() || isSubmitting}
+            disabled={!title.trim() || createTaskMutation.isPending}
             className="px-8 shadow-lg shadow-primary/10"
           >
-            {isSubmitting ? "Creating..." : "Create Task"}
+            {createTaskMutation.isPending ? "Creating..." : "Create Task"}
           </Button>
         </div>
       </form>

@@ -22,6 +22,8 @@ playwright-report/
 _next/
 out/
 build
+
+# General build artifacts
 dist
 
 # production builds

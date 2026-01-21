@@ -6,6 +6,8 @@ export * from "./Dropdown";
 export * from "./EmptyState";
 export * from "./Input";
 export * from "./Modal";
+export * from "./OtpInput";
 export * from "./Skeleton";
+export * from "./Spinner";
 export * from "./Textarea";
 export * from "./Toast";

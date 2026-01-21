@@ -12,6 +12,8 @@
     "declarationMap": true,
     "composite": true,
     "incremental": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["bun-types"]
   }
 }

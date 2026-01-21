@@ -1,0 +1,135 @@
+"use client";
+
+import { EventType, type Task, type Event as TaskEvent } from "@locusai/shared";
+import { formatDistanceToNow } from "date-fns";
+import {
+  CheckCircle,
+  Edit,
+  FileText,
+  Lock,
+  MessageSquare,
+  PlusSquare,
+  Tag,
+} from "lucide-react";
+import { Button, EmptyState, Input } from "@/components/ui";
+
+interface TaskActivityProps {
+  task: Task;
+  newComment: string;
+  setNewComment: (val: string) => void;
+  handleAddComment: () => void;
+}
+
+export function TaskActivity({
+  task,
+  newComment,
+  setNewComment,
+  handleAddComment,
+}: TaskActivityProps) {
+  return (
+    <div>
+      <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+        Neural Stream
+      </h4>
+
+      <div className="flex gap-3 mb-6 bg-background/30 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/30 transition-all">
+        <Input
+          value={newComment}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setNewComment(e.target.value)
+          }
+          placeholder="Transmit logs..."
+          className="h-10 text-xs font-bold bg-transparent border-none focus:ring-0 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em]"
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") handleAddComment();
+          }}
+        />
+        <Button
+          onClick={handleAddComment}
+          variant="ghost"
+          className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group shrink-0"
+        >
+          <MessageSquare
+            size={16}
+            className="group-hover:rotate-12 transition-transform"
+          />
+        </Button>
+      </div>
+
+      <div className="space-y-10 max-h-[600px] overflow-y-auto pr-4 scrollbar-thin">
+        {task.activityLog.length > 0 ? (
+          task.activityLog.map((event: Task["activityLog"][number]) => (
+            <div key={event.id} className="relative flex gap-6 group">
+              <div className="absolute left-[19px] top-10 bottom-[-28px] w-px bg-border/40 group-last:hidden" />
+              <div className="h-10 w-10 rounded-2xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm group-hover:border-primary/40 transition-all group-hover:scale-110">
+                {event.type === EventType.COMMENT_ADDED && (
+                  <MessageSquare size={14} className="text-blue-500" />
+                )}
+                {event.type === EventType.STATUS_CHANGED && (
+                  <Tag size={14} className="text-amber-500" />
+                )}
+                {event.type === EventType.TASK_CREATED && (
+                  <PlusSquare size={14} className="text-emerald-400" />
+                )}
+                {event.type === EventType.TASK_UPDATED && (
+                  <Edit size={14} className="text-primary" />
+                )}
+                {event.type === EventType.ARTIFACT_ADDED && (
+                  <FileText size={14} className="text-purple-400" />
+                )}
+                {(event.type === EventType.LOCKED ||
+                  event.type === EventType.UNLOCKED) && (
+                  <Lock size={14} className="text-rose-400" />
+                )}
+                {event.type === EventType.CI_RAN && (
+                  <CheckCircle size={14} className="text-accent" />
+                )}
+              </div>
+              <div className="pt-2 min-w-0">
+                <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
+                  {formatActivityEvent(event as TaskEvent)}
+                </p>
+                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/30">
+                  {formatDistanceToNow(new Date(event.createdAt), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <EmptyState
+            variant="minimal"
+            title="Silent Stream"
+            className="py-12 opacity-30"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatActivityEvent(event: TaskEvent): string {
+  const { type, payload } = event;
+  const p = payload as TaskEvent["payload"];
+  switch (type) {
+    case EventType.STATUS_CHANGED:
+      return `Status moved ${p.oldStatus} ➟ ${p.newStatus}`;
+    case EventType.COMMENT_ADDED:
+      return `${p.author}: "${p.text}"`;
+    case EventType.TASK_CREATED:
+      return "Task initialized";
+    case EventType.TASK_UPDATED:
+      return "Parameters calibrated";
+    case EventType.ARTIFACT_ADDED:
+      return `Output: ${p.title}`;
+    case EventType.LOCKED:
+      return `Protected by ${p.agentId}`;
+    case EventType.UNLOCKED:
+      return "Protection released";
+    case EventType.CI_RAN:
+      return `Valuation complete: ${p.summary}`;
+    default:
+      return (type as string).replace(/_/g, " ").toLowerCase();
+  }
+}

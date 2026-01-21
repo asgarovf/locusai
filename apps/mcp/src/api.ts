@@ -1,5 +1,15 @@
-import { API_BASE } from "./config.js";
+import { API_BASE, API_KEY } from "./config.js";
 import type { ToolResult } from "./types.js";
+
+function getHeaders() {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+  return headers;
+}
 
 export function success(data: unknown): ToolResult {
   return {
@@ -15,7 +25,9 @@ export function error(message: string): ToolResult {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: getHeaders(),
+  });
   return res.json();
 }
 
@@ -25,7 +37,7 @@ export async function apiPost<T>(
 ): Promise<{ data: T; status: number; ok: boolean }> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(),
     body: JSON.stringify(body),
   });
   const data = await res.json();
@@ -38,7 +50,7 @@ export async function apiPatch<T>(
 ): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(),
     body: JSON.stringify(body),
   });
   return res.json();

@@ -9,7 +9,7 @@ export async function setupStructure(config: ProjectConfig) {
   const { projectPath, locusDir } = config;
   await ensureDir(projectPath);
   await ensureDir(join(projectPath, "apps/web/src"));
-  await ensureDir(join(projectPath, "apps/server/src"));
+  await ensureDir(join(projectPath, "apps/api/src"));
   await ensureDir(join(projectPath, "packages/shared/src"));
   await ensureDir(join(locusDir, "artifacts"));
   await ensureDir(join(locusDir, "logs"));
@@ -81,7 +81,7 @@ export async function generateRootConfigs(config: ProjectConfig) {
     references: [
       { path: "./packages/shared" },
       { path: "./apps/web" },
-      { path: "./apps/server" },
+      { path: "./apps/api" },
     ],
   });
 

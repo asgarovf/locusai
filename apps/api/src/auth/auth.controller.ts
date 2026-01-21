@@ -1,0 +1,85 @@
+import {
+  CompleteRegistration,
+  CompleteRegistrationSchema,
+  LoginResponse,
+  OtpRequest,
+  OtpRequestSchema,
+  VerifyOtp,
+  VerifyOtpSchema,
+} from "@locusai/shared";
+import { Body, Controller, Get, Post, UsePipes } from "@nestjs/common";
+import { Public } from "@/auth/decorators";
+import { ZodValidationPipe } from "@/common/pipes";
+import { User } from "@/entities";
+import { AuthService } from "./auth.service";
+import { CurrentUser } from "./decorators";
+
+@Controller("auth")
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Get("me")
+  async getProfile(@CurrentUser() user: User) {
+    // Fetch user's first workspace and organization ID
+    const workspaces = await this.authService.getUserWorkspaces(user.id);
+    const workspaceId = workspaces[0]?.id ?? undefined;
+
+    // Get the org ID from the first workspace
+    let orgId: string | undefined;
+    if (workspaceId) {
+      const workspace = await this.authService.getWorkspaceOrgId(workspaceId);
+      orgId = workspace?.orgId;
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      onboardingCompleted: user.onboardingCompleted,
+      emailVerified: user.emailVerified,
+      companyName: user.companyName ?? undefined,
+      teamSize: user.teamSize ?? undefined,
+      userRole: user.userRole ?? undefined,
+      workspaceId,
+      orgId,
+      createdAt: user.createdAt.getTime(),
+      updatedAt: user.updatedAt.getTime(),
+    };
+  }
+
+  // ============================================================================
+  // OTP-Based Authentication (Cloud Mode)
+  // ============================================================================
+
+  @Public()
+  @UsePipes(new ZodValidationPipe(OtpRequestSchema))
+  @Post("register-otp")
+  async registerOtp(@Body() data: OtpRequest) {
+    return this.authService.requestRegisterOtp(data.email);
+  }
+
+  @Public()
+  @UsePipes(new ZodValidationPipe(OtpRequestSchema))
+  @Post("login-otp")
+  async loginOtp(@Body() data: OtpRequest) {
+    return this.authService.requestLoginOtp(data.email);
+  }
+
+  @Public()
+  @UsePipes(new ZodValidationPipe(VerifyOtpSchema))
+  @Post("verify-login")
+  async verifyLogin(@Body() data: VerifyOtp): Promise<LoginResponse> {
+    return this.authService.verifyOtpAndLogin(data.email, data.otp);
+  }
+
+  @Public()
+  @UsePipes(new ZodValidationPipe(CompleteRegistrationSchema))
+  @Post("complete-registration")
+  async completeRegistration(
+    @Body() data: CompleteRegistration
+  ): Promise<LoginResponse> {
+    return this.authService.completeRegistration(data);
+  }
+}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
 import { Providers } from "./providers";
 
 const roboto = Roboto({
@@ -30,14 +29,7 @@ export default function RootLayout({ children }: Props) {
         suppressHydrationWarning
         className={`${roboto.className} antialiased`}
       >
-        <Providers>
-          <div className="flex h-screen overflow-hidden bg-background">
-            <Sidebar />
-            <main className="flex-1 overflow-auto bg-background p-6">
-              {children}
-            </main>
-          </div>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

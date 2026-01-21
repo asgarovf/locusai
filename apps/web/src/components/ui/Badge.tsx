@@ -1,16 +1,30 @@
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "error" | "info" | "purple";
+  variant?:
+    | "default"
+    | "success"
+    | "warning"
+    | "error"
+    | "info"
+    | "purple"
+    | "primary"
+    | "secondary"
+    | "outline";
   size?: "sm" | "md";
+  className?: string;
 }
 
 export function Badge({
   children,
   variant = "default",
   size = "sm",
+  className = "",
 }: BadgeProps) {
   const variants = {
     default: "bg-primary text-primary-foreground shadow hover:bg-primary/80",
+    primary: "bg-primary/15 text-primary border-primary/20",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    outline: "text-foreground border-border",
     success: "bg-status-done/15 text-status-done border-status-done/20",
     warning:
       "bg-status-progress/15 text-status-progress border-status-progress/20",
@@ -26,7 +40,7 @@ export function Badge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${sizes[size]}`}
+      className={`inline-flex items-center rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </span>

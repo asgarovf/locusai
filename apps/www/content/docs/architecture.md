@@ -13,7 +13,7 @@ This is the entry point for the user. It is a bundled executable that contains:
 - The **Server**: An Express.js API that serves the dashboard and handles requests.
 - The **MCP Server**: A standardized interface for AI agents.
 
-### 2. The Engine (`apps/server`)
+### 2. The Engine (`apps/api`)
 The engine is responsible for maintaining the state of your project. It uses `better-sqlite3` to store task data, comments, and history in a local `.locus/db.sqlite` file within your project root.
 
 ### 3. The Dashboard (`apps/web`)

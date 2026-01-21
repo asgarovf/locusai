@@ -19,4 +19,6 @@ if (!projectPath || typeof projectPath !== "string") {
 }
 
 export const projectDir: string = projectPath;
-export const API_BASE = "http://localhost:3080/api";
+export const API_BASE =
+  process.env.LOCUS_API_URL || "http://localhost:3080/api";
+export const API_KEY = process.env.LOCUS_API_KEY;

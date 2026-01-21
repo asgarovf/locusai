@@ -22,7 +22,7 @@ bun run workspace:init
 
 ## Repository Structure
 
-- `apps/server`: The API and Engine.
+- `apps/api`: The API and Engine.
 - `apps/web`: The Dashboard UI.
 - `apps/mcp`: The Agentic Interface.
 - `packages/cli`: The Bundler and User Interface.

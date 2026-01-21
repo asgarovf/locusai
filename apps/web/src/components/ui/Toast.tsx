@@ -9,10 +9,9 @@ export { toast };
 export function Toaster() {
   return (
     <SonnerToaster
-      position="top-right"
+      position="top-center"
       expand={false}
       richColors
-      closeButton
       theme="dark"
       toastOptions={{
         style: {
@@ -37,19 +36,19 @@ export function Toaster() {
 // Convenience wrapper for typed toast calls
 export const showToast = {
   success: (title: string, description?: string) => {
-    toast.success(title, { description });
+    toast.success(title, { description, dismissible: true });
   },
   error: (title: string, description?: string) => {
-    toast.error(title, { description });
+    toast.error(title, { description, dismissible: true });
   },
   warning: (title: string, description?: string) => {
-    toast.warning(title, { description });
+    toast.warning(title, { description, dismissible: true });
   },
   info: (title: string, description?: string) => {
-    toast.info(title, { description });
+    toast.info(title, { description, dismissible: true });
   },
   loading: (title: string, description?: string) => {
-    return toast.loading(title, { description });
+    return toast.loading(title, { description, dismissible: true });
   },
   promise: <T,>(
     promise: Promise<T>,

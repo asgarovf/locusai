@@ -8,20 +8,19 @@ COPY package.json bun.lock tsconfig.base.json biome.json ./
 # Copy packages
 COPY packages/shared ./packages/shared
 
-# Copy the server app
-COPY apps/server ./apps/server
+# Copy the API app
+COPY apps/api ./apps/api
 
 # Install dependencies (frozen lockfile for speed/consistency)
 RUN bun install --frozen-lockfile
 
 # Set production environment
 ENV NODE_ENV=production
-ENV DB_MODE=cloud
 ENV PORT=8080
 
 # Expose the API port
 EXPOSE 8080
 
-# Run the server
-WORKDIR /app/apps/server
-CMD ["bun", "run", "src/index.ts"]
+# Run the API
+WORKDIR /app/apps/api
+CMD ["bun", "run", "start:prod"]

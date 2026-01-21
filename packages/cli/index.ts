@@ -3,10 +3,9 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-
+import { generateAppApi } from "./src/generators/api.js";
 import { initializeLocus, logMcpConfig } from "./src/generators/locus.js";
 import { generateRootConfigs, setupStructure } from "./src/generators/root.js";
-import { generateAppServer } from "./src/generators/server.js";
 import { generatePackageShared } from "./src/generators/shared.js";
 import { generateAppWeb } from "./src/generators/web.js";
 import type { ProjectConfig } from "./src/types.js";
@@ -63,7 +62,7 @@ async function init(args: string[]) {
       await generateRootConfigs(config);
       await generatePackageShared(config);
       await generateAppWeb(config);
-      await generateAppServer(config);
+      await generateAppApi(config);
     }
 
     await initializeLocus(config);
@@ -101,24 +100,24 @@ async function dev(args: string[]) {
     : resolve(cliDir, "../../");
 
   // Detection for bundled vs source mode
-  const serverSourcePath = join(locusRoot, "apps/server/src/index.ts");
-  const serverBundledPath = isBundled
-    ? join(cliDir, "server.js")
-    : join(locusRoot, "packages/cli/bin/server.js");
+  const apiSourcePath = join(locusRoot, "apps/api/src/main.ts");
+  const apiBundledPath = isBundled
+    ? join(cliDir, "api.js")
+    : join(locusRoot, "packages/cli/bin/api.js");
 
-  const serverExecPath = existsSync(serverSourcePath)
-    ? serverSourcePath
-    : serverBundledPath;
+  const apiExecPath = existsSync(apiSourcePath)
+    ? apiSourcePath
+    : apiBundledPath;
 
-  if (!existsSync(serverExecPath)) {
+  if (!existsSync(apiExecPath)) {
     console.error("Error: Locus engine not found. Please reinstall the CLI.");
     process.exit(1);
   }
 
   console.log("🚀 Starting Locus for project:", projectPath);
 
-  const serverProcess = Bun.spawn(
-    ["bun", "run", serverExecPath, "--project", locusDir],
+  const apiProcess = Bun.spawn(
+    ["bun", "run", apiExecPath, "--project", locusDir],
     {
       stdout: "inherit",
       stderr: "inherit",
@@ -146,7 +145,7 @@ async function dev(args: string[]) {
   setTimeout(() => {
     try {
       if (process.platform === "darwin") {
-        Bun.spawn(["open", "http://localhost:3080"], { stdout: "ignore" });
+        Bun.spawn(["open", "http://localhost:8000"], { stdout: "ignore" });
       }
     } catch {
       // Ignore open errors
@@ -156,13 +155,13 @@ async function dev(args: string[]) {
   // Handle shutdown
   process.on("SIGINT", () => {
     console.log("\n🛑 Shutting down Locus...");
-    serverProcess.kill();
+    apiProcess.kill();
     if (webProcess) webProcess.kill();
     process.exit();
   });
 
   await Promise.all([
-    serverProcess.exited,
+    apiProcess.exited,
     webProcess ? webProcess.exited : Promise.resolve(),
   ]);
 }

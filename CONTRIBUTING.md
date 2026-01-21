@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Locus! Locus is built as a monore
 
 ## 🏗 Repository Structure
 
-- `apps/server`: The core engine (Express/SQLite).
+- `apps/api`: The core engine (NestJS/TypeORM).
 - `apps/web`: The Next.js dashboard.
 - `apps/mcp`: The Model Context Protocol server for AI integration.
 - `packages/cli`: The unified entry point for users.
