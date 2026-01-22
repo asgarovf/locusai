@@ -6,23 +6,8 @@ import { z } from "zod";
 import { UserSchema } from "./user";
 
 // ============================================================================
-// Password-Based Auth
+// Auth Responses
 // ============================================================================
-
-export const LoginRequestSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-export type LoginRequest = z.infer<typeof LoginRequestSchema>;
-
-export const RegisterRequestSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  name: z.string().min(1, "Name is required").max(100),
-});
-
-export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 export const AuthResponseSchema = z.object({
   token: z.string(),

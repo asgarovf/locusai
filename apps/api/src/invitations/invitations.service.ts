@@ -105,11 +105,7 @@ export class InvitationsService {
     return invitation;
   }
 
-  async accept(
-    token: string,
-    name: string,
-    password: string
-  ): Promise<Membership> {
+  async accept(token: string, name: string): Promise<Membership> {
     const invitation = await this.findByToken(token);
 
     // Check if user exists
@@ -119,10 +115,12 @@ export class InvitationsService {
 
     // Create user if doesn't exist
     if (!user) {
+      if (!name) {
+        throw new BadRequestException("Name is required for new users");
+      }
       user = this.userRepository.create({
         email: invitation.email,
         name,
-        passwordHash: password, // In production, hash this
         role: UserRole.USER,
         onboardingCompleted: true,
         emailVerified: true,
@@ -130,14 +128,27 @@ export class InvitationsService {
       user = await this.userRepository.save(user);
     }
 
-    const membership = this.membershipRepository.create({
-      orgId: invitation.orgId,
-      userId: user.id,
-      role: invitation.role,
+    // Check if user is already a member
+    const existingMembership = await this.membershipRepository.findOne({
+      where: { orgId: invitation.orgId, userId: user.id },
     });
 
-    const savedMembership = await this.membershipRepository.save(membership);
+    let savedMembership: Membership;
 
+    if (existingMembership) {
+      // User is already a member, just use the existing membership
+      savedMembership = existingMembership;
+    } else {
+      // Create new membership
+      const membership = this.membershipRepository.create({
+        orgId: invitation.orgId,
+        userId: user.id,
+        role: invitation.role,
+      });
+      savedMembership = await this.membershipRepository.save(membership);
+    }
+
+    // Mark invitation as accepted
     invitation.acceptedAt = new Date();
     await this.invitationRepository.save(invitation);
 
@@ -146,7 +157,7 @@ export class InvitationsService {
 
   async listByOrg(orgId: string): Promise<Invitation[]> {
     return this.invitationRepository.find({
-      where: { orgId },
+      where: { orgId, acceptedAt: null },
       order: { createdAt: "DESC" },
     });
   }

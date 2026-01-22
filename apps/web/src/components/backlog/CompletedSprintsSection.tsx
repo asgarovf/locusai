@@ -33,7 +33,7 @@ export function CompletedSprintsSection({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15, delay: 0.1 }}
-      className="pt-4 border-t border-border/20"
+      className="pt-4 border-t border-border/50"
     >
       <BacklogSection
         id="completed"

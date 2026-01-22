@@ -16,7 +16,7 @@ export function SettingItem({
   children,
 }: SettingItemProps) {
   return (
-    <div className="flex items-start justify-between p-4 rounded-xl hover:bg-secondary/30 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-xl hover:bg-secondary/30 transition-colors">
       <div className="flex gap-4">
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground shrink-0">
           {icon}

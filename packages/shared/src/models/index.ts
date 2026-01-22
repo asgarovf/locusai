@@ -3,6 +3,7 @@ export * from "./agent";
 export * from "./auth";
 export * from "./ci";
 export * from "./doc";
+export * from "./doc-group";
 export * from "./invitation";
 export * from "./organization";
 export * from "./sprint";

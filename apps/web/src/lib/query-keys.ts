@@ -50,4 +50,42 @@ export const queryKeys = {
     detail: (id: string, workspaceId?: string) =>
       [...queryKeys.sprints.all(), "detail", id, { workspaceId }] as const,
   },
+  docs: {
+    all: () => ["docs"] as const,
+    list: (workspaceId?: string | null) =>
+      [
+        ...queryKeys.docs.all(),
+        "list",
+        { workspaceId: workspaceId ?? undefined },
+      ] as const,
+    detail: (id: string, workspaceId?: string | null) =>
+      [
+        ...queryKeys.docs.all(),
+        "detail",
+        id,
+        { workspaceId: workspaceId ?? undefined },
+      ] as const,
+  },
+  docGroups: {
+    all: () => ["doc-groups"] as const,
+    list: (workspaceId?: string | null) =>
+      [
+        ...queryKeys.docGroups.all(),
+        "list",
+        { workspaceId: workspaceId ?? undefined },
+      ] as const,
+  },
+  organizations: {
+    all: () => ["organizations"] as const,
+    list: () => [...queryKeys.organizations.all(), "list"] as const,
+    detail: (id: string) =>
+      [...queryKeys.organizations.all(), "detail", id] as const,
+    members: (id: string) =>
+      [...queryKeys.organizations.all(), "members", id] as const,
+  },
+  invitations: {
+    all: () => ["invitations"] as const,
+    list: (orgId: string) =>
+      [...queryKeys.invitations.all(), "list", orgId] as const,
+  },
 };

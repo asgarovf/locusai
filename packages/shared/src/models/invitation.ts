@@ -25,10 +25,6 @@ export type CreateInvitation = z.infer<typeof CreateInvitationSchema>;
 export const AcceptInvitationSchema = z.object({
   token: z.string().min(1, "Invitation token is required"),
   name: z.string().min(1, "Name is required").optional(),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .optional(),
 });
 
 export type AcceptInvitation = z.infer<typeof AcceptInvitationSchema>;
@@ -61,6 +57,7 @@ export type InvitationQuery = z.infer<typeof InvitationQuerySchema>;
 
 export const InvitationResponseSchema = z.object({
   invitation: InvitationSchema,
+  userExists: z.boolean().optional(),
 });
 
 export type InvitationResponse = z.infer<typeof InvitationResponseSchema>;

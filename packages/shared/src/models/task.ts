@@ -2,6 +2,7 @@ import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 import { AssigneeRole, TaskPriority, TaskStatus } from "../enums";
 import { ArtifactSchema, CommentSchema, EventSchema } from "./activity";
+import { DocSchema } from "./doc";
 
 export const AcceptanceItemSchema = z.object({
   id: z.string(),
@@ -29,6 +30,7 @@ export const TaskSchema = BaseEntitySchema.extend({
   comments: z.array(CommentSchema).default([]),
   artifacts: z.array(ArtifactSchema).default([]),
   activityLog: z.array(EventSchema).default([]),
+  docs: z.array(DocSchema).default([]),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -43,6 +45,7 @@ export const CreateTaskSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
   sprintId: z.string().uuid().nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
+  docIds: z.array(z.string().uuid()).optional(),
 });
 
 export type CreateTask = z.infer<typeof CreateTaskSchema>;
@@ -57,6 +60,7 @@ export const UpdateTaskSchema = TaskSchema.partial()
   .extend({
     title: z.string().min(1).max(200).optional(),
     acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
+    docIds: z.array(z.string().uuid()).optional(),
   });
 
 export type UpdateTask = z.infer<typeof UpdateTaskSchema>;

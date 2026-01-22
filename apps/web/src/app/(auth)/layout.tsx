@@ -45,7 +45,7 @@ export default function AuthLayout({
               priority
             />
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/30">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
             Intelligent Task Management
           </p>
         </div>

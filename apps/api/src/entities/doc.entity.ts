@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { DocGroup } from "./doc-group.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("docs")
@@ -20,6 +21,17 @@ export class Doc {
   @ManyToOne(() => Workspace, { onDelete: "CASCADE" })
   @JoinColumn({ name: "workspace_id" })
   workspace: Workspace;
+
+  @Column({ name: "group_id", nullable: true })
+  groupId: string | null;
+
+  @ManyToOne(
+    () => DocGroup,
+    (group) => group.docs,
+    { nullable: true, onDelete: "SET NULL" }
+  )
+  @JoinColumn({ name: "group_id" })
+  group: DocGroup | null;
 
   @Column()
   title: string;

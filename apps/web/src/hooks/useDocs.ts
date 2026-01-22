@@ -1,7 +1,14 @@
 import { type Doc } from "@locusai/shared";
-import { useCallback, useEffect, useState } from "react";
-import { locusClient } from "@/lib/api-client";
-import { useWorkspaceId } from "./useWorkspaceId";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  useCreateDocGroupMutation,
+  useCreateDocMutation,
+  useDeleteDocMutation,
+  useDocGroupsQuery,
+  useDocsQuery,
+  useUpdateDocMutation,
+} from "./useDocsQuery";
 
 export const DOC_TEMPLATES = [
   { id: "blank", label: "Blank Document", content: "# Untitled\n\n" },
@@ -96,36 +103,21 @@ Description of the endpoint.
 ### POST /api/resource
 `,
   },
-  {
-    id: "runbook",
-    label: "Runbook",
-    category: "engineering",
-    content: `# Runbook: [Service Name]
-
-## Overview
-What this service does.
-
-## Common Issues
-
-### Issue 1
-**Symptoms:** 
-**Resolution:** 
-
-## Monitoring
-- Dashboard: 
-- Alerts: 
-
-## Contacts
-- Team: 
-- Escalation: 
-`,
-  },
 ];
 
 export function useDocs() {
-  const [docs, setDocs] = useState<Doc[]>([]);
+  // Queries
+  const { data: docs = [], isLoading: docsLoading } = useDocsQuery();
+  const { data: groups = [], isLoading: groupsLoading } = useDocGroupsQuery();
+
+  // Mutations
+  const createDocMutation = useCreateDocMutation();
+  const updateDocMutation = useUpdateDocMutation();
+  const deleteDocMutation = useDeleteDocMutation();
+  const createGroupMutation = useCreateDocGroupMutation();
+
+  // Local UI State
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<Doc | null>(null);
   const [content, setContent] = useState("");
   const [originalContent, setOriginalContent] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -134,95 +126,116 @@ export function useDocs() {
   const [contentMode, setContentMode] = useState<"edit" | "preview">("edit");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const workspaceId = useWorkspaceId();
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  const selectedDoc = useMemo(
+    () => docs.find((d) => d.id === selectedId) || null,
+    [docs, selectedId]
+  );
 
   const hasUnsavedChanges = content !== originalContent;
 
-  const fetchDocs = useCallback(async () => {
-    try {
-      const data = await locusClient.docs.list(workspaceId);
-      setDocs(data);
-    } catch (err) {
-      console.error("Failed to fetch docs", err);
-    }
-  }, [workspaceId]);
-
   useEffect(() => {
-    fetchDocs();
-  }, [fetchDocs]);
-
-  useEffect(() => {
-    if (selectedId) {
-      locusClient.docs.getById(selectedId, workspaceId).then((doc) => {
-        setSelectedDoc(doc);
-        setContent(doc.content || "");
-        setOriginalContent(doc.content || "");
-      });
+    if (selectedDoc) {
+      setContent(selectedDoc.content || "");
+      setOriginalContent(selectedDoc.content || "");
     } else {
-      setSelectedDoc(null);
       setContent("");
       setOriginalContent("");
     }
-  }, [selectedId, workspaceId]);
+  }, [selectedDoc]);
 
   const handleSave = async () => {
-    if (!selectedId || !workspaceId) return;
+    if (!selectedId) return;
     try {
-      const updated = await locusClient.docs.update(selectedId, workspaceId, {
-        content,
+      await updateDocMutation.mutateAsync({
+        id: selectedId,
+        updates: { content },
       });
-      setOriginalContent(content);
-      setSelectedDoc(updated);
-      await fetchDocs();
-    } catch (err) {
-      console.error("Failed to save document", err);
+      toast.success("Document saved");
+    } catch {
+      toast.error("Failed to save document");
     }
   };
 
   const handleCreateFile = async () => {
-    if (!newTitle.trim() || !workspaceId) return;
+    if (!newTitle.trim()) return;
 
     const template = DOC_TEMPLATES.find((t) => t.id === selectedTemplate);
     const initialContent = template?.content || `# ${newTitle}\n\n`;
 
     try {
-      const newDoc = await locusClient.docs.create(workspaceId, {
+      const newDoc = await createDocMutation.mutateAsync({
         title: newTitle,
         content: initialContent,
+        groupId: selectedGroupId || undefined,
       });
       setIsCreating(false);
       setNewFileName("");
       setSelectedTemplate("blank");
-      await fetchDocs();
       setSelectedId(newDoc.id);
-    } catch (err) {
-      console.error("Failed to create document", err);
+      toast.success("Document created");
+    } catch {
+      toast.error("Failed to create document");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
-    if (!workspaceId) return;
     try {
-      await locusClient.docs.delete(id, workspaceId);
+      await deleteDocMutation.mutateAsync(id);
       if (selectedId === id) {
         setSelectedId(null);
       }
-      await fetchDocs();
-    } catch (err) {
-      console.error("Failed to delete document", err);
+      toast.success("Document deleted");
+    } catch {
+      toast.error("Failed to delete document");
     }
   };
 
-  const filteredDocs = docs.filter((doc) => {
-    const matchesSearch = doc.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  const handleCreateGroup = async (name: string) => {
+    try {
+      await createGroupMutation.mutateAsync({ name });
+      toast.success("Group created");
+    } catch {
+      toast.error("Failed to create group");
+    }
+  };
+
+  const filteredDocs = useMemo(() => {
+    return docs.filter((doc) => {
+      const matchesSearch = doc.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [docs, searchQuery]);
+
+  // Group docs by their groupId
+  const docsByGroup = useMemo(() => {
+    const grouped: Record<string, Doc[]> = {
+      ungrouped: [],
+    };
+
+    groups.forEach((g) => {
+      grouped[g.id] = [];
+    });
+
+    filteredDocs.forEach((doc) => {
+      if (doc.groupId && grouped[doc.groupId]) {
+        grouped[doc.groupId].push(doc);
+      } else {
+        grouped.ungrouped.push(doc);
+      }
+    });
+
+    return grouped;
+  }, [filteredDocs, groups]);
 
   return {
     docs: filteredDocs,
+    groups,
+    docsByGroup,
     selectedId,
     setSelectedId,
     selectedDoc,
@@ -230,6 +243,7 @@ export function useDocs() {
     setContent,
     originalContent,
     hasUnsavedChanges,
+    isLoading: docsLoading || groupsLoading,
     isCreating,
     setIsCreating,
     newFileName: newTitle,
@@ -242,9 +256,11 @@ export function useDocs() {
     setSearchQuery,
     activeCategory,
     setActiveCategory,
+    selectedGroupId,
+    setSelectedGroupId,
     handleSave,
     handleCreateFile,
     handleDelete,
-    refreshTree: fetchDocs,
+    handleCreateGroup,
   };
 }

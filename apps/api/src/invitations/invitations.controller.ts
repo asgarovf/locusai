@@ -29,12 +29,12 @@ import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
 import { User } from "@/entities";
 import { InvitationsService } from "./invitations.service";
 
-@Controller("org/:orgId/invitations")
+@Controller()
 @UseGuards(JwtAuthGuard, MembershipRolesGuard)
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
-  @Post()
+  @Post("org/:orgId/invitations")
   @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
@@ -50,7 +50,7 @@ export class InvitationsController {
     return { invitation } as unknown as InvitationResponse;
   }
 
-  @Get()
+  @Get("org/:orgId/invitations")
   @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
   async list(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
@@ -60,7 +60,7 @@ export class InvitationsController {
   }
 
   @Public()
-  @Get("verify/:token")
+  @Get("invitations/verify/:token")
   async verify(
     @Param(new ZodValidationPipe(InvitationVerifyParamSchema))
     params: InvitationVerifyParam
@@ -70,19 +70,18 @@ export class InvitationsController {
   }
 
   @Public()
-  @Post("accept")
+  @Post("invitations/accept")
   async accept(
     @Body(new ZodValidationPipe(AcceptInvitationSchema)) body: AcceptInvitation
   ) {
     const membership = await this.invitationsService.accept(
       body.token,
-      body.name,
-      body.password
+      body.name
     );
     return { membership };
   }
 
-  @Delete(":invitationId")
+  @Delete("org/:orgId/invitations/:invitationId")
   @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
   async revoke(@Param("invitationId") invitationId: string) {
     await this.invitationsService.revoke(invitationId);

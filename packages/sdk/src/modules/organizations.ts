@@ -41,4 +41,8 @@ export class OrganizationsModule extends BaseModule {
   async removeMember(orgId: string, userId: string): Promise<void> {
     await this.api.delete(`/organizations/${orgId}/members/${userId}`);
   }
+
+  async delete(orgId: string): Promise<void> {
+    await this.api.delete(`/organizations/${orgId}`);
+  }
 }

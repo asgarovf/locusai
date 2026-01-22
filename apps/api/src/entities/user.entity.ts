@@ -27,9 +27,6 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ name: "password_hash", nullable: true, select: false })
-  passwordHash: string;
-
   @Column({ name: "company_name", nullable: true })
   companyName: string;
 

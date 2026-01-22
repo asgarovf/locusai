@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGlobalKeydowns } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { getTypographyClass } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { WorkspaceCreateModal } from "./WorkspaceCreateModal";
 
@@ -116,7 +117,12 @@ export function Sidebar() {
             <div className="text-sm font-semibold text-foreground truncate">
               {currentWorkspace?.name || "Select Workspace"}
             </div>
-            <div className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
+            <div
+              className={cn(
+                getTypographyClass("label"),
+                "text-muted-foreground/70"
+              )}
+            >
               Workspace
             </div>
           </div>
@@ -168,7 +174,12 @@ export function Sidebar() {
 
       {/* Main Navigation */}
       <div className="flex-1 p-3 overflow-y-auto">
-        <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60 mb-2 px-2">
+        <div
+          className={cn(
+            getTypographyClass("label"),
+            "text-muted-foreground/60 mb-2 px-2"
+          )}
+        >
           Navigation
         </div>
         <nav className="space-y-1">
@@ -202,7 +213,12 @@ export function Sidebar() {
 
         {/* Quick Actions */}
         <div className="mt-6">
-          <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60 mb-2 px-2">
+          <div
+            className={cn(
+              getTypographyClass("label"),
+              "text-muted-foreground/60 mb-2 px-2"
+            )}
+          >
             Quick Actions
           </div>
           <div className="space-y-1">

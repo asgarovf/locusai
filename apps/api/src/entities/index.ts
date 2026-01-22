@@ -1,6 +1,7 @@
 export * from "./artifact.entity";
 export * from "./comment.entity";
 export * from "./doc.entity";
+export * from "./doc-group.entity";
 export * from "./event.entity";
 export * from "./invitation.entity";
 export * from "./membership.entity";

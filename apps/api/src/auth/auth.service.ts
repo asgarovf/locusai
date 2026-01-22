@@ -174,7 +174,6 @@ export class AuthService {
         email: data.email,
         name: data.name,
         role: UserRole.USER,
-        passwordHash: "OTP-AUTH-USER",
         companyName: data.companyName,
         teamSize: data.teamSize,
         userRole: data.userRole,

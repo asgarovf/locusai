@@ -86,4 +86,20 @@ export class OrganizationsService {
 
     await this.membershipRepository.remove(membership);
   }
+
+  async delete(orgId: string): Promise<void> {
+    const org = await this.orgRepository.findOne({
+      where: { id: orgId },
+    });
+
+    if (!org) {
+      throw new NotFoundException("Organization not found");
+    }
+
+    // Delete all memberships for this organization
+    await this.membershipRepository.delete({ orgId });
+
+    // Delete the organization
+    await this.orgRepository.remove(org);
+  }
 }

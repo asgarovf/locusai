@@ -1,15 +1,19 @@
 "use client";
 
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button, Dropdown, Input, Modal, Textarea } from "@/components/ui";
+import { CreateModal } from "@/components/CreateModal";
+import { Button, Dropdown, Input, Textarea } from "@/components/ui";
 import { useWorkspaceId } from "@/hooks";
+import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { locusClient } from "@/lib/api-client";
+import {
+  getAssigneeOptions,
+  getPriorityOptions,
+  getStatusOptions,
+} from "@/lib/options";
 import { queryKeys } from "@/lib/query-keys";
-import { capitalize } from "@/lib/utils";
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -18,36 +22,6 @@ interface TaskCreateModalProps {
   initialStatus?: TaskStatus;
   sprintId?: string | null;
   defaultSprintId?: string;
-}
-
-const STATUS_OPTIONS = Object.values(TaskStatus).map((status) => ({
-  value: status,
-  label: status.replace(/_/g, " "),
-  color: getStatusColor(status),
-}));
-
-const PRIORITY_OPTIONS = [
-  { value: TaskPriority.LOW, label: "Low", color: "#64748b" },
-  { value: TaskPriority.MEDIUM, label: "Medium", color: "#38bdf8" },
-  { value: TaskPriority.HIGH, label: "High", color: "#f59e0b" },
-  { value: TaskPriority.CRITICAL, label: "Critical", color: "#ef4444" },
-];
-
-const ASSIGNEE_OPTIONS = Object.values(AssigneeRole).map((role) => ({
-  value: role,
-  label: capitalize(role),
-}));
-
-function getStatusColor(status: TaskStatus): string {
-  const colors: Record<TaskStatus, string> = {
-    [TaskStatus.BACKLOG]: "#64748b",
-    [TaskStatus.IN_PROGRESS]: "#f59e0b",
-    [TaskStatus.REVIEW]: "#a855f7",
-    [TaskStatus.VERIFICATION]: "#38bdf8",
-    [TaskStatus.DONE]: "#10b981",
-    [TaskStatus.BLOCKED]: "#ef4444",
-  };
-  return colors[status];
 }
 
 export function TaskCreateModal({
@@ -59,7 +33,6 @@ export function TaskCreateModal({
   defaultSprintId = undefined,
 }: TaskCreateModalProps) {
   const workspaceId = useWorkspaceId();
-  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>(initialStatus);
@@ -68,18 +41,15 @@ export function TaskCreateModal({
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
 
-  const createTaskMutation = useMutation({
+  const createTaskMutation = useMutationWithToast({
     mutationFn: (data: Parameters<typeof locusClient.tasks.create>[1]) =>
       locusClient.tasks.create(workspaceId, data),
+    successMessage: "Task created successfully",
+    invalidateKeys: [queryKeys.tasks.all()],
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all() });
-      toast.success("Task created successfully");
       resetForm();
       onClose();
       onCreated();
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create task");
     },
   });
 
@@ -91,11 +61,6 @@ export function TaskCreateModal({
     setAssigneeRole(undefined);
     setLabels([]);
     setLabelInput("");
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
   };
 
   const handleAddLabel = () => {
@@ -125,132 +90,135 @@ export function TaskCreateModal({
     });
   };
 
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const labelFieldComponent = (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 min-h-[32px]">
+        {labels.length === 0 && (
+          <span className="text-xs text-muted-foreground/50 italic py-1">
+            No labels added...
+          </span>
+        )}
+        {labels.map((label) => (
+          <span
+            key={label}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-[11px] font-semibold border shadow-sm transition-all hover:bg-secondary/80 translate-y-0 hover:-translate-y-0.5"
+          >
+            {label}
+            <button
+              type="button"
+              onClick={() => handleRemoveLabel(label)}
+              className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+            >
+              <X size={12} />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-3">
+        <Input
+          value={labelInput}
+          onChange={(e) => setLabelInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddLabel();
+            }
+          }}
+          placeholder="Add labels (e.g. Bug, Feature)..."
+          className="flex-1 h-10"
+        />
+        <Button
+          type="button"
+          onClick={handleAddLabel}
+          variant="secondary"
+          size="icon"
+          disabled={!labelInput.trim()}
+          className="h-10 w-10 shrink-0"
+        >
+          <Plus size={18} />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const dropdownsFieldComponent = (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Dropdown<TaskStatus>
+        label="Initial Status"
+        value={status}
+        onChange={setStatus}
+        options={getStatusOptions()}
+      />
+      <Dropdown<TaskPriority>
+        label="Priority Level"
+        value={priority}
+        onChange={setPriority}
+        options={getPriorityOptions()}
+      />
+      <Dropdown<AssigneeRole>
+        label="Primary Assignee"
+        value={assigneeRole}
+        onChange={setAssigneeRole}
+        options={getAssigneeOptions()}
+        placeholder="Unassigned"
+      />
+    </div>
+  );
+
   return (
-    <Modal
+    <CreateModal
       isOpen={isOpen}
-      onClose={handleClose}
       title="Create New Task"
       size="lg"
-    >
-      <form onSubmit={handleSubmit} className="space-y-8 py-2">
-        <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
-            Task Title <span className="text-destructive">*</span>
-          </label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Implement authentication flow"
-            autoFocus
-            className="text-lg font-medium h-12"
-          />
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
-            Description
-          </label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Provide context for this task..."
-            rows={5}
-            className="resize-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Dropdown
-            label="Initial Status"
-            value={status}
-            onChange={setStatus}
-            options={STATUS_OPTIONS}
-          />
-          <Dropdown
-            label="Priority Level"
-            value={priority}
-            onChange={setPriority}
-            options={PRIORITY_OPTIONS}
-          />
-          <Dropdown
-            label="Primary Assignee"
-            value={assigneeRole}
-            onChange={setAssigneeRole}
-            options={ASSIGNEE_OPTIONS}
-            placeholder="Unassigned"
-          />
-        </div>
-
-        <div className="space-y-4">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
-            Task Labels
-          </label>
-          <div className="flex flex-wrap gap-2 min-h-[32px]">
-            {labels.length === 0 && (
-              <span className="text-xs text-muted-foreground/50 italic py-1">
-                No labels added...
-              </span>
-            )}
-            {labels.map((label) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-[11px] font-semibold border shadow-sm transition-all hover:bg-secondary/80 translate-y-0 hover:-translate-y-0.5"
-              >
-                {label}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveLabel(label)}
-                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-3">
+      fields={[
+        {
+          name: "title",
+          label: "Task Title",
+          component: (
             <Input
-              value={labelInput}
-              onChange={(e) => setLabelInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddLabel();
-                }
-              }}
-              placeholder="Add labels (e.g. Bug, Feature)..."
-              className="flex-1 h-10"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Implement authentication flow"
+              autoFocus
+              className="text-lg font-medium h-12"
             />
-            <Button
-              type="button"
-              onClick={handleAddLabel}
-              variant="secondary"
-              size="icon"
-              disabled={!labelInput.trim()}
-              className="h-10 w-10 shrink-0"
-            >
-              <Plus size={18} />
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-6 border-t mt-4">
-          <Button
-            type="button"
-            onClick={handleClose}
-            variant="ghost"
-            className="px-6"
-          >
-            Discard
-          </Button>
-          <Button
-            type="submit"
-            disabled={!title.trim() || createTaskMutation.isPending}
-            className="px-8 shadow-lg shadow-primary/10"
-          >
-            {createTaskMutation.isPending ? "Creating..." : "Create Task"}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+          ),
+          required: true,
+        },
+        {
+          name: "description",
+          label: "Description",
+          component: (
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Provide context for this task..."
+              rows={5}
+              className="resize-none"
+            />
+          ),
+        },
+        {
+          name: "properties",
+          label: "Task Properties",
+          component: dropdownsFieldComponent,
+        },
+        {
+          name: "labels",
+          label: "Task Labels",
+          component: labelFieldComponent,
+        },
+      ]}
+      onSubmit={handleSubmit}
+      onClose={handleClose}
+      submitText="Create Task"
+      isPending={createTaskMutation.isPending}
+      submitDisabled={!title.trim()}
+    />
   );
 }

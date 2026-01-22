@@ -14,7 +14,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, LessThan, Repository } from "typeorm";
-import { Artifact, Comment, Event, Task } from "@/entities";
+import { Artifact, Comment, Doc, Event, Task } from "@/entities";
 import { EventsService } from "@/events/events.service";
 import { TaskProcessor } from "./task.processor";
 
@@ -27,6 +27,8 @@ export class TasksService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Artifact)
     private readonly artifactRepository: Repository<Artifact>,
+    @InjectRepository(Doc)
+    private readonly docRepository: Repository<Doc>,
     private readonly eventsService: EventsService,
     private readonly processor: TaskProcessor
   ) {}
@@ -52,7 +54,10 @@ export class TasksService {
       artifacts: Artifact[];
     }
   > {
-    const task = await this.taskRepository.findOne({ where: { id } });
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: ["docs"],
+    });
     if (!task) throw new NotFoundException("Task not found");
 
     const [events, comments, artifacts] = await Promise.all([
@@ -86,6 +91,7 @@ export class TasksService {
     parentId?: string;
     sprintId?: string;
     acceptanceChecklist?: AcceptanceItem[];
+    docIds?: string[];
     userId?: string;
   }): Promise<Task> {
     const defaultItems: AcceptanceItem[] = [
@@ -97,17 +103,10 @@ export class TasksService {
       },
     ];
 
-    const currentChecklist = data.acceptanceChecklist || [];
-    const hasLint = currentChecklist.some((item) =>
-      item.text?.includes("lint")
-    );
-    const hasTypecheck = currentChecklist.some((item) =>
-      item.text?.includes("typecheck")
-    );
-
-    const mergedChecklist = [...currentChecklist];
-    if (!hasLint) mergedChecklist.push(defaultItems[0]);
-    if (!hasTypecheck) mergedChecklist.push(defaultItems[1]);
+    const mergedChecklist = [
+      ...(data.acceptanceChecklist || []),
+      ...defaultItems,
+    ];
 
     const task = this.taskRepository.create({
       workspaceId: data.workspaceId,
@@ -120,6 +119,9 @@ export class TasksService {
       parentId: data.parentId,
       sprintId: data.sprintId,
       acceptanceChecklist: mergedChecklist,
+      docs: data.docIds
+        ? await this.docRepository.find({ where: { id: In(data.docIds) } })
+        : [],
     });
 
     const saved = await this.taskRepository.save(task);
@@ -152,7 +154,6 @@ export class TasksService {
 
     const oldStatus = task.status;
 
-    // TypeORM update
     const { comments, artifacts, activityLog, ...rest } = updates;
     Object.assign(task, {
       ...rest,
@@ -160,6 +161,12 @@ export class TasksService {
         ? new Date(rest.lockExpiresAt)
         : undefined,
     });
+
+    if (updates.docIds) {
+      task.docs = await this.docRepository.find({
+        where: { id: In(updates.docIds) },
+      });
+    }
 
     const saved = await this.taskRepository.save(task);
     const result = (Array.isArray(saved) ? saved[0] : saved) as Task;

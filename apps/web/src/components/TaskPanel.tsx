@@ -12,6 +12,7 @@ import { TaskActivity } from "./task-panel/TaskActivity";
 import { TaskArtifacts } from "./task-panel/TaskArtifacts";
 import { TaskChecklist } from "./task-panel/TaskChecklist";
 import { TaskDescription } from "./task-panel/TaskDescription";
+import { TaskDocs } from "./task-panel/TaskDocs";
 import { TaskHeader } from "./task-panel/TaskHeader";
 import { TaskProperties } from "./task-panel/TaskProperties";
 import { Button, Textarea } from "./ui";
@@ -61,6 +62,8 @@ export function TaskPanel({
     handleUnlock,
     handleReject,
     handleApprove,
+    handleLinkDoc,
+    handleUnlinkDoc,
   } = useTaskPanel({ taskId, onUpdated, onDeleted, onClose });
 
   return (
@@ -129,15 +132,22 @@ export function TaskPanel({
                 />
               </div>
 
-              <div className="p-6 overflow-y-auto border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] scrollbar-thin">
-                <TaskProperties task={task} onUpdate={handleUpdateTask} />
-                <TaskArtifacts task={task} />
-                <TaskActivity
-                  task={task}
-                  newComment={newComment}
-                  setNewComment={setNewComment}
-                  handleAddComment={handleAddComment}
-                />
+              <div className="flex flex-col border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
+                  <TaskProperties task={task} onUpdate={handleUpdateTask} />
+                  <TaskDocs
+                    task={task}
+                    onLinkDoc={handleLinkDoc}
+                    onUnlinkDoc={handleUnlinkDoc}
+                  />
+                  <TaskArtifacts task={task} />
+                  <TaskActivity
+                    task={task}
+                    newComment={newComment}
+                    setNewComment={setNewComment}
+                    handleAddComment={handleAddComment}
+                  />
+                </div>
               </div>
             </div>
           </>

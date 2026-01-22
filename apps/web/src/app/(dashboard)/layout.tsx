@@ -2,9 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Sidebar } from "@/components/Sidebar";
-import { LoadingPage } from "@/components/ui";
-import { WorkspaceProtected } from "@/components/WorkspaceProtected";
+import { Sidebar, WorkspaceProtected } from "@/components";
 import { useAuth } from "@/context/AuthContext";
 import { isCloudMode } from "@/utils/env.utils";
 
@@ -22,8 +20,6 @@ export default function DashboardLayout({
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const showLoading = isLoading && isCloudMode();
-
   if (!isAuthenticated && isCloudMode() && !isLoading) {
     return null;
   }
@@ -32,11 +28,7 @@ export default function DashboardLayout({
     <div className="flex h-screen overflow-hidden bg-background">
       {isAuthenticated && <Sidebar />}
       <main className="flex-1 overflow-auto bg-background p-6">
-        {showLoading ? (
-          <LoadingPage />
-        ) : (
-          <WorkspaceProtected>{children}</WorkspaceProtected>
-        )}
+        <WorkspaceProtected>{children}</WorkspaceProtected>
       </main>
     </div>
   );

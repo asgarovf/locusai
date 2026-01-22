@@ -1,111 +1,63 @@
 "use client";
 
-import {
-  Bell,
-  ChevronRight,
-  Globe,
-  Moon,
-  Palette,
-  Shield,
-  Sun,
-  User,
-  Users,
-  Zap,
-} from "lucide-react";
+import { ChevronRight, Trash2, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
 import { SettingItem } from "@/components/settings/SettingItem";
 import { SettingSection } from "@/components/settings/SettingSection";
-import { Button, Toggle } from "@/components/ui";
+import { Button, Input, Modal } from "@/components/ui";
+import { useAuth } from "@/context";
+import { useAuthenticatedUser, useOrganizationQuery } from "@/hooks";
+import { locusClient } from "@/lib/api-client";
 
 export default function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(true);
-  const [notifications, setNotifications] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [compactMode, setCompactMode] = useState(false);
+  const user = useAuthenticatedUser();
+  const { logout } = useAuth();
+  const router = useRouter();
+  const { data: organization } = useOrganizationQuery();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const orgName = organization?.name || "organization";
+
+  const handleDeleteOrganization = async () => {
+    if (!user?.orgId) return;
+
+    const expectedConfirmation = `delete ${orgName}`.toLowerCase();
+    if (deleteConfirmation.toLowerCase() !== expectedConfirmation) {
+      toast.error(`Please type "delete ${orgName}" to confirm`);
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await locusClient.organizations.delete(user.orgId);
+      toast.success("Organization deleted");
+
+      // Logout the user
+      logout();
+
+      // Redirect to login
+      router.push("/login");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete organization"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <PageLayout
       title="Settings"
       description="Manage your workspace preferences and configuration."
     >
-      <div className="max-w-3xl">
-        {/* Appearance Section */}
-        <SettingSection title="Appearance">
-          <SettingItem
-            icon={darkMode ? <Moon size={18} /> : <Sun size={18} />}
-            title="Dark Mode"
-            description="Toggle between light and dark theme"
-          >
-            <Toggle checked={darkMode} onChange={setDarkMode} />
-          </SettingItem>
-          <SettingItem
-            icon={<Palette size={18} />}
-            title="Accent Color"
-            description="Choose your preferred accent color"
-          >
-            <div className="flex gap-2">
-              {["#6366f1", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b"].map(
-                (color) => (
-                  <button
-                    key={color}
-                    className="w-6 h-6 rounded-full border-2 border-transparent hover:border-foreground/30 transition-colors"
-                    style={{ backgroundColor: color }}
-                  />
-                )
-              )}
-            </div>
-          </SettingItem>
-          <SettingItem
-            icon={<Zap size={18} />}
-            title="Compact Mode"
-            description="Reduce spacing for more content visibility"
-          >
-            <Toggle checked={compactMode} onChange={setCompactMode} />
-          </SettingItem>
-        </SettingSection>
-
-        {/* Notifications Section */}
-        <SettingSection title="Notifications">
-          <SettingItem
-            icon={<Bell size={18} />}
-            title="Push Notifications"
-            description="Receive notifications for task updates"
-          >
-            <Toggle checked={notifications} onChange={setNotifications} />
-          </SettingItem>
-          <SettingItem
-            icon={<Globe size={18} />}
-            title="Auto Refresh"
-            description="Automatically refresh board data"
-          >
-            <Toggle checked={autoRefresh} onChange={setAutoRefresh} />
-          </SettingItem>
-        </SettingSection>
-
-        {/* Account Section */}
-        <SettingSection title="Account">
-          <SettingItem
-            icon={<User size={18} />}
-            title="Profile"
-            description="Update your personal information"
-          >
-            <Button variant="secondary" size="sm">
-              Edit
-            </Button>
-          </SettingItem>
-          <SettingItem
-            icon={<Shield size={18} />}
-            title="Security"
-            description="Manage authentication settings"
-          >
-            <Button variant="secondary" size="sm">
-              Configure
-            </Button>
-          </SettingItem>
-        </SettingSection>
-
+      <div className="max-w-3xl space-y-8">
         {/* Organization Section */}
         <SettingSection title="Organization">
           <Link href="/settings/team">
@@ -129,18 +81,77 @@ export default function SettingsPage() {
           <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-foreground">Reset Workspace</h4>
+                <h4 className="font-medium text-foreground">
+                  Delete Organization
+                </h4>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Delete all tasks, documents, and settings
+                  Permanently delete this organization and all its data
                 </p>
               </div>
-              <Button variant="danger" size="sm">
-                Reset
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setIsDeleteModalOpen(true)}
+              >
+                <Trash2 size={18} />
+                Delete
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Organization Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">
+              Delete Organization
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              This action cannot be undone. All organization data will be
+              permanently deleted.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Type "delete {orgName}" to confirm
+            </label>
+            <Input
+              placeholder={`delete ${orgName}`}
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              disabled={isDeleting}
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteOrganization}
+              disabled={
+                isDeleting ||
+                deleteConfirmation.toLowerCase() !==
+                  `delete ${orgName}`.toLowerCase()
+              }
+              isLoading={isDeleting}
+            >
+              Delete Organization
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </PageLayout>
   );
 }

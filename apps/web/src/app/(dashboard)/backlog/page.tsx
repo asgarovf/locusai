@@ -183,7 +183,6 @@ export default function BacklogPage() {
           onClose={() => setSelectedTaskId(null)}
           onUpdated={() => {
             refetchTasks();
-            setSelectedTaskId(null);
           }}
           onDeleted={() => {
             refetchTasks();

@@ -9,6 +9,8 @@ import { useDocs, useGlobalKeydowns } from "@/hooks";
 export function Docs() {
   const {
     docs,
+    groups,
+    docsByGroup,
     selectedId,
     setSelectedId,
     selectedDoc,
@@ -25,9 +27,12 @@ export function Docs() {
     setContentMode,
     searchQuery,
     setSearchQuery,
+    selectedGroupId,
+    setSelectedGroupId,
     handleSave,
     handleCreateFile,
     handleDelete,
+    handleCreateGroup,
   } = useDocs();
 
   useGlobalKeydowns({
@@ -70,7 +75,8 @@ export function Docs() {
       contentClassName="p-0 flex h-full gap-6 overflow-hidden pt-2 pb-6"
     >
       <DocsSidebar
-        docs={docs}
+        groups={groups}
+        docsByGroup={docsByGroup}
         selectedId={selectedId}
         onSelect={setSelectedId}
         searchQuery={searchQuery}
@@ -83,6 +89,9 @@ export function Docs() {
         onTemplateSelect={setSelectedTemplate}
         onCreateFile={handleCreateFile}
         onDelete={handleDelete}
+        onCreateGroup={handleCreateGroup}
+        selectedGroupId={selectedGroupId}
+        onGroupSelect={setSelectedGroupId}
       />
 
       <main className="flex-1 flex flex-col min-w-0">

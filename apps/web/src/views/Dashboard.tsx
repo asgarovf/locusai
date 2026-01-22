@@ -9,7 +9,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PageLayout } from "@/components/PageLayout";
 import { LoadingPage } from "@/components/ui";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthenticatedUser } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 
 interface WorkspaceStats {
@@ -19,7 +19,7 @@ interface WorkspaceStats {
 }
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const user = useAuthenticatedUser();
   const [stats, setStats] = useState<WorkspaceStats | null>(null);
   const [activity, setActivity] = useState<WorkspaceEvent[]>([]);
   const [loading, setLoading] = useState(true);

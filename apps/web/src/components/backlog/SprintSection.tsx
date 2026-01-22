@@ -63,10 +63,9 @@ export function SprintSection({
           isActive ? (
             <Button
               size="sm"
-              variant="subtle"
+              variant="emerald-subtle"
               onClick={() => onComplete?.(sprint.id)}
-              disabled={isSubmitting}
-              className="h-7 border-emerald-500/20 hover:bg-emerald-500/10 hover:text-emerald-500"
+              isLoading={isSubmitting}
             >
               <CheckCircle size={14} className="mr-1" />
               Complete
@@ -75,9 +74,9 @@ export function SprintSection({
             canStart && (
               <Button
                 size="sm"
+                variant="amber"
                 onClick={() => onStart?.(sprint.id)}
-                disabled={isSubmitting}
-                className="h-7 bg-amber-500 text-black hover:bg-amber-600 border-none px-3 font-bold"
+                isLoading={isSubmitting}
               >
                 <Play size={12} className="mr-1.5 fill-current" />
                 Start

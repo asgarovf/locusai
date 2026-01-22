@@ -3,6 +3,7 @@
 import { type AcceptanceItem, type Task, TaskStatus } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
@@ -56,7 +57,7 @@ export function useTaskPanel({
 
   // Mutations
   const updateTaskMutation = useMutation({
-    mutationFn: (updates: Partial<Task>) =>
+    mutationFn: (updates: Partial<Task> & { docIds?: string[] }) =>
       locusClient.tasks.update(taskId, workspaceId as string, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -65,6 +66,35 @@ export function useTaskPanel({
       onUpdated();
     },
   });
+
+  const handleLinkDoc = async (docId: string) => {
+    if (!task) return;
+    const currentDocIds = task.docs?.map((d) => d.id) || [];
+    if (currentDocIds.includes(docId)) return;
+
+    try {
+      await updateTaskMutation.mutateAsync({
+        docIds: [...currentDocIds, docId],
+      });
+      toast.success("Document linked");
+    } catch {
+      toast.error("Failed to link document");
+    }
+  };
+
+  const handleUnlinkDoc = async (docId: string) => {
+    if (!task) return;
+    const currentDocIds = task.docs?.map((d) => d.id) || [];
+
+    try {
+      await updateTaskMutation.mutateAsync({
+        docIds: currentDocIds.filter((id) => id !== docId),
+      });
+      toast.success("Document unlinked");
+    } catch {
+      toast.error("Failed to unlink document");
+    }
+  };
 
   const deleteTaskMutation = useMutation({
     mutationFn: () => locusClient.tasks.delete(taskId, workspaceId as string),
@@ -248,6 +278,8 @@ export function useTaskPanel({
     isLocked,
     checklistProgress,
     handleUpdateTask,
+    handleLinkDoc,
+    handleUnlinkDoc,
     handleDelete,
     handleTitleSave,
     handleDescSave,

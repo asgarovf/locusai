@@ -52,6 +52,19 @@ export class WorkspacesController {
     return { workspaces };
   }
 
+  @Post()
+  async createWithAutoOrg(
+    @CurrentUser() user: User,
+    @Body(new ZodValidationPipe(CreateWorkspaceSchema)) body: CreateWorkspace
+  ): Promise<WorkspaceResponse> {
+    // Auto-create workspace with organization if user has none
+    const workspace = await this.workspacesService.createWithAutoOrg(
+      user.id,
+      body.name
+    );
+    return { workspace };
+  }
+
   @Post("org/:orgId")
   @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
   async create(

@@ -4,10 +4,13 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Doc } from "./doc.entity";
 import { Sprint } from "./sprint.entity";
 import { Workspace } from "./workspace.entity";
 
@@ -55,11 +58,26 @@ export class Task {
   parentId: string;
 
   @Column({ name: "sprint_id", nullable: true })
-  sprintId: string;
+  sprintId: string | null;
 
-  @ManyToOne(() => Sprint, { nullable: true, onDelete: "SET NULL" })
+  @ManyToOne(
+    () => Sprint,
+    (sprint) => sprint.tasks,
+    {
+      nullable: true,
+      onDelete: "SET NULL",
+    }
+  )
   @JoinColumn({ name: "sprint_id" })
-  sprint: Sprint;
+  sprint: Sprint | null;
+
+  @ManyToMany(() => Doc)
+  @JoinTable({
+    name: "task_docs",
+    joinColumn: { name: "task_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "doc_id", referencedColumnName: "id" },
+  })
+  docs: Doc[];
 
   @Column({ name: "locked_by", nullable: true })
   lockedBy: string;

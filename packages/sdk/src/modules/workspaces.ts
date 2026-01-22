@@ -32,6 +32,14 @@ export class WorkspacesModule extends BaseModule {
     return data.workspace;
   }
 
+  async createWithAutoOrg(body: CreateWorkspace): Promise<Workspace> {
+    const { data } = await this.api.post<WorkspaceResponse>(
+      "/workspaces",
+      body
+    );
+    return data.workspace;
+  }
+
   async getById(id: string): Promise<Workspace> {
     const { data } = await this.api.get<WorkspaceResponse>(`/workspaces/${id}`);
     return data.workspace;

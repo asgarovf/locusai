@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { LoadingPage } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 
@@ -19,19 +19,37 @@ interface WorkspaceProtectedProps {
  * - Early exits handle missing workspace automatically
  */
 export function WorkspaceProtected({ children }: WorkspaceProtectedProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
   const router = useRouter();
+  const refreshAttemptRef = useRef(0);
+  const MAX_REFRESH_ATTEMPTS = 3;
 
   useEffect(() => {
-    // If user is loaded and has NO workspace, redirect to create one
-    if (!isLoading && user && !user.workspaceId) {
+    if (isLoading) return;
+
+    // If user has NO organization, redirect to onboarding
+    if (user && !user.orgId) {
+      router.push("/onboarding/workspace");
+      return;
+    }
+
+    // If user has NO workspace, try refreshing first (might have just been created)
+    if (user && !user.workspaceId) {
+      if (refreshAttemptRef.current < MAX_REFRESH_ATTEMPTS) {
+        refreshAttemptRef.current++;
+        // Wait a moment then refresh user data
+        const timer = setTimeout(() => {
+          refreshUser();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+      // After max attempts, redirect to onboarding
       router.push("/onboarding/workspace");
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, refreshUser]);
 
-  // Show loading while fetching auth state
   if (isLoading) {
-    return <LoadingPage />;
+    return null;
   }
 
   // If user is not authenticated, let parent layout handle redirect

@@ -83,4 +83,13 @@ export class OrganizationsController {
     await this.organizationsService.removeMember(orgId, userId);
     return { success: true };
   }
+
+  @Delete(":orgId")
+  @MembershipRoles(MembershipRole.OWNER)
+  async delete(
+    @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
+  ) {
+    await this.organizationsService.delete(params.orgId);
+    return { success: true };
+  }
 }

@@ -28,8 +28,30 @@ export function Spinner({ className, size = "md" }: SpinnerProps) {
 
 export function LoadingPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-4">
+    <div className="flex items-center justify-center w-full h-full min-h-screen">
       <Spinner size="lg" />
+    </div>
+  );
+}
+
+/**
+ * Full-screen loading state that appears during hydration and initial data fetching.
+ * Uses a skeleton layout with sidebar to prevent layout shift.
+ */
+export function LoadingSkeleton() {
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Sidebar Skeleton */}
+      <aside className="w-56 border-r border-border bg-background flex flex-col">
+        <div className="flex-1" />
+      </aside>
+
+      {/* Main Content Skeleton */}
+      <main className="flex-1 overflow-auto bg-background p-6">
+        <div className="flex items-center justify-center h-full">
+          <Spinner size="lg" />
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button, Input, Modal, Spinner } from "@/components/ui";
-import { useAuth } from "@/context";
+import { CreateModal } from "@/components/CreateModal";
+import { Input } from "@/components/ui";
+import { useAuthenticatedUser } from "@/hooks";
+import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -20,22 +21,22 @@ export function WorkspaceCreateModal({
   onSuccess,
 }: WorkspaceCreateModalProps) {
   const [name, setName] = useState("");
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const orgId = user?.orgId;
+  const user = useAuthenticatedUser();
+  const orgId = user.orgId;
 
-  const createWorkspace = useMutation({
-    mutationFn: (data: { name: string }) =>
-      locusClient.workspaces.create({ orgId: orgId || "", name: data.name }),
+  const createWorkspace = useMutationWithToast({
+    mutationFn: (data: { name: string }) => {
+      if (!orgId) {
+        throw new Error("Organization ID is required");
+      }
+      return locusClient.workspaces.create({ orgId, name: data.name });
+    },
+    successMessage: "Workspace created successfully",
+    invalidateKeys: [queryKeys.workspaces.all()],
     onSuccess: () => {
-      toast.success("Workspace created successfully");
-      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
+      setName("");
       onSuccess();
       onClose();
-      setName("");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create workspace");
     },
   });
 
@@ -49,36 +50,30 @@ export function WorkspaceCreateModal({
   };
 
   return (
-    <Modal
+    <CreateModal
       isOpen={isOpen}
-      onClose={onClose}
       title="Create New Workspace"
       size="sm"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Workspace Name</label>
-          <Input
-            placeholder="Engineering, Marketing, etc."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-          />
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={createWorkspace.isPending}>
-            {createWorkspace.isPending ? (
-              <Spinner size="sm" />
-            ) : (
-              "Create Workspace"
-            )}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      fields={[
+        {
+          name: "name",
+          label: "Workspace Name",
+          component: (
+            <Input
+              placeholder="Engineering, Marketing, etc."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          ),
+          required: true,
+        },
+      ]}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+      submitText="Create Workspace"
+      isPending={createWorkspace.isPending}
+      submitDisabled={!name.trim()}
+    />
   );
 }

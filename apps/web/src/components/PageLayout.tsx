@@ -1,5 +1,6 @@
 "use client";
 
+import { getTypographyClass } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 interface PageLayoutProps {
@@ -24,11 +25,11 @@ export function PageLayout({
       <div className="flex-none pb-2">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground/90">
+            <h1 className={cn(getTypographyClass("h1"), "text-foreground/90")}>
               {title}
             </h1>
             {description && (
-              <div className="text-sm text-muted-foreground mt-1 font-medium">
+              <div className={cn(getTypographyClass("caption"), "mt-1")}>
                 {description}
               </div>
             )}
@@ -37,7 +38,7 @@ export function PageLayout({
         </div>
       </div>
       <div
-        className={cn("flex-1 overflow-y-auto px-6 pb-12", contentClassName)}
+        className={cn("flex-1 overflow-y-auto pb-12 mt-4", contentClassName)}
       >
         {children}
       </div>

@@ -84,16 +84,18 @@ export default function BoardPage() {
         actions={headerActions}
         contentClassName="flex flex-col"
       >
-        <div className="flex-none mb-6">
-          <BoardFilter
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            priorityFilter={priorityFilter}
-            onPriorityChange={setPriorityFilter}
-            roleFilter={roleFilter}
-            onRoleChange={setRoleFilter}
-          />
-        </div>
+        {activeSprint != null && (
+          <div className="flex-none mb-6">
+            <BoardFilter
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              priorityFilter={priorityFilter}
+              onPriorityChange={setPriorityFilter}
+              roleFilter={roleFilter}
+              onRoleChange={setRoleFilter}
+            />
+          </div>
+        )}
 
         {shouldShowEmptyState ? (
           <div className="flex-1">
@@ -153,7 +155,6 @@ export default function BoardPage() {
           onClose={() => setSelectedTaskId(null)}
           onUpdated={() => {
             refetch();
-            setSelectedTaskId(null);
           }}
           onDeleted={() => {
             refetch();

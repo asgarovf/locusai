@@ -1,3 +1,4 @@
+import { MembershipRole } from "@locusai/shared";
 import {
   ConflictException,
   Injectable,
@@ -79,6 +80,42 @@ export class WorkspacesService {
     });
 
     return this.workspaceRepository.save(workspace);
+  }
+
+  async createWithAutoOrg(userId: string, name: string): Promise<Workspace> {
+    // Get user's current organization or create one if they don't have one
+    const userMemberships = await this.membershipRepository.find({
+      where: { userId },
+      relations: ["organization"],
+    });
+
+    let org = userMemberships[0]?.organization;
+
+    if (!org) {
+      // User has no organization, create one
+      const orgName = `${name} Organization`;
+      const orgSlug = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+      org = this.orgRepository.create({
+        name: orgName,
+        slug: orgSlug,
+      });
+      org = await this.orgRepository.save(org);
+
+      // Add user as owner of the organization
+      const membership = this.membershipRepository.create({
+        orgId: org.id,
+        userId,
+        role: MembershipRole.OWNER,
+      });
+      await this.membershipRepository.save(membership);
+    }
+
+    // Now create the workspace
+    return this.create(org.id, name);
   }
 
   async update(id: string, name: string): Promise<Workspace> {

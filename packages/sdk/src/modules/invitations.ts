@@ -24,11 +24,11 @@ export class InvitationsModule extends BaseModule {
     return data.invitations;
   }
 
-  async verify(token: string): Promise<Invitation> {
+  async verify(token: string): Promise<InvitationResponse> {
     const { data } = await this.api.get<InvitationResponse>(
       `/invitations/verify/${token}`
     );
-    return data.invitation;
+    return data;
   }
 
   async accept(body: AcceptInvitation): Promise<AcceptInvitationResponse> {

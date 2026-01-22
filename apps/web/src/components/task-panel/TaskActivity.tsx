@@ -89,7 +89,7 @@ export function TaskActivity({
                 <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
                   {formatActivityEvent(event as TaskEvent)}
                 </p>
-                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/30">
+                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">
                   {formatDistanceToNow(new Date(event.createdAt), {
                     addSuffix: true,
                   })}

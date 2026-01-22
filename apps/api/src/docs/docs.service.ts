@@ -11,7 +11,7 @@ export class DocsService {
     private readonly docRepository: Repository<Doc>
   ) {}
 
-  async create(data: CreateDoc): Promise<Doc> {
+  async create(data: CreateDoc & { workspaceId: string }): Promise<Doc> {
     const doc = this.docRepository.create(data);
     return this.docRepository.save(doc);
   }

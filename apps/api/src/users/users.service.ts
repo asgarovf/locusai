@@ -22,7 +22,6 @@ export class UsersService {
         "id",
         "email",
         "name",
-        "passwordHash",
         "role",
         "avatarUrl",
         "companyName",

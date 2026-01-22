@@ -20,7 +20,7 @@ export function SettingSection({
     <div className={cn("mb-8", className)}>
       <h3
         className={cn(
-          "text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 px-4",
+          "text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4",
           titleClassName
         )}
       >

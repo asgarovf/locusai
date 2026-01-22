@@ -5,8 +5,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Task } from "./task.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("sprints")
@@ -20,6 +22,12 @@ export class Sprint {
   @ManyToOne(() => Workspace, { onDelete: "CASCADE" })
   @JoinColumn({ name: "workspace_id" })
   workspace: Workspace;
+
+  @OneToMany(
+    () => Task,
+    (task) => task.sprint
+  )
+  tasks: Task[];
 
   @Column()
   name: string;
