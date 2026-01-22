@@ -1,3 +1,4 @@
+import { JwtAuthUser } from "@locusai/shared";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
@@ -18,11 +19,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload): Promise<JwtAuthUser> {
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
     }
-    return user;
+    // Return properly typed JwtAuthUser
+    return {
+      authType: "jwt",
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      orgId: payload.orgId ?? null,
+      workspaceId: null,
+    };
   }
 }

@@ -23,14 +23,13 @@ import {
 import { MembershipRoles } from "@/auth/decorators/membership-roles.decorator";
 import { Public } from "@/auth/decorators/public.decorator";
 import { CurrentUser } from "@/auth/decorators/user.decorator";
-import { JwtAuthGuard } from "@/auth/guards/jwt-auth.guard";
 import { MembershipRolesGuard } from "@/auth/guards/membership-roles.guard";
 import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
 import { User } from "@/entities";
 import { InvitationsService } from "./invitations.service";
 
 @Controller()
-@UseGuards(JwtAuthGuard, MembershipRolesGuard)
+@UseGuards(MembershipRolesGuard)
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 

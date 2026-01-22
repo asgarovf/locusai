@@ -7,8 +7,6 @@
 "use client";
 
 import { type AcceptanceItem, TaskStatus } from "@locusai/shared";
-import { useWorkspaceId } from "@/hooks/useWorkspaceId";
-import { locusClient } from "@/lib/api-client";
 import { notifications } from "@/services/notifications";
 
 export interface TaskActionHandlers {
@@ -28,21 +26,17 @@ export interface TaskActionHandlers {
   ) => Promise<void>;
   handleLinkDoc: (docId: string, currentDocIds: string[]) => Promise<void>;
   handleUnlinkDoc: (docId: string, currentDocIds: string[]) => Promise<void>;
-  handleLock: () => Promise<void>;
-  handleUnlock: () => Promise<void>;
   handleReject: (reason: string, onSuccess?: () => void) => Promise<void>;
   handleApprove: (onSuccess?: () => void) => Promise<void>;
 }
 
 interface UseTaskActionsProps {
-  taskId: string;
   onUpdateTask: (
     updates: Partial<{
       title?: string;
       description?: string;
       acceptanceChecklist?: AcceptanceItem[];
       status?: TaskStatus;
-      lockedBy?: string;
       docIds?: string[];
     }>
   ) => Promise<void>;
@@ -53,12 +47,9 @@ interface UseTaskActionsProps {
  * Manage task operations
  */
 export function useTaskActions({
-  taskId,
   onUpdateTask,
   onAddComment,
 }: UseTaskActionsProps): TaskActionHandlers {
-  const workspaceId = useWorkspaceId();
-
   const handleTitleSave = async (editTitle: string, currentTitle?: string) => {
     if (editTitle.trim() && editTitle !== currentTitle) {
       try {
@@ -167,33 +158,6 @@ export function useTaskActions({
     }
   };
 
-  const handleLock = async () => {
-    try {
-      await locusClient.tasks.lock(taskId, workspaceId, {
-        agentId: "human",
-        ttlSeconds: 3600,
-      });
-      notifications.success("Task locked");
-    } catch (error) {
-      notifications.error(
-        error instanceof Error ? error.message : "Failed to lock task"
-      );
-    }
-  };
-
-  const handleUnlock = async () => {
-    try {
-      await locusClient.tasks.unlock(taskId, workspaceId, {
-        agentId: "human",
-      });
-      notifications.success("Task unlocked");
-    } catch (error) {
-      notifications.error(
-        error instanceof Error ? error.message : "Failed to unlock task"
-      );
-    }
-  };
-
   const handleReject = async (reason: string, onSuccess?: () => void) => {
     if (!reason.trim()) return;
     try {
@@ -230,8 +194,6 @@ export function useTaskActions({
     handleRemoveChecklistItem,
     handleLinkDoc,
     handleUnlinkDoc,
-    handleLock,
-    handleUnlock,
     handleReject,
     handleApprove,
   };

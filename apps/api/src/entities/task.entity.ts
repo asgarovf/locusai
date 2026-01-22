@@ -93,12 +93,6 @@ export class Task {
   })
   docs: Doc[];
 
-  @Column({ name: "locked_by", nullable: true })
-  lockedBy: string | null;
-
-  @Column({ name: "lock_expires_at", type: "timestamp", nullable: true })
-  lockExpiresAt: Date | null;
-
   @Column({ name: "acceptance_checklist", type: "jsonb", default: [] })
   acceptanceChecklist: Array<{ id: string; text: string; done: boolean }>;
 

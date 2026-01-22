@@ -11,6 +11,9 @@ export interface Task {
   status: string;
   priority: string;
   assigneeRole?: string;
+  lockedBy?: string | null;
+  lockExpiresAt?: string | null;
+  assignedTo?: string | null;
   acceptanceChecklist?: Array<{
     id: string;
     text: string;

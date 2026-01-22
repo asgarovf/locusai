@@ -5,8 +5,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   CheckCircle,
   Edit,
-  FileText,
-  Lock,
   MessageSquare,
   PlusSquare,
   Tag,
@@ -79,13 +77,6 @@ export function TaskActivity({
                 {event.type === EventType.TASK_UPDATED && (
                   <Edit size={14} className="text-primary" />
                 )}
-                {event.type === EventType.ARTIFACT_ADDED && (
-                  <FileText size={14} className="text-purple-400" />
-                )}
-                {(event.type === EventType.LOCKED ||
-                  event.type === EventType.UNLOCKED) && (
-                  <Lock size={14} className="text-rose-400" />
-                )}
                 {event.type === EventType.CI_RAN && (
                   <CheckCircle size={14} className="text-accent" />
                 )}
@@ -128,12 +119,6 @@ function formatActivityEvent(event: TaskEvent): string {
       return "Parameters calibrated";
     case EventType.TASK_DELETED:
       return "Task deleted";
-    case EventType.ARTIFACT_ADDED:
-      return `Output: ${p.title}`;
-    case EventType.LOCKED:
-      return `Protected by ${p.agentId}`;
-    case EventType.UNLOCKED:
-      return "Protection released";
     case EventType.CI_RAN:
       return `Valuation complete: ${p.summary}`;
     default:

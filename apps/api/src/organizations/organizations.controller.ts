@@ -18,14 +18,15 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import { z } from "zod";
 import { CurrentUser, MembershipRoles } from "@/auth/decorators";
-import { JwtAuthGuard, MembershipRolesGuard } from "@/auth/guards";
+import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
 import { User } from "@/entities";
 import { OrganizationsService } from "./organizations.service";
 
 @Controller("organizations")
-@UseGuards(JwtAuthGuard, MembershipRolesGuard)
+@UseGuards(MembershipRolesGuard)
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
@@ -91,5 +92,58 @@ export class OrganizationsController {
   ) {
     await this.organizationsService.delete(params.orgId);
     return { success: true };
+  }
+
+  // ============================================================================
+  // API Key Management
+  // ============================================================================
+
+  @Get(":orgId/api-keys")
+  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  async listApiKeys(
+    @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
+  ) {
+    const apiKeys = await this.organizationsService.listApiKeys(params.orgId);
+    // Mask the keys for security (show only first 8 and last 4 chars)
+    const maskedKeys = apiKeys.map((key) => ({
+      ...key,
+      key: this.maskApiKey(key.key),
+    }));
+    return { apiKeys: maskedKeys };
+  }
+
+  @Post(":orgId/api-keys")
+  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  async createApiKey(
+    @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
+    @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
+    body: { name: string }
+  ) {
+    const { apiKey, key } = await this.organizationsService.createApiKey(
+      params.orgId,
+      body.name
+    );
+    // Return full key only on creation
+    return {
+      apiKey: {
+        ...apiKey,
+        key, // Full key returned only once
+      },
+    };
+  }
+
+  @Delete(":orgId/api-keys/:keyId")
+  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  async deleteApiKey(
+    @Param("orgId") orgId: string,
+    @Param("keyId") keyId: string
+  ) {
+    await this.organizationsService.deleteApiKey(orgId, keyId);
+    return { success: true };
+  }
+
+  private maskApiKey(key: string): string {
+    if (key.length <= 12) return key;
+    return `${key.slice(0, 8)}...${key.slice(-4)}`;
   }
 }

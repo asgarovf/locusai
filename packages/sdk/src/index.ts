@@ -120,3 +120,7 @@ export class LocusClient {
     }
   }
 }
+
+// Note: AgentOrchestrator is NOT exported from this main entry point
+// It uses Node.js APIs (child_process) and should only be used in CLI/Node.js environments
+// For CLI usage, import from the separate index-node.ts entry point

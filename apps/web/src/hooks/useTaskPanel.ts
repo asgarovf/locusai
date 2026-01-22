@@ -22,7 +22,6 @@ interface UseTaskPanelProps {
  *
  * Features:
  * - Optimistic updates for instant UI feedback
- * - Auto-lock/unlock on status changes
  * - Support for assignedTo and dueDate fields
  * - Loading states for all mutations
  */
@@ -259,35 +258,6 @@ export function useTaskPanel({
     }
   };
 
-  const handleLock = async () => {
-    try {
-      await locusClient.tasks.lock(taskId, workspaceId as string, {
-        agentId: user?.name || "human",
-        ttlSeconds: 3600,
-      });
-      await fetchTask();
-      toast.success("Task locked");
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to lock task:", err);
-      toast.error("Failed to lock task");
-    }
-  };
-
-  const handleUnlock = async () => {
-    try {
-      await locusClient.tasks.unlock(taskId, workspaceId as string, {
-        agentId: user?.name || "human",
-      });
-      await fetchTask();
-      toast.success("Task unlocked");
-      onUpdated();
-    } catch (err) {
-      console.error("Failed to unlock task:", err);
-      toast.error("Failed to unlock task");
-    }
-  };
-
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     try {
@@ -319,12 +289,6 @@ export function useTaskPanel({
     }
   };
 
-  const isLockedBy = task?.lockedBy != null;
-  const isLockedExpired =
-    task?.lockExpiresAt != null &&
-    new Date(task.lockExpiresAt).getTime() < Date.now();
-  const isLocked = isLockedBy && !isLockedExpired;
-
   const checklistProgress = task?.acceptanceChecklist?.length
     ? Math.round(
         (task.acceptanceChecklist.filter((i) => i.done).length /
@@ -355,7 +319,6 @@ export function useTaskPanel({
     setShowRejectModal,
     rejectReason,
     setRejectReason,
-    isLocked,
     checklistProgress,
     isLoading: updateTaskMutation.isPending || addCommentMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
@@ -371,8 +334,6 @@ export function useTaskPanel({
     handleToggleChecklistItem,
     handleRemoveChecklistItem,
     handleAddComment,
-    handleLock,
-    handleUnlock,
     handleReject,
     handleApprove,
     refresh: fetchTask,

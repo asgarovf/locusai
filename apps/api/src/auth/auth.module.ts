@@ -1,5 +1,4 @@
 import { Global, Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -15,7 +14,6 @@ import {
 import { UsersModule } from "@/users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { JwtAuthGuard, RolesGuard } from "./guards";
 import { OtpService } from "./otp.service";
 import { JwtStrategy } from "./strategies";
 
@@ -46,14 +44,8 @@ import { JwtStrategy } from "./strategies";
     OtpService,
     EmailService,
     JwtStrategy,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    // Note: Global auth guard (JwtOrApiKeyGuard) is registered in AppModule
+    // This allows both JWT and API key authentication
   ],
   controllers: [AuthController],
   exports: [AuthService],

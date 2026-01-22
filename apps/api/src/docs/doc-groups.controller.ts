@@ -18,12 +18,12 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { MembershipRoles } from "@/auth/decorators";
-import { JwtAuthGuard, MembershipRolesGuard } from "@/auth/guards";
+import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocGroupsService } from "./doc-groups.service";
 
 @Controller("workspaces/:workspaceId/doc-groups")
-@UseGuards(JwtAuthGuard, MembershipRolesGuard)
+@UseGuards(MembershipRolesGuard)
 export class DocGroupsController {
   constructor(private readonly docGroupsService: DocGroupsService) {}
 

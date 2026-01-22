@@ -9,9 +9,8 @@
  * - Task details and description editing
  * - Task properties (status, priority, assignee, deadline)
  * - Activity feed and comments
- * - Artifacts and checklists
+ * - Checklists
  * - Related documents
- * - Lock/unlock functionality
  * - Task approval (if in verification state)
  * - Task deletion
  *
@@ -28,12 +27,14 @@
 
 import { motion } from "framer-motion";
 import { useTaskPanel } from "@/hooks/useTaskPanel";
-import { TaskActivity } from "./task-panel/TaskActivity";
-import { TaskChecklist } from "./task-panel/TaskChecklist";
-import { TaskDescription } from "./task-panel/TaskDescription";
-import { TaskDocs } from "./task-panel/TaskDocs";
-import { TaskHeader } from "./task-panel/TaskHeader";
-import { TaskProperties } from "./task-panel/TaskProperties";
+import {
+  TaskActivity,
+  TaskChecklist,
+  TaskDescription,
+  TaskDocs,
+  TaskHeader,
+  TaskProperties,
+} from "./task-panel";
 import { Button, Textarea } from "./ui";
 
 interface TaskPanelProps {
@@ -72,8 +73,6 @@ export function TaskPanel({
     handleToggleChecklistItem,
     handleRemoveChecklistItem,
     handleAddComment,
-    handleLock,
-    handleUnlock,
     handleReject,
     handleApprove,
     handleLinkDoc,
@@ -113,8 +112,6 @@ export function TaskPanel({
               isLoading={isLoading}
               isDeleting={isDeleting}
               onClose={onClose}
-              onLock={handleLock}
-              onUnlock={handleUnlock}
               onDelete={handleDelete}
               onApprove={handleApprove}
               onReject={() => setShowRejectModal(true)}

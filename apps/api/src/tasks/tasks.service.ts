@@ -8,13 +8,12 @@ import {
 } from "@locusai/shared";
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, LessThan, Repository } from "typeorm";
-import { Artifact, Comment, Doc, Event, Task } from "@/entities";
+import { In, IsNull, Repository } from "typeorm";
+import { Comment, Doc, Event, Task } from "@/entities";
 import { EventsService } from "@/events/events.service";
 import { TaskProcessor } from "./task.processor";
 
@@ -25,8 +24,6 @@ export class TasksService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
-    @InjectRepository(Artifact)
-    private readonly artifactRepository: Repository<Artifact>,
     @InjectRepository(Doc)
     private readonly docRepository: Repository<Doc>,
     private readonly eventsService: EventsService,
@@ -42,7 +39,7 @@ export class TasksService {
 
   async findBacklog(workspaceId: string): Promise<Task[]> {
     return this.taskRepository.find({
-      where: { workspaceId, sprintId: undefined },
+      where: { workspaceId, sprintId: IsNull() },
       order: { priority: "DESC", createdAt: "DESC" },
     });
   }
@@ -51,7 +48,6 @@ export class TasksService {
     Task & {
       activityLog: Event[];
       comments: Comment[];
-      artifacts: Artifact[];
     }
   > {
     const task = await this.taskRepository.findOne({
@@ -60,13 +56,9 @@ export class TasksService {
     });
     if (!task) throw new NotFoundException("Task not found");
 
-    const [events, comments, artifacts] = await Promise.all([
+    const [events, comments] = await Promise.all([
       this.eventsService.getByTaskId(id),
       this.commentRepository.find({
-        where: { taskId: id },
-        order: { createdAt: "DESC" },
-      }),
-      this.artifactRepository.find({
         where: { taskId: id },
         order: { createdAt: "DESC" },
       }),
@@ -76,7 +68,6 @@ export class TasksService {
       ...task,
       activityLog: events,
       comments,
-      artifacts,
     };
   }
 
@@ -157,31 +148,10 @@ export class TasksService {
     }
 
     const oldStatus = task.status;
-    const newStatus = updates.status;
 
-    // Auto-lock when moving to IN_PROGRESS
-    if (newStatus === TaskStatus.IN_PROGRESS && !task.lockedBy) {
-      const agentId = updates.assignedTo || userId || "human";
-      const ttlSeconds = 3600; // 1 hour default
-      task.lockedBy = agentId;
-      task.lockExpiresAt = new Date(Date.now() + ttlSeconds * 1000);
-    }
-
-    // Auto-unlock when moving back to BACKLOG or DONE
-    if (
-      (newStatus === TaskStatus.BACKLOG || newStatus === TaskStatus.DONE) &&
-      task.lockedBy
-    ) {
-      task.lockedBy = null;
-      task.lockExpiresAt = null;
-    }
-
-    const { comments, artifacts, activityLog, ...rest } = updates;
+    const { comments, activityLog, ...rest } = updates;
     Object.assign(task, {
       ...rest,
-      lockExpiresAt: rest.lockExpiresAt
-        ? new Date(rest.lockExpiresAt)
-        : task.lockExpiresAt,
       dueDate: rest.dueDate ? new Date(rest.dueDate) : task.dueDate,
     });
 
@@ -210,43 +180,6 @@ export class TasksService {
       this.processor
         .onStatusChanged(id, oldStatus, updates.status)
         .catch((err) => console.error("[TasksService] Processor error:", err));
-    }
-
-    // Log auto-lock if it happened
-    if (
-      newStatus === TaskStatus.IN_PROGRESS &&
-      !task.lockedBy &&
-      result.lockedBy
-    ) {
-      await this.eventsService.logEvent({
-        workspaceId: result.workspaceId,
-        taskId: id,
-        userId: userId || null,
-        type: EventType.LOCKED,
-        payload: {
-          agentId: result.lockedBy,
-          expiresAt: result.lockExpiresAt?.getTime(),
-          automatic: true,
-        },
-      });
-    }
-
-    // Log auto-unlock if it happened
-    if (
-      (newStatus === TaskStatus.BACKLOG || newStatus === TaskStatus.DONE) &&
-      task.lockedBy &&
-      !result.lockedBy
-    ) {
-      await this.eventsService.logEvent({
-        workspaceId: result.workspaceId,
-        taskId: id,
-        userId: userId || null,
-        type: EventType.UNLOCKED,
-        payload: {
-          agentId: task.lockedBy,
-          automatic: true,
-        },
-      });
     }
 
     return result;
@@ -295,29 +228,24 @@ export class TasksService {
     return result;
   }
 
+  /**
+   * Dispatch a task from BACKLOG to an agent.
+   * Simply finds a BACKLOG task in the sprint and moves it to IN_PROGRESS.
+   */
   async dispatchTask(workerId: string, sprintId: string): Promise<Task> {
-    const lockDurationMs = 3600 * 1000; // 1 hour
-    const agentName =
-      workerId || `agent-${Math.random().toString(36).slice(2, 10)}`;
-
-    // Try to find an unlocked task in the sprint
+    // Find a BACKLOG task in the sprint
     const task = await this.taskRepository.findOne({
-      where: [
-        { sprintId, lockedBy: null, status: In(["BACKLOG", "TODO"]) },
-        {
-          sprintId,
-          lockExpiresAt: LessThan(new Date()),
-          status: In(["BACKLOG", "TODO"]),
-        },
-      ],
+      where: { sprintId, status: TaskStatus.BACKLOG },
       order: { priority: "DESC", createdAt: "ASC" },
     });
 
-    if (!task) throw new NotFoundException("No available tasks in this sprint");
+    if (!task) {
+      throw new NotFoundException("No available tasks in this sprint");
+    }
 
-    const expiresAt = new Date(Date.now() + lockDurationMs);
-    task.lockedBy = agentName;
-    task.lockExpiresAt = expiresAt;
+    // Move to IN_PROGRESS and assign to worker
+    task.status = TaskStatus.IN_PROGRESS;
+    task.assignedTo = workerId;
 
     const saved = await this.taskRepository.save(task);
     const result = (Array.isArray(saved) ? saved[0] : saved) as Task;
@@ -325,72 +253,15 @@ export class TasksService {
     await this.eventsService.logEvent({
       workspaceId: result.workspaceId,
       taskId: result.id,
-      type: EventType.LOCKED,
+      type: EventType.STATUS_CHANGED,
       payload: {
-        agentId: agentName,
-        expiresAt: expiresAt.getTime(),
+        title: result.title,
+        oldStatus: TaskStatus.BACKLOG,
+        newStatus: TaskStatus.IN_PROGRESS,
+        assignedTo: workerId,
       },
     });
 
     return result;
-  }
-
-  async lockTask(
-    id: string,
-    agentId: string,
-    ttlSeconds: number,
-    userId?: string
-  ): Promise<void> {
-    const task = await this.taskRepository.findOne({ where: { id } });
-    if (!task) throw new NotFoundException("Task not found");
-
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
-
-    if (
-      task.lockedBy &&
-      task.lockedBy !== agentId &&
-      task.lockExpiresAt &&
-      task.lockExpiresAt > now
-    ) {
-      throw new ForbiddenException(`Task already locked by ${task.lockedBy}`);
-    }
-
-    task.lockedBy = agentId;
-    task.lockExpiresAt = expiresAt;
-    await this.taskRepository.save(task);
-
-    await this.eventsService.logEvent({
-      workspaceId: task.workspaceId,
-      taskId: id,
-      userId: userId || null,
-      type: EventType.LOCKED,
-      payload: { agentId, expiresAt: expiresAt.getTime() },
-    });
-  }
-
-  async unlockTask(
-    id: string,
-    agentId: string,
-    userId?: string
-  ): Promise<void> {
-    const task = await this.taskRepository.findOne({ where: { id } });
-    if (!task) throw new NotFoundException("Task not found");
-
-    if (task.lockedBy && task.lockedBy !== agentId && agentId !== "human") {
-      throw new ForbiddenException("Not authorized to unlock this task");
-    }
-
-    task.lockedBy = null;
-    task.lockExpiresAt = null;
-    await this.taskRepository.save(task);
-
-    await this.eventsService.logEvent({
-      workspaceId: task.workspaceId,
-      taskId: id,
-      userId: userId || null,
-      type: EventType.UNLOCKED,
-      payload: { agentId },
-    });
   }
 }

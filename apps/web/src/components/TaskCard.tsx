@@ -9,7 +9,6 @@
  * - Card and list display variants
  * - Priority color coding
  * - Deadline display
- * - Lock status indication
  * - Delete action menu
  * - Click handler for selection
  * - Drag state styling

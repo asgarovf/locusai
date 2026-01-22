@@ -6,13 +6,9 @@ import {
   CreateTaskSchema,
   DispatchTask,
   DispatchTaskSchema,
-  LockTask,
-  LockTaskSchema,
   MembershipRole,
   TaskResponse,
   TasksResponse,
-  UnlockTask,
-  UnlockTaskSchema,
   UpdateTask,
   UpdateTaskSchema,
 } from "@locusai/shared";
@@ -27,16 +23,14 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { MembershipRoles } from "@/auth/decorators/membership-roles.decorator";
-import { CurrentUser } from "@/auth/decorators/user.decorator";
-import { JwtAuthGuard } from "@/auth/guards/jwt-auth.guard";
+import { CurrentUserId } from "@/auth/decorators/user.decorator";
 import { MembershipRolesGuard } from "@/auth/guards/membership-roles.guard";
 import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
-import { User } from "@/entities/user.entity";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
 @Controller("workspaces/:workspaceId/tasks")
-@UseGuards(JwtAuthGuard, MembershipRolesGuard)
+@UseGuards(MembershipRolesGuard)
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
@@ -89,7 +83,7 @@ export class TasksController {
     MembershipRole.MEMBER
   )
   async create(
-    @CurrentUser() user: User,
+    @CurrentUserId() userId: string | null,
     @Param("workspaceId") workspaceId: string,
     @Body(new ZodValidationPipe(CreateTaskSchema)) body: CreateTask
   ): Promise<TaskResponse> {
@@ -106,7 +100,7 @@ export class TasksController {
       parentId: body.parentId ?? undefined,
       sprintId: body.sprintId ?? undefined,
       acceptanceChecklist: body.acceptanceChecklist,
-      userId: user.id,
+      userId: userId ?? undefined,
     });
     return { task };
   }
@@ -118,18 +112,25 @@ export class TasksController {
     MembershipRole.MEMBER
   )
   async update(
-    @CurrentUser() user: User,
+    @CurrentUserId() userId: string | null,
     @Param("taskId") taskId: string,
     @Body(new ZodValidationPipe(UpdateTaskSchema)) body: UpdateTask
   ): Promise<TaskResponse> {
-    const updated = await this.tasksService.update(taskId, body, user.id);
+    const updated = await this.tasksService.update(
+      taskId,
+      body,
+      userId ?? undefined
+    );
     return { task: updated };
   }
 
   @Delete(":taskId")
   @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
-  async delete(@CurrentUser() user: User, @Param("taskId") taskId: string) {
-    await this.tasksService.delete(taskId, user.id);
+  async delete(
+    @CurrentUserId() userId: string | null,
+    @Param("taskId") taskId: string
+  ) {
+    await this.tasksService.delete(taskId, userId ?? undefined);
     return { success: true };
   }
 
@@ -140,7 +141,7 @@ export class TasksController {
     MembershipRole.MEMBER
   )
   async addComment(
-    @CurrentUser() user: User,
+    @CurrentUserId() userId: string | null,
     @Param("taskId") taskId: string,
     @Body(new ZodValidationPipe(AddCommentSchema)) body: AddComment
   ): Promise<CommentResponse> {
@@ -148,7 +149,7 @@ export class TasksController {
       taskId,
       body.author,
       body.text,
-      user.id
+      userId ?? undefined
     );
     return { comment };
   }
@@ -163,40 +164,5 @@ export class TasksController {
       body.sprintId
     );
     return { task };
-  }
-
-  @Post(":taskId/lock")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
-  async lock(
-    @CurrentUser() user: User,
-    @Param("taskId") taskId: string,
-    @Body(new ZodValidationPipe(LockTaskSchema)) body: LockTask
-  ) {
-    await this.tasksService.lockTask(
-      taskId,
-      body.agentId,
-      body.ttlSeconds,
-      user.id
-    );
-    return { success: true };
-  }
-
-  @Post(":taskId/unlock")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
-  async unlock(
-    @CurrentUser() user: User,
-    @Param("taskId") taskId: string,
-    @Body(new ZodValidationPipe(UnlockTaskSchema)) body: UnlockTask
-  ) {
-    await this.tasksService.unlockTask(taskId, body.agentId, user.id);
-    return { success: true };
   }
 }

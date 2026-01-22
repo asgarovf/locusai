@@ -50,7 +50,6 @@ export function useTaskPanelComposite({
 
   const ui = useTaskUIState(task);
   const actions = useTaskActions({
-    taskId,
     onUpdateTask: updateTask,
     onAddComment: async (text) => {
       await locusClient.tasks.addComment(taskId, workspaceId, {
@@ -119,7 +118,6 @@ export function useTaskPanelComposite({
     rejectReason: ui.rejectReason,
     setRejectReason: ui.setRejectReason,
     // Computed
-    isLocked: computed.isLocked,
     checklistProgress: computed.checklistProgress,
     // Actions
     handleUpdateTask: updateTask,
@@ -151,8 +149,6 @@ export function useTaskPanelComposite({
         task?.acceptanceChecklist || []
       ),
     handleAddComment,
-    handleLock: actions.handleLock,
-    handleUnlock: actions.handleUnlock,
     handleReject: (onSuccess?: () => void) =>
       actions.handleReject(ui.rejectReason, () => {
         ui.setShowRejectModal(false);

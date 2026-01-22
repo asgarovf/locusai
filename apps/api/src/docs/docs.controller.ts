@@ -16,12 +16,12 @@ import {
   Put,
   UseGuards,
 } from "@nestjs/common";
-import { JwtAuthGuard } from "@/auth/guards";
+import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocsService } from "./docs.service";
 
 @Controller("workspaces/:workspaceId/docs")
-@UseGuards(JwtAuthGuard)
+@UseGuards(MembershipRolesGuard)
 export class DocsController {
   constructor(private readonly docsService: DocsService) {}
 

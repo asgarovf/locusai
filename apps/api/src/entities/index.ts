@@ -1,4 +1,4 @@
-export * from "./artifact.entity";
+export * from "./api-key.entity";
 export * from "./comment.entity";
 export * from "./doc.entity";
 export * from "./doc-group.entity";

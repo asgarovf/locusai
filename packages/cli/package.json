@@ -4,24 +4,29 @@
   "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {
-    "locus": "./bin/locus.js"
+    "locus": "./src/cli.ts"
   },
   "scripts": {
-    "start": "bun lint ."
+    "start": "bun lint .",
+    "build": "bun build ./src/cli.ts --target=bun --outfile=./bin/locus.js"
   },
   "files": [
-    "index.ts",
     "src",
     "bin",
-    "public"
+    "README.md"
   ],
   "keywords": [
     "locus",
     "project-management",
     "monorepo",
     "cli",
-    "scaffold"
+    "scaffold",
+    "agent",
+    "agentic"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@locusai/sdk": "workspace:*"
+  }
 }

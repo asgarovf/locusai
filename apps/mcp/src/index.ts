@@ -6,6 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import "./config.js";
 
 // Import tool registration functions
+import { registerAgentTools } from "./tools/agents.js";
 import { registerArtifactTools } from "./tools/artifacts.js";
 import { registerCiTools } from "./tools/ci.js";
 import { registerDocsTools } from "./tools/docs.js";
@@ -18,6 +19,7 @@ const server = new McpServer({
 });
 
 // Register all tools
+registerAgentTools(server);
 registerDocsTools(server);
 registerKanbanTools(server);
 registerArtifactTools(server);

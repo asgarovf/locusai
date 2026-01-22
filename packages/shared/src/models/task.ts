@@ -20,12 +20,11 @@ export const TaskSchema = BaseEntitySchema.extend({
   priority: z.nativeEnum(TaskPriority).default(TaskPriority.MEDIUM),
   labels: z.array(z.string()).default([]),
   assigneeRole: z.nativeEnum(AssigneeRole).nullable().optional(),
-  assignedTo: z.string().uuid().nullable().optional(),
+  /** Agent ID or user identifier - not necessarily a UUID */
+  assignedTo: z.string().nullable().optional(),
   sprintId: z.string().uuid().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
   dueDate: z.union([z.date(), z.number()]).nullable().optional(),
-  lockedBy: z.string().nullable().optional(),
-  lockExpiresAt: z.union([z.date(), z.number()]).nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).default([]),
   comments: z.array(CommentSchema).default([]),
   activityLog: z.array(EventSchema).default([]),
@@ -79,19 +78,6 @@ export const DispatchTaskSchema = z.object({
 });
 
 export type DispatchTask = z.infer<typeof DispatchTaskSchema>;
-
-export const LockTaskSchema = z.object({
-  agentId: z.string().min(1),
-  ttlSeconds: z.number().int().positive().default(3600),
-});
-
-export type LockTask = z.infer<typeof LockTaskSchema>;
-
-export const UnlockTaskSchema = z.object({
-  agentId: z.string().min(1),
-});
-
-export type UnlockTask = z.infer<typeof UnlockTaskSchema>;
 
 // ============================================================================
 // Parameter & Query Schemas

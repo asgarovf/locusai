@@ -47,15 +47,6 @@ export const CommentAddedPayloadSchema = z.object({
   text: z.string(),
 });
 
-export const LockedPayloadSchema = z.object({
-  agentId: z.string(),
-  expiresAt: z.number().optional(),
-});
-
-export const UnlockedPayloadSchema = z.object({
-  agentId: z.string(),
-});
-
 export const WorkspaceCreatedPayloadSchema = z.object({
   name: z.string(),
 });
@@ -111,11 +102,6 @@ export const EventPayloadSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(EventType.COMMENT_ADDED),
     payload: CommentAddedPayloadSchema,
-  }),
-  z.object({ type: z.literal(EventType.LOCKED), payload: LockedPayloadSchema }),
-  z.object({
-    type: z.literal(EventType.UNLOCKED),
-    payload: UnlockedPayloadSchema,
   }),
   z.object({
     type: z.literal(EventType.WORKSPACE_CREATED),

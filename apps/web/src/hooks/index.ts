@@ -16,7 +16,6 @@ export * from "./useOrganizationQuery";
 export * from "./useRegisterForm";
 export * from "./useSprintsQuery";
 export * from "./useTaskDescription";
-export * from "./useTaskHeader";
 export * from "./useTasksQuery";
 export * from "./useTeamManagement";
 export * from "./useWorkspaceCreateForm";

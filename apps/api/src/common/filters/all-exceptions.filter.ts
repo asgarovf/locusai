@@ -52,14 +52,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (status >= 500) {
       this.logger.error(
-        `${request.method} ${request.url} ${status} - ${message}`,
+        `${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(request.body)}`,
         exception instanceof Error ? exception.stack : undefined,
         "Exceptions"
       );
     } else {
       this.logger.warn(
-        `${request.method} ${request.url} ${status} - ${message}`,
-        "Exceptions"
+        `[Exceptions] ${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(request.body)}`
       );
     }
 

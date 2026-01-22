@@ -5,17 +5,52 @@ import {
   CreateTask,
   Task,
   TaskResponse,
+  TaskStatus,
   TasksResponse,
   UpdateTask,
 } from "@locusai/shared";
 import { BaseModule } from "./base";
 
+export interface TaskListOptions {
+  sprintId?: string;
+  status?: TaskStatus | TaskStatus[];
+}
+
 export class TasksModule extends BaseModule {
-  async list(workspaceId: string): Promise<Task[]> {
+  /**
+   * List all tasks in a workspace, optionally filtered
+   */
+  async list(workspaceId: string, options?: TaskListOptions): Promise<Task[]> {
     const { data } = await this.api.get<TasksResponse>(
       `/workspaces/${workspaceId}/tasks`
     );
-    return data.tasks;
+
+    let tasks = data.tasks;
+
+    // Client-side filtering (API doesn't support query params yet)
+    if (options?.sprintId) {
+      tasks = tasks.filter((t) => t.sprintId === options.sprintId);
+    }
+
+    if (options?.status) {
+      const statuses = Array.isArray(options.status)
+        ? options.status
+        : [options.status];
+      tasks = tasks.filter((t) => statuses.includes(t.status as TaskStatus));
+    }
+
+    return tasks;
+  }
+
+  /**
+   * Get available tasks for an agent to work on.
+   * Returns tasks in BACKLOG status (agents only take from backlog).
+   */
+  async getAvailable(workspaceId: string, sprintId?: string): Promise<Task[]> {
+    return this.list(workspaceId, {
+      sprintId,
+      status: TaskStatus.BACKLOG,
+    });
   }
 
   async getById(id: string, workspaceId: string): Promise<Task> {
@@ -66,21 +101,5 @@ export class TasksModule extends BaseModule {
       body
     );
     return data.comment;
-  }
-
-  async lock(
-    id: string,
-    workspaceId: string,
-    body: { agentId: string; ttlSeconds: number }
-  ): Promise<void> {
-    await this.api.post(`/workspaces/${workspaceId}/tasks/${id}/lock`, body);
-  }
-
-  async unlock(
-    id: string,
-    workspaceId: string,
-    body: { agentId: string }
-  ): Promise<void> {
-    await this.api.post(`/workspaces/${workspaceId}/tasks/${id}/unlock`, body);
   }
 }

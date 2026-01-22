@@ -3,7 +3,72 @@
  */
 
 import { z } from "zod";
+import { UserRole } from "../enums";
 import { UserSchema } from "./user";
+
+// ============================================================================
+// Authenticated User Types (for request context)
+// ============================================================================
+
+/**
+ * User authenticated via JWT (web dashboard)
+ */
+export const JwtAuthUserSchema = z.object({
+  authType: z.literal("jwt"),
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string(),
+  role: z.nativeEnum(UserRole),
+  orgId: z.string().uuid().nullable().optional(),
+  workspaceId: z.string().uuid().nullable().optional(),
+});
+
+export type JwtAuthUser = z.infer<typeof JwtAuthUserSchema>;
+
+/**
+ * User authenticated via API Key (CLI/agents)
+ * Note: API keys don't have a real user ID - they represent organization-level access
+ */
+export const ApiKeyAuthUserSchema = z.object({
+  authType: z.literal("api_key"),
+  apiKeyId: z.string().uuid(),
+  apiKeyName: z.string(),
+  orgId: z.string().uuid(),
+});
+
+export type ApiKeyAuthUser = z.infer<typeof ApiKeyAuthUserSchema>;
+
+/**
+ * Union type for any authenticated request
+ */
+export const AuthenticatedUserSchema = z.discriminatedUnion("authType", [
+  JwtAuthUserSchema,
+  ApiKeyAuthUserSchema,
+]);
+
+export type AuthenticatedUser = z.infer<typeof AuthenticatedUserSchema>;
+
+/**
+ * Type guard to check if user is JWT authenticated
+ */
+export function isJwtUser(user: AuthenticatedUser): user is JwtAuthUser {
+  return user.authType === "jwt";
+}
+
+/**
+ * Type guard to check if user is API key authenticated
+ */
+export function isApiKeyUser(user: AuthenticatedUser): user is ApiKeyAuthUser {
+  return user.authType === "api_key";
+}
+
+/**
+ * Get the user ID for event logging. Returns null for API key users.
+ * Use this when you need to store a reference to the user in the database.
+ */
+export function getAuthUserId(user: AuthenticatedUser): string | null {
+  return isJwtUser(user) ? user.id : null;
+}
 
 // ============================================================================
 // Auth Responses

@@ -1,3 +1,4 @@
+import * as crypto from "node:crypto";
 import { AddMember, MembershipRole } from "@locusai/shared";
 import {
   ConflictException,
@@ -6,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Membership, Organization } from "@/entities";
+import { ApiKey, Membership, Organization } from "@/entities";
 
 @Injectable()
 export class OrganizationsService {
@@ -14,7 +15,9 @@ export class OrganizationsService {
     @InjectRepository(Organization)
     private readonly orgRepository: Repository<Organization>,
     @InjectRepository(Membership)
-    private readonly membershipRepository: Repository<Membership>
+    private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(ApiKey)
+    private readonly apiKeyRepository: Repository<ApiKey>
   ) {}
 
   async findById(id: string): Promise<Organization> {
@@ -101,5 +104,88 @@ export class OrganizationsService {
 
     // Delete the organization
     await this.orgRepository.remove(org);
+  }
+
+  // ============================================================================
+  // API Key Management
+  // ============================================================================
+
+  /**
+   * Generate a secure API key with prefix
+   */
+  private generateApiKey(): string {
+    const randomBytes = crypto.randomBytes(32).toString("hex");
+    return `lk_${randomBytes}`;
+  }
+
+  /**
+   * List all API keys for an organization (without exposing full key)
+   */
+  async listApiKeys(orgId: string): Promise<ApiKey[]> {
+    return this.apiKeyRepository.find({
+      where: { organizationId: orgId },
+      order: { createdAt: "DESC" },
+    });
+  }
+
+  /**
+   * Create a new API key for an organization
+   * Returns the full key only once (on creation)
+   */
+  async createApiKey(
+    orgId: string,
+    name: string
+  ): Promise<{ apiKey: ApiKey; key: string }> {
+    // Verify org exists
+    await this.findById(orgId);
+
+    const key = this.generateApiKey();
+
+    const apiKey = this.apiKeyRepository.create({
+      organizationId: orgId,
+      name,
+      key,
+      active: true,
+    });
+
+    const saved = await this.apiKeyRepository.save(apiKey);
+
+    // Return the full key only on creation
+    return { apiKey: saved, key };
+  }
+
+  /**
+   * Delete an API key
+   */
+  async deleteApiKey(orgId: string, keyId: string): Promise<void> {
+    const apiKey = await this.apiKeyRepository.findOne({
+      where: { id: keyId, organizationId: orgId },
+    });
+
+    if (!apiKey) {
+      throw new NotFoundException("API key not found");
+    }
+
+    await this.apiKeyRepository.remove(apiKey);
+  }
+
+  /**
+   * Toggle API key active status
+   */
+  async toggleApiKeyStatus(
+    orgId: string,
+    keyId: string,
+    active: boolean
+  ): Promise<ApiKey> {
+    const apiKey = await this.apiKeyRepository.findOne({
+      where: { id: keyId, organizationId: orgId },
+    });
+
+    if (!apiKey) {
+      throw new NotFoundException("API key not found");
+    }
+
+    apiKey.active = active;
+    return this.apiKeyRepository.save(apiKey);
   }
 }

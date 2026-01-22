@@ -1,4 +1,9 @@
-import { MembershipRole } from "@locusai/shared";
+import {
+  AuthenticatedUser,
+  isApiKeyUser,
+  isJwtUser,
+  MembershipRole,
+} from "@locusai/shared";
 import {
   CanActivate,
   ExecutionContext,
@@ -29,14 +34,14 @@ export class MembershipRolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const user = request.user as AuthenticatedUser | undefined;
 
     if (!user) {
       return false;
     }
 
-    // System ADMIN bypasses all membership checks
-    if (user.role === "ADMIN") {
+    // System ADMIN bypasses all membership checks (JWT users only)
+    if (isJwtUser(user) && user.role === "ADMIN") {
       return true;
     }
 
@@ -65,6 +70,18 @@ export class MembershipRolesGuard implements CanActivate {
       throw new ForbiddenException("Organization context required");
     }
 
+    // API Key authentication - check if key belongs to this organization
+    if (isApiKeyUser(user)) {
+      if (user.orgId === resolvedOrgId) {
+        // API key belongs to this org, grant full access
+        return true;
+      }
+      throw new ForbiddenException(
+        "API key does not have access to this organization"
+      );
+    }
+
+    // JWT user authentication - check membership
     const members = await this.orgService.getMembers(resolvedOrgId);
     const membership = members.find((m) => m.userId === user.id);
 

@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { APP_FILTER, APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ArtifactsModule } from "./artifacts/artifacts.module";
 import { AuthModule } from "./auth/auth.module";
+import { JwtOrApiKeyGuard } from "./auth/guards/jwt-or-api-key.guard";
 import { CiModule } from "./ci/ci.module";
 import { AllExceptionsFilter } from "./common/filters";
 import {
@@ -13,6 +13,7 @@ import { AppLogger } from "./common/logger";
 import { ConfigModule } from "./config/config.module";
 import { TypedConfigService } from "./config/config.service";
 import { DocsModule } from "./docs/docs.module";
+import { ApiKey } from "./entities/api-key.entity";
 import { EventsModule } from "./events/events.module";
 import { HealthModule } from "./health/health.module";
 import { InvitationsModule } from "./invitations/invitations.module";
@@ -35,6 +36,9 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
       }),
     }),
 
+    // Register entities for global use
+    TypeOrmModule.forFeature([ApiKey]),
+
     // Global Modules
     AuthModule,
     ConfigModule,
@@ -48,12 +52,15 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     TasksModule,
     SprintsModule,
     InvitationsModule,
-    ArtifactsModule,
     DocsModule,
     CiModule,
   ],
   providers: [
     AppLogger,
+    {
+      provide: APP_GUARD,
+      useClass: JwtOrApiKeyGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
