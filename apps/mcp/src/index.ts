@@ -7,7 +7,6 @@ import "./config.js";
 
 // Import tool registration functions
 import { registerAgentTools } from "./tools/agents.js";
-import { registerArtifactTools } from "./tools/artifacts.js";
 import { registerCiTools } from "./tools/ci.js";
 import { registerDocsTools } from "./tools/docs.js";
 import { registerKanbanTools } from "./tools/kanban.js";
@@ -22,7 +21,6 @@ const server = new McpServer({
 registerAgentTools(server);
 registerDocsTools(server);
 registerKanbanTools(server);
-registerArtifactTools(server);
 registerCiTools(server);
 
 // Start the server

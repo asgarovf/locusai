@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import { LocusConfig, LocusEmitter, LocusEvent } from "./events";
-import { ArtifactsModule } from "./modules/artifacts";
 import { AuthModule } from "./modules/auth";
 import { CiModule } from "./modules/ci";
 import { DocsModule } from "./modules/docs";
@@ -11,7 +10,6 @@ import { TasksModule } from "./modules/tasks";
 import { WorkspacesModule } from "./modules/workspaces";
 
 export * from "./events";
-export * from "./modules/artifacts";
 export * from "./modules/auth";
 export * from "./modules/ci";
 export * from "./modules/docs";
@@ -31,7 +29,6 @@ export class LocusClient {
   public readonly workspaces: WorkspacesModule;
   public readonly organizations: OrganizationsModule;
   public readonly invitations: InvitationsModule;
-  public readonly artifacts: ArtifactsModule;
   public readonly docs: DocsModule;
   public readonly ci: CiModule;
 
@@ -56,7 +53,6 @@ export class LocusClient {
     this.workspaces = new WorkspacesModule(this.api, this.emitter);
     this.organizations = new OrganizationsModule(this.api, this.emitter);
     this.invitations = new InvitationsModule(this.api, this.emitter);
-    this.artifacts = new ArtifactsModule(this.api, this.emitter);
     this.docs = new DocsModule(this.api, this.emitter);
     this.ci = new CiModule(this.api, this.emitter);
   }
