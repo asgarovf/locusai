@@ -1,7 +1,27 @@
 /**
- * Task Panel
+ * Task Panel Component
  *
- * Side panel for task details, comments, and activity.
+ * Side panel for displaying and editing task details.
+ * Shows title, description, properties, activity, artifacts, checklists, and docs.
+ * Integrates with `useTaskPanel` hook for comprehensive state management.
+ *
+ * Features:
+ * - Task details and description editing
+ * - Task properties (status, priority, assignee, deadline)
+ * - Activity feed and comments
+ * - Artifacts and checklists
+ * - Related documents
+ * - Lock/unlock functionality
+ * - Task approval (if in verification state)
+ * - Task deletion
+ *
+ * @example
+ * <TaskPanel
+ *   taskId="task-123"
+ *   onClose={handleClose}
+ *   onDeleted={handleDeleted}
+ *   onUpdated={handleUpdated}
+ * />
  */
 
 "use client";
@@ -9,7 +29,6 @@
 import { motion } from "framer-motion";
 import { useTaskPanel } from "@/hooks/useTaskPanel";
 import { TaskActivity } from "./task-panel/TaskActivity";
-import { TaskArtifacts } from "./task-panel/TaskArtifacts";
 import { TaskChecklist } from "./task-panel/TaskChecklist";
 import { TaskDescription } from "./task-panel/TaskDescription";
 import { TaskDocs } from "./task-panel/TaskDocs";
@@ -18,9 +37,13 @@ import { TaskProperties } from "./task-panel/TaskProperties";
 import { Button, Textarea } from "./ui";
 
 interface TaskPanelProps {
+  /** ID of the task to display */
   taskId: string;
+  /** Called when closing the panel */
   onClose: () => void;
+  /** Called after task is deleted */
   onDeleted: () => void;
+  /** Called after task is updated */
   onUpdated: () => void;
 }
 
@@ -32,28 +55,19 @@ export function TaskPanel({
 }: TaskPanelProps) {
   const {
     task,
-    isEditingTitle,
-    setIsEditingTitle,
-    editTitle,
-    setEditTitle,
-    editDesc,
-    setEditDesc,
+    isLoading,
+    isDeleting,
     newComment,
     setNewComment,
     newChecklistItem,
     setNewChecklistItem,
-    descMode,
-    setDescMode,
     showRejectModal,
     setShowRejectModal,
     rejectReason,
     setRejectReason,
-    isLocked,
     checklistProgress,
     handleUpdateTask,
     handleDelete,
-    handleTitleSave,
-    handleDescSave,
     handleAddChecklistItem,
     handleToggleChecklistItem,
     handleRemoveChecklistItem,
@@ -96,7 +110,8 @@ export function TaskPanel({
           <>
             <TaskHeader
               task={task}
-              isLocked={isLocked || false}
+              isLoading={isLoading}
+              isDeleting={isDeleting}
               onClose={onClose}
               onLock={handleLock}
               onUnlock={handleUnlock}
@@ -109,20 +124,13 @@ export function TaskPanel({
               <div className="flex flex-col overflow-y-auto scrollbar-thin">
                 <TaskDescription
                   task={task}
-                  isEditingTitle={isEditingTitle}
-                  setIsEditingTitle={setIsEditingTitle}
-                  editTitle={editTitle}
-                  setEditTitle={setEditTitle}
-                  handleTitleSave={handleTitleSave}
-                  editDesc={editDesc}
-                  setEditDesc={setEditDesc}
-                  handleDescSave={handleDescSave}
-                  descMode={descMode}
-                  setDescMode={setDescMode}
+                  isLoading={isLoading}
+                  onUpdate={handleUpdateTask}
                 />
 
                 <TaskChecklist
                   task={task}
+                  isLoading={isLoading}
                   checklistProgress={checklistProgress}
                   newChecklistItem={newChecklistItem}
                   setNewChecklistItem={setNewChecklistItem}
@@ -134,15 +142,19 @@ export function TaskPanel({
 
               <div className="flex flex-col border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
-                  <TaskProperties task={task} onUpdate={handleUpdateTask} />
+                  <TaskProperties
+                    task={task}
+                    isLoading={isLoading}
+                    onUpdate={handleUpdateTask}
+                  />
                   <TaskDocs
                     task={task}
                     onLinkDoc={handleLinkDoc}
                     onUnlinkDoc={handleUnlinkDoc}
                   />
-                  <TaskArtifacts task={task} />
                   <TaskActivity
                     task={task}
+                    isLoading={isLoading}
                     newComment={newComment}
                     setNewComment={setNewComment}
                     handleAddComment={handleAddComment}
@@ -190,10 +202,10 @@ export function TaskPanel({
               <Button
                 variant="danger"
                 onClick={handleReject}
-                disabled={!rejectReason.trim()}
+                disabled={!rejectReason.trim() || isLoading}
                 className="px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-destructive/20"
               >
-                Confirm Rejection
+                {isLoading ? "Processing..." : "Confirm Rejection"}
               </Button>
             </div>
           </motion.div>

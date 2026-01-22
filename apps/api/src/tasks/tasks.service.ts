@@ -88,6 +88,8 @@ export class TasksService {
     priority?: TaskPriority;
     labels?: string[];
     assigneeRole?: AssigneeRole;
+    assignedTo?: string;
+    dueDate?: Date;
     parentId?: string;
     sprintId?: string;
     acceptanceChecklist?: AcceptanceItem[];
@@ -116,6 +118,8 @@ export class TasksService {
       priority: data.priority || TaskPriority.MEDIUM,
       labels: data.labels || [],
       assigneeRole: data.assigneeRole,
+      assignedTo: data.assignedTo || null,
+      dueDate: data.dueDate || null,
       parentId: data.parentId,
       sprintId: data.sprintId,
       acceptanceChecklist: mergedChecklist,
@@ -153,13 +157,32 @@ export class TasksService {
     }
 
     const oldStatus = task.status;
+    const newStatus = updates.status;
+
+    // Auto-lock when moving to IN_PROGRESS
+    if (newStatus === TaskStatus.IN_PROGRESS && !task.lockedBy) {
+      const agentId = updates.assignedTo || userId || "human";
+      const ttlSeconds = 3600; // 1 hour default
+      task.lockedBy = agentId;
+      task.lockExpiresAt = new Date(Date.now() + ttlSeconds * 1000);
+    }
+
+    // Auto-unlock when moving back to BACKLOG or DONE
+    if (
+      (newStatus === TaskStatus.BACKLOG || newStatus === TaskStatus.DONE) &&
+      task.lockedBy
+    ) {
+      task.lockedBy = null;
+      task.lockExpiresAt = null;
+    }
 
     const { comments, artifacts, activityLog, ...rest } = updates;
     Object.assign(task, {
       ...rest,
       lockExpiresAt: rest.lockExpiresAt
         ? new Date(rest.lockExpiresAt)
-        : undefined,
+        : task.lockExpiresAt,
+      dueDate: rest.dueDate ? new Date(rest.dueDate) : task.dueDate,
     });
 
     if (updates.docIds) {
@@ -187,6 +210,43 @@ export class TasksService {
       this.processor
         .onStatusChanged(id, oldStatus, updates.status)
         .catch((err) => console.error("[TasksService] Processor error:", err));
+    }
+
+    // Log auto-lock if it happened
+    if (
+      newStatus === TaskStatus.IN_PROGRESS &&
+      !task.lockedBy &&
+      result.lockedBy
+    ) {
+      await this.eventsService.logEvent({
+        workspaceId: result.workspaceId,
+        taskId: id,
+        userId: userId || null,
+        type: EventType.LOCKED,
+        payload: {
+          agentId: result.lockedBy,
+          expiresAt: result.lockExpiresAt?.getTime(),
+          automatic: true,
+        },
+      });
+    }
+
+    // Log auto-unlock if it happened
+    if (
+      (newStatus === TaskStatus.BACKLOG || newStatus === TaskStatus.DONE) &&
+      task.lockedBy &&
+      !result.lockedBy
+    ) {
+      await this.eventsService.logEvent({
+        workspaceId: result.workspaceId,
+        taskId: id,
+        userId: userId || null,
+        type: EventType.UNLOCKED,
+        payload: {
+          agentId: task.lockedBy,
+          automatic: true,
+        },
+      });
     }
 
     return result;

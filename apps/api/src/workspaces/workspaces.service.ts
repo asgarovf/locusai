@@ -1,9 +1,5 @@
 import { MembershipRole } from "@locusai/shared";
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Membership, Organization, Task, Workspace } from "@/entities";
@@ -26,7 +22,7 @@ export class WorkspacesService {
   async findById(id: string): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findOne({
       where: { id },
-      select: ["id", "orgId", "name", "slug", "createdAt", "updatedAt"],
+      select: ["id", "orgId", "name", "createdAt", "updatedAt"],
       relations: ["organization"],
     });
     if (!workspace) {
@@ -58,25 +54,9 @@ export class WorkspacesService {
       throw new NotFoundException("Organization not found");
     }
 
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    const existing = await this.workspaceRepository.findOne({
-      where: { orgId, slug },
-    });
-
-    if (existing) {
-      throw new ConflictException(
-        "A workspace with this name already exists in the organization"
-      );
-    }
-
     const workspace = this.workspaceRepository.create({
       orgId,
       name,
-      slug,
     });
 
     return this.workspaceRepository.save(workspace);
@@ -93,15 +73,8 @@ export class WorkspacesService {
 
     if (!org) {
       // User has no organization, create one
-      const orgName = `${name} Organization`;
-      const orgSlug = orgName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-
       org = this.orgRepository.create({
-        name: orgName,
-        slug: orgSlug,
+        name,
       });
       org = await this.orgRepository.save(org);
 

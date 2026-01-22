@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 import { AssigneeRole, TaskPriority, TaskStatus } from "../enums";
-import { ArtifactSchema, CommentSchema, EventSchema } from "./activity";
+import { CommentSchema, EventSchema } from "./activity";
 import { DocSchema } from "./doc";
 
 export const AcceptanceItemSchema = z.object({
@@ -28,7 +28,6 @@ export const TaskSchema = BaseEntitySchema.extend({
   lockExpiresAt: z.union([z.date(), z.number()]).nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).default([]),
   comments: z.array(CommentSchema).default([]),
-  artifacts: z.array(ArtifactSchema).default([]),
   activityLog: z.array(EventSchema).default([]),
   docs: z.array(DocSchema).default([]),
 });
@@ -42,6 +41,8 @@ export const CreateTaskSchema = z.object({
   priority: z.nativeEnum(TaskPriority).optional().default(TaskPriority.MEDIUM),
   labels: z.array(z.string()).optional().default([]),
   assigneeRole: z.nativeEnum(AssigneeRole).optional(),
+  assignedTo: z.string().nullable().optional(),
+  dueDate: z.union([z.date(), z.number()]).nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
   sprintId: z.string().uuid().nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),

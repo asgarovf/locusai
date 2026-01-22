@@ -1,26 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Sidebar, WorkspaceProtected } from "@/components";
-import { useAuth } from "@/context/AuthContext";
-import { isCloudMode } from "@/utils/env.utils";
+import { LoadingSkeleton } from "@/components/ui";
+import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { isLoading, isAuthenticated, shouldShowUI } = useDashboardLayout();
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && isCloudMode()) {
-      router.push("/login");
-    }
-  }, [isLoading, isAuthenticated, router]);
+  // Show loading skeleton while authenticating
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
 
-  if (!isAuthenticated && isCloudMode() && !isLoading) {
+  // Don't render anything if not authenticated (redirect happens in hook)
+  if (!shouldShowUI) {
     return null;
   }
 

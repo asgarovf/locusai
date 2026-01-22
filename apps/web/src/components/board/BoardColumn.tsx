@@ -1,3 +1,19 @@
+/**
+ * Board Column Component
+ *
+ * Displays a single kanban column for a task status.
+ * Supports drag-and-drop task movement between columns.
+ *
+ * @example
+ * <BoardColumn
+ *   statusKey="IN_PROGRESS"
+ *   title="In Progress"
+ *   tasks={tasksInProgress}
+ *   onTaskClick={handleSelectTask}
+ *   onTaskDelete={handleDeleteTask}
+ * />
+ */
+
 "use client";
 
 import { type Task } from "@locusai/shared";
@@ -7,13 +23,30 @@ import { cn } from "@/lib/utils";
 import { BOARD_STATUSES } from "./constants";
 
 interface BoardColumnProps {
+  /** Unique key identifying the status */
   statusKey: string;
+  /** Display title for the column */
   title: string;
+  /** Tasks to display in this column */
   tasks: Task[];
+  /** Called when a task card is clicked */
   onTaskClick: (taskId: string) => void;
+  /** Called when delete action is triggered */
   onTaskDelete: (taskId: string) => void;
 }
 
+/**
+ * Board Column Component
+ *
+ * Features:
+ * - Displays tasks in a kanban column
+ * - Drag-drop enabled via DroppableSection
+ * - Shows task count
+ * - Empty state message
+ * - Color-coded by status
+ *
+ * @component
+ */
 export function BoardColumn({
   statusKey,
   title,

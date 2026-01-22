@@ -1,3 +1,26 @@
+/**
+ * Page Header Component
+ *
+ * Displays page title, subtitle, icon, and actions.
+ * Supports optional search with keyboard shortcut (Cmd+K).
+ * Used on main application pages for consistent header layout.
+ *
+ * Features:
+ * - Title and subtitle display
+ * - Optional icon
+ * - Action buttons area
+ * - Search with Cmd+K keyboard shortcut
+ * - Flexible layout for custom content
+ *
+ * @example
+ * <PageHeader
+ *   title="Dashboard"
+ *   subtitle="Your workspace overview"
+ *   icon={<LayoutDashboard />}
+ *   actions={<Button>Export</Button>}
+ * />
+ */
+
 "use client";
 
 import { Search } from "lucide-react";

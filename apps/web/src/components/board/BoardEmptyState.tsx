@@ -1,3 +1,13 @@
+/**
+ * Board Empty State Component
+ *
+ * Displays contextual empty state based on sprint status.
+ * Guides users to create sprints or add tasks.
+ *
+ * @example
+ * <BoardEmptyState hasActiveSprint={false} onNewTask={handleCreateTask} />
+ */
+
 "use client";
 
 import { Inbox, Layers, Plus } from "lucide-react";
@@ -5,10 +15,22 @@ import { useRouter } from "next/navigation";
 import { Button, EmptyState } from "@/components/ui";
 
 interface BoardEmptyStateProps {
+  /** Whether there's an active sprint */
   hasActiveSprint: boolean;
+  /** Callback to create a new task */
   onNewTask: () => void;
 }
 
+/**
+ * Board Empty State Component
+ *
+ * Features:
+ * - Shows "no active sprint" state with backlog navigation
+ * - Shows "no tasks" state with create task button
+ * - Navigation to backlog and sprint creation
+ *
+ * @component
+ */
 export function BoardEmptyState({
   hasActiveSprint,
   onNewTask,

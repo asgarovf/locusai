@@ -1,3 +1,18 @@
+/**
+ * Sprint Create Modal Component
+ *
+ * Modal dialog for creating new sprints.
+ * Simple form for entering sprint name.
+ *
+ * @example
+ * <SprintCreateModal
+ *   isOpen={isOpen}
+ *   onClose={handleClose}
+ *   onCreated={handleCreated}
+ *   isSubmitting={false}
+ * />
+ */
+
 "use client";
 
 import { Target } from "lucide-react";
@@ -6,9 +21,13 @@ import { CreateModal } from "@/components/CreateModal";
 import { Input } from "@/components/ui";
 
 interface SprintCreateModalProps {
+  /** Whether modal is open */
   isOpen: boolean;
+  /** Called to close modal */
   onClose: () => void;
+  /** Called with sprint name after creation */
   onCreated: (name: string) => void;
+  /** Whether submission is in progress */
   isSubmitting?: boolean;
 }
 

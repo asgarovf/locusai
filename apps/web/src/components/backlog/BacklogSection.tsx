@@ -1,18 +1,48 @@
+/**
+ * Backlog Section Component
+ *
+ * Reusable section component for backlog and sprint organization.
+ * Supports collapsible header with count badge and actions.
+ *
+ * @example
+ * <BacklogSection
+ *   id="sprint-1"
+ *   title="Sprint 1"
+ *   icon={<Flag size={18} />}
+ *   count={12}
+ *   isExpanded={true}
+ *   onToggle={handleToggle}
+ *   accentColor="primary"
+ * >
+ *   { Section content }
+ * </BacklogSection>
+ */
+
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BacklogSectionProps {
+  /** Unique section identifier */
   id: string;
+  /** Display title */
   title: string;
+  /** Icon to display */
   icon: React.ReactNode;
+  /** Item count to display */
   count: number;
+  /** Whether section is expanded */
   isExpanded: boolean;
+  /** Called when toggling expand state */
   onToggle: () => void;
+  /** Color theme for section */
   accentColor: "slate" | "primary" | "amber" | "green" | "emerald";
+  /** Optional badge text */
   badge?: string;
+  /** Optional action elements */
   actions?: React.ReactNode;
+  /** Section content */
   children: React.ReactNode;
 }
 

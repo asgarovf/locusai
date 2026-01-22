@@ -28,9 +28,6 @@ export class Workspace {
   @Column()
   name: string;
 
-  @Column()
-  slug: string;
-
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 

@@ -1,13 +1,45 @@
+/**
+ * Board Filter Component
+ *
+ * Provides filtering controls for board view.
+ * Supports search, priority filtering, and role filtering.
+ * Helps users find and organize tasks efficiently.
+ *
+ * Features:
+ * - Task search by title/content
+ * - Priority-based filtering
+ * - Role-based filtering
+ * - Clear filters button
+ * - Real-time filtering
+ *
+ * @example
+ * <BoardFilter
+ *   searchQuery={search}
+ *   onSearchChange={handleSearch}
+ *   priorityFilter={priority}
+ *   onPriorityChange={handlePriority}
+ *   roleFilter={role}
+ *   onRoleChange={handleRole}
+ * />
+ */
+
 "use client";
 
+import { AssigneeRole } from "@locusai/shared";
 import { Filter } from "lucide-react";
 
 interface BoardFilterProps {
+  /** Current search query */
   searchQuery: string;
+  /** Called when search changes */
   onSearchChange: (query: string) => void;
+  /** Currently selected priority filter */
   priorityFilter: string | null;
+  /** Called when priority filter changes */
   onPriorityChange: (priority: string | null) => void;
+  /** Currently selected role filter */
   roleFilter: string | null;
+  /** Called when role filter changes */
   onRoleChange: (role: string | null) => void;
 }
 
@@ -56,11 +88,11 @@ export function BoardFilter({
         className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8"
       >
         <option value="">All Roles</option>
-        <option value="ENGINEER">Engineer</option>
-        <option value="DESIGNER">Designer</option>
-        <option value="PRODUCT">Product</option>
-        <option value="QA">QA</option>
-        <option value="MANAGER">Manager</option>
+        <option value={AssigneeRole.BACKEND}>Backend</option>
+        <option value={AssigneeRole.FRONTEND}>Frontend</option>
+        <option value={AssigneeRole.QA}>QA</option>
+        <option value={AssigneeRole.PM}>PM</option>
+        <option value={AssigneeRole.DESIGN}>Design</option>
       </select>
     </div>
   );

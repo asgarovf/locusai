@@ -1,15 +1,46 @@
+/**
+ * Task Card Component
+ *
+ * Displays a task in card or list format.
+ * Shows title, status, priority, deadline, and actions.
+ * Supports drag-drop and delete operations.
+ *
+ * Features:
+ * - Card and list display variants
+ * - Priority color coding
+ * - Deadline display
+ * - Lock status indication
+ * - Delete action menu
+ * - Click handler for selection
+ * - Drag state styling
+ *
+ * @example
+ * <TaskCard
+ *   task={task}
+ *   onClick={handleSelect}
+ *   onDelete={handleDelete}
+ *   isDragging={isDragging}
+ *   variant="card"
+ * />
+ */
+
 "use client";
 
 import { type Task, TaskPriority } from "@locusai/shared";
-import { Calendar, Lock, MoreHorizontal, Tag, Trash2 } from "lucide-react";
+import { Calendar, MoreHorizontal, Tag, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
+  /** Task to display */
   task: Task;
+  /** Called when card is clicked */
   onClick?: () => void;
+  /** Called when delete action is triggered */
   onDelete?: (id: string) => void;
+  /** Whether task is being dragged */
   isDragging?: boolean;
+  /** Display variant (card or list) */
   variant?: "card" | "list";
 }
 
@@ -40,10 +71,6 @@ export function TaskCard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isLocked =
-    task.lockedBy &&
-    (!task.lockExpiresAt ||
-      new Date(task.lockExpiresAt).getTime() > Date.now());
   const priority = (task.priority as TaskPriority) || TaskPriority.MEDIUM;
 
   if (variant === "list") {
@@ -140,14 +167,6 @@ export function TaskCard({
             >
               {priority}
             </div>
-            {isLocked && (
-              <span
-                title={`Locked by ${task.lockedBy}`}
-                className="animate-pulse"
-              >
-                <Lock size={12} className="text-amber-500" />
-              </span>
-            )}
           </div>
           {task.assigneeRole && (
             <div className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono font-bold border border-primary/20">

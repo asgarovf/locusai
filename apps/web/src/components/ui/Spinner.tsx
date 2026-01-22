@@ -1,12 +1,35 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { SPINNER_SIZES } from "./constants";
 
+/**
+ * Spinner component props
+ *
+ * @property size - Spinner size (default: "md")
+ * @property className - Additional CSS classes
+ */
 interface SpinnerProps {
+  /** Additional CSS classes */
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  /** Spinner size */
+  size?: keyof typeof SPINNER_SIZES;
 }
 
+/**
+ * Spinner component
+ *
+ * A circular loading indicator with smooth animation.
+ * Used to indicate data fetching or processing.
+ *
+ * @example
+ * // Default spinner
+ * <Spinner />
+ *
+ * @example
+ * // Large spinner
+ * <Spinner size="lg" />
+ */
 export function Spinner({ className, size = "md" }: SpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4 border-2",
@@ -26,6 +49,15 @@ export function Spinner({ className, size = "md" }: SpinnerProps) {
   );
 }
 
+/**
+ * Full-page loading state component
+ *
+ * Displays a centered spinner for full-page loading scenarios.
+ * Use for page transitions and initial data loading.
+ *
+ * @example
+ * <LoadingPage />
+ */
 export function LoadingPage() {
   return (
     <div className="flex items-center justify-center w-full h-full min-h-screen">
@@ -35,8 +67,14 @@ export function LoadingPage() {
 }
 
 /**
- * Full-screen loading state that appears during hydration and initial data fetching.
- * Uses a skeleton layout with sidebar to prevent layout shift.
+ * Full-screen loading skeleton component
+ *
+ * Displays a full-screen loading state with sidebar placeholder
+ * to prevent layout shift during initial hydration.
+ * Use during app initialization in dashboard layout.
+ *
+ * @example
+ * <LoadingSkeleton />
  */
 export function LoadingSkeleton() {
   return (
@@ -56,6 +94,15 @@ export function LoadingSkeleton() {
   );
 }
 
+/**
+ * Overlay loading state component
+ *
+ * Displays a semi-transparent overlay with centered spinner.
+ * Use for asynchronous operations on pages that should remain interactive.
+ *
+ * @example
+ * {isLoading && <LoadingOverlay />}
+ */
 export function LoadingOverlay() {
   return (
     <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-center justify-center">

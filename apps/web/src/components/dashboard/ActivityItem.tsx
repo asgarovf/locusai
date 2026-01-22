@@ -1,3 +1,10 @@
+/**
+ * Activity Item Component
+ *
+ * Displays a single activity event from the workspace.
+ * Shows event type, details, and relative timestamp.
+ */
+
 "use client";
 
 import {
@@ -16,6 +23,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 interface ActivityItemProps {
+  /** Workspace event to display */
   event: WorkspaceEvent;
 }
 
@@ -107,6 +115,18 @@ export function ActivityItem({ event }: ActivityItemProps) {
           color: "text-orange-500",
           action: `moved sprint to ${p.newStatus}`,
           target: p.name,
+        };
+      }
+      case "TASK_DELETED": {
+        const p = payload as Extract<
+          EventPayload,
+          { type: "TASK_DELETED" }
+        >["payload"];
+        return {
+          icon: Activity,
+          color: "text-red-500",
+          action: "deleted task",
+          target: p.title,
         };
       }
       default:

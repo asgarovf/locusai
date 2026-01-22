@@ -1,22 +1,24 @@
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import { BUTTON_SIZES, BUTTON_VARIANTS } from "./constants";
 import { Spinner } from "./Spinner";
 
+/**
+ * Button component props
+ *
+ * @property variant - Button visual style (default: "primary")
+ * @property size - Button size (default: "md")
+ * @property isLoading - Show loading state with spinner
+ * @property loadingText - Text to show while loading (if not provided, shows original children)
+ */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:
-    | "primary"
-    | "secondary"
-    | "subtle"
-    | "outline"
-    | "ghost"
-    | "danger"
-    | "success"
-    | "emerald"
-    | "amber"
-    | "emerald-subtle"
-    | "amber-subtle";
-  size?: "sm" | "md" | "lg" | "icon";
+  /** Button visual style */
+  variant?: keyof typeof BUTTON_VARIANTS;
+  /** Button size */
+  size?: keyof typeof BUTTON_SIZES;
+  /** Show loading state */
   isLoading?: boolean;
+  /** Text to display when loading */
   loadingText?: string;
 }
 
@@ -34,30 +36,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const variants = {
-      primary:
-        "bg-primary text-primary-foreground shadow-sm hover:translate-y-[-1px] hover:shadow-md",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      subtle: "bg-primary/10 text-primary hover:bg-primary/20",
-      outline: "border border-border bg-transparent hover:bg-secondary/50",
-      ghost: "hover:bg-secondary text-muted-foreground hover:text-foreground",
-      danger: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
-      success: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20",
-      emerald: "bg-emerald-500 text-white hover:bg-emerald-600",
-      amber: "bg-amber-500 text-black hover:bg-amber-600 font-bold",
-      "emerald-subtle":
-        "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20",
-      "amber-subtle":
-        "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20",
-    };
-
-    const sizes = {
-      sm: "h-8 px-3 text-[10px] uppercase tracking-wider",
-      md: "h-10 px-5 text-sm",
-      lg: "h-12 px-8 text-base",
-      icon: "h-10 w-10 p-0",
-    };
-
     const isDisabled = isLoading || disabled;
 
     return (
@@ -66,15 +44,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           "inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none",
-          variants[variant],
-          sizes[size],
+          BUTTON_VARIANTS[variant],
+          BUTTON_SIZES[size],
           className
         )}
+        aria-busy={isLoading}
         {...props}
       >
         {isLoading ? (
           <>
-            <Spinner size="sm" className="mr-2" />
+            <Spinner size="sm" className="mr-2" aria-hidden="true" />
             {loadingText || children}
           </>
         ) : (
@@ -85,6 +64,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 
+/**
+ * Button component
+ *
+ * A reusable button component with multiple variants and sizes.
+ * Supports loading state with spinner and automatic disabling.
+ *
+ * @example
+ * // Primary button
+ * <Button onClick={handleClick}>Click me</Button>
+ *
+ * @example
+ * // Loading state
+ * <Button isLoading loadingText="Saving...">Save</Button>
+ *
+ * @example
+ * // Different variants
+ * <Button variant="danger">Delete</Button>
+ * <Button variant="ghost">Cancel</Button>
+ */
 Button.displayName = "Button";
 
 export { Button };

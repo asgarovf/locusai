@@ -1,3 +1,23 @@
+/**
+ * Workspace Protected Component
+ *
+ * Wrapper that ensures all children have valid workspaceId.
+ * Redirects to workspace creation if user has no workspace.
+ * Handles authentication, organization, and workspace validation.
+ *
+ * Features:
+ * - Automatic workspace validation
+ * - Redirect to onboarding if no organization
+ * - Redirect to workspace creation if needed
+ * - Retry logic for race conditions
+ * - Loading state handling
+ *
+ * @example
+ * <WorkspaceProtected>
+ *   <Dashboard />
+ * </WorkspaceProtected>
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -6,17 +26,21 @@ import { LoadingPage } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 
 interface WorkspaceProtectedProps {
+  /** Components to render when workspace is valid */
   children: React.ReactNode;
 }
 
 /**
  * Workspace Protected Wrapper
- * Ensures that all children have a valid workspaceId
- * Redirects to workspace creation if user has no workspace
+ *
+ * Ensures that all children have a valid workspaceId.
+ * Redirects to workspace creation if user has no workspace.
  *
  * Usage: Wrap components that require workspaceId
  * - All children can safely use useWorkspaceId() without fallbacks
  * - Early exits handle missing workspace automatically
+ *
+ * @component
  */
 export function WorkspaceProtected({ children }: WorkspaceProtectedProps) {
   const { user, isLoading, refreshUser } = useAuth();

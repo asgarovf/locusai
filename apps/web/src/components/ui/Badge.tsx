@@ -1,5 +1,13 @@
+/**
+ * Badge component props
+ *
+ * @property variant - Badge color variant
+ * @property size - Badge size (default: "sm")
+ */
 interface BadgeProps {
+  /** Badge content */
   children: React.ReactNode;
+  /** Badge color variant */
   variant?:
     | "default"
     | "success"
@@ -10,10 +18,26 @@ interface BadgeProps {
     | "primary"
     | "secondary"
     | "outline";
+  /** Badge size */
   size?: "sm" | "md";
+  /** Additional CSS classes */
   className?: string;
 }
 
+/**
+ * Badge component
+ *
+ * A small component used to display status, labels, or tags.
+ * Supports multiple variants and sizes.
+ *
+ * @example
+ * // Basic badge
+ * <Badge>New</Badge>
+ *
+ * @example
+ * // Success badge
+ * <Badge variant="success">Active</Badge>
+ */
 export function Badge({
   children,
   variant = "default",
@@ -47,7 +71,13 @@ export function Badge({
   );
 }
 
+/**
+ * Priority badge component props
+ *
+ * @property priority - Task priority level
+ */
 interface PriorityBadgeProps {
+  /** Task priority level */
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 }
 
@@ -58,12 +88,26 @@ const PRIORITY_CONFIG = {
   CRITICAL: { label: "Critical", variant: "error" as const },
 };
 
+/**
+ * Priority badge component
+ *
+ * Displays task priority with appropriate color coding.
+ *
+ * @example
+ * <PriorityBadge priority="HIGH" />
+ */
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
   const config = PRIORITY_CONFIG[priority];
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
 
+/**
+ * Status badge component props
+ *
+ * @property status - Task status
+ */
 interface StatusBadgeProps {
+  /** Task status value */
   status: string;
 }
 
@@ -82,6 +126,15 @@ const STATUS_CONFIG: Record<
   BLOCKED: { label: "Blocked", variant: "error" },
 };
 
+/**
+ * Status badge component
+ *
+ * Displays task status with appropriate color coding.
+ * Automatically maps status values to display labels and colors.
+ *
+ * @example
+ * <StatusBadge status="IN_PROGRESS" />
+ */
 export function StatusBadge({ status }: StatusBadgeProps) {
   const config = STATUS_CONFIG[status] || {
     label: status,

@@ -5,7 +5,24 @@ import { Toaster as SonnerToaster, toast } from "sonner";
 // Re-export toast for convenience
 export { toast };
 
-// Styled Toaster component for our theme
+/**
+ * Toaster component
+ *
+ * Renders the toast notification container.
+ * Place at root level in your app (typically in layout).
+ * Handles all notification positioning and styling.
+ *
+ * @example
+ * // In layout.tsx
+ * export default function Layout() {
+ *   return (
+ *     <>
+ *       {children}
+ *       <Toaster />
+ *     </>
+ *   );
+ * }
+ */
 export function Toaster() {
   return (
     <SonnerToaster
@@ -33,23 +50,42 @@ export function Toaster() {
   );
 }
 
-// Convenience wrapper for typed toast calls
+/**
+ * Toast notification convenience wrapper
+ *
+ * Provides typed toast methods with consistent options.
+ *
+ * @example
+ * showToast.success("Saved!", "Your changes have been saved");
+ * showToast.error("Error", "Something went wrong");
+ * showToast.promise(apiCall(), {
+ *   loading: "Saving...",
+ *   success: "Saved!",
+ *   error: "Error saving",
+ * });
+ */
 export const showToast = {
+  /** Success notification */
   success: (title: string, description?: string) => {
     toast.success(title, { description, dismissible: true });
   },
+  /** Error notification */
   error: (title: string, description?: string) => {
     toast.error(title, { description, dismissible: true });
   },
+  /** Warning notification */
   warning: (title: string, description?: string) => {
     toast.warning(title, { description, dismissible: true });
   },
+  /** Info notification */
   info: (title: string, description?: string) => {
     toast.info(title, { description, dismissible: true });
   },
+  /** Loading notification (returns ID for updating) */
   loading: (title: string, description?: string) => {
     return toast.loading(title, { description, dismissible: true });
   },
+  /** Promise-based notification for async operations */
   promise: <T,>(
     promise: Promise<T>,
     messages: {

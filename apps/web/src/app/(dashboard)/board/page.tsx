@@ -1,17 +1,14 @@
 "use client";
 
-import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
-import { Plus } from "lucide-react";
-import { BoardFilter } from "@/components/BoardFilter";
-import { BoardColumn } from "@/components/board/BoardColumn";
-import { BoardEmptyState } from "@/components/board/BoardEmptyState";
-import { BOARD_STATUSES } from "@/components/board/constants";
-import { PageLayout } from "@/components/PageLayout";
-import { TaskCard } from "@/components/TaskCard";
-import { TaskCreateModal } from "@/components/TaskCreateModal";
-import { TaskPanel } from "@/components/TaskPanel";
-import { Button, Spinner } from "@/components/ui";
-import { useBoard } from "@/hooks/useBoard";
+import {
+  BoardFilter,
+  PageLayout,
+  TaskCreateModal,
+  TaskPanel,
+} from "@/components";
+import { BoardContent, BoardHeader } from "@/components/board";
+import { Spinner } from "@/components/ui";
+import { useBoard } from "@/hooks";
 
 export default function BoardPage() {
   const {
@@ -46,42 +43,18 @@ export default function BoardPage() {
     );
   }
 
-  const headerActions = (
-    <Button
-      onClick={() => setIsCreateModalOpen(true)}
-      size="md"
-      className="shadow-lg shadow-primary/20"
-    >
-      <Plus size={18} className="mr-2" />
-      New Task
-    </Button>
-  );
-
-  const headerDescription = (
-    <div className="flex items-center gap-2">
-      {activeSprint ? (
-        <>
-          <span className="text-primary font-bold">{activeSprint.name}</span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-          <span>{filteredTasks.length} tasks</span>
-        </>
-      ) : (
-        <span>No active sprint</span>
-      )}
-    </div>
-  );
+  const { title, description, actions } = BoardHeader({
+    activeSprint,
+    filteredTasksCount: filteredTasks.length,
+    onNewTask: () => setIsCreateModalOpen(true),
+  });
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <>
       <PageLayout
-        title="Board"
-        description={headerDescription}
-        actions={headerActions}
+        title={title}
+        description={description}
+        actions={actions}
         contentClassName="flex flex-col"
       >
         {activeSprint != null && (
@@ -97,46 +70,19 @@ export default function BoardPage() {
           </div>
         )}
 
-        {shouldShowEmptyState ? (
-          <div className="flex-1">
-            <BoardEmptyState
-              hasActiveSprint={false}
-              onNewTask={() => setIsCreateModalOpen(true)}
-            />
-          </div>
-        ) : filteredTasks.length === 0 && !activeTask ? (
-          <div className="flex-1">
-            <BoardEmptyState
-              hasActiveSprint={true}
-              onNewTask={() => setIsCreateModalOpen(true)}
-            />
-          </div>
-        ) : (
-          <div className="flex-1 overflow-x-auto min-h-0">
-            <div className="flex gap-4 h-full min-w-max pb-4">
-              {BOARD_STATUSES.map((status) => (
-                <BoardColumn
-                  key={status.key}
-                  statusKey={status.key}
-                  title={status.label}
-                  tasks={tasksByStatus[status.key] || []}
-                  onTaskClick={setSelectedTaskId}
-                  onTaskDelete={handleDeleteTask}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <BoardContent
+          filteredTasks={filteredTasks}
+          tasksByStatus={tasksByStatus}
+          shouldShowEmptyState={shouldShowEmptyState}
+          activeTask={activeTask}
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onTaskClick={setSelectedTaskId}
+          onTaskDelete={handleDeleteTask}
+          onNewTask={() => setIsCreateModalOpen(true)}
+        />
       </PageLayout>
-
-      {/* Drag Overlay */}
-      <DragOverlay>
-        {activeTask && (
-          <div className="opacity-90 rotate-2 shadow-2xl cursor-grabbing w-72">
-            <TaskCard task={activeTask} />
-          </div>
-        )}
-      </DragOverlay>
 
       {/* Modals */}
       <TaskCreateModal
@@ -162,6 +108,6 @@ export default function BoardPage() {
           }}
         />
       )}
-    </DndContext>
+    </>
   );
 }

@@ -1,15 +1,37 @@
+/**
+ * Docs Editor Area Component
+ *
+ * Displays the main editor for documentation files.
+ * Supports edit and preview modes with rich text editing.
+ *
+ * @example
+ * <DocsEditorArea
+ *   selectedDoc={doc}
+ *   content={content}
+ *   onContentChange={handleChange}
+ *   contentMode="edit"
+ *   onNewDoc={handleCreate}
+ * />
+ */
+
 "use client";
 
 import { type Doc } from "@locusai/shared";
 import { BookOpen, Plus } from "lucide-react";
 import { Editor } from "@/components/Editor";
+import { SecondaryText } from "@/components/typography";
 import { Button, EmptyState } from "@/components/ui";
 
 interface DocsEditorAreaProps {
+  /** Selected documentation file */
   selectedDoc: Doc | null;
+  /** Current content being edited */
   content: string;
+  /** Called when content changes */
   onContentChange: (content: string) => void;
+  /** Edit or preview mode */
   contentMode: "edit" | "preview";
+  /** Called to create new doc */
   onNewDoc: () => void;
 }
 
@@ -53,8 +75,10 @@ export function DocsEditorArea({
           readOnly={contentMode === "preview"}
         />
         {contentMode === "preview" && (
-          <div className="absolute top-4 right-4 text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.3em] pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity">
-            Vision Mode Only
+          <div className="absolute top-4 right-4 pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity">
+            <SecondaryText size="xs" className="text-muted-foreground/20">
+              Vision Mode Only
+            </SecondaryText>
           </div>
         )}
       </div>

@@ -3,13 +3,42 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * OTP input component props
+ *
+ * @property length - Number of input fields (default: 6)
+ * @property value - Current OTP value (e.g., "123456")
+ * @property onChange - Callback when OTP value changes
+ * @property disabled - Disable the inputs
+ */
 interface OtpInputProps {
+  /** Number of OTP digits (default: 6) */
   length?: number;
+  /** Current OTP value as string */
   value: string;
+  /** Callback when OTP changes */
   onChange: (value: string) => void;
+  /** Disable OTP inputs */
   disabled?: boolean;
 }
 
+/**
+ * OTP input component
+ *
+ * A specialized input component for one-time passwords.
+ * - Auto-focuses next field on digit entry
+ * - Supports backspace and arrow navigation
+ * - Supports paste functionality
+ * - Numeric input only
+ *
+ * @example
+ * const [otp, setOtp] = useState("");
+ * <OtpInput
+ *   length={6}
+ *   value={otp}
+ *   onChange={setOtp}
+ * />
+ */
 export function OtpInput({
   length = 6,
   value,
@@ -83,7 +112,11 @@ export function OtpInput({
   };
 
   return (
-    <div className="flex justify-between gap-2 sm:gap-3" onPaste={handlePaste}>
+    <fieldset
+      className="flex justify-between gap-2 sm:gap-3"
+      onPaste={handlePaste}
+    >
+      <legend className="sr-only">One-time password input</legend>
       {Array.from({ length }).map((_, i) => (
         <input
           key={i}
@@ -107,8 +140,9 @@ export function OtpInput({
               : "hover:border-border/80",
             disabled && "opacity-50 cursor-not-allowed"
           )}
+          aria-label={`Digit ${i + 1}`}
         />
       ))}
-    </div>
+    </fieldset>
   );
 }

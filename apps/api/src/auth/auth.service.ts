@@ -140,33 +140,17 @@ export class AuthService {
 
     return await this.dataSource.transaction(async (manager) => {
       const orgName = data.companyName || `${data.name}'s Organization`;
-      const orgSlug =
-        orgName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "") +
-        "-" +
-        Math.random().toString(36).substring(2, 10);
 
       const org = manager.create(Organization, {
         name: orgName,
-        slug: orgSlug,
       });
       await manager.save(org);
 
       const workspaceName = data.workspaceName || "General";
-      const workspaceSlug =
-        workspaceName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "") +
-        "-" +
-        Math.random().toString(36).substring(2, 10);
 
       const workspace = manager.create(Workspace, {
         orgId: org.id,
         name: workspaceName,
-        slug: workspaceSlug,
       });
       await manager.save(workspace);
 

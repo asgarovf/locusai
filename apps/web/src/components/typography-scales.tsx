@@ -1,7 +1,26 @@
 /**
  * Typography Components
  *
- * Reusable components that apply consistent typography styles.
+ * Reusable components that apply consistent typography styles and scales.
+ * All typography variants are defined in `@/lib/typography` for centralized consistency.
+ *
+ * Readability Standards:
+ * - Primary text: text-foreground (100% opacity)
+ * - Secondary text: text-foreground/60-70% (improved from text-muted-foreground)
+ * - Labels: text-foreground/60% with uppercase
+ * - Disabled states: text-muted-foreground
+ *
+ * Features:
+ * - Semantic HTML heading tags (h1-h6)
+ * - Consistent spacing and tracking
+ * - Responsive text sizes
+ * - Built-in accessibility
+ * - Easy className overrides with cn()
+ *
+ * @example
+ * <Heading variant="h1">Page Title</Heading>
+ * <Body variant="body">Regular text</Body>
+ * <Label required>Field Label</Label>
  */
 
 "use client";
@@ -10,9 +29,18 @@ import { getTypographyClass } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  /** Heading level and size variant */
   variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
+/**
+ * Heading Component
+ *
+ * Renders semantic heading tags with consistent typography.
+ * Maps variant prop to appropriate heading level.
+ *
+ * @component
+ */
 export function Heading({
   variant = "h2",
   className,
@@ -62,9 +90,18 @@ export function Heading({
 }
 
 interface BodyProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  /** Body text size variant */
   variant?: "bodyLg" | "body" | "bodySm";
 }
 
+/**
+ * Body Component
+ *
+ * Renders paragraph text with consistent typography.
+ * Supports multiple size variants for flexible content layout.
+ *
+ * @component
+ */
 export function Body({
   variant = "body",
   className,
@@ -79,10 +116,21 @@ export function Body({
 }
 
 interface LabelProps extends React.HTMLAttributes<HTMLLabelElement> {
+  /** Whether field is required (shows red asterisk) */
   required?: boolean;
+  /** Label size variant */
   variant?: "label" | "caption" | "captionSm";
 }
 
+/**
+ * Label Component
+ *
+ * Renders form label with optional required indicator.
+ * Supports multiple size variants for form layouts.
+ * Includes accessibility features for form associations.
+ *
+ * @component
+ */
 export function Label({
   variant = "label",
   required,
@@ -99,9 +147,18 @@ export function Label({
 }
 
 interface CaptionProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Caption size variant */
   variant?: "caption" | "captionSm";
 }
 
+/**
+ * Caption Component
+ *
+ * Renders smaller supplementary text for captions and helper text.
+ * Provides improved readability with text-foreground/60-65%.
+ *
+ * @component
+ */
 export function Caption({
   variant = "caption",
   className,
@@ -116,10 +173,20 @@ export function Caption({
 }
 
 interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+  /** Code variant (inline or block) */
   variant?: "code" | "codeBlock";
+  /** Whether to render as code block (pre tag) */
   block?: boolean;
 }
 
+/**
+ * Code Component
+ *
+ * Renders inline code or code blocks with monospace font.
+ * Supports both <code> and <pre> tags for different contexts.
+ *
+ * @component
+ */
 export function Code({
   variant,
   block,

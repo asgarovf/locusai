@@ -1,12 +1,28 @@
+/**
+ * Setting Section Component
+ *
+ * Reusable section wrapper for settings pages.
+ * Provides consistent styling and title display.
+ *
+ * @example
+ * <SettingSection title="Profile">
+ *   <SettingItem label="Name" value={name} />
+ * </SettingSection>
+ */
+
 "use client";
 
 import React from "react";
 import { cn } from "@/lib/utils";
 
 interface SettingSectionProps {
+  /** Section title */
   title: string;
+  /** Section content */
   children: React.ReactNode;
+  /** Optional className override */
   className?: string;
+  /** Optional title className override */
   titleClassName?: string;
 }
 

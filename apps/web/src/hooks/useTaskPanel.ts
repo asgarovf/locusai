@@ -19,6 +19,12 @@ interface UseTaskPanelProps {
 /**
  * Task Panel Hook
  * Handles detailed task view, checklist logic, and operations.
+ *
+ * Features:
+ * - Optimistic updates for instant UI feedback
+ * - Auto-lock/unlock on status changes
+ * - Support for assignedTo and dueDate fields
+ * - Loading states for all mutations
  */
 export function useTaskPanel({
   taskId,
@@ -31,7 +37,6 @@ export function useTaskPanel({
   const queryClient = useQueryClient();
 
   // Fetch task details
-  // Note: workspaceId is guaranteed by WorkspaceProtected wrapper
   const { data: task, refetch: fetchTask } = useQuery({
     queryKey: queryKeys.tasks.detail(taskId),
     queryFn: () => locusClient.tasks.getById(taskId, workspaceId),
@@ -42,6 +47,8 @@ export function useTaskPanel({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editAssignedTo, setEditAssignedTo] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
   const [newComment, setNewComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
@@ -52,17 +59,55 @@ export function useTaskPanel({
     if (task) {
       setEditTitle(task.title);
       setEditDesc(task.description || "");
+      setEditAssignedTo(task.assignedTo || "");
+      setEditDueDate(
+        task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""
+      );
     }
   }, [task]);
 
-  // Mutations
+  // Mutations with Optimistic Updates
   const updateTaskMutation = useMutation({
     mutationFn: (updates: Partial<Task> & { docIds?: string[] }) =>
       locusClient.tasks.update(taskId, workspaceId as string, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    // Optimistic update: update cache immediately
+    onMutate: async (updates) => {
+      // Cancel ongoing queries
+      await queryClient.cancelQueries({
         queryKey: queryKeys.tasks.detail(taskId),
       });
+
+      // Snapshot previous data
+      const previousTask = queryClient.getQueryData<Task>(
+        queryKeys.tasks.detail(taskId)
+      );
+
+      // Update cache optimistically
+      if (previousTask) {
+        queryClient.setQueryData(queryKeys.tasks.detail(taskId), {
+          ...previousTask,
+          ...updates,
+          dueDate: updates.dueDate
+            ? new Date(updates.dueDate)
+            : previousTask.dueDate,
+        });
+      }
+
+      return { previousTask };
+    },
+    // On error, rollback to previous data
+    onError: (_err, _variables, context) => {
+      if (context?.previousTask) {
+        queryClient.setQueryData(
+          queryKeys.tasks.detail(taskId),
+          context.previousTask
+        );
+      }
+      toast.error("Failed to update task");
+    },
+    // On success, refetch to confirm
+    onSuccess: () => {
+      fetchTask();
       onUpdated();
     },
   });
@@ -100,8 +145,12 @@ export function useTaskPanel({
     mutationFn: () => locusClient.tasks.delete(taskId, workspaceId as string),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all() });
+      toast.success("Task deleted");
       onDeleted();
       onClose();
+    },
+    onError: () => {
+      toast.error("Failed to delete task");
     },
   });
 
@@ -109,9 +158,10 @@ export function useTaskPanel({
     mutationFn: (data: { author: string; text: string }) =>
       locusClient.tasks.addComment(taskId, workspaceId as string, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.tasks.detail(taskId),
-      });
+      fetchTask();
+    },
+    onError: () => {
+      toast.error("Failed to add comment");
     },
   });
 
@@ -148,6 +198,21 @@ export function useTaskPanel({
   const handleDescSave = () => {
     if (editDesc !== task?.description) {
       handleUpdateTask({ description: editDesc });
+    }
+  };
+
+  const handleAssignedToSave = () => {
+    if (editAssignedTo !== (task?.assignedTo || "")) {
+      handleUpdateTask({ assignedTo: editAssignedTo || null });
+    }
+  };
+
+  const handleDueDateSave = () => {
+    if (editDueDate) {
+      const newDate = new Date(editDueDate);
+      handleUpdateTask({ dueDate: newDate });
+    } else if (task?.dueDate) {
+      handleUpdateTask({ dueDate: null });
     }
   };
 
@@ -188,6 +253,7 @@ export function useTaskPanel({
         text: newComment,
       });
       setNewComment("");
+      toast.success("Comment added");
     } catch (err) {
       console.error("Failed to add comment:", err);
     }
@@ -196,25 +262,29 @@ export function useTaskPanel({
   const handleLock = async () => {
     try {
       await locusClient.tasks.lock(taskId, workspaceId as string, {
-        agentId: "human",
+        agentId: user?.name || "human",
         ttlSeconds: 3600,
       });
       await fetchTask();
+      toast.success("Task locked");
       onUpdated();
     } catch (err) {
       console.error("Failed to lock task:", err);
+      toast.error("Failed to lock task");
     }
   };
 
   const handleUnlock = async () => {
     try {
       await locusClient.tasks.unlock(taskId, workspaceId as string, {
-        agentId: "human",
+        agentId: user?.name || "human",
       });
       await fetchTask();
+      toast.success("Task unlocked");
       onUpdated();
     } catch (err) {
       console.error("Failed to unlock task:", err);
+      toast.error("Failed to unlock task");
     }
   };
 
@@ -225,30 +295,36 @@ export function useTaskPanel({
         status: TaskStatus.IN_PROGRESS,
       });
       await addCommentMutation.mutateAsync({
-        author: "Manager",
+        author: user?.name || "Manager",
         text: `❌ **Rejected**: ${rejectReason}`,
       });
       setShowRejectModal(false);
       setRejectReason("");
+      toast.success("Task rejected and moved back to in progress");
       onUpdated();
     } catch (err) {
       console.error("Failed to reject task:", err);
+      toast.error("Failed to reject task");
     }
   };
 
   const handleApprove = async () => {
     try {
       await updateTaskMutation.mutateAsync({ status: TaskStatus.DONE });
+      toast.success("Task approved and marked as done");
       onUpdated();
     } catch (err) {
       console.error("Failed to approve task:", err);
+      toast.error("Failed to approve task");
     }
   };
 
-  const isLocked =
-    task?.lockedBy &&
-    (!task.lockExpiresAt ||
-      new Date(task.lockExpiresAt).getTime() > Date.now());
+  const isLockedBy = task?.lockedBy != null;
+  const isLockedExpired =
+    task?.lockExpiresAt != null &&
+    new Date(task.lockExpiresAt).getTime() < Date.now();
+  const isLocked = isLockedBy && !isLockedExpired;
+
   const checklistProgress = task?.acceptanceChecklist?.length
     ? Math.round(
         (task.acceptanceChecklist.filter((i) => i.done).length /
@@ -265,6 +341,10 @@ export function useTaskPanel({
     setEditTitle,
     editDesc,
     setEditDesc,
+    editAssignedTo,
+    setEditAssignedTo,
+    editDueDate,
+    setEditDueDate,
     newComment,
     setNewComment,
     newChecklistItem,
@@ -277,12 +357,16 @@ export function useTaskPanel({
     setRejectReason,
     isLocked,
     checklistProgress,
+    isLoading: updateTaskMutation.isPending || addCommentMutation.isPending,
+    isDeleting: deleteTaskMutation.isPending,
     handleUpdateTask,
     handleLinkDoc,
     handleUnlinkDoc,
     handleDelete,
     handleTitleSave,
     handleDescSave,
+    handleAssignedToSave,
+    handleDueDateSave,
     handleAddChecklistItem,
     handleToggleChecklistItem,
     handleRemoveChecklistItem,

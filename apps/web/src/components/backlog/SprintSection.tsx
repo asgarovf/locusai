@@ -1,3 +1,23 @@
+/**
+ * Sprint Section Component
+ *
+ * Displays a sprint with its tasks in the backlog view.
+ * Supports start/complete actions and drag-drop task management.
+ *
+ * @example
+ * <SprintSection
+ *   sprint={sprint}
+ *   tasks={sprintTasks}
+ *   isExpanded={true}
+ *   onToggle={handleToggle}
+ *   isActive={true}
+ *   onStart={handleStart}
+ *   onComplete={handleComplete}
+ *   onTaskClick={handleSelectTask}
+ *   onTaskDelete={handleDeleteTask}
+ * />
+ */
+
 "use client";
 
 import { type Sprint, type Task } from "@locusai/shared";
@@ -9,16 +29,27 @@ import { Button } from "@/components/ui";
 import { BacklogSection } from "./BacklogSection";
 
 interface SprintSectionProps {
+  /** Sprint data */
   sprint: Sprint;
+  /** Tasks in this sprint */
   tasks: Task[];
+  /** Whether section is expanded */
   isExpanded: boolean;
+  /** Called when toggling expand state */
   onToggle: () => void;
+  /** Whether this is the active sprint */
   isActive?: boolean;
+  /** Called when completing sprint */
   onComplete?: (sprintId: string) => void;
+  /** Called when starting sprint */
   onStart?: (sprintId: string) => void;
+  /** Called when task is selected */
   onTaskClick: (taskId: string) => void;
+  /** Called when delete action is triggered */
   onTaskDelete: (taskId: string) => void;
+  /** Whether an action is in progress */
   isSubmitting?: boolean;
+  /** Whether sprint can be started */
   canStart?: boolean;
 }
 

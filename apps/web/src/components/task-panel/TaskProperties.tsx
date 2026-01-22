@@ -1,3 +1,12 @@
+/**
+ * Task Properties Component
+ *
+ * Displays and allows editing of task metadata like status, priority, assignee, etc.
+ *
+ * @example
+ * <TaskProperties task={task} onUpdate={handleUpdate} />
+ */
+
 "use client";
 
 import {
@@ -7,23 +16,43 @@ import {
   TaskStatus,
 } from "@locusai/shared";
 import { format } from "date-fns";
-import { PropertyItem } from "@/components";
+import { PropertyItem, SectionLabel } from "@/components";
 
 interface TaskPropertiesProps {
+  /** Task to display */
   task: Task;
+  /** Whether a mutation is loading */
+  isLoading?: boolean;
+  /** Callback when task properties are updated */
   onUpdate: (updates: Partial<Task>) => void;
 }
 
-export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
+/**
+ * Task Properties Component
+ *
+ * Features:
+ * - Editable status dropdown
+ * - Assignee role selection
+ * - Priority level
+ * - Due date picker
+ * - Operator/assignee field
+ *
+ * @component
+ */
+export function TaskProperties({
+  task,
+  isLoading = false,
+  onUpdate,
+}: TaskPropertiesProps) {
   const formatDate = (date: string | number | Date) => {
     return format(new Date(date), "MMM d, yyyy");
   };
 
   return (
     <div className="mb-10">
-      <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+      <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
         Mission Specs
-      </h4>
+      </SectionLabel>
       <div className="space-y-3">
         <PropertyItem
           label="State"
@@ -33,6 +62,7 @@ export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
           }
           options={Object.values(TaskStatus)}
           type="dropdown"
+          disabled={isLoading}
         />
         <PropertyItem
           label="Role"
@@ -44,6 +74,7 @@ export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
           }
           options={Object.values(AssigneeRole)}
           type="dropdown"
+          disabled={isLoading}
         />
         <PropertyItem
           label="Priority"
@@ -53,6 +84,7 @@ export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
           }
           options={Object.values(TaskPriority)}
           type="dropdown"
+          disabled={isLoading}
         />
         <PropertyItem
           label="Deadline"
@@ -61,6 +93,7 @@ export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
             onUpdate({ dueDate: newValue ? new Date(newValue) : null })
           }
           type="date"
+          disabled={isLoading}
         />
         <PropertyItem
           label="Operator"
@@ -69,6 +102,8 @@ export function TaskProperties({ task, onUpdate }: TaskPropertiesProps) {
             onUpdate({ assignedTo: newValue || null })
           }
           type="text"
+          disabled={isLoading}
+          placeholder="Enter operator name or ID"
         />
       </div>
     </div>

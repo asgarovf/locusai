@@ -1,3 +1,10 @@
+/**
+ * Completed Sprint Item Component
+ *
+ * Displays a single completed sprint as a collapsible item.
+ * Shows completed tasks and allows viewing historical sprint details.
+ */
+
 "use client";
 
 import { type Task } from "@locusai/shared";
@@ -6,11 +13,17 @@ import { CheckCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
 
 interface CompletedSprintItemProps {
+  /** Sprint name */
   name: string;
+  /** Total tasks in sprint */
   taskCount: number;
+  /** Completed tasks */
   tasks: Task[];
+  /** Whether expanded */
   isExpanded: boolean;
+  /** Called when toggling expand */
   onToggle: () => void;
+  /** Called when task is clicked */
   onTaskClick: (taskId: string) => void;
 }
 

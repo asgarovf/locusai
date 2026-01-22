@@ -1,3 +1,19 @@
+/**
+ * Task Create Modal Component
+ *
+ * Modal dialog for creating new tasks with full configuration.
+ * Includes title, description, priority, status, assignee, and sprint selection.
+ *
+ * @example
+ * <TaskCreateModal
+ *   isOpen={isOpen}
+ *   onClose={handleClose}
+ *   onCreated={handleCreated}
+ *   initialStatus={TaskStatus.BACKLOG}
+ *   defaultSprintId={sprintId}
+ * />
+ */
+
 "use client";
 
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
@@ -16,11 +32,17 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 
 interface TaskCreateModalProps {
+  /** Whether modal is open */
   isOpen: boolean;
+  /** Called to close modal */
   onClose: () => void;
+  /** Called after successful creation */
   onCreated: () => void;
+  /** Initial task status */
   initialStatus?: TaskStatus;
+  /** Sprint ID if creating from sprint */
   sprintId?: string | null;
+  /** Default sprint ID to assign */
   defaultSprintId?: string;
 }
 

@@ -1,3 +1,5 @@
+export * from "./AuthLayoutUI";
+export * from "./BoardFilter";
 export * from "./BoardFilter";
 export * from "./Header";
 export * from "./PageLayout";
@@ -7,5 +9,6 @@ export * from "./SprintCreateModal";
 export * from "./TaskCard";
 export * from "./TaskCreateModal";
 export * from "./TaskPanel";
-export * from "./Typography";
+export * from "./typography";
+export * from "./typography-scales";
 export * from "./WorkspaceProtected";

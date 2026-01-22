@@ -1,14 +1,36 @@
+/**
+ * Page Layout Component
+ *
+ * Standard layout wrapper for content pages.
+ * Provides consistent header, title, description, and content area.
+ *
+ * @example
+ * <PageLayout
+ *   title="Team Management"
+ *   description="Manage your organization members"
+ *   actions={<Button>Invite</Button>}
+ * >
+ *   <TeamList />
+ * </PageLayout>
+ */
+
 "use client";
 
 import { getTypographyClass } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
 interface PageLayoutProps {
+  /** Page title */
   title: string;
+  /** Page description or subtitle */
   description?: React.ReactNode;
+  /** Action buttons/controls for header */
   actions?: React.ReactNode;
+  /** Main page content */
   children: React.ReactNode;
+  /** Optional className override */
   className?: string;
+  /** Optional content className override */
   contentClassName?: string;
 }
 

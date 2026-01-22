@@ -2,6 +2,7 @@
  * Error State Component
  *
  * Unified error display with recovery options.
+ * Use to display errors in a consistent, user-friendly way.
  */
 
 "use client";
@@ -10,14 +11,56 @@ import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+/**
+ * Error state component props
+ *
+ * @property variant - Display variant (page, section, or inline)
+ * @property title - Error title text
+ * @property message - Error description
+ * @property onRetry - Callback for retry button
+ */
 interface ErrorStateProps {
+  /** Display variant */
   variant?: "page" | "section" | "inline";
+  /** Error title */
   title?: string;
+  /** Error description message */
   message?: string;
+  /** Callback when user clicks retry */
   onRetry?: () => void;
+  /** Additional CSS classes */
   className?: string;
 }
 
+/**
+ * Error state component
+ *
+ * Displays error messages with optional retry functionality.
+ * Three variants for different contexts.
+ *
+ * @example
+ * // Page-level error
+ * <ErrorState
+ *   title="Failed to load data"
+ *   message="Please try again"
+ *   onRetry={handleRetry}
+ * />
+ *
+ * @example
+ * // Inline error (e.g., in a form)
+ * <ErrorState
+ *   variant="inline"
+ *   message="Invalid email address"
+ * />
+ *
+ * @example
+ * // Section error (e.g., in a card)
+ * <ErrorState
+ *   variant="section"
+ *   title="Failed to load"
+ *   onRetry={refetch}
+ * />
+ */
 export function ErrorState({
   variant = "page",
   title = "Something went wrong",
@@ -40,11 +83,17 @@ export function ErrorState({
   } as const;
 
   return (
-    <div className={cn(variantClasses[variant], className)}>
+    <div
+      className={cn(variantClasses[variant], className)}
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="flex flex-col items-center gap-2">
         <AlertTriangle
           size={iconSize[variant]}
           className="text-destructive/70"
+          aria-hidden="true"
         />
         {variant !== "inline" && (
           <>
@@ -64,8 +113,9 @@ export function ErrorState({
           size={variant === "inline" ? "sm" : "md"}
           onClick={onRetry}
           className="gap-2"
+          aria-label="Retry the failed action"
         >
-          <RotateCcw size={16} />
+          <RotateCcw size={16} aria-hidden="true" />
           Try Again
         </Button>
       )}

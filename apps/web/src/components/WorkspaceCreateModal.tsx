@@ -1,3 +1,18 @@
+/**
+ * Workspace Create Modal Component
+ *
+ * Modal dialog for creating new workspaces.
+ * Requires authenticated user with organization.
+ * Integrates with useMutationWithToast for error handling.
+ *
+ * @example
+ * <WorkspaceCreateModal
+ *   isOpen={isOpen}
+ *   onClose={handleClose}
+ *   onSuccess={handleSuccess}
+ * />
+ */
+
 "use client";
 
 import { useState } from "react";
@@ -10,8 +25,11 @@ import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 interface WorkspaceCreateModalProps {
+  /** Whether modal is open */
   isOpen: boolean;
+  /** Called to close modal */
   onClose: () => void;
+  /** Called after successful workspace creation */
   onSuccess: () => void;
 }
 

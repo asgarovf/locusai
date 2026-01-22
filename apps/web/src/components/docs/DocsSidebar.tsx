@@ -1,3 +1,19 @@
+/**
+ * Docs Sidebar Component
+ *
+ * Displays documentation file/folder hierarchy with search and creation.
+ * Supports doc groups, file search, templates, and deletion.
+ *
+ * @example
+ * <DocsSidebar
+ *   groups={groups}
+ *   docsByGroup={docsMap}
+ *   selectedId={activeId}
+ *   onSelect={handleSelect}
+ *   // ... other props
+ * />
+ */
+
 "use client";
 
 import { type Doc, type DocGroup } from "@locusai/shared";
@@ -13,27 +29,45 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SecondaryText, SectionLabel } from "@/components/typography";
 import { Button, Input } from "@/components/ui";
 import { DOC_TEMPLATES } from "@/hooks";
 import { cn } from "@/lib/utils";
 
 interface DocsSidebarProps {
+  /** Doc groups/folders */
   groups: DocGroup[];
+  /** Docs organized by group ID */
   docsByGroup: Record<string, Doc[]>;
+  /** Currently selected doc ID */
   selectedId: string | null;
+  /** Called when selecting a doc */
   onSelect: (id: string | null) => void;
+  /** Search query filter */
   searchQuery: string;
+  /** Called when search changes */
   onSearchChange: (query: string) => void;
+  /** Whether in creation mode */
   isCreating: boolean;
+  /** Set creation mode */
   setIsCreating: (value: boolean) => void;
+  /** New file name being created */
   newFileName: string;
+  /** Set new file name */
   setNewFileName: (name: string) => void;
+  /** Selected template ID */
   selectedTemplate: string;
+  /** Called when selecting template */
   onTemplateSelect: (id: string) => void;
+  /** Called to create new file */
   onCreateFile: () => void;
+  /** Called to delete doc/group */
   onDelete: (id: string) => void;
+  /** Called to create new group */
   onCreateGroup: (name: string) => void;
+  /** Currently selected group */
   selectedGroupId: string | null;
+  /** Called when selecting group */
   onGroupSelect: (id: string | null) => void;
 }
 
@@ -150,9 +184,9 @@ export function DocsSidebar({
       {(isCreating || isCreatingGroup) && (
         <div className="p-5 bg-primary/5 border-b border-border/40 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            <SectionLabel className="text-primary">
               {isCreatingGroup ? "Initialize Group" : "Initialize Node"}
-            </span>
+            </SectionLabel>
             <button
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
               onClick={() => {
@@ -192,9 +226,9 @@ export function DocsSidebar({
               />
 
               <div className="space-y-2">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                <SecondaryText size="xs" className="ml-1">
                   Assign to Group
-                </span>
+                </SecondaryText>
                 <select
                   value={selectedGroupId || ""}
                   onChange={(e) => onGroupSelect(e.target.value || null)}
@@ -210,9 +244,9 @@ export function DocsSidebar({
               </div>
 
               <div className="space-y-2">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                <SecondaryText size="xs" className="ml-1">
                   Blueprint Template
-                </span>
+                </SecondaryText>
                 <div className="grid grid-cols-2 gap-2">
                   {DOC_TEMPLATES.map((template) => (
                     <button
@@ -250,14 +284,14 @@ export function DocsSidebar({
           <div key={group.id} className="space-y-1">
             <button
               onClick={() => toggleGroup(group.id)}
-              className="flex items-center gap-2 w-full px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 hover:text-foreground transition-colors group"
+              className="flex items-center gap-2 w-full px-2 py-1 text-muted-foreground/70 hover:text-foreground transition-colors group"
             >
               {expandedGroups.has(group.id) ? (
                 <ChevronDown size={14} />
               ) : (
                 <ChevronRight size={14} />
               )}
-              {group.name}
+              <SectionLabel className="m-0 flex-1">{group.name}</SectionLabel>
               <span className="ml-auto opacity-0 group-hover:opacity-100 bg-secondary/50 px-1.5 py-0.5 rounded text-[8px]">
                 {docsByGroup[group.id]?.length || 0}
               </span>
@@ -280,14 +314,14 @@ export function DocsSidebar({
         <div className="space-y-1">
           <button
             onClick={() => toggleGroup("ungrouped")}
-            className="flex items-center gap-2 w-full px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 hover:text-foreground transition-colors group"
+            className="flex items-center gap-2 w-full px-2 py-1 text-muted-foreground/70 hover:text-foreground transition-colors group"
           >
             {expandedGroups.has("ungrouped") ? (
               <ChevronDown size={14} />
             ) : (
               <ChevronRight size={14} />
             )}
-            Unsorted
+            <SectionLabel className="m-0 flex-1">Unsorted</SectionLabel>
             <span className="ml-auto opacity-0 group-hover:opacity-100 bg-secondary/50 px-1.5 py-0.5 rounded text-[8px]">
               {docsByGroup.ungrouped?.length || 0}
             </span>
@@ -308,9 +342,7 @@ export function DocsSidebar({
         {groups.length === 0 && docsByGroup.ungrouped?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 opacity-40">
             <File size={32} className="mb-4 text-muted-foreground" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">
-              Library Empty
-            </span>
+            <SecondaryText size="xs">Library Empty</SecondaryText>
           </div>
         )}
       </div>

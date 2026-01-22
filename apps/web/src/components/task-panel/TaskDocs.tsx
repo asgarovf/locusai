@@ -5,14 +5,32 @@ import { FileText, Link, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useDocsQuery } from "@/hooks/useDocsQuery";
 import { cn } from "@/lib/utils";
+import {
+  EmptyStateText,
+  MetadataText,
+  SecondaryText,
+  SectionLabel,
+} from "../typography";
 import { Button } from "../ui";
 
 interface TaskDocsProps {
+  /** Task to manage documents for */
   task: Task;
+  /** Called when linking a document */
   onLinkDoc: (docId: string) => void;
+  /** Called when unlinking a document */
   onUnlinkDoc: (docId: string) => void;
 }
 
+/**
+ * Task Docs Component
+ *
+ * Displays and manages linked documentation for a task.
+ * Allows linking/unlinking documents from the knowledge base.
+ * Uses standardized typography components for consistent text styling.
+ *
+ * @component
+ */
 export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
   const [isLinking, setIsLinking] = useState(false);
   const { data: allDocs = [] } = useDocsQuery();
@@ -25,9 +43,7 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-          Knowledge base
-        </h3>
+        <SectionLabel as="h3">Knowledge base</SectionLabel>
         <Button
           variant="ghost"
           size="sm"
@@ -46,9 +62,9 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
 
       {isLinking && (
         <div className="p-3 bg-primary/5 border border-primary/20 rounded-2xl animate-in zoom-in-95 duration-200">
-          <div className="text-[9px] font-black uppercase tracking-widest text-primary/70 mb-2 px-1">
+          <SectionLabel className="mb-2 px-1 text-primary">
             Available Nodes
-          </div>
+          </SectionLabel>
           {availableDocs.length > 0 ? (
             <div className="max-h-[200px] overflow-y-auto pr-1 space-y-1 scrollbar-thin">
               {availableDocs.map((doc) => (
@@ -75,8 +91,10 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
               ))}
             </div>
           ) : (
-            <div className="py-6 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">
-              No Unlinked Nodes
+            <div className="py-6 text-center">
+              <SecondaryText size="xs" className="italic">
+                No Unlinked Nodes
+              </SecondaryText>
             </div>
           )}
         </div>
@@ -96,9 +114,9 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
                   <div className="text-[11px] font-black uppercase tracking-wider text-foreground/90 truncate">
                     {doc.title}
                   </div>
-                  <div className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                  <MetadataText size="xs">
                     Document ID: {doc.id.split("-")[0]}
-                  </div>
+                  </MetadataText>
                 </div>
                 <button
                   onClick={() => onUnlinkDoc(doc.id)}
@@ -109,12 +127,9 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
               </div>
             ))
           : !isLinking && (
-              <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-border/10 rounded-3xl opacity-30">
-                <Link size={24} className="mb-3" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em]">
-                  No Linked Documents
-                </span>
-              </div>
+              <EmptyStateText icon={<Link size={24} />}>
+                No Linked Documents
+              </EmptyStateText>
             )}
       </div>
     </div>

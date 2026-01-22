@@ -3,11 +3,13 @@
 import { type Task } from "@locusai/shared";
 import { motion } from "framer-motion";
 import { CheckCircle, X } from "lucide-react";
+import { SecondaryText, SectionLabel } from "@/components/typography";
 import { Button, Checkbox, EmptyState, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface TaskChecklistProps {
   task: Task;
+  isLoading?: boolean;
   checklistProgress: number;
   newChecklistItem: string;
   setNewChecklistItem: (val: string) => void;
@@ -18,6 +20,7 @@ interface TaskChecklistProps {
 
 export function TaskChecklist({
   task,
+  isLoading = false,
   checklistProgress,
   newChecklistItem,
   setNewChecklistItem,
@@ -32,15 +35,13 @@ export function TaskChecklist({
           <div className="h-8 w-8 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
             <CheckCircle size={16} />
           </div>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60">
-            Definition of Done
-          </h4>
+          <SectionLabel as="h4">Definition of Done</SectionLabel>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-1.5">
+            <SecondaryText size="xs" className="mb-1.5">
               Calibration
-            </span>
+            </SecondaryText>
             <span className="text-sm font-mono font-black text-sky-500">
               {checklistProgress}%
             </span>
@@ -81,11 +82,15 @@ export function TaskChecklist({
           <motion.div
             layout
             key={item.id}
-            className="group flex items-center gap-4 p-4 bg-card/30 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-card/50 transition-all duration-300 shadow-sm"
+            className={cn(
+              "group flex items-center gap-4 p-4 bg-card/30 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-card/50 transition-all duration-300 shadow-sm",
+              isLoading && "opacity-60 pointer-events-none"
+            )}
           >
             <Checkbox
               checked={item.done}
-              onChange={() => handleToggleChecklistItem(item.id)}
+              onChange={() => !isLoading && handleToggleChecklistItem(item.id)}
+              disabled={isLoading}
               className="scale-110"
             />
             <span
@@ -101,8 +106,9 @@ export function TaskChecklist({
             <Button
               size="icon"
               variant="ghost"
+              disabled={isLoading}
               className="opacity-0 group-hover:opacity-100 h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg"
-              onClick={() => handleRemoveChecklistItem(item.id)}
+              onClick={() => !isLoading && handleRemoveChecklistItem(item.id)}
             >
               <X size={14} />
             </Button>
@@ -114,16 +120,18 @@ export function TaskChecklist({
         <Input
           value={newChecklistItem}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setNewChecklistItem(e.target.value)
+            !isLoading && setNewChecklistItem(e.target.value)
           }
+          disabled={isLoading}
           placeholder="Add validation gate..."
           className="h-10 bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") handleAddChecklistItem();
+            if (e.key === "Enter" && !isLoading) handleAddChecklistItem();
           }}
         />
         <Button
           onClick={handleAddChecklistItem}
+          disabled={!newChecklistItem.trim() || isLoading}
           className="px-6 h-10 bg-foreground text-background font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
         >
           Append

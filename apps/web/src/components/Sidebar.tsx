@@ -1,3 +1,23 @@
+/**
+ * Sidebar Component
+ *
+ * Main navigation sidebar with workspace switcher and user menu.
+ * Displays navigation links, workspace selection, and user profile.
+ * Features quick access to workspaces, settings, and user actions.
+ *
+ * Features:
+ * - Workspace switcher with quick access
+ * - Navigation links (Dashboard, Backlog, Docs)
+ * - User profile menu
+ * - Create workspace button
+ * - Keyboard shortcuts (Cmd+K for workspace switcher)
+ * - Logout functionality
+ * - Workspace-aware routing
+ *
+ * @example
+ * <Sidebar />
+ */
+
 "use client";
 
 import { type Workspace } from "@locusai/shared";

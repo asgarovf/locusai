@@ -54,6 +54,20 @@ export class Task {
   })
   assigneeRole: AssigneeRole;
 
+  @Column({
+    name: "assigned_to",
+    type: "varchar",
+    nullable: true,
+  })
+  assignedTo: string | null;
+
+  @Column({
+    name: "due_date",
+    type: "date",
+    nullable: true,
+  })
+  dueDate: Date | null;
+
   @Column({ name: "parent_id", nullable: true })
   parentId: string;
 
@@ -80,10 +94,10 @@ export class Task {
   docs: Doc[];
 
   @Column({ name: "locked_by", nullable: true })
-  lockedBy: string;
+  lockedBy: string | null;
 
   @Column({ name: "lock_expires_at", type: "timestamp", nullable: true })
-  lockExpiresAt: Date;
+  lockExpiresAt: Date | null;
 
   @Column({ name: "acceptance_checklist", type: "jsonb", default: [] })
   acceptanceChecklist: Array<{ id: string; text: string; done: boolean }>;

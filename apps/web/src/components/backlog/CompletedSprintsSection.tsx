@@ -1,3 +1,10 @@
+/**
+ * Completed Sprints Section Component
+ *
+ * Displays a collapsible section containing all completed sprints.
+ * Allows viewing historical sprint data and completed tasks.
+ */
+
 "use client";
 
 import { type Sprint, type Task } from "@locusai/shared";
@@ -7,12 +14,19 @@ import { BacklogSection } from "./BacklogSection";
 import { CompletedSprintItem } from "./CompletedSprintItem";
 
 interface CompletedSprintsSectionProps {
+  /** Completed sprints */
   sprints: Sprint[];
+  /** Whether section is expanded */
   isExpanded: boolean;
+  /** Called when toggling section */
   onToggle: () => void;
+  /** Function to get tasks for a sprint */
   getSprintTasks: (sprintId: string) => Task[];
+  /** Set of expanded sprint IDs */
   expandedSprints: Set<string>;
+  /** Called when toggling sprint item */
   onToggleSprint: (section: string) => void;
+  /** Called when task is clicked */
   onTaskClick: (taskId: string) => void;
 }
 

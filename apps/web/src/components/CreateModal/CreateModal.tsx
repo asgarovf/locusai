@@ -1,38 +1,66 @@
 "use client";
 
 import React from "react";
+import { SecondaryText } from "@/components/typography";
 import { Button, Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 export interface CreateModalField {
+  /** Field identifier */
   name: string;
+  /** Display label */
   label: string;
+  /** Form component (Input, Textarea, etc) */
   component: React.ReactNode;
+  /** Whether field is required */
   required?: boolean;
+  /** Help text for field */
   help?: string;
 }
 
 export interface CreateModalProps {
+  /** Whether modal is open */
   isOpen: boolean;
+  /** Modal title */
   title: string;
+  /** Array of form fields */
   fields: CreateModalField[];
+  /** Form submission handler */
   onSubmit: (e: React.FormEvent) => Promise<void> | void;
+  /** Called to close modal */
   onClose: () => void;
+  /** Submit button text */
   submitText?: string;
+  /** Submit button variant */
   submitVariant?: "primary" | "secondary";
+  /** Cancel button text */
   cancelText?: string;
+  /** Whether submission is in progress */
   isPending?: boolean;
+  /** Whether submit button is disabled */
   submitDisabled?: boolean;
+  /** Optional icon for modal header */
   icon?: React.ReactNode;
+  /** Modal size */
   size?: "sm" | "md" | "lg";
 }
 
 /**
- * Compound component for create/edit modals.
+ * Create Modal Component
  *
- * Provides consistent styling and layout for modal forms.
- * Handles field rendering, form submission, and action buttons.
+ * Reusable compound component for create/edit modals.
+ * Provides consistent styling, field rendering, and form submission.
+ * Supports custom fields, icons, and submission handlers.
  *
+ * Features:
+ * - Customizable form fields
+ * - Consistent styling and layout
+ * - Submit and cancel actions
+ * - Loading state handling
+ * - Optional icon display
+ * - Multiple size options
+ *
+ * @component
  * @example
  * <CreateModal
  *   isOpen={isOpen}
@@ -73,10 +101,10 @@ export function CreateModal({
       >
         {fields.map((field) => (
           <div key={field.name} className="space-y-3">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+            <SecondaryText as="label" size="xs" className="block ml-1">
               {field.label}
               {field.required && <span className="text-destructive">*</span>}
-            </label>
+            </SecondaryText>
             {field.component}
             {field.help && (
               <p className="text-xs text-muted-foreground/60 ml-1">

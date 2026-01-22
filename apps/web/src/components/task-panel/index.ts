@@ -5,7 +5,6 @@
  */
 
 export * from "./TaskActivity";
-export * from "./TaskArtifacts";
 export * from "./TaskChecklist";
 export * from "./TaskDescription";
 export * from "./TaskDocs";

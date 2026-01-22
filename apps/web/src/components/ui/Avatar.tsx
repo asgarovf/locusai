@@ -3,10 +3,21 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
+/**
+ * Avatar component props
+ *
+ * @property name - User name for initials fallback and alt text
+ * @property src - Optional image URL (if not provided, shows initials)
+ * @property size - Avatar size (default: "md")
+ */
 interface AvatarProps {
+  /** Image URL for avatar photo */
   src?: string | null;
+  /** User name (used for initials and alt text) */
   name: string;
+  /** Avatar size */
   size?: "sm" | "md" | "lg";
+  /** Additional CSS classes */
   className?: string;
 }
 
@@ -22,6 +33,10 @@ const imageSizes = {
   lg: 40,
 };
 
+/**
+ * Extract initials from user name
+ * @example getInitials("John Doe") // "JD"
+ */
 function getInitials(name: string): string {
   return name
     .split(" ")
@@ -31,6 +46,10 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/**
+ * Get consistent color from user name using hash
+ * Ensures same name always gets same color
+ */
 function getColorFromName(name: string): string {
   const colors = [
     "bg-rose-500",
@@ -59,6 +78,20 @@ function getColorFromName(name: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
+/**
+ * Avatar component
+ *
+ * Displays user avatar with image or initials fallback.
+ * Automatically assigns consistent colors based on name hash.
+ *
+ * @example
+ * // With image
+ * <Avatar src="/avatar.jpg" name="John Doe" />
+ *
+ * @example
+ * // Without image (shows initials)
+ * <Avatar name="Jane Smith" size="lg" />
+ */
 export function Avatar({ src, name, size = "md", className }: AvatarProps) {
   if (src) {
     return (

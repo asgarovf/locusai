@@ -33,7 +33,7 @@ export class DocsController {
     const doc = await this.docsService.create({
       ...body,
       workspaceId,
-    } as CreateDoc);
+    });
     return { doc } as unknown as DocResponse;
   }
 

@@ -1,3 +1,20 @@
+/**
+ * Docs Header Actions Component
+ *
+ * Displays header actions for documentation editor.
+ * Includes mode toggle, new doc, and save buttons.
+ *
+ * @example
+ * <DocsHeaderActions
+ *   selectedDoc={doc}
+ *   contentMode="edit"
+ *   setContentMode={setMode}
+ *   onNewDoc={handleNew}
+ *   onSave={handleSave}
+ *   hasUnsavedChanges={true}
+ * />
+ */
+
 "use client";
 
 import { type Doc } from "@locusai/shared";
@@ -6,11 +23,17 @@ import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface DocsHeaderActionsProps {
+  /** Selected doc or null */
   selectedDoc: Doc | null;
+  /** Current editor mode */
   contentMode: "edit" | "preview";
+  /** Called when changing mode */
   setContentMode: (mode: "edit" | "preview") => void;
+  /** Called to create new doc */
   onNewDoc: () => void;
+  /** Called to save doc */
   onSave: () => void;
+  /** Whether there are unsaved changes */
   hasUnsavedChanges: boolean;
 }
 

@@ -1,3 +1,28 @@
+/**
+ * Rich Text Editor Component
+ *
+ * TipTap-based rich text editor with markdown support.
+ * Includes formatting toolbar and multiple editing modes.
+ * Supports headings, lists, code blocks, links, and more.
+ *
+ * Features:
+ * - Markdown support with live preview
+ * - Rich formatting toolbar
+ * - Code syntax highlighting
+ * - Task lists and checkboxes
+ * - Link editing
+ * - Undo/redo functionality
+ * - Heading and list formatting
+ * - Quote and code block support
+ *
+ * @example
+ * <Editor
+ *   value={markdown}
+ *   onChange={handleChange}
+ *   placeholder="Write your documentation..."
+ * />
+ */
+
 "use client";
 
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";

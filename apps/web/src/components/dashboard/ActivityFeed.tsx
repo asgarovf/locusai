@@ -1,3 +1,13 @@
+/**
+ * Activity Feed Component
+ *
+ * Displays recent workspace activity and events.
+ * Shows recent actions performed by team members.
+ *
+ * @example
+ * <ActivityFeed activity={workspaceEvents} />
+ */
+
 "use client";
 
 import { type Event as WorkspaceEvent } from "@locusai/shared";
@@ -6,9 +16,21 @@ import { Button } from "@/components/ui";
 import { ActivityItem } from "./ActivityItem";
 
 interface ActivityFeedProps {
+  /** Array of workspace events to display */
   activity: WorkspaceEvent[];
 }
 
+/**
+ * Activity Feed Component
+ *
+ * Features:
+ * - Displays recent workspace events
+ * - Shows activity items with timestamps
+ * - Empty state when no activity
+ * - View all button for navigation
+ *
+ * @component
+ */
 export function ActivityFeed({ activity }: ActivityFeedProps) {
   return (
     <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm h-full">

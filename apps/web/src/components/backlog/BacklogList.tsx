@@ -1,3 +1,19 @@
+/**
+ * Backlog List Component
+ *
+ * Displays unscheduled tasks in the backlog.
+ * Supports expand/collapse and drag-drop to sprints.
+ *
+ * @example
+ * <BacklogList
+ *   tasks={unscheduledTasks}
+ *   isExpanded={true}
+ *   onToggle={handleToggle}
+ *   onTaskClick={handleSelectTask}
+ *   onTaskDelete={handleDeleteTask}
+ * />
+ */
+
 "use client";
 
 import { type Task } from "@locusai/shared";
@@ -8,10 +24,15 @@ import { TaskCard } from "@/components/TaskCard";
 import { BacklogSection } from "./BacklogSection";
 
 interface BacklogListProps {
+  /** Unscheduled tasks to display */
   tasks: Task[];
+  /** Whether the backlog section is expanded */
   isExpanded: boolean;
+  /** Called when expanding/collapsing */
   onToggle: () => void;
+  /** Called when a task is selected */
   onTaskClick: (taskId: string) => void;
+  /** Called when delete action is triggered */
   onTaskDelete: (taskId: string) => void;
 }
 

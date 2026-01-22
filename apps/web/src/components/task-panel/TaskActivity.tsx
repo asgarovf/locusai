@@ -11,10 +11,12 @@ import {
   PlusSquare,
   Tag,
 } from "lucide-react";
+import { MetadataText, SectionLabel } from "@/components/typography";
 import { Button, EmptyState, Input } from "@/components/ui";
 
 interface TaskActivityProps {
   task: Task;
+  isLoading?: boolean;
   newComment: string;
   setNewComment: (val: string) => void;
   handleAddComment: () => void;
@@ -22,30 +24,33 @@ interface TaskActivityProps {
 
 export function TaskActivity({
   task,
+  isLoading = false,
   newComment,
   setNewComment,
   handleAddComment,
 }: TaskActivityProps) {
   return (
     <div>
-      <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 pb-2 border-b border-border/40">
+      <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
         Neural Stream
-      </h4>
+      </SectionLabel>
 
       <div className="flex gap-3 mb-6 bg-background/30 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/30 transition-all">
         <Input
           value={newComment}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setNewComment(e.target.value)
+            !isLoading && setNewComment(e.target.value)
           }
+          disabled={isLoading}
           placeholder="Transmit logs..."
           className="h-10 text-xs font-bold bg-transparent border-none focus:ring-0 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em]"
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") handleAddComment();
+            if (e.key === "Enter" && !isLoading) handleAddComment();
           }}
         />
         <Button
           onClick={handleAddComment}
+          disabled={!newComment.trim() || isLoading}
           variant="ghost"
           className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group shrink-0"
         >
@@ -89,11 +94,11 @@ export function TaskActivity({
                 <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
                   {formatActivityEvent(event as TaskEvent)}
                 </p>
-                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">
+                <MetadataText size="sm">
                   {formatDistanceToNow(new Date(event.createdAt), {
                     addSuffix: true,
                   })}
-                </span>
+                </MetadataText>
               </div>
             </div>
           ))
@@ -121,6 +126,8 @@ function formatActivityEvent(event: TaskEvent): string {
       return "Task initialized";
     case EventType.TASK_UPDATED:
       return "Parameters calibrated";
+    case EventType.TASK_DELETED:
+      return "Task deleted";
     case EventType.ARTIFACT_ADDED:
       return `Output: ${p.title}`;
     case EventType.LOCKED:

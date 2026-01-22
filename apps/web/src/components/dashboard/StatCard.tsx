@@ -1,13 +1,34 @@
+/**
+ * Stat Card Component
+ *
+ * Displays a statistic with icon, value, title, and trend.
+ * Used on dashboard to show key metrics.
+ *
+ * @example
+ * <StatCard
+ *   title="Active Tasks"
+ *   value={24}
+ *   icon={CheckCircle}
+ *   trend="+5% this week"
+ *   color="success"
+ * />
+ */
+
 "use client";
 
 import { type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui";
 
 export interface StatCardProps {
+  /** Display title */
   title: string;
+  /** Statistic value */
   value: number | string;
+  /** Icon component to display */
   icon: LucideIcon;
+  /** Trend or additional info text */
   trend: string;
+  /** Color theme */
   color: "primary" | "warning" | "success" | "purple";
 }
 
@@ -18,6 +39,17 @@ const colors = {
   purple: "text-purple-500 bg-purple-500/10",
 };
 
+/**
+ * Stat Card Component
+ *
+ * Features:
+ * - Icon display with color theming
+ * - Value and title display
+ * - Trend badge
+ * - Hover effect for interactivity
+ *
+ * @component
+ */
 export function StatCard({
   title,
   value,

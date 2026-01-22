@@ -70,3 +70,14 @@ export const VALIDATION = {
   MAX_DESC_LENGTH: 10000,
   MAX_COMMENT_LENGTH: 5000,
 } as const;
+
+/**
+ * React Query configuration
+ */
+export const QUERY_CONFIG = {
+  DEFAULT_STALE_TIME: 0,
+  DEFAULT_GC_TIME: 0,
+  DEFAULT_RETRY: 1,
+  REFETCH_ON_WINDOW_FOCUS: false,
+  MUTATION_RETRY: 1,
+} as const;
