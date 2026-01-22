@@ -1,16 +1,24 @@
 import {
+  AuthenticatedUser,
   CompleteRegistration,
   CompleteRegistrationSchema,
+  isJwtUser,
   LoginResponse,
   OtpRequest,
   OtpRequestSchema,
   VerifyOtp,
   VerifyOtpSchema,
 } from "@locusai/shared";
-import { Body, Controller, Get, Post, UsePipes } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+  UsePipes,
+} from "@nestjs/common";
 import { Public } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
-import { User } from "@/entities";
 import { AuthService } from "./auth.service";
 import { CurrentUser } from "./decorators";
 
@@ -19,7 +27,20 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get("me")
-  async getProfile(@CurrentUser() user: User) {
+  async getProfile(@CurrentUser() authUser: AuthenticatedUser) {
+    // This endpoint only works for JWT-authenticated users
+    if (!isJwtUser(authUser)) {
+      throw new UnauthorizedException(
+        "This endpoint requires user authentication, not API key"
+      );
+    }
+
+    // Fetch full user from database
+    const user = await this.authService.getUserById(authUser.id);
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
     // Fetch user's first workspace and organization ID
     const workspaces = await this.authService.getUserWorkspaces(user.id);
     const workspaceId = workspaces[0]?.id ?? undefined;

@@ -204,4 +204,8 @@ export class AuthService {
     );
     return result[0] || null;
   }
+
+  async getUserById(userId: string): Promise<User | null> {
+    return this.usersService.findById(userId);
+  }
 }

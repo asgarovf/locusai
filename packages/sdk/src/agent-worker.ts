@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
 import { Task, TaskStatus } from "@locusai/shared";
 import { LocusClient } from "./index";
@@ -92,8 +93,77 @@ class AgentWorker {
   }
 
   /**
-   * Execute task
-   * TODO: Replace with real Claude Code / AI execution
+   * Build prompt for Claude CLI from task data
+   */
+  private buildTaskPrompt(task: Task): string {
+    let prompt = `# Task: ${task.title}\n\n`;
+    prompt += `## Description\n${task.description || "No description provided."}\n\n`;
+
+    if (task.acceptanceChecklist && task.acceptanceChecklist.length > 0) {
+      prompt += `## Acceptance Criteria\n`;
+      for (const item of task.acceptanceChecklist) {
+        const checkbox = item.done ? "[x]" : "[ ]";
+        prompt += `- ${checkbox} ${item.text}\n`;
+      }
+      prompt += "\n";
+    }
+
+    prompt += `## Instructions\n`;
+    prompt += `Complete this task. When finished successfully, output: <promise>COMPLETE</promise>\n`;
+    prompt += `If you cannot complete it, explain why and do NOT output the completion signal.\n`;
+
+    return prompt;
+  }
+
+  /**
+   * Run Claude CLI with the given prompt
+   */
+  private runClaudeCli(prompt: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const claude = spawn(
+        "claude",
+        ["--dangerously-skip-permissions", "--print"],
+        {
+          cwd: this.config.mcpProjectPath || process.cwd(),
+          stdio: ["pipe", "pipe", "pipe"],
+        }
+      );
+
+      let output = "";
+      let errorOutput = "";
+
+      claude.stdout.on("data", (data: Buffer) => {
+        const text = data.toString();
+        output += text;
+        process.stdout.write(text);
+      });
+
+      claude.stderr.on("data", (data: Buffer) => {
+        const text = data.toString();
+        errorOutput += text;
+        process.stderr.write(text);
+      });
+
+      claude.on("error", (err) => {
+        reject(new Error(`Failed to start Claude CLI: ${err.message}`));
+      });
+
+      claude.on("close", (code) => {
+        if (code === 0) {
+          resolve(output);
+        } else {
+          reject(new Error(`Claude exited with code ${code}: ${errorOutput}`));
+        }
+      });
+
+      // Send prompt via stdin and close
+      claude.stdin.write(prompt);
+      claude.stdin.end();
+    });
+  }
+
+  /**
+   * Execute task using Claude CLI
    */
   private async executeTask(
     task: Task
@@ -109,32 +179,46 @@ class AgentWorker {
       }
     }
 
-    // TODO: This is where real task execution would happen
-    // For now, simulate execution with a delay
-    await this.sleep(2000);
+    // Build prompt and run Claude CLI
+    const prompt = this.buildTaskPrompt(task);
+    this.log("Running Claude CLI...", "info");
 
-    // Mark all acceptance items as done
-    if (task.acceptanceChecklist) {
-      const updated = task.acceptanceChecklist.map(
-        (item: { id: string; text: string; done: boolean }) => ({
-          ...item,
-          done: true,
-        })
-      );
+    try {
+      const output = await this.runClaudeCli(prompt);
 
-      try {
-        await this.client.tasks.update(task.id, this.config.workspaceId, {
-          acceptanceChecklist: updated,
-        });
-      } catch (error) {
-        this.log(`Warning: Failed to update checklist: ${error}`, "warn");
+      // Check for completion signal (like Ralph does)
+      const success = output.includes("<promise>COMPLETE</promise>");
+
+      // Mark all acceptance items as done if successful
+      if (success && task.acceptanceChecklist) {
+        const updated = task.acceptanceChecklist.map(
+          (item: { id: string; text: string; done: boolean }) => ({
+            ...item,
+            done: true,
+          })
+        );
+
+        try {
+          await this.client.tasks.update(task.id, this.config.workspaceId, {
+            acceptanceChecklist: updated,
+          });
+        } catch (error) {
+          this.log(`Warning: Failed to update checklist: ${error}`, "warn");
+        }
       }
-    }
 
-    return {
-      success: true,
-      summary: `Agent processed task "${task.title}" successfully.`,
-    };
+      return {
+        success,
+        summary: success
+          ? `Task completed by Claude CLI`
+          : `Claude did not signal completion. Output:\n${output.slice(0, 500)}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        summary: `Claude CLI error: ${error}`,
+      };
+    }
   }
 
   /**
