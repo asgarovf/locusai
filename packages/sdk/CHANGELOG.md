@@ -1,4 +1,4 @@
-# @locusai/shared
+# @locusai/sdk
 
 ## 0.2.0
 
@@ -29,44 +29,7 @@
   - Updated schemas to support the new `Agent` and `Orchestrator` models.
   - Added `Sprint.mindmap` and `Sprint.mindmapUpdatedAt` fields.
 
-## 0.1.7
-
 ### Patch Changes
 
-- - Workflow improvements
-
-## 0.1.6
-
-### Patch Changes
-
-- - Fix mcp paths and workflows
-
-## 0.1.5
-
-### Patch Changes
-
-- - Fix workflow and mcp connection issues
-
-## 0.1.4
-
-### Patch Changes
-
-- - Fix nextjs vulnerabilities
-
-## 0.1.3
-
-### Patch Changes
-
-- - Fixed the cli throwing error after init
-
-## 0.1.2
-
-### Patch Changes
-
-- Fix the documents cannot be created in a nested way inside categories
-
-## 0.1.1
-
-### Patch Changes
-
-- No change
+- Updated dependencies [52d35dd]
+  - @locusai/shared@0.2.0

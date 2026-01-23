@@ -1,5 +1,12 @@
 # @locusai/www
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [52d35dd]
+  - @locusai/shared@0.2.0
+
 ## 0.1.7
 
 ### Patch Changes
