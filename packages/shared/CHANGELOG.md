@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.2
+
+### Patch Changes
+
+- Tree summarizer ignore list
+
 ## 0.4.1
 
 ### Patch Changes

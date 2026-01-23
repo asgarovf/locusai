@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.4.2
+
+### Patch Changes
+
+- Tree summarizer ignore list
+- Updated dependencies
+  - @locusai/shared@0.4.2
+
 ## 0.4.1
 
 ### Patch Changes
