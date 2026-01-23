@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.8
+
+### Patch Changes
+
+- Package builds
+
 ## 0.4.7
 
 ### Patch Changes

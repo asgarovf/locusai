@@ -1,6 +1,6 @@
 {
   "name": "@locusai/sdk",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "type": "module",
   "source": "./src/index.ts",
   "main": "./dist/index.js",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
-    "@locusai/shared": "^0.4.7",
+    "@locusai/shared": "^0.4.8",
     "axios": "^1.13.2",
     "events": "^3.3.0",
     "globby": "^14.0.2"

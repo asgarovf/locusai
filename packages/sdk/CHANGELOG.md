@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.4.8
+
+### Patch Changes
+
+- Package builds
+- Updated dependencies
+  - @locusai/shared@0.4.8
+
 ## 0.4.7
 
 ### Patch Changes
