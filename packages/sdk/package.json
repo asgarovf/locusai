@@ -5,6 +5,20 @@
   "source": "./src/index.ts",
   "main": "./src/index.ts",
   "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "development": "./src/index-node.ts",
+      "import": "./dist/index-node.js",
+      "types": "./dist/index-node.d.ts",
+      "default": "./dist/index-node.js"
+    }
+  },
   "files": [
     "dist",
     "README.md"
