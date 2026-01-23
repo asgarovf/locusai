@@ -1,6 +1,7 @@
 {
   "name": "@locusai/web",
   "version": "0.3.4",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
