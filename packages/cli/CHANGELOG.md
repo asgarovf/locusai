@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.2.2
+
+### Patch Changes
+
+- Fix package builds
+
 ## 0.2.1
 
 ### Patch Changes
