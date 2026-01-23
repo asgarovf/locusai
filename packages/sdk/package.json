@@ -1,21 +1,20 @@
 {
   "name": "@locusai/sdk",
   "version": "0.4.9",
-  "source": "./src/index.ts",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "development": "./src/index.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./node": {
-      "types": "./dist/index-node.d.ts",
+      "types": "./src/index-node.ts",
       "development": "./src/index-node.ts",
-      "import": "./dist/index-node.js",
-      "default": "./dist/index-node.js"
+      "import": "./src/index-node.ts",
+      "default": "./src/index-node.ts"
     }
   },
   "files": [
@@ -23,7 +22,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/index-node.ts --outdir ./dist --target node --format cjs --external @anthropic-ai/sdk --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external @anthropic-ai/sdk --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit"
