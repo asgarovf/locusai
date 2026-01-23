@@ -1,5 +1,16 @@
 # @locusai/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- Tree summarizer logs optimized
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.4.0
+
 ## 0.3.4
 
 ### Patch Changes
