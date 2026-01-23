@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.3.2
+
+### Patch Changes
+
+- Worker path resolution
+
 ## 0.3.1
 
 ### Patch Changes

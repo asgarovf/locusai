@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.3.2
+
+### Patch Changes
+
+- Worker path resolution
+- Updated dependencies
+  - @locusai/shared@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
