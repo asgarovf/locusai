@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common.js";
-import { AssigneeRole, TaskPriority, TaskStatus } from "../enums.js";
-import { CommentSchema, EventSchema } from "./activity.js";
-import { DocSchema } from "./doc.js";
+import { BaseEntitySchema } from "../common";
+import { AssigneeRole, TaskPriority, TaskStatus } from "../enums";
+import { CommentSchema, EventSchema } from "./activity";
+import { DocSchema } from "./doc";
 
 export const AcceptanceItemSchema = z.object({
   id: z.string(),

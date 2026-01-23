@@ -1,3 +1,3 @@
-export * from "./common.js";
-export * from "./enums.js";
-export * from "./models/index.js";
+export * from "./common";
+export * from "./enums";
+export * from "./models/index";

@@ -184,11 +184,12 @@ export class AgentOrchestrator extends EventEmitter {
     // Try multiple resolution strategies
     const potentialPaths: string[] = [];
 
-    // Strategy 1: Use import.meta.resolve to find the installed SDK package
+    // Strategy 1: Use resolution to find the installed SDK package
     try {
       // Resolve the SDK's index to find the package location
-      const sdkIndexPath = import.meta.resolve("@locusai/sdk");
-      const sdkDir = dirname(sdkIndexPath.replace("file://", ""));
+      // In CommonJS build, we use require.resolve
+      const sdkIndexPath = require.resolve("@locusai/sdk");
+      const sdkDir = dirname(sdkIndexPath);
       // In production, files are in dist/; sdkDir points to dist/ or src/
       const sdkRoot = this.findPackageRoot(sdkDir);
       potentialPaths.push(
@@ -196,7 +197,7 @@ export class AgentOrchestrator extends EventEmitter {
         join(sdkRoot, "src", "agent", "worker.ts")
       );
     } catch {
-      // import.meta.resolve failed, continue with fallback strategies
+      // require.resolve failed, continue with fallback strategies
     }
 
     // Strategy 2: Find package root from __dirname (works in dev/local)

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common.js";
+import { BaseEntitySchema } from "../common";
 
 // Forward declaration for circular reference
 export const DocGroupSchemaForDoc = z.object({

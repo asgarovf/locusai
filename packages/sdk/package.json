@@ -1,7 +1,6 @@
 {
   "name": "@locusai/sdk",
   "version": "0.4.9",
-  "type": "module",
   "source": "./src/index.ts",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -24,7 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "bun build ./src/index.ts ./src/index-node.ts --outdir ./dist --target node --format cjs --external @anthropic-ai/sdk --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit"

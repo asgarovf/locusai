@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common.js";
-import { EventType, SprintStatus, TaskStatus } from "../enums.js";
+import { BaseEntitySchema } from "../common";
+import { EventType, SprintStatus, TaskStatus } from "../enums";
 
 export const CommentSchema = BaseEntitySchema.extend({
   taskId: z.string().uuid(),

@@ -10,7 +10,6 @@
     { "path": "./packages/sdk" },
     { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./apps/mcp" },
     { "path": "./packages/cli" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]

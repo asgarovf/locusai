@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common.js";
-import { SprintStatus } from "../enums.js";
+import { BaseEntitySchema } from "../common";
+import { SprintStatus } from "../enums";
 
 export const SprintSchema = BaseEntitySchema.extend({
   workspaceId: z.string().uuid().nullable().optional(),

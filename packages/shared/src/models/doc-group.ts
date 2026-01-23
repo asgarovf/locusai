@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common.js";
+import { BaseEntitySchema } from "../common";
 
 export const DocGroupSchema = BaseEntitySchema.extend({
   workspaceId: z.string().uuid(),
