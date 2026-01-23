@@ -4,18 +4,18 @@
   "type": "module",
   "source": "./src/index.ts",
   "main": "./src/index.ts",
-  "types": "./src/index.d.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "development": "./src/index.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./node": {
+      "types": "./dist/index-node.d.ts",
       "development": "./src/index-node.ts",
       "import": "./dist/index-node.js",
-      "types": "./dist/index-node.d.ts",
       "default": "./dist/index-node.js"
     }
   },
