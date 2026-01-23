@@ -11,9 +11,9 @@ import {
 
 const features = [
   {
-    title: "Local-First Architecture",
+    title: "Privacy by Design",
     description:
-      "Your data stays on your machine. Powered by SQLite and transparent file storage in your repository.",
+      "Your intellectual property never leaves your machine. Agents execute locally while you coordinate via the cloud.",
     icon: Database,
     className: "md:col-span-2 md:row-span-2",
   },
@@ -39,9 +39,9 @@ const features = [
     className: "md:col-span-1",
   },
   {
-    title: "Agentic MCP Server",
+    title: "Sprint Mindmaps",
     description:
-      "Exposes your workspace to Claude, Cursor, and other AI tools via standard protocols.",
+      "Agents generate high-level technical plans for sprints to ensure cohesive implementation across tasks.",
     icon: BrainCircuit,
     className: "md:col-span-2",
   },

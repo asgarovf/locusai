@@ -1,29 +1,52 @@
 ---
-title: Understanding Locus Architecture
+title: Architecture
 ---
 
-Locus is built as a modular monorepo. It consists of three main applications and a shared package ecosystem.
+Locus employs a **Hybrid Architecture** that balances the privacy and performance of local execution with the coordination capabilities of the cloud.
 
-## Core Components
+## The "Local-First" Model
 
-### 1. Unified CLI (`packages/cli`)
-This is the entry point for the user. It is a bundled executable that contains:
-- The **Locus Engine**: Logic for task management and file operations.
-- The **Dashboard**: A static export of the Next.js web app.
-- The **Server**: An Express.js API that serves the dashboard and handles requests.
-- The **MCP Server**: A standardized interface for AI agents.
+Unlike cloud-only coding assistants that require you to upload your entire codebase to a remote server, Locus executes **locally on your machine**.
 
-### 2. The Engine (`apps/api`)
-The engine is responsible for maintaining the state of your project. It uses `better-sqlite3` to store task data, comments, and history in a local `.locus/db.sqlite` file within your project root.
+### 1. Verification & Security
+Because the agent runs locally, it allows for:
+- **Local File Access**: No need to sync files to a remote sandbox.
+- **Local Tool Execution**: The agent can run `npm install`, `docker build`, or `cargo test` exactly as you would.
+- **Privacy**: Your source code never leaves your machine. Only task descriptions, patches/diffs, and summaries are sent to the cloud for coordination.
 
-### 3. The Dashboard (`apps/web`)
-A Next.js application that provides a beautiful UI for managing your tasks and viewing documentation. When built, it is exported as purely static HTML/CSS/JS and served by the CLI.
+### 2. Cloud Orchestration
+The Locus Cloud (API & Dashboard) acts as the control plane:
+- **Task Management**: Stores the backlog, sprints, and task statuses.
+- **Agent Coordination**: Dispatches tasks to available local workers.
+- **Knowledge Graph**: Maintains high-level project metadata (but not the raw code).
 
-### 4. MCP Server (`apps/mcp`)
-This component implements the **Model Context Protocol**. It exposes tools like `kanban_create_task`, `docs_read`, and `ci_run` to any MCP-compatible AI client (like Claude Desktop or Cursor).
+## Component Overview
 
-## Design Philosophy
+```mermaid
+graph TD
+    subgraph Cloud [Locus Cloud]
+        API[API Server]
+        DB[(Database)]
+        Dashboard[Web Dashboard]
+    end
 
-- **Local-First**: We never send your data to our cloud.
-- **Agentic**: Everything is built to be used by both humans and AI agents.
-- **Transparent**: Your data is stored in open formats (SQLite, Markdown, JSON) that you can inspect and version control.
+    subgraph Local [Your Machine]
+        CLI[Locus CLI / Agent Worker]
+        Code[Your Source Code]
+        Tools[Local Tools (Git, Node, etc.)]
+    end
+
+    CLI <-->|Polls Tasks / Updates Status| API
+    CLI <-->|Reads/Writes| Code
+    CLI <-->|Executes| Tools
+    API --- DB
+    Dashboard --- API
+```
+
+## Workflow
+
+1. **Task Creation**: You create a task in the Web Dashboard (or ask the agent to create one).
+2. **Dispatch**: You run `locus run` on your terminal. The CLI connects to the API and asks for work.
+3. **Execution**: The CLI receives the task assignment. It reads your code, plans a solution, and executes changes.
+4. **Verification**: The agent runs local tests to verify the fix.
+5. **Completion**: The agent commits the changes locally and updates the task status to "Verification" on the cloud.

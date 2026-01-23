@@ -1,4 +1,9 @@
-import { DemoVideo, FeatureGrid, Hero } from "@/components/landing";
+import {
+  FeatureGrid,
+  Hero,
+  TerminalDemo,
+  WorkflowSteps,
+} from "@/components/landing";
 import { Footer, Navbar } from "@/components/layout";
 
 async function getNpmVersion(): Promise<string> {
@@ -23,7 +28,10 @@ export default async function Home() {
       <Navbar />
       <main className="flex-1 bg-background">
         <Hero version={version} />
-        <DemoVideo />
+        <div className="container mx-auto px-4 -mt-20 relative z-20 mb-24">
+          <TerminalDemo />
+        </div>
+        <WorkflowSteps />
         <FeatureGrid />
       </main>
       <Footer />

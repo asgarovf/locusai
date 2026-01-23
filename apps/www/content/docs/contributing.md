@@ -14,25 +14,38 @@ We welcome contributions to Locus! As a local-first platform, we value transpare
 bun install
 ```
 
-4. **Initialize a test workspace**:
-
-```bash
-bun run workspace:init
-```
-
 ## Repository Structure
 
-- `apps/api`: The API and Engine.
-- `apps/web`: The Dashboard UI.
-- `apps/mcp`: The Agentic Interface.
-- `packages/cli`: The Bundler and User Interface.
+Locus is a monorepo managed by Turborepo.
 
-## Pull Request Process
+- **`apps/`**
+  - `api`: The NestJS Cloud API and Orchestration Engine.
+  - `www`: The Next.js Landing Page and Dashboard.
+- **`packages/`**
+  - `cli`: The Local Agent Runtime and CLI tool.
+  - `sdk`: Core business logic shared between CLI and API.
+  - `shared`: Zod schemas and TypeScript interfaces shared across the stack.
 
-1. Create a feature branch.
-2. Make your changes using our patterns (modular service/controller architecture).
-3. Ensure linting and typechecks pass (`bun run lint`, `bun run typecheck`).
-4. Submit a PR. We review typically within 48 hours.
+## Development Workflow
+
+### 1. Make Changes
+Create a feature branch and implement your changes. We follow a modular architecture:
+- **Backend**: Use the Controller-Service-Repository pattern.
+- **Frontend**: Use Shadcn UI components and Tailwind CSS.
+
+### 2. Verify
+Before pushing, ensure your code passes standard checks:
+
+```bash
+# Run linting
+bun run lint
+
+# Run type checking
+bun run typecheck
+```
+
+### 3. Submit PR
+Submit a Pull Request to the `master` branch. Please include a clear description of your changes and why they are necessary.
 
 ## License
 

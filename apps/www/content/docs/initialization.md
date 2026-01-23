@@ -2,114 +2,58 @@
 title: Initialization & Configuration
 ---
 
-This guide covers how to initialize Locus in different scenarios and configure your workspace.
+This guide covers how to initialize Locus in your project and configure it for your needs.
 
-## New Project
-
-To create a brand new project with Locus:
-
-```bash
-npx @locusai/cli init --name my-project
-```
-
-This creates a new directory with:
-- A monorepo structure with `apps/` and `packages/`
-- A Next.js web application
-- Locus configuration in `.locus/`
-- Pre-configured linting and TypeScript
-
-## Existing Project
+## Initialization
 
 To add Locus to an existing repository:
 
 ```bash
-cd your-existing-project
-npx @locusai/cli init
+locus init
 ```
 
-This will only create the `.locus/` directory without modifying your existing code.
+This will create a `.locus` directory in your project root. This process is non-destructive and only adds Locus-specific configuration files.
 
 ## The `.locus` Directory
 
-After initialization, you'll have a `.locus` folder containing:
+After initialization, you'll see the following structure:
 
 ```
 .locus/
-├── db.sqlite              # Local SQLite database
-├── workspace.config.json  # Workspace configuration
-├── docs/                  # Documentation files
-└── artifacts/             # Task artifacts
+├── config.json            # Project configuration
+├── index.json             # Codebase semantic index (generated)
+└── artifacts/             # Task artifacts and logs
 ```
 
-### workspace.config.json
-
-The main configuration file:
+The `config.json` file contains basic project metadata:
 
 ```json
 {
-  "name": "my-project",
-  "version": "1.0.0",
-  "ci": {
-    "allowlist": [
-      "bun run lint",
-      "bun run typecheck",
-      "bun run test",
-      "bun run build"
-    ]
-  }
+  "version": "0.1.7",
+  "createdAt": "2024-01-20T10:00:00.000Z",
+  "projectPath": "."
 }
 ```
 
-### Customizing the CI Allowlist
+## Context File (CLAUDE.md)
 
-The CI allowlist controls which commands AI agents can execute. Add your own commands:
+`locus init` also creates (or checks for) a `CLAUDE.md` file in your root. This file serves as the high-level "brain" or context for the AI agent.
 
-```json
-{
-  "ci": {
-    "allowlist": [
-      "bun run lint",
-      "bun run typecheck",
-      "bun run test",
-      "bun run build",
-      "bun run e2e",
-      "docker compose up -d"
-    ]
-  }
-}
-```
+Use this file to document:
+- Project architecture overview.
+- Coding standards and patterns.
+- Important commands (build, test, lint).
+- Known issues or "gotchas".
 
-## Starting the Dashboard
-
-Run the Locus dashboard to manage tasks and view documentation:
-
-```bash
-npx @locusai/cli dev
-```
-
-This starts:
-- **Dashboard**: `http://localhost:3080`
-- **API Server**: `http://localhost:3080/api`
-
-## Environment Variables
-
-Locus respects the following environment variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOCUS_PORT` | `3080` | Dashboard port |
-| `LOCUS_HOST` | `localhost` | Dashboard host |
-| `LOCUS_DB_PATH` | `.locus/db.sqlite` | Database location |
+The agent reads this file before starting every task to ensure it adheres to your project's specific guidelines.
 
 ## Git Integration
 
-Locus is designed to work with Git. We recommend:
+We recommend adding the following to your `.gitignore`:
 
-1. **Commit `.locus`** to version control (except `db.sqlite`)
-2. **Add to `.gitignore`**:
-   ```
-   .locus/db.sqlite
-   .locus/db.sqlite-journal
-   ```
+```
+.locus/artifacts
+.locus/index.json
+```
 
-This ensures your documentation and configuration are shared, while each developer has their own local database.
+You should **commit** `.locus/config.json` and `CLAUDE.md` to ensure all team members (and their agents) share the same configuration and context.

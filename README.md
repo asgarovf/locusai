@@ -13,7 +13,9 @@
   <a href="https://www.npmjs.com/package/@locusai/shared"><img src="https://img.shields.io/npm/v/@locusai/shared?label=%40locusai%2Fshared&color=blue" alt="@locusai/shared" /></a>
 </p>
 
-A **local-first AI development platform** that combines task management, documentation, and CI coordination to help AI agents build your projects.
+**Locus is a local-first platform for autonomous software engineering.**
+
+It combines a cloud-based coordination layer with strictly local execution to enable AI agents to build, test, and document your software without your code leaving your machine.
 
 > [!WARNING]
 > **Active Development**: Locus is currently in an early alpha stage and is under active development. Expect breaking changes, bugs, and evolving APIs. Use with caution in production environments.
@@ -22,12 +24,11 @@ A **local-first AI development platform** that combines task management, documen
 
 ## 🌟 Key Features
 
-- **Kanban Board** - Visual task management with AI-friendly workflows.
-- **Documentation Hub** - Markdown docs integrated directly with your repository.
-- **MCP Integration** - Let AI agents (Claude, Cursor, etc.) read/write docs, manage tasks, and run CI.
-- **Acceptance Checklists** - Track implementation progress automatically as agents work.
-- **Secure CI** - Execute allowlisted commands with real-time audit logs and artifacts.
-- **Local-First** - Your data stays on your machine, stored in a transparent `.locus` folder.
+- **Hybrid Architecture** - Cloud coordination for teams, local execution for privacy and security.
+- **Autonomous Agents** - Run agents locally that plan, code, and verify their own work.
+- **Cognitive Context** - Agents use project-specific `CLAUDE.md` and semantic indexing to understand your codebase.
+- **Sprint Mindmaps** - Agents generate and follow high-level technical plans for cohesive feature implementation.
+- **Artifact Sync** - Documenation and plans generated locally are automatically synced to the cloud dashboard.
 
 ## 🚀 Quick Start
 
@@ -36,33 +37,19 @@ The fastest way to use Locus is via `npx`. No installation required.
 ### 1. Initialize a new project
 Run this command in the directory where you want to create your project:
 ```bash
-npx @locusai/cli init --name my-cool-app
+npx @locusai/cli init
 ```
 
-### 2. Run the Locus Dashboard
-Navigate to your project folder and start the engine:
+### 2. Index Your Codebase
+Create a semantic map for the agent:
 ```bash
-cd my-cool-app
-npx @locusai/cli dev
+npx @locusai/cli index
 ```
 
-### 3. Open the Dashboard
-Locus will automatically open `http://localhost:3080` in your browser.
-
----
-
-## 📦 Installation (Optional)
-
-If you prefer to have Locus always available as a global command:
-
+### 3. Run the Agent
+Connect to the Locus Cloud and start working:
 ```bash
-npm install -g @locusai/cli
-```
-
-Then you can simply use:
-```bash
-locus init --name my-app
-locus dev
+npx @locusai/cli run --api-key <YOUR_KEY> --workspace <WORKSPACE_ID>
 ```
 
 ---
@@ -72,40 +59,23 @@ locus dev
 ### Architecture
 
 ```
-locus-dev/           ← The platform
+locus-dev/           ← The platform (Open Source)
 ├── apps/
-│   ├── server/     ← Locus API
-│   ├── web/        ← Locus Dashboard
-│   └── mcp/        ← MCP server for AI connectivity
+│   ├── api/        ← Cloud API & Engine
+│   └── www/        ← Cloud Dashboard & Landing Page
 └── packages/
-    ├── cli/        ← Unified Locus CLI
-    └── shared/     ← Shared types and schemas
-
-my-app/             ← Your product (managed BY Locus)
-├── apps/           ← Your frontend and backend code
-├── packages/       ← Shared logic for your app
-└── .locus/         ← Locus workspace data (Generated)
-    ├── db.sqlite          ← Tasks, comments, and CI runs
-    ├── workspace.config.json
-    └── ci-presets.json
+    ├── cli/        ← Local Agent Runtime
+    ├── sdk/        ← Core Logic
+    └── shared/     ← Shared Types
 ```
 
-### AI Workflow Example
+### The "Local-First" Workflow
 
-1. **Task Creation**: Define a feature in the Locus UI.
-2. **In Progress**: Moving a task to "In Progress" triggers a "Technical Implementation Draft".
-3. **Agent Implementation**: Your AI agent reads the draft, applies code changes, and checks off criteria.
-4. **CI Validation**: The agent runs `ci.run` to verify the build/lint/tests pass.
-5. **Verification**: You review the work and move the task to "Done".
-
-### MCP Tools for Agents
-
-Your AI assistant can use these tools immediately:
-
-- `kanban.*` - List, create, and move tasks.
-- `docs.*` - Read and write technical documentation.
-- `artifacts.*` - Access implementation drafts and logs.
-- `ci.run` - Execute pre-defined CI workflows.
+1.  **Dispatch**: You request work via the CLI.
+2.  **Assignment**: The Cloud assigns the next high-priority task.
+3.  **Planning**: The Local Agent reads the task and your code, then creates a plan.
+4.  **Execution**: The Agent modifies files and runs tests locally on your machine.
+5.  **Verification**: You review the changes before marking the task as Done.
 
 ---
 

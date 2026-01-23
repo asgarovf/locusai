@@ -77,9 +77,3 @@ pids
 *.pid
 *.seed
 *.pid.lock
-
-# Locus Build Artifacts
-packages/cli/bin/
-packages/cli/public/
-db.sqlite
-.locus/

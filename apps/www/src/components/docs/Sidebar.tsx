@@ -18,21 +18,29 @@ const groups = [
         href: "/docs/initialization",
       },
       {
+        title: "Workflows",
+        href: "/docs/workflows",
+      },
+      {
+        title: "Best Practices",
+        href: "/docs/best-practices",
+      },
+      {
         title: "Architecture",
         href: "/docs/architecture",
       },
     ],
   },
   {
-    title: "MCP Integration",
+    title: "Reference",
     items: [
       {
-        title: "Configuration",
-        href: "/docs/mcp-configuration",
+        title: "CLI Commands",
+        href: "/docs/cli-reference",
       },
       {
-        title: "Tools Reference",
-        href: "/docs/mcp-tools",
+        title: "Configuration",
+        href: "/docs/configuration",
       },
     ],
   },
