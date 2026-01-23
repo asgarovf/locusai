@@ -1,6 +1,6 @@
 import { ChildProcess, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index";
@@ -142,6 +142,21 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
+   * Find the package root by looking for package.json
+   */
+  private findPackageRoot(startPath: string): string {
+    let currentDir = startPath;
+    while (currentDir !== "/") {
+      if (existsSync(join(currentDir, "package.json"))) {
+        return currentDir;
+      }
+      currentDir = dirname(currentDir);
+    }
+    // Fallback to startPath if not found
+    return startPath;
+  }
+
+  /**
    * Spawn a single agent process
    */
   private async spawnAgent(): Promise<void> {
@@ -164,9 +179,15 @@ export class AgentOrchestrator extends EventEmitter {
 
     // Build arguments for agent worker
     // Resolve path relative to this file's location (works in both dev and production)
+    // Find package root to correctly resolve worker path
+    const packageRoot = this.findPackageRoot(__dirname);
+
+    // Check possible locations for the worker file relative to package root
     const potentialPaths = [
-      join(__dirname, "agent", "worker.ts"), // Try TS source first (dev)
-      join(__dirname, "agent", "worker.js"), // Fallback to JS (prod/dist)
+      join(packageRoot, "dist", "agent", "worker.js"), // Production
+      join(packageRoot, "src", "agent", "worker.ts"), // Development
+      join(__dirname, "agent", "worker.ts"), // Fallback relative (dev)
+      join(__dirname, "agent", "worker.js"), // Fallback relative (prod)
     ];
 
     const workerPath = potentialPaths.find((p) => existsSync(p));
@@ -175,7 +196,7 @@ export class AgentOrchestrator extends EventEmitter {
     if (!workerPath) {
       throw new Error(
         `Worker file not found. Checked: ${potentialPaths.join(", ")}. ` +
-          `Make sure the SDK is properly built. __dirname: ${__dirname}`
+          `Make sure the SDK is properly built. __dirname: ${__dirname}, Package Root: ${packageRoot}`
       );
     }
 
