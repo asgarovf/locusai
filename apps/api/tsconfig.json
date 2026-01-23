@@ -20,8 +20,17 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@locusai/shared": ["../../packages/shared/src/index.ts"],
+      "@locusai/sdk": ["../../packages/sdk/src/index.ts"],
+      "@locusai/sdk/node": ["../../packages/sdk/src/index-node.ts"]
     },
     "types": ["jest", "node"]
-  }
+  },
+  "include": [
+    "src/**/*",
+    "../../packages/shared/src/**/*",
+    "../../packages/sdk/src/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
 }

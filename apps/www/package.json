@@ -9,7 +9,7 @@
     "lint": "biome lint ."
   },
   "dependencies": {
-    "@locusai/shared": "workspace:*",
+    "@locusai/shared": "^0.4.7",
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/react-syntax-highlighter": "^15.5.13",

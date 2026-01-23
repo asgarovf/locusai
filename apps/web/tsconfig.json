@@ -13,9 +13,16 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@locusai/shared": ["../../packages/shared/src/index.ts"],
+      "@locusai/sdk": ["../../packages/sdk/src/index.ts"]
     }
   },
-  "include": ["src", ".next/types/**/*.ts"],
+  "include": [
+    "src/**/*",
+    ".next/types/**/*.ts",
+    "../../packages/shared/src/**/*",
+    "../../packages/sdk/src/**/*"
+  ],
   "exclude": ["node_modules"]
 }

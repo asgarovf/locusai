@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "@locusai/sdk": ["../sdk/src/index.ts"],
+      "@locusai/sdk/node": ["../sdk/src/index-node.ts"]
+    }
   },
   "include": ["src/**/*", "index.ts"],
   "exclude": ["bin", "public"]

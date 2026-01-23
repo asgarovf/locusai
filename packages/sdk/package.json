@@ -2,15 +2,19 @@
   "name": "@locusai/sdk",
   "version": "0.4.7",
   "type": "module",
+  "source": "./src/index.ts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./node": {
+      "source": "./src/index-node.ts",
       "types": "./dist/index-node.d.ts",
+      "import": "./dist/index-node.js",
       "default": "./dist/index-node.js"
     }
   },
