@@ -12,10 +12,6 @@ export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 export const WorkspaceSchema = BaseEntitySchema.extend({
   orgId: z.string().uuid(),
   name: z.string().min(1, "Name is required").max(100),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
   defaultChecklist: z.array(ChecklistItemSchema).nullable().optional(),
 });
 
@@ -23,11 +19,6 @@ export type Workspace = z.infer<typeof WorkspaceSchema>;
 
 export const CreateWorkspaceSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
-    .optional(),
 });
 
 export type CreateWorkspace = z.infer<typeof CreateWorkspaceSchema>;
@@ -35,7 +26,6 @@ export type CreateWorkspace = z.infer<typeof CreateWorkspaceSchema>;
 export const UpdateWorkspaceSchema = WorkspaceSchema.partial().omit({
   id: true,
   orgId: true,
-  slug: true,
   createdAt: true,
   updatedAt: true,
 });

@@ -12,17 +12,11 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@locusai/shared": ["../../packages/shared/src/index.ts"],
-      "@locusai/sdk": ["../../packages/sdk/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    ".next/types/**/*.ts",
-    "../../packages/shared/src/**/*",
-    "../../packages/sdk/src/**/*"
-  ],
+  "include": ["src/**/*", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

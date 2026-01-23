@@ -3,10 +3,6 @@ import { BaseEntitySchema } from "../common";
 
 export const OrganizationSchema = BaseEntitySchema.extend({
   name: z.string().min(1, "Name is required").max(100),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
   avatarUrl: z
     .string()
     .url("Invalid avatar URL")
@@ -19,10 +15,6 @@ export type Organization = z.infer<typeof OrganizationSchema>;
 
 export const CreateOrganizationSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
   avatarUrl: z.string().url("Invalid avatar URL").optional().or(z.literal("")),
 });
 
@@ -30,7 +22,6 @@ export type CreateOrganization = z.infer<typeof CreateOrganizationSchema>;
 
 export const UpdateOrganizationSchema = OrganizationSchema.partial().omit({
   id: true,
-  slug: true,
   createdAt: true,
   updatedAt: true,
 });
