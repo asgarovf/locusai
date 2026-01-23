@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.3.4
+
+### Patch Changes
+
+- SDK package config
+- Updated dependencies
+  - @locusai/sdk@0.3.4
+
 ## 0.3.3
 
 ### Patch Changes

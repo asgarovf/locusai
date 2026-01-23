@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.3.4
+
+### Patch Changes
+
+- SDK package config
+
 ## 0.3.3
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.3.4
+
+### Patch Changes
+
+- SDK package config
+- Updated dependencies
+  - @locusai/shared@0.3.4
+
 ## 0.3.3
 
 ### Patch Changes
