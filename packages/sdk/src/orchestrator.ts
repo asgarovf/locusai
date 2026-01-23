@@ -164,12 +164,17 @@ export class AgentOrchestrator extends EventEmitter {
 
     // Build arguments for agent worker
     // Resolve path relative to this file's location (works in both dev and production)
-    const workerPath = join(__dirname, "agent", "worker.js");
+    const potentialPaths = [
+      join(__dirname, "agent", "worker.ts"), // Try TS source first (dev)
+      join(__dirname, "agent", "worker.js"), // Fallback to JS (prod/dist)
+    ];
+
+    const workerPath = potentialPaths.find((p) => existsSync(p));
 
     // Verify worker file exists
-    if (!existsSync(workerPath)) {
+    if (!workerPath) {
       throw new Error(
-        `Worker file not found at ${workerPath}. ` +
+        `Worker file not found. Checked: ${potentialPaths.join(", ")}. ` +
           `Make sure the SDK is properly built. __dirname: ${__dirname}`
       );
     }
@@ -202,9 +207,8 @@ export class AgentOrchestrator extends EventEmitter {
       workerArgs.push("--sprint-id", this.resolvedSprintId);
     }
 
-    // Use bun to run TypeScript files directly
-    const workerTsPath = workerPath.replace(/\.js$/, ".ts");
-    const agentProcess = spawn("bun", ["run", workerTsPath, ...workerArgs]);
+    // Use bun to run the worker script
+    const agentProcess = spawn("bun", ["run", workerPath, ...workerArgs]);
 
     agentState.process = agentProcess;
 

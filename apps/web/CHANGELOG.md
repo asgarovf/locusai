@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.3.1
+
+### Patch Changes
+
+- Fix worker resolution
+- Updated dependencies
+  - @locusai/sdk@0.3.1
+  - @locusai/shared@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
