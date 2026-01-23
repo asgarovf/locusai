@@ -57,8 +57,8 @@ export function useBacklog() {
     }
   };
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["active", "planned"])
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(["completed"])
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -102,13 +102,13 @@ export function useBacklog() {
     tasks.filter((t) => t.sprintId === sprintId);
 
   const toggleSection = (section: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(section)) {
-      newExpanded.delete(section);
+    const newCollapsed = new Set(collapsedSections);
+    if (newCollapsed.has(section)) {
+      newCollapsed.delete(section);
     } else {
-      newExpanded.add(section);
+      newCollapsed.add(section);
     }
-    setExpandedSections(newExpanded);
+    setCollapsedSections(newCollapsed);
   };
 
   // Drag handlers
@@ -287,7 +287,7 @@ export function useBacklog() {
     selectedTaskId,
     setSelectedTaskId,
     activeTask,
-    expandedSections,
+    collapsedSections,
     isSubmitting,
     sensors,
     toggleSection,

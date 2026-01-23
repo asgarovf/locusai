@@ -31,7 +31,7 @@ export default function BacklogPage() {
     selectedTaskId,
     setSelectedTaskId,
     activeTask,
-    expandedSections,
+    collapsedSections,
     isSubmitting,
     sensors,
     toggleSection,
@@ -100,7 +100,7 @@ export default function BacklogPage() {
                 key={`section-active-${activeSprint.id}`}
                 sprint={activeSprint}
                 tasks={getSprintTasks(activeSprint.id)}
-                isExpanded={expandedSections.has("active")}
+                isExpanded={!collapsedSections.has("active")}
                 onToggle={() => toggleSection("active")}
                 isActive={true}
                 onComplete={handleCompleteSprint}
@@ -116,7 +116,7 @@ export default function BacklogPage() {
                 key={`section-planned-${sprint.id}`}
                 sprint={sprint}
                 tasks={getSprintTasks(sprint.id)}
-                isExpanded={expandedSections.has(`planned-${sprint.id}`)}
+                isExpanded={!collapsedSections.has(`planned-${sprint.id}`)}
                 onToggle={() => toggleSection(`planned-${sprint.id}`)}
                 canStart={!activeSprint}
                 onStart={handleStartSprint}
@@ -130,7 +130,7 @@ export default function BacklogPage() {
             <BacklogList
               key="backlog-list"
               tasks={backlogTasks}
-              isExpanded={expandedSections.has("backlog")}
+              isExpanded={!collapsedSections.has("backlog")}
               onToggle={() => toggleSection("backlog")}
               onTaskClick={setSelectedTaskId}
               onTaskDelete={handleDeleteTask}
@@ -140,10 +140,10 @@ export default function BacklogPage() {
             <CompletedSprintsSection
               key="completed-sprints"
               sprints={completedSprints}
-              isExpanded={expandedSections.has("completed")}
+              isExpanded={!collapsedSections.has("completed")}
               onToggle={() => toggleSection("completed")}
               getSprintTasks={getSprintTasks}
-              expandedSprints={expandedSections}
+              collapsedSections={collapsedSections}
               onToggleSprint={toggleSection}
               onTaskClick={setSelectedTaskId}
             />

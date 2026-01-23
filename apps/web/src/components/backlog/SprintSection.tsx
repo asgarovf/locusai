@@ -20,7 +20,7 @@
 
 "use client";
 
-import { type Sprint, type Task } from "@locusai/shared";
+import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
 import { motion } from "framer-motion";
 import { CheckCircle, Flag, Layers, Play } from "lucide-react";
 import { DraggableTask, DroppableSection } from "@/components/dnd";
@@ -139,7 +139,9 @@ export function SprintSection({
                   <DraggableTask task={task}>
                     <TaskCard
                       task={task}
-                      variant="list"
+                      variant={
+                        task.status === TaskStatus.DONE ? "list" : "card"
+                      }
                       onClick={() => onTaskClick(task.id)}
                       onDelete={onTaskDelete}
                     />

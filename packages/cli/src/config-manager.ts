@@ -18,7 +18,7 @@ export class ConfigManager {
 
     // 1. Create CLAUDE.md if it doesn't exist
     if (!existsSync(claudeMdPath)) {
-      const template = `# Locus Project Context\n\n# Workflow\n- Run lint and typecheck before completion\n`;
+      const template = `# Locus Project Context\n\n`;
       writeFileSync(claudeMdPath, template);
     }
 

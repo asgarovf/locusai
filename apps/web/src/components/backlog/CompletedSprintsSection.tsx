@@ -22,8 +22,8 @@ interface CompletedSprintsSectionProps {
   onToggle: () => void;
   /** Function to get tasks for a sprint */
   getSprintTasks: (sprintId: string) => Task[];
-  /** Set of expanded sprint IDs */
-  expandedSprints: Set<string>;
+  /** Set of collapsed sprint IDs */
+  collapsedSections: Set<string>;
   /** Called when toggling sprint item */
   onToggleSprint: (section: string) => void;
   /** Called when task is clicked */
@@ -35,7 +35,7 @@ export function CompletedSprintsSection({
   isExpanded,
   onToggle,
   getSprintTasks,
-  expandedSprints,
+  collapsedSections,
   onToggleSprint,
   onTaskClick,
 }: CompletedSprintsSectionProps) {
@@ -65,7 +65,9 @@ export function CompletedSprintsSection({
               name={sprint.name}
               taskCount={getSprintTasks(sprint.id).length}
               tasks={getSprintTasks(sprint.id)}
-              isExpanded={expandedSprints.has(`completed-sprint-${sprint.id}`)}
+              isExpanded={collapsedSections.has(
+                `completed-sprint-${sprint.id}`
+              )}
               onToggle={() => onToggleSprint(`completed-sprint-${sprint.id}`)}
               onTaskClick={onTaskClick}
             />

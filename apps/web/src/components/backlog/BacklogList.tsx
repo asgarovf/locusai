@@ -16,7 +16,7 @@
 
 "use client";
 
-import { type Task } from "@locusai/shared";
+import { type Task, TaskStatus } from "@locusai/shared";
 import { motion } from "framer-motion";
 import { Inbox } from "lucide-react";
 import { DraggableTask, DroppableSection } from "@/components/dnd";
@@ -76,7 +76,9 @@ export function BacklogList({
                   <DraggableTask task={task}>
                     <TaskCard
                       task={task}
-                      variant="list"
+                      variant={
+                        task.status === TaskStatus.DONE ? "list" : "card"
+                      }
                       onClick={() => onTaskClick(task.id)}
                       onDelete={onTaskDelete}
                     />

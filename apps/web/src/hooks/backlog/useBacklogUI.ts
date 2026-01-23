@@ -13,7 +13,7 @@ export interface BacklogUIState {
   isTaskModalOpen: boolean;
   isSprintModalOpen: boolean;
   selectedTaskId: string | null;
-  expandedSections: Set<string>;
+  collapsedSections: Set<string>;
 }
 
 export interface BacklogUIActions {
@@ -33,8 +33,8 @@ export function useBacklogUI(): BacklogUIState & BacklogUIActions {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["active", "planned"])
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(["completed"])
   );
 
   // Handle query parameters for new task/sprint
@@ -52,20 +52,20 @@ export function useBacklogUI(): BacklogUIState & BacklogUIActions {
   }, [searchParams, router]);
 
   const toggleSection = (section: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(section)) {
-      newExpanded.delete(section);
+    const newCollapsed = new Set(collapsedSections);
+    if (newCollapsed.has(section)) {
+      newCollapsed.delete(section);
     } else {
-      newExpanded.add(section);
+      newCollapsed.add(section);
     }
-    setExpandedSections(newExpanded);
+    setCollapsedSections(newCollapsed);
   };
 
   return {
     isTaskModalOpen,
     isSprintModalOpen,
     selectedTaskId,
-    expandedSections,
+    collapsedSections,
     setIsTaskModalOpen,
     setIsSprintModalOpen,
     setSelectedTaskId,

@@ -8,6 +8,4 @@
 export * from "./useTaskActions";
 export * from "./useTaskComputedValues";
 export * from "./useTaskData";
-// Composite hook for components not yet refactored
-export { useTaskPanelComposite as useTaskPanel } from "./useTaskPanelComposite";
 export * from "./useTaskUIState";
