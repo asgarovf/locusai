@@ -36,7 +36,26 @@ export function useBacklog() {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskIdState] = useState<string | null>(
+    null
+  );
+
+  // Sync URL query param with state on mount
+  useEffect(() => {
+    const taskIdFromUrl = searchParams.get("taskId");
+    if (taskIdFromUrl) {
+      setSelectedTaskIdState(taskIdFromUrl);
+    }
+  }, [searchParams]);
+
+  const setSelectedTaskId = (id: string | null) => {
+    setSelectedTaskIdState(id);
+    if (id) {
+      router.push(`/backlog?taskId=${id}`, { scroll: false });
+    } else {
+      router.push("/backlog", { scroll: false });
+    }
+  };
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["active", "planned"])

@@ -9,7 +9,8 @@ import {
 } from "@dnd-kit/core";
 import { SprintStatus, type Task, TaskStatus } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BOARD_STATUSES } from "@/components/board/constants";
 import { useSprintsQuery, useTasksQuery } from "@/hooks";
@@ -20,6 +21,8 @@ import { queryKeys } from "@/lib/query-keys";
 export function useBoard() {
   const workspaceId = useWorkspaceId();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const {
     data: tasks = [],
@@ -29,7 +32,26 @@ export function useBoard() {
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsQuery();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskIdState] = useState<string | null>(
+    null
+  );
+
+  // Sync URL query param with state on mount
+  useEffect(() => {
+    const taskIdFromUrl = searchParams.get("taskId");
+    if (taskIdFromUrl) {
+      setSelectedTaskIdState(taskIdFromUrl);
+    }
+  }, [searchParams]);
+
+  const setSelectedTaskId = (id: string | null) => {
+    setSelectedTaskIdState(id);
+    if (id) {
+      router.push(`/board?taskId=${id}`, { scroll: false });
+    } else {
+      router.push("/board", { scroll: false });
+    }
+  };
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
