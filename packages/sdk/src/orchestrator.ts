@@ -178,17 +178,32 @@ export class AgentOrchestrator extends EventEmitter {
     console.log(`🚀 Agent started: ${agentId}\n`);
 
     // Build arguments for agent worker
-    // Resolve path relative to this file's location (works in both dev and production)
-    // Find package root to correctly resolve worker path
-    const packageRoot = this.findPackageRoot(__dirname);
+    // Try multiple resolution strategies
+    const potentialPaths: string[] = [];
 
-    // Check possible locations for the worker file relative to package root
-    const potentialPaths = [
-      join(packageRoot, "dist", "agent", "worker.js"), // Production
-      join(packageRoot, "src", "agent", "worker.ts"), // Development
-      join(__dirname, "agent", "worker.ts"), // Fallback relative (dev)
-      join(__dirname, "agent", "worker.js"), // Fallback relative (prod)
-    ];
+    // Strategy 1: Use import.meta.resolve to find the installed SDK package
+    try {
+      // Resolve the SDK's index to find the package location
+      const sdkIndexPath = import.meta.resolve("@locusai/sdk");
+      const sdkDir = dirname(sdkIndexPath.replace("file://", ""));
+      // In production, files are in dist/; sdkDir points to dist/ or src/
+      const sdkRoot = this.findPackageRoot(sdkDir);
+      potentialPaths.push(
+        join(sdkRoot, "dist", "agent", "worker.js"),
+        join(sdkRoot, "src", "agent", "worker.ts")
+      );
+    } catch {
+      // import.meta.resolve failed, continue with fallback strategies
+    }
+
+    // Strategy 2: Find package root from __dirname (works in dev/local)
+    const packageRoot = this.findPackageRoot(__dirname);
+    potentialPaths.push(
+      join(packageRoot, "dist", "agent", "worker.js"),
+      join(packageRoot, "src", "agent", "worker.ts"),
+      join(__dirname, "agent", "worker.ts"),
+      join(__dirname, "agent", "worker.js")
+    );
 
     const workerPath = potentialPaths.find((p) => existsSync(p));
 
@@ -196,7 +211,7 @@ export class AgentOrchestrator extends EventEmitter {
     if (!workerPath) {
       throw new Error(
         `Worker file not found. Checked: ${potentialPaths.join(", ")}. ` +
-          `Make sure the SDK is properly built. __dirname: ${__dirname}, Package Root: ${packageRoot}`
+          `Make sure the SDK is properly built and installed.`
       );
     }
 

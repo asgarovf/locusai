@@ -30,7 +30,8 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "@locusai/sdk": "workspace:*"
-  }
+  "dependencies": {
+    "@locusai/sdk": "^0.3.2"
+  },
+  "devDependencies": {}
 }
