@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
+import { DEFAULT_MODEL } from "@locusai/sdk/src/config";
 import { CodebaseIndexer } from "@locusai/sdk/src/indexer";
 import { AgentOrchestrator } from "@locusai/sdk/src/orchestrator";
 import { ConfigManager } from "./config-manager";
@@ -25,14 +26,17 @@ async function runCommand(args: string[]) {
       "api-key": { type: "string" },
       workspace: { type: "string" },
       sprint: { type: "string" },
-      model: { type: "string", default: "sonnet" },
+      model: { type: "string" },
       "api-url": { type: "string" },
       dir: { type: "string" },
+      "anthropic-api-key": { type: "string" },
     },
     strict: false,
   });
 
   const apiKey = values["api-key"] || process.env.LOCUS_API_KEY;
+  const anthropicApiKey =
+    values["anthropic-api-key"] || process.env.ANTHROPIC_API_KEY;
   const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
   const projectPath = (values.dir as string) || process.cwd();
 
@@ -44,11 +48,12 @@ async function runCommand(args: string[]) {
   const orchestrator = new AgentOrchestrator({
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
-    model: (values.model as string) || "sonnet",
+    model: (values.model as string) || DEFAULT_MODEL,
     apiBase: (values["api-url"] as string) || "https://api.locus.dev/api",
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
+    anthropicApiKey: anthropicApiKey as string,
   });
 
   orchestrator.on("task:assigned", (data) =>

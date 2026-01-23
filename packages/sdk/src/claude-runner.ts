@@ -1,9 +1,10 @@
 import { spawn } from "node:child_process";
+import { DEFAULT_MODEL } from "./config";
 
 export class ClaudeRunner {
   constructor(
     private projectPath: string,
-    private model: string = "sonnet"
+    private model: string = DEFAULT_MODEL
   ) {}
 
   run(prompt: string, _isPlanning = false): Promise<string> {

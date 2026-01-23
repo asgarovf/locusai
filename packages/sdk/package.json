@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@locusai/shared": "workspace:*",
     "axios": "^1.13.2",
     "events": "^3.3.0"

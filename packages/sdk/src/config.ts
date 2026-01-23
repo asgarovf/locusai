@@ -1,5 +1,7 @@
 import { join } from "node:path";
 
+export const DEFAULT_MODEL = "sonnet";
+
 export const LOCUS_CONFIG = {
   dir: ".locus",
   configFile: "config.json",

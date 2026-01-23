@@ -25,6 +25,7 @@ export interface OrchestratorConfig {
   maxIterations: number;
   projectPath: string;
   apiKey: string;
+  anthropicApiKey?: string;
   model?: string;
 }
 
@@ -173,6 +174,11 @@ export class AgentOrchestrator extends EventEmitter {
       "--project-path",
       this.config.projectPath,
     ];
+
+    // Add anthropic API key if provided
+    if (this.config.anthropicApiKey) {
+      workerArgs.push("--anthropic-api-key", this.config.anthropicApiKey);
+    }
 
     // Add model if specified
     if (this.config.model) {

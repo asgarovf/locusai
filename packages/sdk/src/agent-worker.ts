@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { Sprint, Task, TaskStatus } from "@locusai/shared";
+import { AnthropicClient } from "./anthropic-client";
 import { ClaudeRunner } from "./claude-runner";
 import { getLocusPath } from "./config";
 import { LocusClient } from "./index";
@@ -19,6 +20,7 @@ interface WorkerConfig {
   apiBase: string;
   projectPath: string;
   apiKey: string;
+  anthropicApiKey?: string;
   model?: string;
 }
 
@@ -26,6 +28,7 @@ export class AgentWorker {
   private client: LocusClient;
   private promptBuilder: PromptBuilder;
   private claudeRunner: ClaudeRunner;
+  private anthropicClient: AnthropicClient | null;
   private consecutiveEmpty = 0;
   private maxEmpty = 10;
   private maxTasks = 50;
@@ -41,6 +44,26 @@ export class AgentWorker {
     });
     this.promptBuilder = new PromptBuilder(projectPath);
     this.claudeRunner = new ClaudeRunner(projectPath, config.model);
+
+    // Only initialize Anthropic client if API key is provided
+    this.anthropicClient = config.anthropicApiKey
+      ? new AnthropicClient({
+          apiKey: config.anthropicApiKey,
+          model: config.model,
+        })
+      : null;
+
+    if (this.anthropicClient) {
+      this.log(
+        "Using Anthropic SDK with prompt caching for planning phases",
+        "info"
+      );
+    } else {
+      this.log(
+        "Using Claude CLI for all phases (no Anthropic API key provided)",
+        "info"
+      );
+    }
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
@@ -74,8 +97,35 @@ export class AgentWorker {
       )
       .join("\n");
 
-    const planningPrompt = `
-# Sprint Planning: ${sprint.name}
+    let plan: string;
+
+    if (this.anthropicClient) {
+      // Use Anthropic SDK with caching for faster planning
+      const systemPrompt = `You are an expert project manager and lead engineer specialized in sprint planning and task prioritization.`;
+
+      const userPrompt = `# Sprint Planning: ${sprint.name}
+
+## Tasks
+${taskList}
+
+## Instructions
+1. Analyze dependencies between these tasks.
+2. Prioritize them for the most efficient execution.
+3. Create a mindmap (in Markdown or Mermaid format) that visualizes the sprint structure.
+4. Output your final plan. The plan should clearly state the order of execution.
+
+**IMPORTANT**: 
+- Do NOT create any files on the filesystem during this planning phase. 
+- Avoid using absolute local paths (e.g., /Users/...) in your output. Use relative paths starting from the project root if necessary.
+- Your output will be saved as the official sprint mindmap on the server.`;
+
+      plan = await this.anthropicClient.run({
+        systemPrompt,
+        userPrompt,
+      });
+    } else {
+      // Fallback to Claude CLI
+      const planningPrompt = `# Sprint Planning: ${sprint.name}
 
 You are an expert project manager and lead engineer. You need to create a mindmap and execution plan for the following tasks in this sprint.
 
@@ -91,10 +141,10 @@ ${taskList}
 **IMPORTANT**: 
 - Do NOT create any files on the filesystem during this planning phase. 
 - Avoid using absolute local paths (e.g., /Users/...) in your output. Use relative paths starting from the project root if necessary.
-- Your output will be saved as the official sprint mindmap on the server.
-`;
+- Your output will be saved as the official sprint mindmap on the server.`;
 
-    const plan = await this.claudeRunner.run(planningPrompt, true);
+      plan = await this.claudeRunner.run(planningPrompt, true);
+    }
 
     // Save mindmap to server
     await this.client.sprints.update(sprint.id, this.config.workspaceId, {
@@ -192,12 +242,30 @@ ${taskList}
     }
 
     try {
-      // Phase 1: Planning
-      this.log("Phase 1: Planning...", "info");
-      const planningPrompt = `${basePrompt}\n\n## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
-      const plan = await this.claudeRunner.run(planningPrompt, true);
+      let plan: string;
 
-      // Phase 2: Execution
+      if (this.anthropicClient) {
+        // Phase 1: Planning (using Anthropic SDK with caching)
+        this.log("Phase 1: Planning (Anthropic SDK)...", "info");
+
+        // Build cacheable context blocks
+        const cacheableContext: string[] = [basePrompt];
+
+        plan = await this.anthropicClient.run({
+          systemPrompt:
+            "You are an expert software engineer. Analyze the task carefully and create a detailed implementation plan.",
+          cacheableContext,
+          userPrompt:
+            "## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.",
+        });
+      } else {
+        // Phase 1: Planning (using Claude CLI)
+        this.log("Phase 1: Planning (Claude CLI)...", "info");
+        const planningPrompt = `${basePrompt}\n\n## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
+        plan = await this.claudeRunner.run(planningPrompt, true);
+      }
+
+      // Phase 2: Execution (always using Claude CLI for agentic tools)
       this.log("Plan generated. Starting Phase 2: Execution...", "info");
       const executionPrompt = `${basePrompt}\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}\n\nWhen finished, output: <promise>COMPLETE</promise>`;
       const output = await this.claudeRunner.run(executionPrompt);
@@ -323,6 +391,7 @@ if (process.argv[1]?.includes("agent-worker")) {
     else if (arg === "--sprint-id") config.sprintId = args[++i];
     else if (arg === "--api-base") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
+    else if (arg === "--anthropic-api-key") config.anthropicApiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
   }
