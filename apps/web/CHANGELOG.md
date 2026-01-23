@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.4.6
+
+### Patch Changes
+
+- Fix package builds
+- Updated dependencies
+  - @locusai/sdk@0.4.6
+  - @locusai/shared@0.4.6
+
 ## 0.4.5
 
 ### Patch Changes

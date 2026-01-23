@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.4.6
+
+### Patch Changes
+
+- Fix package builds
+- Updated dependencies
+  - @locusai/shared@0.4.6
+
 ## 0.4.5
 
 ### Patch Changes
