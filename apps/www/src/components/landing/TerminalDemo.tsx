@@ -6,61 +6,91 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const steps = [
-  { text: "locus index", color: "text-foreground" },
-  { text: "ℹ Reading file tree...", color: "text-zinc-400" },
-  { text: "✓ Index generated (42 Files)", color: "text-green-400" },
-  { text: "", color: "text-foreground" }, // Spacer
-  { text: "locus run", color: "text-foreground" },
+  {
+    text: "npx @locusai/cli run --api-key=lk_123_123 --workspace-id=123",
+    color: "text-foreground",
+  },
+  { text: "", color: "text-foreground" },
+  {
+    text: "🚀 Starting agent in /Users/user/dev/my-project...",
+    color: "text-green-400",
+  },
+  { text: "📋 Using active sprint: Sprint 1", color: "text-blue-400" },
+  { text: "", color: "text-foreground" },
   { text: "🤖 Locus Agent Orchestrator", color: "text-blue-400" },
   {
     text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     color: "text-blue-400",
   },
-  { text: "Workspace: locus-production", color: "text-zinc-400" },
-  { text: "Sprint: sprint-24-q1", color: "text-zinc-400" },
-  { text: "🚀 Agent started: agent-1718902", color: "text-green-400" },
   {
-    text: "[10:24:00] [1718902] ℹ Found active sprint: Sprint 24",
-    color: "text-blue-400",
-  },
-  {
-    text: "[10:24:00] [1718902] ℹ Sprint tasks found: 12",
+    text: "Workspace: 123",
     color: "text-zinc-400",
   },
   {
-    text: "[10:24:01] [1718902] ⚠ New tasks added. Regenerating Mindmap...",
-    color: "text-yellow-400",
+    text: "Sprint: d37aab80-27f9-428c-881f-bc1f95832af8",
+    color: "text-zinc-400",
   },
+  { text: "API Base: https://api.locusai.dev/api", color: "text-zinc-400" },
   {
-    text: "[10:24:04] [1718902] ✓ Sprint Mindmap updated",
+    text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    color: "text-blue-400",
+  },
+  { text: "", color: "text-foreground" },
+  {
+    text: "🚀 Agent started: agent-1769190120436-fuet063",
     color: "text-green-400",
   },
+  { text: "", color: "text-foreground" },
   {
-    text: "[10:24:05] [1718902] ✓ Claimed: Implement Dark Mode",
-    color: "text-green-400",
-  },
-  {
-    text: "[10:24:05] [1718902] ℹ Generating file tree...",
+    text: "[17:42:00] [-fuet063] ℹ Using Claude CLI for all phases",
     color: "text-zinc-400",
   },
   {
-    text: "[10:24:06] [1718902] ℹ Executing: Implement Dark Mode",
-    color: "text-yellow-400",
+    text: "[17:42:00] [-fuet063] ✓ Agent started in .../dev/my-project",
+    color: "text-green-400",
   },
   {
-    text: "[10:24:08] [1718902] ℹ Phase 1: Planning (Claude CLI)...",
-    color: "text-purple-400",
-  },
-  {
-    text: "[10:24:12] [1718902] ℹ Plan generated. Starting Execution...",
-    color: "text-purple-400",
-  },
-  {
-    text: "[10:24:25] [1718902] ℹ Syncing 2 artifacts to server...",
+    text: "[17:42:00] [-fuet063] ℹ Found active sprint: Sprint 1 (d37a...)",
     color: "text-blue-400",
   },
   {
-    text: "[10:24:28] [1718902] ✓ Task completed by Claude",
+    text: "[17:42:01] [-fuet063] ℹ Sprint tasks found: 1",
+    color: "text-zinc-400",
+  },
+  {
+    text: "[17:42:01] [-fuet063] ℹ Skipping mindmap generation...",
+    color: "text-zinc-400",
+  },
+  {
+    text: "[17:42:01] [-fuet063] ✓ Claimed: Add button component",
+    color: "text-green-400",
+  },
+  {
+    text: "[17:42:01] [-fuet063] ℹ Executing: Add button component",
+    color: "text-yellow-400",
+  },
+  {
+    text: "[17:42:01] [-fuet063] ℹ Skipping Phase 1: Planning",
+    color: "text-zinc-400",
+  },
+  {
+    text: "[17:42:01] [-fuet063] ℹ Starting Execution...",
+    color: "text-purple-400",
+  },
+  {
+    text: "[17:44:43] [-fuet063] ℹ Reindexing codebase...",
+    color: "text-zinc-400",
+  },
+  {
+    text: "[17:44:43] [-fuet063] ℹ Generating file tree...",
+    color: "text-zinc-400",
+  },
+  {
+    text: "[17:44:43] [-fuet063] ℹ AI is analyzing codebase...",
+    color: "text-purple-400",
+  },
+  {
+    text: "[17:45:35] [-fuet063] ✓ Codebase reindexed successfully",
     color: "text-green-400",
   },
 ];
@@ -97,9 +127,7 @@ export function TerminalDemo() {
             transition={{ duration: 0.2 }}
             className={cn("mb-1 whitespace-nowrap", step.color)}
           >
-            {(i === 0 || i === 4) && (
-              <span className="opacity-50 mr-2 select-none">$</span>
-            )}
+            {i === 0 && <span className="opacity-50 mr-2 select-none">$</span>}
             {step.text}
           </motion.div>
         ))}
