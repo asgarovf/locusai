@@ -21,7 +21,7 @@ After initialization, you'll see the following structure:
 ```
 .locus/
 ├── config.json            # Project configuration
-├── index.json             # Codebase semantic index (generated)
+├── codebase-index.json    # Codebase semantic index (generated)
 └── artifacts/             # Task artifacts and logs
 ```
 
@@ -53,7 +53,7 @@ We recommend adding the following to your `.gitignore`:
 
 ```
 .locus/artifacts
-.locus/index.json
+.locus/codebase-index.json
 ```
 
 You should **commit** `.locus/config.json` and `CLAUDE.md` to ensure all team members (and their agents) share the same configuration and context.

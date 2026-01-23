@@ -17,7 +17,7 @@ File Tree:
 ${tree}`;
 
       const claude = spawn("claude", ["--print"], {
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio: ["pipe", "pipe", "ignore"],
         cwd: this.projectPath,
       });
 
