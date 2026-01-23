@@ -33,6 +33,7 @@ export function Docs() {
     handleCreateFile,
     handleDelete,
     handleCreateGroup,
+    handleGroupChange,
   } = useDocs();
 
   useGlobalKeydowns({
@@ -50,6 +51,8 @@ export function Docs() {
       onNewDoc={() => setIsCreating(true)}
       onSave={handleSave}
       hasUnsavedChanges={hasUnsavedChanges}
+      groups={groups}
+      onGroupChange={handleGroupChange}
     />
   );
 

@@ -1,13 +1,35 @@
 #!/usr/bin/env bun
 
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { DEFAULT_MODEL } from "@locusai/sdk/src/config";
-import { CodebaseIndexer } from "@locusai/sdk/src/indexer";
-import { AgentOrchestrator } from "@locusai/sdk/src/orchestrator";
+import {
+  AgentOrchestrator,
+  CodebaseIndexer,
+  DEFAULT_MODEL,
+  LOCUS_CONFIG,
+} from "@locusai/sdk/node";
 import { ConfigManager } from "./config-manager";
 import { TreeSummarizer } from "./tree-summarizer";
 
-const VERSION = "0.2.0";
+// Get version from package.json
+function getVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const packagePath = join(__dirname, "..", "package.json");
+    if (existsSync(packagePath)) {
+      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
+      return pkg.version || "0.0.0";
+    }
+  } catch {
+    // Silent fallback
+  }
+  return "0.0.0";
+}
+
+const VERSION = getVersion();
 
 function printBanner() {
   console.log(`
@@ -17,6 +39,28 @@ function printBanner() {
  ██      ██    ██ ██       ██    ██      ██ 
  ███████  ██████   ██████   ██████  ███████  v${VERSION}
 `);
+}
+
+function isProjectInitialized(projectPath: string): boolean {
+  const locusDir = join(projectPath, LOCUS_CONFIG.dir);
+  const configPath = join(locusDir, LOCUS_CONFIG.configFile);
+  return existsSync(locusDir) && existsSync(configPath);
+}
+
+function requireInitialization(projectPath: string, command: string): void {
+  if (!isProjectInitialized(projectPath)) {
+    console.error(`
+❌ Error: Locus is not initialized in this directory.
+
+The '${command}' command requires a Locus project to be initialized.
+
+To initialize Locus in this directory, run:
+  locus init
+
+This will create a .locus directory with the necessary configuration.
+`);
+    process.exit(1);
+  }
 }
 
 async function runCommand(args: string[]) {
@@ -34,11 +78,13 @@ async function runCommand(args: string[]) {
     strict: false,
   });
 
+  const projectPath = (values.dir as string) || process.cwd();
+  requireInitialization(projectPath, "run");
+
   const apiKey = values["api-key"] || process.env.LOCUS_API_KEY;
   const anthropicApiKey =
     values["anthropic-api-key"] || process.env.ANTHROPIC_API_KEY;
   const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
-  const projectPath = (values.dir as string) || process.cwd();
 
   if (!apiKey || !workspaceId) {
     console.error("Error: --api-key and --workspace are required");
@@ -77,6 +123,7 @@ async function indexCommand(args: string[]) {
     strict: false,
   });
   const projectPath = (values.dir as string) || process.cwd();
+  requireInitialization(projectPath, "index");
 
   const summarizer = new TreeSummarizer(projectPath);
   const indexer = new CodebaseIndexer(projectPath);
@@ -88,6 +135,37 @@ async function indexCommand(args: string[]) {
   );
   indexer.saveIndex(index);
   console.log("✅ Indexing complete!");
+}
+
+async function initCommand() {
+  const projectPath = process.cwd();
+
+  if (isProjectInitialized(projectPath)) {
+    console.log(`
+ℹ️  Locus is already initialized in this directory.
+
+Configuration found at: ${join(projectPath, LOCUS_CONFIG.dir)}
+
+If you want to reinitialize, please remove the .locus directory first.
+`);
+    return;
+  }
+
+  await new ConfigManager(projectPath).init(VERSION);
+  console.log(`
+✨ Locus initialized successfully!
+
+Created:
+  📁 .locus/                  - Locus configuration directory
+  📄 .locus/config.json      - Project configuration
+  📝 CLAUDE.md               - AI context file
+
+Next steps:
+  1. Run 'locus index' to index your codebase
+  2. Run 'locus run' to start an agent (requires --api-key and --workspace)
+
+For more information, visit: https://locus.dev/docs
+`);
 }
 
 async function main() {
@@ -103,11 +181,32 @@ async function main() {
       await indexCommand(args);
       break;
     case "init":
-      await new ConfigManager(process.cwd()).init(VERSION);
-      console.log("✨ Initialized!");
+      await initCommand();
       break;
     default:
-      console.log("Usage: locus [run|index|init]");
+      console.log(`
+Usage: locus <command>
+
+Commands:
+  init     Initialize Locus in the current directory
+  index    Index the codebase for AI context
+  run      Start an agent to work on tasks
+
+Options:
+  --help   Show this help message
+
+Examples:
+  locus init
+  locus index
+  locus run --api-key YOUR_KEY --workspace WORKSPACE_ID
+
+Environment Variables:
+  LOCUS_API_KEY         API key for authentication
+  LOCUS_WORKSPACE_ID    Workspace ID
+  ANTHROPIC_API_KEY     Optional Anthropic API key
+
+For more information, visit: https://locus.dev/docs
+`);
   }
 }
 

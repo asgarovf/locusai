@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { CodebaseIndex } from "@locusai/sdk/src/indexer";
+import { CodebaseIndex } from "@locusai/sdk/node";
 
 export class TreeSummarizer {
   constructor(private projectPath: string) {}

@@ -9,6 +9,7 @@ import { SprintsModule } from "./modules/sprints";
 import { TasksModule } from "./modules/tasks";
 import { WorkspacesModule } from "./modules/workspaces";
 
+// Browser-safe exports only
 export * from "./events";
 export * from "./modules/auth";
 export * from "./modules/ci";

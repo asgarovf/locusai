@@ -232,6 +232,18 @@ export function useDocs() {
     return grouped;
   }, [filteredDocs, groups]);
 
+  const handleGroupChange = async (docId: string, groupId: string | null) => {
+    try {
+      await updateDocMutation.mutateAsync({
+        id: docId,
+        updates: { groupId },
+      });
+      toast.success("Document moved");
+    } catch {
+      toast.error("Failed to move document");
+    }
+  };
+
   return {
     docs: filteredDocs,
     groups,
@@ -262,5 +274,6 @@ export function useDocs() {
     handleCreateFile,
     handleDelete,
     handleCreateGroup,
+    handleGroupChange,
   };
 }

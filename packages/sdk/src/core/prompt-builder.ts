@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { Task } from "@locusai/shared";
 import { getLocusPath } from "./config";
 import { CodebaseIndex } from "./indexer";
@@ -26,27 +26,7 @@ export class PromptBuilder {
       }
     }
 
-    // 2. Add Local Artifacts (.locus/artifacts)
-    const artifactsDir = getLocusPath(this.projectPath, "artifactsDir");
-    if (existsSync(artifactsDir)) {
-      try {
-        const files = readdirSync(artifactsDir).filter((f) =>
-          f.endsWith(".md")
-        );
-        if (files.length > 0) {
-          prompt += `## Available Project Documents (.locus/artifacts)\n`;
-          prompt += `The following documents are available for reference. If you need to read any of them to complete your task, use your tools to read the file content:\n\n`;
-          for (const file of files) {
-            prompt += `- \`.locus/artifacts/${file}\`\n`;
-          }
-          prompt += "\n";
-        }
-      } catch (err) {
-        console.warn(`Warning: Could not read artifacts directory: ${err}`);
-      }
-    }
-
-    // 3. Add Codebase Index context
+    // 2. Add Codebase Index context
     const indexPath = getLocusPath(this.projectPath, "indexFile");
     if (existsSync(indexPath)) {
       try {

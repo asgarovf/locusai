@@ -4,17 +4,19 @@
   "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {
-    "locus": "./index.ts"
+    "locus": "./bin/locus.js"
   },
   "scripts": {
     "start": "bun lint .",
-    "build": "bun build ./index.ts --target=bun --outfile=./bin/locus.js",
+    "build": "bun build ./index.ts --target=node --outfile=./bin/locus.js",
     "lint": "biome lint .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "test:local": "bun run build && node ./bin/locus.js",
+    "pack:test": "npm pack && tar -xzf locusai-cli-*.tgz && cd package && npm link"
   },
   "files": [
-    "src",
     "bin",
+    "package.json",
     "README.md"
   ],
   "keywords": [

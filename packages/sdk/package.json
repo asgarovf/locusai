@@ -1,10 +1,38 @@
 {
   "name": "@locusai/sdk",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./node": {
+      "types": "./src/index-node.ts",
+      "default": "./src/index-node.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./node": {
+        "types": "./dist/index-node.d.ts",
+        "default": "./dist/index-node.js"
+      }
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -15,7 +43,8 @@
     "@anthropic-ai/sdk": "^0.71.2",
     "@locusai/shared": "workspace:*",
     "axios": "^1.13.2",
-    "events": "^3.3.0"
+    "events": "^3.3.0",
+    "globby": "^14.0.2"
   },
   "devDependencies": {
     "typescript": "5.8.3",

@@ -1,0 +1,299 @@
+import type { Sprint, Task, TaskStatus } from "@locusai/shared";
+import { AnthropicClient } from "../ai/anthropic-client";
+import { ClaudeRunner } from "../ai/claude-runner";
+import { LocusClient } from "../index";
+import { ArtifactSyncer } from "./artifact-syncer";
+import { CodebaseIndexerService } from "./codebase-indexer-service";
+import { SprintPlanner } from "./sprint-planner";
+import { TaskExecutor } from "./task-executor";
+
+export interface WorkerConfig {
+  agentId: string;
+  workspaceId: string;
+  sprintId?: string;
+  apiBase: string;
+  projectPath: string;
+  apiKey: string;
+  anthropicApiKey?: string;
+  model?: string;
+}
+
+/**
+ * Main agent worker that orchestrates task execution
+ * Delegates responsibilities to specialized services
+ */
+export class AgentWorker {
+  private client: LocusClient;
+  private claudeRunner: ClaudeRunner;
+  private anthropicClient: AnthropicClient | null;
+
+  // Services
+  private sprintPlanner: SprintPlanner;
+  private indexerService: CodebaseIndexerService;
+  private artifactSyncer: ArtifactSyncer;
+  private taskExecutor: TaskExecutor;
+
+  // State
+  private consecutiveEmpty = 0;
+  private maxEmpty = 10;
+  private maxTasks = 50;
+  private tasksCompleted = 0;
+  private pollInterval = 10_000;
+  private sprintPlan: string | null = null;
+
+  constructor(private config: WorkerConfig) {
+    const projectPath = config.projectPath || process.cwd();
+
+    // Initialize API client
+    this.client = new LocusClient({
+      baseUrl: config.apiBase,
+      token: config.apiKey,
+    });
+
+    // Initialize AI clients
+    this.claudeRunner = new ClaudeRunner(projectPath, config.model);
+    this.anthropicClient = config.anthropicApiKey
+      ? new AnthropicClient({
+          apiKey: config.anthropicApiKey,
+          model: config.model,
+        })
+      : null;
+
+    // Initialize services with dependencies
+    const logFn = this.log.bind(this);
+
+    this.sprintPlanner = new SprintPlanner({
+      anthropicClient: this.anthropicClient,
+      claudeRunner: this.claudeRunner,
+      log: logFn,
+    });
+
+    this.indexerService = new CodebaseIndexerService({
+      anthropicClient: this.anthropicClient,
+      claudeRunner: this.claudeRunner,
+      projectPath,
+      log: logFn,
+    });
+
+    this.artifactSyncer = new ArtifactSyncer({
+      client: this.client,
+      workspaceId: config.workspaceId,
+      projectPath,
+      log: logFn,
+    });
+
+    this.taskExecutor = new TaskExecutor({
+      anthropicClient: this.anthropicClient,
+      claudeRunner: this.claudeRunner,
+      projectPath,
+      sprintPlan: null, // Will be set after sprint planning
+      log: logFn,
+    });
+
+    // Log initialization
+    if (this.anthropicClient) {
+      this.log(
+        "Using Anthropic SDK with prompt caching for planning phases",
+        "info"
+      );
+    } else {
+      this.log(
+        "Using Claude CLI for all phases (no Anthropic API key provided)",
+        "info"
+      );
+    }
+  }
+
+  log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
+    const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
+    const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
+    console.log(
+      `[${timestamp}] [${this.config.agentId.slice(-8)}] ${prefix} ${message}`
+    );
+  }
+
+  private async getActiveSprint(): Promise<Sprint | null> {
+    try {
+      if (this.config.sprintId) {
+        return await this.client.sprints.getById(
+          this.config.sprintId,
+          this.config.workspaceId
+        );
+      }
+      return await this.client.sprints.getActive(this.config.workspaceId);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  private async getNextTask(): Promise<Task | null> {
+    try {
+      const task = await this.client.workspaces.dispatch(
+        this.config.workspaceId,
+        this.config.agentId,
+        this.config.sprintId
+      );
+      return task;
+    } catch (error) {
+      this.log(
+        `No task dispatched: ${error instanceof Error ? error.message : String(error)}`,
+        "info"
+      );
+      return null;
+    }
+  }
+
+  private async executeTask(
+    task: Task
+  ): Promise<{ success: boolean; summary: string }> {
+    // Reindex codebase before execution to ensure fresh context
+    await this.indexerService.reindex();
+
+    // Fetch full task details to get comments/feedback
+    const fullTask = await this.client.tasks.getById(
+      task.id,
+      this.config.workspaceId
+    );
+
+    // Update task executor with current sprint plan
+    this.taskExecutor.updateSprintPlan(this.sprintPlan);
+
+    // Execute the task
+    const result = await this.taskExecutor.execute(fullTask);
+
+    return result;
+  }
+
+  async run(): Promise<void> {
+    this.log(
+      `Agent started in ${this.config.projectPath || process.cwd()}`,
+      "success"
+    );
+
+    // Initial Sprint Planning Phase
+    const sprint = await this.getActiveSprint();
+    if (sprint) {
+      this.log(`Found active sprint: ${sprint.name} (${sprint.id})`, "info");
+      const tasks = await this.client.tasks.list(this.config.workspaceId, {
+        sprintId: sprint.id,
+      });
+
+      this.log(`Sprint tasks found: ${tasks.length}`, "info");
+
+      const latestTaskCreation = tasks.reduce((latest, task) => {
+        const taskDate = new Date(task.createdAt);
+        return taskDate > latest ? taskDate : latest;
+      }, new Date(0));
+
+      const mindmapDate = sprint.mindmapUpdatedAt
+        ? new Date(sprint.mindmapUpdatedAt)
+        : new Date(0);
+
+      const needsPlanning =
+        !sprint.mindmap ||
+        sprint.mindmap.trim() === "" ||
+        latestTaskCreation > mindmapDate;
+
+      if (needsPlanning) {
+        if (sprint.mindmap && latestTaskCreation > mindmapDate) {
+          this.log(
+            "New tasks have been added to the sprint since last mindmap. Regenerating...",
+            "warn"
+          );
+        }
+        this.sprintPlan = await this.sprintPlanner.planSprint(sprint, tasks);
+
+        // Save mindmap to server
+        await this.client.sprints.update(sprint.id, this.config.workspaceId, {
+          mindmap: this.sprintPlan,
+          mindmapUpdatedAt: new Date(),
+        });
+      } else {
+        this.log("Using existing sprint mindmap.", "info");
+        this.sprintPlan = sprint.mindmap ?? null;
+      }
+    } else {
+      this.log("No active sprint found for planning.", "warn");
+    }
+
+    // Main task execution loop
+    while (
+      this.tasksCompleted < this.maxTasks &&
+      this.consecutiveEmpty < this.maxEmpty
+    ) {
+      const task = await this.getNextTask();
+      if (!task) {
+        this.consecutiveEmpty++;
+        if (this.consecutiveEmpty >= this.maxEmpty) break;
+        await new Promise((r) => setTimeout(r, this.pollInterval));
+        continue;
+      }
+
+      this.consecutiveEmpty = 0;
+      this.log(`Claimed: ${task.title}`, "success");
+
+      const result = await this.executeTask(task);
+
+      // Sync artifacts after task execution
+      await this.artifactSyncer.sync();
+
+      if (result.success) {
+        await this.client.tasks.update(task.id, this.config.workspaceId, {
+          status: "VERIFICATION" as TaskStatus,
+        });
+        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+          author: this.config.agentId,
+          text: `✅ ${result.summary}`,
+        });
+        this.tasksCompleted++;
+      } else {
+        await this.client.tasks.update(task.id, this.config.workspaceId, {
+          status: "BACKLOG" as TaskStatus,
+          assignedTo: null,
+        });
+        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+          author: this.config.agentId,
+          text: `❌ ${result.summary}`,
+        });
+      }
+    }
+    process.exit(0);
+  }
+}
+
+// CLI entry point
+if (
+  process.argv[1]?.includes("agent-worker") ||
+  process.argv[1]?.includes("worker")
+) {
+  const args = process.argv.slice(2);
+  const config: Partial<WorkerConfig> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--agent-id") config.agentId = args[++i];
+    else if (arg === "--workspace-id") config.workspaceId = args[++i];
+    else if (arg === "--sprint-id") config.sprintId = args[++i];
+    else if (arg === "--api-base") config.apiBase = args[++i];
+    else if (arg === "--api-key") config.apiKey = args[++i];
+    else if (arg === "--anthropic-api-key") config.anthropicApiKey = args[++i];
+    else if (arg === "--project-path") config.projectPath = args[++i];
+    else if (arg === "--model") config.model = args[++i];
+  }
+
+  if (
+    !config.agentId ||
+    !config.workspaceId ||
+    !config.apiBase ||
+    !config.apiKey ||
+    !config.projectPath
+  ) {
+    console.error("Missing required arguments");
+    process.exit(1);
+  }
+
+  const worker = new AgentWorker(config as WorkerConfig);
+  worker.run().catch((err) => {
+    console.error("Fatal worker error:", err);
+    process.exit(1);
+  });
+}

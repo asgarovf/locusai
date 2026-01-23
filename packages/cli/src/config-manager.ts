@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getLocusPath, LOCUS_CONFIG } from "@locusai/sdk/src/config";
+import { getLocusPath, LOCUS_CONFIG } from "@locusai/sdk/node";
 
 export interface LocusProjectConfig {
   version: string;

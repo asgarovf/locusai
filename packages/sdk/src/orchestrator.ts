@@ -1,4 +1,6 @@
 import { ChildProcess, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index";
@@ -161,7 +163,17 @@ export class AgentOrchestrator extends EventEmitter {
     console.log(`🚀 Agent started: ${agentId}\n`);
 
     // Build arguments for agent worker
-    const workerPath = require.resolve("./agent-worker");
+    // Resolve path relative to this file's location (works in both dev and production)
+    const workerPath = join(__dirname, "agent", "worker.js");
+
+    // Verify worker file exists
+    if (!existsSync(workerPath)) {
+      throw new Error(
+        `Worker file not found at ${workerPath}. ` +
+          `Make sure the SDK is properly built. __dirname: ${__dirname}`
+      );
+    }
+
     const workerArgs = [
       "--agent-id",
       agentId,

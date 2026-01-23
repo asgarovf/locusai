@@ -1,11 +1,18 @@
 import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 
+// Forward declaration for circular reference
+export const DocGroupSchemaForDoc = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+});
+
 export const DocSchema = BaseEntitySchema.extend({
   workspaceId: z.string().uuid(),
   groupId: z.string().uuid().nullable().optional(),
   title: z.string().min(1, "Title is required"),
   content: z.string().default(""),
+  group: DocGroupSchemaForDoc.nullable().optional(),
 });
 
 export type Doc = z.infer<typeof DocSchema>;

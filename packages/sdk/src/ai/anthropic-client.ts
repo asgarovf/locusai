@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { DEFAULT_MODEL } from "./config";
+import { DEFAULT_MODEL } from "../core/config";
 
 export interface AnthropicClientConfig {
   apiKey: string;

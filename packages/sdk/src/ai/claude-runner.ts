@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { DEFAULT_MODEL } from "./config";
+import { DEFAULT_MODEL } from "../core/config";
 
 export class ClaudeRunner {
   constructor(

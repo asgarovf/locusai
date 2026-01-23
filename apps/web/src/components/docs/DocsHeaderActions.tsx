@@ -17,8 +17,8 @@
 
 "use client";
 
-import { type Doc } from "@locusai/shared";
-import { Plus, Save } from "lucide-react";
+import { type Doc, type DocGroup } from "@locusai/shared";
+import { FolderOpen, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,10 @@ interface DocsHeaderActionsProps {
   onSave: () => void;
   /** Whether there are unsaved changes */
   hasUnsavedChanges: boolean;
+  /** Available doc groups */
+  groups: DocGroup[];
+  /** Called when changing doc group */
+  onGroupChange: (docId: string, groupId: string | null) => void;
 }
 
 export function DocsHeaderActions({
@@ -44,34 +48,55 @@ export function DocsHeaderActions({
   onNewDoc,
   onSave,
   hasUnsavedChanges,
+  groups,
+  onGroupChange,
 }: DocsHeaderActionsProps) {
   return (
     <div className="flex items-center gap-3">
       {selectedDoc && (
-        <div className="flex bg-secondary/30 p-1 rounded-xl border border-border/20 shadow-inner mr-2">
-          <button
-            className={cn(
-              "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
-              contentMode === "edit"
-                ? "bg-background text-primary shadow-sm scale-105"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setContentMode("edit")}
-          >
-            Forge
-          </button>
-          <button
-            className={cn(
-              "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
-              contentMode === "preview"
-                ? "bg-background text-primary shadow-sm scale-105"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setContentMode("preview")}
-          >
-            Vision
-          </button>
-        </div>
+        <>
+          <div className="flex bg-secondary/30 p-1 rounded-xl border border-border/20 shadow-inner mr-2">
+            <button
+              className={cn(
+                "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                contentMode === "edit"
+                  ? "bg-background text-primary shadow-sm scale-105"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setContentMode("edit")}
+            >
+              Forge
+            </button>
+            <button
+              className={cn(
+                "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                contentMode === "preview"
+                  ? "bg-background text-primary shadow-sm scale-105"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setContentMode("preview")}
+            >
+              Vision
+            </button>
+          </div>
+          <div className="flex items-center gap-2 bg-secondary/20 px-3 py-1.5 rounded-xl border border-border/20">
+            <FolderOpen size={14} className="text-muted-foreground" />
+            <select
+              value={selectedDoc.groupId || ""}
+              onChange={(e) =>
+                onGroupChange(selectedDoc.id, e.target.value || null)
+              }
+              className="bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer appearance-none pr-2"
+            >
+              <option value="">Unsorted</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
       <Button
         onClick={onNewDoc}

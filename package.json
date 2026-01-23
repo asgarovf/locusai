@@ -27,13 +27,14 @@
     "workspace:init": "bun run scripts/workspace-init.ts",
     "create-project": "bun run packages/cli/index.ts",
     "seed": "bun run scripts/seed.ts",
-    "mcp": "bun run --cwd apps/mcp src/index.ts",
     "format": "biome check --write --formatter-enabled=true --assist-enabled=true ",
-    "build:mcp": "bun build apps/mcp/src/index.ts --target bun --outfile packages/cli/bin/mcp.js",
     "build:web": "cd apps/web && bun run build && mkdir -p ../../packages/cli/public/dashboard && cp -r out/* ../../packages/cli/public/dashboard/",
-    "build:cli": "bun run build:web && bun run build:mcp && bun build packages/cli/index.ts --target bun --outfile packages/cli/bin/locus.js",
+    "build:cli": "bun run build && cd packages/cli && bun run build",
     "version": "changeset version",
-    "release": "bun run build:cli && changeset publish"
+    "release": "bun run build:packages && changeset publish",
+    "build:packages": "bun run build:sdk && bun run build:cli-only",
+    "build:sdk": "cd packages/sdk && bun run build",
+    "build:cli-only": "cd packages/cli && bun run build"
   },
   "type": "module",
   "packageManager": "bun@1.2.4",
