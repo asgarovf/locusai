@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common";
+import { BaseEntitySchema } from "../common.js";
 
 export const ChecklistItemSchema = z.object({
   id: z.string(),

@@ -3,8 +3,8 @@
  */
 
 import { z } from "zod";
-import { UserRole } from "../enums";
-import { UserSchema } from "./user";
+import { UserRole } from "../enums.js";
+import { UserSchema } from "./user.js";
 
 // ============================================================================
 // Authenticated User Types (for request context)

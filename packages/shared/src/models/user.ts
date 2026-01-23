@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common";
-import { UserRole } from "../enums";
+import { BaseEntitySchema } from "../common.js";
+import { UserRole } from "../enums.js";
 
 export const UserSchema = BaseEntitySchema.extend({
   email: z.string().email(),

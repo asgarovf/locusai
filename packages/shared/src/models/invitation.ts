@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common";
-import { MembershipRole } from "../enums";
+import { BaseEntitySchema } from "../common.js";
+import { MembershipRole } from "../enums.js";
 
 export const InvitationSchema = BaseEntitySchema.extend({
   orgId: z.string().uuid("Invalid Organization ID"),

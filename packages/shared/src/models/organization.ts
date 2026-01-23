@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseEntitySchema } from "../common";
+import { BaseEntitySchema } from "../common.js";
 
 export const OrganizationSchema = BaseEntitySchema.extend({
   name: z.string().min(1, "Name is required").max(100),
