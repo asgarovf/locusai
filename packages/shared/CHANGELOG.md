@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.3
+
+### Patch Changes
+
+- Modify task spawn options
+
 ## 0.4.2
 
 ### Patch Changes

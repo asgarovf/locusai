@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.4.3
+
+### Patch Changes
+
+- Modify task spawn options
+- Updated dependencies
+  - @locusai/shared@0.4.3
+
 ## 0.4.2
 
 ### Patch Changes
