@@ -38,8 +38,13 @@ export class ClaudeRunner {
       );
       claude.on("close", (code) => {
         if (code === 0) resolve(output);
-        else
-          reject(new Error(`Claude exited with code ${code}: ${errorOutput}`));
+        else {
+          const detail = errorOutput.trim();
+          const message = detail
+            ? `Claude CLI error: ${detail}`
+            : `Claude CLI exited with code ${code}. Please ensure the Claude CLI is installed and you are logged in (run 'claude' manually to check).`;
+          reject(new Error(message));
+        }
       });
 
       claude.stdin.write(prompt);

@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index";
+import { c } from "./utils/colors";
 
 export interface AgentConfig {
   id: string;
@@ -62,14 +63,16 @@ export class AgentOrchestrator extends EventEmitter {
         this.config.workspaceId
       );
       if (sprint?.id) {
-        console.log(`📋 Using active sprint: ${sprint.name}`);
+        console.log(c.info(`📋 Using active sprint: ${sprint.name}`));
         return sprint.id;
       }
     } catch {
       // No active sprint found, will work with all tasks
     }
 
-    console.log("ℹ  No sprint specified, working with all workspace tasks");
+    console.log(
+      c.dim("ℹ  No sprint specified, working with all workspace tasks")
+    );
     return "";
   }
 
@@ -107,20 +110,20 @@ export class AgentOrchestrator extends EventEmitter {
       sprintId: this.resolvedSprintId,
     });
 
-    console.log("\n🤖 Locus Agent Orchestrator");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`Workspace: ${this.config.workspaceId}`);
+    console.log(`\n${c.primary("🤖 Locus Agent Orchestrator")}`);
+    console.log(c.dim("----------------------------------------------"));
+    console.log(`${c.bold("Workspace:")} ${this.config.workspaceId}`);
     if (this.resolvedSprintId) {
-      console.log(`Sprint: ${this.resolvedSprintId}`);
+      console.log(`${c.bold("Sprint:")} ${this.resolvedSprintId}`);
     }
-    console.log(`API Base: ${this.config.apiBase}`);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    console.log(`${c.bold("API Base:")} ${this.config.apiBase}`);
+    console.log(c.dim("----------------------------------------------\n"));
 
     // Check if there are tasks to work on before spawning
     const tasks = await this.getAvailableTasks();
 
     if (tasks.length === 0) {
-      console.log("ℹ  No available tasks found in the backlog.");
+      console.log(c.dim("ℹ  No available tasks found in the backlog."));
       return;
     }
 
@@ -138,7 +141,7 @@ export class AgentOrchestrator extends EventEmitter {
       await this.sleep(2000);
     }
 
-    console.log("\n✅ Orchestrator finished");
+    console.log(`\n${c.success("✅ Orchestrator finished")}`);
   }
 
   /**
@@ -175,7 +178,7 @@ export class AgentOrchestrator extends EventEmitter {
 
     this.agents.set(agentId, agentState);
 
-    console.log(`🚀 Agent started: ${agentId}\n`);
+    console.log(`${c.primary("🚀 Agent started:")} ${c.bold(agentId)}\n`);
 
     // Build arguments for agent worker
     // Try multiple resolution strategies

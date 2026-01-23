@@ -18,3 +18,6 @@ export * from "./index";
 
 // Node.js-only: Orchestrator
 export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator";
+
+// Utilities
+export { c } from "./utils/colors";

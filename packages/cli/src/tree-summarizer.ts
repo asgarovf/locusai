@@ -17,17 +17,27 @@ File Tree:
 ${tree}`;
 
       const claude = spawn("claude", ["--print"], {
-        stdio: ["pipe", "pipe", "ignore"],
+        stdio: ["pipe", "pipe", "pipe"],
         cwd: this.projectPath,
       });
 
       let output = "";
+      let errorOutput = "";
+
       claude.stdout.on("data", (data) => {
         output += data.toString();
       });
+
+      claude.stderr.on("data", (data) => {
+        errorOutput += data.toString();
+      });
+
       claude.on("close", (code) => {
-        if (code !== 0)
-          return reject(new Error(`Claude exited with code ${code}`));
+        if (code !== 0) {
+          const errMsg =
+            errorOutput.trim() || `Claude exited with code ${code}`;
+          return reject(new Error(errMsg));
+        }
         try {
           const jsonMatch = output.match(/\{[\s\S]*\}/);
           if (jsonMatch) resolve(JSON.parse(jsonMatch[0]));

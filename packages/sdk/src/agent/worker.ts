@@ -2,6 +2,7 @@ import type { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { AnthropicClient } from "../ai/anthropic-client";
 import { ClaudeRunner } from "../ai/claude-runner";
 import { LocusClient } from "../index";
+import { c } from "../utils/colors";
 import { ArtifactSyncer } from "./artifact-syncer";
 import { CodebaseIndexerService } from "./codebase-indexer-service";
 import { SprintPlanner } from "./sprint-planner";
@@ -112,9 +113,16 @@ export class AgentWorker {
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
     const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
+    const colorFn = {
+      info: c.cyan,
+      success: c.green,
+      warn: c.yellow,
+      error: c.red,
+    }[level];
     const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
+
     console.log(
-      `[${timestamp}] [${this.config.agentId.slice(-8)}] ${prefix} ${message}`
+      `${c.dim(`[${timestamp}]`)} ${c.bold(`[${this.config.agentId.slice(-8)}]`)} ${colorFn(`${prefix} ${message}`)}`
     );
   }
 

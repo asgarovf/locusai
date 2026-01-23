@@ -7,6 +7,7 @@ import { parseArgs } from "node:util";
 import {
   AgentOrchestrator,
   CodebaseIndexer,
+  c,
   DEFAULT_MODEL,
   LOCUS_CONFIG,
 } from "@locusai/sdk/node";
@@ -32,13 +33,15 @@ function getVersion(): string {
 const VERSION = getVersion();
 
 function printBanner() {
-  console.log(`
- ██       ██████   ██████  ██    ██  ██████ 
- ██      ██    ██ ██       ██    ██ ██       
- ██      ██    ██ ██       ██    ██ ███████  
- ██      ██    ██ ██       ██    ██      ██ 
- ███████  ██████   ██████   ██████  ███████  v${VERSION}
-`);
+  console.log(
+    c.primary(`
+  ##       ######   ######  ##    ##  ###### 
+  ##      ##    ## ##       ##    ## ##       
+  ##      ##    ## ##       ##    ## ######   
+  ##      ##    ## ##       ##    ##      ## 
+  #######  ######   ######   ######  ######   v${VERSION}
+`)
+  );
 }
 
 function isProjectInitialized(projectPath: string): boolean {
@@ -49,13 +52,11 @@ function isProjectInitialized(projectPath: string): boolean {
 
 function requireInitialization(projectPath: string, command: string): void {
   if (!isProjectInitialized(projectPath)) {
-    console.error(`
-❌ Error: Locus is not initialized in this directory.
-
-The '${command}' command requires a Locus project to be initialized.
+    console.error(`\n${c.error("❌ Error: Locus is not initialized in this directory.")}\n
+The '${c.bold(command)}' command requires a Locus project to be initialized.
 
 To initialize Locus in this directory, run:
-  locus init
+  ${c.primary("locus init")}
 
 This will create a .locus directory with the necessary configuration.
 `);
@@ -87,7 +88,7 @@ async function runCommand(args: string[]) {
   const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
 
   if (!apiKey || !workspaceId) {
-    console.error("Error: --api-key and --workspace are required");
+    console.error(c.error("Error: --api-key and --workspace are required"));
     process.exit(1);
   }
 
@@ -112,7 +113,7 @@ async function runCommand(args: string[]) {
     console.log(`✗ [FAILED] ${data.taskId}: ${data.error}`)
   );
 
-  console.log(`🚀 Starting agent in ${projectPath}...`);
+  console.log(`${c.primary("🚀 Starting agent in")} ${c.bold(projectPath)}...`);
   await orchestrator.start();
 }
 
@@ -128,13 +129,15 @@ async function indexCommand(args: string[]) {
   const summarizer = new TreeSummarizer(projectPath);
   const indexer = new CodebaseIndexer(projectPath);
 
-  console.log(`🔍 Indexing codebase in ${projectPath}...`);
+  console.log(
+    `${c.primary("🔍 Indexing codebase in")} ${c.bold(projectPath)}...`
+  );
   const index = await indexer.index(
-    (msg) => console.log(`  ${msg}`),
+    (msg) => console.log(`  ${c.dim(msg)}`),
     (tree) => summarizer.summarize(tree)
   );
   indexer.saveIndex(index);
-  console.log("✅ Indexing complete!");
+  console.log(c.success("✅ Indexing complete!"));
 }
 
 async function initCommand() {
@@ -142,9 +145,9 @@ async function initCommand() {
 
   if (isProjectInitialized(projectPath)) {
     console.log(`
-ℹ️  Locus is already initialized in this directory.
+${c.info("ℹ️  Locus is already initialized in this directory.")}
 
-Configuration found at: ${join(projectPath, LOCUS_CONFIG.dir)}
+Configuration found at: ${c.bold(join(projectPath, LOCUS_CONFIG.dir))}
 
 If you want to reinitialize, please remove the .locus directory first.
 `);
@@ -153,18 +156,18 @@ If you want to reinitialize, please remove the .locus directory first.
 
   await new ConfigManager(projectPath).init(VERSION);
   console.log(`
-✨ Locus initialized successfully!
+${c.success("✨ Locus initialized successfully!")}
 
 Created:
-  📁 .locus/                  - Locus configuration directory
-  📄 .locus/config.json      - Project configuration
-  📝 CLAUDE.md               - AI context file
+  📁 ${c.dim(".locus/")}                  - Locus configuration directory
+  📄 ${c.dim(".locus/config.json")}      - Project configuration
+  📝 ${c.dim("CLAUDE.md")}               - AI context file
 
 Next steps:
-  1. Run 'locus index' to index your codebase
-  2. Run 'locus run' to start an agent (requires --api-key and --workspace)
+  1. Run '${c.primary("locus index")}' to index your codebase
+  2. Run '${c.primary("locus run")}' to start an agent (requires --api-key and --workspace)
 
-For more information, visit: https://locus.dev/docs
+For more information, visit: ${c.underline("https://locus.dev/docs")}
 `);
 }
 
