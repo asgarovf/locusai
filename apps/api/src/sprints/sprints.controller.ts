@@ -97,10 +97,14 @@ export class SprintsController {
     @Param("sprintId") sprintId: string,
     @Body(new ZodValidationPipe(UpdateSprintSchema)) body: UpdateSprint
   ): Promise<SprintResponse> {
+    const dateOrUndefined = (date: number | Date | undefined) =>
+      date ? new Date(date) : undefined;
+
     const updatedSprint = await this.sprintsService.update(sprintId, {
       ...body,
-      startDate: body.startDate ? new Date(body.startDate) : undefined,
-      endDate: body.endDate ? new Date(body.endDate) : undefined,
+      startDate: dateOrUndefined(body.startDate),
+      endDate: dateOrUndefined(body.endDate),
+      mindmapUpdatedAt: dateOrUndefined(body.mindmapUpdatedAt),
     });
     return { sprint: updatedSprint };
   }

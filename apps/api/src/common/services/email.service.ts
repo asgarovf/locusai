@@ -2,6 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { Resend } from "resend";
 import { TypedConfigService } from "@/config/config.service";
 import { AppLogger } from "../logger/logger.service";
+import {
+  createInvitationEmail,
+  createOtpEmail,
+  createWelcomeEmail,
+  type InvitationEmailData,
+  type OtpEmailData,
+  type WelcomeEmailData,
+} from "../templates";
 
 @Injectable()
 export class EmailService {
@@ -17,10 +25,9 @@ export class EmailService {
     }
   }
 
-  async sendOtpEmail(
-    email: string,
-    data: { otp: string; expiryMinutes: number }
-  ) {
+  async sendOtpEmail(email: string, data: OtpEmailData) {
+    const emailContent = createOtpEmail(data);
+
     if (!this.resend) {
       this.logger.log(
         `[Email Mock] Sending OTP ${data.otp} to ${email}`,
@@ -32,15 +39,15 @@ export class EmailService {
     await this.resend.emails.send({
       from: "Locus <noreply@locusai.dev>",
       to: email,
-      subject: "Your verification code",
-      text: `Your verification code is ${data.otp}. It will expire in ${data.expiryMinutes} minutes.`,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
     });
   }
 
-  async sendWelcomeEmail(
-    email: string,
-    data: { userName: string; organizationName: string; workspaceName: string }
-  ) {
+  async sendWelcomeEmail(email: string, data: WelcomeEmailData) {
+    const emailContent = createWelcomeEmail(data);
+
     if (!this.resend) {
       this.logger.log(
         `[Email Mock] Sending Welcome email to ${email}`,
@@ -52,19 +59,15 @@ export class EmailService {
     await this.resend.emails.send({
       from: "Locus <noreply@locusai.dev>",
       to: email,
-      subject: "Welcome to Locus!",
-      text: `Hello ${data.userName}, welcome to Locus! Your organization ${data.organizationName} and workspace ${data.workspaceName} are ready.`,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
     });
   }
 
-  async sendInvitationEmail(
-    email: string,
-    data: {
-      inviterName: string;
-      organizationName: string;
-      token: string;
-    }
-  ) {
+  async sendInvitationEmail(email: string, data: InvitationEmailData) {
+    const emailContent = createInvitationEmail(data);
+
     if (!this.resend) {
       this.logger.log(
         `[Email Mock] Sending Invitation email to ${email} (Org: ${data.organizationName})`,
@@ -73,13 +76,12 @@ export class EmailService {
       return;
     }
 
-    const invitationUrl = `https://locusai.dev/invite?token=${data.token}`;
-
     await this.resend.emails.send({
       from: "Locus <noreply@locusai.dev>",
       to: email,
-      subject: `You've been invited to join ${data.organizationName}`,
-      text: `Hello, ${data.inviterName} has invited you to join ${data.organizationName} on Locus. Accept the invitation here: ${invitationUrl}`,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
     });
   }
 }
