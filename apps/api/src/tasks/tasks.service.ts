@@ -94,10 +94,10 @@ export class TasksService {
     userId?: string;
   }): Promise<Task> {
     const defaultItems: AcceptanceItem[] = [
-      { id: `default-lint-${Date.now()}`, text: "bun run lint", done: false },
+      { id: `default-lint-${Date.now()}`, text: "npm run lint", done: false },
       {
         id: `default-typecheck-${Date.now()}`,
-        text: "bun run typecheck",
+        text: "npm run typecheck",
         done: false,
       },
     ];

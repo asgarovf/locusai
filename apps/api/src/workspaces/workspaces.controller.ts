@@ -109,7 +109,7 @@ export class WorkspacesController {
   ) {
     const workspace = await this.workspacesService.update(
       params.workspaceId,
-      body.name
+      body
     );
     return { workspace };
   }

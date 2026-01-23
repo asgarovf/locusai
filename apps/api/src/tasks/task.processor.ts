@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Task } from "@/entities/task.entity";
+import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
 
 @Injectable()
@@ -10,6 +11,8 @@ export class TaskProcessor {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
     private readonly eventsService: EventsService
   ) {}
 
@@ -42,21 +45,17 @@ export class TaskProcessor {
   ) {
     if (current && current.length > 0) return;
 
-    const defaultChecklist = [
-      { id: "step-1", text: "Research & Planning", done: false },
-      { id: "step-2", text: "Implementation", done: false },
-      { id: "step-3", text: "Testing & Verification", done: false },
-      {
-        id: `quality-lint-${Date.now()}`,
-        text: "bun run lint",
-        done: false,
-      },
-      {
-        id: `quality-typecheck-${Date.now()}`,
-        text: "bun run typecheck",
-        done: false,
-      },
-    ];
+    // Get workspace configuration
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: workspaceId },
+      select: ["defaultChecklist"],
+    });
+
+    const defaultChecklist = workspace?.defaultChecklist;
+
+    if (!defaultChecklist || defaultChecklist.length === 0) {
+      return;
+    }
 
     await this.taskRepository.update(taskId, {
       acceptanceChecklist: defaultChecklist,

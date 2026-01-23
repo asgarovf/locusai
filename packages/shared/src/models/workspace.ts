@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 
+export const ChecklistItemSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  done: z.boolean(),
+});
+
+export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+
 export const WorkspaceSchema = BaseEntitySchema.extend({
   orgId: z.string().uuid(),
   name: z.string().min(1, "Name is required").max(100),
@@ -8,6 +16,7 @@ export const WorkspaceSchema = BaseEntitySchema.extend({
     .string()
     .min(1, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
+  defaultChecklist: z.array(ChecklistItemSchema).nullable().optional(),
 });
 
 export type Workspace = z.infer<typeof WorkspaceSchema>;

@@ -34,23 +34,43 @@ export class CodebaseIndexer {
     // 1. Get a comprehensive but clean file tree
     const files = await globby(["**/*"], {
       cwd: this.projectPath,
+      gitignore: true,
       ignore: [
         "**/node_modules/**",
         "**/dist/**",
         "**/build/**",
+        "**/target/**", // Rust build artifacts
+        "**/bin/**",
+        "**/obj/**",
         "**/.next/**",
+        "**/.svelte-kit/**",
+        "**/.nuxt/**",
+        "**/.cache/**",
         "**/out/**",
         "**/__tests__/**",
+        "**/coverage/**",
         "**/*.test.*",
         "**/*.spec.*",
         "**/*.d.ts",
         "**/tsconfig.tsbuildinfo",
         "**/.locus/*.json", // Ignore index and other system JSONs
-        "**/.locus/*.md", // Ignore system MDs if any (except artifacts handled below)
+        "**/.locus/*.md", // Ignore system MDs
         "**/.locus/!(artifacts)/**", // Ignore everything in .locus EXCEPT artifacts
-        "bun.lock",
-        "package-lock.json",
-        "yarn.lock",
+        "**/.git/**",
+        "**/.svn/**",
+        "**/.hg/**",
+        "**/.vscode/**",
+        "**/.idea/**",
+        "**/.DS_Store",
+        "**/bun.lock",
+        "**/package-lock.json",
+        "**/yarn.lock",
+        "**/pnpm-lock.yaml",
+        "**/Cargo.lock",
+        "**/go.sum",
+        "**/poetry.lock",
+        // Binary/Large Assets
+        "**/*.{png,jpg,jpeg,gif,svg,ico,mp4,webm,wav,mp3,woff,woff2,eot,ttf,otf,pdf,zip,tar.gz,rar}",
       ],
     });
 

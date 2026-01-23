@@ -30,6 +30,9 @@ export class Workspace {
   @Column()
   name: string;
 
+  @Column({ name: "default_checklist", type: "jsonb", nullable: true })
+  defaultChecklist: Array<{ id: string; text: string; done: boolean }>;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 

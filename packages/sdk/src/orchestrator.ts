@@ -246,8 +246,8 @@ export class AgentOrchestrator extends EventEmitter {
       workerArgs.push("--sprint-id", this.resolvedSprintId);
     }
 
-    // Use bun to run the worker script
-    const agentProcess = spawn("bun", ["run", workerPath, ...workerArgs]);
+    // Use node to run the worker script
+    const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs]);
 
     agentState.process = agentProcess;
 

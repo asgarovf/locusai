@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
-import { ApiKeysSettings } from "@/components/settings/ApiKeysSettings";
+import {
+  ApiKeysSettings,
+  WorkspaceChecklistSettings,
+} from "@/components/settings";
 import { SettingItem } from "@/components/settings/SettingItem";
 import { SettingSection } from "@/components/settings/SettingSection";
 import { Button, Input, Modal } from "@/components/ui";
@@ -76,6 +79,9 @@ export default function SettingsPage() {
 
         {/* API Keys Section */}
         <ApiKeysSettings />
+
+        {/* Task Settings */}
+        <WorkspaceChecklistSettings />
 
         {/* Danger Zone */}
         <div>

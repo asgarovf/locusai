@@ -1,4 +1,4 @@
-import { MembershipRole } from "@locusai/shared";
+import { ChecklistItem, MembershipRole } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -25,7 +25,14 @@ export class WorkspacesService {
   async findById(id: string): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findOne({
       where: { id },
-      select: ["id", "orgId", "name", "createdAt", "updatedAt"],
+      select: [
+        "id",
+        "orgId",
+        "name",
+        "defaultChecklist",
+        "createdAt",
+        "updatedAt",
+      ],
       relations: ["organization"],
     });
     if (!workspace) {
@@ -94,9 +101,21 @@ export class WorkspacesService {
     return this.create(org.id, name);
   }
 
-  async update(id: string, name: string): Promise<Workspace> {
+  async update(
+    id: string,
+    updateData: {
+      name?: string;
+      defaultChecklist?: Array<Partial<ChecklistItem>>;
+    }
+  ): Promise<Workspace> {
     const workspace = await this.findById(id);
-    workspace.name = name;
+    if (updateData.name) {
+      workspace.name = updateData.name;
+    }
+    if (updateData.defaultChecklist) {
+      // biome-ignore lint/suspicious/noExplicitAny: DTO has partial items while entity requires complete items
+      workspace.defaultChecklist = updateData.defaultChecklist as any;
+    }
     return this.workspaceRepository.save(workspace);
   }
 
