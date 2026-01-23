@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.4.4
+
+### Patch Changes
+
+- Ignore submodules
+- Updated dependencies
+  - @locusai/sdk@0.4.4
+
 ## 0.4.3
 
 ### Patch Changes

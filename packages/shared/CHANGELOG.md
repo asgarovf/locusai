@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.4
+
+### Patch Changes
+
+- Ignore submodules
+
 ## 0.4.3
 
 ### Patch Changes

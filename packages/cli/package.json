@@ -1,6 +1,6 @@
 {
   "name": "@locusai/cli",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {
@@ -31,7 +31,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@locusai/sdk": "^0.4.3"
+    "@locusai/sdk": "^0.4.4"
   },
   "devDependencies": {}
 }
