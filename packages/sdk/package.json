@@ -2,37 +2,22 @@
   "name": "@locusai/sdk",
   "version": "0.4.6",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./node": {
-      "types": "./src/index-node.ts",
-      "default": "./src/index-node.ts"
+      "types": "./dist/index-node.d.ts",
+      "default": "./dist/index-node.js"
     }
   },
   "files": [
     "dist",
-    "src",
     "README.md"
   ],
-  "publishConfig": {
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "./node": {
-        "types": "./dist/index-node.d.ts",
-        "default": "./dist/index-node.js"
-      }
-    }
-  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
