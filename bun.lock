@@ -27,7 +27,7 @@
     },
     "apps/api": {
       "name": "@locusai/api",
-      "version": "0.0.1",
+      "version": "0.2.1",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@nestjs/common": "^11.0.1",
@@ -72,7 +72,7 @@
     },
     "apps/web": {
       "name": "@locusai/web",
-      "version": "0.1.7",
+      "version": "0.2.1",
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -124,7 +124,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.1.7",
+      "version": "0.2.1",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@radix-ui/react-slot": "^1.2.4",
@@ -159,7 +159,7 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.1.7",
+      "version": "0.2.1",
       "bin": {
         "locus": "./bin/locus.js",
       },
@@ -169,7 +169,7 @@
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.71.2",
         "@locusai/shared": "workspace:*",
@@ -184,7 +184,7 @@
     },
     "packages/shared": {
       "name": "@locusai/shared",
-      "version": "0.1.7",
+      "version": "0.2.1",
       "dependencies": {
         "zod": "^3.23.8",
       },
@@ -2584,7 +2584,7 @@
 
     "cosmiconfig/path-type": ["path-type@4.0.0", "", {}, "sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw=="],
 
-    "css/source-map": ["source-map@0.1.34", "", { "dependencies": { "amdefine": ">=0.0.4" } }, "sha512-yfCwDj0vR9RTwt3pEzglgb3ZgmcXHt6DjG3bjJvzPwTL+5zDQ2MhmSzAcTy0GTiQuCiriSWXvWM1/NhKdXuoQA=="],
+    "css/source-map": ["source-map@0.1.43", "", { "dependencies": { "amdefine": ">=0.0.4" } }, "sha512-VtCvB9SIQhk3aF6h+N85EaqIaBFIAfZ9Cu+NJHHVvc8BbEcnvDcFw6sqQ2dQrT6SlOrZq3tIvyD9+EGq/lJryQ=="],
 
     "defaults/clone": ["clone@1.0.4", "", {}, "sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg=="],
 

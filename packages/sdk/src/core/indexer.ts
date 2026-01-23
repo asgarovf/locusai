@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import globby from "globby";
+import { globby } from "globby";
 
 export interface CodebaseIndex {
   symbols: Record<string, string[]>; // symbol -> file paths
