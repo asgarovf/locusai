@@ -63,7 +63,10 @@ export class AuthService {
     };
   }
 
-  async login(user: User): Promise<LoginResponse> {
+  async login(
+    user: User,
+    context?: { workspaceId?: string; orgId?: string }
+  ): Promise<LoginResponse> {
     const payload = {
       email: user.email,
       sub: user.id,
@@ -71,18 +74,22 @@ export class AuthService {
       role: user.role,
     };
 
-    // Fetch user's workspaces to get the current workspace ID and org ID
-    const workspaces = await this.dataSource.query(
-      `SELECT w.id, w.org_id as "orgId" FROM workspaces w
-       INNER JOIN memberships m ON w.org_id = m.org_id
-       WHERE m.user_id = $1
-       ORDER BY w.created_at ASC
-       LIMIT 1`,
-      [user.id]
-    );
+    let { workspaceId, orgId } = context || {};
 
-    const workspaceId = workspaces[0]?.id ?? undefined;
-    const orgId = workspaces[0]?.orgId ?? undefined;
+    if (!workspaceId) {
+      // Fetch user's workspaces to get the current workspace ID and org ID
+      const workspaces = await this.dataSource.query(
+        `SELECT w.id, w.org_id as "orgId" FROM workspaces w
+         INNER JOIN memberships m ON w.org_id = m.org_id
+         WHERE m.user_id = $1
+         ORDER BY w.created_at ASC
+         LIMIT 1`,
+        [user.id]
+      );
+
+      workspaceId = workspaces[0]?.id ?? undefined;
+      orgId = workspaces[0]?.orgId ?? undefined;
+    }
 
     return {
       token: this.jwtService.sign(payload),
@@ -218,7 +225,10 @@ export class AuthService {
         workspaceName: workspaceName,
       });
 
-      return this.login(user);
+      return this.login(user, {
+        workspaceId: workspace.id,
+        orgId: org.id,
+      });
     });
   }
 

@@ -27,30 +27,25 @@ export function createWelcomeEmail(data: WelcomeEmailData): {
       </tr>
       
       <!-- Workspace Info Card -->
+      <!-- Workspace Info -->
       <tr>
         <td style="padding: 16px 0;">
-          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+          <h2 style="margin: 0 0 12px 0; color: #111827; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            Your Workspace Details
+          </h2>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
             <tr>
-              <td style="padding: 16px;">
-                <p style="margin: 0 0 12px 0; color: #111827; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                  Your Workspace Details
+              <td style="padding: 4px 0;">
+                <p style="margin: 0; color: #4b5563; font-size: 14px;">
+                  <span style="color: #6b7280;">Organization:</span> <span style="color: #111827; font-weight: 500;">${organizationName}</span>
                 </p>
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="padding: 4px 0;">
-                      <p style="margin: 0; color: #4b5563; font-size: 13px;">
-                        <strong>Organization:</strong> <span style="color: #111827; font-weight: 600;">${organizationName}</span>
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 4px 0;">
-                      <p style="margin: 0; color: #4b5563; font-size: 13px;">
-                        <strong>Workspace:</strong> <span style="color: #111827; font-weight: 600;">${workspaceName}</span>
-                      </p>
-                    </td>
-                  </tr>
-                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0;">
+                <p style="margin: 0; color: #4b5563; font-size: 14px;">
+                  <span style="color: #6b7280;">Workspace:</span> <span style="color: #111827; font-weight: 500;">${workspaceName}</span>
+                </p>
               </td>
             </tr>
           </table>
@@ -60,78 +55,31 @@ export function createWelcomeEmail(data: WelcomeEmailData): {
       <!-- Quick Start Guide -->
       <tr>
         <td style="padding: 24px 0;">
-          <p style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 600;">
-            🚀 Quick Start Guide
+          <p style="margin: 0 0 16px 0; color: #111827; font-size: 16px; font-weight: 600;">
+            Quick Start Guide
           </p>
           
-          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-            <tr>
-              <td style="padding: 16px 0;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                      <div style="width: 24px; height: 24px; background-color: #000000; border-radius: 50%; color: #ffffff; text-align: center; line-height: 24px; font-size: 12px; font-weight: 600;">1</div>
-                    </td>
-                    <td style="padding-left: 12px;">
-                      <p style="margin: 0 0 4px 0; color: #111827; font-size: 15px; font-weight: 600;">
-                        Create Your First Task
-                      </p>
-                      <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-                        Use the Kanban board to organize your work and track progress
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            
-            <tr>
-              <td style="padding: 16px 0;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                      <div style="width: 24px; height: 24px; background-color: #000000; border-radius: 50%; color: #ffffff; text-align: center; line-height: 24px; font-size: 12px; font-weight: 600;">2</div>
-                    </td>
-                    <td style="padding-left: 12px;">
-                      <p style="margin: 0 0 4px 0; color: #111827; font-size: 15px; font-weight: 600;">
-                        Write Documentation
-                      </p>
-                      <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-                        Keep your technical docs and specs in one place
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            
-            <tr>
-              <td style="padding: 16px 0;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="width: 32px; vertical-align: top; padding-top: 2px;">
-                      <div style="width: 24px; height: 24px; background-color: #000000; border-radius: 50%; color: #ffffff; text-align: center; line-height: 24px; font-size: 12px; font-weight: 600;">3</div>
-                    </td>
-                    <td style="padding-left: 12px;">
-                      <p style="margin: 0 0 4px 0; color: #111827; font-size: 15px; font-weight: 600;">
-                        Connect AI Agents
-                      </p>
-                      <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-                        Use MCP tools to let Claude, Cursor, and other agents manage your project
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
+          <ul style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.6;">
+            <li style="margin-bottom: 12px;">
+              <strong style="color: #111827;">Create Your First Task</strong><br>
+              Use the Kanban board to organize your work and track progress
+            </li>
+            <li style="margin-bottom: 12px;">
+              <strong style="color: #111827;">Write Documentation</strong><br>
+              Keep your technical docs and specs in one place
+            </li>
+            <li>
+              <strong style="color: #111827;">Connect AI Agents</strong><br>
+              Use MCP tools to let Claude, Cursor, and other agents manage your project
+            </li>
+          </ul>
         </td>
       </tr>
 
       <!-- CTA Button -->
       <tr>
-        <td style="padding: 24px 0 16px 0; text-align: center;">
-          <a href="https://locusai.dev/board" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 15px; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <td style="padding: 16px 0;">
+          <a href="https://app.locusai.dev/board" style="display: inline-block; background-color: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 500;">
             Open Dashboard
           </a>
         </td>
@@ -140,18 +88,18 @@ export function createWelcomeEmail(data: WelcomeEmailData): {
       <!-- Resources -->
       <tr>
         <td style="padding-top: 24px; border-top: 1px solid #e5e7eb;">
-          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-            <strong>Helpful Resources:</strong>
+          <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px; font-weight: 600;">
+            Helpful Resources
           </p>
-          <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 14px; line-height: 1.6;">
-            <li style="margin-bottom: 8px;">
-              <a href="https://locusai.dev/docs" style="color: #111827; text-decoration: underline;">Documentation</a> - Learn how to use Locus
+          <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 13px; line-height: 1.6;">
+            <li style="margin-bottom: 4px;">
+              <a href="https://locusai.dev/docs" style="color: #6b7280; text-decoration: underline;">Documentation</a>
             </li>
-            <li style="margin-bottom: 8px;">
-              <a href="https://github.com/asgarovf/locusai" style="color: #111827; text-decoration: underline;">GitHub</a> - View source code and contribute
+            <li style="margin-bottom: 4px;">
+              <a href="https://github.com/asgarovf/locusai" style="color: #6b7280; text-decoration: underline;">GitHub</a>
             </li>
             <li>
-              <a href="https://locusai.dev/docs/mcp" style="color: #111827; text-decoration: underline;">MCP Integration</a> - Connect your AI agents
+              <a href="https://locusai.dev/docs/mcp" style="color: #6b7280; text-decoration: underline;">MCP Integration</a>
             </li>
           </ul>
         </td>
@@ -189,7 +137,7 @@ Quick Start Guide:
 3. Connect AI Agents
    Use MCP tools to let Claude, Cursor, and other agents manage your project
 
-Get Started: https://locusai.dev/board
+Get Started: https://app.locusai.dev/board
 
 Helpful Resources:
 - Documentation: https://locusai.dev/docs

@@ -5,6 +5,12 @@ const nextConfig = {
     unoptimized: true,
   },
   webpack: (config, { isServer }) => {
+    config.resolve.extensionAlias = {
+      ".js": [".ts", ".tsx", ".js", ".jsx"],
+      ".mjs": [".mts", ".mjs"],
+      ".cjs": [".cts", ".cjs"],
+    };
+
     // Externalize Node.js-only dependencies from browser bundle
     if (!isServer) {
       config.resolve.fallback = {
