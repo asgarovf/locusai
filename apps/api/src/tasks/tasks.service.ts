@@ -13,7 +13,10 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
-import { Comment, Doc, Event, Task } from "@/entities";
+import { Comment } from "@/entities/comment.entity";
+import { Doc } from "@/entities/doc.entity";
+import { Event } from "@/entities/event.entity";
+import { Task } from "@/entities/task.entity";
 import { EventsService } from "@/events/events.service";
 import { TaskProcessor } from "./task.processor";
 
@@ -39,7 +42,10 @@ export class TasksService {
 
   async findBacklog(workspaceId: string): Promise<Task[]> {
     return this.taskRepository.find({
-      where: { workspaceId, sprintId: IsNull() },
+      where: [
+        { workspaceId, sprintId: IsNull() },
+        { workspaceId, status: TaskStatus.IN_PROGRESS, assignedTo: IsNull() },
+      ],
       order: { priority: "DESC", createdAt: "DESC" },
     });
   }
@@ -149,6 +155,16 @@ export class TasksService {
 
     const oldStatus = task.status;
 
+    // Handle rejection: If moving from VERIFICATION back to IN_PROGRESS or BACKLOG,
+    // clear the assignedTo field so it can be re-dispatched.
+    if (
+      oldStatus === TaskStatus.VERIFICATION &&
+      (updates.status === TaskStatus.IN_PROGRESS ||
+        updates.status === TaskStatus.BACKLOG)
+    ) {
+      task.assignedTo = null;
+    }
+
     const { comments, activityLog, ...rest } = updates;
     Object.assign(task, {
       ...rest,
@@ -232,16 +248,34 @@ export class TasksService {
    * Dispatch a task from BACKLOG to an agent.
    * Simply finds a BACKLOG task in the sprint and moves it to IN_PROGRESS.
    */
-  async dispatchTask(workerId: string, sprintId: string): Promise<Task> {
-    // Find a BACKLOG task in the sprint
+  async dispatchTask(
+    workspaceId: string,
+    workerId: string,
+    sprintId?: string
+  ): Promise<Task> {
+    // Find a BACKLOG or IN_PROGRESS (unassigned) task in the workspace/sprint
     const task = await this.taskRepository.findOne({
-      where: { sprintId, status: TaskStatus.BACKLOG },
+      where: [
+        {
+          workspaceId,
+          ...(sprintId ? { sprintId } : {}),
+          status: TaskStatus.BACKLOG,
+        },
+        {
+          workspaceId,
+          ...(sprintId ? { sprintId } : {}),
+          status: TaskStatus.IN_PROGRESS,
+          assignedTo: IsNull(),
+        },
+      ],
       order: { priority: "DESC", createdAt: "ASC" },
     });
 
     if (!task) {
-      throw new NotFoundException("No available tasks in this sprint");
+      throw new NotFoundException("No available tasks");
     }
+
+    const oldStatus = task.status;
 
     // Move to IN_PROGRESS and assign to worker
     task.status = TaskStatus.IN_PROGRESS;
@@ -256,7 +290,7 @@ export class TasksService {
       type: EventType.STATUS_CHANGED,
       payload: {
         title: result.title,
-        oldStatus: TaskStatus.BACKLOG,
+        oldStatus,
         newStatus: TaskStatus.IN_PROGRESS,
         assignedTo: workerId,
       },

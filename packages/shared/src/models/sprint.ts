@@ -8,6 +8,8 @@ export const SprintSchema = BaseEntitySchema.extend({
   status: z.nativeEnum(SprintStatus),
   startDate: z.union([z.date(), z.number()]).nullable().optional(),
   endDate: z.union([z.date(), z.number()]).nullable().optional(),
+  mindmap: z.string().nullable().optional(),
+  mindmapUpdatedAt: z.union([z.date(), z.number()]).nullable().optional(),
 });
 
 export type Sprint = z.infer<typeof SprintSchema>;
@@ -30,6 +32,10 @@ export const UpdateSprintSchema = SprintSchema.partial()
     name: z.string().min(1).max(100).optional(),
     startDate: z.union([z.coerce.date(), z.number()]).optional().nullable(),
     endDate: z.union([z.coerce.date(), z.number()]).optional().nullable(),
+    mindmapUpdatedAt: z
+      .union([z.coerce.date(), z.number()])
+      .optional()
+      .nullable(),
   });
 
 export type UpdateSprint = z.infer<typeof UpdateSprintSchema>;

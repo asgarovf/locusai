@@ -1,9 +1,12 @@
 import {
   CreateWorkspace,
   CreateWorkspaceSchema,
+  DispatchTask,
+  DispatchTaskSchema,
   MembershipRole,
   OrgIdParam,
   OrgIdParamSchema,
+  TaskResponse,
   UpdateWorkspace,
   UpdateWorkspaceSchema,
   WorkspaceIdParam,
@@ -15,23 +18,27 @@ import {
   Body,
   Controller,
   Delete,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Post,
   Put,
   Query,
-  UseGuards,
 } from "@nestjs/common";
 import { CurrentUser, MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
-import { User } from "@/entities";
+import { User } from "@/entities/user.entity";
+import { TasksService } from "@/tasks/tasks.service";
 import { WorkspacesService } from "./workspaces.service";
 
 @Controller("workspaces")
-@UseGuards(MembershipRolesGuard)
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService) {}
+  constructor(
+    private readonly workspacesService: WorkspacesService,
+    @Inject(forwardRef(() => TasksService))
+    private readonly tasksService: TasksService
+  ) {}
 
   @Get()
   async listAll(@CurrentUser() user: User): Promise<WorkspacesResponse> {
@@ -146,5 +153,20 @@ export class WorkspacesController {
       limit
     );
     return { activity };
+  }
+
+  @Post(":workspaceId/dispatch")
+  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  async dispatch(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam,
+    @Body(new ZodValidationPipe(DispatchTaskSchema)) body: DispatchTask
+  ): Promise<TaskResponse> {
+    const task = await this.tasksService.dispatchTask(
+      params.workspaceId,
+      body.workerId || "system",
+      body.sprintId
+    );
+    return { task };
   }
 }

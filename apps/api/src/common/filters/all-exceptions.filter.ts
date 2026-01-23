@@ -50,19 +50,38 @@ export class AllExceptionsFilter implements ExceptionFilter {
       },
     };
 
+    const sanitizedBody = this.sanitizeBody(request.body);
+
     if (status >= 500) {
       this.logger.error(
-        `${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(request.body)}`,
+        `${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(sanitizedBody)}`,
         exception instanceof Error ? exception.stack : undefined,
         "Exceptions"
       );
     } else {
       this.logger.warn(
-        `[Exceptions] ${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(request.body)}`
+        `[Exceptions] ${request.method} ${request.url} ${status} - ${message} - ${JSON.stringify(sanitizedBody)}`
       );
     }
 
     response.status(status).json(apiResponse);
+  }
+
+  private sanitizeBody(body: $FixMe): $FixMe {
+    if (!body || typeof body !== "object") return body;
+
+    const sensitiveKeys = ["otp", "password", "token", "apiKey", "key"];
+    const sanitized = { ...body };
+
+    for (const key of Object.keys(sanitized)) {
+      if (sensitiveKeys.some((sk) => key.toLowerCase().includes(sk))) {
+        sanitized[key] = "********";
+      } else if (typeof sanitized[key] === "object") {
+        sanitized[key] = this.sanitizeBody(sanitized[key]);
+      }
+    }
+
+    return sanitized;
   }
 
   private getErrorCode(status: number): string {

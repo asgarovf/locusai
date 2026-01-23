@@ -20,10 +20,10 @@ export class Organization {
   @Column({ name: "avatar_url", nullable: true })
   avatarUrl: string;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 
   @OneToMany(

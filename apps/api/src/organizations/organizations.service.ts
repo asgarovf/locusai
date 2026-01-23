@@ -113,9 +113,12 @@ export class OrganizationsService {
   /**
    * Generate a secure API key with prefix
    */
-  private generateApiKey(): string {
+  private generateApiKey(): { key: string; hash: string; prefix: string } {
     const randomBytes = crypto.randomBytes(32).toString("hex");
-    return `lk_${randomBytes}`;
+    const key = `lk_${randomBytes}`;
+    const hash = crypto.createHash("sha256").update(key).digest("hex");
+    const prefix = key.slice(0, 8); // "lk_XXXX"
+    return { key, hash, prefix };
   }
 
   /**
@@ -139,12 +142,13 @@ export class OrganizationsService {
     // Verify org exists
     await this.findById(orgId);
 
-    const key = this.generateApiKey();
+    const { key, hash, prefix } = this.generateApiKey();
 
     const apiKey = this.apiKeyRepository.create({
       organizationId: orgId,
       name,
-      key,
+      keyHash: hash,
+      keyPrefix: prefix,
       active: true,
     });
 

@@ -8,8 +8,8 @@ export const ConfigSchema = z.object({
   DATABASE_URL: z.string(),
   DATABASE_SYNC: z.enum(["true", "false"]).default("false"),
   JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.string().default("7d") as z.ZodType<"7d">,
-  RESEND_API_KEY: z.string(),
+  JWT_EXPIRES_IN: z.union([z.string(), z.number()]).default("7d"),
+  RESEND_API_KEY: z.string().optional(),
   OTP_EXPIRES_IN_MINUTES: z.coerce.number().default(10),
   CORS_ORIGIN: z.string().default("*"),
 });

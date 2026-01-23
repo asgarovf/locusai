@@ -1,4 +1,3 @@
-import { ApiKeyAuthUser } from "@locusai/shared";
 import {
   CanActivate,
   ExecutionContext,
@@ -7,9 +6,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { ApiKey } from "@/entities/api-key.entity";
+import { AuthService } from "../auth.service";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 
 /**
@@ -24,8 +21,7 @@ import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @InjectRepository(ApiKey)
-    private apiKeyRepository: Repository<ApiKey>
+    private authService: AuthService
   ) {
     super();
   }
@@ -54,12 +50,6 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
     }
 
     // Fall back to API key authentication
-    return this.validateApiKey(request);
-  }
-
-  private async validateApiKey(
-    request: Record<string, unknown>
-  ): Promise<boolean> {
     const apiKey = this.extractApiKey(request);
 
     if (!apiKey) {
@@ -68,29 +58,7 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
       );
     }
 
-    const keyRecord = await this.apiKeyRepository.findOne({
-      where: { key: apiKey, active: true },
-      relations: ["organization"],
-    });
-
-    if (!keyRecord) {
-      throw new UnauthorizedException("Invalid API key");
-    }
-
-    // Update last used time
-    keyRecord.lastUsedAt = new Date();
-    await this.apiKeyRepository.save(keyRecord);
-
-    // Attach API key entity to request for direct access if needed
-    request.apiKey = keyRecord;
-
-    // Set properly typed ApiKeyAuthUser
-    const apiKeyUser: ApiKeyAuthUser = {
-      authType: "api_key",
-      apiKeyId: keyRecord.id,
-      apiKeyName: keyRecord.name,
-      orgId: keyRecord.organizationId,
-    };
+    const apiKeyUser = await this.authService.validateApiKey(apiKey);
     request.user = apiKeyUser;
 
     return true;

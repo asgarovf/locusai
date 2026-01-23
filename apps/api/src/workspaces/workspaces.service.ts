@@ -2,7 +2,10 @@ import { MembershipRole } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Membership, Organization, Task, Workspace } from "@/entities";
+import { Membership } from "@/entities/membership.entity";
+import { Organization } from "@/entities/organization.entity";
+import { Task } from "@/entities/task.entity";
+import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
 
 @Injectable()

@@ -1,17 +1,15 @@
 import { ChildProcess, spawn } from "node:child_process";
-import { Task, TaskStatus } from "@locusai/shared";
+import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index";
 
 export interface AgentConfig {
   id: string;
-  skills: string[];
   maxConcurrentTasks: number;
 }
 
 export interface AgentState {
   id: string;
-  skills: string[];
   status: "IDLE" | "WORKING" | "COMPLETED" | "FAILED";
   currentTaskId: string | null;
   tasksCompleted: number;
@@ -25,9 +23,9 @@ export interface OrchestratorConfig {
   sprintId: string;
   apiBase: string;
   maxIterations: number;
-  agentSkills: string[];
-  mcpProjectPath: string;
+  projectPath: string;
   apiKey: string;
+  model?: string;
 }
 
 export class AgentOrchestrator extends EventEmitter {
@@ -83,6 +81,20 @@ export class AgentOrchestrator extends EventEmitter {
     this.isRunning = true;
     this.processedTasks.clear();
 
+    try {
+      await this.orchestrationLoop();
+    } catch (error) {
+      this.emit("error", error);
+      throw error;
+    } finally {
+      await this.cleanup();
+    }
+  }
+
+  /**
+   * Main orchestration loop - runs 1 agent continuously
+   */
+  private async orchestrationLoop(): Promise<void> {
     // Resolve sprint ID first
     this.resolvedSprintId = await this.resolveSprintId();
 
@@ -98,33 +110,25 @@ export class AgentOrchestrator extends EventEmitter {
     if (this.resolvedSprintId) {
       console.log(`Sprint: ${this.resolvedSprintId}`);
     }
-    console.log(`Agent Skills: ${this.config.agentSkills.join(", ")}`);
     console.log(`API Base: ${this.config.apiBase}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
-    try {
-      await this.orchestrationLoop();
-    } catch (error) {
-      this.emit("error", error);
-      throw error;
-    } finally {
-      await this.cleanup();
-    }
-  }
+    // Check if there are tasks to work on before spawning
+    const tasks = await this.getAvailableTasks();
 
-  /**
-   * Main orchestration loop - runs 1 agent continuously
-   */
-  private async orchestrationLoop(): Promise<void> {
+    if (tasks.length === 0) {
+      console.log("ℹ  No available tasks found in the backlog.");
+      return;
+    }
+
     // Spawn single agent
-    await this.spawnAgent(this.config.agentSkills);
+    await this.spawnAgent();
 
     // Wait for agent to complete
     while (this.agents.size > 0 && this.isRunning) {
       await this.reapAgents();
 
       if (this.agents.size === 0) {
-        console.log("✅ Agent completed all tasks!");
         break;
       }
 
@@ -137,14 +141,13 @@ export class AgentOrchestrator extends EventEmitter {
   /**
    * Spawn a single agent process
    */
-  private async spawnAgent(skills: string[]): Promise<void> {
+  private async spawnAgent(): Promise<void> {
     const agentId = `agent-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 9)}`;
 
     const agentState: AgentState = {
       id: agentId,
-      skills,
       status: "IDLE",
       currentTaskId: null,
       tasksCompleted: 0,
@@ -154,8 +157,7 @@ export class AgentOrchestrator extends EventEmitter {
 
     this.agents.set(agentId, agentState);
 
-    console.log(`🚀 Agent started: ${agentId}`);
-    console.log(`   Skills: ${skills.join(", ")}\n`);
+    console.log(`🚀 Agent started: ${agentId}\n`);
 
     // Build arguments for agent worker
     const workerPath = require.resolve("./agent-worker");
@@ -164,15 +166,18 @@ export class AgentOrchestrator extends EventEmitter {
       agentId,
       "--workspace-id",
       this.config.workspaceId,
-      "--skills",
-      skills.join(","),
       "--api-base",
       this.config.apiBase,
       "--api-key",
       this.config.apiKey,
-      "--mcp-project",
-      this.config.mcpProjectPath,
+      "--project-path",
+      this.config.projectPath,
     ];
+
+    // Add model if specified
+    if (this.config.model) {
+      workerArgs.push("--model", this.config.model);
+    }
 
     // Add sprint ID if resolved
     if (this.resolvedSprintId) {
@@ -180,9 +185,17 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Use bun to run TypeScript files directly
-    const agentProcess = spawn("bun", ["run", workerPath, ...workerArgs]);
+    const workerTsPath = workerPath.replace(/\.js$/, ".ts");
+    const agentProcess = spawn("bun", ["run", workerTsPath, ...workerArgs]);
 
     agentState.process = agentProcess;
+
+    agentProcess.on("message", (msg: Record<string, unknown>) => {
+      if (msg.type === "stats") {
+        agentState.tasksCompleted = (msg.tasksCompleted as number) || 0;
+        agentState.tasksFailed = (msg.tasksFailed as number) || 0;
+      }
+    });
 
     agentProcess.stdout?.on("data", (data) => {
       process.stdout.write(data.toString());
@@ -197,33 +210,29 @@ export class AgentOrchestrator extends EventEmitter {
       const agent = this.agents.get(agentId);
       if (agent) {
         agent.status = code === 0 ? "COMPLETED" : "FAILED";
-      }
-    });
 
-    this.emit("agent:spawned", { agentId, skills });
-  }
-
-  /**
-   * Reap completed agents
-   */
-  private async reapAgents(): Promise<void> {
-    const completed: string[] = [];
-
-    for (const [agentId, agent] of this.agents.entries()) {
-      if (agent.process && agent.process.exitCode !== null) {
-        completed.push(agentId);
+        // Ensure CLI gets the absolute latest stats
         this.emit("agent:completed", {
           agentId,
           status: agent.status,
           tasksCompleted: agent.tasksCompleted,
           tasksFailed: agent.tasksFailed,
         });
-      }
-    }
 
-    for (const agentId of completed) {
-      this.agents.delete(agentId);
-    }
+        // Remove from active tracking after emitting
+        this.agents.delete(agentId);
+      }
+    });
+
+    this.emit("agent:spawned", { agentId });
+  }
+
+  /**
+   * Reap completed agents
+   */
+  private async reapAgents(): Promise<void> {
+    // No-op: agents now remove themselves in the 'exit' listener
+    // to ensure events are emitted with correct stats before deletion.
   }
 
   /**
@@ -253,10 +262,18 @@ export class AgentOrchestrator extends EventEmitter {
     try {
       const tasks = await this.getAvailableTasks();
 
-      // Find task matching agent skills
-      let task = tasks.find(
-        (t) => t.assigneeRole && agent.skills.includes(t.assigneeRole)
-      );
+      const priorityOrder = [
+        TaskPriority.CRITICAL,
+        TaskPriority.HIGH,
+        TaskPriority.MEDIUM,
+        TaskPriority.LOW,
+      ];
+
+      // Find task with highest priority
+      let task = tasks.sort(
+        (a, b) =>
+          priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority)
+      )[0];
 
       // Fallback: any available task
       if (!task && tasks.length > 0) {

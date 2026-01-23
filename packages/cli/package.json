@@ -4,11 +4,13 @@
   "description": "Local-first AI development platform & engineering workspace",
   "type": "module",
   "bin": {
-    "locus": "./src/cli.ts"
+    "locus": "./index.ts"
   },
   "scripts": {
     "start": "bun lint .",
-    "build": "bun build ./src/cli.ts --target=bun --outfile=./bin/locus.js"
+    "build": "bun build ./index.ts --target=bun --outfile=./bin/locus.js",
+    "lint": "biome lint .",
+    "format": "biome format --write ."
   },
   "files": [
     "src",

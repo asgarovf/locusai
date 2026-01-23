@@ -21,6 +21,7 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["jest", "node"]
   }
 }

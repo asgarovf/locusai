@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -11,10 +12,12 @@ import { Organization } from "./organization.entity";
 import { User } from "./user.entity";
 
 @Entity("memberships")
+@Index(["userId", "orgId"], { unique: true })
 export class Membership {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "user_id" })
   userId: string;
 
@@ -22,6 +25,7 @@ export class Membership {
   @JoinColumn({ name: "user_id" })
   user: User;
 
+  @Index()
   @Column({ name: "org_id" })
   orgId: string;
 
@@ -39,6 +43,6 @@ export class Membership {
   })
   role: MembershipRole;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 }

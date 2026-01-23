@@ -2,6 +2,8 @@ import {
   ActivityResponse,
   CreateWorkspace,
   Event,
+  Task,
+  TaskResponse,
   UpdateWorkspace,
   Workspace,
   WorkspaceResponse,
@@ -72,5 +74,21 @@ export class WorkspacesModule extends BaseModule {
       }
     );
     return data.activity;
+  }
+
+  /**
+   * Dispatch a task from the workspace backlog to an agent.
+   * Atomically moves a task from BACKLOG to IN_PROGRESS and assigns it.
+   */
+  async dispatch(
+    id: string,
+    workerId: string,
+    sprintId?: string
+  ): Promise<Task> {
+    const { data } = await this.api.post<TaskResponse>(
+      `/workspaces/${id}/dispatch`,
+      { workerId, sprintId }
+    );
+    return data.task;
   }
 }

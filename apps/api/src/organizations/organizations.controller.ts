@@ -104,11 +104,14 @@ export class OrganizationsController {
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ) {
     const apiKeys = await this.organizationsService.listApiKeys(params.orgId);
-    // Mask the keys for security (show only first 8 and last 4 chars)
-    const maskedKeys = apiKeys.map((key) => ({
-      ...key,
-      key: this.maskApiKey(key.key),
-    }));
+
+    const maskedKeys = apiKeys.map((apiKey) => {
+      const { keyHash: _, ...rest } = apiKey;
+      return {
+        ...rest,
+        key: `${apiKey.keyPrefix}...`,
+      };
+    });
     return { apiKeys: maskedKeys };
   }
 
@@ -123,10 +126,13 @@ export class OrganizationsController {
       params.orgId,
       body.name
     );
+
+    const { keyHash: _, ...rest } = apiKey;
+
     // Return full key only on creation
     return {
       apiKey: {
-        ...apiKey,
+        ...rest,
         key, // Full key returned only once
       },
     };
@@ -140,10 +146,5 @@ export class OrganizationsController {
   ) {
     await this.organizationsService.deleteApiKey(orgId, keyId);
     return { success: true };
-  }
-
-  private maskApiKey(key: string): string {
-    if (key.length <= 12) return key;
-    return `${key.slice(0, 8)}...${key.slice(-4)}`;
   }
 }

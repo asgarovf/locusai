@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -15,6 +16,7 @@ export class Doc {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "workspace_id" })
   workspaceId: string;
 
@@ -22,6 +24,7 @@ export class Doc {
   @JoinColumn({ name: "workspace_id" })
   workspace: Workspace;
 
+  @Index()
   @Column({ name: "group_id", nullable: true })
   groupId: string | null;
 
@@ -39,9 +42,9 @@ export class Doc {
   @Column({ type: "text", nullable: true })
   content: string;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

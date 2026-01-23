@@ -14,10 +14,12 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import {
   Activity,
+  CheckCircle2,
   Clock,
   MessageSquare,
   Plus,
   Rocket,
+  ShieldCheck,
   UserPlus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +28,14 @@ interface ActivityItemProps {
   /** Workspace event to display */
   event: WorkspaceEvent;
 }
+
+const formatStatus = (status: string) => {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 export function ActivityItem({ event }: ActivityItemProps) {
   const { user } = useAuth();
@@ -53,7 +63,7 @@ export function ActivityItem({ event }: ActivityItemProps) {
         return {
           icon: Activity,
           color: "text-primary",
-          action: `moved task to ${p.newStatus}`,
+          action: `moved task to ${formatStatus(p.newStatus)}`,
           target: p.title,
         };
       }
@@ -65,7 +75,7 @@ export function ActivityItem({ event }: ActivityItemProps) {
         return {
           icon: MessageSquare,
           color: "text-blue-500",
-          action: "commented on task",
+          action: "commented on",
           target: p.title,
         };
       }
@@ -89,7 +99,7 @@ export function ActivityItem({ event }: ActivityItemProps) {
         return {
           icon: UserPlus,
           color: "text-amber-500",
-          action: `invited ${p.email}`,
+          action: `invited ${p.email} to the team`,
           target: "",
         };
       }
@@ -113,7 +123,7 @@ export function ActivityItem({ event }: ActivityItemProps) {
         return {
           icon: Rocket,
           color: "text-orange-500",
-          action: `moved sprint to ${p.newStatus}`,
+          action: `moved sprint to ${formatStatus(p.newStatus)}`,
           target: p.name,
         };
       }
@@ -129,11 +139,35 @@ export function ActivityItem({ event }: ActivityItemProps) {
           target: p.title,
         };
       }
+      case "CI_RAN": {
+        const p = payload as Extract<
+          EventPayload,
+          { type: "CI_RAN" }
+        >["payload"];
+        return {
+          icon: ShieldCheck,
+          color: p.ok ? "text-emerald-500" : "text-rose-500",
+          action: `ran verification: ${p.ok ? "Passed" : "Failed"}`,
+          target: p.preset,
+        };
+      }
+      case "CHECKLIST_INITIALIZED": {
+        const p = payload as Extract<
+          EventPayload,
+          { type: "CHECKLIST_INITIALIZED" }
+        >["payload"];
+        return {
+          icon: CheckCircle2,
+          color: "text-blue-500",
+          action: `initialized ${p.itemCount} checklist items`,
+          target: "",
+        };
+      }
       default:
         return {
           icon: Activity,
           color: "text-muted-foreground",
-          action: type,
+          action: type.toLowerCase().replace(/_/g, " "),
           target: "",
         };
     }
@@ -142,25 +176,30 @@ export function ActivityItem({ event }: ActivityItemProps) {
   const config = getEventConfig();
   const Icon = config.icon;
 
+  const parseDate = (date: string | number | Date | null | undefined) => {
+    if (!date) return new Date();
+    return new Date(date);
+  };
+
+  const eventDate = parseDate(event.createdAt);
+
   return (
     <div className="flex items-start gap-4 p-3 hover:bg-secondary/20 rounded-xl transition-colors group">
       <div className={`p-2 rounded-lg bg-secondary/50 ${config.color}`}>
         <Icon size={16} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">
+        <p className="text-sm text-foreground leading-relaxed">
           <span className="font-semibold text-foreground/90">
             {event.userId === user?.id ? "You" : "Team member"}
           </span>{" "}
           <span className="text-muted-foreground">{config.action}</span>{" "}
           {config.target && (
-            <span className="font-medium text-primary cursor-pointer hover:underline">
-              {config.target}
-            </span>
+            <span className="font-medium text-primary">"{config.target}"</span>
           )}
         </p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
-          {formatDistanceToNow(new Date(event.createdAt), { addSuffix: true })}
+          {formatDistanceToNow(eventDate, { addSuffix: true })}
         </p>
       </div>
     </div>

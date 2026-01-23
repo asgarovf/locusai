@@ -74,7 +74,7 @@ export type AddComment = z.infer<typeof AddCommentSchema>;
 
 export const DispatchTaskSchema = z.object({
   workerId: z.string().optional(),
-  sprintId: z.string().uuid(),
+  sprintId: z.string().uuid().optional().nullable(),
 });
 
 export type DispatchTask = z.infer<typeof DispatchTaskSchema>;

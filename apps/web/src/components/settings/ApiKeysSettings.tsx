@@ -9,11 +9,12 @@ import { Key } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui";
-import { useAuthenticatedUserWithOrg } from "@/hooks";
+import { useAuthenticatedUserWithOrg, useWorkspaceIdOptional } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 import { ApiKeyConfirmationModal } from "./ApiKeyConfirmationModal";
 import { CreateApiKeyModal } from "./ApiKeyCreatedModal";
 import { ApiKeysList } from "./ApiKeysList";
+import { ProjectSetupGuide } from "./ProjectSetupGuide";
 import { SettingSection } from "./SettingSection";
 
 interface ApiKey {
@@ -27,6 +28,7 @@ interface ApiKey {
 
 export function ApiKeysSettings() {
   const { orgId } = useAuthenticatedUserWithOrg();
+  const workspaceId = useWorkspaceIdOptional();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -115,6 +117,11 @@ export function ApiKeysSettings() {
           onDelete={handleDeleteApiKey}
         />
       </SettingSection>
+
+      <ProjectSetupGuide
+        hasApiKeys={apiKeys.length > 0}
+        workspaceId={workspaceId || undefined}
+      />
 
       <CreateApiKeyModal
         isOpen={isCreateModalOpen}

@@ -4,8 +4,6 @@ import {
   CommentResponse,
   CreateTask,
   CreateTaskSchema,
-  DispatchTask,
-  DispatchTaskSchema,
   MembershipRole,
   TaskResponse,
   TasksResponse,
@@ -16,7 +14,9 @@ import {
   Body,
   Controller,
   Delete,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -34,6 +34,7 @@ import { TasksService } from "./tasks.service";
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
+    @Inject(forwardRef(() => WorkspacesService))
     private readonly workspacesService: WorkspacesService
   ) {}
 
@@ -152,17 +153,5 @@ export class TasksController {
       userId ?? undefined
     );
     return { comment };
-  }
-
-  @Post("dispatch")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
-  async dispatch(
-    @Body(new ZodValidationPipe(DispatchTaskSchema)) body: DispatchTask
-  ): Promise<TaskResponse> {
-    const task = await this.tasksService.dispatchTask(
-      body.workerId || "system",
-      body.sprintId
-    );
-    return { task };
   }
 }

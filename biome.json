@@ -111,7 +111,19 @@
     }
   },
   "javascript": {
-    "globals": ["React", "JSX", "Bun"],
+    "globals": [
+      "React",
+      "JSX",
+      "Bun",
+      "jest",
+      "describe",
+      "it",
+      "expect",
+      "beforeEach",
+      "afterEach",
+      "beforeAll",
+      "afterAll"
+    ],
     "formatter": {
       "jsxQuoteStyle": "double",
       "quoteProperties": "asNeeded",

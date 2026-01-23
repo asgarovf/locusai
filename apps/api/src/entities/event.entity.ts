@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -12,10 +13,12 @@ import { User } from "./user.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("events")
+@Index(["workspaceId", "createdAt"])
 export class Event {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "workspace_id" })
   workspaceId: string;
 
@@ -23,6 +26,7 @@ export class Event {
   @JoinColumn({ name: "workspace_id" })
   workspace: Workspace;
 
+  @Index()
   @Column({ name: "task_id", nullable: true })
   taskId: string;
 
@@ -30,6 +34,7 @@ export class Event {
   @JoinColumn({ name: "task_id" })
   task: Task;
 
+  @Index()
   @Column({ name: "user_id", nullable: true })
   userId: string;
 
@@ -45,6 +50,7 @@ export class Event {
   @Column({ type: "jsonb", nullable: true })
   payload: Record<string, $FixMe>;
 
-  @CreateDateColumn({ name: "created_at" })
+  @Index()
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 }

@@ -1,4 +1,6 @@
+import * as crypto from "node:crypto";
 import {
+  ApiKeyAuthUser,
   CompleteRegistration,
   LoginResponse,
   MembershipRole,
@@ -10,9 +12,14 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { DataSource } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
 import { EmailService } from "@/common/services/email.service";
-import { Membership, Organization, User, Workspace } from "@/entities";
+import { ApiKey } from "@/entities/api-key.entity";
+import { Membership } from "@/entities/membership.entity";
+import { Organization } from "@/entities/organization.entity";
+import { User } from "@/entities/user.entity";
+import { Workspace } from "@/entities/workspace.entity";
 import { UsersService } from "@/users/users.service";
 import { OtpService } from "./otp.service";
 
@@ -23,8 +30,38 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+
+    @InjectRepository(ApiKey)
+    private readonly apiKeyRepository: Repository<ApiKey>
   ) {}
+
+  async validateApiKey(apiKey: string): Promise<ApiKeyAuthUser> {
+    const hash = crypto.createHash("sha256").update(apiKey).digest("hex");
+
+    const keyRecord = await this.apiKeyRepository.findOne({
+      where: { keyHash: hash, active: true },
+      relations: ["organization"],
+    });
+
+    if (!keyRecord) {
+      throw new UnauthorizedException("Invalid API key");
+    }
+
+    // Update last used time (throttle to once per minute to save DB writes)
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    if (!keyRecord.lastUsedAt || keyRecord.lastUsedAt < oneMinuteAgo) {
+      keyRecord.lastUsedAt = new Date();
+      await this.apiKeyRepository.save(keyRecord);
+    }
+
+    return {
+      authType: "api_key",
+      apiKeyId: keyRecord.id,
+      apiKeyName: keyRecord.name,
+      orgId: keyRecord.organizationId,
+    };
+  }
 
   async login(user: User): Promise<LoginResponse> {
     const payload = {

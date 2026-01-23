@@ -44,7 +44,11 @@ export function registerKanbanTools(server: McpServer): void {
         );
 
         return success({
-          sprint: { id: activeSprint.id, name: activeSprint.name },
+          sprint: {
+            id: activeSprint.id,
+            name: activeSprint.name,
+            mindmap: activeSprint.mindmap,
+          },
           tasks: tasks.map((t) => ({
             id: t.id,
             title: t.title,
@@ -53,6 +57,38 @@ export function registerKanbanTools(server: McpServer): void {
             assigneeRole: t.assigneeRole,
           })),
           hint: "Use kanban.next to claim and start working on the next available task.",
+        });
+      } catch (e) {
+        return error(String(e));
+      }
+    }
+  );
+
+  // Update sprint mindmap
+  server.registerTool(
+    "kanban.plan",
+    {
+      title: "Plan Sprint Mindmap",
+      description:
+        "Post a mindmap of the sprint tasks and their prioritization. This should be done at the start of a sprint to organize work. The mindmap should be a markdown-formatted string or a structured JSON string representing the plan.",
+      inputSchema: {
+        mindmap: z.string().describe("The mindmap/plan for the sprint"),
+      },
+    },
+    async ({ mindmap }) => {
+      try {
+        const sprints = await apiGet<Sprint[]>("/sprints");
+        const activeSprint = sprints.find((s) => s.status === "ACTIVE");
+
+        if (!activeSprint) {
+          return error("No active sprint found to plan.");
+        }
+
+        await apiPatch(`/sprints/${activeSprint.id}`, { mindmap });
+
+        return success({
+          message: "Sprint mindmap updated successfully",
+          sprintId: activeSprint.id,
         });
       } catch (e) {
         return error(String(e));

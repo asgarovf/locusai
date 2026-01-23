@@ -1,10 +1,9 @@
 "use client";
 
 import { type Event as WorkspaceEvent } from "@locusai/shared";
-import { CheckCircle2, Clock, LayoutDashboard, Users } from "lucide-react";
+import { CheckCircle2, Clock, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { AIInsights } from "@/components/dashboard/AIInsights";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PageLayout } from "@/components/PageLayout";
@@ -56,6 +55,8 @@ export function Dashboard() {
   );
   const doneTasks = stats?.taskCounts?.DONE || 0;
   const inProgressTasks = stats?.taskCounts?.IN_PROGRESS || 0;
+  const verificationTasks = stats?.taskCounts?.VERIFICATION || 0;
+  const backlogTasks = stats?.taskCounts?.BACKLOG || 0;
 
   const welcomeTitle = `Welcome back, ${user?.name.split(" ")[0]}!`;
   const welcomeDesc = (
@@ -70,22 +71,33 @@ export function Dashboard() {
 
   return (
     <PageLayout title={welcomeTitle} description={welcomeDesc}>
-      <div className="max-w-6xl mx-auto space-y-8 pt-4">
+      <div className="max-w-7xl mx-auto space-y-8 pt-4">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Total Tasks"
             value={totalTasks}
             icon={LayoutDashboard}
-            trend="+0 since yesterday"
+            trend={`${backlogTasks} in backlog`}
             color="primary"
           />
           <StatCard
             title="In Progress"
             value={inProgressTasks}
             icon={Clock}
-            trend="Needs attention"
+            trend={inProgressTasks > 5 ? "High workload" : "Manageable"}
             color="warning"
+          />
+          <StatCard
+            title="Verification"
+            value={verificationTasks}
+            icon={CheckCircle2}
+            trend={
+              verificationTasks > 0
+                ? `${verificationTasks} needs review`
+                : "All clear"
+            }
+            color="purple"
           />
           <StatCard
             title="Completed"
@@ -96,24 +108,16 @@ export function Dashboard() {
             }% completion rate`}
             color="success"
           />
-          <StatCard
-            title="Team Members"
-            value={stats?.memberCount || 0}
-            icon={Users}
-            trend="Active now"
-            color="purple"
-          />
         </div>
 
         {/* Feed & Quick Actions Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-8">
             <ActivityFeed activity={activity} />
           </div>
 
-          <div className="space-y-6">
+          <div className="lg:col-span-4 space-y-6">
             <QuickActions />
-            <AIInsights />
           </div>
         </div>
       </div>

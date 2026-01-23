@@ -44,13 +44,18 @@ export class TasksModule extends BaseModule {
 
   /**
    * Get available tasks for an agent to work on.
-   * Returns tasks in BACKLOG status (agents only take from backlog).
+   * Returns tasks in BACKLOG or IN_PROGRESS (unassigned) status.
    */
   async getAvailable(workspaceId: string, sprintId?: string): Promise<Task[]> {
-    return this.list(workspaceId, {
+    const tasks = await this.list(workspaceId, {
       sprintId,
-      status: TaskStatus.BACKLOG,
     });
+
+    return tasks.filter(
+      (t) =>
+        t.status === TaskStatus.BACKLOG ||
+        (t.status === TaskStatus.IN_PROGRESS && !t.assignedTo)
+    );
   }
 
   async getById(id: string, workspaceId: string): Promise<Task> {

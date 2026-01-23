@@ -34,6 +34,7 @@ export function useBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [view, setView] = useState<"board" | "mindmap">("board");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -196,6 +197,8 @@ export function useBoard() {
     setPriorityFilter,
     roleFilter,
     setRoleFilter,
+    view,
+    setView,
     sensors,
     handleDragStart,
     handleDragEnd,

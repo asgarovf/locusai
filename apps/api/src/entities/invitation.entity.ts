@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -16,6 +17,7 @@ export class Invitation {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "org_id" })
   orgId: string;
 
@@ -23,6 +25,7 @@ export class Invitation {
   @JoinColumn({ name: "org_id" })
   organization: Organization;
 
+  @Index()
   @Column()
   email: string;
 
@@ -35,10 +38,10 @@ export class Invitation {
   @Column({ unique: true })
   token: string;
 
-  @Column({ name: "expires_at", type: "timestamp" })
+  @Column({ name: "expires_at", type: "timestamptz" })
   expiresAt: Date;
 
-  @Column({ name: "accepted_at", type: "timestamp", nullable: true })
+  @Column({ name: "accepted_at", type: "timestamptz", nullable: true })
   acceptedAt: Date;
 
   @Column({ name: "invited_by_id" })
@@ -48,9 +51,9 @@ export class Invitation {
   @JoinColumn({ name: "invited_by_id" })
   invitedBy: User;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

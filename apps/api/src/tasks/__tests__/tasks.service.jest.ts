@@ -1,0 +1,96 @@
+import "reflect-metadata";
+import "../../test-setup";
+import { TaskStatus } from "@locusai/shared";
+import { BadRequestException } from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Comment } from "@/entities/comment.entity";
+import { Doc } from "@/entities/doc.entity";
+import { Task } from "@/entities/task.entity";
+import { EventsService } from "@/events/events.service";
+import { TaskProcessor } from "../task.processor";
+import { TasksService } from "../tasks.service";
+
+describe("TasksService", () => {
+  let service: TasksService;
+  let taskRepo: jest.Mocked<Repository<Task>>;
+  let eventsService: jest.Mocked<EventsService>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        TasksService,
+        {
+          provide: getRepositoryToken(Task),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Comment),
+          useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(Doc),
+          useValue: { find: jest.fn() },
+        },
+        {
+          provide: EventsService,
+          useValue: { logEvent: jest.fn(), getByTaskId: jest.fn() },
+        },
+        {
+          provide: TaskProcessor,
+          useValue: { onStatusChanged: jest.fn().mockResolvedValue(undefined) },
+        },
+      ],
+    }).compile();
+
+    service = module.get<TasksService>(TasksService);
+    taskRepo = module.get(getRepositoryToken(Task));
+    eventsService = module.get(EventsService);
+  });
+
+  it("should create a task with default checklist items", async () => {
+    const data = { title: "Test Task", workspaceId: "ws-1" };
+    taskRepo.create.mockImplementation(
+      (dto) => ({ id: "task-1", ...dto }) as any
+    );
+    taskRepo.save.mockImplementation(async (t) => t as any);
+
+    const result = await service.create(data);
+
+    expect(result.title).toBe("Test Task");
+    expect(result.acceptanceChecklist).toContainEqual(
+      expect.objectContaining({ text: "bun run lint" })
+    );
+    expect(eventsService.logEvent).toHaveBeenCalled();
+  });
+
+  it("should prevent moving directly to DONE from non-VERIFICATION status", async () => {
+    const task = { id: "task-1", status: TaskStatus.IN_PROGRESS };
+    taskRepo.findOne.mockResolvedValue(task as any);
+
+    await expect(
+      service.update("task-1", { status: TaskStatus.DONE })
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it("should allow moving to DONE from VERIFICATION", async () => {
+    const task = {
+      id: "task-1",
+      status: TaskStatus.VERIFICATION,
+      title: "Test",
+    };
+    taskRepo.findOne.mockResolvedValue(task as any);
+    taskRepo.save.mockImplementation(async (t) => t as any);
+
+    const result = await service.update("task-1", { status: TaskStatus.DONE });
+
+    expect(result.status).toBe(TaskStatus.DONE);
+  });
+});

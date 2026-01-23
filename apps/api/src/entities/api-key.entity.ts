@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -14,6 +15,7 @@ export class ApiKey {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "organization_id" })
   organizationId: string;
 
@@ -24,18 +26,21 @@ export class ApiKey {
   @Column()
   name: string;
 
-  @Column({ unique: true })
-  key: string;
+  @Column({ name: "key_hash", unique: true })
+  keyHash: string;
+
+  @Column({ name: "key_prefix" })
+  keyPrefix: string;
 
   @Column({ default: true })
   active: boolean;
 
-  @Column({ name: "last_used_at", type: "timestamp", nullable: true })
+  @Column({ name: "last_used_at", type: "timestamptz", nullable: true })
   lastUsedAt: Date | null;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

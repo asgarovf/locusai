@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -15,10 +16,14 @@ import { Sprint } from "./sprint.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("tasks")
+@Index(["workspaceId", "status"])
+@Index(["workspaceId", "priority"])
+@Index(["workspaceId", "assignedTo"])
 export class Task {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "workspace_id" })
   workspaceId: string;
 
@@ -32,12 +37,14 @@ export class Task {
   @Column({ nullable: true })
   description: string;
 
+  @Index()
   @Column({
     type: "varchar",
     default: TaskStatus.BACKLOG,
   })
   status: TaskStatus;
 
+  @Index()
   @Column({
     type: "varchar",
     default: TaskPriority.MEDIUM,
@@ -54,6 +61,7 @@ export class Task {
   })
   assigneeRole: AssigneeRole;
 
+  @Index()
   @Column({
     name: "assigned_to",
     type: "varchar",
@@ -63,14 +71,16 @@ export class Task {
 
   @Column({
     name: "due_date",
-    type: "date",
+    type: "timestamptz",
     nullable: true,
   })
   dueDate: Date | null;
 
+  @Index()
   @Column({ name: "parent_id", nullable: true })
   parentId: string;
 
+  @Index()
   @Column({ name: "sprint_id", nullable: true })
   sprintId: string | null;
 
@@ -96,9 +106,9 @@ export class Task {
   @Column({ name: "acceptance_checklist", type: "jsonb", default: [] })
   acceptanceChecklist: Array<{ id: string; text: string; done: boolean }>;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

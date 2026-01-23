@@ -9,7 +9,10 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { EmailService } from "@/common/services/email.service";
-import { Invitation, Membership, Organization, User } from "@/entities";
+import { Invitation } from "@/entities/invitation.entity";
+import { Membership } from "@/entities/membership.entity";
+import { Organization } from "@/entities/organization.entity";
+import { User } from "@/entities/user.entity";
 
 @Injectable()
 export class InvitationsService {

@@ -1,9 +1,9 @@
 import { randomInt } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { LessThan, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { TypedConfigService } from "@/config/config.service";
-import { OtpVerification } from "@/entities";
+import { OtpVerification } from "@/entities/otp-verification.entity";
 
 @Injectable()
 export class OtpService {
@@ -56,11 +56,5 @@ export class OtpService {
 
   async invalidateOtp(email: string): Promise<void> {
     await this.otpRepository.delete({ email });
-  }
-
-  async cleanupExpired(): Promise<void> {
-    await this.otpRepository.delete({
-      expiresAt: LessThan(new Date()),
-    });
   }
 }

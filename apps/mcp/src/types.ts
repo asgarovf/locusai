@@ -25,6 +25,7 @@ export interface Sprint {
   id: number;
   name: string;
   status: string;
+  mindmap?: string | null;
 }
 
 export const ROLE_PROMPTS: Record<string, string> = {

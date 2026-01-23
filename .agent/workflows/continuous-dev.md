@@ -8,11 +8,16 @@ Autonomous workflow for picking up and completing tasks in a loop from the activ
 
 ## Flow
 
-### 1. Check Sprint Status
+### 1. Check Sprint Status & Plan
 ```
 Use kanban.sprint to verify there is an active sprint
 ```
 If no active sprint exists, notify the user and wait for a sprint to be started.
+
+**Sprint Planning**: If this is the start of the sprint (or if the sprint mindmap is missing), you MUST:
+1. Review all tasks in the sprint using `kanban.sprint`.
+2. Create a mindmap/plan of the sprint, prioritizing tasks and identifying dependencies.
+3. Use `kanban.plan` to post this mindmap to the server. This helps visualize the sprint strategy.
 
 ### 2. Get Next Task
 ```

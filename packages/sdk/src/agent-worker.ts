@@ -1,404 +1,346 @@
-import { spawn } from "node:child_process";
-import { parseArgs } from "node:util";
-import { Task, TaskStatus } from "@locusai/shared";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+} from "node:fs";
+import { join } from "node:path";
+import { Sprint, Task, TaskStatus } from "@locusai/shared";
+import { ClaudeRunner } from "./claude-runner";
+import { getLocusPath } from "./config";
 import { LocusClient } from "./index";
+import { PromptBuilder } from "./prompt-builder";
 
 interface WorkerConfig {
   agentId: string;
   workspaceId: string;
   sprintId?: string;
-  skills: string[];
   apiBase: string;
-  mcpProjectPath: string;
+  projectPath: string;
   apiKey: string;
+  model?: string;
 }
 
-class AgentWorker {
-  private config: WorkerConfig;
+export class AgentWorker {
   private client: LocusClient;
+  private promptBuilder: PromptBuilder;
+  private claudeRunner: ClaudeRunner;
   private consecutiveEmpty = 0;
-  private maxEmpty = 5;
+  private maxEmpty = 10;
   private maxTasks = 50;
   private tasksCompleted = 0;
-  private tasksFailed = 0;
-  private pollInterval = 3000;
+  private pollInterval = 10_000;
+  private sprintPlan: string | null = null;
 
-  constructor(config: WorkerConfig) {
-    this.config = config;
+  constructor(private config: WorkerConfig) {
+    const projectPath = config.projectPath || process.cwd();
     this.client = new LocusClient({
       baseUrl: config.apiBase,
       token: config.apiKey,
     });
+    this.promptBuilder = new PromptBuilder(projectPath);
+    this.claudeRunner = new ClaudeRunner(projectPath, config.model);
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
     const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
-    const prefix = {
-      info: "ℹ",
-      success: "✓",
-      warn: "⚠",
-      error: "✗",
-    }[level];
+    const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
     console.log(
       `[${timestamp}] [${this.config.agentId.slice(-8)}] ${prefix} ${message}`
     );
   }
 
-  /**
-   * Get next available task matching agent skills.
-   * Only BACKLOG tasks are available for agents to pick up.
-   */
-  private async getNextTask(): Promise<Task | null> {
+  private async getActiveSprint(): Promise<Sprint | null> {
     try {
-      const tasks = await this.client.tasks.getAvailable(
-        this.config.workspaceId,
-        this.config.sprintId
-      );
-
-      if (tasks.length === 0) return null;
-
-      // Priority 1: tasks matching agent skills
-      let task = tasks.find(
-        (t) => t.assigneeRole && this.config.skills.includes(t.assigneeRole)
-      );
-
-      // Priority 2: first available task
-      if (!task) {
-        task = tasks[0];
+      if (this.config.sprintId) {
+        return await this.client.sprints.getById(
+          this.config.sprintId,
+          this.config.workspaceId
+        );
       }
-
-      return task || null;
-    } catch (error) {
-      this.log(`Error fetching tasks: ${error}`, "error");
+      return await this.client.sprints.getActive(this.config.workspaceId);
+    } catch (_error) {
       return null;
     }
   }
 
-  /**
-   * Claim task by moving it to IN_PROGRESS.
-   * This implicitly "locks" the task since only BACKLOG tasks are available.
-   */
-  private async claimTask(task: Task): Promise<boolean> {
-    try {
-      await this.client.tasks.update(task.id, this.config.workspaceId, {
-        status: TaskStatus.IN_PROGRESS,
-        assignedTo: this.config.agentId,
-      });
+  private async planSprint(sprint: Sprint, tasks: Task[]): Promise<string> {
+    this.log(`Planning sprint: ${sprint.name}`, "info");
 
-      return true;
-    } catch (error) {
-      this.log(`Failed to claim task: ${error}`, "error");
-      return false;
-    }
-  }
+    const taskList = tasks
+      .map(
+        (t) => `- [${t.id}] ${t.title}: ${t.description || "No description"}`
+      )
+      .join("\n");
 
-  /**
-   * Build prompt for Claude CLI from task data
-   */
-  private buildTaskPrompt(task: Task): string {
-    let prompt = `# Task: ${task.title}\n\n`;
-    prompt += `## Description\n${task.description || "No description provided."}\n\n`;
+    const planningPrompt = `
+# Sprint Planning: ${sprint.name}
 
-    if (task.acceptanceChecklist && task.acceptanceChecklist.length > 0) {
-      prompt += `## Acceptance Criteria\n`;
-      for (const item of task.acceptanceChecklist) {
-        const checkbox = item.done ? "[x]" : "[ ]";
-        prompt += `- ${checkbox} ${item.text}\n`;
-      }
-      prompt += "\n";
-    }
+You are an expert project manager and lead engineer. You need to create a mindmap and execution plan for the following tasks in this sprint.
 
-    prompt += `## Instructions\n`;
-    prompt += `Complete this task. When finished successfully, output: <promise>COMPLETE</promise>\n`;
-    prompt += `If you cannot complete it, explain why and do NOT output the completion signal.\n`;
+## Tasks
+${taskList}
 
-    return prompt;
-  }
+## Instructions
+1. Analyze dependencies between these tasks.
+2. Prioritize them for the most efficient execution.
+3. Create a mindmap (in Markdown or Mermaid format) that visualizes the sprint structure.
+4. Output your final plan. The plan should clearly state the order of execution.
 
-  /**
-   * Run Claude CLI with the given prompt
-   */
-  private runClaudeCli(prompt: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const claude = spawn(
-        "claude",
-        ["--dangerously-skip-permissions", "--print"],
-        {
-          cwd: this.config.mcpProjectPath || process.cwd(),
-          stdio: ["pipe", "pipe", "pipe"],
-        }
-      );
+**IMPORTANT**: 
+- Do NOT create any files on the filesystem during this planning phase. 
+- Avoid using absolute local paths (e.g., /Users/...) in your output. Use relative paths starting from the project root if necessary.
+- Your output will be saved as the official sprint mindmap on the server.
+`;
 
-      let output = "";
-      let errorOutput = "";
+    const plan = await this.claudeRunner.run(planningPrompt, true);
 
-      claude.stdout.on("data", (data: Buffer) => {
-        const text = data.toString();
-        output += text;
-        process.stdout.write(text);
-      });
-
-      claude.stderr.on("data", (data: Buffer) => {
-        const text = data.toString();
-        errorOutput += text;
-        process.stderr.write(text);
-      });
-
-      claude.on("error", (err) => {
-        reject(new Error(`Failed to start Claude CLI: ${err.message}`));
-      });
-
-      claude.on("close", (code) => {
-        if (code === 0) {
-          resolve(output);
-        } else {
-          reject(new Error(`Claude exited with code ${code}: ${errorOutput}`));
-        }
-      });
-
-      // Send prompt via stdin and close
-      claude.stdin.write(prompt);
-      claude.stdin.end();
+    // Save mindmap to server
+    await this.client.sprints.update(sprint.id, this.config.workspaceId, {
+      mindmap: plan,
+      mindmapUpdatedAt: new Date(),
     });
+
+    this.log("Sprint mindmap generated and posted to server.", "success");
+    return plan;
   }
 
-  /**
-   * Execute task using Claude CLI
-   */
+  private async getNextTask(): Promise<Task | null> {
+    try {
+      // If we have a plan, we should ideally pick the next task based on it.
+      // For now, we still use the dispatch endpoint which picks the highest priority task,
+      // but the planning phase (planSprint) can be used to re-prioritize tasks in the DB
+      // if we wanted to be even smarter.
+      const task = await this.client.workspaces.dispatch(
+        this.config.workspaceId,
+        this.config.agentId,
+        this.config.sprintId
+      );
+      return task;
+    } catch (error) {
+      this.log(
+        `No task dispatched: ${error instanceof Error ? error.message : String(error)}`,
+        "info"
+      );
+      return null;
+    }
+  }
+
+  private async syncArtifacts(): Promise<void> {
+    const artifactsDir = getLocusPath(this.config.projectPath, "artifactsDir");
+    if (!existsSync(artifactsDir)) {
+      mkdirSync(artifactsDir, { recursive: true });
+      return;
+    }
+
+    try {
+      const files = readdirSync(artifactsDir);
+      if (files.length === 0) return;
+
+      this.log(`Syncing ${files.length} artifacts to server...`, "info");
+
+      // Get existing docs to check for updates
+      const existingDocs = await this.client.docs.list(this.config.workspaceId);
+
+      for (const file of files) {
+        const filePath = join(artifactsDir, file);
+        if (statSync(filePath).isFile()) {
+          const content = readFileSync(filePath, "utf-8");
+          const title = file.replace(/\.md$/, "").trim();
+          if (!title) continue;
+
+          const existing = existingDocs.find((d) => d.title === title);
+
+          if (existing) {
+            if (existing.content !== content) {
+              await this.client.docs.update(
+                existing.id,
+                this.config.workspaceId,
+                { content }
+              );
+              this.log(`Updated artifact: ${file}`, "success");
+            }
+          } else {
+            await this.client.docs.create(this.config.workspaceId, {
+              title,
+              content,
+            });
+            this.log(`Created artifact: ${file}`, "success");
+          }
+        }
+      }
+    } catch (error) {
+      this.log(`Failed to sync artifacts: ${error}`, "error");
+    }
+  }
+
   private async executeTask(
     task: Task
   ): Promise<{ success: boolean; summary: string }> {
-    this.log(`Executing: ${task.title}`, "info");
+    // Fetch full task details to get comments/feedback
+    const fullTask = await this.client.tasks.getById(
+      task.id,
+      this.config.workspaceId
+    );
 
-    // Log acceptance criteria
-    if (task.acceptanceChecklist && task.acceptanceChecklist.length > 0) {
-      this.log("Acceptance criteria:", "info");
-      for (const item of task.acceptanceChecklist) {
-        const icon = item.done ? "☑" : "☐";
-        console.log(`     ${icon} ${item.text}`);
-      }
+    this.log(`Executing: ${fullTask.title}`, "info");
+    let basePrompt = await this.promptBuilder.build(fullTask);
+
+    if (this.sprintPlan) {
+      basePrompt = `## Sprint Context\n${this.sprintPlan}\n\n${basePrompt}`;
     }
 
-    // Build prompt and run Claude CLI
-    const prompt = this.buildTaskPrompt(task);
-    this.log("Running Claude CLI...", "info");
-
     try {
-      const output = await this.runClaudeCli(prompt);
+      // Phase 1: Planning
+      this.log("Phase 1: Planning...", "info");
+      const planningPrompt = `${basePrompt}\n\n## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
+      const plan = await this.claudeRunner.run(planningPrompt, true);
 
-      // Check for completion signal (like Ralph does)
+      // Phase 2: Execution
+      this.log("Plan generated. Starting Phase 2: Execution...", "info");
+      const executionPrompt = `${basePrompt}\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}\n\nWhen finished, output: <promise>COMPLETE</promise>`;
+      const output = await this.claudeRunner.run(executionPrompt);
+
       const success = output.includes("<promise>COMPLETE</promise>");
-
-      // Mark all acceptance items as done if successful
       if (success && task.acceptanceChecklist) {
-        const updated = task.acceptanceChecklist.map(
-          (item: { id: string; text: string; done: boolean }) => ({
-            ...item,
+        await this.client.tasks.update(task.id, this.config.workspaceId, {
+          acceptanceChecklist: task.acceptanceChecklist.map((i) => ({
+            ...i,
             done: true,
-          })
-        );
-
-        try {
-          await this.client.tasks.update(task.id, this.config.workspaceId, {
-            acceptanceChecklist: updated,
-          });
-        } catch (error) {
-          this.log(`Warning: Failed to update checklist: ${error}`, "warn");
-        }
+          })),
+        });
       }
 
       return {
         success,
         summary: success
-          ? `Task completed by Claude CLI`
-          : `Claude did not signal completion. Output:\n${output.slice(0, 500)}`,
+          ? "Task completed by Claude"
+          : "Claude did not signal completion",
       };
     } catch (error) {
-      return {
-        success: false,
-        summary: `Claude CLI error: ${error}`,
-      };
+      return { success: false, summary: `Error: ${error}` };
     }
   }
 
-  /**
-   * Complete task - move to VERIFICATION for human review
-   */
-  private async completeTask(task: Task, summary: string): Promise<void> {
-    try {
-      await this.client.tasks.update(task.id, this.config.workspaceId, {
-        status: TaskStatus.VERIFICATION,
-      });
-
-      await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-        author: this.config.agentId,
-        text: `✅ Task completed by agent\n\n${summary}`,
-      });
-
-      this.tasksCompleted += 1;
-      this.consecutiveEmpty = 0;
-
-      this.log(`Completed: ${task.title}`, "success");
-      this.log(
-        `Progress: ${this.tasksCompleted} completed, ${this.tasksFailed} failed`,
-        "info"
-      );
-    } catch (error) {
-      this.log(`Error completing task: ${error}`, "error");
-    }
-  }
-
-  /**
-   * Fail task - move back to BACKLOG so another agent can pick it up
-   */
-  private async failTask(task: Task, error: string): Promise<void> {
-    try {
-      await this.client.tasks.update(task.id, this.config.workspaceId, {
-        status: TaskStatus.BACKLOG,
-        assignedTo: null,
-      });
-
-      await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-        author: this.config.agentId,
-        text: `❌ Task failed\n\nError: ${error}`,
-      });
-
-      this.tasksFailed += 1;
-      this.log(`Failed: ${task.title} - ${error}`, "error");
-    } catch (err) {
-      this.log(`Error failing task: ${err}`, "error");
-    }
-  }
-
-  /**
-   * Main agent loop
-   */
   async run(): Promise<void> {
-    this.log(`Agent started`, "success");
-    this.log(`Skills: ${this.config.skills.join(", ")}`, "info");
-    this.log(`Workspace: ${this.config.workspaceId}`, "info");
-    if (this.config.sprintId) {
-      this.log(`Sprint: ${this.config.sprintId}`, "info");
+    this.log(
+      `Agent started in ${this.config.projectPath || process.cwd()}`,
+      "success"
+    );
+
+    // Initial Sprint Planning Phase
+    const sprint = await this.getActiveSprint();
+    if (sprint) {
+      this.log(`Found active sprint: ${sprint.name} (${sprint.id})`, "info");
+      const tasks = await this.client.tasks.list(this.config.workspaceId, {
+        sprintId: sprint.id,
+      });
+
+      this.log(`Sprint tasks found: ${tasks.length}`, "info");
+
+      const latestTaskCreation = tasks.reduce((latest, task) => {
+        const taskDate = new Date(task.createdAt);
+        return taskDate > latest ? taskDate : latest;
+      }, new Date(0));
+
+      const mindmapDate = sprint.mindmapUpdatedAt
+        ? new Date(sprint.mindmapUpdatedAt)
+        : new Date(0);
+
+      const needsPlanning =
+        !sprint.mindmap ||
+        sprint.mindmap.trim() === "" ||
+        latestTaskCreation > mindmapDate;
+
+      if (needsPlanning) {
+        if (sprint.mindmap && latestTaskCreation > mindmapDate) {
+          this.log(
+            "New tasks have been added to the sprint since last mindmap. Regenerating...",
+            "warn"
+          );
+        }
+        this.sprintPlan = await this.planSprint(sprint, tasks);
+      } else {
+        this.log("Using existing sprint mindmap.", "info");
+        this.sprintPlan = sprint.mindmap ?? null;
+      }
+    } else {
+      this.log("No active sprint found for planning.", "warn");
     }
-    console.log("");
 
     while (
       this.tasksCompleted < this.maxTasks &&
       this.consecutiveEmpty < this.maxEmpty
     ) {
-      // Poll for next task
       const task = await this.getNextTask();
-
       if (!task) {
-        this.consecutiveEmpty += 1;
-        this.log(
-          `No tasks available (${this.consecutiveEmpty}/${this.maxEmpty} polls)`,
-          "warn"
-        );
-
-        if (this.consecutiveEmpty >= this.maxEmpty) {
-          this.log("Max empty polls reached, stopping", "info");
-          break;
-        }
-
-        await this.sleep(this.pollInterval);
+        this.consecutiveEmpty++;
+        if (this.consecutiveEmpty >= this.maxEmpty) break;
+        await new Promise((r) => setTimeout(r, this.pollInterval));
         continue;
       }
 
       this.consecutiveEmpty = 0;
-
-      // Try to claim the task
-      const claimed = await this.claimTask(task);
-      if (!claimed) {
-        this.log("Failed to claim task, trying another", "warn");
-        await this.sleep(1000);
-        continue;
-      }
-
       this.log(`Claimed: ${task.title}`, "success");
 
-      // Execute the task
-      try {
-        const result = await this.executeTask(task);
+      const result = await this.executeTask(task);
 
-        if (result.success) {
-          await this.completeTask(task, result.summary);
-        } else {
-          await this.failTask(task, "Execution returned failure");
-        }
-      } catch (error) {
-        await this.failTask(task, String(error));
+      // Sync artifacts after task execution
+      await this.syncArtifacts();
+
+      if (result.success) {
+        await this.client.tasks.update(task.id, this.config.workspaceId, {
+          status: TaskStatus.VERIFICATION,
+        });
+        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+          author: this.config.agentId,
+          text: `✅ ${result.summary}`,
+        });
+        this.tasksCompleted++;
+      } else {
+        await this.client.tasks.update(task.id, this.config.workspaceId, {
+          status: TaskStatus.BACKLOG,
+          assignedTo: null,
+        });
+        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+          author: this.config.agentId,
+          text: `❌ ${result.summary}`,
+        });
       }
-
-      // Brief pause between tasks
-      await this.sleep(500);
     }
-
-    console.log("");
-    this.log(`Agent finished`, "success");
-    this.log(`Tasks completed: ${this.tasksCompleted}`, "info");
-    this.log(`Tasks failed: ${this.tasksFailed}`, "info");
-
     process.exit(0);
   }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 }
 
-/**
- * Parse command line arguments
- */
-function parseConfig(): WorkerConfig {
-  const { values } = parseArgs({
-    options: {
-      "agent-id": { type: "string" },
-      "workspace-id": { type: "string" },
-      "sprint-id": { type: "string" },
-      skills: { type: "string" },
-      "api-base": { type: "string" },
-      "api-key": { type: "string" },
-      "mcp-project": { type: "string" },
-    },
-    strict: true,
+if (process.argv[1]?.includes("agent-worker")) {
+  const args = process.argv.slice(2);
+  const config: Partial<WorkerConfig> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--agent-id") config.agentId = args[++i];
+    else if (arg === "--workspace-id") config.workspaceId = args[++i];
+    else if (arg === "--sprint-id") config.sprintId = args[++i];
+    else if (arg === "--api-base") config.apiBase = args[++i];
+    else if (arg === "--api-key") config.apiKey = args[++i];
+    else if (arg === "--project-path") config.projectPath = args[++i];
+    else if (arg === "--model") config.model = args[++i];
+  }
+
+  if (
+    !config.agentId ||
+    !config.workspaceId ||
+    !config.apiBase ||
+    !config.apiKey ||
+    !config.projectPath
+  ) {
+    console.error("Missing required arguments");
+    process.exit(1);
+  }
+
+  const worker = new AgentWorker(config as WorkerConfig);
+  worker.run().catch((err) => {
+    console.error("Fatal worker error:", err);
+    process.exit(1);
   });
-
-  const agentId = values["agent-id"];
-  const workspaceId = values["workspace-id"];
-  const sprintId = values["sprint-id"];
-  const apiKey = values["api-key"];
-
-  if (!agentId || !workspaceId || !apiKey) {
-    console.error(
-      "Missing required arguments: --agent-id, --workspace-id, --api-key"
-    );
-    process.exit(1);
-  }
-
-  return {
-    agentId,
-    workspaceId,
-    sprintId: sprintId || undefined,
-    skills: (values.skills || "").split(",").filter(Boolean),
-    apiBase: values["api-base"] || "https://api.locus.dev/api",
-    mcpProjectPath: values["mcp-project"] || "",
-    apiKey,
-  };
 }
-
-/**
- * Main entry point
- */
-async function main() {
-  try {
-    const config = parseConfig();
-    const worker = new AgentWorker(config);
-    await worker.run();
-  } catch (error) {
-    console.error("Agent error:", error);
-    process.exit(1);
-  }
-}
-
-main();

@@ -18,6 +18,7 @@ export function useTasksQuery() {
     queryFn: () =>
       workspaceId ? locusClient.tasks.list(workspaceId) : Promise.resolve([]),
     enabled: !!workspaceId,
+    refetchInterval: 10_000,
   });
 }
 

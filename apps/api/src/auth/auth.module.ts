@@ -2,9 +2,9 @@ import { Global, Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { EmailService } from "@/common/services/email.service";
 import { TypedConfigService } from "@/config/config.service";
 import {
+  ApiKey,
   Membership,
   Organization,
   OtpVerification,
@@ -28,25 +28,19 @@ import { JwtStrategy } from "./strategies";
       Organization,
       Workspace,
       Membership,
+      ApiKey,
     ]),
     JwtModule.registerAsync({
       inject: [TypedConfigService],
       useFactory: async (configService: TypedConfigService) => ({
         secret: configService.get("JWT_SECRET"),
         signOptions: {
-          expiresIn: configService.get("JWT_EXPIRES_IN"),
+          expiresIn: configService.get("JWT_EXPIRES_IN") as "1h" | "1d" | "7d",
         },
       }),
     }),
   ],
-  providers: [
-    AuthService,
-    OtpService,
-    EmailService,
-    JwtStrategy,
-    // Note: Global auth guard (JwtOrApiKeyGuard) is registered in AppModule
-    // This allows both JWT and API key authentication
-  ],
+  providers: [AuthService, OtpService, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

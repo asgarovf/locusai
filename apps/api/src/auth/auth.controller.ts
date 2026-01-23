@@ -17,10 +17,9 @@ import {
   UnauthorizedException,
   UsePipes,
 } from "@nestjs/common";
-import { Public } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { AuthService } from "./auth.service";
-import { CurrentUser } from "./decorators";
+import { CurrentUser, Public } from "./decorators";
 
 @Controller("auth")
 export class AuthController {

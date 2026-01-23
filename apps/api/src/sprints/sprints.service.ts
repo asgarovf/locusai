@@ -63,6 +63,16 @@ export class SprintsService {
     const sprint = await this.findById(id);
     const oldStatus = sprint.status;
 
+    // Handle mindmap update if present
+    if (updates.mindmap !== undefined) {
+      sprint.mindmap = updates.mindmap;
+      if (updates.mindmapUpdatedAt !== undefined) {
+        sprint.mindmapUpdatedAt = updates.mindmapUpdatedAt
+          ? new Date(updates.mindmapUpdatedAt)
+          : null;
+      }
+    }
+
     Object.assign(sprint, updates);
     const saved = await this.sprintRepository.save(sprint);
 

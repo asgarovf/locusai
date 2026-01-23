@@ -1,4 +1,9 @@
-import { EventType, ReportCiResult } from "@locusai/shared";
+import {
+  AuthenticatedUser,
+  EventType,
+  getAuthUserId,
+  ReportCiResult,
+} from "@locusai/shared";
 import { Injectable } from "@nestjs/common";
 import { EventsService } from "@/events/events.service";
 
@@ -6,17 +11,17 @@ import { EventsService } from "@/events/events.service";
 export class CiService {
   constructor(private readonly eventsService: EventsService) {}
 
-  async reportResult(data: ReportCiResult, userId?: string) {
+  async reportResult(data: ReportCiResult, user: AuthenticatedUser) {
     const { workspaceId, taskId, ...payload } = data;
 
     await this.eventsService.logEvent({
       workspaceId,
       taskId: taskId || null,
-      userId: userId || null,
+      userId: getAuthUserId(user),
       type: EventType.CI_RAN,
       payload: {
         ...payload,
-        source: "local-cli",
+        source: user.authType === "api_key" ? "api_key" : "local-cli",
         deferred: false,
         processed: true,
       },

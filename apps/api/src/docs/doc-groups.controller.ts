@@ -15,15 +15,12 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from "@nestjs/common";
 import { MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocGroupsService } from "./doc-groups.service";
 
 @Controller("workspaces/:workspaceId/doc-groups")
-@UseGuards(MembershipRolesGuard)
 export class DocGroupsController {
   constructor(private readonly docGroupsService: DocGroupsService) {}
 
@@ -31,7 +28,8 @@ export class DocGroupsController {
   @MembershipRoles(
     MembershipRole.OWNER,
     MembershipRole.ADMIN,
-    MembershipRole.MEMBER
+    MembershipRole.MEMBER,
+    MembershipRole.VIEWER
   )
   async list(
     @Param("workspaceId") workspaceId: string

@@ -23,6 +23,7 @@
 import { type Workspace } from "@locusai/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -102,6 +103,12 @@ export function Sidebar() {
       label: "Backlog",
       icon: List,
       description: "All tasks",
+    },
+    {
+      href: "/activity",
+      label: "Activity",
+      icon: Activity,
+      description: "Workspace history",
     },
     {
       href: "/docs",

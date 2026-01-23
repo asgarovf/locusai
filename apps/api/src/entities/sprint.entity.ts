@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -12,10 +13,12 @@ import { Task } from "./task.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("sprints")
+@Index(["workspaceId", "status"])
 export class Sprint {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column({ name: "workspace_id" })
   workspaceId: string;
 
@@ -32,18 +35,25 @@ export class Sprint {
   @Column()
   name: string;
 
+  @Index()
   @Column({
     type: "varchar",
     default: SprintStatus.PLANNED,
   })
   status: SprintStatus;
 
-  @Column({ name: "start_date", type: "timestamp", nullable: true })
+  @Column({ name: "start_date", type: "timestamptz", nullable: true })
   startDate: Date;
 
-  @Column({ name: "end_date", type: "timestamp", nullable: true })
+  @Column({ name: "end_date", type: "timestamptz", nullable: true })
   endDate: Date;
 
-  @CreateDateColumn({ name: "created_at" })
+  @Column({ type: "text", nullable: true })
+  mindmap: string;
+
+  @Column({ name: "mindmap_updated_at", type: "timestamptz", nullable: true })
+  mindmapUpdatedAt: Date;
+
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 }

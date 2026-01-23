@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from "typeorm";
 
@@ -10,13 +11,14 @@ export class OtpVerification {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Index()
   @Column()
   email: string;
 
   @Column()
   code: string;
 
-  @Column({ name: "expires_at" })
+  @Column({ name: "expires_at", type: "timestamptz" })
   expiresAt: Date;
 
   @Column({ default: false })
@@ -25,6 +27,6 @@ export class OtpVerification {
   @Column({ default: 0 })
   attempts: number;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 }

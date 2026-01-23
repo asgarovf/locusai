@@ -58,7 +58,7 @@ export default function SettingsPage() {
       title="Settings"
       description="Manage your workspace preferences and configuration."
     >
-      <div className="max-w-3xl space-y-8">
+      <div className="max-w-5xl space-y-8">
         {/* Organization Section */}
         <SettingSection title="Organization">
           <Link href="/settings/team">

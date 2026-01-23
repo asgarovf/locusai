@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -21,6 +22,7 @@ export class User {
   @Column({ name: "avatar_url", nullable: true })
   avatarUrl: string;
 
+  @Index()
   @Column({
     type: "varchar",
     default: UserRole.USER,
@@ -42,9 +44,9 @@ export class User {
   @Column({ name: "email_verified", default: false })
   emailVerified: boolean;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }
