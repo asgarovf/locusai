@@ -40,7 +40,7 @@ export class AnthropicClient {
     const { systemPrompt, cacheableContext = [], userPrompt } = options;
 
     // Build system message with cache breakpoints
-    const systemContent: Anthropic.Messages.ContentBlock[] = [];
+    const systemContent: Anthropic.Messages.TextBlockParam[] = [];
 
     if (systemPrompt) {
       systemContent.push({
