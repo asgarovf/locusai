@@ -29,129 +29,6 @@ var __export = (target, all) => {
 };
 var __require = /* @__PURE__ */ createRequire(import.meta.url);
 
-// ../../node_modules/array-union/index.js
-var require_array_union = __commonJS((exports, module) => {
-  module.exports = (...arguments_) => {
-    return [...new Set([].concat(...arguments_))];
-  };
-});
-
-// ../../node_modules/merge2/index.js
-var require_merge2 = __commonJS((exports, module) => {
-  var Stream = __require("stream");
-  var PassThrough = Stream.PassThrough;
-  var slice = Array.prototype.slice;
-  module.exports = merge2;
-  function merge2() {
-    const streamsQueue = [];
-    const args = slice.call(arguments);
-    let merging = false;
-    let options = args[args.length - 1];
-    if (options && !Array.isArray(options) && options.pipe == null) {
-      args.pop();
-    } else {
-      options = {};
-    }
-    const doEnd = options.end !== false;
-    const doPipeError = options.pipeError === true;
-    if (options.objectMode == null) {
-      options.objectMode = true;
-    }
-    if (options.highWaterMark == null) {
-      options.highWaterMark = 64 * 1024;
-    }
-    const mergedStream = PassThrough(options);
-    function addStream() {
-      for (let i = 0, len = arguments.length;i < len; i++) {
-        streamsQueue.push(pauseStreams(arguments[i], options));
-      }
-      mergeStream();
-      return this;
-    }
-    function mergeStream() {
-      if (merging) {
-        return;
-      }
-      merging = true;
-      let streams = streamsQueue.shift();
-      if (!streams) {
-        process.nextTick(endStream);
-        return;
-      }
-      if (!Array.isArray(streams)) {
-        streams = [streams];
-      }
-      let pipesCount = streams.length + 1;
-      function next() {
-        if (--pipesCount > 0) {
-          return;
-        }
-        merging = false;
-        mergeStream();
-      }
-      function pipe(stream) {
-        function onend() {
-          stream.removeListener("merge2UnpipeEnd", onend);
-          stream.removeListener("end", onend);
-          if (doPipeError) {
-            stream.removeListener("error", onerror);
-          }
-          next();
-        }
-        function onerror(err) {
-          mergedStream.emit("error", err);
-        }
-        if (stream._readableState.endEmitted) {
-          return next();
-        }
-        stream.on("merge2UnpipeEnd", onend);
-        stream.on("end", onend);
-        if (doPipeError) {
-          stream.on("error", onerror);
-        }
-        stream.pipe(mergedStream, { end: false });
-        stream.resume();
-      }
-      for (let i = 0;i < streams.length; i++) {
-        pipe(streams[i]);
-      }
-      next();
-    }
-    function endStream() {
-      merging = false;
-      mergedStream.emit("queueDrain");
-      if (doEnd) {
-        mergedStream.end();
-      }
-    }
-    mergedStream.setMaxListeners(0);
-    mergedStream.add = addStream;
-    mergedStream.on("unpipe", function(stream) {
-      stream.emit("merge2UnpipeEnd");
-    });
-    if (args.length) {
-      addStream.apply(null, args);
-    }
-    return mergedStream;
-  }
-  function pauseStreams(streams, options) {
-    if (!Array.isArray(streams)) {
-      if (!streams._readableState && streams.pipe) {
-        streams = streams.pipe(PassThrough(options));
-      }
-      if (!streams._readableState || !streams.pause || !streams.pipe) {
-        throw new Error("Only readable stream can be merged.");
-      }
-      streams.pause();
-    } else {
-      for (let i = 0, len = streams.length;i < len; i++) {
-        streams[i] = pauseStreams(streams[i], options);
-      }
-    }
-    return streams;
-  }
-});
-
 // ../../node_modules/fast-glob/out/utils/array.js
 var require_array = __commonJS((exports) => {
   Object.defineProperty(exports, "__esModule", { value: true });
@@ -1730,7 +1607,7 @@ var require_scan = __commonJS((exports, module) => {
     let backslashes = false;
     let negated = false;
     let negatedExtglob = false;
-    let finished = false;
+    let finished2 = false;
     let braces = 0;
     let prev;
     let code;
@@ -1767,7 +1644,7 @@ var require_scan = __commonJS((exports, module) => {
           if (braceEscaped !== true && code === CHAR_DOT && (code = advance()) === CHAR_DOT) {
             isBrace = token.isBrace = true;
             isGlob = token.isGlob = true;
-            finished = true;
+            finished2 = true;
             if (scanToEnd === true) {
               continue;
             }
@@ -1776,7 +1653,7 @@ var require_scan = __commonJS((exports, module) => {
           if (braceEscaped !== true && code === CHAR_COMMA) {
             isBrace = token.isBrace = true;
             isGlob = token.isGlob = true;
-            finished = true;
+            finished2 = true;
             if (scanToEnd === true) {
               continue;
             }
@@ -1787,7 +1664,7 @@ var require_scan = __commonJS((exports, module) => {
             if (braces === 0) {
               braceEscaped = false;
               isBrace = token.isBrace = true;
-              finished = true;
+              finished2 = true;
               break;
             }
           }
@@ -1801,7 +1678,7 @@ var require_scan = __commonJS((exports, module) => {
         slashes.push(index);
         tokens.push(token);
         token = { value: "", depth: 0, isGlob: false };
-        if (finished === true)
+        if (finished2 === true)
           continue;
         if (prev === CHAR_DOT && index === start + 1) {
           start += 2;
@@ -1815,7 +1692,7 @@ var require_scan = __commonJS((exports, module) => {
         if (isExtglobChar === true && peek() === CHAR_LEFT_PARENTHESES) {
           isGlob = token.isGlob = true;
           isExtglob = token.isExtglob = true;
-          finished = true;
+          finished2 = true;
           if (code === CHAR_EXCLAMATION_MARK && index === start) {
             negatedExtglob = true;
           }
@@ -1828,7 +1705,7 @@ var require_scan = __commonJS((exports, module) => {
               }
               if (code === CHAR_RIGHT_PARENTHESES) {
                 isGlob = token.isGlob = true;
-                finished = true;
+                finished2 = true;
                 break;
               }
             }
@@ -1841,7 +1718,7 @@ var require_scan = __commonJS((exports, module) => {
         if (prev === CHAR_ASTERISK)
           isGlobstar = token.isGlobstar = true;
         isGlob = token.isGlob = true;
-        finished = true;
+        finished2 = true;
         if (scanToEnd === true) {
           continue;
         }
@@ -1849,7 +1726,7 @@ var require_scan = __commonJS((exports, module) => {
       }
       if (code === CHAR_QUESTION_MARK) {
         isGlob = token.isGlob = true;
-        finished = true;
+        finished2 = true;
         if (scanToEnd === true) {
           continue;
         }
@@ -1865,7 +1742,7 @@ var require_scan = __commonJS((exports, module) => {
           if (next === CHAR_RIGHT_SQUARE_BRACKET) {
             isBracket = token.isBracket = true;
             isGlob = token.isGlob = true;
-            finished = true;
+            finished2 = true;
             break;
           }
         }
@@ -1889,7 +1766,7 @@ var require_scan = __commonJS((exports, module) => {
               continue;
             }
             if (code === CHAR_RIGHT_PARENTHESES) {
-              finished = true;
+              finished2 = true;
               break;
             }
           }
@@ -1898,7 +1775,7 @@ var require_scan = __commonJS((exports, module) => {
         break;
       }
       if (isGlob === true) {
-        finished = true;
+        finished2 = true;
         if (scanToEnd === true) {
           continue;
         }
@@ -3242,6 +3119,122 @@ var require_pattern = __commonJS((exports) => {
   exports.isAbsolute = isAbsolute;
 });
 
+// ../../node_modules/merge2/index.js
+var require_merge2 = __commonJS((exports, module) => {
+  var Stream = __require("stream");
+  var PassThrough = Stream.PassThrough;
+  var slice = Array.prototype.slice;
+  module.exports = merge2;
+  function merge2() {
+    const streamsQueue = [];
+    const args = slice.call(arguments);
+    let merging = false;
+    let options = args[args.length - 1];
+    if (options && !Array.isArray(options) && options.pipe == null) {
+      args.pop();
+    } else {
+      options = {};
+    }
+    const doEnd = options.end !== false;
+    const doPipeError = options.pipeError === true;
+    if (options.objectMode == null) {
+      options.objectMode = true;
+    }
+    if (options.highWaterMark == null) {
+      options.highWaterMark = 64 * 1024;
+    }
+    const mergedStream = PassThrough(options);
+    function addStream() {
+      for (let i = 0, len = arguments.length;i < len; i++) {
+        streamsQueue.push(pauseStreams(arguments[i], options));
+      }
+      mergeStream();
+      return this;
+    }
+    function mergeStream() {
+      if (merging) {
+        return;
+      }
+      merging = true;
+      let streams = streamsQueue.shift();
+      if (!streams) {
+        process.nextTick(endStream2);
+        return;
+      }
+      if (!Array.isArray(streams)) {
+        streams = [streams];
+      }
+      let pipesCount = streams.length + 1;
+      function next() {
+        if (--pipesCount > 0) {
+          return;
+        }
+        merging = false;
+        mergeStream();
+      }
+      function pipe(stream) {
+        function onend() {
+          stream.removeListener("merge2UnpipeEnd", onend);
+          stream.removeListener("end", onend);
+          if (doPipeError) {
+            stream.removeListener("error", onerror);
+          }
+          next();
+        }
+        function onerror(err) {
+          mergedStream.emit("error", err);
+        }
+        if (stream._readableState.endEmitted) {
+          return next();
+        }
+        stream.on("merge2UnpipeEnd", onend);
+        stream.on("end", onend);
+        if (doPipeError) {
+          stream.on("error", onerror);
+        }
+        stream.pipe(mergedStream, { end: false });
+        stream.resume();
+      }
+      for (let i = 0;i < streams.length; i++) {
+        pipe(streams[i]);
+      }
+      next();
+    }
+    function endStream2() {
+      merging = false;
+      mergedStream.emit("queueDrain");
+      if (doEnd) {
+        mergedStream.end();
+      }
+    }
+    mergedStream.setMaxListeners(0);
+    mergedStream.add = addStream;
+    mergedStream.on("unpipe", function(stream) {
+      stream.emit("merge2UnpipeEnd");
+    });
+    if (args.length) {
+      addStream.apply(null, args);
+    }
+    return mergedStream;
+  }
+  function pauseStreams(streams, options) {
+    if (!Array.isArray(streams)) {
+      if (!streams._readableState && streams.pipe) {
+        streams = streams.pipe(PassThrough(options));
+      }
+      if (!streams._readableState || !streams.pause || !streams.pipe) {
+        throw new Error("Only readable stream can be merged.");
+      }
+      streams.pause();
+    } else {
+      for (let i = 0, len = streams.length;i < len; i++) {
+        streams[i] = pauseStreams(streams[i], options);
+      }
+    }
+    return streams;
+  }
+});
+
 // ../../node_modules/fast-glob/out/utils/stream.js
 var require_stream = __commonJS((exports) => {
   Object.defineProperty(exports, "__esModule", { value: true });
@@ -3923,8 +3916,8 @@ var require_queue = __commonJS((exports, module) => {
     var errorHandler = null;
     var self2 = {
       push,
-      drain: noop,
-      saturated: noop,
+      drain: noop2,
+      saturated: noop2,
       pause,
       paused: false,
       get concurrency() {
@@ -3948,7 +3941,7 @@ var require_queue = __commonJS((exports, module) => {
       length,
       getQueue,
       unshift,
-      empty: noop,
+      empty: noop2,
       kill,
       killAndDrain,
       error,
@@ -4001,7 +3994,7 @@ var require_queue = __commonJS((exports, module) => {
       current.context = context;
       current.release = release;
       current.value = value;
-      current.callback = done || noop;
+      current.callback = done || noop2;
       current.errorHandler = errorHandler;
       if (_running >= _concurrency || self2.paused) {
         if (queueTail) {
@@ -4022,7 +4015,7 @@ var require_queue = __commonJS((exports, module) => {
       current.context = context;
       current.release = release;
       current.value = value;
-      current.callback = done || noop;
+      current.callback = done || noop2;
       current.errorHandler = errorHandler;
       if (_running >= _concurrency || self2.paused) {
         if (queueHead) {
@@ -4064,13 +4057,13 @@ var require_queue = __commonJS((exports, module) => {
     function kill() {
       queueHead = null;
       queueTail = null;
-      self2.drain = noop;
+      self2.drain = noop2;
     }
     function killAndDrain() {
       queueHead = null;
       queueTail = null;
       self2.drain();
-      self2.drain = noop;
+      self2.drain = noop2;
     }
     function abort() {
       var current = queueHead;
@@ -4083,7 +4076,7 @@ var require_queue = __commonJS((exports, module) => {
         var val = current.value;
         var context2 = current.context;
         current.value = null;
-        current.callback = noop;
+        current.callback = noop2;
         current.errorHandler = null;
         if (errorHandler2) {
           errorHandler2(new Error("abort"), val);
@@ -4092,19 +4085,19 @@ var require_queue = __commonJS((exports, module) => {
         current.release(current);
         current = next;
       }
-      self2.drain = noop;
+      self2.drain = noop2;
     }
     function error(handler) {
       errorHandler = handler;
     }
   }
-  function noop() {
+  function noop2() {
   }
   function Task() {
     this.value = null;
-    this.callback = noop;
+    this.callback = noop2;
     this.next = null;
-    this.release = noop;
+    this.release = noop2;
     this.context = null;
     this.errorHandler = null;
     var self2 = this;
@@ -4113,7 +4106,7 @@ var require_queue = __commonJS((exports, module) => {
       var errorHandler = self2.errorHandler;
       var val = self2.value;
       self2.value = null;
-      self2.callback = noop;
+      self2.callback = noop2;
       if (self2.errorHandler) {
         errorHandler(err, val);
       }
@@ -4149,7 +4142,7 @@ var require_queue = __commonJS((exports, module) => {
           resolve(result);
         });
       });
-      p.catch(noop);
+      p.catch(noop2);
       return p;
     }
     function unshift(value) {
@@ -4162,7 +4155,7 @@ var require_queue = __commonJS((exports, module) => {
           resolve(result);
         });
       });
-      p.catch(noop);
+      p.catch(noop2);
       return p;
     }
     function drained() {
@@ -5306,110 +5299,12 @@ var require_out4 = __commonJS((exports, module) => {
   module.exports = FastGlob;
 });
 
-// ../../node_modules/path-type/index.js
-var require_path_type = __commonJS((exports) => {
-  var { promisify } = __require("util");
-  var fs = __require("fs");
-  async function isType(fsStatType, statsMethodName, filePath) {
-    if (typeof filePath !== "string") {
-      throw new TypeError(`Expected a string, got ${typeof filePath}`);
-    }
-    try {
-      const stats = await promisify(fs[fsStatType])(filePath);
-      return stats[statsMethodName]();
-    } catch (error) {
-      if (error.code === "ENOENT") {
-        return false;
-      }
-      throw error;
-    }
-  }
-  function isTypeSync(fsStatType, statsMethodName, filePath) {
-    if (typeof filePath !== "string") {
-      throw new TypeError(`Expected a string, got ${typeof filePath}`);
-    }
-    try {
-      return fs[fsStatType](filePath)[statsMethodName]();
-    } catch (error) {
-      if (error.code === "ENOENT") {
-        return false;
-      }
-      throw error;
-    }
-  }
-  exports.isFile = isType.bind(null, "stat", "isFile");
-  exports.isDirectory = isType.bind(null, "stat", "isDirectory");
-  exports.isSymlink = isType.bind(null, "lstat", "isSymbolicLink");
-  exports.isFileSync = isTypeSync.bind(null, "statSync", "isFile");
-  exports.isDirectorySync = isTypeSync.bind(null, "statSync", "isDirectory");
-  exports.isSymlinkSync = isTypeSync.bind(null, "lstatSync", "isSymbolicLink");
-});
-
-// ../../node_modules/dir-glob/index.js
-var require_dir_glob = __commonJS((exports, module) => {
-  var path = __require("path");
-  var pathType = require_path_type();
-  var getExtensions = (extensions) => extensions.length > 1 ? `{${extensions.join(",")}}` : extensions[0];
-  var getPath = (filepath, cwd) => {
-    const pth = filepath[0] === "!" ? filepath.slice(1) : filepath;
-    return path.isAbsolute(pth) ? pth : path.join(cwd, pth);
-  };
-  var addExtensions = (file, extensions) => {
-    if (path.extname(file)) {
-      return `**/${file}`;
-    }
-    return `**/${file}.${getExtensions(extensions)}`;
-  };
-  var getGlob = (directory, options) => {
-    if (options.files && !Array.isArray(options.files)) {
-      throw new TypeError(`Expected \`files\` to be of type \`Array\` but received type \`${typeof options.files}\``);
-    }
-    if (options.extensions && !Array.isArray(options.extensions)) {
-      throw new TypeError(`Expected \`extensions\` to be of type \`Array\` but received type \`${typeof options.extensions}\``);
-    }
-    if (options.files && options.extensions) {
-      return options.files.map((x) => path.posix.join(directory, addExtensions(x, options.extensions)));
-    }
-    if (options.files) {
-      return options.files.map((x) => path.posix.join(directory, `**/${x}`));
-    }
-    if (options.extensions) {
-      return [path.posix.join(directory, `**/*.${getExtensions(options.extensions)}`)];
-    }
-    return [path.posix.join(directory, "**")];
-  };
-  module.exports = async (input, options) => {
-    options = {
-      cwd: process.cwd(),
-      ...options
-    };
-    if (typeof options.cwd !== "string") {
-      throw new TypeError(`Expected \`cwd\` to be of type \`string\` but received type \`${typeof options.cwd}\``);
-    }
-    const globs = await Promise.all([].concat(input).map(async (x) => {
-      const isDirectory = await pathType.isDirectory(getPath(x, options.cwd));
-      return isDirectory ? getGlob(x, options) : x;
-    }));
-    return [].concat.apply([], globs);
-  };
-  module.exports.sync = (input, options) => {
-    options = {
-      cwd: process.cwd(),
-      ...options
-    };
-    if (typeof options.cwd !== "string") {
-      throw new TypeError(`Expected \`cwd\` to be of type \`string\` but received type \`${typeof options.cwd}\``);
-    }
-    const globs = [].concat(input).map((x) => pathType.isDirectorySync(getPath(x, options.cwd)) ? getGlob(x, options) : x);
-    return [].concat.apply([], globs);
-  };
-});
-
 // ../../node_modules/ignore/index.js
 var require_ignore = __commonJS((exports, module) => {
   function makeArray(subject) {
     return Array.isArray(subject) ? subject : [subject];
   }
+  var UNDEFINED = undefined;
   var EMPTY = "";
   var SPACE = " ";
   var ESCAPE = "\\";
@@ -5418,14 +5313,18 @@ var require_ignore = __commonJS((exports, module) => {
   var REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/;
   var REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/;
   var REGEX_SPLITALL_CRLF = /\r?\n/g;
-  var REGEX_TEST_INVALID_PATH = /^\.*\/|^\.+$/;
+  var REGEX_TEST_INVALID_PATH = /^\.{0,2}\/|^\.{1,2}$/;
+  var REGEX_TEST_TRAILING_SLASH = /\/$/;
   var SLASH = "/";
   var TMP_KEY_IGNORE = "node-ignore";
   if (typeof Symbol !== "undefined") {
     TMP_KEY_IGNORE = Symbol.for("node-ignore");
   }
   var KEY_IGNORE = TMP_KEY_IGNORE;
-  var define = (object, key, value) => Object.defineProperty(object, key, { value });
+  var define = (object, key, value) => {
+    Object.defineProperty(object, key, { value });
+    return value;
+  };
   var REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g;
   var RETURN_FALSE = () => false;
   var sanitizeRange = (range) => range.replace(REGEX_REGEXP_RANGE, (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0) ? match : EMPTY);
@@ -5501,47 +5400,125 @@ var require_ignore = __commonJS((exports, module) => {
     [
       /(?:[^*])$/,
       (match) => /\/$/.test(match) ? `${match}$` : `${match}(?=$|\\/$)`
-    ],
-    [
-      /(\^|\\\/)?\\\*$/,
-      (_, p1) => {
-        const prefix = p1 ? `${p1}[^/]+` : "[^/]*";
-        return `${prefix}(?=$|\\/$)`;
-      }
     ]
   ];
-  var regexCache = Object.create(null);
-  var makeRegex = (pattern, ignoreCase) => {
-    let source = regexCache[pattern];
-    if (!source) {
-      source = REPLACERS.reduce((prev, [matcher, replacer]) => prev.replace(matcher, replacer.bind(pattern)), pattern);
-      regexCache[pattern] = source;
+  var REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/;
+  var MODE_IGNORE = "regex";
+  var MODE_CHECK_IGNORE = "checkRegex";
+  var UNDERSCORE = "_";
+  var TRAILING_WILD_CARD_REPLACERS = {
+    [MODE_IGNORE](_, p1) {
+      const prefix = p1 ? `${p1}[^/]+` : "[^/]*";
+      return `${prefix}(?=$|\\/$)`;
+    },
+    [MODE_CHECK_IGNORE](_, p1) {
+      const prefix = p1 ? `${p1}[^/]*` : "[^/]*";
+      return `${prefix}(?=$|\\/$)`;
     }
-    return ignoreCase ? new RegExp(source, "i") : new RegExp(source);
   };
+  var makeRegexPrefix = (pattern) => REPLACERS.reduce((prev, [matcher, replacer]) => prev.replace(matcher, replacer.bind(pattern)), pattern);
   var isString = (subject) => typeof subject === "string";
   var checkPattern = (pattern) => pattern && isString(pattern) && !REGEX_TEST_BLANK_LINE.test(pattern) && !REGEX_INVALID_TRAILING_BACKSLASH.test(pattern) && pattern.indexOf("#") !== 0;
-  var splitPattern = (pattern) => pattern.split(REGEX_SPLITALL_CRLF);
+  var splitPattern = (pattern) => pattern.split(REGEX_SPLITALL_CRLF).filter(Boolean);
 
   class IgnoreRule {
-    constructor(origin, pattern, negative, regex) {
-      this.origin = origin;
+    constructor(pattern, mark, body, ignoreCase, negative, prefix) {
       this.pattern = pattern;
+      this.mark = mark;
       this.negative = negative;
-      this.regex = regex;
+      define(this, "body", body);
+      define(this, "ignoreCase", ignoreCase);
+      define(this, "regexPrefix", prefix);
+    }
+    get regex() {
+      const key = UNDERSCORE + MODE_IGNORE;
+      if (this[key]) {
+        return this[key];
+      }
+      return this._make(MODE_IGNORE, key);
+    }
+    get checkRegex() {
+      const key = UNDERSCORE + MODE_CHECK_IGNORE;
+      if (this[key]) {
+        return this[key];
+      }
+      return this._make(MODE_CHECK_IGNORE, key);
+    }
+    _make(mode, key) {
+      const str = this.regexPrefix.replace(REGEX_REPLACE_TRAILING_WILDCARD, TRAILING_WILD_CARD_REPLACERS[mode]);
+      const regex = this.ignoreCase ? new RegExp(str, "i") : new RegExp(str);
+      return define(this, key, regex);
     }
   }
-  var createRule = (pattern, ignoreCase) => {
-    const origin = pattern;
+  var createRule = ({
+    pattern,
+    mark
+  }, ignoreCase) => {
     let negative = false;
-    if (pattern.indexOf("!") === 0) {
+    let body = pattern;
+    if (body.indexOf("!") === 0) {
       negative = true;
-      pattern = pattern.substr(1);
+      body = body.substr(1);
     }
-    pattern = pattern.replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, "!").replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, "#");
-    const regex = makeRegex(pattern, ignoreCase);
-    return new IgnoreRule(origin, pattern, negative, regex);
+    body = body.replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, "!").replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, "#");
+    const regexPrefix = makeRegexPrefix(body);
+    return new IgnoreRule(pattern, mark, body, ignoreCase, negative, regexPrefix);
   };
+
+  class RuleManager {
+    constructor(ignoreCase) {
+      this._ignoreCase = ignoreCase;
+      this._rules = [];
+    }
+    _add(pattern) {
+      if (pattern && pattern[KEY_IGNORE]) {
+        this._rules = this._rules.concat(pattern._rules._rules);
+        this._added = true;
+        return;
+      }
+      if (isString(pattern)) {
+        pattern = {
+          pattern
+        };
+      }
+      if (checkPattern(pattern.pattern)) {
+        const rule = createRule(pattern, this._ignoreCase);
+        this._added = true;
+        this._rules.push(rule);
+      }
+    }
+    add(pattern) {
+      this._added = false;
+      makeArray(isString(pattern) ? splitPattern(pattern) : pattern).forEach(this._add, this);
+      return this._added;
+    }
+    test(path, checkUnignored, mode) {
+      let ignored = false;
+      let unignored = false;
+      let matchedRule;
+      this._rules.forEach((rule) => {
+        const { negative } = rule;
+        if (unignored === negative && ignored !== unignored || negative && !ignored && !unignored && !checkUnignored) {
+          return;
+        }
+        const matched = rule[mode].test(path);
+        if (!matched) {
+          return;
+        }
+        ignored = !negative;
+        unignored = negative;
+        matchedRule = negative ? UNDEFINED : rule;
+      });
+      const ret = {
+        ignored,
+        unignored
+      };
+      if (matchedRule) {
+        ret.rule = matchedRule;
+      }
+      return ret;
+    }
+  }
   var throwError = (message, Ctor) => {
     throw new Ctor(message);
   };
@@ -5569,31 +5546,16 @@ var require_ignore = __commonJS((exports, module) => {
       allowRelativePaths = false
     } = {}) {
       define(this, KEY_IGNORE, true);
-      this._rules = [];
-      this._ignoreCase = ignoreCase;
-      this._allowRelativePaths = allowRelativePaths;
+      this._rules = new RuleManager(ignoreCase);
+      this._strictPathCheck = !allowRelativePaths;
       this._initCache();
     }
     _initCache() {
       this._ignoreCache = Object.create(null);
       this._testCache = Object.create(null);
     }
-    _addPattern(pattern) {
-      if (pattern && pattern[KEY_IGNORE]) {
-        this._rules = this._rules.concat(pattern._rules);
-        this._added = true;
-        return;
-      }
-      if (checkPattern(pattern)) {
-        const rule = createRule(pattern, this._ignoreCase);
-        this._added = true;
-        this._rules.push(rule);
-      }
-    }
     add(pattern) {
-      this._added = false;
-      makeArray(isString(pattern) ? splitPattern(pattern) : pattern).forEach(this._addPattern, this);
-      if (this._added) {
+      if (this._rules.add(pattern)) {
         this._initCache();
       }
       return this;
@@ -5601,43 +5563,38 @@ var require_ignore = __commonJS((exports, module) => {
     addPattern(pattern) {
       return this.add(pattern);
     }
-    _testOne(path, checkUnignored) {
-      let ignored = false;
-      let unignored = false;
-      this._rules.forEach((rule) => {
-        const { negative } = rule;
-        if (unignored === negative && ignored !== unignored || negative && !ignored && !unignored && !checkUnignored) {
-          return;
-        }
-        const matched = rule.regex.test(path);
-        if (matched) {
-          ignored = !negative;
-          unignored = negative;
-        }
-      });
-      return {
-        ignored,
-        unignored
-      };
-    }
     _test(originalPath, cache, checkUnignored, slices) {
       const path = originalPath && checkPath.convert(originalPath);
-      checkPath(path, originalPath, this._allowRelativePaths ? RETURN_FALSE : throwError);
+      checkPath(path, originalPath, this._strictPathCheck ? throwError : RETURN_FALSE);
       return this._t(path, cache, checkUnignored, slices);
+    }
+    checkIgnore(path) {
+      if (!REGEX_TEST_TRAILING_SLASH.test(path)) {
+        return this.test(path);
+      }
+      const slices = path.split(SLASH).filter(Boolean);
+      slices.pop();
+      if (slices.length) {
+        const parent = this._t(slices.join(SLASH) + SLASH, this._testCache, true, slices);
+        if (parent.ignored) {
+          return parent;
+        }
+      }
+      return this._rules.test(path, false, MODE_CHECK_IGNORE);
     }
     _t(path, cache, checkUnignored, slices) {
       if (path in cache) {
         return cache[path];
       }
       if (!slices) {
-        slices = path.split(SLASH);
+        slices = path.split(SLASH).filter(Boolean);
       }
       slices.pop();
       if (!slices.length) {
-        return cache[path] = this._testOne(path, checkUnignored);
+        return cache[path] = this._rules.test(path, checkUnignored, MODE_IGNORE);
       }
       const parent = this._t(slices.join(SLASH) + SLASH, cache, checkUnignored, slices);
-      return cache[path] = parent.ignored ? parent : this._testOne(path, checkUnignored);
+      return cache[path] = parent.ignored ? parent : this._rules.test(path, checkUnignored, MODE_IGNORE);
     }
     ignores(path) {
       return this._test(path, this._ignoreCache, false).ignored;
@@ -5654,298 +5611,19 @@ var require_ignore = __commonJS((exports, module) => {
   }
   var factory = (options) => new Ignore(options);
   var isPathValid = (path) => checkPath(path && checkPath.convert(path), path, RETURN_FALSE);
-  factory.isPathValid = isPathValid;
-  factory.default = factory;
-  module.exports = factory;
-  if (typeof process !== "undefined" && (process.env && process.env.IGNORE_TEST_WIN32 || process.platform === "win32")) {
+  var setupWindows = () => {
     const makePosix = (str) => /^\\\\\?\\/.test(str) || /["<>|\u0000-\u001F]+/u.test(str) ? str : str.replace(/\\/g, "/");
     checkPath.convert = makePosix;
-    const REGIX_IS_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i;
-    checkPath.isNotRelative = (path) => REGIX_IS_WINDOWS_PATH_ABSOLUTE.test(path) || isNotRelative(path);
+    const REGEX_TEST_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i;
+    checkPath.isNotRelative = (path) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path) || isNotRelative(path);
+  };
+  if (typeof process !== "undefined" && process.platform === "win32") {
+    setupWindows();
   }
-});
-
-// ../../node_modules/slash/index.js
-var require_slash = __commonJS((exports, module) => {
-  module.exports = (path) => {
-    const isExtendedLengthPath = /^\\\\\?\\/.test(path);
-    const hasNonAscii = /[^\u0000-\u0080]+/.test(path);
-    if (isExtendedLengthPath || hasNonAscii) {
-      return path;
-    }
-    return path.replace(/\\/g, "/");
-  };
-});
-
-// ../../node_modules/globby/gitignore.js
-var require_gitignore = __commonJS((exports, module) => {
-  var { promisify } = __require("util");
-  var fs = __require("fs");
-  var path = __require("path");
-  var fastGlob = require_out4();
-  var gitIgnore = require_ignore();
-  var slash = require_slash();
-  var DEFAULT_IGNORE = [
-    "**/node_modules/**",
-    "**/flow-typed/**",
-    "**/coverage/**",
-    "**/.git"
-  ];
-  var readFileP = promisify(fs.readFile);
-  var mapGitIgnorePatternTo = (base) => (ignore) => {
-    if (ignore.startsWith("!")) {
-      return "!" + path.posix.join(base, ignore.slice(1));
-    }
-    return path.posix.join(base, ignore);
-  };
-  var parseGitIgnore = (content, options) => {
-    const base = slash(path.relative(options.cwd, path.dirname(options.fileName)));
-    return content.split(/\r?\n/).filter(Boolean).filter((line) => !line.startsWith("#")).map(mapGitIgnorePatternTo(base));
-  };
-  var reduceIgnore = (files) => {
-    const ignores = gitIgnore();
-    for (const file of files) {
-      ignores.add(parseGitIgnore(file.content, {
-        cwd: file.cwd,
-        fileName: file.filePath
-      }));
-    }
-    return ignores;
-  };
-  var ensureAbsolutePathForCwd = (cwd, p) => {
-    cwd = slash(cwd);
-    if (path.isAbsolute(p)) {
-      if (slash(p).startsWith(cwd)) {
-        return p;
-      }
-      throw new Error(`Path ${p} is not in cwd ${cwd}`);
-    }
-    return path.join(cwd, p);
-  };
-  var getIsIgnoredPredecate = (ignores, cwd) => {
-    return (p) => ignores.ignores(slash(path.relative(cwd, ensureAbsolutePathForCwd(cwd, p.path || p))));
-  };
-  var getFile = async (file, cwd) => {
-    const filePath = path.join(cwd, file);
-    const content = await readFileP(filePath, "utf8");
-    return {
-      cwd,
-      filePath,
-      content
-    };
-  };
-  var getFileSync = (file, cwd) => {
-    const filePath = path.join(cwd, file);
-    const content = fs.readFileSync(filePath, "utf8");
-    return {
-      cwd,
-      filePath,
-      content
-    };
-  };
-  var normalizeOptions = ({
-    ignore = [],
-    cwd = slash(process.cwd())
-  } = {}) => {
-    return { ignore, cwd };
-  };
-  module.exports = async (options) => {
-    options = normalizeOptions(options);
-    const paths = await fastGlob("**/.gitignore", {
-      ignore: DEFAULT_IGNORE.concat(options.ignore),
-      cwd: options.cwd
-    });
-    const files = await Promise.all(paths.map((file) => getFile(file, options.cwd)));
-    const ignores = reduceIgnore(files);
-    return getIsIgnoredPredecate(ignores, options.cwd);
-  };
-  module.exports.sync = (options) => {
-    options = normalizeOptions(options);
-    const paths = fastGlob.sync("**/.gitignore", {
-      ignore: DEFAULT_IGNORE.concat(options.ignore),
-      cwd: options.cwd
-    });
-    const files = paths.map((file) => getFileSync(file, options.cwd));
-    const ignores = reduceIgnore(files);
-    return getIsIgnoredPredecate(ignores, options.cwd);
-  };
-});
-
-// ../../node_modules/globby/stream-utils.js
-var require_stream_utils = __commonJS((exports, module) => {
-  var { Transform } = __require("stream");
-
-  class ObjectTransform extends Transform {
-    constructor() {
-      super({
-        objectMode: true
-      });
-    }
-  }
-
-  class FilterStream extends ObjectTransform {
-    constructor(filter) {
-      super();
-      this._filter = filter;
-    }
-    _transform(data, encoding, callback) {
-      if (this._filter(data)) {
-        this.push(data);
-      }
-      callback();
-    }
-  }
-
-  class UniqueStream extends ObjectTransform {
-    constructor() {
-      super();
-      this._pushed = new Set;
-    }
-    _transform(data, encoding, callback) {
-      if (!this._pushed.has(data)) {
-        this.push(data);
-        this._pushed.add(data);
-      }
-      callback();
-    }
-  }
-  module.exports = {
-    FilterStream,
-    UniqueStream
-  };
-});
-
-// ../../node_modules/globby/index.js
-var require_globby = __commonJS((exports, module) => {
-  var fs = __require("fs");
-  var arrayUnion = require_array_union();
-  var merge2 = require_merge2();
-  var fastGlob = require_out4();
-  var dirGlob = require_dir_glob();
-  var gitignore = require_gitignore();
-  var { FilterStream, UniqueStream } = require_stream_utils();
-  var DEFAULT_FILTER = () => false;
-  var isNegative = (pattern) => pattern[0] === "!";
-  var assertPatternsInput = (patterns) => {
-    if (!patterns.every((pattern) => typeof pattern === "string")) {
-      throw new TypeError("Patterns must be a string or an array of strings");
-    }
-  };
-  var checkCwdOption = (options = {}) => {
-    if (!options.cwd) {
-      return;
-    }
-    let stat;
-    try {
-      stat = fs.statSync(options.cwd);
-    } catch {
-      return;
-    }
-    if (!stat.isDirectory()) {
-      throw new Error("The `cwd` option must be a path to a directory");
-    }
-  };
-  var getPathString = (p) => p.stats instanceof fs.Stats ? p.path : p;
-  var generateGlobTasks = (patterns, taskOptions) => {
-    patterns = arrayUnion([].concat(patterns));
-    assertPatternsInput(patterns);
-    checkCwdOption(taskOptions);
-    const globTasks = [];
-    taskOptions = {
-      ignore: [],
-      expandDirectories: true,
-      ...taskOptions
-    };
-    for (const [index, pattern] of patterns.entries()) {
-      if (isNegative(pattern)) {
-        continue;
-      }
-      const ignore = patterns.slice(index).filter((pattern2) => isNegative(pattern2)).map((pattern2) => pattern2.slice(1));
-      const options = {
-        ...taskOptions,
-        ignore: taskOptions.ignore.concat(ignore)
-      };
-      globTasks.push({ pattern, options });
-    }
-    return globTasks;
-  };
-  var globDirs = (task, fn) => {
-    let options = {};
-    if (task.options.cwd) {
-      options.cwd = task.options.cwd;
-    }
-    if (Array.isArray(task.options.expandDirectories)) {
-      options = {
-        ...options,
-        files: task.options.expandDirectories
-      };
-    } else if (typeof task.options.expandDirectories === "object") {
-      options = {
-        ...options,
-        ...task.options.expandDirectories
-      };
-    }
-    return fn(task.pattern, options);
-  };
-  var getPattern = (task, fn) => task.options.expandDirectories ? globDirs(task, fn) : [task.pattern];
-  var getFilterSync = (options) => {
-    return options && options.gitignore ? gitignore.sync({ cwd: options.cwd, ignore: options.ignore }) : DEFAULT_FILTER;
-  };
-  var globToTask = (task) => (glob) => {
-    const { options } = task;
-    if (options.ignore && Array.isArray(options.ignore) && options.expandDirectories) {
-      options.ignore = dirGlob.sync(options.ignore);
-    }
-    return {
-      pattern: glob,
-      options
-    };
-  };
-  module.exports = async (patterns, options) => {
-    const globTasks = generateGlobTasks(patterns, options);
-    const getFilter = async () => {
-      return options && options.gitignore ? gitignore({ cwd: options.cwd, ignore: options.ignore }) : DEFAULT_FILTER;
-    };
-    const getTasks = async () => {
-      const tasks2 = await Promise.all(globTasks.map(async (task) => {
-        const globs = await getPattern(task, dirGlob);
-        return Promise.all(globs.map(globToTask(task)));
-      }));
-      return arrayUnion(...tasks2);
-    };
-    const [filter, tasks] = await Promise.all([getFilter(), getTasks()]);
-    const paths = await Promise.all(tasks.map((task) => fastGlob(task.pattern, task.options)));
-    return arrayUnion(...paths).filter((path_) => !filter(getPathString(path_)));
-  };
-  module.exports.sync = (patterns, options) => {
-    const globTasks = generateGlobTasks(patterns, options);
-    const tasks = [];
-    for (const task of globTasks) {
-      const newTask = getPattern(task, dirGlob.sync).map(globToTask(task));
-      tasks.push(...newTask);
-    }
-    const filter = getFilterSync(options);
-    let matches = [];
-    for (const task of tasks) {
-      matches = arrayUnion(matches, fastGlob.sync(task.pattern, task.options));
-    }
-    return matches.filter((path_) => !filter(path_));
-  };
-  module.exports.stream = (patterns, options) => {
-    const globTasks = generateGlobTasks(patterns, options);
-    const tasks = [];
-    for (const task of globTasks) {
-      const newTask = getPattern(task, dirGlob.sync).map(globToTask(task));
-      tasks.push(...newTask);
-    }
-    const filter = getFilterSync(options);
-    const filterStream = new FilterStream((p) => !filter(p));
-    const uniqueStream = new UniqueStream;
-    return merge2(tasks.map((task) => fastGlob.stream(task.pattern, task.options))).pipe(filterStream).pipe(uniqueStream);
-  };
-  module.exports.generateGlobTasks = generateGlobTasks;
-  module.exports.hasMagic = (patterns, options) => [].concat(patterns).some((pattern) => fastGlob.isDynamicPattern(pattern, options));
-  module.exports.gitignore = gitignore;
+  module.exports = factory;
+  factory.default = factory;
+  module.exports.isPathValid = isPathValid;
+  define(module.exports, Symbol.for("setupWindows"), setupWindows);
 });
 
 // ../../node_modules/delayed-stream/lib/delayed_stream.js
@@ -14800,11 +14478,11 @@ var require_mime_types = __commonJS((exports) => {
     }
     return exts[0];
   }
-  function lookup(path2) {
-    if (!path2 || typeof path2 !== "string") {
+  function lookup(path3) {
+    if (!path3 || typeof path3 !== "string") {
       return false;
     }
-    var extension2 = extname("x." + path2).toLowerCase().substr(1);
+    var extension2 = extname("x." + path3).toLowerCase().substr(1);
     if (!extension2) {
       return false;
     }
@@ -15757,11 +15435,11 @@ var require_populate = __commonJS((exports, module) => {
 var require_form_data = __commonJS((exports, module) => {
   var CombinedStream = require_combined_stream();
   var util = __require("util");
-  var path2 = __require("path");
+  var path3 = __require("path");
   var http = __require("http");
   var https = __require("https");
   var parseUrl = __require("url").parse;
-  var fs = __require("fs");
+  var fs4 = __require("fs");
   var Stream2 = __require("stream").Stream;
   var crypto = __require("crypto");
   var mime = require_mime_types();
@@ -15829,7 +15507,7 @@ var require_form_data = __commonJS((exports, module) => {
       if (value.end != null && value.end != Infinity && value.start != null) {
         callback(null, value.end + 1 - (value.start ? value.start : 0));
       } else {
-        fs.stat(value.path, function(err, stat) {
+        fs4.stat(value.path, function(err, stat) {
           if (err) {
             callback(err);
             return;
@@ -15884,11 +15562,11 @@ var require_form_data = __commonJS((exports, module) => {
   FormData2.prototype._getContentDisposition = function(value, options) {
     var filename;
     if (typeof options.filepath === "string") {
-      filename = path2.normalize(options.filepath).replace(/\\/g, "/");
+      filename = path3.normalize(options.filepath).replace(/\\/g, "/");
     } else if (options.filename || value && (value.name || value.path)) {
-      filename = path2.basename(options.filename || value && (value.name || value.path));
+      filename = path3.basename(options.filename || value && (value.name || value.path));
     } else if (value && value.readable && hasOwn2(value, "httpVersion")) {
-      filename = path2.basename(value.client._httpMessage.path || "");
+      filename = path3.basename(value.client._httpMessage.path || "");
     }
     if (filename) {
       return 'filename="' + filename + '"';
@@ -16941,7 +16619,7 @@ var require_follow_redirects = __commonJS((exports, module) => {
   var TooManyRedirectsError = createErrorType("ERR_FR_TOO_MANY_REDIRECTS", "Maximum number of redirects exceeded", RedirectionError);
   var MaxBodyLengthExceededError = createErrorType("ERR_FR_MAX_BODY_LENGTH_EXCEEDED", "Request body larger than maxBodyLength limit");
   var WriteAfterEndError = createErrorType("ERR_STREAM_WRITE_AFTER_END", "write after end");
-  var destroy = Writable.prototype.destroy || noop3;
+  var destroy = Writable.prototype.destroy || noop4;
   function RedirectableRequest(options, responseCallback) {
     Writable.call(this);
     this._sanitizeOptions(options);
@@ -17261,7 +16939,7 @@ var require_follow_redirects = __commonJS((exports, module) => {
     });
     return exports2;
   }
-  function noop3() {
+  function noop4() {
   }
   function parseUrl(input) {
     var parsed;
@@ -17337,7 +17015,7 @@ var require_follow_redirects = __commonJS((exports, module) => {
     for (var event of events) {
       request.removeListener(event, eventHandlers[event]);
     }
-    request.on("error", noop3);
+    request.on("error", noop4);
     request.destroy(error2);
   }
   function isSubdomain(subdomain, domain) {
@@ -17364,7 +17042,7 @@ var require_follow_redirects = __commonJS((exports, module) => {
 // src/cli.ts
 import { existsSync as existsSync6, readFileSync as readFileSync5 } from "node:fs";
 import { dirname as dirname2, join as join6 } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath as fileURLToPath2 } from "node:url";
 import { parseArgs } from "node:util";
 
 // ../sdk/src/agent/artifact-syncer.ts
@@ -17460,10 +17138,515 @@ class ArtifactSyncer {
   }
 }
 // ../sdk/src/core/indexer.ts
-var import_globby = __toESM(require_globby(), 1);
 import { existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync2, writeFileSync } from "node:fs";
 import { dirname, join as join3 } from "node:path";
 
+// ../../node_modules/globby/index.js
+import process3 from "node:process";
+import fs3 from "node:fs";
+import nodePath from "node:path";
+
+// ../../node_modules/@sindresorhus/merge-streams/index.js
+import { on, once } from "node:events";
+import { PassThrough as PassThroughStream } from "node:stream";
+import { finished } from "node:stream/promises";
+function mergeStreams(streams) {
+  if (!Array.isArray(streams)) {
+    throw new TypeError(`Expected an array, got \`${typeof streams}\`.`);
+  }
+  for (const stream of streams) {
+    validateStream(stream);
+  }
+  const objectMode = streams.some(({ readableObjectMode }) => readableObjectMode);
+  const highWaterMark = getHighWaterMark(streams, objectMode);
+  const passThroughStream = new MergedStream({
+    objectMode,
+    writableHighWaterMark: highWaterMark,
+    readableHighWaterMark: highWaterMark
+  });
+  for (const stream of streams) {
+    passThroughStream.add(stream);
+  }
+  if (streams.length === 0) {
+    endStream(passThroughStream);
+  }
+  return passThroughStream;
+}
+var getHighWaterMark = (streams, objectMode) => {
+  if (streams.length === 0) {
+    return 16384;
+  }
+  const highWaterMarks = streams.filter(({ readableObjectMode }) => readableObjectMode === objectMode).map(({ readableHighWaterMark }) => readableHighWaterMark);
+  return Math.max(...highWaterMarks);
+};
+
+class MergedStream extends PassThroughStream {
+  #streams = new Set([]);
+  #ended = new Set([]);
+  #aborted = new Set([]);
+  #onFinished;
+  add(stream) {
+    validateStream(stream);
+    if (this.#streams.has(stream)) {
+      return;
+    }
+    this.#streams.add(stream);
+    this.#onFinished ??= onMergedStreamFinished(this, this.#streams);
+    endWhenStreamsDone({
+      passThroughStream: this,
+      stream,
+      streams: this.#streams,
+      ended: this.#ended,
+      aborted: this.#aborted,
+      onFinished: this.#onFinished
+    });
+    stream.pipe(this, { end: false });
+  }
+  remove(stream) {
+    validateStream(stream);
+    if (!this.#streams.has(stream)) {
+      return false;
+    }
+    stream.unpipe(this);
+    return true;
+  }
+}
+var onMergedStreamFinished = async (passThroughStream, streams) => {
+  updateMaxListeners(passThroughStream, PASSTHROUGH_LISTENERS_COUNT);
+  const controller = new AbortController;
+  try {
+    await Promise.race([
+      onMergedStreamEnd(passThroughStream, controller),
+      onInputStreamsUnpipe(passThroughStream, streams, controller)
+    ]);
+  } finally {
+    controller.abort();
+    updateMaxListeners(passThroughStream, -PASSTHROUGH_LISTENERS_COUNT);
+  }
+};
+var onMergedStreamEnd = async (passThroughStream, { signal }) => {
+  await finished(passThroughStream, { signal, cleanup: true });
+};
+var onInputStreamsUnpipe = async (passThroughStream, streams, { signal }) => {
+  for await (const [unpipedStream] of on(passThroughStream, "unpipe", { signal })) {
+    if (streams.has(unpipedStream)) {
+      unpipedStream.emit(unpipeEvent);
+    }
+  }
+};
+var validateStream = (stream) => {
+  if (typeof stream?.pipe !== "function") {
+    throw new TypeError(`Expected a readable stream, got: \`${typeof stream}\`.`);
+  }
+};
+var endWhenStreamsDone = async ({ passThroughStream, stream, streams, ended, aborted, onFinished }) => {
+  updateMaxListeners(passThroughStream, PASSTHROUGH_LISTENERS_PER_STREAM);
+  const controller = new AbortController;
+  try {
+    await Promise.race([
+      afterMergedStreamFinished(onFinished, stream),
+      onInputStreamEnd({ passThroughStream, stream, streams, ended, aborted, controller }),
+      onInputStreamUnpipe({ stream, streams, ended, aborted, controller })
+    ]);
+  } finally {
+    controller.abort();
+    updateMaxListeners(passThroughStream, -PASSTHROUGH_LISTENERS_PER_STREAM);
+  }
+  if (streams.size === ended.size + aborted.size) {
+    if (ended.size === 0 && aborted.size > 0) {
+      abortStream(passThroughStream);
+    } else {
+      endStream(passThroughStream);
+    }
+  }
+};
+var isAbortError = (error) => error?.code === "ERR_STREAM_PREMATURE_CLOSE";
+var afterMergedStreamFinished = async (onFinished, stream) => {
+  try {
+    await onFinished;
+    abortStream(stream);
+  } catch (error) {
+    if (isAbortError(error)) {
+      abortStream(stream);
+    } else {
+      errorStream(stream, error);
+    }
+  }
+};
+var onInputStreamEnd = async ({ passThroughStream, stream, streams, ended, aborted, controller: { signal } }) => {
+  try {
+    await finished(stream, { signal, cleanup: true, readable: true, writable: false });
+    if (streams.has(stream)) {
+      ended.add(stream);
+    }
+  } catch (error) {
+    if (signal.aborted || !streams.has(stream)) {
+      return;
+    }
+    if (isAbortError(error)) {
+      aborted.add(stream);
+    } else {
+      errorStream(passThroughStream, error);
+    }
+  }
+};
+var onInputStreamUnpipe = async ({ stream, streams, ended, aborted, controller: { signal } }) => {
+  await once(stream, unpipeEvent, { signal });
+  streams.delete(stream);
+  ended.delete(stream);
+  aborted.delete(stream);
+};
+var unpipeEvent = Symbol("unpipe");
+var endStream = (stream) => {
+  if (stream.writable) {
+    stream.end();
+  }
+};
+var abortStream = (stream) => {
+  if (stream.readable || stream.writable) {
+    stream.destroy();
+  }
+};
+var errorStream = (stream, error) => {
+  if (!stream.destroyed) {
+    stream.once("error", noop);
+    stream.destroy(error);
+  }
+};
+var noop = () => {
+};
+var updateMaxListeners = (passThroughStream, increment) => {
+  const maxListeners = passThroughStream.getMaxListeners();
+  if (maxListeners !== 0 && maxListeners !== Number.POSITIVE_INFINITY) {
+    passThroughStream.setMaxListeners(maxListeners + increment);
+  }
+};
+var PASSTHROUGH_LISTENERS_COUNT = 2;
+var PASSTHROUGH_LISTENERS_PER_STREAM = 1;
+
+// ../../node_modules/globby/index.js
+var import_fast_glob2 = __toESM(require_out4(), 1);
+
+// ../../node_modules/path-type/index.js
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
+async function isType(fsStatType, statsMethodName, filePath) {
+  if (typeof filePath !== "string") {
+    throw new TypeError(`Expected a string, got ${typeof filePath}`);
+  }
+  try {
+    const stats = await fsPromises[fsStatType](filePath);
+    return stats[statsMethodName]();
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+function isTypeSync(fsStatType, statsMethodName, filePath) {
+  if (typeof filePath !== "string") {
+    throw new TypeError(`Expected a string, got ${typeof filePath}`);
+  }
+  try {
+    return fs[fsStatType](filePath)[statsMethodName]();
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+var isFile = isType.bind(undefined, "stat", "isFile");
+var isDirectory = isType.bind(undefined, "stat", "isDirectory");
+var isSymlink = isType.bind(undefined, "lstat", "isSymbolicLink");
+var isFileSync = isTypeSync.bind(undefined, "statSync", "isFile");
+var isDirectorySync = isTypeSync.bind(undefined, "statSync", "isDirectory");
+var isSymlinkSync = isTypeSync.bind(undefined, "lstatSync", "isSymbolicLink");
+
+// ../../node_modules/unicorn-magic/node.js
+import { promisify } from "node:util";
+import { execFile as execFileCallback, execFileSync as execFileSyncOriginal } from "node:child_process";
+import { fileURLToPath } from "node:url";
+var execFileOriginal = promisify(execFileCallback);
+function toPath(urlOrPath) {
+  return urlOrPath instanceof URL ? fileURLToPath(urlOrPath) : urlOrPath;
+}
+var TEN_MEGABYTES_IN_BYTES = 10 * 1024 * 1024;
+
+// ../../node_modules/globby/ignore.js
+var import_fast_glob = __toESM(require_out4(), 1);
+var import_ignore = __toESM(require_ignore(), 1);
+import process2 from "node:process";
+import fs2 from "node:fs";
+import fsPromises2 from "node:fs/promises";
+import path from "node:path";
+
+// ../../node_modules/globby/node_modules/slash/index.js
+function slash(path) {
+  const isExtendedLengthPath = path.startsWith("\\\\?\\");
+  if (isExtendedLengthPath) {
+    return path;
+  }
+  return path.replace(/\\/g, "/");
+}
+
+// ../../node_modules/globby/utilities.js
+var isNegativePattern = (pattern) => pattern[0] === "!";
+
+// ../../node_modules/globby/ignore.js
+var defaultIgnoredDirectories = [
+  "**/node_modules",
+  "**/flow-typed",
+  "**/coverage",
+  "**/.git"
+];
+var ignoreFilesGlobOptions = {
+  absolute: true,
+  dot: true
+};
+var GITIGNORE_FILES_PATTERN = "**/.gitignore";
+var applyBaseToPattern = (pattern, base) => isNegativePattern(pattern) ? "!" + path.posix.join(base, pattern.slice(1)) : path.posix.join(base, pattern);
+var parseIgnoreFile = (file, cwd) => {
+  const base = slash(path.relative(cwd, path.dirname(file.filePath)));
+  return file.content.split(/\r?\n/).filter((line) => line && !line.startsWith("#")).map((pattern) => applyBaseToPattern(pattern, base));
+};
+var toRelativePath = (fileOrDirectory, cwd) => {
+  cwd = slash(cwd);
+  if (path.isAbsolute(fileOrDirectory)) {
+    if (slash(fileOrDirectory).startsWith(cwd)) {
+      return path.relative(cwd, fileOrDirectory);
+    }
+    throw new Error(`Path ${fileOrDirectory} is not in cwd ${cwd}`);
+  }
+  return fileOrDirectory;
+};
+var getIsIgnoredPredicate = (files, cwd) => {
+  const patterns = files.flatMap((file) => parseIgnoreFile(file, cwd));
+  const ignores = import_ignore.default().add(patterns);
+  return (fileOrDirectory) => {
+    fileOrDirectory = toPath(fileOrDirectory);
+    fileOrDirectory = toRelativePath(fileOrDirectory, cwd);
+    return fileOrDirectory ? ignores.ignores(slash(fileOrDirectory)) : false;
+  };
+};
+var normalizeOptions = (options = {}) => ({
+  cwd: toPath(options.cwd) ?? process2.cwd(),
+  suppressErrors: Boolean(options.suppressErrors),
+  deep: typeof options.deep === "number" ? options.deep : Number.POSITIVE_INFINITY,
+  ignore: [...options.ignore ?? [], ...defaultIgnoredDirectories]
+});
+var isIgnoredByIgnoreFiles = async (patterns, options) => {
+  const { cwd, suppressErrors, deep, ignore } = normalizeOptions(options);
+  const paths = await import_fast_glob.default(patterns, {
+    cwd,
+    suppressErrors,
+    deep,
+    ignore,
+    ...ignoreFilesGlobOptions
+  });
+  const files = await Promise.all(paths.map(async (filePath) => ({
+    filePath,
+    content: await fsPromises2.readFile(filePath, "utf8")
+  })));
+  return getIsIgnoredPredicate(files, cwd);
+};
+var isIgnoredByIgnoreFilesSync = (patterns, options) => {
+  const { cwd, suppressErrors, deep, ignore } = normalizeOptions(options);
+  const paths = import_fast_glob.default.sync(patterns, {
+    cwd,
+    suppressErrors,
+    deep,
+    ignore,
+    ...ignoreFilesGlobOptions
+  });
+  const files = paths.map((filePath) => ({
+    filePath,
+    content: fs2.readFileSync(filePath, "utf8")
+  }));
+  return getIsIgnoredPredicate(files, cwd);
+};
+
+// ../../node_modules/globby/index.js
+var assertPatternsInput = (patterns) => {
+  if (patterns.some((pattern) => typeof pattern !== "string")) {
+    throw new TypeError("Patterns must be a string or an array of strings");
+  }
+};
+var normalizePathForDirectoryGlob = (filePath, cwd) => {
+  const path2 = isNegativePattern(filePath) ? filePath.slice(1) : filePath;
+  return nodePath.isAbsolute(path2) ? path2 : nodePath.join(cwd, path2);
+};
+var getDirectoryGlob = ({ directoryPath, files, extensions }) => {
+  const extensionGlob = extensions?.length > 0 ? `.${extensions.length > 1 ? `{${extensions.join(",")}}` : extensions[0]}` : "";
+  return files ? files.map((file) => nodePath.posix.join(directoryPath, `**/${nodePath.extname(file) ? file : `${file}${extensionGlob}`}`)) : [nodePath.posix.join(directoryPath, `**${extensionGlob ? `/*${extensionGlob}` : ""}`)];
+};
+var directoryToGlob = async (directoryPaths, {
+  cwd = process3.cwd(),
+  files,
+  extensions
+} = {}) => {
+  const globs = await Promise.all(directoryPaths.map(async (directoryPath) => await isDirectory(normalizePathForDirectoryGlob(directoryPath, cwd)) ? getDirectoryGlob({ directoryPath, files, extensions }) : directoryPath));
+  return globs.flat();
+};
+var directoryToGlobSync = (directoryPaths, {
+  cwd = process3.cwd(),
+  files,
+  extensions
+} = {}) => directoryPaths.flatMap((directoryPath) => isDirectorySync(normalizePathForDirectoryGlob(directoryPath, cwd)) ? getDirectoryGlob({ directoryPath, files, extensions }) : directoryPath);
+var toPatternsArray = (patterns) => {
+  patterns = [...new Set([patterns].flat())];
+  assertPatternsInput(patterns);
+  return patterns;
+};
+var checkCwdOption = (cwd) => {
+  if (!cwd) {
+    return;
+  }
+  let stat;
+  try {
+    stat = fs3.statSync(cwd);
+  } catch {
+    return;
+  }
+  if (!stat.isDirectory()) {
+    throw new Error("The `cwd` option must be a path to a directory");
+  }
+};
+var normalizeOptions2 = (options = {}) => {
+  options = {
+    ...options,
+    ignore: options.ignore ?? [],
+    expandDirectories: options.expandDirectories ?? true,
+    cwd: toPath(options.cwd)
+  };
+  checkCwdOption(options.cwd);
+  return options;
+};
+var normalizeArguments = (function_) => async (patterns, options) => function_(toPatternsArray(patterns), normalizeOptions2(options));
+var normalizeArgumentsSync = (function_) => (patterns, options) => function_(toPatternsArray(patterns), normalizeOptions2(options));
+var getIgnoreFilesPatterns = (options) => {
+  const { ignoreFiles, gitignore } = options;
+  const patterns = ignoreFiles ? toPatternsArray(ignoreFiles) : [];
+  if (gitignore) {
+    patterns.push(GITIGNORE_FILES_PATTERN);
+  }
+  return patterns;
+};
+var getFilter = async (options) => {
+  const ignoreFilesPatterns = getIgnoreFilesPatterns(options);
+  return createFilterFunction(ignoreFilesPatterns.length > 0 && await isIgnoredByIgnoreFiles(ignoreFilesPatterns, options));
+};
+var getFilterSync = (options) => {
+  const ignoreFilesPatterns = getIgnoreFilesPatterns(options);
+  return createFilterFunction(ignoreFilesPatterns.length > 0 && isIgnoredByIgnoreFilesSync(ignoreFilesPatterns, options));
+};
+var createFilterFunction = (isIgnored) => {
+  const seen = new Set;
+  return (fastGlobResult) => {
+    const pathKey = nodePath.normalize(fastGlobResult.path ?? fastGlobResult);
+    if (seen.has(pathKey) || isIgnored && isIgnored(pathKey)) {
+      return false;
+    }
+    seen.add(pathKey);
+    return true;
+  };
+};
+var unionFastGlobResults = (results, filter) => results.flat().filter((fastGlobResult) => filter(fastGlobResult));
+var convertNegativePatterns = (patterns, options) => {
+  const tasks = [];
+  while (patterns.length > 0) {
+    const index = patterns.findIndex((pattern) => isNegativePattern(pattern));
+    if (index === -1) {
+      tasks.push({ patterns, options });
+      break;
+    }
+    const ignorePattern = patterns[index].slice(1);
+    for (const task of tasks) {
+      task.options.ignore.push(ignorePattern);
+    }
+    if (index !== 0) {
+      tasks.push({
+        patterns: patterns.slice(0, index),
+        options: {
+          ...options,
+          ignore: [
+            ...options.ignore,
+            ignorePattern
+          ]
+        }
+      });
+    }
+    patterns = patterns.slice(index + 1);
+  }
+  return tasks;
+};
+var normalizeExpandDirectoriesOption = (options, cwd) => ({
+  ...cwd ? { cwd } : {},
+  ...Array.isArray(options) ? { files: options } : options
+});
+var generateTasks = async (patterns, options) => {
+  const globTasks = convertNegativePatterns(patterns, options);
+  const { cwd, expandDirectories } = options;
+  if (!expandDirectories) {
+    return globTasks;
+  }
+  const directoryToGlobOptions = normalizeExpandDirectoriesOption(expandDirectories, cwd);
+  return Promise.all(globTasks.map(async (task) => {
+    let { patterns: patterns2, options: options2 } = task;
+    [
+      patterns2,
+      options2.ignore
+    ] = await Promise.all([
+      directoryToGlob(patterns2, directoryToGlobOptions),
+      directoryToGlob(options2.ignore, { cwd })
+    ]);
+    return { patterns: patterns2, options: options2 };
+  }));
+};
+var generateTasksSync = (patterns, options) => {
+  const globTasks = convertNegativePatterns(patterns, options);
+  const { cwd, expandDirectories } = options;
+  if (!expandDirectories) {
+    return globTasks;
+  }
+  const directoryToGlobSyncOptions = normalizeExpandDirectoriesOption(expandDirectories, cwd);
+  return globTasks.map((task) => {
+    let { patterns: patterns2, options: options2 } = task;
+    patterns2 = directoryToGlobSync(patterns2, directoryToGlobSyncOptions);
+    options2.ignore = directoryToGlobSync(options2.ignore, { cwd });
+    return { patterns: patterns2, options: options2 };
+  });
+};
+var globby = normalizeArguments(async (patterns, options) => {
+  const [
+    tasks,
+    filter
+  ] = await Promise.all([
+    generateTasks(patterns, options),
+    getFilter(options)
+  ]);
+  const results = await Promise.all(tasks.map((task) => import_fast_glob2.default(task.patterns, task.options)));
+  return unionFastGlobResults(results, filter);
+});
+var globbySync = normalizeArgumentsSync((patterns, options) => {
+  const tasks = generateTasksSync(patterns, options);
+  const filter = getFilterSync(options);
+  const results = tasks.map((task) => import_fast_glob2.default.sync(task.patterns, task.options));
+  return unionFastGlobResults(results, filter);
+});
+var globbyStream = normalizeArgumentsSync((patterns, options) => {
+  const tasks = generateTasksSync(patterns, options);
+  const filter = getFilterSync(options);
+  const streams = tasks.map((task) => import_fast_glob2.default.stream(task.patterns, task.options));
+  const stream = mergeStreams(streams).filter((fastGlobResult) => filter(fastGlobResult));
+  return stream;
+});
+var isDynamicPattern = normalizeArgumentsSync((patterns, options) => patterns.some((pattern) => import_fast_glob2.default.isDynamicPattern(pattern, options)));
+var generateGlobTasks = normalizeArguments(generateTasks);
+var generateGlobTasksSync = normalizeArgumentsSync(generateTasksSync);
+
+// ../sdk/src/core/indexer.ts
 class CodebaseIndexer {
   projectPath;
   indexPath;
@@ -17477,7 +17660,7 @@ class CodebaseIndexer {
     }
     if (onProgress)
       onProgress("Generating file tree...");
-    const files = await import_globby.default(["**/*"], {
+    const files = await globby(["**/*"], {
       cwd: this.projectPath,
       ignore: [
         "**/node_modules/**",
@@ -17718,7 +17901,7 @@ ${comment.text}
 This codebase has been indexed to help you navigate.
 
 `;
-    const structuralDirs = Object.entries(index.responsibilities || {}).filter(([path]) => !path.includes(".") || path.split("/").length <= 2).slice(0, 15);
+    const structuralDirs = Object.entries(index.responsibilities || {}).filter(([path2]) => !path2.includes(".") || path2.split("/").length <= 2).slice(0, 15);
     if (structuralDirs.length > 0) {
       section += `### Project Structure
 ${structuralDirs.map(([p, d]) => `- \`${p}\`: ${d}`).join(`
@@ -17829,7 +18012,7 @@ var uuid4 = function() {
 };
 
 // ../../node_modules/@anthropic-ai/sdk/internal/errors.mjs
-function isAbortError(err) {
+function isAbortError2(err) {
   return typeof err === "object" && err !== null && (("name" in err) && err.name === "AbortError" || ("message" in err) && String(err.message).includes("FetchRequestCanceledException"));
 }
 var castToError = (err) => {
@@ -18339,20 +18522,20 @@ var parseLogLevel = (maybeLevel, sourceName, client) => {
   loggerFor(client).warn(`${sourceName} was set to ${JSON.stringify(maybeLevel)}, expected one of ${JSON.stringify(Object.keys(levelNumbers))}`);
   return;
 };
-function noop() {
+function noop2() {
 }
 function makeLogFn(fnLevel, logger, logLevel) {
   if (!logger || levelNumbers[fnLevel] > levelNumbers[logLevel]) {
-    return noop;
+    return noop2;
   } else {
     return logger[fnLevel].bind(logger);
   }
 }
 var noopLogger = {
-  error: noop,
-  warn: noop,
-  info: noop,
-  debug: noop
+  error: noop2,
+  warn: noop2,
+  info: noop2,
+  debug: noop2
 };
 var cachedLoggers = /* @__PURE__ */ new WeakMap;
 function loggerFor(client) {
@@ -18442,7 +18625,7 @@ class Stream {
         }
         done = true;
       } catch (e) {
-        if (isAbortError(e))
+        if (isAbortError2(e))
           return;
         throw e;
       } finally {
@@ -18481,7 +18664,7 @@ class Stream {
         }
         done = true;
       } catch (e) {
-        if (isAbortError(e))
+        if (isAbortError2(e))
           return;
         throw e;
       } finally {
@@ -18852,8 +19035,8 @@ class PageCursor extends AbstractPage {
 // ../../node_modules/@anthropic-ai/sdk/internal/uploads.mjs
 var checkFileSupport = () => {
   if (typeof File === "undefined") {
-    const { process: process2 } = globalThis;
-    const isOldNode = typeof process2?.versions?.node === "string" && parseInt(process2.versions.node.split(".")) < 20;
+    const { process: process4 } = globalThis;
+    const isOldNode = typeof process4?.versions?.node === "string" && parseInt(process4.versions.node.split(".")) < 20;
     throw new Error("`File` is not defined as a global, which is required for file uploads." + (isOldNode ? " Update to Node 20 LTS or newer, or set `globalThis.File` to `import('node:buffer').File`." : ""));
   }
 };
@@ -19060,7 +19243,7 @@ var createPathTagFunction = (pathEncoder = encodeURIPath) => function path(stati
     return statics[0];
   let postPath = false;
   const invalidSegments = [];
-  const path = statics.reduce((previousValue, currentValue, index) => {
+  const path2 = statics.reduce((previousValue, currentValue, index) => {
     if (/[?#]/.test(currentValue)) {
       postPath = true;
     }
@@ -19076,7 +19259,7 @@ var createPathTagFunction = (pathEncoder = encodeURIPath) => function path(stati
     }
     return previousValue + currentValue + (index === params.length ? "" : encoded);
   }, "");
-  const pathOnly = path.split(/[?#]/, 1)[0];
+  const pathOnly = path2.split(/[?#]/, 1)[0];
   const invalidSegmentPattern = /(?<=^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi;
   let match;
   while ((match = invalidSegmentPattern.exec(pathOnly)) !== null) {
@@ -19098,12 +19281,12 @@ var createPathTagFunction = (pathEncoder = encodeURIPath) => function path(stati
     throw new AnthropicError(`Path parameters result in path with invalid segments:
 ${invalidSegments.map((e) => e.error).join(`
 `)}
-${path}
+${path2}
 ${underline}`);
   }
-  return path;
+  return path2;
 };
-var path = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
+var path2 = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
 
 // ../../node_modules/@anthropic-ai/sdk/resources/beta/files.mjs
 class Files extends APIResource {
@@ -19120,7 +19303,7 @@ class Files extends APIResource {
   }
   delete(fileID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.delete(path`/v1/files/${fileID}`, {
+    return this._client.delete(path2`/v1/files/${fileID}`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "files-api-2025-04-14"].toString() },
@@ -19130,7 +19313,7 @@ class Files extends APIResource {
   }
   download(fileID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/files/${fileID}/content`, {
+    return this._client.get(path2`/v1/files/${fileID}/content`, {
       ...options,
       headers: buildHeaders([
         {
@@ -19144,7 +19327,7 @@ class Files extends APIResource {
   }
   retrieveMetadata(fileID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/files/${fileID}`, {
+    return this._client.get(path2`/v1/files/${fileID}`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "files-api-2025-04-14"].toString() },
@@ -19169,7 +19352,7 @@ class Files extends APIResource {
 class Models extends APIResource {
   retrieve(modelID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/models/${modelID}?beta=true`, {
+    return this._client.get(path2`/v1/models/${modelID}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { ...betas?.toString() != null ? { "anthropic-beta": betas?.toString() } : undefined },
@@ -19547,7 +19730,7 @@ class BetaMessageStream {
     _BetaMessageStream_logger.set(this, undefined);
     _BetaMessageStream_handleError.set(this, (error2) => {
       __classPrivateFieldSet(this, _BetaMessageStream_errored, true, "f");
-      if (isAbortError(error2)) {
+      if (isAbortError2(error2)) {
         error2 = new APIUserAbortError;
       }
       if (error2 instanceof APIUserAbortError) {
@@ -20362,7 +20545,7 @@ class Batches extends APIResource {
   }
   retrieve(messageBatchID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/messages/batches/${messageBatchID}?beta=true`, {
+    return this._client.get(path2`/v1/messages/batches/${messageBatchID}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "message-batches-2024-09-24"].toString() },
@@ -20383,7 +20566,7 @@ class Batches extends APIResource {
   }
   delete(messageBatchID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.delete(path`/v1/messages/batches/${messageBatchID}?beta=true`, {
+    return this._client.delete(path2`/v1/messages/batches/${messageBatchID}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "message-batches-2024-09-24"].toString() },
@@ -20393,7 +20576,7 @@ class Batches extends APIResource {
   }
   cancel(messageBatchID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.post(path`/v1/messages/batches/${messageBatchID}/cancel?beta=true`, {
+    return this._client.post(path2`/v1/messages/batches/${messageBatchID}/cancel?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "message-batches-2024-09-24"].toString() },
@@ -20499,7 +20682,7 @@ Messages.BetaToolRunner = BetaToolRunner;
 class Versions extends APIResource {
   create(skillID, params = {}, options) {
     const { betas, ...body } = params ?? {};
-    return this._client.post(path`/v1/skills/${skillID}/versions?beta=true`, multipartFormRequestOptions({
+    return this._client.post(path2`/v1/skills/${skillID}/versions?beta=true`, multipartFormRequestOptions({
       body,
       ...options,
       headers: buildHeaders([
@@ -20510,7 +20693,7 @@ class Versions extends APIResource {
   }
   retrieve(version, params, options) {
     const { skill_id, betas } = params;
-    return this._client.get(path`/v1/skills/${skill_id}/versions/${version}?beta=true`, {
+    return this._client.get(path2`/v1/skills/${skill_id}/versions/${version}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "skills-2025-10-02"].toString() },
@@ -20520,7 +20703,7 @@ class Versions extends APIResource {
   }
   list(skillID, params = {}, options) {
     const { betas, ...query } = params ?? {};
-    return this._client.getAPIList(path`/v1/skills/${skillID}/versions?beta=true`, PageCursor, {
+    return this._client.getAPIList(path2`/v1/skills/${skillID}/versions?beta=true`, PageCursor, {
       query,
       ...options,
       headers: buildHeaders([
@@ -20531,7 +20714,7 @@ class Versions extends APIResource {
   }
   delete(version, params, options) {
     const { skill_id, betas } = params;
-    return this._client.delete(path`/v1/skills/${skill_id}/versions/${version}?beta=true`, {
+    return this._client.delete(path2`/v1/skills/${skill_id}/versions/${version}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "skills-2025-10-02"].toString() },
@@ -20560,7 +20743,7 @@ class Skills extends APIResource {
   }
   retrieve(skillID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/skills/${skillID}?beta=true`, {
+    return this._client.get(path2`/v1/skills/${skillID}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "skills-2025-10-02"].toString() },
@@ -20581,7 +20764,7 @@ class Skills extends APIResource {
   }
   delete(skillID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.delete(path`/v1/skills/${skillID}?beta=true`, {
+    return this._client.delete(path2`/v1/skills/${skillID}?beta=true`, {
       ...options,
       headers: buildHeaders([
         { "anthropic-beta": [...betas ?? [], "skills-2025-10-02"].toString() },
@@ -20676,7 +20859,7 @@ class MessageStream {
     _MessageStream_request_id.set(this, undefined);
     _MessageStream_handleError.set(this, (error2) => {
       __classPrivateFieldSet(this, _MessageStream_errored, true, "f");
-      if (isAbortError(error2)) {
+      if (isAbortError2(error2)) {
         error2 = new APIUserAbortError;
       }
       if (error2 instanceof APIUserAbortError) {
@@ -21155,16 +21338,16 @@ class Batches2 extends APIResource {
     return this._client.post("/v1/messages/batches", { body, ...options });
   }
   retrieve(messageBatchID, options) {
-    return this._client.get(path`/v1/messages/batches/${messageBatchID}`, options);
+    return this._client.get(path2`/v1/messages/batches/${messageBatchID}`, options);
   }
   list(query = {}, options) {
     return this._client.getAPIList("/v1/messages/batches", Page, { query, ...options });
   }
   delete(messageBatchID, options) {
-    return this._client.delete(path`/v1/messages/batches/${messageBatchID}`, options);
+    return this._client.delete(path2`/v1/messages/batches/${messageBatchID}`, options);
   }
   cancel(messageBatchID, options) {
-    return this._client.post(path`/v1/messages/batches/${messageBatchID}/cancel`, options);
+    return this._client.post(path2`/v1/messages/batches/${messageBatchID}/cancel`, options);
   }
   async results(messageBatchID, options) {
     const batch = await this.retrieve(messageBatchID);
@@ -21228,7 +21411,7 @@ Messages2.Batches = Batches2;
 class Models2 extends APIResource {
   retrieve(modelID, params = {}, options) {
     const { betas } = params ?? {};
-    return this._client.get(path`/v1/models/${modelID}`, {
+    return this._client.get(path2`/v1/models/${modelID}`, {
       ...options,
       headers: buildHeaders([
         { ...betas?.toString() != null ? { "anthropic-beta": betas?.toString() } : undefined },
@@ -21373,9 +21556,9 @@ new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   makeStatusError(status, error2, message, headers) {
     return APIError.generate(status, error2, message, headers);
   }
-  buildURL(path2, query, defaultBaseURL) {
+  buildURL(path3, query, defaultBaseURL) {
     const baseURL = !__classPrivateFieldGet(this, _BaseAnthropic_instances, "m", _BaseAnthropic_baseURLOverridden).call(this) && defaultBaseURL || this.baseURL;
-    const url = isAbsoluteURL(path2) ? new URL(path2) : new URL(baseURL + (baseURL.endsWith("/") && path2.startsWith("/") ? path2.slice(1) : path2));
+    const url = isAbsoluteURL(path3) ? new URL(path3) : new URL(baseURL + (baseURL.endsWith("/") && path3.startsWith("/") ? path3.slice(1) : path3));
     const defaultQuery = this.defaultQuery();
     if (!isEmptyObj(defaultQuery)) {
       query = { ...defaultQuery, ...query };
@@ -21397,24 +21580,24 @@ new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   }
   async prepareRequest(request, { url, options }) {
   }
-  get(path2, opts) {
-    return this.methodRequest("get", path2, opts);
+  get(path3, opts) {
+    return this.methodRequest("get", path3, opts);
   }
-  post(path2, opts) {
-    return this.methodRequest("post", path2, opts);
+  post(path3, opts) {
+    return this.methodRequest("post", path3, opts);
   }
-  patch(path2, opts) {
-    return this.methodRequest("patch", path2, opts);
+  patch(path3, opts) {
+    return this.methodRequest("patch", path3, opts);
   }
-  put(path2, opts) {
-    return this.methodRequest("put", path2, opts);
+  put(path3, opts) {
+    return this.methodRequest("put", path3, opts);
   }
-  delete(path2, opts) {
-    return this.methodRequest("delete", path2, opts);
+  delete(path3, opts) {
+    return this.methodRequest("delete", path3, opts);
   }
-  methodRequest(method, path2, opts) {
+  methodRequest(method, path3, opts) {
     return this.request(Promise.resolve(opts).then((opts2) => {
-      return { method, path: path2, ...opts2 };
+      return { method, path: path3, ...opts2 };
     }));
   }
   request(options, remainingRetries = null) {
@@ -21452,7 +21635,7 @@ new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
       if (options.signal?.aborted) {
         throw new APIUserAbortError;
       }
-      const isTimeout = isAbortError(response) || /timed? ?out/i.test(String(response) + ("cause" in response ? String(response.cause) : ""));
+      const isTimeout = isAbortError2(response) || /timed? ?out/i.test(String(response) + ("cause" in response ? String(response.cause) : ""));
       if (retriesRemaining) {
         loggerFor(this).info(`[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} - ${retryMessage}`);
         loggerFor(this).debug(`[${requestLogID}] connection ${isTimeout ? "timed out" : "failed"} (${retryMessage})`, formatRequestDetails({
@@ -21518,8 +21701,8 @@ new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
     }));
     return { response, options, controller, requestLogID, retryOfRequestLogID, startTime };
   }
-  getAPIList(path2, Page2, opts) {
-    return this.requestAPIList(Page2, { method: "get", path: path2, ...opts });
+  getAPIList(path3, Page2, opts) {
+    return this.requestAPIList(Page2, { method: "get", path: path3, ...opts });
   }
   requestAPIList(Page2, options) {
     const request = this.makeRequest(options, null, undefined);
@@ -21606,8 +21789,8 @@ new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   }
   async buildRequest(inputOptions, { retryCount = 0 } = {}) {
     const options = { ...inputOptions };
-    const { method, path: path2, query, defaultBaseURL } = options;
-    const url = this.buildURL(path2, query, defaultBaseURL);
+    const { method, path: path3, query, defaultBaseURL } = options;
+    const url = this.buildURL(path3, query, defaultBaseURL);
     if ("timeout" in options)
       validatePositiveInteger("timeout", options.timeout);
     options.timeout = options.timeout ?? this.timeout;
@@ -21852,7 +22035,7 @@ var isEmptyObject = (val) => {
   }
 };
 var isDate = kindOfTest("Date");
-var isFile = kindOfTest("File");
+var isFile2 = kindOfTest("File");
 var isBlob = kindOfTest("Blob");
 var isFileList = kindOfTest("FileList");
 var isStream = (val) => isObject(val) && isFunction(val.pipe);
@@ -22071,7 +22254,7 @@ var toObjectSet = (arrayOrString, delimiter) => {
   isArray2(arrayOrString) ? define(arrayOrString) : define(String(arrayOrString).split(delimiter));
   return obj;
 };
-var noop2 = () => {
+var noop3 = () => {
 };
 var toFiniteNumber = (value, defaultValue) => {
   return value != null && Number.isFinite(value = +value) ? value : defaultValue;
@@ -22142,7 +22325,7 @@ var utils_default = {
   isHeaders,
   isUndefined,
   isDate,
-  isFile,
+  isFile: isFile2,
   isBlob,
   isRegExp,
   isFunction,
@@ -22170,7 +22353,7 @@ var utils_default = {
   freezeMethods,
   toObjectSet,
   toCamelCase,
-  noop: noop2,
+  noop: noop3,
   toFiniteNumber,
   findKey,
   global: _global,
@@ -22269,10 +22452,10 @@ function isVisitable(thing) {
 function removeBrackets(key) {
   return utils_default.endsWith(key, "[]") ? key.slice(0, -2) : key;
 }
-function renderKey(path2, key, dots) {
-  if (!path2)
+function renderKey(path3, key, dots) {
+  if (!path3)
     return key;
-  return path2.concat(key).map(function each(token, i) {
+  return path3.concat(key).map(function each(token, i) {
     token = removeBrackets(token);
     return !dots && i ? "[" + token + "]" : token;
   }).join(dots ? "." : "");
@@ -22321,9 +22504,9 @@ function toFormData(obj, formData, options) {
     }
     return value;
   }
-  function defaultVisitor(value, key, path2) {
+  function defaultVisitor(value, key, path3) {
     let arr = value;
-    if (value && !path2 && typeof value === "object") {
+    if (value && !path3 && typeof value === "object") {
       if (utils_default.endsWith(key, "{}")) {
         key = metaTokens ? key : key.slice(0, -2);
         value = JSON.stringify(value);
@@ -22338,7 +22521,7 @@ function toFormData(obj, formData, options) {
     if (isVisitable(value)) {
       return true;
     }
-    formData.append(renderKey(path2, key, dots), convertValue(value));
+    formData.append(renderKey(path3, key, dots), convertValue(value));
     return false;
   }
   const stack = [];
@@ -22347,17 +22530,17 @@ function toFormData(obj, formData, options) {
     convertValue,
     isVisitable
   });
-  function build(value, path2) {
+  function build(value, path3) {
     if (utils_default.isUndefined(value))
       return;
     if (stack.indexOf(value) !== -1) {
-      throw Error("Circular reference detected in " + path2.join("."));
+      throw Error("Circular reference detected in " + path3.join("."));
     }
     stack.push(value);
     utils_default.forEach(value, function each(el, key) {
-      const result = !(utils_default.isUndefined(el) || el === null) && visitor.call(formData, el, utils_default.isString(key) ? key.trim() : key, path2, exposedHelpers);
+      const result = !(utils_default.isUndefined(el) || el === null) && visitor.call(formData, el, utils_default.isString(key) ? key.trim() : key, path3, exposedHelpers);
       if (result === true) {
-        build(el, path2 ? path2.concat(key) : [key]);
+        build(el, path3 ? path3.concat(key) : [key]);
       }
     });
     stack.pop();
@@ -22538,7 +22721,7 @@ var platform_default = {
 // ../../node_modules/axios/lib/helpers/toURLEncodedForm.js
 function toURLEncodedForm(data, options) {
   return toFormData_default(data, new platform_default.classes.URLSearchParams, {
-    visitor: function(value, key, path2, helpers) {
+    visitor: function(value, key, path3, helpers) {
       if (platform_default.isNode && utils_default.isBuffer(value)) {
         this.append(key, value.toString("base64"));
         return false;
@@ -22568,12 +22751,12 @@ function arrayToObject(arr) {
   return obj;
 }
 function formDataToJSON(formData) {
-  function buildPath(path2, value, target, index) {
-    let name = path2[index++];
+  function buildPath(path3, value, target, index) {
+    let name = path3[index++];
     if (name === "__proto__")
       return true;
     const isNumericKey = Number.isFinite(+name);
-    const isLast = index >= path2.length;
+    const isLast = index >= path3.length;
     name = !name && utils_default.isArray(target) ? target.length : name;
     if (isLast) {
       if (utils_default.hasOwnProp(target, name)) {
@@ -22586,7 +22769,7 @@ function formDataToJSON(formData) {
     if (!target[name] || !utils_default.isObject(target[name])) {
       target[name] = [];
     }
-    const result = buildPath(path2, value, target[name], index);
+    const result = buildPath(path3, value, target[name], index);
     if (result && utils_default.isArray(target[name])) {
       target[name] = arrayToObject(target[name]);
     }
@@ -23883,9 +24066,9 @@ var http_default = isHttpAdapterSupported && function httpAdapter(config) {
       auth = urlUsername + ":" + urlPassword;
     }
     auth && headers.delete("authorization");
-    let path2;
+    let path3;
     try {
-      path2 = buildURL(parsed.pathname + parsed.search, config.params, config.paramsSerializer).replace(/^\?/, "");
+      path3 = buildURL(parsed.pathname + parsed.search, config.params, config.paramsSerializer).replace(/^\?/, "");
     } catch (err) {
       const customErr = new Error(err.message);
       customErr.config = config;
@@ -23895,7 +24078,7 @@ var http_default = isHttpAdapterSupported && function httpAdapter(config) {
     }
     headers.set("Accept-Encoding", "gzip, compress, deflate" + (isBrotliSupported ? ", br" : ""), false);
     const options = {
-      path: path2,
+      path: path3,
       method,
       headers: headers.toJSON(),
       agents: { http: config.httpAgent, https: config.httpsAgent },
@@ -24102,15 +24285,15 @@ var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? ((origin2
 
 // ../../node_modules/axios/lib/helpers/cookies.js
 var cookies_default = platform_default.hasStandardBrowserEnv ? {
-  write(name, value, expires, path2, domain, secure, sameSite) {
+  write(name, value, expires, path3, domain, secure, sameSite) {
     if (typeof document === "undefined")
       return;
     const cookie = [`${name}=${encodeURIComponent(value)}`];
     if (utils_default.isNumber(expires)) {
       cookie.push(`expires=${new Date(expires).toUTCString()}`);
     }
-    if (utils_default.isString(path2)) {
-      cookie.push(`path=${path2}`);
+    if (utils_default.isString(path3)) {
+      cookie.push(`path=${path3}`);
     }
     if (utils_default.isString(domain)) {
       cookie.push(`domain=${domain}`);
@@ -25864,8 +26047,8 @@ function getErrorMap() {
 }
 // ../shared/node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path2, errorMaps, issueData } = params;
-  const fullPath = [...path2, ...issueData.path || []];
+  const { data, path: path3, errorMaps, issueData } = params;
+  const fullPath = [...path3, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -25977,11 +26160,11 @@ var errorUtil;
 
 // ../shared/node_modules/zod/v3/types.js
 class ParseInputLazyPath {
-  constructor(parent, value, path2, key) {
+  constructor(parent, value, path3, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path2;
+    this._path = path3;
     this._key = key;
   }
   get path() {
@@ -30709,9 +30892,9 @@ class ConfigManager {
     }
   }
   loadConfig() {
-    const path2 = getLocusPath(this.projectPath, "configFile");
-    if (existsSync5(path2)) {
-      return JSON.parse(readFileSync4(path2, "utf-8"));
+    const path3 = getLocusPath(this.projectPath, "configFile");
+    if (existsSync5(path3)) {
+      return JSON.parse(readFileSync4(path3, "utf-8"));
     }
     return null;
   }
@@ -30765,11 +30948,8 @@ ${tree}`;
 
 // src/cli.ts
 function getVersion() {
-  if (true) {
-    return "0.1.7";
-  }
   try {
-    const __filename2 = fileURLToPath(import.meta.url);
+    const __filename2 = fileURLToPath2(import.meta.url);
     const __dirname2 = dirname2(__filename2);
     const packagePath = join6(__dirname2, "..", "package.json");
     if (existsSync6(packagePath)) {
