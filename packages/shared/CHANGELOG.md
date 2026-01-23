@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.3.3
+
+### Patch Changes
+
+- Worker resolution
+
 ## 0.3.2
 
 ### Patch Changes
