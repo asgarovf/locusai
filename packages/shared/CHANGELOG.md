@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.9
+
+### Patch Changes
+
+- Package resolutions
+
 ## 0.4.8
 
 ### Patch Changes

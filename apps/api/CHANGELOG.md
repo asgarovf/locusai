@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.4.9
+
+### Patch Changes
+
+- Package resolutions
+- Updated dependencies
+  - @locusai/shared@0.4.9
+
 ## 0.4.8
 
 ### Patch Changes
