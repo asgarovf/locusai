@@ -30,6 +30,12 @@ export function Navbar() {
               Documentation
             </Link>
             <Link
+              href="https://app.locusai.dev"
+              className="text-sm font-medium transition-colors hover:text-foreground/80 text-foreground/60"
+            >
+              Dashboard
+            </Link>
+            <Link
               href="https://github.com/asgarovf/locusai"
               target="_blank"
               rel="noreferrer"
