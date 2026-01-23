@@ -17,6 +17,7 @@ import { Comment } from "@/entities/comment.entity";
 import { Doc } from "@/entities/doc.entity";
 import { Event } from "@/entities/event.entity";
 import { Task } from "@/entities/task.entity";
+import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
 import { TaskProcessor } from "./task.processor";
 
@@ -29,6 +30,8 @@ export class TasksService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Doc)
     private readonly docRepository: Repository<Doc>,
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
     private readonly eventsService: EventsService,
     private readonly processor: TaskProcessor
   ) {}
@@ -93,14 +96,16 @@ export class TasksService {
     docIds?: string[];
     userId?: string;
   }): Promise<Task> {
-    const defaultItems: AcceptanceItem[] = [
-      { id: `default-lint-${Date.now()}`, text: "npm run lint", done: false },
-      {
-        id: `default-typecheck-${Date.now()}`,
-        text: "npm run typecheck",
-        done: false,
-      },
-    ];
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: data.workspaceId },
+    });
+
+    const defaultItems: AcceptanceItem[] = (
+      workspace?.defaultChecklist || []
+    ).map((item) => ({
+      ...item,
+      id: `default-${item.id}-${Date.now()}`,
+    }));
 
     const mergedChecklist = [
       ...(data.acceptanceChecklist || []),
