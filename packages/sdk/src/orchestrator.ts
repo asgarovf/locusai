@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index.js";
@@ -167,10 +168,17 @@ export class AgentOrchestrator extends EventEmitter {
 
     const potentialPaths: string[] = [];
 
-    const entryDir = dirname(process.argv[1]);
+    // Use import.meta.url to get the actual module location
+    // This works correctly with npm/npx installations
+    const currentModulePath = fileURLToPath(import.meta.url);
+    const currentModuleDir = dirname(currentModulePath);
+
+    // Check multiple potential locations for the worker file
     potentialPaths.push(
-      join(entryDir, "agent", "worker.js"),
-      join(entryDir, "worker.js")
+      // When running from built SDK (dist/orchestrator.js -> dist/agent/worker.js)
+      join(currentModuleDir, "agent", "worker.js"),
+      // When running from built SDK (dist/orchestrator.js -> dist/worker.js)
+      join(currentModuleDir, "worker.js")
     );
 
     const workerPath = potentialPaths.find((p) => existsSync(p));

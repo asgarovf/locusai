@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "node"
+    "module": "ES2022",
+    "moduleResolution": "bundler"
   }
 }
