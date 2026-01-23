@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { LocusConfig, LocusEmitter, LocusEvent } from "./events";
 import { AuthModule } from "./modules/auth";
 import { CiModule } from "./modules/ci";
@@ -8,6 +8,7 @@ import { OrganizationsModule } from "./modules/organizations";
 import { SprintsModule } from "./modules/sprints";
 import { TasksModule } from "./modules/tasks";
 import { WorkspacesModule } from "./modules/workspaces";
+import { RetryOptions } from "./utils/retry";
 
 // Browser-safe exports only
 export * from "./events";
@@ -56,6 +57,45 @@ export class LocusClient {
     this.invitations = new InvitationsModule(this.api, this.emitter);
     this.docs = new DocsModule(this.api, this.emitter);
     this.ci = new CiModule(this.api, this.emitter);
+
+    if (config.retryOptions) {
+      this.setupRetryInterceptor(config.retryOptions);
+    }
+  }
+
+  private setupRetryInterceptor(retryOptions: RetryOptions) {
+    this.api.interceptors.response.use(undefined, async (error) => {
+      const config = error.config as InternalAxiosRequestConfig & {
+        _retryCount?: number;
+      };
+
+      if (!config || !retryOptions) {
+        return Promise.reject(error);
+      }
+
+      config._retryCount = config._retryCount || 0;
+
+      const maxRetries = retryOptions.maxRetries ?? 3;
+      const shouldRetry =
+        config._retryCount < maxRetries &&
+        (retryOptions.retryCondition
+          ? retryOptions.retryCondition(error)
+          : !error.response || error.response.status >= 500);
+
+      if (shouldRetry) {
+        config._retryCount++;
+        const delay = Math.min(
+          (retryOptions.initialDelay ?? 1000) *
+            Math.pow(retryOptions.factor ?? 2, config._retryCount - 1),
+          retryOptions.maxDelay ?? 5000
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return this.api(config);
+      }
+
+      return Promise.reject(error);
+    });
   }
 
   private setupInterceptors() {

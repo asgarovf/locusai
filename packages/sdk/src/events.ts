@@ -1,5 +1,7 @@
 import { EventEmitter } from "events";
 
+import { RetryOptions } from "./utils/retry";
+
 export enum LocusEvent {
   TOKEN_EXPIRED = "TOKEN_EXPIRED",
   AUTH_ERROR = "AUTH_ERROR",
@@ -10,6 +12,7 @@ export interface LocusConfig {
   baseUrl: string;
   token?: string | null;
   timeout?: number;
+  retryOptions?: RetryOptions;
 }
 
 export class LocusEmitter extends EventEmitter {

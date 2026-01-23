@@ -48,6 +48,12 @@ export class AgentWorker {
     this.client = new LocusClient({
       baseUrl: config.apiBase,
       token: config.apiKey,
+      retryOptions: {
+        maxRetries: 3,
+        initialDelay: 1000,
+        maxDelay: 5000,
+        factor: 2,
+      },
     });
 
     // Initialize AI clients
