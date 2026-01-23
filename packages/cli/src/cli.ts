@@ -95,7 +95,7 @@ async function runCommand(args: string[]) {
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
     model: (values.model as string) || DEFAULT_MODEL,
-    apiBase: (values["api-url"] as string) || "https://api.locus.dev/api",
+    apiBase: (values["api-url"] as string) || "https://api.locusai.dev/api",
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
