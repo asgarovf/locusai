@@ -9,7 +9,7 @@ import {
   TasksResponse,
   UpdateTask,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export interface TaskListOptions {
   sprintId?: string;

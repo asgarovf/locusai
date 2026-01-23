@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-import { RetryOptions } from "./utils/retry";
+import { RetryOptions } from "./utils/retry.js";
 
 export enum LocusEvent {
   TOKEN_EXPIRED = "TOKEN_EXPIRED",

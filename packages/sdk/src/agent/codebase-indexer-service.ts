@@ -1,6 +1,6 @@
-import type { AnthropicClient } from "../ai/anthropic-client";
-import type { ClaudeRunner } from "../ai/claude-runner";
-import { CodebaseIndexer } from "../core/indexer";
+import type { AnthropicClient } from "../ai/anthropic-client.js";
+import type { ClaudeRunner } from "../ai/claude-runner.js";
+import { CodebaseIndexer } from "../core/indexer.js";
 
 export interface CodebaseIndexerServiceDeps {
   anthropicClient: AnthropicClient | null;

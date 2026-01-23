@@ -1,7 +1,7 @@
 import type { Task } from "@locusai/shared";
-import type { AnthropicClient } from "../ai/anthropic-client";
-import type { ClaudeRunner } from "../ai/claude-runner";
-import { PromptBuilder } from "../core/prompt-builder";
+import type { AnthropicClient } from "../ai/anthropic-client.js";
+import type { ClaudeRunner } from "../ai/claude-runner.js";
+import { PromptBuilder } from "../core/prompt-builder.js";
 
 export interface TaskExecutorDeps {
   anthropicClient: AnthropicClient | null;

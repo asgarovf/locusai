@@ -8,16 +8,16 @@
  */
 
 // Node.js-only: Agent system
-export * from "./agent";
+export * from "./agent/index.js";
 // Node.js-only: AI clients
-export * from "./ai";
+export * from "./ai/index.js";
 // Node.js-only: Core utilities (uses fs)
-export * from "./core";
+export * from "./core/index.js";
 // Re-export everything from main index (browser-safe)
-export * from "./index";
+export * from "./index.js";
 
 // Node.js-only: Orchestrator
-export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator";
+export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator.js";
 
 // Utilities
-export { c } from "./utils/colors";
+export { c } from "./utils/colors.js";

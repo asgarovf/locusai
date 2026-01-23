@@ -10,7 +10,7 @@ import {
   WorkspaceStats,
   WorkspacesResponse,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class WorkspacesModule extends BaseModule {
   async listAll(): Promise<Workspace[]> {

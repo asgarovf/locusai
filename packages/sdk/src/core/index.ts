@@ -1,3 +1,3 @@
-export { DEFAULT_MODEL, getLocusPath, LOCUS_CONFIG } from "./config";
-export { type CodebaseIndex, CodebaseIndexer } from "./indexer";
-export { PromptBuilder } from "./prompt-builder";
+export { DEFAULT_MODEL, getLocusPath, LOCUS_CONFIG } from "./config.js";
+export { type CodebaseIndex, CodebaseIndexer } from "./indexer.js";
+export { PromptBuilder } from "./prompt-builder.js";

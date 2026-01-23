@@ -4,7 +4,7 @@ import {
   User,
   VerifyOtp,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class AuthModule extends BaseModule {
   async getMe(): Promise<User> {

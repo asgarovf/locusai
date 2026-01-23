@@ -6,8 +6,8 @@ import {
   statSync,
 } from "node:fs";
 import { join } from "node:path";
-import { getLocusPath } from "../core/config";
-import type { LocusClient } from "../index";
+import { getLocusPath } from "../core/config.js";
+import type { LocusClient } from "../index.js";
 
 export interface ArtifactSyncerDeps {
   client: LocusClient;

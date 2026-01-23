@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { Task } from "@locusai/shared";
-import { getLocusPath } from "./config";
-import { CodebaseIndex } from "./indexer";
+import { getLocusPath } from "./config.js";
+import { CodebaseIndex } from "./indexer.js";
 
 export class PromptBuilder {
   constructor(private projectPath: string) {}

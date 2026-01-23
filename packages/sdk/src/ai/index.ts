@@ -1,2 +1,2 @@
-export { AnthropicClient } from "./anthropic-client";
-export { ClaudeRunner } from "./claude-runner";
+export { AnthropicClient } from "./anthropic-client.js";
+export { ClaudeRunner } from "./claude-runner.js";

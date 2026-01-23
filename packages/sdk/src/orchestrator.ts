@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
-import { LocusClient } from "./index";
-import { c } from "./utils/colors";
+import { LocusClient } from "./index.js";
+import { c } from "./utils/colors.js";
 
 export interface AgentConfig {
   id: string;

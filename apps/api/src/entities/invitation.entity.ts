@@ -47,7 +47,7 @@ export class Invitation {
   @Column({ name: "invited_by_id" })
   invitedByUserId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "invited_by_id" })
   invitedBy: User;
 

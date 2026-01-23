@@ -1,6 +1,6 @@
 import type { Sprint, Task } from "@locusai/shared";
-import type { AnthropicClient } from "../ai/anthropic-client";
-import type { ClaudeRunner } from "../ai/claude-runner";
+import type { AnthropicClient } from "../ai/anthropic-client.js";
+import type { ClaudeRunner } from "../ai/claude-runner.js";
 
 export interface SprintPlannerDeps {
   anthropicClient: AnthropicClient | null;

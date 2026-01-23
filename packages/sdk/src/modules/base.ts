@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { LocusEmitter } from "../events";
+import { LocusEmitter } from "../events.js";
 
 export abstract class BaseModule {
   constructor(

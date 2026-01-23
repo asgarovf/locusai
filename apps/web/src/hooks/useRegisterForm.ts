@@ -161,7 +161,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
         invitedEmails: deduped.length > 0 ? deduped : undefined,
       });
 
-      login(response.token, response.user as User);
+      await login(response.token, response.user as User);
       toast.success("Account created successfully!");
     } catch (error) {
       toast.error(

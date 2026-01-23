@@ -6,7 +6,7 @@ import {
   InvitationResponse,
   InvitationsResponse,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class InvitationsModule extends BaseModule {
   async create(orgId: string, body: CreateInvitation): Promise<Invitation> {

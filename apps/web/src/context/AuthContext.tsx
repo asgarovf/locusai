@@ -16,7 +16,7 @@ interface AuthContextType {
   workspaces: Workspace[];
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: User) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   switchWorkspace: (workspaceId: string) => void;
@@ -85,9 +85,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, [refreshUser]);
 
-  const login = (token: string, userData: User) => {
+  const login = async (token: string, userData: User) => {
     setClientToken(token);
     setUser(userData);
+
+    // Fetch workspaces to ensure they're loaded before navigation
+    await refreshUser();
 
     // If user doesn't have a workspace, redirect to create one
     if (!userData.workspaceId) {

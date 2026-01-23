@@ -1,25 +1,25 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { LocusConfig, LocusEmitter, LocusEvent } from "./events";
-import { AuthModule } from "./modules/auth";
-import { CiModule } from "./modules/ci";
-import { DocsModule } from "./modules/docs";
-import { InvitationsModule } from "./modules/invitations";
-import { OrganizationsModule } from "./modules/organizations";
-import { SprintsModule } from "./modules/sprints";
-import { TasksModule } from "./modules/tasks";
-import { WorkspacesModule } from "./modules/workspaces";
-import { RetryOptions } from "./utils/retry";
+import { LocusConfig, LocusEmitter, LocusEvent } from "./events.js";
+import { AuthModule } from "./modules/auth.js";
+import { CiModule } from "./modules/ci.js";
+import { DocsModule } from "./modules/docs.js";
+import { InvitationsModule } from "./modules/invitations.js";
+import { OrganizationsModule } from "./modules/organizations.js";
+import { SprintsModule } from "./modules/sprints.js";
+import { TasksModule } from "./modules/tasks.js";
+import { WorkspacesModule } from "./modules/workspaces.js";
+import { RetryOptions } from "./utils/retry.js";
 
 // Browser-safe exports only
-export * from "./events";
-export * from "./modules/auth";
-export * from "./modules/ci";
-export * from "./modules/docs";
-export * from "./modules/invitations";
-export * from "./modules/organizations";
-export * from "./modules/sprints";
-export * from "./modules/tasks";
-export * from "./modules/workspaces";
+export * from "./events.js";
+export * from "./modules/auth.js";
+export * from "./modules/ci.js";
+export * from "./modules/docs.js";
+export * from "./modules/invitations.js";
+export * from "./modules/organizations.js";
+export * from "./modules/sprints.js";
+export * from "./modules/tasks.js";
+export * from "./modules/workspaces.js";
 
 export class LocusClient {
   private readonly api: AxiosInstance;

@@ -1,5 +1,5 @@
 import { ReportCiResult } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class CiModule extends BaseModule {
   async report(body: ReportCiResult): Promise<{ success: boolean }> {

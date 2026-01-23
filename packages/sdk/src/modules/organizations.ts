@@ -7,7 +7,7 @@ import {
   OrganizationResponse,
   OrganizationsResponse,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export interface ApiKey {
   id: string;

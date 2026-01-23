@@ -56,7 +56,7 @@ export function useLoginForm(): UseLoginFormReturn {
     setLoading(true);
     try {
       const response = await locusClient.auth.verifyLogin({ email, otp });
-      login(response.token, response.user as User);
+      await login(response.token, response.user as User);
       toast.success("Welcome back!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invalid code");

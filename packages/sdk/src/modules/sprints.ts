@@ -5,7 +5,7 @@ import {
   SprintsResponse,
   UpdateSprint,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class SprintsModule extends BaseModule {
   async list(workspaceId: string): Promise<Sprint[]> {

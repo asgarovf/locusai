@@ -10,7 +10,7 @@ import {
   UpdateDoc,
   UpdateDocGroup,
 } from "@locusai/shared";
-import { BaseModule } from "./base";
+import { BaseModule } from "./base.js";
 
 export class DocsModule extends BaseModule {
   async create(workspaceId: string, body: CreateDoc): Promise<Doc> {
