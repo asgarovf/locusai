@@ -7,7 +7,32 @@ export class ClaudeRunner {
     private model: string = DEFAULT_MODEL
   ) {}
 
-  run(prompt: string, _isPlanning = false): Promise<string> {
+  async run(prompt: string, _isPlanning = false): Promise<string> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.executeRun(prompt);
+      } catch (error) {
+        const err = error as Error;
+        lastError = err;
+        const isLastAttempt = attempt === maxRetries;
+
+        if (!isLastAttempt) {
+          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          console.warn(
+            `Claude CLI attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError || new Error("Claude CLI failed after multiple attempts");
+  }
+
+  private executeRun(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const args = [
         "--dangerously-skip-permissions",
@@ -28,11 +53,12 @@ export class ClaudeRunner {
 
       claude.stdout.on("data", (data) => {
         output += data.toString();
-        process.stdout.write(data.toString());
+        // Only write to stdout if we're not retrying or if logic dictates
+        // process.stdout.write(data.toString());
       });
       claude.stderr.on("data", (data) => {
         errorOutput += data.toString();
-        process.stderr.write(data.toString());
+        // process.stderr.write(data.toString());
       });
 
       claude.on("error", (err) =>

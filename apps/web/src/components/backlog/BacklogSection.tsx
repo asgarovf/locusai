@@ -59,60 +59,61 @@ export function BacklogSection({
   children,
 }: BacklogSectionProps) {
   const colors = {
-    slate: "border-l-slate-400/60 bg-slate-50/50 dark:bg-slate-900/10",
-    primary: "border-l-primary bg-primary/[0.08] dark:bg-primary/[0.06]",
-    emerald:
-      "border-l-emerald-500 bg-emerald-500/[0.08] dark:bg-emerald-500/[0.06]",
-    amber: "border-l-amber-500 bg-amber-500/[0.08] dark:bg-amber-500/[0.06]",
-    green: "border-l-green-500 bg-green-500/[0.03] dark:bg-green-500/[0.02]",
+    slate: "text-slate-500",
+    primary: "text-primary",
+    emerald: "text-emerald-500",
+    amber: "text-amber-500",
+    green: "text-green-500",
   };
 
   const badgeColors = {
-    slate: "bg-muted text-muted-foreground",
-    primary: "bg-primary/20 text-primary dark:text-primary-foreground/90",
-    emerald: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
-    amber: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-    green: "bg-green-500/15 text-green-700 dark:text-green-400",
+    slate: "bg-secondary text-muted-foreground",
+    primary: "bg-primary/10 text-primary border-primary/20",
+    emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    amber: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    green: "bg-green-500/10 text-green-500 border-green-500/20",
   };
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border/40 overflow-hidden transition-all duration-200",
-        colors[accentColor],
-        "border-l-4",
-        isExpanded
-          ? "shadow-sm ring-1 ring-border/10"
-          : "hover:bg-secondary/5 dark:hover:bg-white/2"
-      )}
-    >
+    <div className="space-y-2">
       {/* Header */}
       <div
         onClick={onToggle}
         onKeyDown={(e) => e.key === "Enter" && onToggle()}
-        className="w-full flex items-center justify-between p-3.5 cursor-pointer select-none group"
+        className={cn(
+          "w-full flex items-center justify-between px-2 py-2 cursor-pointer select-none group rounded-lg transition-colors",
+          "hover:bg-secondary/40"
+        )}
       >
         <div className="flex items-center gap-3">
-          <div className="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+          <div className="p-1 rounded-md text-muted-foreground/60 group-hover:text-foreground transition-colors">
             {isExpanded ? (
-              <ChevronDown size={18} className="text-muted-foreground/70" />
+              <ChevronDown size={16} />
             ) : (
-              <ChevronRight size={18} className="text-muted-foreground/70" />
+              <ChevronRight size={16} />
             )}
           </div>
-          <div className="opacity-70 group-hover:opacity-100 transition-opacity">
+
+          <div
+            className={cn(
+              "transition-opacity flex items-center gap-2",
+              colors[accentColor]
+            )}
+          >
             {icon}
+            <span className="font-semibold text-[15px] tracking-tight text-foreground">
+              {title}
+            </span>
           </div>
-          <span className="font-semibold text-sm tracking-tight text-foreground/90">
-            {title}
-          </span>
-          <span className="text-[11px] text-muted-foreground/70 bg-background/50 border border-border/10 px-2 py-0.5 rounded-full font-mono">
+
+          <span className="text-[11px] text-muted-foreground/50 bg-secondary/50 px-2 py-0.5 rounded-full font-mono font-medium">
             {count}
           </span>
+
           {badge && (
             <span
               className={cn(
-                "text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold shadow-sm",
+                "text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold border",
                 badgeColors[accentColor]
               )}
             >
@@ -120,9 +121,10 @@ export function BacklogSection({
             </span>
           )}
         </div>
+
         {actions && (
           <div
-            className="flex items-center"
+            className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {actions}
@@ -131,7 +133,18 @@ export function BacklogSection({
       </div>
 
       {/* Content */}
-      {isExpanded && <div className="px-3.5 pb-3.5 space-y-1">{children}</div>}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          isExpanded
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden p-1">
+          <div className="px-2 pb-6 space-y-0">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

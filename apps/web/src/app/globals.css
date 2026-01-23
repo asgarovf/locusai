@@ -35,8 +35,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  /* Status Colors */
-  --color-status-backlog: #475569;
+  /* Status Colors with better vibrancy */
+  --color-status-backlog: #64748b;
   --color-status-todo: #0ea5e9;
   --color-status-progress: #f59e0b;
   --color-status-review: #8b5cf6;
@@ -45,7 +45,7 @@
   --color-status-blocked: #f43f5e;
 
   /* Priority Colors */
-  --color-priority-low: #64748b;
+  --color-priority-low: #94a3b8;
   --color-priority-medium: #38bdf8;
   --color-priority-high: #f59e0b;
   --color-priority-critical: #ef4444;
@@ -55,6 +55,7 @@
   --shadow-lg:
     0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
 }
 
 @layer base {
@@ -92,6 +93,8 @@
     /* Custom Locus Colors */
     --color-sidebar-bg: #0c0d12;
     --color-glass-bg: rgba(255, 255, 255, 0.03);
+    --color-glass-border: rgba(255, 255, 255, 0.08);
+    --color-glass-blur: blur(12px);
     --color-panel-bg: rgba(12, 13, 18, 0.95);
   }
 
@@ -123,6 +126,10 @@
     --border: #e4e4e7;
     --input: #e4e4e7;
     --ring: #18181b;
+
+    --color-glass-bg: rgba(255, 255, 255, 0.8);
+    --color-glass-border: rgba(0, 0, 0, 0.05);
+    --color-glass-blur: blur(12px);
   }
 
   body {
@@ -154,7 +161,17 @@
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
 }
 
 .app-container {

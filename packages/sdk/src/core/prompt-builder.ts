@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
-import { Task } from "@locusai/shared";
+import { AssigneeRole, Task } from "@locusai/shared";
 import { getLocusPath } from "./config.js";
-import { CodebaseIndex } from "./indexer.js";
 
 export class PromptBuilder {
   constructor(private projectPath: string) {}
@@ -9,8 +8,9 @@ export class PromptBuilder {
   async build(task: Task): Promise<string> {
     let prompt = `# Task: ${task.title}\n\n`;
 
-    if (task.assigneeRole) {
-      prompt += `## Role\nYou are acting as a ${task.assigneeRole} engineer.\n\n`;
+    const roleText = this.roleToText(task.assigneeRole);
+    if (roleText) {
+      prompt += `## Role\nYou are acting as a ${roleText}.\n\n`;
     }
 
     prompt += `## Description\n${task.description || "No description provided."}\n\n`;
@@ -29,13 +29,7 @@ export class PromptBuilder {
     // 2. Add Codebase Index context
     const indexPath = getLocusPath(this.projectPath, "indexFile");
     if (existsSync(indexPath)) {
-      try {
-        const indexContent = readFileSync(indexPath, "utf-8");
-        const index = JSON.parse(indexContent) as CodebaseIndex;
-        prompt += this.formatIndex(index, task);
-      } catch (err) {
-        console.warn(`Warning: Could not read codebase index: ${err}`);
-      }
+      prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
     }
 
     // 3. Add Documents
@@ -57,9 +51,10 @@ export class PromptBuilder {
 
     // 5. Add Comments & Feedback
     if (task.comments && task.comments.length > 0) {
+      const comments = task.comments.slice(0, 5);
       prompt += `## Task History & Feedback\n`;
       prompt += `Review the following comments for context or rejection feedback:\n\n`;
-      for (const comment of task.comments) {
+      for (const comment of comments) {
         const date = new Date(comment.createdAt).toLocaleString();
         prompt += `### ${comment.author} (${date})\n${comment.text}\n\n`;
       }
@@ -73,28 +68,24 @@ export class PromptBuilder {
     return prompt;
   }
 
-  private formatIndex(index: CodebaseIndex, task: Task): string {
-    let section = `## Codebase Overview\nThis codebase has been indexed to help you navigate.\n\n`;
-
-    // Structural directories
-    const structuralDirs = Object.entries(index.responsibilities || {})
-      .filter(([path]) => !path.includes(".") || path.split("/").length <= 2)
-      .slice(0, 15);
-
-    if (structuralDirs.length > 0) {
-      section += `### Project Structure\n${structuralDirs.map(([p, d]) => `- \`${p}\`: ${d}`).join("\n")}\n\n`;
+  roleToText(role: Task["assigneeRole"]): string | null {
+    if (!role) {
+      return null;
     }
 
-    // Relevant symbols
-    const keywords = `${task.title} ${task.description}`.toLowerCase();
-    const symbols = Object.entries(index.symbols || {})
-      .filter(([symbol]) => keywords.includes(symbol.toLowerCase()))
-      .slice(0, 10);
-
-    if (symbols.length > 0) {
-      section += `### Potentially Relevant Symbols\n${symbols.map(([s, f]) => `- \`${s}\` is defined in: ${Array.isArray(f) ? f.join(", ") : f}`).join("\n")}\n\n`;
+    switch (role) {
+      case AssigneeRole.BACKEND:
+        return "Backend Engineer";
+      case AssigneeRole.FRONTEND:
+        return "Frontend Engineer";
+      case AssigneeRole.PM:
+        return "Product Manager";
+      case AssigneeRole.QA:
+        return "QA Engineer";
+      case AssigneeRole.DESIGN:
+        return "Product Designer";
+      default:
+        return "engineer";
     }
-
-    return section;
   }
 }

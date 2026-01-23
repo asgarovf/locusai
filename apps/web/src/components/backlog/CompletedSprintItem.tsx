@@ -69,13 +69,13 @@ export function CompletedSprintItem({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="px-3 pb-3 space-y-1">
+            <div className="px-0 pb-0 space-y-0">
               {tasks.length === 0 ? (
                 <div className="py-4 text-center text-[10px] text-muted-foreground/40 italic">
                   No tasks in this sprint
                 </div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-0">
                   {tasks.map((task) => (
                     <TaskCard
                       key={task.id}

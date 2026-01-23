@@ -34,7 +34,7 @@ export class TaskExecutor {
     }
 
     try {
-      let plan: string;
+      let plan: string = "";
 
       if (this.deps.anthropicClient) {
         // Phase 1: Planning (using Anthropic SDK with caching)
@@ -51,15 +51,23 @@ export class TaskExecutor {
             "## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.",
         });
       } else {
-        // Phase 1: Planning (using Claude CLI)
-        this.deps.log("Phase 1: Planning (Claude CLI)...", "info");
-        const planningPrompt = `${basePrompt}\n\n## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
-        plan = await this.deps.claudeRunner.run(planningPrompt, true);
+        this.deps.log(
+          "Skipping Phase 1: Planning (No Anthropic API Key)...",
+          "info"
+        );
       }
 
       // Phase 2: Execution (always using Claude CLI for agentic tools)
-      this.deps.log("Plan generated. Starting Phase 2: Execution...", "info");
-      const executionPrompt = `${basePrompt}\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}\n\nWhen finished, output: <promise>COMPLETE</promise>`;
+      this.deps.log("Starting Execution...", "info");
+
+      let executionPrompt = basePrompt;
+      if (plan) {
+        executionPrompt += `\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}`;
+      } else {
+        executionPrompt += `\n\n## Execution\nExecute the task directly.`;
+      }
+
+      executionPrompt += `\n\nWhen finished, output: <promise>COMPLETE</promise>`;
       const output = await this.deps.claudeRunner.run(executionPrompt);
 
       const success = output.includes("<promise>COMPLETE</promise>");

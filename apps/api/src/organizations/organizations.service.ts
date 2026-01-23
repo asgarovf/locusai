@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { ApiKey, Membership, Organization } from "@/entities";
+import { ApiKey, Membership, Organization, User } from "@/entities";
 
 @Injectable()
 export class OrganizationsService {
@@ -17,7 +17,9 @@ export class OrganizationsService {
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(ApiKey)
-    private readonly apiKeyRepository: Repository<ApiKey>
+    private readonly apiKeyRepository: Repository<ApiKey>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) {}
 
   async findById(id: string): Promise<Organization> {
@@ -87,7 +89,16 @@ export class OrganizationsService {
       }
     }
 
-    await this.membershipRepository.remove(membership);
+    // For now, we are enforcing 1 User = 1 Organization policy.
+    // When a user is removed from an organization, they are deleted entirely.
+    // This simplifies the frontend flow as they would need to sign up again anyway.
+
+    // Cascading delete on User entity will update:
+    // - Memberships (CASCADE)
+    // - Events (CASCADE)
+    // - Tasks/Comments (No FK constraint, just ID reference - will remain as history)
+
+    await this.userRepository.delete(userId);
   }
 
   async delete(orgId: string): Promise<void> {

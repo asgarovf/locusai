@@ -128,7 +128,7 @@ export function SprintSection({
               Drag tasks here to add to this sprint
             </div>
           ) : (
-            <div className="space-y-1.5 pt-1">
+            <div className="pt-1">
               {tasks.map((task) => (
                 <motion.div
                   key={task.id}

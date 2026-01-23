@@ -65,7 +65,7 @@ export function BacklogList({
               No tasks in backlog
             </div>
           ) : (
-            <div className="space-y-1.5 pt-1">
+            <div className="pt-1">
               {tasks.map((task) => (
                 <motion.div
                   key={task.id}

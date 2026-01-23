@@ -76,49 +76,91 @@ export function TaskCard({
     return (
       <div
         className={cn(
-          "group relative bg-card/40 border border-border/40 rounded-lg overflow-hidden transition-all hover:bg-secondary/20 hover:border-border cursor-pointer flex items-center h-10 px-3 gap-4",
-          isDragging && "opacity-50 scale-[0.98] shadow-lg"
+          "group relative glass border-b-0 last:border-b border-border/10 rounded-none first:rounded-t-xl last:rounded-b-xl overflow-hidden transition-all duration-200 cursor-pointer flex items-center h-14 px-4 gap-4 hover:bg-secondary/30",
+          isDragging && "opacity-50 scale-[0.98] shadow-lg rounded-xl border"
         )}
         onClick={onClick}
       >
-        <div className="flex items-center gap-2 min-w-[70px]">
+        {/* Priority Indicator Line */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80 group-hover:opacity-100 transition-opacity"
+          style={{ backgroundColor: PRIORITY_COLORS[priority] }}
+        />
+
+        {/* Priority Badge */}
+        <div className="flex items-center justify-center w-6 shrink-0">
           <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: PRIORITY_COLORS[priority] }}
+            className="w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-background group-hover:ring-transparent transition-all"
+            style={{
+              backgroundColor: PRIORITY_COLORS[priority],
+              boxShadow: `0 0 10px ${PRIORITY_COLORS[priority]}60`,
+            }}
           />
-          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
-            {priority.slice(0, 3)}
-          </span>
         </div>
 
-        <h4 className="text-[13px] font-medium text-foreground/90 truncate flex-1">
-          {task.title}
-        </h4>
-
-        <div className="flex items-center gap-4 text-muted-foreground/50">
-          {task.acceptanceChecklist?.length > 0 && (
-            <div className="flex items-center gap-1 text-[10px] font-bold">
+        {/* Title */}
+        <div className="flex-1 min-w-0 pr-4">
+          <h4 className="text-[14px] font-medium text-foreground/90 truncate tracking-tight group-hover:text-foreground transition-colors">
+            {task.title}
+          </h4>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-muted-foreground/50 font-mono">
+              #{task.id.slice(-4)}
+            </span>
+            {task.labels?.map((label, i) => (
               <span
-                className={cn(
-                  "h-1 w-1 rounded-full",
-                  task.acceptanceChecklist.every((i) => i.done)
-                    ? "bg-emerald-500"
-                    : "bg-primary/40"
-                )}
-              />
-              {task.acceptanceChecklist.filter((i) => i.done).length}/
-              {task.acceptanceChecklist.length}
+                key={i}
+                className="text-[10px] bg-secondary/70 text-secondary-foreground/70 px-1.5 rounded-[3px] border border-border/20"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Metadata section - Right Aligned */}
+        <div className="flex items-center gap-5 text-muted-foreground/70 shrink-0">
+          {/* Stats / Checklist */}
+          {task.acceptanceChecklist?.length > 0 && (
+            <div
+              className={cn(
+                "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/30",
+                task.acceptanceChecklist.every((i) => i.done) &&
+                  "bg-emerald-500/10 text-emerald-600"
+              )}
+            >
+              <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-full h-full stroke-current stroke-3 fill-none opacity-40"
+                >
+                  <title>Progress</title>
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+                <span className="absolute text-[8px] font-bold">
+                  {Math.round(
+                    (task.acceptanceChecklist.filter((i) => i.done).length /
+                      task.acceptanceChecklist.length) *
+                      100
+                  )}
+                </span>
+              </div>
+              <span className="text-[10px] font-medium">Progress</span>
             </div>
           )}
 
-          {task.assigneeRole && (
-            <div className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20">
-              {task.assigneeRole}
-            </div>
-          )}
+          {/* Assignee */}
+          <div className="hidden sm:flex items-center gap-1.5">
+            {task.assigneeRole && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-primary/80">
+                {task.assigneeRole}
+              </span>
+            )}
+          </div>
 
-          <div className="flex items-center gap-1 text-[10px]">
-            <Calendar size={10} />
+          {/* Date with Icon */}
+          <div className="flex items-center gap-1.5 text-[11px] font-medium min-w-[70px] justify-end group-hover:text-foreground/80 transition-colors">
+            <Calendar size={12} className="opacity-70" />
             <span>
               {new Date(task.createdAt).toLocaleDateString(undefined, {
                 month: "short",
@@ -126,21 +168,25 @@ export function TaskCard({
               })}
             </span>
           </div>
-        </div>
 
-        {onDelete && (
-          <div className="flex items-center ml-2" ref={menuRef}>
-            <button
-              className="p-1 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm("Delete task?")) onDelete(task.id);
-              }}
+          {/* Actions - Always visible on hover but subtle otherwise */}
+          {onDelete && (
+            <div
+              className="flex items-center pl-2 border-l border-border/10"
+              ref={menuRef}
             >
-              <Trash2 size={13} />
-            </button>
-          </div>
-        )}
+              <button
+                className="p-2 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm("Delete task?")) onDelete(task.id);
+                }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
