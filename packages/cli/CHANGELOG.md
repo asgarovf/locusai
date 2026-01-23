@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- Default api base url
+
 ## 0.2.2
 
 ### Patch Changes

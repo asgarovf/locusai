@@ -1,5 +1,16 @@
 # @locusai/sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- Default api base url
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/shared@0.3.0
+
 ## 0.2.2
 
 ### Patch Changes
