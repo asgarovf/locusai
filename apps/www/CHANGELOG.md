@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.4.7
+
+### Patch Changes
+
+- Package entrypoints
+- Updated dependencies
+  - @locusai/shared@0.4.7
+
 ## 0.4.6
 
 ### Patch Changes

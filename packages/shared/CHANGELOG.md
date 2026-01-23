@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.7
+
+### Patch Changes
+
+- Package entrypoints
+
 ## 0.4.6
 
 ### Patch Changes
