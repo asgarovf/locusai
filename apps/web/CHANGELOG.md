@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.4.5
+
+### Patch Changes
+
+- Task execution workflow improvements
+- Updated dependencies
+  - @locusai/sdk@0.4.5
+  - @locusai/shared@0.4.5
+
 ## 0.4.4
 
 ### Patch Changes

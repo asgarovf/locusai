@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.4.5
+
+### Patch Changes
+
+- Task execution workflow improvements
+- Updated dependencies
+  - @locusai/shared@0.4.5
+
 ## 0.4.4
 
 ### Patch Changes

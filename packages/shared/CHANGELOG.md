@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.5
+
+### Patch Changes
+
+- Task execution workflow improvements
+
 ## 0.4.4
 
 ### Patch Changes
