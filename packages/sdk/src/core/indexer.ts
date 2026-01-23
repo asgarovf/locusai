@@ -32,10 +32,30 @@ export class CodebaseIndexer {
     if (onProgress) onProgress("Generating file tree...");
 
     // 1. Get a comprehensive but clean file tree
+    const gitmodulesPath = join(this.projectPath, ".gitmodules");
+    const submoduleIgnores: string[] = [];
+    if (existsSync(gitmodulesPath)) {
+      try {
+        const content = readFileSync(gitmodulesPath, "utf-8");
+        const lines = content.split("\n");
+        for (const line of lines) {
+          const match = line.match(/^\s*path\s*=\s*(.*)$/);
+          const path = match?.[1]?.trim();
+          if (path) {
+            submoduleIgnores.push(`${path}/**`);
+            submoduleIgnores.push(`**/${path}/**`);
+          }
+        }
+      } catch {
+        // Fallback if .gitmodules exists but can't be read or parsed
+      }
+    }
+
     const files = await globby(["**/*"], {
       cwd: this.projectPath,
       gitignore: true,
       ignore: [
+        ...submoduleIgnores,
         "**/node_modules/**",
         "**/dist/**",
         "**/build/**",
