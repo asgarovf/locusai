@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 export class ClaudeRunner {
   constructor(
     private projectPath: string,
-    private model: string = "haiku"
+    private model: string = "sonnet"
   ) {}
 
   run(prompt: string, _isPlanning = false): Promise<string> {

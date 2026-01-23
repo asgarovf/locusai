@@ -25,7 +25,7 @@ async function runCommand(args: string[]) {
       "api-key": { type: "string" },
       workspace: { type: "string" },
       sprint: { type: "string" },
-      model: { type: "string", default: "haiku" },
+      model: { type: "string", default: "sonnet" },
       "api-url": { type: "string" },
       dir: { type: "string" },
     },
@@ -44,7 +44,7 @@ async function runCommand(args: string[]) {
   const orchestrator = new AgentOrchestrator({
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
-    model: (values.model as string) || "haiku",
+    model: (values.model as string) || "sonnet",
     apiBase: (values["api-url"] as string) || "https://api.locus.dev/api",
     maxIterations: 100,
     projectPath,
