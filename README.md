@@ -62,7 +62,8 @@ npx @locusai/cli run --api-key <YOUR_KEY> --workspace <WORKSPACE_ID>
 locus-dev/           ← The platform (Open Source)
 ├── apps/
 │   ├── api/        ← Cloud API & Engine
-│   └── www/        ← Cloud Dashboard & Landing Page
+│   └── web/        ← Cloud Dashboard 
+│   └── www/        ← Landing Page
 └── packages/
     ├── cli/        ← Local Agent Runtime
     ├── sdk/        ← Core Logic
