@@ -180,33 +180,12 @@ export class AgentOrchestrator extends EventEmitter {
 
     console.log(`${c.primary("🚀 Agent started:")} ${c.bold(agentId)}\n`);
 
-    // Build arguments for agent worker
-    // Try multiple resolution strategies
     const potentialPaths: string[] = [];
 
-    // Strategy 1: Use resolution to find the installed SDK package
-    try {
-      // Resolve the SDK's index to find the package location
-      // In CommonJS build, we use require.resolve
-      const sdkIndexPath = require.resolve("@locusai/sdk");
-      const sdkDir = dirname(sdkIndexPath);
-      // In production, files are in dist/; sdkDir points to dist/ or src/
-      const sdkRoot = this.findPackageRoot(sdkDir);
-      potentialPaths.push(
-        join(sdkRoot, "dist", "agent", "worker.js"),
-        join(sdkRoot, "src", "agent", "worker.ts")
-      );
-    } catch {
-      // require.resolve failed, continue with fallback strategies
-    }
-
-    // Strategy 2: Find package root from __dirname (works in dev/local)
-    const packageRoot = this.findPackageRoot(__dirname);
+    const entryDir = dirname(process.argv[1]);
     potentialPaths.push(
-      join(packageRoot, "dist", "agent", "worker.js"),
-      join(packageRoot, "src", "agent", "worker.ts"),
-      join(__dirname, "agent", "worker.ts"),
-      join(__dirname, "agent", "worker.js")
+      join(entryDir, "agent", "worker.js"),
+      join(entryDir, "worker.js")
     );
 
     const workerPath = potentialPaths.find((p) => existsSync(p));

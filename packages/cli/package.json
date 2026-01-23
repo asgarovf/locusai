@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "bun lint .",
-    "build": "bun build ./index.ts --target=node --outfile=./bin/locus.js",
+    "build": "bun build ./index.ts --target=node --outfile=./bin/locus.js && bun build ../sdk/src/agent/worker.ts --target=node --outfile=./bin/agent/worker.js",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test:local": "bun run build && node ./bin/locus.js",

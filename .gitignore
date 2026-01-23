@@ -81,3 +81,4 @@ pids
 # package builds
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
+packages/cli/bin/agent/
