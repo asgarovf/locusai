@@ -145,21 +145,6 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Find the package root by looking for package.json
-   */
-  private findPackageRoot(startPath: string): string {
-    let currentDir = startPath;
-    while (currentDir !== "/") {
-      if (existsSync(join(currentDir, "package.json"))) {
-        return currentDir;
-      }
-      currentDir = dirname(currentDir);
-    }
-    // Fallback to startPath if not found
-    return startPath;
-  }
-
-  /**
    * Spawn a single agent process
    */
   private async spawnAgent(): Promise<void> {
