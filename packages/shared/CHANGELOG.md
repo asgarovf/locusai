@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.13
+
+### Patch Changes
+
+- Improve logging
+
 ## 0.4.12
 
 ### Patch Changes

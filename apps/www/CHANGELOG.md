@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.4.13
+
+### Patch Changes
+
+- Improve logging
+- Updated dependencies
+  - @locusai/shared@0.4.13
+
 ## 0.4.12
 
 ### Patch Changes
