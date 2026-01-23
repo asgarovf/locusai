@@ -1,5 +1,14 @@
 # @locusai/www
 
+## 0.4.1
+
+### Patch Changes
+
+- Add colors to console
+  stdio configuration changes
+- Updated dependencies
+  - @locusai/shared@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
