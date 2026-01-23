@@ -104,10 +104,7 @@ export class AgentWorker {
         "info"
       );
     } else {
-      this.log(
-        "Using Claude CLI for all phases (no Anthropic API key provided)",
-        "info"
-      );
+      this.log("Using Claude CLI for all phases", "info");
     }
   }
 
