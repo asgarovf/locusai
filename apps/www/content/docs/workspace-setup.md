@@ -3,8 +3,6 @@ title: Workspace Setup
 description: Configure your Locus workspace, including API keys and global verification checklists.
 ---
 
-# Workspace Setup
-
 Before you start using Locus agents, you need to configure your workspace settings. This guide covers the essential setup steps.
 
 ## API Keys
