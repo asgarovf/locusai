@@ -10,6 +10,8 @@ Locus is a local-first platform designed to give AI agents the context and tools
 - **Git**: Your project must be a git repository.
 - **Locus Account**: You need a Workspace ID and API Key from the Locus Cloud dashboard.
 
+
+
 ## Installation
 
 You can run Locus commands directly using `npx`:
@@ -61,8 +63,9 @@ The agent will:
 4. Execute the work LOCALLY on your machine.
 5. Push changes and report status back to the cloud.
 
-> [!TIP]
-> You can set `LOCUS_API_KEY` and `LOCUS_WORKSPACE_ID` as environment variables to avoid typing them every time.
+<Tip>
+You can set `LOCUS_API_KEY` and `LOCUS_WORKSPACE_ID` as environment variables to avoid typing them every time.
+</Tip>
 
 ## Next Steps
 

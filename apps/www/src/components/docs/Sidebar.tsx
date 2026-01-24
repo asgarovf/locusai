@@ -18,29 +18,38 @@ const groups = [
         href: "/docs/initialization",
       },
       {
-        title: "Workflows",
+        title: "Workspace Setup",
+        href: "/docs/workspace-setup",
+      },
+    ],
+  },
+  {
+    title: "Workflows",
+    items: [
+      {
+        title: "Using Workflow through Dashboard",
+        href: "/docs/dashboard-workflow",
+      },
+      {
+        title: "Agent Flow",
         href: "/docs/workflows",
+      },
+    ],
+  },
+  {
+    title: "Technical",
+    items: [
+      {
+        title: "Architecture",
+        href: "/docs/architecture",
       },
       {
         title: "Best Practices",
         href: "/docs/best-practices",
       },
       {
-        title: "Architecture",
-        href: "/docs/architecture",
-      },
-    ],
-  },
-  {
-    title: "Reference",
-    items: [
-      {
         title: "CLI Commands",
         href: "/docs/cli-reference",
-      },
-      {
-        title: "Configuration",
-        href: "/docs/configuration",
       },
     ],
   },

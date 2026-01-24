@@ -66,7 +66,7 @@ locus run [options]
 - `--api-key <key>`: (Required) Your Locus API key.
 - `--workspace <id>`: (Required) Your Locus Workspace ID.
 - `--sprint <id>`: (Optional) Limit work to a specific sprint.
-- `--model <name>`: (Optional) AI model to use (defaults to Claude 3.5 Sonnet).
+- `--model <name>`: (Optional) AI model to use (defaults to `sonnet`).
 - `--anthropic-api-key <key>`: (Optional) Direct Anthropic API key for planning (skips some limits).
 - `--api-url <url>`: (Optional) Custom API endpoint.
 

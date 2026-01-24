@@ -57,3 +57,5 @@ We recommend adding the following to your `.gitignore`:
 ```
 
 You should **commit** `.locus/config.json` and `CLAUDE.md` to ensure all team members (and their agents) share the same configuration and context.
+
+
