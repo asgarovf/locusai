@@ -33,7 +33,7 @@ graph TD
     subgraph Local [Your Machine]
         CLI[Locus CLI / Agent Worker]
         Code[Your Source Code]
-        Tools[Local Tools (Git, Node, etc.)]
+        Tools["Local Tools (Git, Node, etc.)"]
     end
 
     CLI <-->|Polls Tasks / Updates Status| API

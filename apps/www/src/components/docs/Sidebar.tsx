@@ -79,10 +79,10 @@ export function Sidebar() {
               >
                 {pathname === item.href && (
                   <motion.div
-                    layoutId="sidebar-active"
                     className="absolute inset-0 bg-secondary rounded-md"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
                     style={{ zIndex: -1 }}
                   />
                 )}

@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import dynamic from "next/dynamic";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Mermaid } from "./Mermaid";
 
 // Lazy load to avoid hydration mismatch
 const SyntaxHighlighter = dynamic(
@@ -50,6 +51,10 @@ export function CodeBlock({ className, children, ...props }: CodeBlockProps) {
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
   };
+
+  if (lang === "mermaid") {
+    return <Mermaid chart={codeString} />;
+  }
 
   // Inline code rendering
   if (isInline) {

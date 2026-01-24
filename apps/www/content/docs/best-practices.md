@@ -4,6 +4,14 @@ title: Best Practices
 
 To get the most out of your AI engineering workforce, you need to communicate effectively. Here are the best practices for working with Locus agents.
 
+```mermaid
+graph TD
+    A["**Master CLAUDE.md**"] --> B("Write *Actionable* Tasks")
+    B --> C{Complex?}
+    C -->|Yes| D["Use **Sprints**"]
+    C -->|No| E["Review Code"]
+```
+
 ## 1. Master the `CLAUDE.md`
 
 The `CLAUDE.md` file in your project root is the single most important file for guiding agent behavior. It is injected into the context of **every** task.
