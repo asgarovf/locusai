@@ -81,6 +81,7 @@ async function runCommand(args: string[]) {
 
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "run");
+  new ConfigManager(projectPath).updateVersion(VERSION);
 
   const apiKey = values["api-key"] || process.env.LOCUS_API_KEY;
   const anthropicApiKey =
@@ -135,6 +136,7 @@ async function indexCommand(args: string[]) {
   });
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "index");
+  new ConfigManager(projectPath).updateVersion(VERSION);
 
   const summarizer = new TreeSummarizer(projectPath);
   const indexer = new CodebaseIndexer(projectPath);

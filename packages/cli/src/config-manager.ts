@@ -44,4 +44,13 @@ export class ConfigManager {
     }
     return null;
   }
+
+  updateVersion(version: string): void {
+    const config = this.loadConfig();
+    if (config && config.version !== version) {
+      config.version = version;
+      const path = getLocusPath(this.projectPath, "configFile");
+      writeFileSync(path, JSON.stringify(config, null, 2));
+    }
+  }
 }
