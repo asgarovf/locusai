@@ -42,7 +42,7 @@ const nextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "connect-src 'self' http://localhost:3080 https://api.locus.sh",
+              "connect-src 'self' https://*.locusai.dev",
             ].join("; "),
           },
           {
