@@ -54,7 +54,7 @@ import {
   Terminal,
   Undo,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Markdown } from "tiptap-markdown";
 import { cn } from "@/lib/utils";
 
@@ -192,8 +192,21 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
 };
 
 export function Editor({ value, onChange, readOnly = false }: EditorProps) {
-  const editor = useEditor({
-    extensions: [
+  // useRef for debouncing to avoid re-creating the debounce function on every render
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastEmittedValue = useRef<string>(value);
+
+  // Debounce helper
+  const debouncedUpdate = (fn: () => void, delay: number) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(fn, delay);
+  };
+
+  // Memoize extensions to prevent reconfiguration on every render
+  const extensions = useMemo(
+    () => [
       StarterKit.configure({
         bulletList: {
           keepMarks: true,
@@ -234,15 +247,12 @@ export function Editor({ value, onChange, readOnly = false }: EditorProps) {
       TextStyle,
       Color,
     ],
-    immediatelyRender: false,
-    content: value,
-    editable: !readOnly,
-    onUpdate: ({ editor }) => {
-      // biome-ignore lint/suspicious/noExplicitAny: Tiptap storage is not strictly typed
-      const markdown = (editor.storage as any).markdown.getMarkdown();
-      onChange(markdown);
-    },
-    editorProps: {
+    []
+  );
+
+  // Memoize editor props
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         class: cn(
           "prose prose-invert max-w-none min-h-[500px] p-8 focus:outline-none",
@@ -254,16 +264,38 @@ export function Editor({ value, onChange, readOnly = false }: EditorProps) {
           "prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:rounded-r-xl"
         ),
       },
+    }),
+    []
+  );
+
+  const editor = useEditor({
+    extensions,
+    immediatelyRender: false,
+    content: value,
+    editable: !readOnly,
+    onUpdate: ({ editor }) => {
+      debouncedUpdate(() => {
+        // biome-ignore lint/suspicious/noExplicitAny: Tiptap storage is not strictly typed
+        const markdown = (editor.storage as any).markdown.getMarkdown();
+        // Only trigger change if content actually changed from what we last knew
+        if (markdown !== lastEmittedValue.current) {
+          lastEmittedValue.current = markdown;
+          onChange(markdown);
+        }
+      }, 500);
     },
+    editorProps,
   });
 
-  // Handle value updates from outside
   useEffect(() => {
     if (editor) {
-      // biome-ignore lint/suspicious/noExplicitAny: Tiptap storage is not strictly typed
-      const currentMarkdown = (editor.storage as any).markdown.getMarkdown();
-      if (value !== currentMarkdown) {
-        editor.commands.setContent(value);
+      if (value !== lastEmittedValue.current) {
+        // biome-ignore lint/suspicious/noExplicitAny: Tiptap storage is not strictly typed
+        const currentMarkdown = (editor.storage as any).markdown.getMarkdown();
+        if (value !== currentMarkdown) {
+          editor.commands.setContent(value);
+          lastEmittedValue.current = value;
+        }
       }
     }
   }, [value, editor]);

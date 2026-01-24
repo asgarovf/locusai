@@ -10,7 +10,6 @@ import { PageLayout } from "@/components/PageLayout";
 import { SprintCreateModal } from "@/components/SprintCreateModal";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskCreateModal } from "@/components/TaskCreateModal";
-import { TaskPanel } from "@/components/TaskPanel";
 import { Button, Spinner } from "@/components/ui";
 import { useBacklog } from "@/hooks/useBacklog";
 
@@ -28,7 +27,6 @@ export default function BacklogPage() {
     setIsTaskModalOpen,
     isSprintModalOpen,
     setIsSprintModalOpen,
-    selectedTaskId,
     setSelectedTaskId,
     activeTask,
     collapsedSections,
@@ -176,20 +174,6 @@ export default function BacklogPage() {
         onCreated={handleCreateSprint}
         isSubmitting={isSubmitting}
       />
-
-      {selectedTaskId && (
-        <TaskPanel
-          taskId={selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdated={() => {
-            refetchTasks();
-          }}
-          onDeleted={() => {
-            refetchTasks();
-            setSelectedTaskId(null);
-          }}
-        />
-      )}
     </DndContext>
   );
 }

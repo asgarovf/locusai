@@ -1,4 +1,5 @@
 import { type Doc } from "@locusai/shared";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -110,6 +111,10 @@ export function useDocs() {
   const { data: docs = [], isLoading: docsLoading } = useDocsQuery();
   const { data: groups = [], isLoading: groupsLoading } = useDocGroupsQuery();
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   // Mutations
   const createDocMutation = useCreateDocMutation();
   const updateDocMutation = useUpdateDocMutation();
@@ -127,11 +132,36 @@ export function useDocs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-
   const selectedDoc = useMemo(
     () => docs.find((d) => d.id === selectedId) || null,
     [docs, selectedId]
   );
+
+  // Sync with URL
+  useEffect(() => {
+    const docId = searchParams.get("docId");
+    if (docId && docId !== selectedId) {
+      setSelectedId(docId);
+    } else if (!docId && selectedId && !isCreating) {
+      // Clear selection if URL param is removed (optional, but good for back nav)
+      // Actually, typically we want URL to drive state.
+      // If we want two-way sync:
+    }
+  }, [searchParams]);
+
+  // Update URL when selectedId changes
+  useEffect(() => {
+    const currentDocId = searchParams.get("docId");
+    if (selectedId && selectedId !== currentDocId) {
+      const params = new URLSearchParams(searchParams);
+      params.set("docId", selectedId);
+      router.push(`${pathname}?${params.toString()}`);
+    } else if (!selectedId && currentDocId) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("docId");
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  }, [selectedId, router, pathname]);
 
   const hasUnsavedChanges = content !== originalContent;
 

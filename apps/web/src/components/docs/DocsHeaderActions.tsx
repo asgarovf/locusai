@@ -104,7 +104,7 @@ export function DocsHeaderActions({
         className="h-9 border-border/50"
       >
         <Plus size={16} className="mr-2" />
-        New Doc
+        New Document
       </Button>
       {selectedDoc && (
         <Button

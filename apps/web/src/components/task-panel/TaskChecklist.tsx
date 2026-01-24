@@ -35,12 +35,12 @@ export function TaskChecklist({
           <div className="h-8 w-8 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
             <CheckCircle size={16} />
           </div>
-          <SectionLabel as="h4">Definition of Done</SectionLabel>
+          <SectionLabel as="h4">Checklist</SectionLabel>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
             <SecondaryText size="xs" className="mb-1.5">
-              Calibration
+              Progress
             </SecondaryText>
             <span className="text-sm font-mono font-black text-sky-500">
               {checklistProgress}%
@@ -61,19 +61,17 @@ export function TaskChecklist({
         {task.acceptanceChecklist.length === 0 && (
           <EmptyState
             variant="compact"
-            title="Zero Quality Gates"
-            description="Deployment requires standard validation criteria."
+            title="No Checklist Items"
+            description="Add items to track task completion."
             className="bg-secondary/5 border-dashed border-2 border-border/40 py-8"
             action={
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() =>
-                  setNewChecklistItem("Initialize unit validation")
-                }
+                onClick={() => setNewChecklistItem("Review requirements")}
                 className="text-[10px] font-black uppercase tracking-widest hover:text-sky-500"
               >
-                Suggest Criteria
+                Add first item
               </Button>
             }
           />
@@ -123,7 +121,7 @@ export function TaskChecklist({
             !isLoading && setNewChecklistItem(e.target.value)
           }
           disabled={isLoading}
-          placeholder="Add validation gate..."
+          placeholder="Add item..."
           className="h-10 bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter" && !isLoading) handleAddChecklistItem();
@@ -134,7 +132,7 @@ export function TaskChecklist({
           disabled={!newChecklistItem.trim() || isLoading}
           className="px-6 h-10 bg-foreground text-background font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
         >
-          Append
+          Add
         </Button>
       </div>
     </div>

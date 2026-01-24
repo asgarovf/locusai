@@ -74,7 +74,7 @@ export function BoardEmptyState({
       action={
         <Button onClick={onNewTask} className="shadow-lg shadow-primary/20">
           <Plus size={18} className="mr-2" />
-          New Task
+          Create Task
         </Button>
       }
     />

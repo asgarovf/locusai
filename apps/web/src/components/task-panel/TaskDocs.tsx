@@ -2,6 +2,7 @@
 
 import { type Task } from "@locusai/shared";
 import { FileText, Link, Plus, Trash2, X } from "lucide-react";
+import NextLink from "next/link";
 import { useState } from "react";
 import { useDocsQuery } from "@/hooks/useDocsQuery";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,7 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
       {isLinking && (
         <div className="p-3 bg-primary/5 border border-primary/20 rounded-2xl animate-in zoom-in-95 duration-200">
           <SectionLabel className="mb-2 px-1 text-primary">
-            Available Nodes
+            Available Docs
           </SectionLabel>
           {availableDocs.length > 0 ? (
             <div className="max-h-[200px] overflow-y-auto pr-1 space-y-1 scrollbar-thin">
@@ -93,7 +94,7 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
           ) : (
             <div className="py-6 text-center">
               <SecondaryText size="xs" className="italic">
-                No Unlinked Nodes
+                No Unlinked Docs
               </SecondaryText>
             </div>
           )}
@@ -103,9 +104,10 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
       <div className="space-y-2 px-1">
         {linkedDocs.length > 0
           ? linkedDocs.map((doc: { id: string; title: string }) => (
-              <div
+              <NextLink
                 key={doc.id}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/20 border border-border/20 hover:border-border/60 transition-all group"
+                href={`/docs?docId=${doc.id}`}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/20 border border-border/20 hover:border-primary/40 hover:bg-secondary/30 transition-all group relative"
               >
                 <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                   <FileText size={16} />
@@ -119,12 +121,16 @@ export function TaskDocs({ task, onLinkDoc, onUnlinkDoc }: TaskDocsProps) {
                   </MetadataText>
                 </div>
                 <button
-                  onClick={() => onUnlinkDoc(doc.id)}
-                  className="p-1.5 text-muted-foreground/40 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUnlinkDoc(doc.id);
+                  }}
+                  className="p-1.5 text-muted-foreground/40 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 z-10"
                 >
                   <Trash2 size={14} />
                 </button>
-              </div>
+              </NextLink>
             ))
           : !isLinking && (
               <EmptyStateText icon={<Link size={24} />}>

@@ -57,7 +57,7 @@ export function DocsEditorArea({
               onClick={onNewDoc}
             >
               <Plus size={16} className="mr-2" />
-              Initialize Node
+              New Document
             </Button>
           }
           className="max-w-xl scale-110 group-hover:scale-[1.12] transition-transform duration-500"

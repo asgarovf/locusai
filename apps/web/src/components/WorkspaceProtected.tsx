@@ -46,7 +46,7 @@ export function WorkspaceProtected({ children }: WorkspaceProtectedProps) {
   const { user, isLoading, refreshUser } = useAuth();
   const router = useRouter();
   const refreshAttemptRef = useRef(0);
-  const MAX_REFRESH_ATTEMPTS = 3;
+  const MAX_REFRESH_ATTEMPTS = 5;
 
   useEffect(() => {
     if (isLoading) return;

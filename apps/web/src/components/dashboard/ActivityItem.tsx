@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   UserPlus,
 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 interface ActivityItemProps {
@@ -40,6 +42,7 @@ const formatStatus = (status: string) => {
 export function ActivityItem({ event }: ActivityItemProps) {
   const { user } = useAuth();
   const { type, payload } = event;
+  const searchParams = useSearchParams();
 
   const getEventConfig = () => {
     switch (type) {
@@ -183,8 +186,8 @@ export function ActivityItem({ event }: ActivityItemProps) {
 
   const eventDate = parseDate(event.createdAt);
 
-  return (
-    <div className="flex items-start gap-4 p-3 hover:bg-secondary/20 rounded-xl transition-colors group">
+  const content = (
+    <>
       <div className={`p-2 rounded-lg bg-secondary/50 ${config.color}`}>
         <Icon size={16} />
       </div>
@@ -202,6 +205,26 @@ export function ActivityItem({ event }: ActivityItemProps) {
           {formatDistanceToNow(eventDate, { addSuffix: true })}
         </p>
       </div>
-    </div>
+    </>
   );
+
+  const commonClasses =
+    "flex items-start gap-4 p-3 hover:bg-secondary/20 rounded-xl transition-colors group w-full text-left";
+
+  if (event.taskId) {
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.set("taskId", event.taskId);
+
+    return (
+      <Link
+        href={`?${newParams.toString()}`}
+        className={commonClasses}
+        scroll={false}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={commonClasses}>{content}</div>;
 }

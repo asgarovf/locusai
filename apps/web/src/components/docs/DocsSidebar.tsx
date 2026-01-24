@@ -185,7 +185,7 @@ export function DocsSidebar({
         <div className="p-5 bg-primary/5 border-b border-border/40 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center justify-between mb-4">
             <SectionLabel className="text-primary">
-              {isCreatingGroup ? "Initialize Group" : "Initialize Node"}
+              {isCreatingGroup ? "Create Group" : "Create Node"}
             </SectionLabel>
             <button
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
@@ -270,7 +270,7 @@ export function DocsSidebar({
                 onClick={onCreateFile}
                 disabled={!newFileName.trim()}
               >
-                Deploy Document
+                Create Document
               </Button>
             </div>
           )}

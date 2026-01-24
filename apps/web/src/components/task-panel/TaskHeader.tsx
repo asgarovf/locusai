@@ -73,7 +73,7 @@ export function TaskHeader({
 
       <div className="flex-1 min-w-0">
         <MetadataText size="sm" className="mb-1.5 block">
-          Reference: #{task.id}
+          ID: #{task.id}
         </MetadataText>
         <div className="flex gap-3">
           <StatusBadge status={task.status} />

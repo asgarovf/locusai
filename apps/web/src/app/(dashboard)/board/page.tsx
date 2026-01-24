@@ -1,12 +1,7 @@
 "use client";
 
 import { LayoutGrid, Map as MapIcon } from "lucide-react";
-import {
-  BoardFilter,
-  PageLayout,
-  TaskCreateModal,
-  TaskPanel,
-} from "@/components";
+import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
 import { BoardContent, BoardHeader, SprintMindmap } from "@/components/board";
 import { Button, Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
@@ -21,7 +16,6 @@ export default function BoardPage() {
     shouldShowEmptyState,
     isCreateModalOpen,
     setIsCreateModalOpen,
-    selectedTaskId,
     setSelectedTaskId,
     searchQuery,
     setSearchQuery,
@@ -122,20 +116,6 @@ export default function BoardPage() {
         }}
         defaultSprintId={activeSprint?.id}
       />
-
-      {selectedTaskId && (
-        <TaskPanel
-          taskId={selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdated={() => {
-            refetch();
-          }}
-          onDeleted={() => {
-            refetch();
-            setSelectedTaskId(null);
-          }}
-        />
-      )}
     </>
   );
 }
