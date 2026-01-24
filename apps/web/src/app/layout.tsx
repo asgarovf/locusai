@@ -10,11 +10,35 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Locus Dashboard",
+  title: "Locus Dashboard | The Local-First AI Software Engineer",
   description:
-    "Local-first task management and documentation for agentic engineering.",
+    "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
   icons: {
     icon: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Locus Dashboard | The Local-First AI Software Engineer",
+    description:
+      "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
+    url: "https://locus.sh",
+    siteName: "Locus",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Locus Dashboard",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Locus Dashboard | The Local-First AI Software Engineer",
+    description:
+      "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
+    images: ["/og-image.png"],
   },
 };
 

@@ -16,20 +16,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Locus | Mission Control for Agentic Engineering",
+    default: "Locus | The Local-First AI Software Engineer",
     template: "%s | Locus",
   },
   description:
-    "A local-first AI development platform that combines task management, documentation, and CI coordination to help AI agents build your projects.",
+    "The open-source, local-first platform for autonomous AI software engineering. Keep your code private while AI agents build your projects locally.",
   keywords: [
     "AI agents",
     "agentic engineering",
     "local-first",
     "MCP",
-    "task management",
+    "autonomous agents",
     "AI development",
     "developer tools",
-    "CI/CD",
+    "privacy-first AI",
     "documentation",
   ],
   authors: [{ name: "Locus Team" }],
@@ -40,23 +40,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://locusai.dev",
     siteName: "Locus",
-    title: "Locus | Mission Control for Agentic Engineering",
+    title: "Locus | The Local-First AI Software Engineer",
     description:
-      "A local-first AI development platform that combines task management, documentation, and CI coordination to help AI agents build your projects.",
+      "The open-source, local-first platform for autonomous AI software engineering. Keep your code private while AI agents build your projects locally.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Locus - Mission Control for Agentic Engineering",
+        alt: "Locus - The Local-First AI Software Engineer",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus | Mission Control for Agentic Engineering",
+    title: "Locus | The Local-First AI Software Engineer",
     description:
-      "A local-first AI development platform for AI agents to build your projects.",
+      "The open-source, local-first platform for autonomous AI software engineering.",
     images: ["/og-image.png"],
   },
   icons: {

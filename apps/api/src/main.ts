@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AppLogger } from "./common/logger";
 import { TypedConfigService } from "./config/config.service";
@@ -10,6 +11,9 @@ async function bootstrap() {
 
   const logger = app.get(AppLogger);
   app.useLogger(logger);
+
+  // Use helmet for security headers
+  app.use(helmet());
 
   app.setGlobalPrefix("api");
 
