@@ -113,6 +113,16 @@ async function runCommand(args: string[]) {
     console.log(`✗ [FAILED] ${data.taskId}: ${data.error}`)
   );
 
+  // Handle graceful shutdown
+  const handleSignal = async (signal: string) => {
+    console.log(`\n${c.info(`Received ${signal}. Stopping agents...`)}`);
+    await orchestrator.stop();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", () => handleSignal("SIGINT"));
+  process.on("SIGTERM", () => handleSignal("SIGTERM"));
+
   console.log(`${c.primary("🚀 Starting agent in")} ${c.bold(projectPath)}...`);
   await orchestrator.start();
 }

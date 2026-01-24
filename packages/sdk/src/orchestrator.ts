@@ -178,7 +178,8 @@ export class AgentOrchestrator extends EventEmitter {
       // When running from built SDK (dist/orchestrator.js -> dist/agent/worker.js)
       join(currentModuleDir, "agent", "worker.js"),
       // When running from built SDK (dist/orchestrator.js -> dist/worker.js)
-      join(currentModuleDir, "worker.js")
+      join(currentModuleDir, "worker.js"),
+      join(currentModuleDir, "agent", "worker.ts")
     );
 
     const workerPath = potentialPaths.find((p) => existsSync(p));
