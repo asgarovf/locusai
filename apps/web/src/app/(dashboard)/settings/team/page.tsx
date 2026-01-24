@@ -1,14 +1,15 @@
 "use client";
 
 import { UserPlus } from "lucide-react";
+import { Suspense } from "react";
 import { PageLayout } from "@/components";
 import { InviteMemberModal } from "@/components/settings";
 import { TeamInvitationsList } from "@/components/settings/TeamInvitationsList";
 import { TeamMembersList } from "@/components/settings/TeamMembersList";
-import { Button } from "@/components/ui";
+import { Button, Spinner } from "@/components/ui";
 import { useTeamManagement } from "@/hooks/useTeamManagement";
 
-export default function TeamPage() {
+function SettingsTeamPageContent() {
   const {
     currentUser,
     members,
@@ -71,5 +72,19 @@ export default function TeamPage() {
         onClose={() => setIsInviteModalOpen(false)}
       />
     </PageLayout>
+  );
+}
+
+export default function SettingsTeamPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <SettingsTeamPageContent />
+    </Suspense>
   );
 }

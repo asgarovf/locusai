@@ -2,19 +2,19 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Sidebar, WorkspaceProtected } from "@/components";
-
 import { TaskPanel } from "@/components/TaskPanel";
-import { LoadingSkeleton } from "@/components/ui";
+import { LoadingPage, LoadingSkeleton } from "@/components/ui";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { useWorkspaceIdOptional } from "@/hooks/useWorkspaceId";
 import { queryKeys } from "@/lib/query-keys";
 
-export default function DashboardLayout({
-  children,
-}: {
+type DashboardLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const { isLoading, isAuthenticated, shouldShowUI } = useDashboardLayout();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -73,5 +73,15 @@ export default function DashboardLayout({
         />
       )}
     </div>
+  );
+}
+
+export default function DashboardLayoutPage({
+  children,
+}: DashboardLayoutProps) {
+  return (
+    <Suspense fallback={<LoadingPage />}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

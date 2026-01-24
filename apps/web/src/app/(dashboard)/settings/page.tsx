@@ -3,7 +3,7 @@
 import { ChevronRight, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
 import {
@@ -12,12 +12,12 @@ import {
 } from "@/components/settings";
 import { SettingItem } from "@/components/settings/SettingItem";
 import { SettingSection } from "@/components/settings/SettingSection";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input, Modal, Spinner } from "@/components/ui";
 import { useAuth } from "@/context";
 import { useAuthenticatedUser, useOrganizationQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const user = useAuthenticatedUser();
   const { logout } = useAuth();
   const router = useRouter();
@@ -163,5 +163,19 @@ export default function SettingsPage() {
         </div>
       </Modal>
     </PageLayout>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }
