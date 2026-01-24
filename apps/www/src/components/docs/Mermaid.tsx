@@ -19,8 +19,8 @@ interface MermaidProps {
 }
 
 export function Mermaid({ chart }: MermaidProps) {
-  const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
   // Use a stable ID for hydration matches, but unique enough for multiple charts
@@ -28,11 +28,11 @@ export function Mermaid({ chart }: MermaidProps) {
 
   useEffect(() => {
     setIsClient(true);
-    idRef.current = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+    idRef.current = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
   }, []);
 
   useEffect(() => {
-    if (!isClient || !chart) return;
+    if (!isClient || !chart || !containerRef.current) return;
 
     const renderChart = async () => {
       try {
@@ -41,7 +41,11 @@ export function Mermaid({ chart }: MermaidProps) {
 
         // Render the chart
         const { svg } = await mermaid.render(idRef.current, chart);
-        setSvg(svg);
+
+        // Check if ref still exists (component might be unmounted)
+        if (containerRef.current) {
+          containerRef.current.innerHTML = svg;
+        }
       } catch (err) {
         console.error("Failed to render mermaid chart", err);
         // Mermaid throws a string effectively sometimes, but let's be safe
@@ -70,8 +74,8 @@ export function Mermaid({ chart }: MermaidProps) {
 
   return (
     <div
+      ref={containerRef}
       className="flex justify-center my-8 p-6 rounded-xl bg-[#0d1117] border border-white/10 overflow-x-auto"
-      dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
 }
