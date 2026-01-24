@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.4.16
+
+### Patch Changes
+
+- Update .locus/version on every command
+- Updated dependencies
+  - @locusai/shared@0.4.16
+
 ## 0.4.15
 
 ### Patch Changes
