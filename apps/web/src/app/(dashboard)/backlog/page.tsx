@@ -3,6 +3,7 @@
 import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import { AnimatePresence } from "framer-motion";
 import { Layers, Plus } from "lucide-react";
+import { Suspense } from "react";
 import { BacklogList } from "@/components/backlog/BacklogList";
 import { CompletedSprintsSection } from "@/components/backlog/CompletedSprintsSection";
 import { SprintSection } from "@/components/backlog/SprintSection";
@@ -13,7 +14,7 @@ import { TaskCreateModal } from "@/components/TaskCreateModal";
 import { Button, Spinner } from "@/components/ui";
 import { useBacklog } from "@/hooks/useBacklog";
 
-export default function BacklogPage() {
+function BacklogContent() {
   const {
     tasks,
     sprints,
@@ -175,5 +176,19 @@ export default function BacklogPage() {
         isSubmitting={isSubmitting}
       />
     </DndContext>
+  );
+}
+
+export default function BacklogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <BacklogContent />
+    </Suspense>
   );
 }

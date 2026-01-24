@@ -1,12 +1,13 @@
 "use client";
 
 import { LayoutGrid, Map as MapIcon } from "lucide-react";
+import { Suspense } from "react";
 import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
 import { BoardContent, BoardHeader, SprintMindmap } from "@/components/board";
 import { Button, Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
 
-export default function BoardPage() {
+function BoardPageContent() {
   const {
     activeSprint,
     filteredTasks,
@@ -117,5 +118,19 @@ export default function BoardPage() {
         defaultSprintId={activeSprint?.id}
       />
     </>
+  );
+}
+
+export default function BoardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <BoardPageContent />
+    </Suspense>
   );
 }
