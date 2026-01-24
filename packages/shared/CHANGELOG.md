@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.14
+
+### Patch Changes
+
+- Fix docs url on cli
+
 ## 0.4.13
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.4.14
+
+### Patch Changes
+
+- Fix docs url on cli
+- Updated dependencies
+  - @locusai/sdk@0.4.14
+  - @locusai/shared@0.4.14
+
 ## 0.4.13
 
 ### Patch Changes
