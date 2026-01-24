@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.4.15
+
+### Patch Changes
+
+- Handle stop signals
+- Updated dependencies
+  - @locusai/shared@0.4.15
+
 ## 0.4.14
 
 ### Patch Changes

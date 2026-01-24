@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.4.15
+
+### Patch Changes
+
+- Handle stop signals
+
 ## 0.4.14
 
 ### Patch Changes

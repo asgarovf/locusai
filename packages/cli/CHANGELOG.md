@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.4.15
+
+### Patch Changes
+
+- Handle stop signals
+- Updated dependencies
+  - @locusai/sdk@0.4.15
+
 ## 0.4.14
 
 ### Patch Changes
