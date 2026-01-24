@@ -167,7 +167,7 @@ Next steps:
   1. Run '${c.primary("locus index")}' to index your codebase
   2. Run '${c.primary("locus run")}' to start an agent (requires --api-key and --workspace)
 
-For more information, visit: ${c.underline("https://locus.dev/docs")}
+For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);
 }
 
@@ -208,7 +208,7 @@ Environment Variables:
   LOCUS_WORKSPACE_ID    Workspace ID
   ANTHROPIC_API_KEY     Optional Anthropic API key
 
-For more information, visit: https://locus.dev/docs
+For more information, visit: https://locusai.dev/docs
 `);
   }
 }
