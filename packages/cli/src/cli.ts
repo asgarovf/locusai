@@ -101,7 +101,7 @@ async function runCommand(args: string[]) {
   const provider = resolveProvider(
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
-  const resolvedModel =
+  const model =
     (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   if (!apiKey || !workspaceId) {
@@ -112,7 +112,7 @@ async function runCommand(args: string[]) {
   const orchestrator = new AgentOrchestrator({
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
-    model: resolvedModel,
+    model,
     provider,
     apiBase: (values["api-url"] as string) || "https://api.locusai.dev/api",
     maxIterations: 100,
@@ -161,12 +161,12 @@ async function indexCommand(args: string[]) {
   const provider = resolveProvider(
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
-  const resolvedModel =
+  const model =
     (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {
     projectPath,
-    model: resolvedModel,
+    model,
   });
   const summarizer = new TreeSummarizer(aiRunner);
   const indexer = new CodebaseIndexer(projectPath);
