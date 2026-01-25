@@ -1,9 +1,10 @@
 import type { Sprint, Task } from "@locusai/shared";
+import type { LogFn } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 
 export interface SprintPlannerDeps {
   aiRunner: AiRunner;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  log: LogFn;
 }
 
 /**
@@ -22,9 +23,7 @@ export class SprintPlanner {
         )
         .join("\n");
 
-    
-      
-        const planningPrompt = `# Sprint Planning: ${sprint.name}
+      const planningPrompt = `# Sprint Planning: ${sprint.name}
 
 You are an expert project manager and lead engineer. You need to create a mindmap and execution plan for the following tasks in this sprint.
 
@@ -42,8 +41,7 @@ ${taskList}
 - Avoid using absolute local paths (e.g., /Users/...) in your output. Use relative paths starting from the project root if necessary.
 - Your output will be saved as the official sprint mindmap on the server.`;
 
-        const plan = await this.deps.aiRunner.run(planningPrompt, true);
-      
+      const plan = await this.deps.aiRunner.run(planningPrompt, true);
 
       this.deps.log(
         "Sprint mindmap generated and posted to server.",

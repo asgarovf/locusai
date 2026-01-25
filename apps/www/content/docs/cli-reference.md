@@ -70,6 +70,7 @@ locus run [options]
 - `--sprint <id>`: (Optional) Limit work to a specific sprint.
 - `--provider <name>`: (Optional) AI provider to use (`claude` or `codex`, default `claude`).
 - `--model <name>`: (Optional) AI model to use (defaults to `sonnet` for `claude`).
+- `--skip-planning`: (Optional) Skip the planning phase.
 - `--api-url <url>`: (Optional) Custom API endpoint.
 
 **Environment Variables:**

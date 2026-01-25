@@ -1,13 +1,20 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
+import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
 export class CodexRunner implements AiRunner {
   constructor(
     private projectPath: string,
-    private model?: string
+    private model: string = DEFAULT_MODEL[PROVIDERS.CODEX],
+    private log: LogFn
   ) {}
 
-  async run(prompt: string, _isPlanning = false): Promise<string> {
+  async run(prompt: string): Promise<string> {
     const maxRetries = 3;
     let lastError: Error | null = null;
 
@@ -15,16 +22,14 @@ export class CodexRunner implements AiRunner {
       try {
         return await this.executeRun(prompt);
       } catch (error) {
-        const err = error as Error;
-        lastError = err;
-        const isLastAttempt = attempt === maxRetries;
+        lastError = error as Error;
 
-        if (!isLastAttempt) {
-          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000;
           console.warn(
-            `Codex CLI attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`
+            `Codex CLI attempt ${attempt} failed: ${lastError.message}. Retrying in ${delay}ms...`
           );
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await this.sleep(delay);
         }
       }
     }
@@ -34,14 +39,8 @@ export class CodexRunner implements AiRunner {
 
   private executeRun(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const args: string[] = ["exec", "--full-auto"];
-
-      if (this.model) {
-        args.push("--model", this.model);
-      }
-
-      // Read prompt from stdin to avoid arg-length limits.
-      args.push("-");
+      const outputPath = join(tmpdir(), `locus-codex-${randomUUID()}.txt`);
+      const args = this.buildArgs(outputPath);
 
       const codex = spawn("codex", args, {
         cwd: this.projectPath,
@@ -53,33 +52,111 @@ export class CodexRunner implements AiRunner {
       let output = "";
       let errorOutput = "";
 
-      codex.stdout.on("data", (data) => {
-        output += data.toString();
-      });
-      codex.stderr.on("data", (data) => {
-        errorOutput += data.toString();
+      const handleOutput = (data: Buffer) => {
+        const msg = data.toString();
+        output += msg;
+        this.streamToConsole(msg);
+      };
+
+      codex.stdout.on("data", handleOutput);
+      codex.stderr.on("data", (data: Buffer) => {
+        const msg = data.toString();
+        errorOutput += msg;
+        this.streamToConsole(msg);
       });
 
-      codex.on("error", (err) =>
+      codex.on("error", (err) => {
         reject(
           new Error(
-            `Failed to start Codex CLI (shell: false): ${err.message}. Please ensure the 'codex' command is available in your PATH.`
+            `Failed to start Codex CLI: ${err.message}. ` +
+              `Ensure 'codex' is installed and available in PATH.`
           )
-        )
-      );
+        );
+      });
+
       codex.on("close", (code) => {
-        if (code === 0) resolve(output);
-        else {
-          const detail = errorOutput.trim();
-          const message = detail
-            ? `Codex CLI error (exit code ${code}): ${detail}`
-            : `Codex CLI exited with code ${code}. Please ensure the Codex CLI is installed and you are logged in (run 'codex' manually to check).`;
-          reject(new Error(message));
+        this.cleanupTempFile(outputPath);
+
+        if (code === 0) {
+          resolve(this.readOutput(outputPath, output));
+        } else {
+          reject(this.createErrorFromOutput(code, errorOutput));
         }
       });
 
       codex.stdin.write(prompt);
       codex.stdin.end();
     });
+  }
+
+  private buildArgs(outputPath: string): string[] {
+    const args = ["exec", "--full-auto", "--output-last-message", outputPath];
+
+    if (this.model) {
+      args.push("--model", this.model);
+    }
+
+    args.push("-"); // Read prompt from stdin
+    return args;
+  }
+
+  /**
+   * Streams filtered output to console.
+   * Only displays thinking status, descriptions, and plan updates.
+   */
+  private streamToConsole(chunk: string): void {
+    for (const rawLine of chunk.split("\n")) {
+      const line = rawLine.trim();
+      if (line && this.shouldDisplay(line)) {
+        const formattedLine = "[Codex]: ".concat(line.replace(/\*/g, ""));
+
+        this.log(formattedLine, "info");
+      }
+    }
+  }
+
+  private shouldDisplay(line: string): boolean {
+    return [
+      /^thinking\b/, // Thinking status
+      /^\*\*/, // Description headers
+      /^Plan update\b/, // Plan updates
+      /^[→•✓]/, // Plan bullets and checkmarks
+    ].some((pattern) => pattern.test(line));
+  }
+
+  private readOutput(outputPath: string, fallback: string): string {
+    if (existsSync(outputPath)) {
+      try {
+        const text = readFileSync(outputPath, "utf-8").trim();
+        if (text) return text;
+      } catch {
+        // Fall through to fallback
+      }
+    }
+    return fallback.trim();
+  }
+
+  private createErrorFromOutput(
+    code: number | null,
+    errorOutput: string
+  ): Error {
+    const detail = errorOutput.trim();
+    const message = detail
+      ? `Codex CLI error (exit code ${code}): ${detail}`
+      : `Codex CLI exited with code ${code}. ` +
+        `Ensure Codex CLI is installed and you are logged in.`;
+    return new Error(message);
+  }
+
+  private cleanupTempFile(path: string): void {
+    try {
+      if (existsSync(path)) unlinkSync(path);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

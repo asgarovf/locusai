@@ -33,6 +33,7 @@ export interface WorkerConfig {
   apiKey: string;
   model?: string;
   provider?: AiProvider;
+  skipPlanning?: boolean;
 }
 
 /**
@@ -51,7 +52,7 @@ export class AgentWorker {
 
   // State
   private consecutiveEmpty = 0;
-  private maxEmpty = 10;
+  private maxEmpty = 5;
   private maxTasks = 50;
   private tasksCompleted = 0;
   private pollInterval = 10_000;
@@ -72,39 +73,40 @@ export class AgentWorker {
       },
     });
 
+    const log = this.log.bind(this);
+
     // Initialize AI clients
     const provider = config.provider ?? PROVIDERS.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
+      log,
     });
-
-    // Initialize services with dependencies
-    const logFn = this.log.bind(this);
 
     this.sprintPlanner = new SprintPlanner({
       aiRunner: this.aiRunner,
-      log: logFn,
+      log,
     });
 
     this.indexerService = new CodebaseIndexerService({
       aiRunner: this.aiRunner,
       projectPath,
-      log: logFn,
+      log,
     });
 
     this.artifactSyncer = new ArtifactSyncer({
       client: this.client,
       workspaceId: config.workspaceId,
       projectPath,
-      log: logFn,
+      log,
     });
 
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,
       projectPath,
       sprintPlan: null, // Will be set after sprint planning
-      log: logFn,
+      skipPlanning: config.skipPlanning,
+      log,
     });
 
     // Log initialization
@@ -315,7 +317,7 @@ if (
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;
       config.provider = resolveProvider(value);
-    }
+    } else if (arg === "--skip-planning") config.skipPlanning = true;
   }
 
   if (

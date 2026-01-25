@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
-import type { AiRunner } from "./runner.js";
 import { c } from "../utils/colors.js";
+import { LogFn } from "./factory.js";
+import type { AiRunner } from "./runner.js";
 
 interface ClaudeStreamItem {
   type: string;
@@ -26,7 +27,8 @@ export class ClaudeRunner implements AiRunner {
 
   constructor(
     projectPath: string,
-    private model: string = DEFAULT_MODEL[PROVIDERS.CLAUDE]
+    private model: string = DEFAULT_MODEL[PROVIDERS.CLAUDE],
+    private log: LogFn
   ) {
     this.projectPath = resolve(projectPath);
   }
@@ -153,12 +155,13 @@ export class ClaudeRunner implements AiRunner {
 
     if (type === "content_block_delta" && delta) {
       if (delta.type === "text_delta" && delta.text) {
-        process.stdout.write(delta.text);
+        this.log(delta.text, "info");
       }
     } else if (type === "content_block_start" && content_block) {
       if (content_block.type === "tool_use" && content_block.name) {
-        process.stdout.write(
-          `\n\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`
+        this.log(
+          `\n\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`,
+          "info"
         );
       }
     }

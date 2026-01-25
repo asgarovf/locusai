@@ -32,6 +32,7 @@ export interface OrchestratorConfig {
   apiKey: string;
   model?: string;
   provider?: AiProvider;
+  skipPlanning?: boolean;
 }
 
 export class AgentOrchestrator extends EventEmitter {
@@ -214,6 +215,10 @@ export class AgentOrchestrator extends EventEmitter {
     // Add provider if specified
     if (this.config.provider) {
       workerArgs.push("--provider", this.config.provider);
+    }
+
+    if (this.config.skipPlanning) {
+      workerArgs.push("--skip-planning");
     }
 
     // Add sprint ID if resolved

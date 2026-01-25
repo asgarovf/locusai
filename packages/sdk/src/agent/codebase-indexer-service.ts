@@ -1,10 +1,11 @@
+import { LogFn } from "src/ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { CodebaseIndexer } from "../core/indexer.js";
 
 export interface CodebaseIndexerServiceDeps {
   aiRunner: AiRunner;
   projectPath: string;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  log: LogFn;
 }
 
 /**
@@ -37,8 +38,6 @@ File tree:
 ${tree}
 
 Return ONLY valid JSON, no markdown formatting.`;
-
-    
 
           const response = await this.deps.aiRunner.run(prompt, true);
 

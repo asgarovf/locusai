@@ -86,6 +86,7 @@ async function runCommand(args: string[]) {
       sprint: { type: "string" },
       model: { type: "string" },
       provider: { type: "string" },
+      "skip-planning": { type: "boolean" },
       "api-url": { type: "string" },
       dir: { type: "string" },
     },
@@ -118,6 +119,7 @@ async function runCommand(args: string[]) {
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
+    skipPlanning: Boolean(values["skip-planning"]),
   });
 
   orchestrator.on("task:assigned", (data) =>
@@ -240,6 +242,7 @@ Commands:
 Options:
   --help   Show this help message
   --provider <name>  AI provider: claude or codex (default: claude)
+  --skip-planning    Skip the planning phase (CLI planning)
 
 Examples:
   locus init

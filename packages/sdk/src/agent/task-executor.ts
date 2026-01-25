@@ -1,4 +1,5 @@
 import type { Task } from "@locusai/shared";
+import { LogFn } from "src/ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { PromptBuilder } from "../core/prompt-builder.js";
 
@@ -6,7 +7,8 @@ export interface TaskExecutorDeps {
   aiRunner: AiRunner;
   projectPath: string;
   sprintPlan: string | null;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  skipPlanning?: boolean;
+  log: LogFn;
 }
 
 /**
@@ -32,21 +34,25 @@ export class TaskExecutor {
     }
 
     try {
-      let plan: string = "";
+      let plan: string | null = null;
 
-      this.deps.log("Phase 1: Planning (CLI)...", "info");
-      const planningPrompt = `${basePrompt}
+      if (this.deps.skipPlanning) {
+        this.deps.log("Skipping Phase 1: Planning (CLI)...", "info");
+      } else {
+        this.deps.log("Phase 1: Planning (CLI)...", "info");
+        const planningPrompt = `${basePrompt}
 
 ## Phase 1: Planning
 Analyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
 
-      plan = await this.deps.aiRunner.run(planningPrompt, true);
+        plan = await this.deps.aiRunner.run(planningPrompt, true);
+      }
 
       // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");
 
       let executionPrompt = basePrompt;
-      if (plan) {
+      if (plan != null) {
         executionPrompt += `\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}`;
       } else {
         executionPrompt += `\n\n## Execution\nExecute the task directly.`;

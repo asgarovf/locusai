@@ -6,6 +6,7 @@ import {
   statSync,
 } from "node:fs";
 import { join } from "node:path";
+import type { LogFn } from "../ai/factory.js";
 import { getLocusPath } from "../core/config.js";
 import type { LocusClient } from "../index.js";
 
@@ -13,7 +14,7 @@ export interface ArtifactSyncerDeps {
   client: LocusClient;
   workspaceId: string;
   projectPath: string;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  log: LogFn;
 }
 
 /**
