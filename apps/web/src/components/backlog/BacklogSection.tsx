@@ -124,7 +124,7 @@ export function BacklogSection({
 
         {actions && (
           <div
-            className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="flex items-center"
             onClick={(e) => e.stopPropagation()}
           >
             {actions}

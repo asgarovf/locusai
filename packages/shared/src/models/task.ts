@@ -26,8 +26,8 @@ export const TaskSchema = BaseEntitySchema.extend({
   parentId: z.string().uuid().nullable().optional(),
   dueDate: z.union([z.date(), z.number()]).nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).default([]),
-  comments: z.array(CommentSchema).default([]),
-  activityLog: z.array(EventSchema).default([]),
+  comments: z.array(CommentSchema).optional(),
+  activityLog: z.array(EventSchema).optional(),
   docs: z.array(DocSchema).default([]),
 });
 

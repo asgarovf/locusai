@@ -11,6 +11,6 @@
     "build": "bun build ./src/index.ts --outdir ./dist --target node --format cjs --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   }
 }

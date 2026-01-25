@@ -1,12 +1,35 @@
 import { spawn } from "node:child_process";
+import { resolve } from "node:path";
 import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
 import type { AiRunner } from "./runner.js";
+import { c } from "../utils/colors.js";
+
+interface ClaudeStreamItem {
+  type: string;
+  result?: string;
+  event?: {
+    type: string;
+    delta?: {
+      type: string;
+      text?: string;
+      partial_json?: string;
+    };
+    content_block?: {
+      type: string;
+      name?: string;
+    };
+  };
+}
 
 export class ClaudeRunner implements AiRunner {
+  private projectPath: string;
+
   constructor(
-    private projectPath: string,
+    projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDERS.CLAUDE]
-  ) {}
+  ) {
+    this.projectPath = resolve(projectPath);
+  }
 
   async run(prompt: string, _isPlanning = false): Promise<string> {
     const maxRetries = 3;
@@ -21,7 +44,7 @@ export class ClaudeRunner implements AiRunner {
         const isLastAttempt = attempt === maxRetries;
 
         if (!isLastAttempt) {
-          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          const delay = Math.pow(2, attempt) * 1000;
           console.warn(
             `Claude CLI attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`
           );
@@ -38,50 +61,114 @@ export class ClaudeRunner implements AiRunner {
       const args = [
         "--dangerously-skip-permissions",
         "--print",
+        "--verbose",
+        "--output-format",
+        "stream-json",
+        "--include-partial-messages",
         "--model",
         this.model,
       ];
 
+      const env = {
+        ...process.env,
+        FORCE_COLOR: "1",
+        TERM: "xterm-256color",
+      };
+
       const claude = spawn("claude", args, {
         cwd: this.projectPath,
         stdio: ["pipe", "pipe", "pipe"],
-        env: process.env,
-        shell: true,
+        env,
       });
 
-      let output = "";
+      let finalResult = "";
       let errorOutput = "";
+      let buffer = "";
 
-      claude.stdout.on("data", (data) => {
-        output += data.toString();
-        // Only write to stdout if we're not retrying or if logic dictates
-        // process.stdout.write(data.toString());
-      });
-      claude.stderr.on("data", (data) => {
-        errorOutput += data.toString();
-        // process.stderr.write(data.toString());
+      claude.stdout.on("data", (data: Buffer) => {
+        buffer += data.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const result = this.handleStreamLine(line);
+          if (result) finalResult = result;
+        }
       });
 
-      claude.on("error", (err) =>
+      claude.stderr.on("data", (data: Buffer) => {
+        const msg = data.toString();
+        errorOutput += msg;
+        process.stderr.write(msg);
+      });
+
+      claude.on("error", (err) => {
         reject(
           new Error(
-            `Failed to start Claude CLI (shell: true): ${err.message}. Please ensure the 'claude' command is available in your PATH.`
+            `Failed to start Claude CLI: ${err.message}. Please ensure the 'claude' command is available in your PATH.`
           )
-        )
-      );
+        );
+      });
+
       claude.on("close", (code) => {
-        if (code === 0) resolve(output);
-        else {
-          const detail = errorOutput.trim();
-          const message = detail
-            ? `Claude CLI error (exit code ${code}): ${detail}`
-            : `Claude CLI exited with code ${code}. Please ensure the Claude CLI is installed and you are logged in (run 'claude' manually to check).`;
-          reject(new Error(message));
+        process.stdout.write("\n");
+        if (code === 0) {
+          resolve(finalResult);
+        } else {
+          reject(this.createExecutionError(code, errorOutput));
         }
       });
 
       claude.stdin.write(prompt);
       claude.stdin.end();
     });
+  }
+
+  private handleStreamLine(line: string): string | null {
+    if (!line.trim()) return null;
+
+    try {
+      const item = JSON.parse(line) as ClaudeStreamItem;
+      return this.processStreamItem(item);
+    } catch {
+      // Ignore partial or non-JSON lines
+      return null;
+    }
+  }
+
+  private processStreamItem(item: ClaudeStreamItem): string | null {
+    if (item.type === "result") {
+      return item.result || "";
+    }
+
+    if (item.type === "stream_event" && item.event) {
+      this.handleEvent(item.event);
+    }
+
+    return null;
+  }
+
+  private handleEvent(event: Required<ClaudeStreamItem>["event"]) {
+    const { type, delta, content_block } = event;
+
+    if (type === "content_block_delta" && delta) {
+      if (delta.type === "text_delta" && delta.text) {
+        process.stdout.write(delta.text);
+      }
+    } else if (type === "content_block_start" && content_block) {
+      if (content_block.type === "tool_use" && content_block.name) {
+        process.stdout.write(
+          `\n\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`
+        );
+      }
+    }
+  }
+
+  private createExecutionError(code: number | null, detail: string): Error {
+    const errorMsg = detail.trim();
+    const message = errorMsg
+      ? `Claude CLI error (exit code ${code}): ${errorMsg}`
+      : `Claude CLI exited with code ${code}. Please ensure the Claude CLI is installed and you are logged in.`;
+    return new Error(message);
   }
 }

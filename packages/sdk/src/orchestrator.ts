@@ -222,7 +222,14 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Use node to run the worker script
-    const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs]);
+    const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs], {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        FORCE_COLOR: "1",
+        TERM: "xterm-256color",
+      },
+    });
 
     agentState.process = agentProcess;
 
@@ -238,7 +245,7 @@ export class AgentOrchestrator extends EventEmitter {
     });
 
     agentProcess.stderr?.on("data", (data) => {
-      process.stderr.write(`[${agentId}] ERR: ${data.toString()}`);
+      process.stderr.write(data.toString());
     });
 
     agentProcess.on("exit", (code) => {

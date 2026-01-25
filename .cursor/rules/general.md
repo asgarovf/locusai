@@ -1,17 +1,19 @@
-# Senin Kentin - Cursor AI Rules
+---
+description: "This rule provides standard for all implementations"
+alwaysApply: true
+---
 
-
-## 🏗 Architecture & Coding Patterns
+## Architecture & Coding Patterns
 - **Separation of Concerns**: Extact hooks, utils, and services
 - **Compound Components**: Use for complex UI. Keep page files minimal.
 - **Clean Code**: Atomic functions, early returns, immutability, spinner for loading.
 
-## 🔒 Security & Quality
+## Security & Quality
 - **Verification**: Run `bun lint` and `bun typecheck` before finishing.
 - **Validation**: Strict Zod validation
 - **No `any`**: Avoid type casting (`as`) and `any` at all costs.
 
-## 🚫 Critical Prohibitions
+## Critical Prohibitions
 - No class components, no inline CSS, no manual hex codes (use Tailwind/brand classes).
 - No redundant UI: Reuse `components/common` or `components/onboarding`.
 - No direct `console.log`: Use `logger`.

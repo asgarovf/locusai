@@ -1,0 +1,27 @@
+{
+  "name": "@locusai/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm --external express --external cors --external @modelcontextprotocol/sdk --external zod",
+    "start": "node dist/index.js",
+    "dev": "bun --watch src/index.ts",
+    "lint": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@locusai/sdk": "workspace:*",
+    "@locusai/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.25.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.8.3"
+  }
+}
