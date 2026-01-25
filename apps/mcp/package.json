@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "bun src/index.ts",
-    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "bun --watch src/index.ts",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
