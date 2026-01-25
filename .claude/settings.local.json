@@ -4,7 +4,10 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(bun run lint:*)",
-      "Bash(bun run typecheck:*)"
+      "Bash(bun run typecheck:*)",
+      "Bash(bun run build:*)",
+      "Bash(bun biome check:*)",
+      "Bash(bun pm ls:*)"
     ]
   }
 }

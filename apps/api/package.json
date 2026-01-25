@@ -31,7 +31,7 @@
     "resend": "^6.8.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@jest/core": "^30.2.0",
@@ -55,6 +55,6 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "5.8.3"
+    "typescript": "^5.8.3"
   }
 }

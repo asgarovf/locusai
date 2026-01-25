@@ -24,10 +24,36 @@ const groups = [
     ],
   },
   {
-    title: "Workflows",
+    title: "Integrations (MCP)",
     items: [
       {
-        title: "Using Workflow through Dashboard",
+        title: "Setup Guide",
+        href: "/docs/mcp-integration",
+      },
+    ],
+  },
+  {
+    title: "Terminal Agents",
+    items: [
+      {
+        title: "Overview",
+        href: "/docs/terminal-agent",
+      },
+      {
+        title: "Using Claude",
+        href: "/docs/claude",
+      },
+      {
+        title: "Using Codex",
+        href: "/docs/codex",
+      },
+    ],
+  },
+  {
+    title: "Core Concepts",
+    items: [
+      {
+        title: "Dashboard Workflow",
         href: "/docs/dashboard-workflow",
       },
       {

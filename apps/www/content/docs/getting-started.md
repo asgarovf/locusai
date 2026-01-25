@@ -14,16 +14,16 @@ Locus is an AI-native project management platform for engineering teams. Plan sp
 
 ## Installation
 
-You can run Locus commands directly using `npx`:
-
-```bash
-npx @locusai/cli --help
-```
-
-Or install it globally:
+You can install Locus globally:
 
 ```bash
 npm install -g @locusai/cli
+```
+
+Or run it directly using `npx`:
+
+```bash
+npx @locusai/cli --help
 ```
 
 ## Quick Start
@@ -67,7 +67,12 @@ The agent will:
 You can set `LOCUS_API_KEY` and `LOCUS_WORKSPACE_ID` as environment variables to avoid typing them every time.
 </Tip>
 
-## Next Steps
+## Detailed Documentation
+Now that you have initialized Locus, choose your preferred way of working:
 
-- **[Explore the CLI](/docs/cli-reference)** to learn about all available commands.
-- **[Understand the Architecture](/docs/architecture)** to see how Locus keeps your code safe.
+- **[Using with Editors (MCP)](/docs/mcp-integration)**: Connect Locus mainly with Cursor, Windsurf, or VSCode.
+- **[Using Terminal Agent](/docs/terminal-agent)**: Run Locus as a standalone background process in your terminal.
+
+## Further Reading
+- **[CLI Reference](/docs/cli-reference)**: Explore all available commands.
+- **[Architecture](/docs/architecture)**: Understand how Locus works under the hood.

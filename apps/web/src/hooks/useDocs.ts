@@ -147,7 +147,7 @@ export function useDocs() {
       // Actually, typically we want URL to drive state.
       // If we want two-way sync:
     }
-  }, [searchParams]);
+  }, [searchParams, selectedId, isCreating]);
 
   // Update URL when selectedId changes
   useEffect(() => {
@@ -161,7 +161,7 @@ export function useDocs() {
       params.delete("docId");
       router.push(`${pathname}?${params.toString()}`);
     }
-  }, [selectedId, router, pathname]);
+  }, [selectedId, router, pathname, searchParams]);
 
   const hasUnsavedChanges = content !== originalContent;
 
