@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm --external express --external cors --external @modelcontextprotocol/sdk --external zod",
     "start": "node dist/index.js",
     "dev": "bun --watch src/index.ts",
     "lint": "biome check --write .",
