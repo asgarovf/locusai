@@ -1,7 +1,7 @@
 import type { Sprint, Task, TaskStatus } from "@locusai/shared";
-import { AnthropicClient } from "../ai/anthropic-client.js";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
+import { PROVIDERS } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
 import { ArtifactSyncer } from "./artifact-syncer.js";
@@ -14,13 +14,13 @@ function resolveProvider(value: string | undefined): AiProvider {
     console.warn(
       "Warning: --provider requires a value. Falling back to 'claude'."
     );
-    return "claude";
+    return PROVIDERS.CLAUDE;
   }
-  if (value === "claude" || value === "codex") return value;
+  if (value === PROVIDERS.CLAUDE || value === PROVIDERS.CODEX) return value;
   console.warn(
     `Warning: invalid --provider value '${value}'. Falling back to 'claude'.`
   );
-  return "claude";
+  return PROVIDERS.CLAUDE;
 }
 
 export interface WorkerConfig {
@@ -30,7 +30,6 @@ export interface WorkerConfig {
   apiBase: string;
   projectPath: string;
   apiKey: string;
-  anthropicApiKey?: string;
   model?: string;
   provider?: AiProvider;
 }
@@ -42,7 +41,6 @@ export interface WorkerConfig {
 export class AgentWorker {
   private client: LocusClient;
   private aiRunner: AiRunner;
-  private anthropicClient: AnthropicClient | null;
 
   // Services
   private sprintPlanner: SprintPlanner;
@@ -74,29 +72,21 @@ export class AgentWorker {
     });
 
     // Initialize AI clients
-    const provider = config.provider ?? "claude";
+    const provider = config.provider ?? PROVIDERS.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
     });
-    this.anthropicClient = config.anthropicApiKey
-      ? new AnthropicClient({
-          apiKey: config.anthropicApiKey,
-          model: config.model,
-        })
-      : null;
 
     // Initialize services with dependencies
     const logFn = this.log.bind(this);
 
     this.sprintPlanner = new SprintPlanner({
-      anthropicClient: this.anthropicClient,
       aiRunner: this.aiRunner,
       log: logFn,
     });
 
     this.indexerService = new CodebaseIndexerService({
-      anthropicClient: this.anthropicClient,
       aiRunner: this.aiRunner,
       projectPath,
       log: logFn,
@@ -110,7 +100,6 @@ export class AgentWorker {
     });
 
     this.taskExecutor = new TaskExecutor({
-      anthropicClient: this.anthropicClient,
       aiRunner: this.aiRunner,
       projectPath,
       sprintPlan: null, // Will be set after sprint planning
@@ -118,19 +107,8 @@ export class AgentWorker {
     });
 
     // Log initialization
-    if (this.anthropicClient) {
-      this.log(
-        "Using Anthropic SDK with prompt caching for planning phases",
-        "info"
-      );
-    }
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
-    this.log(
-      this.anthropicClient
-        ? `Using ${providerLabel} CLI for execution`
-        : `Using ${providerLabel} CLI for all phases`,
-      "info"
-    );
+    this.log(`Using ${providerLabel} CLI for all phases`, "info");
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
@@ -320,7 +298,6 @@ if (
     else if (arg === "--sprint-id") config.sprintId = args[++i];
     else if (arg === "--api-base") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
-    else if (arg === "--anthropic-api-key") config.anthropicApiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
     else if (arg === "--provider") {

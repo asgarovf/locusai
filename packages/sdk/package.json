@@ -22,13 +22,12 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external @anthropic-ai/sdk --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
     "@locusai/shared": "^0.4.16",
     "axios": "^1.13.2",
     "events": "^3.3.0",

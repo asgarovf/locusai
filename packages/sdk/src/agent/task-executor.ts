@@ -1,10 +1,8 @@
 import type { Task } from "@locusai/shared";
-import type { AnthropicClient } from "../ai/anthropic-client.js";
 import type { AiRunner } from "../ai/runner.js";
 import { PromptBuilder } from "../core/prompt-builder.js";
 
 export interface TaskExecutorDeps {
-  anthropicClient: AnthropicClient | null;
   aiRunner: AiRunner;
   projectPath: string;
   sprintPlan: string | null;
@@ -36,26 +34,13 @@ export class TaskExecutor {
     try {
       let plan: string = "";
 
-      if (this.deps.anthropicClient) {
-        // Phase 1: Planning (using Anthropic SDK with caching)
-        this.deps.log("Phase 1: Planning (Anthropic SDK)...", "info");
+      this.deps.log("Phase 1: Planning (CLI)...", "info");
+      const planningPrompt = `${basePrompt}
 
-        // Build cacheable context blocks
-        const cacheableContext: string[] = [basePrompt];
+## Phase 1: Planning
+Analyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
 
-        plan = await this.deps.anthropicClient.run({
-          systemPrompt:
-            "You are an expert software engineer. Analyze the task carefully and create a detailed implementation plan.",
-          cacheableContext,
-          userPrompt:
-            "## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.",
-        });
-      } else {
-        this.deps.log(
-          "Skipping Phase 1: Planning (No Anthropic API Key)...",
-          "info"
-        );
-      }
+      plan = await this.deps.aiRunner.run(planningPrompt, true);
 
       // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");

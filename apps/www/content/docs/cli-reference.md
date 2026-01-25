@@ -70,14 +70,12 @@ locus run [options]
 - `--sprint <id>`: (Optional) Limit work to a specific sprint.
 - `--provider <name>`: (Optional) AI provider to use (`claude` or `codex`, default `claude`).
 - `--model <name>`: (Optional) AI model to use (defaults to `sonnet` for `claude`).
-- `--anthropic-api-key <key>`: (Optional) Direct Anthropic API key for planning (skips some limits).
 - `--api-url <url>`: (Optional) Custom API endpoint.
 
 **Environment Variables:**
 Instead of flags, you can set:
 - `LOCUS_API_KEY`
 - `LOCUS_WORKSPACE_ID`
-- `ANTHROPIC_API_KEY`
 - `LOCUS_AI_PROVIDER` (`claude` or `codex`)
 
 **What it does:**

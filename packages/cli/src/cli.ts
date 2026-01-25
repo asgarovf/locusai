@@ -10,6 +10,7 @@ import {
   c,
   DEFAULT_MODEL,
   LOCUS_CONFIG,
+  PROVIDERS,
   createAiRunner,
   type AiProvider,
 } from "@locusai/sdk/node";
@@ -67,8 +68,8 @@ This will create a .locus directory with the necessary configuration.
 }
 
 function resolveProvider(input?: string): AiProvider {
-  if (!input) return "claude";
-  if (input === "claude" || input === "codex") return input;
+  if (!input) return PROVIDERS.CLAUDE;
+  if (input === PROVIDERS.CLAUDE || input === PROVIDERS.CODEX) return input;
 
   console.error(
     c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
@@ -87,7 +88,6 @@ async function runCommand(args: string[]) {
       provider: { type: "string" },
       "api-url": { type: "string" },
       dir: { type: "string" },
-      "anthropic-api-key": { type: "string" },
     },
     strict: false,
   });
@@ -97,15 +97,12 @@ async function runCommand(args: string[]) {
   new ConfigManager(projectPath).updateVersion(VERSION);
 
   const apiKey = values["api-key"] || process.env.LOCUS_API_KEY;
-  const anthropicApiKey =
-    values["anthropic-api-key"] || process.env.ANTHROPIC_API_KEY;
   const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
   const provider = resolveProvider(
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
   const resolvedModel =
-    (values.model as string | undefined) ||
-    (provider === "claude" ? DEFAULT_MODEL : undefined);
+    (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   if (!apiKey || !workspaceId) {
     console.error(c.error("Error: --api-key and --workspace are required"));
@@ -121,7 +118,6 @@ async function runCommand(args: string[]) {
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
-    anthropicApiKey: anthropicApiKey as string,
   });
 
   orchestrator.on("task:assigned", (data) =>
@@ -166,8 +162,7 @@ async function indexCommand(args: string[]) {
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
   const resolvedModel =
-    (values.model as string | undefined) ||
-    (provider === "claude" ? DEFAULT_MODEL : undefined);
+    (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {
     projectPath,
@@ -254,7 +249,6 @@ Examples:
 Environment Variables:
   LOCUS_API_KEY         API key for authentication
   LOCUS_WORKSPACE_ID    Workspace ID
-  ANTHROPIC_API_KEY     Optional Anthropic API key
   LOCUS_AI_PROVIDER     AI provider: claude or codex
 
 For more information, visit: https://locusai.dev/docs

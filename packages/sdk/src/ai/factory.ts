@@ -1,6 +1,7 @@
 import type { AiProvider, AiRunner } from "./runner.js";
 import { ClaudeRunner } from "./claude-runner.js";
 import { CodexRunner } from "./codex-runner.js";
+import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
 
 export interface AiRunnerConfig {
   projectPath: string;
@@ -11,10 +12,13 @@ export function createAiRunner(
   provider: AiProvider | undefined,
   config: AiRunnerConfig
 ): AiRunner {
-  switch (provider) {
-    case "codex":
-      return new CodexRunner(config.projectPath, config.model);
+  const resolvedProvider = provider ?? PROVIDERS.CLAUDE;
+  const model = config.model ?? DEFAULT_MODEL[resolvedProvider];
+
+  switch (resolvedProvider) {
+    case PROVIDERS.CODEX:
+      return new CodexRunner(config.projectPath, model);
     default:
-      return new ClaudeRunner(config.projectPath, config.model);
+      return new ClaudeRunner(config.projectPath, model);
   }
 }

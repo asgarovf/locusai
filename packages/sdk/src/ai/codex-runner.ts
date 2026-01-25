@@ -10,19 +10,13 @@ export class CodexRunner implements AiRunner {
   async run(prompt: string, _isPlanning = false): Promise<string> {
     const maxRetries = 3;
     let lastError: Error | null = null;
-    let usePrint = true;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.executeRun(prompt, usePrint);
+        return await this.executeRun(prompt);
       } catch (error) {
         const err = error as Error;
         lastError = err;
-        if (usePrint && this.isPrintFlagError(err)) {
-          // Some Codex CLI versions do not support --print; retry without it.
-          usePrint = false;
-          continue;
-        }
         const isLastAttempt = attempt === maxRetries;
 
         if (!isLastAttempt) {
@@ -38,29 +32,22 @@ export class CodexRunner implements AiRunner {
     throw lastError || new Error("Codex CLI failed after multiple attempts");
   }
 
-  private isPrintFlagError(error: Error): boolean {
-    return /unrecognized option.*--print|unknown option.*--print/i.test(
-      error.message
-    );
-  }
-
-  private executeRun(prompt: string, usePrint: boolean): Promise<string> {
+  private executeRun(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const args: string[] = [];
-
-      if (usePrint) {
-        args.push("--print");
-      }
+      const args: string[] = ["exec", "--full-auto"];
 
       if (this.model) {
         args.push("--model", this.model);
       }
 
+      // Read prompt from stdin to avoid arg-length limits.
+      args.push("-");
+
       const codex = spawn("codex", args, {
         cwd: this.projectPath,
         stdio: ["pipe", "pipe", "pipe"],
         env: process.env,
-        shell: true,
+        shell: false,
       });
 
       let output = "";
@@ -76,7 +63,7 @@ export class CodexRunner implements AiRunner {
       codex.on("error", (err) =>
         reject(
           new Error(
-            `Failed to start Codex CLI (shell: true): ${err.message}. Please ensure the 'codex' command is available in your PATH.`
+            `Failed to start Codex CLI (shell: false): ${err.message}. Please ensure the 'codex' command is available in your PATH.`
           )
         )
       );

@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
-import { DEFAULT_MODEL } from "../core/config.js";
+import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
 import type { AiRunner } from "./runner.js";
 
 export class ClaudeRunner implements AiRunner {
   constructor(
     private projectPath: string,
-    private model: string = DEFAULT_MODEL
+    private model: string = DEFAULT_MODEL[PROVIDERS.CLAUDE]
   ) {}
 
   async run(prompt: string, _isPlanning = false): Promise<string> {
