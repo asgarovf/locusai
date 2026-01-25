@@ -10,15 +10,18 @@ export class CodexRunner implements AiRunner {
   async run(prompt: string, _isPlanning = false): Promise<string> {
     const maxRetries = 3;
     let lastError: Error | null = null;
+    let usePrint = true;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.executeRun(prompt, true);
+        return await this.executeRun(prompt, usePrint);
       } catch (error) {
         const err = error as Error;
         lastError = err;
-        if (this.isPrintFlagError(err)) {
-          return await this.executeRun(prompt, false);
+        if (usePrint && this.isPrintFlagError(err)) {
+          // Some Codex CLI versions do not support --print; retry without it.
+          usePrint = false;
+          continue;
         }
         const isLastAttempt = attempt === maxRetries;
 

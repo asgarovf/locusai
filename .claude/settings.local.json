@@ -4,7 +4,8 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(bun run lint:*)",
-      "Bash(bun run typecheck:*)"
+      "Bash(bun run typecheck:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
