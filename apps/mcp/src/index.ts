@@ -44,7 +44,10 @@ async function main() {
     if (!transport) {
       if (sessionId) {
         // Client sent an ID but we don't have it (expired/invalid)
-        res.status(404).send("Session not found");
+        res.status(404).json({
+          error: "Not Found",
+          message: "Session not found",
+        });
         return;
       }
 
@@ -80,9 +83,20 @@ async function main() {
     } catch (e) {
       console.error("Transport error:", e);
       if (!res.headersSent) {
-        res.status(500).send("Internal Server Error");
+        res.status(500).json({
+          error: "Internal Server Error",
+          message: "An unexpected error occurred during request handling",
+        });
       }
     }
+  });
+
+  // Default handler for all other routes
+  app.use((req, res) => {
+    res.status(404).json({
+      error: "Not Found",
+      message: `Route ${req.method} ${req.path} not found`,
+    });
   });
 
   app.listen(port, () => {
