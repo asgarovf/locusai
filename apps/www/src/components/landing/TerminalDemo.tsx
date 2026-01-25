@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const steps = [
   {
-    text: "npx @locusai/cli run --api-key=lk_123_123 --workspace-id=123",
+    text: "locus run --api-key=lk_123_123 --workspace-id=123",
     color: "text-foreground",
   },
   { text: "", color: "text-foreground" },
