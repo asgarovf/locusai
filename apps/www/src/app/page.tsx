@@ -1,4 +1,5 @@
 import {
+  DemoVideo,
   FeatureGrid,
   Hero,
   TerminalDemo,
@@ -31,6 +32,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 -mt-20 relative z-20 mb-24">
           <TerminalDemo />
         </div>
+        <DemoVideo />
         <WorkflowSteps />
         <FeatureGrid />
       </main>

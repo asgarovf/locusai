@@ -31,7 +31,7 @@ export function DemoVideo() {
         >
           <iframe
             className="absolute inset-0 w-full h-full"
-            src="https://www.youtube.com/embed/ZrBLIZbUiZw"
+            src="https://www.youtube.com/embed/GgkytOJPWbI"
             title="Locus Demo Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen

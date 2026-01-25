@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google"; // Next 15 might use next/font/google or local fonts
 import "./globals.css";
@@ -77,6 +78,9 @@ export default function RootLayout({
         className="font-sans antialiased min-h-screen bg-background text-foreground"
       >
         {children}
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+        )}
       </body>
     </html>
   );
