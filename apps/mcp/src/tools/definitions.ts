@@ -21,7 +21,6 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
     const rawWorkspace =
       headers["x-workspace-id"] || headers["x-locus-workspace-id"];
     workspaceId = Array.isArray(rawWorkspace) ? rawWorkspace[0] : rawWorkspace;
-
   }
 
   // 3. Fallback to Server Env (if running locally/single-tenant)

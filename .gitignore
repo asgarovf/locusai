@@ -82,3 +82,6 @@ pids
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
 packages/cli/bin/agent/
+
+# Locus runtime
+.locus/

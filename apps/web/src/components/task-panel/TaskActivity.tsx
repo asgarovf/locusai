@@ -44,6 +44,8 @@ export function TaskActivity({
     }
   };
 
+  const activityLog = task.activityLog || [];
+
   return (
     <div>
       <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
@@ -77,8 +79,8 @@ export function TaskActivity({
       </div>
 
       <div className="space-y-10 max-h-[600px] overflow-y-auto pr-4 scrollbar-thin">
-        {task.activityLog.length > 0 ? (
-          task.activityLog.map((event) => (
+        {activityLog.length > 0 ? (
+          activityLog.map((event) => (
             <div key={event.id} className="relative flex gap-6 group">
               <div className="absolute left-[19px] top-10 bottom-[-28px] w-px bg-border/40 group-last:hidden" />
               <div className="h-10 w-10 rounded-2xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm">

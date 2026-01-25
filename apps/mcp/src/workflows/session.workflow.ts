@@ -1,4 +1,4 @@
-import { PROVIDERS, SprintPlanner, createAiRunner } from "@locusai/sdk/node";
+import { createAiRunner, PROVIDERS, SprintPlanner } from "@locusai/sdk/node";
 import { logger } from "../lib/logger.js";
 import { ClientConfig, SessionContext } from "../lib/types.js";
 import { LocusService } from "../services/locus.service.js";
