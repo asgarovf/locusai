@@ -1,4 +1,4 @@
-import type { Sprint, Task, TaskStatus } from "@locusai/shared";
+import { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { AnthropicClient } from "../ai/anthropic-client.js";
 import { ClaudeRunner } from "../ai/claude-runner.js";
 import { LocusClient } from "../index.js";
@@ -189,25 +189,30 @@ export class AgentWorker {
         sprintId: sprint.id,
       });
 
-      this.log(`Sprint tasks found: ${tasks.length}`, "info");
+      const activeTasks = tasks.filter(
+        (t) =>
+          t.status === TaskStatus.BACKLOG || t.status === TaskStatus.IN_PROGRESS
+      );
 
-      const latestTaskCreation = tasks.reduce((latest, task) => {
-        const taskDate = new Date(task.createdAt);
-        return taskDate > latest ? taskDate : latest;
-      }, new Date(0));
-
-      const mindmapDate = sprint.mindmapUpdatedAt
-        ? new Date(sprint.mindmapUpdatedAt)
-        : new Date(0);
+      this.log(`Sprint tasks found: ${activeTasks.length}`, "info");
 
       // Skip mindmap generation if there's only one task
-      if (tasks.length <= 1) {
+      if (activeTasks.length <= 1) {
         this.log(
           "Skipping mindmap generation (only one task in sprint).",
           "info"
         );
         this.sprintPlan = null;
       } else {
+        const latestTaskCreation = activeTasks.reduce((latest, task) => {
+          const taskDate = new Date(task.createdAt);
+          return taskDate > latest ? taskDate : latest;
+        }, new Date(0));
+
+        const mindmapDate = sprint.mindmapUpdatedAt
+          ? new Date(sprint.mindmapUpdatedAt)
+          : new Date(0);
+
         const needsPlanning =
           !sprint.mindmap ||
           sprint.mindmap.trim() === "" ||
@@ -243,6 +248,9 @@ export class AgentWorker {
     ) {
       const task = await this.getNextTask();
       if (!task) {
+        if (this.consecutiveEmpty === 0) {
+          this.log("Queue empty, waiting for tasks...", "info");
+        }
         this.consecutiveEmpty++;
         if (this.consecutiveEmpty >= this.maxEmpty) break;
         await new Promise((r) => setTimeout(r, this.pollInterval));
@@ -258,6 +266,7 @@ export class AgentWorker {
       await this.artifactSyncer.sync();
 
       if (result.success) {
+        this.log(`Completed: ${task.title}`, "success");
         await this.client.tasks.update(task.id, this.config.workspaceId, {
           status: "VERIFICATION" as TaskStatus,
         });
@@ -267,6 +276,7 @@ export class AgentWorker {
         });
         this.tasksCompleted++;
       } else {
+        this.log(`Failed: ${task.title} - ${result.summary}`, "error");
         await this.client.tasks.update(task.id, this.config.workspaceId, {
           status: "BACKLOG" as TaskStatus,
           assignedTo: null,
