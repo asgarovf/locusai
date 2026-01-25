@@ -1,4 +1,19 @@
 /** @type {import('next').NextConfig} */
+
+const getFormattedConnectSrc = () => {
+  const isDev = process.env.NODE_ENV === "development";
+
+  if (!isDev) {
+    return "https://*.locusai.dev";
+  } else {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    const parsedUrl = new URL(url);
+    const protocol = parsedUrl.protocol;
+    const hostname = parsedUrl.hostname;
+    return `${protocol}//${hostname}:${parsedUrl.port}`;
+  }
+};
+
 const nextConfig = {
   transpilePackages: ["@locusai/shared", "@locusai/sdk"],
   images: {
@@ -42,7 +57,7 @@ const nextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "connect-src 'self' https://*.locusai.dev",
+              `connect-src 'self' ${getFormattedConnectSrc()}`,
             ].join("; "),
           },
           {

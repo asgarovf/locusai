@@ -10,23 +10,23 @@ import {
 
 const steps = [
   {
-    title: "Dispatch",
-    description: "You assign a task from the backlog via the CLI.",
+    title: "Plan",
+    description: "Define tasks and sprints in the cloud dashboard.",
     icon: Terminal,
   },
   {
-    title: "Plan",
-    description: "Agent reads CLAUDE.md and creates a Mindmap.",
+    title: "Dispatch",
+    description: "Assign tasks to agents via the CLI.",
     icon: BrainCircuit,
   },
   {
     title: "Execute",
-    description: "Agent writes code and runs local tests.",
+    description: "Agents run securely on your machine.",
     icon: GitPullRequestArrow,
   },
   {
     title: "Verify",
-    description: "You review the work and merge to master.",
+    description: "Review the work and merge to master.",
     icon: CheckCircle2,
   },
 ];

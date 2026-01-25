@@ -43,9 +43,9 @@ export function Hero({ version }: HeroProps) {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed"
         >
-          The operating system for AI agents. Manage tasks, write documentation,
-          and run secure CI pipelines locally-keeping your context close to your
-          code.
+          The AI-native platform for engineering teams. Plan sprints, manage
+          tasks, and write documentation in the cloud—while agents run securely
+          on your machine.
         </motion.p>
 
         <motion.div

@@ -14,9 +14,9 @@
   <a href="https://locusai.dev/docs"><img src="https://img.shields.io/badge/docs-locusai.dev-blue" alt="Documentation" /></a>
 </p>
 
-**Locus is a local-first platform for autonomous software engineering.**
+**Locus is an AI-native project management platform for engineering teams.**
 
-It combines a cloud-based coordination layer with strictly local execution to enable AI agents to build, test, and document your software without your code leaving your machine.
+Plan sprints, manage tasks, and coordinate documentation in the cloud—while AI agents run securely on your machine to build, test, and document your software.
 
 Read the [full documentation](https://locusai.dev/docs) to learn more.
 
@@ -27,11 +27,11 @@ Read the [full documentation](https://locusai.dev/docs) to learn more.
 
 ## 🌟 Key Features
 
-- **Hybrid Architecture** - Cloud coordination for teams, local execution for privacy and security.
-- **Autonomous Agents** - Run agents locally that plan, code, and verify their own work.
+- **AI-Native Planning** - Plan sprints, define tasks, and write documentation designed for AI agents.
+- **Secure Local Execution** - Agents run securely on your machine, keeping your codebase private.
+- **Team Coordination** - Cloud-based dashboard for visibility, collaboration, and task management.
 - **Cognitive Context** - Agents use project-specific `CLAUDE.md` and semantic indexing to understand your codebase.
 - **Sprint Mindmaps** - Agents generate and follow high-level technical plans for cohesive feature implementation.
-- **Artifact Sync** - Documenation and plans generated locally are automatically synced to the cloud dashboard.
 
 ## 🚀 Quick Start
 
@@ -73,13 +73,12 @@ locus-dev/           ← The platform (Open Source)
     └── shared/     ← Shared Types
 ```
 
-### The "Local-First" Workflow
+### The Workflow
 
-1.  **Dispatch**: You request work via the CLI.
-2.  **Assignment**: The Cloud assigns the next high-priority task.
-3.  **Planning**: The Local Agent reads the task and your code, then creates a plan.
-4.  **Execution**: The Agent modifies files and runs tests locally on your machine.
-5.  **Verification**: You review the changes before marking the task as Done.
+1.  **Plan**: Define tasks and sprints in the cloud dashboard.
+2.  **Dispatch**: Assign tasks to agents via the CLI.
+3.  **Execute**: Agents run securely on your machine, writing code and running tests.
+4.  **Verify**: Review the changes before marking the task as Done.
 
 ---
 

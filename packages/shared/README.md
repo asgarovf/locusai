@@ -38,7 +38,7 @@ const task = TaskSchema.parse(data);
 
 ## Part of Locus
 
-This package is part of the [Locus](https://github.com/asgarovf/locusai) platform — a local-first AI development platform for task management, documentation, and CI coordination.
+This package is part of the [Locus](https://github.com/asgarovf/locusai) platform — an AI-native project management platform for engineering teams.
 
 ## License
 

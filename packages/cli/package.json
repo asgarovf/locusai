@@ -1,7 +1,7 @@
 {
   "name": "@locusai/cli",
   "version": "0.4.16",
-  "description": "Local-first AI development platform & engineering workspace",
+  "description": "CLI for Locus - AI-native project management platform",
   "type": "module",
   "bin": {
     "locus": "./bin/locus.js"
@@ -22,9 +22,9 @@
   "keywords": [
     "locus",
     "project-management",
-    "monorepo",
+    "ai-agents",
     "cli",
-    "scaffold",
+    "engineering-teams",
     "agent",
     "agentic"
   ],

@@ -10,7 +10,7 @@
 
 # @locusai/web
 
-The dashboard UI for **Locus** — a local-first AI development platform.
+The dashboard UI for **Locus** — an AI-native project management platform for engineering teams.
 
 ## Features
 

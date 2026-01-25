@@ -126,7 +126,7 @@ export function Sidebar() {
           src="/logo.png"
           alt="Locus"
           width={97.81}
-          height={32}
+          height={36.09}
           className="rounded-xl"
         />
       </div>

@@ -2,7 +2,7 @@
 title: Getting Started with Locus
 ---
 
-Locus is a local-first platform designed to give AI agents the context and tools they need to be effective engineers. It combines a local agent runtime with a cloud-based orchestration layer to ensure your intellectual property stays private while enabling powerful autonomous workflows.
+Locus is an AI-native project management platform for engineering teams. Plan sprints, manage tasks, and coordinate documentation in the cloud—while AI agents run securely on your machine to build, test, and document your software.
 
 ## Prerequisites
 

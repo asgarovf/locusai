@@ -11,9 +11,9 @@ import {
 
 const features = [
   {
-    title: "Privacy by Design",
+    title: "Secure Local Execution",
     description:
-      "Your intellectual property never leaves your machine. Agents execute locally while you coordinate via the cloud.",
+      "Agents run securely on your machine. Plan and coordinate in the cloud while keeping your codebase private.",
     icon: Database,
     className: "md:col-span-2 md:row-span-2",
   },
@@ -74,7 +74,7 @@ export function FeatureGrid() {
             transition={{ duration: 0.5 }}
             className="text-3xl font-bold tracking-tight mb-4"
           >
-            Everything an Agent Needs
+            Built for AI Engineering Teams
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -83,8 +83,8 @@ export function FeatureGrid() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-muted-foreground max-w-2xl mx-auto"
           >
-            Locus provides the cognitive architecture for autonomous software
-            engineering.
+            Locus provides the platform for teams to plan, coordinate, and
+            execute with AI agents.
           </motion.p>
         </div>
 

@@ -2,7 +2,7 @@
 title: Contributing to Locus
 ---
 
-We welcome contributions to Locus! As a local-first platform, we value transparency, simplicity, and robustness.
+We welcome contributions to Locus! As an AI-native project management platform, we value transparency, simplicity, and robustness.
 
 ## Getting Started
 

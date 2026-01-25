@@ -145,7 +145,7 @@ Helpful Resources:
 - MCP Integration: https://locusai.dev/docs/mcp
 
 ---
-Locus - Mission Control for Agentic Engineering
+Locus - Mission Control for AI Engineering Teams
 https://locusai.dev
   `.trim();
 

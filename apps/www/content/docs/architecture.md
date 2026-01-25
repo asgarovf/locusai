@@ -2,23 +2,24 @@
 title: Architecture
 ---
 
-Locus employs a **Hybrid Architecture** that balances the privacy and performance of local execution with the coordination capabilities of the cloud.
+Locus employs a **Hybrid Architecture** that combines cloud-based planning with secure local execution.
 
-## The "Local-First" Model
+## Cloud Planning, Local Execution
 
-Unlike cloud-only coding assistants that require you to upload your entire codebase to a remote server, Locus executes **locally on your machine**.
+Locus is a SaaS platform where teams plan and coordinate work, while agents execute securely on developer machines.
 
-### 1. Verification & Security
-Because the agent runs locally, it allows for:
+### 1. Cloud Platform
+The Locus Cloud (API & Dashboard) provides:
+- **Sprint Planning**: Define sprints, milestones, and project timelines.
+- **Task Management**: Create, prioritize, and assign tasks with detailed acceptance criteria.
+- **Documentation Hub**: Write and organize project documentation designed for AI agents.
+- **Team Coordination**: Visibility and collaboration across your engineering team.
+
+### 2. Secure Local Execution
+Agents run securely on your machine, providing:
 - **Local File Access**: No need to sync files to a remote sandbox.
 - **Local Tool Execution**: The agent can run `npm install`, `docker build`, or `cargo test` exactly as you would.
-- **Privacy**: Your source code never leaves your machine. Only task descriptions, patches/diffs, and summaries are sent to the cloud for coordination.
-
-### 2. Cloud Orchestration
-The Locus Cloud (API & Dashboard) acts as the control plane:
-- **Task Management**: Stores the backlog, sprints, and task statuses.
-- **Agent Coordination**: Dispatches tasks to available local workers.
-- **Knowledge Graph**: Maintains high-level project metadata (but not the raw code).
+- **Privacy**: Your source code stays on your machine. Only task updates and summaries are synced to the cloud.
 
 ## Component Overview
 

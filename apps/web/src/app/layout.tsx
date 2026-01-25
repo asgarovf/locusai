@@ -10,16 +10,16 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Locus Dashboard | The Local-First AI Software Engineer",
+  title: "Locus Dashboard | Mission Control for AI Engineering Teams",
   description:
-    "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
+    "Plan sprints, manage tasks, and coordinate with AI agents. Agents run securely on your machine.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Locus Dashboard | The Local-First AI Software Engineer",
+    title: "Locus Dashboard | Mission Control for AI Engineering Teams",
     description:
-      "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
+      "Plan sprints, manage tasks, and coordinate with AI agents. Agents run securely on your machine.",
     url: "https://locus.sh",
     siteName: "Locus",
     images: [
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus Dashboard | The Local-First AI Software Engineer",
+    title: "Locus Dashboard | Mission Control for AI Engineering Teams",
     description:
-      "Local-first autonomous AI software engineering. Build software while keeping your code private and secure on your machine.",
+      "Plan sprints, manage tasks, and coordinate with AI agents. Agents run securely on your machine.",
     images: ["/og-image.png"],
   },
 };

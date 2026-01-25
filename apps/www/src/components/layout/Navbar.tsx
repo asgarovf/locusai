@@ -11,7 +11,7 @@ export function Navbar() {
         {/* Left: Logo */}
         <div className="flex items-center shrink-0">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Image src="/logo.png" alt="Locus" width={97.81} height={32} />
+            <Image src="/logo.png" alt="Locus" width={97.81} height={36.09} />
           </Link>
         </div>
 

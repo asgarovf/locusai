@@ -17,8 +17,8 @@ export function DemoVideo() {
             See Locus in Action
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            Watch how Locus streamlines agentic engineering by providing a
-            unified interface for task management, documentation, and CI/CD.
+            See how engineering teams use Locus to plan sprints, coordinate
+            tasks, and let AI agents build software securely on their machines.
           </p>
         </motion.div>
 

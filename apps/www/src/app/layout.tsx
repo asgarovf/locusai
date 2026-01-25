@@ -16,21 +16,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Locus | The Local-First AI Software Engineer",
+    default: "Locus | Mission Control for AI Engineering Teams",
     template: "%s | Locus",
   },
   description:
-    "The open-source, local-first platform for autonomous AI software engineering. Keep your code private while AI agents build your projects locally.",
+    "The AI-native project management platform for engineering teams. Plan sprints, manage tasks, and coordinate documentation in the cloud—while agents run securely on your machine.",
   keywords: [
     "AI agents",
     "agentic engineering",
-    "local-first",
+    "project management",
     "MCP",
     "autonomous agents",
     "AI development",
     "developer tools",
-    "privacy-first AI",
-    "documentation",
+    "engineering teams",
+    "AI planning",
   ],
   authors: [{ name: "Locus Team" }],
   creator: "Locus",
@@ -40,23 +40,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://locusai.dev",
     siteName: "Locus",
-    title: "Locus | The Local-First AI Software Engineer",
+    title: "Locus | Mission Control for AI Engineering Teams",
     description:
-      "The open-source, local-first platform for autonomous AI software engineering. Keep your code private while AI agents build your projects locally.",
+      "The AI-native project management platform for engineering teams. Plan sprints, manage tasks, and coordinate documentation in the cloud—while agents run securely on your machine.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Locus - The Local-First AI Software Engineer",
+        alt: "Locus - Mission Control for AI Engineering Teams",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus | The Local-First AI Software Engineer",
+    title: "Locus | Mission Control for AI Engineering Teams",
     description:
-      "The open-source, local-first platform for autonomous AI software engineering.",
+      "The AI-native project management platform for engineering teams. Agents run securely on your machine.",
     images: ["/og-image.png"],
   },
   icons: {

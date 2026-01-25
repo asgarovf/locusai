@@ -22,7 +22,7 @@ export function createInvitationEmail(data: InvitationEmailData): {
             <strong>${inviterName}</strong> has invited you to join their organization on Locus.
           </p>
           <p style="margin: 0; color: #374151; font-size: 15px; line-height: 1.5;">
-            Locus is a local-first AI development platform that helps teams manage tasks, documentation, and CI coordination with AI agents.
+            Locus is an AI-native project management platform where engineering teams plan sprints, manage tasks, and coordinate with AI agents.
           </p>
         </td>
       </tr>
@@ -107,7 +107,7 @@ You're Invited to Join ${organizationName} on Locus!
 
 ${inviterName} has invited you to join their organization on Locus.
 
-Locus is a local-first AI development platform that helps teams manage tasks, documentation, and CI coordination with AI agents.
+Locus is an AI-native project management platform where engineering teams plan sprints, manage tasks, and coordinate with AI agents.
 
 Organization: ${organizationName}
 
@@ -122,7 +122,7 @@ ${invitationUrl}
 ⏱️ Note: This invitation will expire in 7 days. Accept it soon to join the team!
 
 ---
-Locus - Mission Control for Agentic Engineering
+Locus - Mission Control for AI Engineering Teams
 https://locusai.dev
   `.trim();
 
