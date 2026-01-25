@@ -54,6 +54,7 @@ Connect to the Locus Cloud and start working:
 ```bash
 npx @locusai/cli run --api-key <YOUR_KEY> --workspace <WORKSPACE_ID>
 ```
+Optional: add `--provider codex` (or set `LOCUS_AI_PROVIDER=codex`) to use Codex instead of Claude.
 
 ---
 

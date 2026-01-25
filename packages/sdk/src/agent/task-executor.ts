@@ -1,11 +1,11 @@
 import type { Task } from "@locusai/shared";
 import type { AnthropicClient } from "../ai/anthropic-client.js";
-import type { ClaudeRunner } from "../ai/claude-runner.js";
+import type { AiRunner } from "../ai/runner.js";
 import { PromptBuilder } from "../core/prompt-builder.js";
 
 export interface TaskExecutorDeps {
   anthropicClient: AnthropicClient | null;
-  claudeRunner: ClaudeRunner;
+  aiRunner: AiRunner;
   projectPath: string;
   sprintPlan: string | null;
   log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
@@ -57,7 +57,7 @@ export class TaskExecutor {
         );
       }
 
-      // Phase 2: Execution (always using Claude CLI for agentic tools)
+      // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");
 
       let executionPrompt = basePrompt;
@@ -68,15 +68,15 @@ export class TaskExecutor {
       }
 
       executionPrompt += `\n\nWhen finished, output: <promise>COMPLETE</promise>`;
-      const output = await this.deps.claudeRunner.run(executionPrompt);
+      const output = await this.deps.aiRunner.run(executionPrompt);
 
       const success = output.includes("<promise>COMPLETE</promise>");
 
       return {
         success,
         summary: success
-          ? "Task completed by Claude"
-          : "Claude did not signal completion",
+          ? "Task completed by the agent"
+          : "The agent did not signal completion",
       };
     } catch (error) {
       return { success: false, summary: `Error: ${error}` };

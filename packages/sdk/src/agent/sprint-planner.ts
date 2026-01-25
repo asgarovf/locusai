@@ -1,10 +1,10 @@
 import type { Sprint, Task } from "@locusai/shared";
 import type { AnthropicClient } from "../ai/anthropic-client.js";
-import type { ClaudeRunner } from "../ai/claude-runner.js";
+import type { AiRunner } from "../ai/runner.js";
 
 export interface SprintPlannerDeps {
   anthropicClient: AnthropicClient | null;
-  claudeRunner: ClaudeRunner;
+  aiRunner: AiRunner;
   log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
 }
 
@@ -51,7 +51,7 @@ ${taskList}
           userPrompt,
         });
       } else {
-        // Fallback to Claude CLI
+        // Fallback to the selected CLI
         const planningPrompt = `# Sprint Planning: ${sprint.name}
 
 You are an expert project manager and lead engineer. You need to create a mindmap and execution plan for the following tasks in this sprint.
@@ -70,7 +70,7 @@ ${taskList}
 - Avoid using absolute local paths (e.g., /Users/...) in your output. Use relative paths starting from the project root if necessary.
 - Your output will be saved as the official sprint mindmap on the server.`;
 
-        plan = await this.deps.claudeRunner.run(planningPrompt, true);
+        plan = await this.deps.aiRunner.run(planningPrompt, true);
       }
 
       this.deps.log(

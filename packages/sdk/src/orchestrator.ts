@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index.js";
+import type { AiProvider } from "./ai/runner.js";
 import { c } from "./utils/colors.js";
 
 export interface AgentConfig {
@@ -31,6 +32,7 @@ export interface OrchestratorConfig {
   apiKey: string;
   anthropicApiKey?: string;
   model?: string;
+  provider?: AiProvider;
 }
 
 export class AgentOrchestrator extends EventEmitter {
@@ -213,6 +215,11 @@ export class AgentOrchestrator extends EventEmitter {
     // Add model if specified
     if (this.config.model) {
       workerArgs.push("--model", this.config.model);
+    }
+
+    // Add provider if specified
+    if (this.config.provider) {
+      workerArgs.push("--provider", this.config.provider);
     }
 
     // Add sprint ID if resolved

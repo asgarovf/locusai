@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import { DEFAULT_MODEL } from "../core/config.js";
+import type { AiRunner } from "./runner.js";
 
-export class ClaudeRunner {
+export class ClaudeRunner implements AiRunner {
   constructor(
     private projectPath: string,
     private model: string = DEFAULT_MODEL

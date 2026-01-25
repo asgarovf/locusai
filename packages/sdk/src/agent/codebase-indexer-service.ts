@@ -1,10 +1,10 @@
 import type { AnthropicClient } from "../ai/anthropic-client.js";
-import type { ClaudeRunner } from "../ai/claude-runner.js";
+import type { AiRunner } from "../ai/runner.js";
 import { CodebaseIndexer } from "../core/indexer.js";
 
 export interface CodebaseIndexerServiceDeps {
   anthropicClient: AnthropicClient | null;
-  claudeRunner: ClaudeRunner;
+  aiRunner: AiRunner;
   projectPath: string;
   log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
 }
@@ -50,8 +50,8 @@ Return ONLY valid JSON, no markdown formatting.`;
               userPrompt: prompt,
             });
           } else {
-            // Fallback to Claude CLI
-            response = await this.deps.claudeRunner.run(prompt, true);
+            // Fallback to the selected CLI
+            response = await this.deps.aiRunner.run(prompt, true);
           }
 
           // Extract JSON from response (handle markdown code blocks)

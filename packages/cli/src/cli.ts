@@ -10,6 +10,8 @@ import {
   c,
   DEFAULT_MODEL,
   LOCUS_CONFIG,
+  createAiRunner,
+  type AiProvider,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "./config-manager";
 import { TreeSummarizer } from "./tree-summarizer";
@@ -64,6 +66,16 @@ This will create a .locus directory with the necessary configuration.
   }
 }
 
+function resolveProvider(input?: string): AiProvider {
+  if (!input) return "claude";
+  if (input === "claude" || input === "codex") return input;
+
+  console.error(
+    c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
+  );
+  process.exit(1);
+}
+
 async function runCommand(args: string[]) {
   const { values } = parseArgs({
     args,
@@ -72,6 +84,7 @@ async function runCommand(args: string[]) {
       workspace: { type: "string" },
       sprint: { type: "string" },
       model: { type: "string" },
+      provider: { type: "string" },
       "api-url": { type: "string" },
       dir: { type: "string" },
       "anthropic-api-key": { type: "string" },
@@ -87,6 +100,12 @@ async function runCommand(args: string[]) {
   const anthropicApiKey =
     values["anthropic-api-key"] || process.env.ANTHROPIC_API_KEY;
   const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
+  const provider = resolveProvider(
+    (values.provider as string) || process.env.LOCUS_AI_PROVIDER
+  );
+  const resolvedModel =
+    (values.model as string | undefined) ||
+    (provider === "claude" ? DEFAULT_MODEL : undefined);
 
   if (!apiKey || !workspaceId) {
     console.error(c.error("Error: --api-key and --workspace are required"));
@@ -96,7 +115,8 @@ async function runCommand(args: string[]) {
   const orchestrator = new AgentOrchestrator({
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
-    model: (values.model as string) || DEFAULT_MODEL,
+    model: resolvedModel,
+    provider,
     apiBase: (values["api-url"] as string) || "https://api.locusai.dev/api",
     maxIterations: 100,
     projectPath,
@@ -131,14 +151,29 @@ async function runCommand(args: string[]) {
 async function indexCommand(args: string[]) {
   const { values } = parseArgs({
     args,
-    options: { dir: { type: "string" } },
+    options: {
+      dir: { type: "string" },
+      model: { type: "string" },
+      provider: { type: "string" },
+    },
     strict: false,
   });
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "index");
   new ConfigManager(projectPath).updateVersion(VERSION);
 
-  const summarizer = new TreeSummarizer(projectPath);
+  const provider = resolveProvider(
+    (values.provider as string) || process.env.LOCUS_AI_PROVIDER
+  );
+  const resolvedModel =
+    (values.model as string | undefined) ||
+    (provider === "claude" ? DEFAULT_MODEL : undefined);
+
+  const aiRunner = createAiRunner(provider, {
+    projectPath,
+    model: resolvedModel,
+  });
+  const summarizer = new TreeSummarizer(aiRunner);
   const indexer = new CodebaseIndexer(projectPath);
 
   console.log(
@@ -209,6 +244,7 @@ Commands:
 
 Options:
   --help   Show this help message
+  --provider <name>  AI provider: claude or codex (default: claude)
 
 Examples:
   locus init
@@ -219,6 +255,7 @@ Environment Variables:
   LOCUS_API_KEY         API key for authentication
   LOCUS_WORKSPACE_ID    Workspace ID
   ANTHROPIC_API_KEY     Optional Anthropic API key
+  LOCUS_AI_PROVIDER     AI provider: claude or codex
 
 For more information, visit: https://locusai.dev/docs
 `);
