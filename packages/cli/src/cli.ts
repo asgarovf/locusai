@@ -176,7 +176,11 @@ async function indexCommand(args: string[]) {
     (msg) => console.log(`  ${c.dim(msg)}`),
     (tree) => summarizer.summarize(tree)
   );
-  indexer.saveIndex(index);
+
+  if (index) {
+    indexer.saveIndex(index);
+  }
+
   console.log(c.success("✅ Indexing complete!"));
 }
 
