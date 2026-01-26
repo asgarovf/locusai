@@ -12,7 +12,8 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test:local": "bun run build && node ./bin/locus.js",
-    "pack:test": "npm pack && tar -xzf locusai-cli-*.tgz && cd package && npm link"
+    "pack:test": "npm pack && tar -xzf locusai-cli-*.tgz && cd package && npm link",
+    "clean": "rm -rf node_modules"
   },
   "files": [
     "bin",

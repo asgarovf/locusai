@@ -1,8 +1,8 @@
 export {
   DEFAULT_MODEL,
-  PROVIDERS,
   getLocusPath,
   LOCUS_CONFIG,
+  PROVIDER,
   type Provider,
 } from "./config.js";
 export { type CodebaseIndex, CodebaseIndexer } from "./indexer.js";

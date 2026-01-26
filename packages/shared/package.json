@@ -8,7 +8,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --format cjs --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly"
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format cjs --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "zod": "^4.3.6"

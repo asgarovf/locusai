@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome lint .",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

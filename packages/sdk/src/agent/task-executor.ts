@@ -1,5 +1,5 @@
 import type { Task } from "@locusai/shared";
-import { LogFn } from "src/ai/factory.js";
+import { LogFn } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { PromptBuilder } from "../core/prompt-builder.js";
 

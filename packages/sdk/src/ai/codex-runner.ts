@@ -3,15 +3,15 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_MODEL, PROVIDERS } from "../core/config.js";
+import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
 import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
 export class CodexRunner implements AiRunner {
   constructor(
     private projectPath: string,
-    private model: string = DEFAULT_MODEL[PROVIDERS.CODEX],
-    private log: LogFn
+    private model: string = DEFAULT_MODEL[PROVIDER.CODEX],
+    private log?: LogFn
   ) {}
 
   async run(prompt: string): Promise<string> {
@@ -110,7 +110,7 @@ export class CodexRunner implements AiRunner {
       if (line && this.shouldDisplay(line)) {
         const formattedLine = "[Codex]: ".concat(line.replace(/\*/g, ""));
 
-        this.log(formattedLine, "info");
+        this.log?.(formattedLine, "info");
       }
     }
   }

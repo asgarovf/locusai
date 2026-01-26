@@ -6,7 +6,8 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@locusai/shared": "workspace:*",

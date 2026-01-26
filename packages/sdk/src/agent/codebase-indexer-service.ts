@@ -1,4 +1,4 @@
-import { LogFn } from "src/ai/factory.js";
+import { LogFn } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { CodebaseIndexer } from "../core/indexer.js";
 

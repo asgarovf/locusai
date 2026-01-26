@@ -2,7 +2,7 @@ import type { Sprint, Task } from "@locusai/shared";
 import { TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
-import { PROVIDERS } from "../core/config.js";
+import { PROVIDER } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
 import { ArtifactSyncer } from "./artifact-syncer.js";
@@ -15,13 +15,13 @@ function resolveProvider(value: string | undefined): AiProvider {
     console.warn(
       "Warning: --provider requires a value. Falling back to 'claude'."
     );
-    return PROVIDERS.CLAUDE;
+    return PROVIDER.CLAUDE;
   }
-  if (value === PROVIDERS.CLAUDE || value === PROVIDERS.CODEX) return value;
+  if (value === PROVIDER.CLAUDE || value === PROVIDER.CODEX) return value;
   console.warn(
     `Warning: invalid --provider value '${value}'. Falling back to 'claude'.`
   );
-  return PROVIDERS.CLAUDE;
+  return PROVIDER.CLAUDE;
 }
 
 export interface WorkerConfig {
@@ -76,7 +76,7 @@ export class AgentWorker {
     const log = this.log.bind(this);
 
     // Initialize AI clients
-    const provider = config.provider ?? PROVIDERS.CLAUDE;
+    const provider = config.provider ?? PROVIDER.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,

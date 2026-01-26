@@ -13,7 +13,8 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "biome lint .",
-    "test": "jest"
+    "test": "jest",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@locusai/shared": "workspace:*",

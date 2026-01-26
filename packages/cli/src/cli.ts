@@ -6,13 +6,13 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
   AgentOrchestrator,
+  type AiProvider,
   CodebaseIndexer,
   c,
+  createAiRunner,
   DEFAULT_MODEL,
   LOCUS_CONFIG,
-  PROVIDERS,
-  createAiRunner,
-  type AiProvider,
+  PROVIDER,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "./config-manager";
 import { TreeSummarizer } from "./tree-summarizer";
@@ -68,8 +68,8 @@ This will create a .locus directory with the necessary configuration.
 }
 
 function resolveProvider(input?: string): AiProvider {
-  if (!input) return PROVIDERS.CLAUDE;
-  if (input === PROVIDERS.CLAUDE || input === PROVIDERS.CODEX) return input;
+  if (!input) return PROVIDER.CLAUDE;
+  if (input === PROVIDER.CLAUDE || input === PROVIDER.CODEX) return input;
 
   console.error(
     c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
@@ -102,8 +102,7 @@ async function runCommand(args: string[]) {
   const provider = resolveProvider(
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
-  const model =
-    (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   if (!apiKey || !workspaceId) {
     console.error(c.error("Error: --api-key and --workspace are required"));
@@ -163,8 +162,7 @@ async function indexCommand(args: string[]) {
   const provider = resolveProvider(
     (values.provider as string) || process.env.LOCUS_AI_PROVIDER
   );
-  const model =
-    (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {
     projectPath,

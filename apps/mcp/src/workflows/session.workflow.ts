@@ -1,4 +1,4 @@
-import { createAiRunner, PROVIDERS, SprintPlanner } from "@locusai/sdk/node";
+import { createAiRunner, PROVIDER, SprintPlanner } from "@locusai/sdk/node";
 import { logger } from "../lib/logger.js";
 import { ClientConfig, SessionContext } from "../lib/types.js";
 import { LocusService } from "../services/locus.service.js";
@@ -8,11 +8,7 @@ export class SessionWorkflow {
   private locusService: LocusService;
 
   constructor(config: ClientConfig) {
-    // Current directory is the server's directory, not the user's project.
-    // We cannot run ClaudeRunner on the server to analyze user code.
-    // However, SprintPlanner uses LLMs to plan based on Task text, which is fine.
-
-    const aiRunner = createAiRunner(PROVIDERS.CLAUDE, {
+    const aiRunner = createAiRunner(PROVIDER.CLAUDE, {
       projectPath: process.cwd(),
     });
 

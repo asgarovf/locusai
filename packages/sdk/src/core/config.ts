@@ -1,15 +1,15 @@
 import { join } from "node:path";
 
-export const PROVIDERS = {
+export const PROVIDER = {
   CLAUDE: "claude",
   CODEX: "codex",
 } as const;
 
-export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
+export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
 
 export const DEFAULT_MODEL: Record<Provider, string> = {
-  [PROVIDERS.CLAUDE]: "sonnet",
-  [PROVIDERS.CODEX]: "gpt-5.1-codex-mini",
+  [PROVIDER.CLAUDE]: "sonnet",
+  [PROVIDER.CODEX]: "gpt-5.1-codex-mini",
 };
 
 export const LOCUS_CONFIG = {
