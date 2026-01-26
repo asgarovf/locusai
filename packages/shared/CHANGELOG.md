@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.5.1
+
+### Patch Changes
+
+- Optimize project reindexing to prevent unnecessary index
+
 ## 0.5.0
 
 ### Minor Changes
