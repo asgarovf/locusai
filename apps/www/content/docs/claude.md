@@ -1,16 +1,16 @@
 ---
 title: "Usage with Claude"
-description: "Instructions for running the Locus Agent using Anthropic's Claude models."
+description: "Instructions for running the Locus Agent using the Claude CLI."
 ---
 
-Locus currently uses Anthropic's Claude 3.5 Sonnet as its primary driver for the terminal agent. This provides a balance of high-reasoning capability and coding proficiency.
+Locus uses the Claude CLI as one of the terminal agent providers. This provides a balance of high-reasoning capability and coding proficiency.
 
 ## Prerequisites
 
-To use Claude with Locus, you need an Anthropic API Key.
+To use Claude with Locus, install the Claude CLI and make sure you are logged in.
 
-1. Get your API Key from the [Anthropic Console](https://console.anthropic.com/).
-2. Set it in your environment or pass it as a flag.
+1. Install the Claude CLI.
+2. Run `claude` once to complete login.
 
 
 ## Running the Agent
@@ -33,12 +33,4 @@ By default, Locus uses `sonnet`. You can specify a different Claude model if nee
 
 ```bash
 locus run --model opus
-```
-
-### Other options
-
-If you prefer some middle step optimizations, you can pass the Anthropic key to improve your agent's experience. However, these paramters are not well tested and should be used carefully.
-
-```bash
-locus run --anthropic-api-key <YOUR_ANTHROPIC_KEY>
 ```

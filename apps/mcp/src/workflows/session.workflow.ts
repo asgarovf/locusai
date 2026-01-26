@@ -1,8 +1,4 @@
-import {
-  AnthropicClient,
-  ClaudeRunner,
-  SprintPlanner,
-} from "@locusai/sdk/node";
+import { createAiRunner, PROVIDERS, SprintPlanner } from "@locusai/sdk/node";
 import { logger } from "../lib/logger.js";
 import { ClientConfig, SessionContext } from "../lib/types.js";
 import { LocusService } from "../services/locus.service.js";
@@ -16,13 +12,9 @@ export class SessionWorkflow {
     // We cannot run ClaudeRunner on the server to analyze user code.
     // However, SprintPlanner uses LLMs to plan based on Task text, which is fine.
 
-    const anthropicClient = config.anthropicApiKey
-      ? new AnthropicClient({ apiKey: config.anthropicApiKey })
-      : null;
-
-    // Fallback runner (though likely won't work well without local project context for some ops)
-    // But SprintPlanner mostly needs text.
-    const claudeRunner = new ClaudeRunner(process.cwd());
+    const aiRunner = createAiRunner(PROVIDERS.CLAUDE, {
+      projectPath: process.cwd(),
+    });
 
     const logFn = (
       msg: string,
@@ -37,8 +29,7 @@ export class SessionWorkflow {
     this.locusService = new LocusService(config);
 
     this.sprintPlanner = new SprintPlanner({
-      anthropicClient,
-      claudeRunner,
+      aiRunner,
       log: logFn,
     });
   }

@@ -17,8 +17,8 @@ The Local Terminal Agent runs as a standalone process. It:
 
 Locus supports multiple LLM providers to drive the terminal agent. Select your provider for specific setup instructions:
 
-- **[Anthropic Claude](/docs/claude)** (Default & Recommended)
-- **[OpenAI Codex](/docs/codex)** (Coming Soon)
+- **[Claude CLI](/docs/claude)** (Default)
+- **[OpenAI Codex](/docs/codex)**
 
 ## Workflow
 

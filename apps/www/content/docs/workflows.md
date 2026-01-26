@@ -34,7 +34,7 @@ graph TD
 
 The `AgentWorker` is the autonomous entity that actually performs the work. Each worker is an isolated process that runs through the following cycle:
 
-1.  **Initialization**: Sets up the `LocusClient`, AI runners (Claude/Anthropic), and necessary services (Indexer, Sprint Planner).
+1.  **Initialization**: Sets up the `LocusClient`, AI runners (Claude/Codex), and necessary services (Indexer, Sprint Planner).
 2.  **Planning**: If a new sprint is detected, the worker may trigger a "Sprint Planning" phase to generate a mindmap of the tasks.
 3.  **Execution Loop**:
     *   **Claim Task**: Requests a task from the orchestrator/API.

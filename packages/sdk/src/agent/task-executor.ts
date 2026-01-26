@@ -1,14 +1,14 @@
 import type { Task } from "@locusai/shared";
-import type { AnthropicClient } from "../ai/anthropic-client.js";
-import type { ClaudeRunner } from "../ai/claude-runner.js";
+import { LogFn } from "src/ai/factory.js";
+import type { AiRunner } from "../ai/runner.js";
 import { PromptBuilder } from "../core/prompt-builder.js";
 
 export interface TaskExecutorDeps {
-  anthropicClient: AnthropicClient | null;
-  claudeRunner: ClaudeRunner;
+  aiRunner: AiRunner;
   projectPath: string;
   sprintPlan: string | null;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  skipPlanning?: boolean;
+  log: LogFn;
 }
 
 /**
@@ -34,49 +34,40 @@ export class TaskExecutor {
     }
 
     try {
-      let plan: string = "";
+      let plan: string | null = null;
 
-      if (this.deps.anthropicClient) {
-        // Phase 1: Planning (using Anthropic SDK with caching)
-        this.deps.log("Phase 1: Planning (Anthropic SDK)...", "info");
-
-        // Build cacheable context blocks
-        const cacheableContext: string[] = [basePrompt];
-
-        plan = await this.deps.anthropicClient.run({
-          systemPrompt:
-            "You are an expert software engineer. Analyze the task carefully and create a detailed implementation plan.",
-          cacheableContext,
-          userPrompt:
-            "## Phase 1: Planning\nAnalyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.",
-        });
+      if (this.deps.skipPlanning) {
+        this.deps.log("Skipping Phase 1: Planning (CLI)...", "info");
       } else {
-        this.deps.log(
-          "Skipping Phase 1: Planning (No Anthropic API Key)...",
-          "info"
-        );
+        this.deps.log("Phase 1: Planning (CLI)...", "info");
+        const planningPrompt = `${basePrompt}
+
+## Phase 1: Planning
+Analyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
+
+        plan = await this.deps.aiRunner.run(planningPrompt, true);
       }
 
-      // Phase 2: Execution (always using Claude CLI for agentic tools)
+      // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");
 
       let executionPrompt = basePrompt;
-      if (plan) {
+      if (plan != null) {
         executionPrompt += `\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}`;
       } else {
         executionPrompt += `\n\n## Execution\nExecute the task directly.`;
       }
 
       executionPrompt += `\n\nWhen finished, output: <promise>COMPLETE</promise>`;
-      const output = await this.deps.claudeRunner.run(executionPrompt);
+      const output = await this.deps.aiRunner.run(executionPrompt);
 
       const success = output.includes("<promise>COMPLETE</promise>");
 
       return {
         success,
         summary: success
-          ? "Task completed by Claude"
-          : "Claude did not signal completion",
+          ? "Task completed by the agent"
+          : "The agent did not signal completion",
       };
     } catch (error) {
       return { success: false, summary: `Error: ${error}` };

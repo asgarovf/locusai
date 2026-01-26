@@ -42,6 +42,8 @@ locus index [options]
 
 **Options:**
 - `--dir <path>`: Specify the directory to index (defaults to current directory).
+- `--provider <name>`: AI provider to use (`claude` or `codex`, default `claude`).
+- `--model <name>`: Model override for the chosen provider.
 
 **What it does:**
 - Scans your project files.
@@ -66,15 +68,16 @@ locus run [options]
 - `--api-key <key>`: (Required) Your Locus API key.
 - `--workspace <id>`: (Required) Your Locus Workspace ID.
 - `--sprint <id>`: (Optional) Limit work to a specific sprint.
-- `--model <name>`: (Optional) AI model to use (defaults to `sonnet`).
-- `--anthropic-api-key <key>`: (Optional) Direct Anthropic API key for planning (skips some limits).
+- `--provider <name>`: (Optional) AI provider to use (`claude` or `codex`, default `claude`).
+- `--model <name>`: (Optional) AI model to use (defaults to `sonnet` for `claude`).
+- `--skip-planning`: (Optional) Skip the planning phase.
 - `--api-url <url>`: (Optional) Custom API endpoint.
 
 **Environment Variables:**
 Instead of flags, you can set:
 - `LOCUS_API_KEY`
 - `LOCUS_WORKSPACE_ID`
-- `ANTHROPIC_API_KEY`
+- `LOCUS_AI_PROVIDER` (`claude` or `codex`)
 
 **What it does:**
 - Connects to the Locus Cloud to fetch tasks.

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { LocusClient } from "./index.js";
+import type { AiProvider } from "./ai/runner.js";
 import { c } from "./utils/colors.js";
 
 export interface AgentConfig {
@@ -29,8 +30,9 @@ export interface OrchestratorConfig {
   maxIterations: number;
   projectPath: string;
   apiKey: string;
-  anthropicApiKey?: string;
   model?: string;
+  provider?: AiProvider;
+  skipPlanning?: boolean;
 }
 
 export class AgentOrchestrator extends EventEmitter {
@@ -205,14 +207,18 @@ export class AgentOrchestrator extends EventEmitter {
       this.config.projectPath,
     ];
 
-    // Add anthropic API key if provided
-    if (this.config.anthropicApiKey) {
-      workerArgs.push("--anthropic-api-key", this.config.anthropicApiKey);
-    }
-
     // Add model if specified
     if (this.config.model) {
       workerArgs.push("--model", this.config.model);
+    }
+
+    // Add provider if specified
+    if (this.config.provider) {
+      workerArgs.push("--provider", this.config.provider);
+    }
+
+    if (this.config.skipPlanning) {
+      workerArgs.push("--skip-planning");
     }
 
     // Add sprint ID if resolved

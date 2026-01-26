@@ -1,12 +1,11 @@
-import type { AnthropicClient } from "../ai/anthropic-client.js";
-import type { ClaudeRunner } from "../ai/claude-runner.js";
+import { LogFn } from "src/ai/factory.js";
+import type { AiRunner } from "../ai/runner.js";
 import { CodebaseIndexer } from "../core/indexer.js";
 
 export interface CodebaseIndexerServiceDeps {
-  anthropicClient: AnthropicClient | null;
-  claudeRunner: ClaudeRunner;
+  aiRunner: AiRunner;
   projectPath: string;
-  log: (message: string, level?: "info" | "success" | "warn" | "error") => void;
+  log: LogFn;
 }
 
 /**
@@ -40,19 +39,7 @@ ${tree}
 
 Return ONLY valid JSON, no markdown formatting.`;
 
-          let response: string;
-
-          if (this.deps.anthropicClient) {
-            // Use Anthropic SDK with caching for faster indexing
-            response = await this.deps.anthropicClient.run({
-              systemPrompt:
-                "You are a codebase analysis expert specialized in extracting structure and symbols from file trees.",
-              userPrompt: prompt,
-            });
-          } else {
-            // Fallback to Claude CLI
-            response = await this.deps.claudeRunner.run(prompt, true);
-          }
+          const response = await this.deps.aiRunner.run(prompt, true);
 
           // Extract JSON from response (handle markdown code blocks)
           const jsonMatch = response.match(/\{[\s\S]*\}/);

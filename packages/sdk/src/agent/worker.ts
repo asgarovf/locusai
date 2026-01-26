@@ -1,12 +1,28 @@
-import { Sprint, Task, TaskStatus } from "@locusai/shared";
-import { AnthropicClient } from "../ai/anthropic-client.js";
-import { ClaudeRunner } from "../ai/claude-runner.js";
+import type { Sprint, Task } from "@locusai/shared";
+import { TaskStatus } from "@locusai/shared";
+import { createAiRunner } from "../ai/factory.js";
+import type { AiProvider, AiRunner } from "../ai/runner.js";
+import { PROVIDERS } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
 import { ArtifactSyncer } from "./artifact-syncer.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
 import { SprintPlanner } from "./sprint-planner.js";
 import { TaskExecutor } from "./task-executor.js";
+
+function resolveProvider(value: string | undefined): AiProvider {
+  if (!value || value.startsWith("--")) {
+    console.warn(
+      "Warning: --provider requires a value. Falling back to 'claude'."
+    );
+    return PROVIDERS.CLAUDE;
+  }
+  if (value === PROVIDERS.CLAUDE || value === PROVIDERS.CODEX) return value;
+  console.warn(
+    `Warning: invalid --provider value '${value}'. Falling back to 'claude'.`
+  );
+  return PROVIDERS.CLAUDE;
+}
 
 export interface WorkerConfig {
   agentId: string;
@@ -15,8 +31,9 @@ export interface WorkerConfig {
   apiBase: string;
   projectPath: string;
   apiKey: string;
-  anthropicApiKey?: string;
   model?: string;
+  provider?: AiProvider;
+  skipPlanning?: boolean;
 }
 
 /**
@@ -25,8 +42,7 @@ export interface WorkerConfig {
  */
 export class AgentWorker {
   private client: LocusClient;
-  private claudeRunner: ClaudeRunner;
-  private anthropicClient: AnthropicClient | null;
+  private aiRunner: AiRunner;
 
   // Services
   private sprintPlanner: SprintPlanner;
@@ -36,7 +52,7 @@ export class AgentWorker {
 
   // State
   private consecutiveEmpty = 0;
-  private maxEmpty = 10;
+  private maxEmpty = 5;
   private maxTasks = 50;
   private tasksCompleted = 0;
   private pollInterval = 10_000;
@@ -57,55 +73,45 @@ export class AgentWorker {
       },
     });
 
-    // Initialize AI clients
-    this.claudeRunner = new ClaudeRunner(projectPath, config.model);
-    this.anthropicClient = config.anthropicApiKey
-      ? new AnthropicClient({
-          apiKey: config.anthropicApiKey,
-          model: config.model,
-        })
-      : null;
+    const log = this.log.bind(this);
 
-    // Initialize services with dependencies
-    const logFn = this.log.bind(this);
+    // Initialize AI clients
+    const provider = config.provider ?? PROVIDERS.CLAUDE;
+    this.aiRunner = createAiRunner(provider, {
+      projectPath,
+      model: config.model,
+      log,
+    });
 
     this.sprintPlanner = new SprintPlanner({
-      anthropicClient: this.anthropicClient,
-      claudeRunner: this.claudeRunner,
-      log: logFn,
+      aiRunner: this.aiRunner,
+      log,
     });
 
     this.indexerService = new CodebaseIndexerService({
-      anthropicClient: this.anthropicClient,
-      claudeRunner: this.claudeRunner,
+      aiRunner: this.aiRunner,
       projectPath,
-      log: logFn,
+      log,
     });
 
     this.artifactSyncer = new ArtifactSyncer({
       client: this.client,
       workspaceId: config.workspaceId,
       projectPath,
-      log: logFn,
+      log,
     });
 
     this.taskExecutor = new TaskExecutor({
-      anthropicClient: this.anthropicClient,
-      claudeRunner: this.claudeRunner,
+      aiRunner: this.aiRunner,
       projectPath,
       sprintPlan: null, // Will be set after sprint planning
-      log: logFn,
+      skipPlanning: config.skipPlanning,
+      log,
     });
 
     // Log initialization
-    if (this.anthropicClient) {
-      this.log(
-        "Using Anthropic SDK with prompt caching for planning phases",
-        "info"
-      );
-    } else {
-      this.log("Using Claude CLI for all phases", "info");
-    }
+    const providerLabel = provider === "codex" ? "Codex" : "Claude";
+    this.log(`Using ${providerLabel} CLI for all phases`, "info");
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
@@ -305,9 +311,13 @@ if (
     else if (arg === "--sprint-id") config.sprintId = args[++i];
     else if (arg === "--api-base") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
-    else if (arg === "--anthropic-api-key") config.anthropicApiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
+    else if (arg === "--provider") {
+      const value = args[i + 1];
+      if (value && !value.startsWith("--")) i++;
+      config.provider = resolveProvider(value);
+    } else if (arg === "--skip-planning") config.skipPlanning = true;
   }
 
   if (

@@ -12,10 +12,6 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
   let apiKey = typeof args?.apiKey === "string" ? args.apiKey : undefined;
   let workspaceId =
     typeof args?.workspaceId === "string" ? args.workspaceId : undefined;
-  let anthropicApiKey =
-    typeof args?.anthropicApiKey === "string"
-      ? args.anthropicApiKey
-      : undefined;
 
   // 2. Try Headers (if passed via SSE/HTTP context)
   if (!apiKey && headers) {
@@ -25,17 +21,11 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
     const rawWorkspace =
       headers["x-workspace-id"] || headers["x-locus-workspace-id"];
     workspaceId = Array.isArray(rawWorkspace) ? rawWorkspace[0] : rawWorkspace;
-
-    const rawAnthropic = headers["x-anthropic-api-key"];
-    anthropicApiKey = Array.isArray(rawAnthropic)
-      ? rawAnthropic[0]
-      : rawAnthropic;
   }
 
   // 3. Fallback to Server Env (if running locally/single-tenant)
   if (!apiKey) apiKey = process.env.LOCUS_API_KEY;
   if (!workspaceId) workspaceId = process.env.LOCUS_WORKSPACE_ID;
-  if (!anthropicApiKey) anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey || !workspaceId) {
     throw new Error(
@@ -44,7 +34,7 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
     );
   }
 
-  return { apiKey, workspaceId, anthropicApiKey };
+  return { apiKey, workspaceId };
 }
 
 export function registerTools(

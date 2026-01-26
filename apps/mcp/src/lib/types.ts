@@ -9,7 +9,6 @@ export interface ClientConfig {
   apiKey: string;
   workspaceId: string;
   apiUrl?: string;
-  anthropicApiKey?: string;
 }
 
 export const AGENT_INSTRUCTIONS = `
