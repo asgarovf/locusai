@@ -2,6 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google"; // Next 15 might use next/font/google or local fonts
 import "./globals.css";
+import { WhelpWidget } from "@/components/layout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -81,6 +82,7 @@ export default function RootLayout({
         {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
         )}
+        <WhelpWidget />
       </body>
     </html>
   );
