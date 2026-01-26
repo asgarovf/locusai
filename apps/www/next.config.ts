@@ -30,9 +30,9 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://widget.whelp.co",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' blob: data: https://www.google-analytics.com",
+              "img-src 'self' blob: data: https://www.google-analytics.com https://*.google.com https://*.whelp.co",
               "font-src 'self'",
               "frame-src 'self' https://www.youtube.com",
               "object-src 'none'",
@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "connect-src 'self' https://*.locusai.dev https://www.google-analytics.com https://analytics.google.com",
+              "connect-src 'self' https://*.locusai.dev https://*.google-analytics.com https://*.google.com https://*.whelp.co",
             ].join("; "),
           },
           {
