@@ -2,6 +2,7 @@ import {
   DemoVideo,
   FeatureGrid,
   Hero,
+  SupportedTools,
   TerminalDemo,
   WorkflowSteps,
 } from "@/components/landing";
@@ -32,6 +33,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 -mt-20 relative z-20 mb-24">
           <TerminalDemo />
         </div>
+        <SupportedTools />
         <DemoVideo />
         <WorkflowSteps />
         <FeatureGrid />
