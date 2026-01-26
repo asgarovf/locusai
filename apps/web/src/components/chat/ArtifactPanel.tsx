@@ -3,9 +3,9 @@
 import {
   Check,
   Copy,
-  ExternalLink,
   FileText,
   Maximize2,
+  Minimize2,
   Terminal,
   X,
 } from "lucide-react";
@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 import { Artifact } from "./types";
 
 interface ArtifactPanelProps {
@@ -27,6 +28,7 @@ export function ArtifactPanel({
   onClose,
 }: ArtifactPanelProps) {
   const [isCopied, setIsCopied] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!isOpen || !artifact) return null;
 
@@ -37,7 +39,12 @@ export function ArtifactPanel({
   };
 
   return (
-    <div className="w-[400px] xl:w-[500px] border-l border-border/50 bg-card/30 backdrop-blur-xl flex flex-col h-full shrink-0 transition-all duration-300">
+    <div
+      className={cn(
+        "border-l border-border/50 bg-card/30 backdrop-blur-xl flex flex-col h-full shrink-0 transition-all duration-300",
+        isExpanded ? "w-[800px] xl:w-[900px]" : "w-[400px] xl:w-[500px]"
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-card/50">
         <div className="flex items-center gap-3 overflow-hidden">
@@ -62,8 +69,9 @@ export function ArtifactPanel({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => setIsExpanded(!isExpanded)}
           >
-            <Maximize2 size={14} />
+            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </Button>
           <Button
             variant="ghost"
@@ -101,13 +109,19 @@ export function ArtifactPanel({
                 fontSize: "13px",
                 lineHeight: "1.5",
               }}
+              codeTagProps={{
+                style: {
+                  backgroundColor: "transparent",
+                },
+              }}
               showLineNumbers
+              wrapLines
             >
               {artifact.content}
             </SyntaxHighlighter>
           </div>
         ) : (
-          <div className="p-6 prose prose-sm dark:prose-invert max-w-none">
+          <div className="p-6 prose prose-sm prose-invert max-w-none">
             {/* Simple Markdown rendering placeholder */}
             <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/80">
               {artifact.content}
@@ -118,13 +132,14 @@ export function ArtifactPanel({
 
       {/* Footer Actions */}
       <div className="p-3 border-t border-border/40 bg-card/50 flex gap-2 justify-end">
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-2">
-          <Copy size={12} />
-          Copy to Clipboard
-        </Button>
-        <Button size="sm" className="h-8 text-xs gap-2">
-          <ExternalLink size={12} />
-          Open in Editor
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-2"
+          onClick={handleCopy}
+        >
+          {isCopied ? <Check size={12} /> : <Copy size={12} />}
+          {isCopied ? "Copied" : "Copy to Clipboard"}
         </Button>
       </div>
     </div>

@@ -1,21 +1,58 @@
-export type Artifact = {
+export type ArtifactType = "code" | "document" | "image";
+
+export interface Artifact {
   id: string;
-  type: "code" | "document" | "image";
+  type: ArtifactType;
   title: string;
   content: string;
   language?: string;
-};
+  metadata?: Record<string, unknown>;
+}
 
-export type Message = {
+export type ReferenceType = "file" | "documentation" | "task";
+
+export interface Reference {
   id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  relatedArtifactId?: string; // ID of the artifact this message is discussing
-};
+  type: ReferenceType;
+  title: string;
+  url?: string;
+  preview?: string;
+}
 
-export type ChatSession = {
+export type Role = "system" | "user" | "assistant";
+
+export interface BaseMessage {
+  id: string;
+  role: Role;
+  timestamp: Date;
+}
+
+export interface SystemMessage extends BaseMessage {
+  role: "system";
+  content: string;
+  level: "info" | "warning" | "error" | "success";
+}
+
+export interface UserMessage extends BaseMessage {
+  role: "user";
+  content: string;
+  attachments?: Artifact[];
+}
+
+export interface AssistantMessage extends BaseMessage {
+  role: "assistant";
+  content: string; // Markdown content
+  thoughtProcess?: string; // Chain of thought/reasoning
+  artifacts?: Artifact[]; // Generated artifacts (code, docs)
+  references?: Reference[]; // Context-used references
+  relatedArtifactId?: string;
+}
+
+export type Message = SystemMessage | UserMessage | AssistantMessage;
+
+export interface ChatSession {
   id: string;
   title: string;
   updatedAt: Date;
-};
+  summary?: string;
+}

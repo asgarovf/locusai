@@ -56,7 +56,7 @@ export function ApiKeyConfirmationModal({
                 variant="secondary"
                 size="sm"
                 onClick={handleCopy}
-                className="flex-shrink-0"
+                className="shrink-0"
               >
                 <Copy size={16} className="mr-1.5" />
                 Copy
@@ -66,7 +66,7 @@ export function ApiKeyConfirmationModal({
         </div>
 
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-          <p className="text-xs text-amber-600 dark:text-amber-400">
+          <p className="text-xs text-amber-400">
             ⚠️ <strong>Important:</strong> Keep this key secure. Never share it
             publicly or commit it to version control.
           </p>

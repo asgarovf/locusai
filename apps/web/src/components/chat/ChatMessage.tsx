@@ -21,6 +21,25 @@ export function ChatMessage({
   isTyping,
 }: ChatMessageProps) {
   const { user } = useAuth();
+
+  // Handle System Messages
+  if (message.role === "system") {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <span
+          className={cn(
+            "text-xs px-3 py-1 rounded-full",
+            message.level === "error"
+              ? "bg-destructive/10 text-destructive"
+              : "bg-muted text-muted-foreground"
+          )}
+        >
+          {message.content}
+        </span>
+      </div>
+    );
+  }
+
   const isUser = message.role === "user";
 
   return (
@@ -87,11 +106,6 @@ export function ChatMessage({
             </div>
           ) : (
             <div className="markdown-content space-y-2">
-              {/* 
-                     We are rendering markdown here. 
-                     For simplicity in this step, we just render children.
-                     In a real app, we'd configure remark-gfm etc.
-                 */}
               {message.content.split("\n").map((line, i) => (
                 <p key={i} className="min-h-[1em]">
                   {line}

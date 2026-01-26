@@ -64,7 +64,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
       <main
         className={cn(
           "flex-1 overflow-auto bg-background",
-          isChatPage ? "p-1" : "p-6"
+          isChatPage ? "p-0" : "p-6"
         )}
       >
         <WorkspaceProtected>{children}</WorkspaceProtected>

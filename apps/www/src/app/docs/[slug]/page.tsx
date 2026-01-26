@@ -28,7 +28,7 @@ export default async function DocPage({
   try {
     const doc = getDocBySlug(slug, ["title", "content"]);
     return (
-      <article className="prose prose-zinc dark:prose-invert max-w-none pb-12">
+      <article className="prose prose-zinc prose-invert max-w-none pb-12">
         <h1 className="mb-8 font-bold text-4xl">{doc.title}</h1>
         <MDXRemote
           source={doc.content}
