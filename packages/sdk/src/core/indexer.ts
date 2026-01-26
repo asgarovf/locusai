@@ -58,7 +58,10 @@ export class CodebaseIndexer {
     const existingHashes = existingIndex?.fileHashes;
     const canIncremental = !force && existingIndex && existingHashes;
 
+
+    
     if (canIncremental) {
+      onProgress?.("Performing incremental update");
       const { added, deleted, modified } = this.diffFiles(
         currentHashes,
         existingHashes
@@ -72,6 +75,7 @@ export class CodebaseIndexer {
       if (existingFileCount === 0) {
         onProgress?.("Empty existing index, performing full reindex");
       } else {
+        onProgress?.("Existing index has files, checking for incremental update");
         const changeRatio = totalChanges / existingFileCount;
 
         if (
