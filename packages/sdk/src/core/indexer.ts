@@ -51,15 +51,12 @@ export class CodebaseIndexer {
     }
 
     // 3. Compute content hashes for all current files
-    onProgress?.("Computing file hashes...");
     const currentHashes = this.computeFileHashes(currentFiles);
 
     // 4. Check if we can do incremental update
     const existingHashes = existingIndex?.fileHashes;
     const canIncremental = !force && existingIndex && existingHashes;
 
-
-    
     if (canIncremental) {
       onProgress?.("Performing incremental update");
       const { added, deleted, modified } = this.diffFiles(
@@ -71,11 +68,11 @@ export class CodebaseIndexer {
       const totalChanges = changedFiles.length + deleted.length;
       const existingFileCount = Object.keys(existingHashes).length;
 
-      // Handle edge case: empty existing index
-      if (existingFileCount === 0) {
-        onProgress?.("Empty existing index, performing full reindex");
-      } else {
-        onProgress?.("Existing index has files, checking for incremental update");
+      onProgress?.(
+        `File changes detected: ${changedFiles.length} changed, ${added.length} added, ${deleted.length} deleted`
+      );
+
+      if (existingFileCount > 0) {
         const changeRatio = totalChanges / existingFileCount;
 
         if (
@@ -83,7 +80,7 @@ export class CodebaseIndexer {
           changedFiles.length > 0
         ) {
           onProgress?.(
-            `Incremental update: ${added.length} added, ${modified.length} modified, ${deleted.length} deleted`
+            `Reindexing ${changedFiles.length} changed files and merging with existing index`
           );
 
           // Analyze changed files FIRST (before mutating index)
@@ -92,9 +89,7 @@ export class CodebaseIndexer {
           );
 
           // Clone to avoid corrupting loaded index if something fails later
-          const updatedIndex: CodebaseIndex = JSON.parse(
-            JSON.stringify(existingIndex)
-          );
+          const updatedIndex = this.cloneIndex(existingIndex);
           this.removeFilesFromIndex(updatedIndex, [...deleted, ...modified]);
 
           // Merge results
@@ -107,34 +102,37 @@ export class CodebaseIndexer {
         }
 
         if (changedFiles.length === 0 && deleted.length > 0) {
-          // Only deletions, no AI call needed
           onProgress?.(`Removing ${deleted.length} deleted files from index`);
-          const updatedIndex: CodebaseIndex = JSON.parse(
-            JSON.stringify(existingIndex)
-          );
+          const updatedIndex = this.cloneIndex(existingIndex);
           this.removeFilesFromIndex(updatedIndex, deleted);
-          updatedIndex.treeHash = newTreeHash;
-          updatedIndex.fileHashes = currentHashes;
-          updatedIndex.lastIndexed = new Date().toISOString();
-          return updatedIndex;
+          return this.applyIndexMetadata(
+            updatedIndex,
+            currentHashes,
+            newTreeHash
+          );
+        }
+
+        if (changedFiles.length === 0 && deleted.length === 0) {
+          onProgress?.("No actual file changes, updating hashes only");
+          const updatedIndex = this.cloneIndex(existingIndex);
+          return this.applyIndexMetadata(
+            updatedIndex,
+            currentHashes,
+            newTreeHash
+          );
         }
 
         // Log why we're falling through to full reindex
-        if (totalChanges > 0) {
-          onProgress?.(
-            `Too many changes (${(changeRatio * 100).toFixed(1)}%), performing full reindex`
-          );
-        }
+        onProgress?.(
+          `Too many changes (${(changeRatio * 100).toFixed(1)}%), performing full reindex`
+        );
       }
     }
 
     // 5. Full reindex
     onProgress?.("AI is analyzing codebase structure...");
     const index = await treeSummarizer(treeString);
-    index.lastIndexed = new Date().toISOString();
-    index.treeHash = newTreeHash;
-    index.fileHashes = currentHashes;
-    return index;
+    return this.applyIndexMetadata(index, currentHashes, newTreeHash);
   }
 
   private async getFileTree(): Promise<string[]> {
@@ -220,6 +218,23 @@ export class CodebaseIndexer {
     writeFileSync(this.indexPath, JSON.stringify(index, null, 2));
   }
 
+  private cloneIndex(index: CodebaseIndex): CodebaseIndex {
+    // Defensive copy to avoid corrupting the loaded index on failure.
+    return JSON.parse(JSON.stringify(index));
+  }
+
+  private applyIndexMetadata(
+    index: CodebaseIndex,
+    fileHashes: Record<string, string>,
+    treeHash: string
+  ): CodebaseIndex {
+    // Keep metadata updates consistent across all code paths.
+    index.lastIndexed = new Date().toISOString();
+    index.treeHash = treeHash;
+    index.fileHashes = fileHashes;
+    return index;
+  }
+
   private hashTree(tree: string): string {
     return createHash("sha256").update(tree).digest("hex");
   }
@@ -298,15 +313,15 @@ export class CodebaseIndexer {
       }
     }
 
-    return {
+    const merged: CodebaseIndex = {
       symbols: mergedSymbols,
       responsibilities: {
         ...existing.responsibilities,
         ...incremental.responsibilities,
       },
-      lastIndexed: new Date().toISOString(),
-      treeHash: newTreeHash,
-      fileHashes: newHashes,
+      lastIndexed: "",
     };
+
+    return this.applyIndexMetadata(merged, newHashes, newTreeHash);
   }
 }
