@@ -19,7 +19,6 @@ export function useOrganizationMembersQuery() {
         ? locusClient.organizations.listMembers(orgId)
         : Promise.resolve([]),
     enabled: !!orgId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
