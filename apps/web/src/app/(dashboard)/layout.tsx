@@ -9,6 +9,7 @@ import { LoadingPage, LoadingSkeleton } from "@/components/ui";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { useWorkspaceIdOptional } from "@/hooks/useWorkspaceId";
 import { queryKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -57,10 +58,17 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
     return null;
   }
 
+  const isChatPage = pathname?.startsWith("/chat");
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {isAuthenticated && <Sidebar />}
-      <main className="flex-1 overflow-auto bg-background p-6">
+      <main
+        className={cn(
+          "flex-1 overflow-auto bg-background",
+          isChatPage ? "p-1" : "p-6"
+        )}
+      >
         <WorkspaceProtected>{children}</WorkspaceProtected>
       </main>
 

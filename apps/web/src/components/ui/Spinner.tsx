@@ -79,11 +79,6 @@ export function LoadingPage() {
 export function LoadingSkeleton() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar Skeleton */}
-      <aside className="w-56 border-r border-border bg-background flex flex-col">
-        <div className="flex-1" />
-      </aside>
-
       {/* Main Content Skeleton */}
       <main className="flex-1 overflow-auto bg-background p-6">
         <div className="flex items-center justify-center h-full">

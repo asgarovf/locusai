@@ -10,6 +10,7 @@ export * from "./useDocsSidebarState";
 export * from "./useFormState";
 export * from "./useGlobalKeydowns";
 export * from "./useInviteForm";
+export * from "./useLocalStorage";
 export * from "./useLoginForm";
 export * from "./useMutationWithToast";
 export * from "./useOrganizationQuery";
