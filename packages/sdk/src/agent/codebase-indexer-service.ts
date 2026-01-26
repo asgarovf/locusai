@@ -18,10 +18,8 @@ export class CodebaseIndexerService {
     this.indexer = new CodebaseIndexer(deps.projectPath);
   }
 
-  async reindex(): Promise<void> {
+  async reindex(force = false): Promise<void> {
     try {
-      this.deps.log("Reindexing codebase...", "info");
-
       const index = await this.indexer.index(
         (msg) => this.deps.log(msg, "info"),
         async (tree: string) => {
@@ -47,8 +45,16 @@ Return ONLY valid JSON, no markdown formatting.`;
             return JSON.parse(jsonMatch[0]);
           }
           return { symbols: {}, responsibilities: {}, lastIndexed: "" };
-        }
+        },
+        force
       );
+
+      // null means no changes detected, skip was successful
+      if (index === null) {
+        this.deps.log("No changes detected, skipping reindex", "info");
+        return;
+      }
+
       this.indexer.saveIndex(index);
       this.deps.log("Codebase reindexed successfully", "success");
     } catch (error) {
