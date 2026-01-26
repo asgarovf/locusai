@@ -106,8 +106,8 @@ export function TerminalDemo() {
   }, []);
 
   return (
-    <div className="rounded-xl border border-border bg-black/95 shadow-2xl overflow-hidden font-mono text-xs md:text-sm leading-relaxed w-full max-w-[95vw] md:max-w-2xl mx-auto backdrop-blur-sm">
-      <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 border-b border-border/20 bg-muted/10">
+    <div className="rounded-xl border border-border bg-black/95 shadow-2xl overflow-hidden font-mono text-xs md:text-sm leading-relaxed w-full max-w-[95vw] md:max-w-2xl mx-auto backdrop-blur-sm h-[340px] md:h-[380px] flex flex-col relative translate-z-0">
+      <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 border-b border-border/20 bg-muted/10 shrink-0 z-10 relative">
         <div className="flex gap-1.5">
           <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/50" />
           <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-500/50" />
@@ -118,24 +118,28 @@ export function TerminalDemo() {
           locus-cli — agent-worker
         </div>
       </div>
-      <div className="p-3 md:p-6 h-[280px] md:h-[320px] flex flex-col justify-end overflow-x-auto">
-        {steps.slice(0, activeStep + 1).map((step, i) => (
+      <div className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-x-0 bottom-0 p-3 md:p-6 flex flex-col justify-end overflow-x-auto">
+          {steps.slice(0, activeStep + 1).map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+              className={cn("mb-1 whitespace-nowrap", step.color)}
+            >
+              {i === 0 && (
+                <span className="opacity-50 mr-2 select-none">$</span>
+              )}
+              {step.text}
+            </motion.div>
+          ))}
           <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-            className={cn("mb-1 whitespace-nowrap", step.color)}
-          >
-            {i === 0 && <span className="opacity-50 mr-2 select-none">$</span>}
-            {step.text}
-          </motion.div>
-        ))}
-        <motion.div
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ repeat: Infinity, duration: 0.8 }}
-          className="w-1.5 h-3 md:w-2 md:h-4 bg-primary mt-1"
-        />
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ repeat: Infinity, duration: 0.8 }}
+            className="w-1.5 h-3 md:w-2 md:h-4 bg-primary mt-1 shrink-0"
+          />
+        </div>
       </div>
     </div>
   );
