@@ -157,9 +157,7 @@ async function indexCommand(args: string[]) {
   requireInitialization(projectPath, "index");
   new ConfigManager(projectPath).updateVersion(VERSION);
 
-  const provider = resolveProvider(
-    (values.provider as string) || process.env.LOCUS_AI_PROVIDER
-  );
+  const provider = resolveProvider(values.provider as string);
   const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {

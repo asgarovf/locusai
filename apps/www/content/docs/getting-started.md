@@ -65,7 +65,7 @@ The agent will:
 5. Push changes and report status back to the cloud.
 
 <Tip>
-Use `--provider codex` or set `LOCUS_AI_PROVIDER=codex` to run with Codex instead of Claude.
+Use `--provider codex` to run with Codex instead of Claude.
 </Tip>
 
 ## Detailed Documentation
