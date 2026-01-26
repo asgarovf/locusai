@@ -37,7 +37,7 @@ export class EmailService {
     }
 
     await this.resend.emails.send({
-      from: "Locus <noreply@locusai.dev>",
+      from: "Locus <noreply@locusai.team>",
       to: email,
       subject: emailContent.subject,
       html: emailContent.html,
@@ -57,7 +57,7 @@ export class EmailService {
     }
 
     await this.resend.emails.send({
-      from: "Locus <noreply@locusai.dev>",
+      from: "Locus <noreply@locusai.team>",
       to: email,
       subject: emailContent.subject,
       html: emailContent.html,
@@ -77,7 +77,7 @@ export class EmailService {
     }
 
     await this.resend.emails.send({
-      from: "Locus <noreply@locusai.dev>",
+      from: "Locus <noreply@locusai.team>",
       to: email,
       subject: emailContent.subject,
       html: emailContent.html,
