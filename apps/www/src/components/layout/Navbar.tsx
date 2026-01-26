@@ -2,7 +2,11 @@ import { Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Search } from "@/components/docs";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { Button } from "@/components/ui";
+import { getAllDocs } from "@/lib/docs";
+
+const docs = getAllDocs(["title", "slug"]);
 
 export function Navbar() {
   return (
@@ -17,7 +21,7 @@ export function Navbar() {
 
         {/* Center: Search */}
         <div className="flex-1 md:flex-none flex justify-center w-full md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto px-4 md:px-0">
-          <Search />
+          <Search docs={docs} />
         </div>
 
         {/* Right: Nav */}
@@ -47,6 +51,7 @@ export function Navbar() {
             </Link>
           </nav>
         </div>
+        <MobileNav />
       </div>
     </header>
   );

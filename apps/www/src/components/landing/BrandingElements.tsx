@@ -27,7 +27,7 @@ export function BrandingElements() {
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
       {/* Large Floating Cube - Left */}
       <motion.div
-        className="absolute -left-20 top-20 text-foreground/5"
+        className="absolute -left-10 top-10 md:-left-20 md:top-20 text-foreground/5"
         initial={{ opacity: 0, x: -100 }}
         animate={{ opacity: 1, x: 0, rotate: 360 }}
         transition={{
@@ -36,12 +36,12 @@ export function BrandingElements() {
           rotate: { duration: 120, repeat: Infinity, ease: "linear" },
         }}
       >
-        <WireframeCube className="w-96 h-96" />
+        <WireframeCube className="w-48 h-48 md:w-96 md:h-96" />
       </motion.div>
 
       {/* Large Floating Cube - Right */}
       <motion.div
-        className="absolute -right-20 bottom-20 text-foreground/5"
+        className="absolute -right-10 bottom-10 md:-right-20 md:bottom-20 text-foreground/5"
         initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0, rotate: -360 }}
         transition={{
@@ -50,7 +50,7 @@ export function BrandingElements() {
           rotate: { duration: 150, repeat: Infinity, ease: "linear" },
         }}
       >
-        <WireframeCube className="w-[500px] h-[500px]" />
+        <WireframeCube className="w-64 h-64 md:w-[500px] md:h-[500px]" />
       </motion.div>
 
       {/* subtle grid overlay */}

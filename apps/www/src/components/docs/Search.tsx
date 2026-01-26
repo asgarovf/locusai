@@ -1,12 +1,17 @@
 "use client";
 
 import { Command } from "cmdk";
-import { BookOpen, Code, SearchIcon, Settings } from "lucide-react";
+import { FileText, SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { getAllDocs } from "@/lib/docs";
 
-export function Search() {
+interface SearchProps {
+  docs?: ReturnType<typeof getAllDocs>;
+}
+
+export function Search({ docs = [] }: SearchProps) {
   const [open, setOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   const router = useRouter();
@@ -34,7 +39,7 @@ export function Search() {
 
   const modalContent = open ? (
     <div
-      className="fixed inset-0 z-9999 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-9999 flex items-center justify-center bg-background/80 backdrop-blur-sm"
       onClick={() => setOpen(false)}
       onKeyDown={(e) => {
         if (e.key === "Escape") setOpen(false);
@@ -46,92 +51,50 @@ export function Search() {
         className="w-full max-w-lg mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <Command className="rounded-xl border border-white/10 bg-zinc-900 shadow-2xl overflow-hidden">
-          <div className="flex items-center border-b border-white/10 px-4">
-            <SearchIcon className="mr-3 h-5 w-5 shrink-0 text-white/50" />
+        <Command className="rounded-xl border border-border bg-popover shadow-2xl overflow-hidden">
+          <div className="flex items-center border-b border-border px-4">
+            <SearchIcon className="mr-3 h-5 w-5 shrink-0 text-muted-foreground" />
             <Command.Input
               placeholder="Type a command or search..."
-              className="flex h-14 w-full bg-transparent py-3 text-base text-white outline-none placeholder:text-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-14 w-full bg-transparent py-3 text-base text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               autoFocus
             />
           </div>
           <Command.List className="max-h-[320px] overflow-y-auto overflow-x-hidden p-2">
-            <Command.Empty className="py-8 text-center text-sm text-white/50">
+            <Command.Empty className="py-8 text-center text-sm text-muted-foreground">
               No results found.
             </Command.Empty>
 
             <Command.Group
               heading="Documentation"
-              className="text-white/40 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider"
+              className="text-muted-foreground px-2 py-2 text-xs font-semibold uppercase tracking-wider"
             >
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/getting-started"))
-                }
-              >
-                <BookOpen className="mr-3 h-4 w-4 text-blue-400" />
-                <span>Getting Started</span>
-              </Command.Item>
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/initialization"))
-                }
-              >
-                <Settings className="mr-3 h-4 w-4 text-cyan-400" />
-                <span>Initialization</span>
-              </Command.Item>
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/architecture"))
-                }
-              >
-                <Settings className="mr-3 h-4 w-4 text-purple-400" />
-                <span>Architecture</span>
-              </Command.Item>
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/mcp-configuration"))
-                }
-              >
-                <Code className="mr-3 h-4 w-4 text-yellow-400" />
-                <span>MCP Configuration</span>
-              </Command.Item>
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/mcp-tools"))
-                }
-              >
-                <Code className="mr-3 h-4 w-4 text-pink-400" />
-                <span>MCP Tools Reference</span>
-              </Command.Item>
-              <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
-                onSelect={() =>
-                  runCommand(() => router.push("/docs/contributing"))
-                }
-              >
-                <Code className="mr-3 h-4 w-4 text-emerald-400" />
-                <span>Contributing</span>
-              </Command.Item>
+              {docs.map((doc) => (
+                <Command.Item
+                  key={doc.slug}
+                  className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 my-1 text-sm text-foreground outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                  onSelect={() =>
+                    runCommand(() => router.push(`/docs/${doc.slug}`))
+                  }
+                >
+                  <FileText className="mr-3 h-4 w-4 text-foreground/70" />
+                  <span>{doc.title}</span>
+                </Command.Item>
+              ))}
             </Command.Group>
             <Command.Group
               heading="Links"
-              className="text-white/40 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider mt-2"
+              className="text-muted-foreground px-2 py-2 text-xs font-semibold uppercase tracking-wider mt-2"
             >
               <Command.Item
-                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm text-white/80 outline-none aria-selected:bg-white/10 aria-selected:text-white data-disabled:pointer-events-none data-disabled:opacity-50"
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-3 py-3 my-1 text-sm text-foreground outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
                 onSelect={() =>
                   runCommand(() =>
                     window.open("https://github.com/asgarovf/locusai", "_blank")
                   )
                 }
               >
-                <GithubIcon className="mr-3 h-4 w-4 text-orange-400" />
+                <GithubIcon className="mr-3 h-4 w-4 text-foreground/70" />
                 <span>GitHub Repository</span>
               </Command.Item>
             </Command.Group>
