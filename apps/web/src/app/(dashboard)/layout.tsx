@@ -3,11 +3,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Sidebar, WorkspaceProtected } from "@/components";
-import { TaskPanel } from "@/components/TaskPanel";
+import { Sidebar, TaskPanel, WorkspaceProtected } from "@/components";
 import { LoadingPage, LoadingSkeleton } from "@/components/ui";
-import { useDashboardLayout } from "@/hooks/useDashboardLayout";
-import { useWorkspaceIdOptional } from "@/hooks/useWorkspaceId";
+import { useDashboardLayout, useWorkspaceIdOptional } from "@/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
