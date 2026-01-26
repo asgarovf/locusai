@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.5.0
+
+### Minor Changes
+
+- Codex support
+
 ## 0.4.16
 
 ### Patch Changes
