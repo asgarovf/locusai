@@ -5,57 +5,34 @@
 
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Key } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui";
-import { useAuthenticatedUserWithOrg, useWorkspaceIdOptional } from "@/hooks";
+import {
+  useApiKeysQuery,
+  useAuthenticatedUserWithOrg,
+  useWorkspaceIdOptional,
+} from "@/hooks";
 import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { ApiKeyConfirmationModal } from "./ApiKeyConfirmationModal";
 import { CreateApiKeyModal } from "./ApiKeyCreatedModal";
 import { ApiKeysList } from "./ApiKeysList";
 import { ProjectSetupGuide } from "./ProjectSetupGuide";
 import { SettingSection } from "./SettingSection";
 
-interface ApiKey {
-  id: string;
-  name: string;
-  key: string;
-  createdAt: Date | string;
-  lastUsedAt: Date | string | null;
-  active: boolean;
-}
-
 export function ApiKeysSettings() {
   const { orgId } = useAuthenticatedUserWithOrg();
   const workspaceId = useWorkspaceIdOptional();
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: apiKeys = [], isLoading } = useApiKeysQuery();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-
-  // Fetch API keys
-  const fetchApiKeys = useCallback(async () => {
-    if (!orgId) return;
-
-    setIsLoading(true);
-    try {
-      const keys = await locusClient.organizations.listApiKeys(orgId);
-      setApiKeys(keys);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to fetch API keys"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [orgId]);
-
-  useEffect(() => {
-    fetchApiKeys();
-  }, [fetchApiKeys]);
 
   const handleCreateApiKey = async (name: string) => {
     if (!orgId) return;
@@ -70,8 +47,10 @@ export function ApiKeysSettings() {
       setIsConfirmationModalOpen(true);
       setIsCreateModalOpen(false);
 
-      // Add to list
-      setApiKeys([...apiKeys, response]);
+      // Invalidate cache
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.organizations.apiKeys(orgId),
+      });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create API key"
@@ -84,7 +63,9 @@ export function ApiKeysSettings() {
 
     try {
       await locusClient.organizations.deleteApiKey(orgId, id);
-      setApiKeys(apiKeys.filter((key) => key.id !== id));
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.organizations.apiKeys(orgId),
+      });
       toast.success("API key deleted");
     } catch (error) {
       toast.error(

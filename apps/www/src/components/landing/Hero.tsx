@@ -55,7 +55,7 @@ export function Hero({ version }: HeroProps) {
           className="flex flex-col sm:flex-row gap-4 w-full max-w-md items-center justify-center mb-12"
         >
           <CopyCommand
-            value="npx @locusai/cli init"
+            value="locus init"
             className="w-full sm:w-auto min-w-[300px]"
           />
         </motion.div>

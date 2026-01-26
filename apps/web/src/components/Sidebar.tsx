@@ -138,7 +138,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-border/50 bg-card/30 backdrop-blur-xl h-full transition-all duration-300 ease-in-out",
+        "flex flex-col border-r border-border/50 bg-card/30 backdrop-blur-xl h-full transition-all duration-300 ease-in-out z-50",
         isCollapsed ? "w-[70px]" : "w-[260px]"
       )}
     >
@@ -214,7 +214,7 @@ export function Sidebar() {
         {isWorkspaceOpen && (
           <div
             className={cn(
-              "mt-2 bg-secondary/30 rounded-xl border border-border/30 animate-in fade-in slide-in-from-top-2 duration-200 z-50",
+              "mt-2 bg-secondary/30 rounded-xl border border-border/30 animate-in fade-in slide-in-from-top-2 duration-200 z-9999",
               isCollapsed
                 ? "absolute left-20 top-20 w-[200px] shadow-xl p-2 bg-card"
                 : "p-2 relative"
@@ -404,7 +404,7 @@ export function Sidebar() {
           {isUserMenuOpen && (
             <div
               className={cn(
-                "absolute bottom-full mb-2 bg-popover rounded-xl border border-border shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 z-50",
+                "absolute bottom-full mb-2 bg-popover rounded-xl border border-border shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 z-9999",
                 isCollapsed ? "left-14 w-48" : "left-0 right-0 p-2"
               )}
             >

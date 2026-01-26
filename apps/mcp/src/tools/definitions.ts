@@ -23,10 +23,6 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
     workspaceId = Array.isArray(rawWorkspace) ? rawWorkspace[0] : rawWorkspace;
   }
 
-  // 3. Fallback to Server Env (if running locally/single-tenant)
-  if (!apiKey) apiKey = process.env.LOCUS_API_KEY;
-  if (!workspaceId) workspaceId = process.env.LOCUS_WORKSPACE_ID;
-
   if (!apiKey || !workspaceId) {
     throw new Error(
       "Missing configuration: apiKey and workspaceId are required. " +

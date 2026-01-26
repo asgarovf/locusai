@@ -19,6 +19,7 @@ export function useOrganizationMembersQuery() {
         ? locusClient.organizations.listMembers(orgId)
         : Promise.resolve([]),
     enabled: !!orgId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -50,6 +51,23 @@ export function useOrganizationQuery() {
       orgId
         ? locusClient.organizations.getById(orgId)
         : Promise.reject("No orgId"),
+    enabled: !!orgId,
+  });
+}
+
+/**
+ * API Keys Query Hook
+ */
+export function useApiKeysQuery() {
+  const { user } = useAuth();
+  const orgId = user?.orgId;
+
+  return useQuery({
+    queryKey: orgId ? queryKeys.organizations.apiKeys(orgId) : [],
+    queryFn: () =>
+      orgId
+        ? locusClient.organizations.listApiKeys(orgId)
+        : Promise.resolve([]),
     enabled: !!orgId,
   });
 }

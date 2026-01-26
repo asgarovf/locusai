@@ -21,3 +21,4 @@ export * from "./useTasksQuery";
 export * from "./useTeamManagement";
 export * from "./useWorkspaceCreateForm";
 export * from "./useWorkspaceId";
+export * from "./useWorkspaceQuery";

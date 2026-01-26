@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clipboard, Terminal } from "lucide-react";
+import { Check, Clipboard } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui";
@@ -47,7 +47,7 @@ export function ProjectSetupGuide({
       description:
         "Run this command in your project root to set up Locus configuration and CLAUDE.md.",
       status: "action",
-      command: "npx @locusai/cli init",
+      command: "locus init",
     },
     {
       id: "run",
@@ -129,18 +129,6 @@ export function ProjectSetupGuide({
             </div>
           </div>
         ))}
-
-        <div className="pt-4 flex items-center gap-3 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
-          <Terminal size={18} className="text-primary" />
-          <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Pro tip:</span> You
-            can also set{" "}
-            <code className="bg-secondary px-1 rounded text-foreground">
-              LOCUS_API_KEY
-            </code>{" "}
-            environment variable to avoid passing it via flags.
-          </p>
-        </div>
       </div>
     </SettingSection>
   );

@@ -73,11 +73,6 @@ locus run [options]
 - `--skip-planning`: (Optional) Skip the planning phase.
 - `--api-url <url>`: (Optional) Custom API endpoint.
 
-**Environment Variables:**
-Instead of flags, you can set:
-- `LOCUS_API_KEY`
-- `LOCUS_WORKSPACE_ID`
-- `LOCUS_AI_PROVIDER` (`claude` or `codex`)
 
 **What it does:**
 - Connects to the Locus Cloud to fetch tasks.

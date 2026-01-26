@@ -1,37 +1,30 @@
 "use client";
 
 import { ChecklistItem } from "@locusai/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
-import { useWorkspaceIdOptional } from "@/hooks";
+import { useWorkspaceIdOptional, useWorkspaceQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { SettingSection } from "./SettingSection";
 
 export function WorkspaceChecklistSettings() {
   const workspaceId = useWorkspaceIdOptional();
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: workspace, isLoading: isWorkspaceLoading } =
+    useWorkspaceQuery();
+
   const [newItemText, setNewItemText] = useState("");
 
   useEffect(() => {
-    if (!workspaceId) return;
-
-    const fetchWorkspace = async () => {
-      setIsLoading(true);
-      try {
-        const workspace = await locusClient.workspaces.getById(workspaceId);
-        setChecklist(workspace.defaultChecklist || []);
-      } catch (_error) {
-        toast.error("Failed to fetch workspace settings");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWorkspace();
-  }, [workspaceId]);
+    if (workspace?.defaultChecklist) {
+      setChecklist(workspace.defaultChecklist);
+    }
+  }, [workspace]);
 
   const handleSave = async (updatedChecklist: ChecklistItem[]) => {
     if (!workspaceId) return;
@@ -39,6 +32,10 @@ export function WorkspaceChecklistSettings() {
     try {
       await locusClient.workspaces.update(workspaceId, {
         defaultChecklist: updatedChecklist,
+      });
+      // Update cache
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.detail(workspaceId),
       });
       toast.success("Default checklist updated");
     } catch (_error) {
@@ -78,7 +75,7 @@ export function WorkspaceChecklistSettings() {
     handleSave(checklist);
   };
 
-  if (isLoading) {
+  if (isWorkspaceLoading) {
     return (
       <SettingSection title="Acceptance Checklist">
         <div className="p-8 text-center text-muted-foreground animate-pulse">

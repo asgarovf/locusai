@@ -82,6 +82,8 @@ export const queryKeys = {
       [...queryKeys.organizations.all(), "detail", id] as const,
     members: (id: string) =>
       [...queryKeys.organizations.all(), "members", id] as const,
+    apiKeys: (id: string) =>
+      [...queryKeys.organizations.all(), "api-keys", id] as const,
   },
   invitations: {
     all: () => ["invitations"] as const,

@@ -97,11 +97,9 @@ async function runCommand(args: string[]) {
   requireInitialization(projectPath, "run");
   new ConfigManager(projectPath).updateVersion(VERSION);
 
-  const apiKey = values["api-key"] || process.env.LOCUS_API_KEY;
-  const workspaceId = values.workspace || process.env.LOCUS_WORKSPACE_ID;
-  const provider = resolveProvider(
-    (values.provider as string) || process.env.LOCUS_AI_PROVIDER
-  );
+  const apiKey = values["api-key"];
+  const workspaceId = values.workspace;
+  const provider = resolveProvider(values.provider as string);
   const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
 
   if (!apiKey || !workspaceId) {
@@ -246,11 +244,6 @@ Examples:
   locus init
   locus index
   locus run --api-key YOUR_KEY --workspace WORKSPACE_ID
-
-Environment Variables:
-  LOCUS_API_KEY         API key for authentication
-  LOCUS_WORKSPACE_ID    Workspace ID
-  LOCUS_AI_PROVIDER     AI provider: claude or codex
 
 For more information, visit: https://locusai.dev/docs
 `);

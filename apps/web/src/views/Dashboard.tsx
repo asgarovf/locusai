@@ -3,10 +3,13 @@
 import { type Event as WorkspaceEvent } from "@locusai/shared";
 import { CheckCircle2, Clock, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { PageLayout } from "@/components/PageLayout";
+import { PageLayout } from "@/components";
+import {
+  ActivityFeed,
+  QuickActions,
+  StatCard,
+  WorkspaceSetup,
+} from "@/components/dashboard";
 import { LoadingPage } from "@/components/ui";
 import { useAuthenticatedUser } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
@@ -72,6 +75,9 @@ export function Dashboard() {
   return (
     <PageLayout title={welcomeTitle} description={welcomeDesc}>
       <div className="max-w-7xl mx-auto space-y-8 pt-4">
+        {/* Workspace Quick Info & Setup */}
+        {user?.workspaceId && <WorkspaceSetup workspaceId={user.workspaceId} />}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard

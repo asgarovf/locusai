@@ -65,10 +65,6 @@ The agent will:
 5. Push changes and report status back to the cloud.
 
 <Tip>
-You can set `LOCUS_API_KEY` and `LOCUS_WORKSPACE_ID` as environment variables to avoid typing them every time.
-</Tip>
-
-<Tip>
 Use `--provider codex` or set `LOCUS_AI_PROVIDER=codex` to run with Codex instead of Claude.
 </Tip>
 
