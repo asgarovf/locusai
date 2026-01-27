@@ -37,7 +37,7 @@ export class LocusService {
   async updateSprintMindmap(sprintId: string, mindmap: string): Promise<void> {
     await this.client.sprints.update(sprintId, this.workspaceId, {
       mindmap,
-      mindmapUpdatedAt: new Date(),
+      mindmapUpdatedAt: Date.now(),
     });
   }
 

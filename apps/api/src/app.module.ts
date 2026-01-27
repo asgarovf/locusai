@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
 import { JwtOrApiKeyGuard, MembershipRolesGuard } from "./auth/guards";
 import { CiModule } from "./ci/ci.module";
@@ -55,6 +56,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     InvitationsModule,
     DocsModule,
     CiModule,
+    AiModule,
   ],
   providers: [
     {

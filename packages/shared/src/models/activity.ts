@@ -3,7 +3,7 @@ import { BaseEntitySchema } from "../common";
 import { EventType, SprintStatus, TaskStatus } from "../enums";
 
 export const CommentSchema = BaseEntitySchema.extend({
-  taskId: z.string().uuid(),
+  taskId: z.uuid(),
   author: z.string().min(1),
   text: z.string().min(1),
 });
@@ -11,7 +11,7 @@ export const CommentSchema = BaseEntitySchema.extend({
 export type Comment = z.infer<typeof CommentSchema>;
 
 export const ArtifactSchema = BaseEntitySchema.extend({
-  taskId: z.string().uuid(),
+  taskId: z.uuid(),
   type: z.string().min(1),
   title: z.string().min(1),
   contentText: z.string().optional(),
@@ -37,8 +37,8 @@ export const TaskDeletedPayloadSchema = z.object({
 
 export const StatusChangedPayloadSchema = z.object({
   title: z.string(),
-  oldStatus: z.nativeEnum(TaskStatus),
-  newStatus: z.nativeEnum(TaskStatus),
+  oldStatus: z.enum(TaskStatus),
+  newStatus: z.enum(TaskStatus),
 });
 
 export const CommentAddedPayloadSchema = z.object({
@@ -62,14 +62,14 @@ export const MemberInvitedPayloadSchema = z.object({
 
 export const SprintCreatedPayloadSchema = z.object({
   name: z.string(),
-  sprintId: z.string().uuid(),
+  sprintId: z.uuid(),
 });
 
 export const SprintStatusChangedPayloadSchema = z.object({
   name: z.string(),
-  sprintId: z.string().uuid(),
-  oldStatus: z.nativeEnum(SprintStatus),
-  newStatus: z.nativeEnum(SprintStatus),
+  sprintId: z.uuid(),
+  oldStatus: z.enum(SprintStatus),
+  newStatus: z.enum(SprintStatus),
 });
 
 export const ChecklistInitializedPayloadSchema = z.object({
@@ -138,9 +138,9 @@ export type EventPayload = z.infer<typeof EventPayloadSchema>;
 export const EventSchema = z.object({
   id: z.string(),
   workspaceId: z.string(),
-  taskId: z.string().uuid().optional().nullable(),
+  taskId: z.uuid().optional().nullable(),
   userId: z.string().optional().nullable(),
-  type: z.nativeEnum(EventType),
+  type: z.enum(EventType),
   payload: z.record(z.string(), z.unknown()),
   createdAt: z.union([z.date(), z.number()]),
 });
@@ -212,7 +212,7 @@ export const ArtifactsResponseSchema = z.object({
 export type ArtifactsResponse = z.infer<typeof ArtifactsResponseSchema>;
 
 export const CreateArtifactSchema = z.object({
-  taskId: z.string().uuid(),
+  taskId: z.uuid(),
   type: z.string().min(1),
   title: z.string().min(1),
   contentText: z.string().optional(),
@@ -221,8 +221,8 @@ export const CreateArtifactSchema = z.object({
 export type CreateArtifact = z.infer<typeof CreateArtifactSchema>;
 
 export const ReportCiResultSchema = z.object({
-  workspaceId: z.string().uuid(),
-  taskId: z.string().uuid().optional(),
+  workspaceId: z.uuid(),
+  taskId: z.uuid().optional(),
   preset: z.string(),
   ok: z.boolean(),
   summary: z.string(),

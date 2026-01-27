@@ -5,5 +5,6 @@ export * from "./ChatInput";
 export * from "./ChatLayout";
 export * from "./ChatMessage";
 export * from "./ChatSidebar";
+export * from "./ChatSuggestions";
 export * from "./SuggestedPrompts";
 export * from "./types";

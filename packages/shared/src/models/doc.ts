@@ -3,15 +3,24 @@ import { BaseEntitySchema } from "../common";
 
 // Forward declaration for circular reference
 export const DocGroupSchemaForDoc = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
 });
 
+export enum DocType {
+  GENERAL = "GENERAL",
+  PRD = "PRD",
+  TECH_SPEC = "TECH_SPEC",
+  ADR = "ADR",
+  API_DESIGN = "API_DESIGN",
+}
+
 export const DocSchema = BaseEntitySchema.extend({
-  workspaceId: z.string().uuid(),
-  groupId: z.string().uuid().nullable().optional(),
+  workspaceId: z.uuid(),
+  groupId: z.uuid().nullable().optional(),
   title: z.string().min(1, "Title is required"),
   content: z.string().default(""),
+  type: z.enum(DocType).default(DocType.GENERAL),
   group: DocGroupSchemaForDoc.nullable().optional(),
 });
 
@@ -20,7 +29,8 @@ export type Doc = z.infer<typeof DocSchema>;
 export const CreateDocSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().optional(),
-  groupId: z.string().uuid().optional(),
+  type: z.enum(DocType).optional().default(DocType.GENERAL),
+  groupId: z.uuid().optional(),
 });
 
 export type CreateDoc = z.infer<typeof CreateDocSchema>;
@@ -28,7 +38,8 @@ export type CreateDoc = z.infer<typeof CreateDocSchema>;
 export const UpdateDocSchema = z.object({
   title: z.string().min(1).optional(),
   content: z.string().optional(),
-  groupId: z.string().uuid().nullable().optional(),
+  type: z.enum(DocType).optional(),
+  groupId: z.uuid().nullable().optional(),
 });
 
 export type UpdateDoc = z.infer<typeof UpdateDocSchema>;

@@ -10,7 +10,8 @@
     { "path": "./packages/sdk" },
     { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./packages/cli" }
+    { "path": "./packages/cli" },
+    { "path": "./packages/ai-sdk" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }

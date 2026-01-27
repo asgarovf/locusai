@@ -1,4 +1,4 @@
-import { type Doc } from "@locusai/shared";
+import { type Doc, DocType } from "@locusai/shared";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -199,6 +199,7 @@ export function useDocs() {
         title: newTitle,
         content: initialContent,
         groupId: selectedGroupId || undefined,
+        type: DocType.GENERAL,
       });
       setIsCreating(false);
       setNewFileName("");

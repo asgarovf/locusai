@@ -7,7 +7,6 @@ import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
 import { ArtifactSyncer } from "./artifact-syncer.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
-import { SprintPlanner } from "./sprint-planner.js";
 import { TaskExecutor } from "./task-executor.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -45,7 +44,6 @@ export class AgentWorker {
   private aiRunner: AiRunner;
 
   // Services
-  private sprintPlanner: SprintPlanner;
   private indexerService: CodebaseIndexerService;
   private artifactSyncer: ArtifactSyncer;
   private taskExecutor: TaskExecutor;
@@ -56,7 +54,6 @@ export class AgentWorker {
   private maxTasks = 50;
   private tasksCompleted = 0;
   private pollInterval = 10_000;
-  private sprintPlan: string | null = null;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -83,11 +80,6 @@ export class AgentWorker {
       log,
     });
 
-    this.sprintPlanner = new SprintPlanner({
-      aiRunner: this.aiRunner,
-      log,
-    });
-
     this.indexerService = new CodebaseIndexerService({
       aiRunner: this.aiRunner,
       projectPath,
@@ -104,7 +96,6 @@ export class AgentWorker {
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,
       projectPath,
-      sprintPlan: null, // Will be set after sprint planning
       skipPlanning: config.skipPlanning,
       log,
     });
@@ -169,11 +160,22 @@ export class AgentWorker {
       this.config.workspaceId
     );
 
-    // Update task executor with current sprint plan
-    this.taskExecutor.updateSprintPlan(this.sprintPlan);
+    // Fetch and inject server-side context
+    try {
+      const context = await this.client.tasks.getContext(
+        task.id,
+        this.config.workspaceId
+      );
+      this.taskExecutor.updateTaskContext(context);
+    } catch (err) {
+      this.log(`Failed to fetch task context: ${err}`, "warn");
+    }
 
     // Execute the task
     const result = await this.taskExecutor.execute(fullTask);
+
+    // Cleanup context after execution
+    this.taskExecutor.updateTaskContext("");
 
     // Reindex codebase after execution to ensure fresh context
     await this.indexerService.reindex();
@@ -190,59 +192,17 @@ export class AgentWorker {
     // Initial Sprint Planning Phase
     const sprint = await this.getActiveSprint();
     if (sprint) {
-      this.log(`Found active sprint: ${sprint.name} (${sprint.id})`, "info");
-      const tasks = await this.client.tasks.list(this.config.workspaceId, {
-        sprintId: sprint.id,
-      });
-
-      const activeTasks = tasks.filter(
-        (t) =>
-          t.status === TaskStatus.BACKLOG || t.status === TaskStatus.IN_PROGRESS
+      this.log(
+        `Active sprint found: ${sprint.name}. Ensuring plan is up to date...`,
+        "info"
       );
 
-      this.log(`Sprint tasks found: ${activeTasks.length}`, "info");
-
-      // Skip mindmap generation if there's only one task
-      if (activeTasks.length <= 1) {
-        this.log(
-          "Skipping mindmap generation (only one task in sprint).",
-          "info"
-        );
-        this.sprintPlan = null;
-      } else {
-        const latestTaskCreation = activeTasks.reduce((latest, task) => {
-          const taskDate = new Date(task.createdAt);
-          return taskDate > latest ? taskDate : latest;
-        }, new Date(0));
-
-        const mindmapDate = sprint.mindmapUpdatedAt
-          ? new Date(sprint.mindmapUpdatedAt)
-          : new Date(0);
-
-        const needsPlanning =
-          !sprint.mindmap ||
-          sprint.mindmap.trim() === "" ||
-          latestTaskCreation > mindmapDate;
-
-        if (needsPlanning) {
-          if (sprint.mindmap && latestTaskCreation > mindmapDate) {
-            this.log(
-              "New tasks have been added to the sprint since last mindmap. Regenerating...",
-              "warn"
-            );
-          }
-          this.sprintPlan = await this.sprintPlanner.planSprint(sprint, tasks);
-
-          // Save mindmap to server
-          await this.client.sprints.update(sprint.id, this.config.workspaceId, {
-            mindmap: this.sprintPlan,
-            mindmapUpdatedAt: new Date(),
-          });
-        } else {
-          this.log("Using existing sprint mindmap.", "info");
-          this.sprintPlan = sprint.mindmap ?? null;
-        }
-      }
+      // Trigger server-side planning (it will check if AI planning is needed)
+      await this.client.sprints.triggerAIPlanning(
+        sprint.id,
+        this.config.workspaceId
+      );
+      this.log(`Sprint plan sync checked on server.`, "success");
     } else {
       this.log("No active sprint found for planning.", "warn");
     }
@@ -253,6 +213,7 @@ export class AgentWorker {
       this.consecutiveEmpty < this.maxEmpty
     ) {
       const task = await this.getNextTask();
+
       if (!task) {
         if (this.consecutiveEmpty === 0) {
           this.log("Queue empty, waiting for tasks...", "info");

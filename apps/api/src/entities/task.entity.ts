@@ -109,6 +109,9 @@ export class Task {
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 
+  @Column({ name: "order", type: "float", default: 1000 })
+  order: number;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

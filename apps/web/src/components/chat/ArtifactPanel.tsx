@@ -2,8 +2,10 @@
 
 import {
   Check,
+  CheckSquare,
   Copy,
   FileText,
+  Layers,
   Maximize2,
   Minimize2,
   Terminal,
@@ -14,6 +16,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { Markdown } from "./Markdown";
 import { Artifact } from "./types";
 
 interface ArtifactPanelProps {
@@ -51,6 +54,10 @@ export function ArtifactPanel({
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary shrink-0">
             {artifact.type === "code" ? (
               <Terminal size={16} />
+            ) : artifact.type === "sprint" ? (
+              <Layers size={16} />
+            ) : artifact.type === "task" ? (
+              <CheckSquare size={16} />
             ) : (
               <FileText size={16} />
             )}
@@ -60,7 +67,11 @@ export function ArtifactPanel({
             <p className="text-[10px] text-muted-foreground truncate">
               {artifact.type === "code"
                 ? `${artifact.language} snippet`
-                : "Document preview"}
+                : artifact.type === "sprint"
+                  ? "Sprint details"
+                  : artifact.type === "task"
+                    ? "Task details"
+                    : "Document preview"}
             </p>
           </div>
         </div>
@@ -121,11 +132,8 @@ export function ArtifactPanel({
             </SyntaxHighlighter>
           </div>
         ) : (
-          <div className="p-6 prose prose-sm prose-invert max-w-none">
-            {/* Simple Markdown rendering placeholder */}
-            <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/80">
-              {artifact.content}
-            </div>
+          <div className="p-6">
+            <Markdown content={artifact.content} />
           </div>
         )}
       </div>

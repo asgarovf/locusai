@@ -9,7 +9,12 @@ import {
   ChatLayout,
   ChatMessage,
   ChatSidebar,
+  ChatSuggestions,
 } from "@/components/chat";
+import {
+  type AssistantMessage,
+  type SuggestedAction,
+} from "@/components/chat/types";
 import { useChat } from "@/hooks/useChat";
 
 export default function ChatPage() {
@@ -39,6 +44,11 @@ export default function ChatPage() {
     selectSession(id);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
+
+  const lastMessage = messages[messages.length - 1];
+
+  const suggestions =
+    (lastMessage && (lastMessage as AssistantMessage).suggestedActions) || [];
 
   return (
     <ChatLayout
@@ -88,6 +98,24 @@ export default function ChatPage() {
                   onArtifactClick={(art) => setActiveArtifact(art)}
                 />
               ))}
+
+              {/* Suggested Actions for the last AI message */}
+              {!isTyping &&
+                messages.length > 0 &&
+                messages[messages.length - 1].role === "assistant" &&
+                (messages[messages.length - 1] as AssistantMessage)
+                  .suggestedActions && (
+                  <ChatSuggestions
+                    suggestions={suggestions}
+                    onSelect={(suggestion: SuggestedAction) => {
+                      if (suggestion.type === "chat_suggestion") {
+                        sendMessage(suggestion.payload.text);
+                      }
+                    }}
+                    className="mt-2"
+                  />
+                )}
+
               {isTyping && (
                 <ChatMessage
                   message={{

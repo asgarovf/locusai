@@ -81,7 +81,7 @@ export function TaskChecklist({
             layout
             key={item.id}
             className={cn(
-              "group flex items-center gap-4 p-4 bg-card/30 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-card/50 transition-all duration-300 shadow-sm",
+              "group flex items-start gap-4 p-4 bg-card/30 border border-border/40 rounded-2xl hover:border-sky-500/50 hover:bg-card/50 transition-all duration-300 shadow-sm",
               isLoading && "opacity-60 pointer-events-none"
             )}
           >
@@ -89,7 +89,7 @@ export function TaskChecklist({
               checked={item.done}
               onChange={() => !isLoading && handleToggleChecklistItem(item.id)}
               disabled={isLoading}
-              className="scale-110"
+              className="scale-110 pt-0.5"
             />
             <span
               className={cn(
@@ -114,26 +114,28 @@ export function TaskChecklist({
         ))}
       </div>
 
-      <div className="flex gap-4 p-2.5 bg-secondary/5 rounded-2xl border border-border/40 focus-within:border-primary/40 transition-all shadow-inner">
-        <Input
-          value={newChecklistItem}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            !isLoading && setNewChecklistItem(e.target.value)
-          }
-          disabled={isLoading}
-          placeholder="Add item..."
-          className="h-10 bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter" && !isLoading) handleAddChecklistItem();
-          }}
-        />
-        <Button
-          onClick={handleAddChecklistItem}
-          disabled={!newChecklistItem.trim() || isLoading}
-          className="px-6 h-10 bg-foreground text-background font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl"
-        >
-          Add
-        </Button>
+      <div className="sticky bottom-0 bg-linear-to-t from-background via-background/95 to-transparent pt-12 pb-8 -mx-8 px-8 mt-auto z-20">
+        <div className="flex gap-4 p-2.5 bg-secondary/10 backdrop-blur-md rounded-2xl border border-border/40 focus-within:border-primary/40 transition-all shadow-xl">
+          <Input
+            value={newChecklistItem}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              !isLoading && setNewChecklistItem(e.target.value)
+            }
+            disabled={isLoading}
+            placeholder="Add new requirement..."
+            className="h-10 bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:font-black placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest"
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter" && !isLoading) handleAddChecklistItem();
+            }}
+          />
+          <Button
+            onClick={handleAddChecklistItem}
+            disabled={!newChecklistItem.trim() || isLoading}
+            className="px-6 h-10 bg-foreground text-background font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all rounded-xl shadow-lg"
+          >
+            Add Item
+          </Button>
+        </div>
       </div>
     </div>
   );

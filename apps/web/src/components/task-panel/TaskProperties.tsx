@@ -90,7 +90,7 @@ export function TaskProperties({
           label="Deadline"
           value={task.dueDate ? formatDate(task.dueDate) : "Undetermined"}
           onEdit={(newValue: string) =>
-            onUpdate({ dueDate: newValue ? new Date(newValue) : null })
+            onUpdate({ dueDate: newValue ? Number(newValue) : null })
           }
           type="date"
           disabled={isLoading}

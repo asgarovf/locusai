@@ -66,4 +66,11 @@ export class SprintsModule extends BaseModule {
     );
     return data.sprint;
   }
+
+  async triggerAIPlanning(id: string, workspaceId: string): Promise<Sprint> {
+    const { data } = await this.api.post<SprintResponse>(
+      `/workspaces/${workspaceId}/sprints/${id}/trigger-ai-planning`
+    );
+    return data.sprint;
+  }
 }

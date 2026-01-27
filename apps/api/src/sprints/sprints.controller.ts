@@ -32,6 +32,15 @@ export class SprintsController {
     private readonly workspacesService: WorkspacesService
   ) {}
 
+  private _toDate(
+    val: string | number | Date | null | undefined
+  ): Date | null | undefined {
+    if (val === undefined) return undefined;
+    if (val === null) return null;
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }
+
   @Get()
   @MembershipRoles(
     MembershipRole.OWNER,
@@ -85,8 +94,8 @@ export class SprintsController {
     const sprint = await this.sprintsService.create({
       name: body.name,
       workspaceId,
-      startDate: body.startDate ? new Date(body.startDate) : undefined,
-      endDate: body.endDate ? new Date(body.endDate) : undefined,
+      startDate: this._toDate(body.startDate) ?? undefined,
+      endDate: this._toDate(body.endDate) ?? undefined,
     });
     return { sprint };
   }
@@ -97,14 +106,11 @@ export class SprintsController {
     @Param("sprintId") sprintId: string,
     @Body(new ZodValidationPipe(UpdateSprintSchema)) body: UpdateSprint
   ): Promise<SprintResponse> {
-    const dateOrUndefined = (date: number | Date | undefined) =>
-      date ? new Date(date) : undefined;
-
     const updatedSprint = await this.sprintsService.update(sprintId, {
       ...body,
-      startDate: dateOrUndefined(body.startDate),
-      endDate: dateOrUndefined(body.endDate),
-      mindmapUpdatedAt: dateOrUndefined(body.mindmapUpdatedAt),
+      startDate: this._toDate(body.startDate),
+      endDate: this._toDate(body.endDate),
+      mindmapUpdatedAt: this._toDate(body.mindmapUpdatedAt),
     });
     return { sprint: updatedSprint };
   }
@@ -134,5 +140,18 @@ export class SprintsController {
   async delete(@Param("sprintId") sprintId: string) {
     await this.sprintsService.delete(sprintId);
     return { success: true };
+  }
+
+  @Post(":sprintId/trigger-ai-planning")
+  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  async triggerAIPlanning(
+    @Param("sprintId") sprintId: string,
+    @Param("workspaceId") workspaceId: string
+  ): Promise<SprintResponse> {
+    const sprint = await this.sprintsService.planSprintWithAi(
+      sprintId,
+      workspaceId
+    );
+    return { sprint };
   }
 }

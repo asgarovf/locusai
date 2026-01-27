@@ -1,5 +1,6 @@
 export * from "./activity";
 export * from "./agent";
+export * from "./ai";
 export * from "./auth";
 export * from "./ci";
 export * from "./doc";

@@ -1,3 +1,4 @@
+import { DocType } from "@locusai/shared";
 import {
   Column,
   CreateDateColumn,
@@ -38,6 +39,9 @@ export class Doc {
 
   @Column()
   title: string;
+
+  @Column({ type: "varchar", default: DocType.GENERAL })
+  type: DocType;
 
   @Column({ type: "text", nullable: true })
   content: string;

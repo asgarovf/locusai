@@ -10,6 +10,7 @@ const initialToken =
 export const locusClient = new LocusClient({
   baseUrl: config.NEXT_PUBLIC_API_URL,
   token: initialToken,
+  timeout: 60000,
 });
 
 // Setup event listeners for the web app

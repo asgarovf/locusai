@@ -5,7 +5,7 @@ import { z } from "zod";
 // ============================================================================
 
 export const BaseEntitySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   createdAt: z.union([z.date(), z.number()]),
   updatedAt: z.union([z.date(), z.number()]),
 });

@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot, FileText, Terminal } from "lucide-react";
+import { Bot, CheckSquare, FileText, Layers, Terminal } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import { Markdown } from "./Markdown";
 import { Artifact, Message } from "./types";
 
 interface ChatMessageProps {
@@ -89,6 +90,13 @@ export function ChatMessage({
         </div>
 
         {/* Message Content */}
+        {message.role === "assistant" &&
+          message.thoughtProcess &&
+          !isTyping && (
+            <div className="text-[11px] text-muted-foreground/60 italic mb-1 px-1 max-w-lg line-clamp-2 hover:line-clamp-none transition-all cursor-help">
+              💭 {message.thoughtProcess}
+            </div>
+          )}
         <div
           className={cn(
             "rounded-2xl px-5 py-3.5 text-sm shadow-sm leading-relaxed",
@@ -105,13 +113,7 @@ export function ChatMessage({
               <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce"></span>
             </div>
           ) : (
-            <div className="markdown-content space-y-2">
-              {message.content.split("\n").map((line, i) => (
-                <p key={i} className="min-h-[1em]">
-                  {line}
-                </p>
-              ))}
-            </div>
+            <Markdown content={message.content} isInverted={!isUser} />
           )}
         </div>
 
@@ -124,6 +126,10 @@ export function ChatMessage({
             <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-secondary/50 text-foreground/70 group-hover/artifact:text-primary group-hover/artifact:bg-primary/10 transition-colors">
               {artifact.type === "code" ? (
                 <Terminal size={20} />
+              ) : artifact.type === "sprint" ? (
+                <Layers size={20} />
+              ) : artifact.type === "task" ? (
+                <CheckSquare size={20} />
               ) : (
                 <FileText size={20} />
               )}
@@ -132,8 +138,8 @@ export function ChatMessage({
               <div className="text-sm font-medium text-foreground truncate">
                 {artifact.title}
               </div>
-              <div className="text-xs text-muted-foreground">
-                Click to view {artifact.type}
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                {artifact.type}
               </div>
             </div>
           </button>

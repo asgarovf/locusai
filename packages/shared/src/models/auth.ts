@@ -15,12 +15,12 @@ import { UserSchema } from "./user";
  */
 export const JwtAuthUserSchema = z.object({
   authType: z.literal("jwt"),
-  id: z.string().uuid(),
+  id: z.uuid(),
   email: z.string().email(),
   name: z.string(),
-  role: z.nativeEnum(UserRole),
-  orgId: z.string().uuid().nullable().optional(),
-  workspaceId: z.string().uuid().nullable().optional(),
+  role: z.enum(UserRole),
+  orgId: z.uuid().nullable().optional(),
+  workspaceId: z.uuid().nullable().optional(),
 });
 
 export type JwtAuthUser = z.infer<typeof JwtAuthUserSchema>;
@@ -31,9 +31,9 @@ export type JwtAuthUser = z.infer<typeof JwtAuthUserSchema>;
  */
 export const ApiKeyAuthUserSchema = z.object({
   authType: z.literal("api_key"),
-  apiKeyId: z.string().uuid(),
+  apiKeyId: z.uuid(),
   apiKeyName: z.string(),
-  orgId: z.string().uuid(),
+  orgId: z.uuid(),
 });
 
 export type ApiKeyAuthUser = z.infer<typeof ApiKeyAuthUserSchema>;
@@ -123,7 +123,7 @@ export const JWTPayloadSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   role: z.string(),
-  orgId: z.string().uuid().optional(),
+  orgId: z.uuid().optional(),
   iat: z.number(),
   exp: z.number(),
 });
@@ -135,8 +135,8 @@ export const AuthContextSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   role: z.string(),
-  orgId: z.string().uuid().optional(),
-  workspaceId: z.string().uuid().optional(),
+  orgId: z.uuid().optional(),
+  workspaceId: z.uuid().optional(),
   authType: z.enum(["jwt", "api_key", "local"]),
 });
 

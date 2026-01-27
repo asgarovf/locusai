@@ -5,11 +5,11 @@ import { MembershipRole } from "../enums";
 export const InvitationSchema = BaseEntitySchema.extend({
   orgId: z.string().uuid("Invalid Organization ID"),
   email: z.string().email("Invalid email address"),
-  role: z.nativeEnum(MembershipRole),
+  role: z.enum(MembershipRole),
   token: z.string(),
   expiresAt: z.number(),
   acceptedAt: z.number().nullable().optional(),
-  invitedBy: z.string().uuid(),
+  invitedBy: z.uuid(),
 });
 
 export type Invitation = z.infer<typeof InvitationSchema>;
@@ -17,7 +17,7 @@ export type Invitation = z.infer<typeof InvitationSchema>;
 export const CreateInvitationSchema = z.object({
   orgId: z.string().uuid("Invalid Organization ID"),
   email: z.string().email("Invalid email address"),
-  role: z.nativeEnum(MembershipRole).default(MembershipRole.MEMBER),
+  role: z.enum(MembershipRole).default(MembershipRole.MEMBER),
 });
 
 export type CreateInvitation = z.infer<typeof CreateInvitationSchema>;
@@ -70,10 +70,10 @@ export type InvitationsResponse = z.infer<typeof InvitationsResponseSchema>;
 
 export const AcceptInvitationResponseSchema = z.object({
   membership: z.object({
-    id: z.string().uuid(),
-    userId: z.string().uuid(),
-    orgId: z.string().uuid(),
-    role: z.nativeEnum(MembershipRole),
+    id: z.uuid(),
+    userId: z.uuid(),
+    orgId: z.uuid(),
+    role: z.enum(MembershipRole),
     createdAt: z.number(),
   }),
 });

@@ -36,13 +36,13 @@ export const AddMemberSchema = z.object({
 export type AddMember = z.infer<typeof AddMemberSchema>;
 
 export const MembershipWithUserSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
-  orgId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
+  orgId: z.uuid(),
   role: z.string(),
   createdAt: z.number(),
   user: z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     email: z.string().email(),
     name: z.string(),
     avatarUrl: z.string().url().nullable().optional(),

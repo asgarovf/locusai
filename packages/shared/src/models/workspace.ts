@@ -10,7 +10,7 @@ export const ChecklistItemSchema = z.object({
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 
 export const WorkspaceSchema = BaseEntitySchema.extend({
-  orgId: z.string().uuid(),
+  orgId: z.uuid(),
   name: z.string().min(1, "Name is required").max(100),
   defaultChecklist: z.array(ChecklistItemSchema).nullable().optional(),
 });

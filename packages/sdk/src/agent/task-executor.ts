@@ -6,7 +6,7 @@ import { PromptBuilder } from "../core/prompt-builder.js";
 export interface TaskExecutorDeps {
   aiRunner: AiRunner;
   projectPath: string;
-  sprintPlan: string | null;
+  taskContext?: string;
   skipPlanning?: boolean;
   log: LogFn;
 }
@@ -21,20 +21,20 @@ export class TaskExecutor {
     this.promptBuilder = new PromptBuilder(deps.projectPath);
   }
 
-  updateSprintPlan(sprintPlan: string | null) {
-    this.deps.sprintPlan = sprintPlan;
+  updateTaskContext(context: string) {
+    this.deps.taskContext = context;
   }
 
   async execute(task: Task): Promise<{ success: boolean; summary: string }> {
     this.deps.log(`Executing: ${task.title}`, "info");
-    let basePrompt = await this.promptBuilder.build(task);
 
-    if (this.deps.sprintPlan) {
-      basePrompt = `## Sprint Context\n${this.deps.sprintPlan}\n\n${basePrompt}`;
-    }
+    const basePrompt = await this.promptBuilder.build(task, {
+      taskContext: this.deps.taskContext,
+    });
 
     try {
       let plan: string | null = null;
+      // ...
 
       if (this.deps.skipPlanning) {
         this.deps.log("Skipping Phase 1: Planning (CLI)...", "info");

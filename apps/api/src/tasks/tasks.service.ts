@@ -1,16 +1,13 @@
 import {
   AcceptanceItem,
-  AssigneeRole,
+  CreateTask,
   EventType,
+  SprintStatus,
   TaskPriority,
   TaskStatus,
   UpdateTask,
 } from "@locusai/shared";
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
 import { Comment } from "@/entities/comment.entity";
@@ -39,8 +36,22 @@ export class TasksService {
   async findAll(workspaceId: string): Promise<Task[]> {
     return this.taskRepository.find({
       where: { workspaceId },
-      order: { createdAt: "DESC" },
+      order: { order: "ASC", createdAt: "DESC" },
     });
+  }
+
+  async findRelevantTasks(workspaceId: string): Promise<Task[]> {
+    return this.taskRepository
+      .createQueryBuilder("task")
+      .leftJoin("task.sprint", "sprint")
+      .where("task.workspaceId = :workspaceId", { workspaceId })
+      .andWhere(
+        "(task.sprintId IS NULL OR sprint.status != :completedStatus)",
+        { completedStatus: SprintStatus.COMPLETED }
+      )
+      .orderBy("task.order", "ASC")
+      .addOrderBy("task.createdAt", "DESC")
+      .getMany();
   }
 
   async findBacklog(workspaceId: string): Promise<Task[]> {
@@ -49,7 +60,7 @@ export class TasksService {
         { workspaceId, sprintId: IsNull() },
         { workspaceId, status: TaskStatus.IN_PROGRESS, assignedTo: IsNull() },
       ],
-      order: { priority: "DESC", createdAt: "DESC" },
+      order: { order: "ASC", priority: "DESC", createdAt: "DESC" },
     });
   }
 
@@ -80,22 +91,9 @@ export class TasksService {
     };
   }
 
-  async create(data: {
-    workspaceId: string;
-    title: string;
-    description?: string;
-    status?: TaskStatus;
-    priority?: TaskPriority;
-    labels?: string[];
-    assigneeRole?: AssigneeRole;
-    assignedTo?: string;
-    dueDate?: Date;
-    parentId?: string;
-    sprintId?: string;
-    acceptanceChecklist?: AcceptanceItem[];
-    docIds?: string[];
-    userId?: string;
-  }): Promise<Task> {
+  async create(
+    data: CreateTask & { workspaceId: string; userId?: string }
+  ): Promise<Task> {
     const workspace = await this.workspaceRepository.findOne({
       where: { id: data.workspaceId },
     });
@@ -151,12 +149,6 @@ export class TasksService {
   ): Promise<Task> {
     const task = await this.taskRepository.findOne({ where: { id } });
     if (!task) throw new NotFoundException("Task not found");
-
-    if (updates.status === "DONE" && task.status !== "VERIFICATION") {
-      throw new BadRequestException(
-        "Cannot move directly to DONE. Tasks must be in VERIFICATION first for human review."
-      );
-    }
 
     const oldStatus = task.status;
 
@@ -273,7 +265,7 @@ export class TasksService {
           assignedTo: IsNull(),
         },
       ],
-      order: { priority: "DESC", createdAt: "ASC" },
+      order: { order: "ASC", priority: "DESC", createdAt: "ASC" },
     });
 
     if (!task) {

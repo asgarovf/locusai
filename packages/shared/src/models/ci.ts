@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const RecordCiSchema = z.object({
-  taskId: z.string().uuid(),
-  workspaceId: z.string().uuid(),
+  taskId: z.uuid(),
+  workspaceId: z.uuid(),
   result: z.object({
     ok: z.boolean(),
     summary: z.string(),

@@ -1,5 +1,5 @@
-import { CodebaseIndex } from "@locusai/sdk/node";
 import type { AiRunner } from "@locusai/sdk/node";
+import { CodebaseIndex } from "@locusai/sdk/node";
 
 export class TreeSummarizer {
   constructor(private aiRunner: AiRunner) {}

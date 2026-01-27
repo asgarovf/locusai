@@ -78,7 +78,7 @@ export function TaskActivity({
         </Button>
       </div>
 
-      <div className="space-y-10 max-h-[600px] overflow-y-auto pr-4 scrollbar-thin">
+      <div className="space-y-10 pr-4">
         {activityLog.length > 0 ? (
           activityLog.map((event) => (
             <div key={event.id} className="relative flex gap-6 group">

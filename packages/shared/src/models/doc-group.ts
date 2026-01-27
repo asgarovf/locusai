@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 
 export const DocGroupSchema = BaseEntitySchema.extend({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.uuid(),
   name: z.string().min(1, "Name is required"),
   order: z.number().default(0),
 });

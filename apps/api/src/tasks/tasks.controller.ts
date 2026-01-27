@@ -1,3 +1,4 @@
+import { ContextManager } from "@locusai/ai-sdk";
 import {
   AddComment,
   AddCommentSchema,
@@ -22,10 +23,9 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { MembershipRoles } from "@/auth/decorators/membership-roles.decorator";
-import { CurrentUserId } from "@/auth/decorators/user.decorator";
-import { MembershipRolesGuard } from "@/auth/guards/membership-roles.guard";
-import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
+import { CurrentUserId, MembershipRoles } from "@/auth/decorators";
+import { MembershipRolesGuard } from "@/auth/guards";
+import { ZodValidationPipe } from "@/common/pipes";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
@@ -153,5 +153,25 @@ export class TasksController {
       userId ?? undefined
     );
     return { comment };
+  }
+
+  @Get(":taskId/context")
+  @MembershipRoles(
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN,
+    MembershipRole.MEMBER
+  )
+  async getTaskContext(@Param("taskId") taskId: string): Promise<string> {
+    const task = await this.tasksService.findById(taskId);
+    const workspace = await this.workspacesService.findById(task.workspaceId);
+
+    return ContextManager.formatTaskContextForLocalAI(
+      {
+        title: task.title,
+        description: task.description,
+        status: task.status,
+      },
+      workspace.projectManifest
+    );
   }
 }

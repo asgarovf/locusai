@@ -90,4 +90,22 @@ export const queryKeys = {
     list: (orgId: string) =>
       [...queryKeys.invitations.all(), "list", orgId] as const,
   },
+  ai: {
+    all: () => ["ai"] as const,
+    sessions: (workspaceId?: string | null) =>
+      [
+        ...queryKeys.ai.all(),
+        "sessions",
+        "list",
+        { workspaceId: workspaceId ?? undefined },
+      ] as const,
+    session: (id: string, workspaceId?: string | null) =>
+      [
+        ...queryKeys.ai.all(),
+        "sessions",
+        "detail",
+        id,
+        { workspaceId: workspaceId ?? undefined },
+      ] as const,
+  },
 };

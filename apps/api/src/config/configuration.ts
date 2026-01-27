@@ -12,6 +12,7 @@ export const ConfigSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   OTP_EXPIRES_IN_MINUTES: z.coerce.number().default(10),
   CORS_ORIGIN: z.string().default("*"),
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -20,7 +21,10 @@ export default () => {
   const result = ConfigSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("❌ Invalid environment variables:", result.error.format());
+    console.error(
+      "❌ Invalid environment variables:",
+      z.treeifyError(result.error)
+    );
     throw new Error("Invalid api configuration");
   }
 

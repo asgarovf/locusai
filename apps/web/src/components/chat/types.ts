@@ -1,4 +1,12 @@
-export type ArtifactType = "code" | "document" | "image";
+import { $FixMe } from "@locusai/shared";
+
+export type ArtifactType =
+  | "code"
+  | "document"
+  | "image"
+  | "sprint"
+  | "task"
+  | "task_list";
 
 export interface Artifact {
   id: string;
@@ -39,6 +47,17 @@ export interface UserMessage extends BaseMessage {
   attachments?: Artifact[];
 }
 
+export interface SuggestedAction {
+  label: string;
+  type:
+    | "chat_suggestion"
+    | "create_task"
+    | "create_doc"
+    | "start_sprint"
+    | "plan_sprint";
+  payload?: $FixMe;
+}
+
 export interface AssistantMessage extends BaseMessage {
   role: "assistant";
   content: string; // Markdown content
@@ -46,6 +65,7 @@ export interface AssistantMessage extends BaseMessage {
   artifacts?: Artifact[]; // Generated artifacts (code, docs)
   references?: Reference[]; // Context-used references
   relatedArtifactId?: string;
+  suggestedActions?: SuggestedAction[];
 }
 
 export type Message = SystemMessage | UserMessage | AssistantMessage;

@@ -6,6 +6,7 @@ import {
   statSync,
 } from "node:fs";
 import { join } from "node:path";
+import { DocType } from "@locusai/shared";
 import type { LogFn } from "../ai/factory.js";
 import { getLocusPath } from "../core/config.js";
 import type { LocusClient } from "../index.js";
@@ -100,6 +101,7 @@ export class ArtifactSyncer {
               title,
               content,
               groupId: artifactsGroupId,
+              type: DocType.GENERAL,
             });
             this.deps.log(`Created artifact: ${file}`, "success");
           }

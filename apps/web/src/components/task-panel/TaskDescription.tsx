@@ -17,6 +17,7 @@ import { SectionLabel } from "@/components/typography";
 import { Input, Textarea } from "@/components/ui";
 import { useTaskDescription } from "@/hooks/useTaskDescription";
 import { cn } from "@/lib/utils";
+import { Markdown } from "../chat/Markdown";
 
 interface TaskDescriptionProps {
   /** Task to display */
@@ -58,7 +59,7 @@ export function TaskDescription({
   } = useTaskDescription({ task, onUpdate });
 
   return (
-    <div className="p-8 overflow-y-auto scrollbar-thin">
+    <div className="p-8">
       {/* Title Section */}
       <div className="mb-8">
         {isEditingTitle ? (
@@ -177,14 +178,12 @@ export function TaskDescription({
         ) : (
           <div
             className={cn(
-              "prose prose-invert max-w-none bg-secondary/10 p-10 rounded-3xl border border-border/40 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] relative group",
+              "bg-secondary/10 p-10 rounded-3xl border border-border/40 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] relative group",
               isLoading && "opacity-60 pointer-events-none"
             )}
           >
             {task.description ? (
-              <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap font-medium">
-                {task.description}
-              </p>
+              <Markdown content={task.description} />
             ) : (
               <div className="flex flex-col items-center justify-center py-10 opacity-30 select-none">
                 <FileText size={32} className="mb-4" aria-hidden="true" />

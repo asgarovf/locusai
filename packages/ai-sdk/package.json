@@ -1,0 +1,30 @@
+{
+  "name": "@locusai/ai-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules dist"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@langchain/core": "^1.1.17",
+    "@langchain/google-genai": "2.1.13",
+    "@locusai/sdk": "workspace:*",
+    "@locusai/shared": "workspace:*",
+    "@qdrant/js-client-rest": "1.16.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "typescript": "^5.8.3"
+  }
+}

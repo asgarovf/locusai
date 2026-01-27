@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
 import { EventEmitter } from "events";
-import { LocusClient } from "./index.js";
 import type { AiProvider } from "./ai/runner.js";
+import { LocusClient } from "./index.js";
 import { c } from "./utils/colors.js";
 
 export interface AgentConfig {

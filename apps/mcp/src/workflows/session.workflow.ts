@@ -1,33 +1,12 @@
-import { createAiRunner, PROVIDER, SprintPlanner } from "@locusai/sdk/node";
 import { logger } from "../lib/logger.js";
 import { ClientConfig, SessionContext } from "../lib/types.js";
 import { LocusService } from "../services/locus.service.js";
 
 export class SessionWorkflow {
-  private sprintPlanner: SprintPlanner;
   private locusService: LocusService;
 
   constructor(config: ClientConfig) {
-    const aiRunner = createAiRunner(PROVIDER.CLAUDE, {
-      projectPath: process.cwd(),
-    });
-
-    const logFn = (
-      msg: string,
-      level?: "info" | "success" | "warn" | "error"
-    ) => {
-      // Map SDK log levels to our logger
-      if (level === "error") logger.error("SDK", msg);
-      else if (level === "warn") logger.warn("SDK", msg);
-      else logger.info("SDK", msg);
-    };
-
     this.locusService = new LocusService(config);
-
-    this.sprintPlanner = new SprintPlanner({
-      aiRunner,
-      log: logFn,
-    });
   }
 
   async start(): Promise<SessionContext> {
@@ -39,13 +18,7 @@ export class SessionWorkflow {
 
       try {
         logger.info("SessionWorkflow", "Planning sprint...");
-        const tasks = await this.locusService.getSprintTasks(sprint.id);
-        const plan = await this.sprintPlanner.planSprint(sprint, tasks);
 
-        if (plan && plan !== sprint.mindmap) {
-          await this.locusService.updateSprintMindmap(sprint.id, plan);
-          sprint.mindmap = plan;
-        }
         logger.info("SessionWorkflow", "Sprint planning complete.");
       } catch (error) {
         logger.error(

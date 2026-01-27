@@ -209,7 +209,7 @@ export function useTaskPanel({
   const handleDueDateSave = () => {
     if (editDueDate) {
       const newDate = new Date(editDueDate);
-      handleUpdateTask({ dueDate: newDate });
+      handleUpdateTask({ dueDate: newDate.getTime() });
     } else if (task?.dueDate) {
       handleUpdateTask({ dueDate: null });
     }
