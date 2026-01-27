@@ -121,8 +121,10 @@ export function useDocs() {
   const deleteDocMutation = useDeleteDocMutation();
   const createGroupMutation = useCreateDocGroupMutation();
 
+  // Derived State (URL is source of truth)
+  const selectedId = searchParams.get("docId");
+
   // Local UI State
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [originalContent, setOriginalContent] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -132,36 +134,21 @@ export function useDocs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
   const selectedDoc = useMemo(
     () => docs.find((d) => d.id === selectedId) || null,
     [docs, selectedId]
   );
 
-  // Sync with URL
-  useEffect(() => {
-    const docId = searchParams.get("docId");
-    if (docId && docId !== selectedId) {
-      setSelectedId(docId);
-    } else if (!docId && selectedId && !isCreating) {
-      // Clear selection if URL param is removed (optional, but good for back nav)
-      // Actually, typically we want URL to drive state.
-      // If we want two-way sync:
-    }
-  }, [searchParams, selectedId, isCreating]);
-
-  // Update URL when selectedId changes
-  useEffect(() => {
-    const currentDocId = searchParams.get("docId");
-    if (selectedId && selectedId !== currentDocId) {
-      const params = new URLSearchParams(searchParams);
-      params.set("docId", selectedId);
-      router.push(`${pathname}?${params.toString()}`);
-    } else if (!selectedId && currentDocId) {
-      const params = new URLSearchParams(searchParams);
+  const handleSelectDoc = (id: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id) {
+      params.set("docId", id);
+    } else {
       params.delete("docId");
-      router.push(`${pathname}?${params.toString()}`);
     }
-  }, [selectedId, router, pathname, searchParams]);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const hasUnsavedChanges = content !== originalContent;
 
@@ -204,7 +191,12 @@ export function useDocs() {
       setIsCreating(false);
       setNewFileName("");
       setSelectedTemplate("blank");
-      setSelectedId(newDoc.id);
+
+      // Update URL
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("docId", newDoc.id);
+      router.push(`${pathname}?${params.toString()}`);
+
       toast.success("Document created");
     } catch {
       toast.error("Failed to create document");
@@ -216,7 +208,7 @@ export function useDocs() {
     try {
       await deleteDocMutation.mutateAsync(id);
       if (selectedId === id) {
-        setSelectedId(null);
+        handleSelectDoc(null);
       }
       toast.success("Document deleted");
     } catch {
@@ -280,7 +272,7 @@ export function useDocs() {
     groups,
     docsByGroup,
     selectedId,
-    setSelectedId,
+    setSelectedId: handleSelectDoc,
     selectedDoc,
     content,
     setContent,

@@ -28,6 +28,7 @@ import {
 } from "@nestjs/common";
 import { CurrentUser, MembershipRoles } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import { Task } from "@/entities";
 import { User } from "@/entities/user.entity";
 import { TasksService } from "@/tasks/tasks.service";
 import { WorkspacesService } from "./workspaces.service";
@@ -167,6 +168,15 @@ export class WorkspacesController {
       body.workerId || "system",
       body.sprintId
     );
-    return { task };
+    return { task: this.taskToTaskResponse(task) };
+  }
+
+  private taskToTaskResponse(task: Task): TaskResponse["task"] {
+    return {
+      ...task,
+      dueDate: task.dueDate ? task.dueDate.getTime() : null,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+    };
   }
 }

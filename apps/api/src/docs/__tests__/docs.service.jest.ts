@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import "../../test-setup";
+import { DocType } from "@locusai/shared";
 import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -33,7 +34,11 @@ describe("DocsService", () => {
   });
 
   it("should create a doc", async () => {
-    const data = { title: "Test Doc", workspaceId: "ws-1" };
+    const data = {
+      title: "Test Doc",
+      workspaceId: "ws-1",
+      type: DocType.GENERAL,
+    };
     repository.create.mockReturnValue(data as any);
     repository.save.mockResolvedValue(data as any);
 

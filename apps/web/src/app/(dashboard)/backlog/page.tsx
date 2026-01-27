@@ -39,6 +39,7 @@ function BacklogContent() {
     handleCreateSprint,
     handleStartSprint,
     handleCompleteSprint,
+    handleDeleteSprint,
     handleDeleteTask,
     refetchTasks,
   } = useBacklog();
@@ -103,6 +104,7 @@ function BacklogContent() {
                 onToggle={() => toggleSection("active")}
                 isActive={true}
                 onComplete={handleCompleteSprint}
+                onDelete={handleDeleteSprint}
                 onTaskClick={setSelectedTaskId}
                 onTaskDelete={handleDeleteTask}
                 isSubmitting={isSubmitting}
@@ -119,6 +121,7 @@ function BacklogContent() {
                 onToggle={() => toggleSection(`planned-${sprint.id}`)}
                 canStart={!activeSprint}
                 onStart={handleStartSprint}
+                onDelete={handleDeleteSprint}
                 onTaskClick={setSelectedTaskId}
                 onTaskDelete={handleDeleteTask}
                 isSubmitting={isSubmitting}

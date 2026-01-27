@@ -14,16 +14,26 @@ import {
   Controller,
   Get,
   Post,
+  Req,
+  Res,
   UnauthorizedException,
+  UseGuards,
   UsePipes,
 } from "@nestjs/common";
+import { Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
+import { TypedConfigService } from "@/config/config.service";
 import { AuthService } from "./auth.service";
 import { CurrentUser, Public } from "./decorators";
+import { GoogleAuthGuard } from "./guards";
+import { GoogleUser } from "./interfaces/google-user.interface";
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: TypedConfigService
+  ) {}
 
   @Get("me")
   async getProfile(@CurrentUser() authUser: AuthenticatedUser) {
@@ -101,5 +111,29 @@ export class AuthController {
     @Body() data: CompleteRegistration
   ): Promise<LoginResponse> {
     return this.authService.completeRegistration(data);
+  }
+
+  // ============================================================================
+  // Google OAuth
+  // ============================================================================
+
+  @Public()
+  @Get("google")
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth() {
+    // This method is just a placeholder for the Google OAuth redirect
+    // Passport will handle the redirect
+  }
+
+  @Public()
+  @Get("google/callback")
+  @UseGuards(GoogleAuthGuard)
+  async googleAuthRedirect(
+    @Req() req: { user: GoogleUser },
+    @Res() res: Response
+  ) {
+    const { token } = await this.authService.loginWithGoogle(req.user);
+    const frontendUrl = this.configService.get("FRONTEND_URL");
+    return res.redirect(`${frontendUrl}/callback?token=${token}`);
   }
 }

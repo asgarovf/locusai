@@ -10,14 +10,14 @@ import { Artifact, Message } from "./types";
 
 interface ChatMessageProps {
   message: Message;
-  artifact?: Artifact;
+  artifacts?: Artifact[];
   onArtifactClick?: (artifact: Artifact) => void;
   isTyping?: boolean;
 }
 
 export function ChatMessage({
   message,
-  artifact,
+  artifacts,
   onArtifactClick,
   isTyping,
 }: ChatMessageProps) {
@@ -48,7 +48,7 @@ export function ChatMessage({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex gap-4 max-w-4xl mx-auto w-full group",
+        "flex gap-4 max-w-5xl mx-auto w-full group transition-all",
         isUser ? "flex-row-reverse" : ""
       )}
     >
@@ -73,7 +73,7 @@ export function ChatMessage({
 
       <div
         className={cn(
-          "flex flex-col gap-2 min-w-0 max-w-[85%]",
+          "flex flex-col gap-2 min-w-0 max-w-[90%]",
           isUser ? "items-end" : "items-start"
         )}
       >
@@ -117,32 +117,37 @@ export function ChatMessage({
           )}
         </div>
 
-        {/* Artifact Attachment / Preview */}
-        {artifact && !isTyping && (
-          <button
-            onClick={() => onArtifactClick?.(artifact)}
-            className="flex items-center gap-3 p-3 mt-1 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 hover:border-primary/30 transition-all text-left group/artifact w-full max-w-sm"
-          >
-            <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-secondary/50 text-foreground/70 group-hover/artifact:text-primary group-hover/artifact:bg-primary/10 transition-colors">
-              {artifact.type === "code" ? (
-                <Terminal size={20} />
-              ) : artifact.type === "sprint" ? (
-                <Layers size={20} />
-              ) : artifact.type === "task" ? (
-                <CheckSquare size={20} />
-              ) : (
-                <FileText size={20} />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground truncate">
-                {artifact.title}
-              </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                {artifact.type}
-              </div>
-            </div>
-          </button>
+        {/* Artifact Attachments / Previews */}
+        {artifacts && artifacts.length > 0 && !isTyping && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 w-full max-w-2xl">
+            {artifacts.map((art) => (
+              <button
+                key={art.id}
+                onClick={() => onArtifactClick?.(art)}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 hover:border-primary/30 transition-all text-left group/artifact w-full"
+              >
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-secondary/50 text-foreground/70 group-hover/artifact:text-primary group-hover/artifact:bg-primary/10 transition-colors shrink-0">
+                  {art.type === "code" ? (
+                    <Terminal size={20} />
+                  ) : art.type === "sprint" ? (
+                    <Layers size={20} />
+                  ) : art.type === "task" ? (
+                    <CheckSquare size={20} />
+                  ) : (
+                    <FileText size={20} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground truncate">
+                    {art.title}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                    {art.type}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </motion.div>

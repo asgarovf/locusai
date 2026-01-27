@@ -18,6 +18,7 @@ export const CreateSprintSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   startDate: z.union([z.string(), z.number()]).optional(),
   endDate: z.union([z.string(), z.number()]).optional(),
+  taskIds: z.array(z.string()).optional(),
 });
 
 export type CreateSprint = z.infer<typeof CreateSprintSchema>;

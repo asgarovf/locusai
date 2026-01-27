@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const ConfigSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:3080/api"),
+  NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:8000/api"),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

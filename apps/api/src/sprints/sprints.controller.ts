@@ -96,6 +96,7 @@ export class SprintsController {
       workspaceId,
       startDate: this._toDate(body.startDate) ?? undefined,
       endDate: this._toDate(body.endDate) ?? undefined,
+      taskIds: body.taskIds,
     });
     return { sprint };
   }

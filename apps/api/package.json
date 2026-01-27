@@ -17,8 +17,8 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "workspace:*",
     "@locusai/ai-sdk": "workspace:*",
+    "@locusai/shared": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
@@ -27,6 +27,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "helmet": "^8.1.0",
     "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
@@ -44,6 +45,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
+    "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.2",

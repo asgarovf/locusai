@@ -19,7 +19,9 @@ export function ChatSuggestions({
   if (!suggestions || suggestions.length === 0) return null;
 
   return (
-    <div className={cn("flex flex-wrap gap-2 px-1", className)}>
+    <div
+      className={cn("max-w-5xl mx-auto flex flex-wrap gap-2 px-12", className)}
+    >
       {suggestions.map((suggestion, index) => (
         <motion.button
           key={index}

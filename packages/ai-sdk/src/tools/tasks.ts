@@ -1,5 +1,9 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { CreateTaskSchema, TaskStatus } from "@locusai/shared";
+import {
+  CreateTaskSchema,
+  TaskStatus,
+  UpdateTaskSchema,
+} from "@locusai/shared";
 import { z } from "zod";
 import { ITaskProvider } from "./interfaces";
 
@@ -39,10 +43,28 @@ export const createListTasksTool = (
     description: "List all tasks in the workspace. Can be filtered by status.",
     schema: z.object({
       status: z.enum(TaskStatus).optional(),
+      search: z
+        .string()
+        .optional()
+        .describe("Search term to filter tasks by title or description"),
     }),
-    func: async () => {
+    func: async ({ status, search }) => {
       try {
-        const tasks = await provider.list(workspaceId);
+        let tasks = await provider.list(workspaceId);
+
+        if (status) {
+          tasks = tasks.filter((t) => t.status === status);
+        }
+
+        if (search) {
+          const lower = search.toLowerCase();
+          tasks = tasks.filter(
+            (t) =>
+              t.title.toLowerCase().includes(lower) ||
+              t.description?.toLowerCase().includes(lower)
+          );
+        }
+
         return JSON.stringify({
           success: true,
           count: tasks.length,
@@ -58,6 +80,67 @@ export const createListTasksTool = (
           success: false,
           error:
             error instanceof Error ? error.message : "Failed to list tasks",
+        });
+      }
+    },
+  });
+
+export const createUpdateTaskTool = (
+  provider: ITaskProvider,
+  workspaceId: string
+) =>
+  new DynamicStructuredTool({
+    name: "update_task",
+    description:
+      "Update an existing task's properties like title, description, status, priority, or sprintId.",
+    schema: z.object({
+      id: z.string().describe("The ID of the task to update"),
+      updates: UpdateTaskSchema,
+    }),
+    func: async ({ id, updates }) => {
+      try {
+        const task = await provider.update(id, workspaceId, updates);
+        return JSON.stringify({
+          success: true,
+          message: `Updated task "${task.title}"`,
+          taskId: task.id,
+        });
+      } catch (error: unknown) {
+        return JSON.stringify({
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Failed to update task",
+        });
+      }
+    },
+  });
+
+export const createBatchUpdateTasksTool = (
+  provider: ITaskProvider,
+  workspaceId: string
+) =>
+  new DynamicStructuredTool({
+    name: "batch_update_tasks",
+    description:
+      "Update multiple tasks at once. Useful for moving multiple tasks to a sprint or changing their status together.",
+    schema: z.object({
+      ids: z.array(z.string()).describe("List of task IDs to update"),
+      updates: UpdateTaskSchema,
+    }),
+    func: async ({ ids, updates }) => {
+      try {
+        await provider.batchUpdate(ids, workspaceId, updates);
+        return JSON.stringify({
+          success: true,
+          message: `Successfully updated ${ids.length} tasks.`,
+        });
+      } catch (error: unknown) {
+        return JSON.stringify({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to batch update tasks",
         });
       }
     },

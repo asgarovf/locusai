@@ -1,5 +1,4 @@
-import type { Sprint, Task } from "@locusai/shared";
-import { TaskStatus } from "@locusai/shared";
+import { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
@@ -50,7 +49,7 @@ export class AgentWorker {
 
   // State
   private consecutiveEmpty = 0;
-  private maxEmpty = 5;
+  private maxEmpty = 60; // 10 minutes (60 * 10s)
   private maxTasks = 50;
   private tasksCompleted = 0;
   private pollInterval = 10_000;
@@ -161,21 +160,18 @@ export class AgentWorker {
     );
 
     // Fetch and inject server-side context
+    let context = "";
     try {
-      const context = await this.client.tasks.getContext(
+      context = await this.client.tasks.getContext(
         task.id,
         this.config.workspaceId
       );
-      this.taskExecutor.updateTaskContext(context);
     } catch (err) {
       this.log(`Failed to fetch task context: ${err}`, "warn");
     }
 
     // Execute the task
-    const result = await this.taskExecutor.execute(fullTask);
-
-    // Cleanup context after execution
-    this.taskExecutor.updateTaskContext("");
+    const result = await this.taskExecutor.execute(fullTask, context);
 
     // Reindex codebase after execution to ensure fresh context
     await this.indexerService.reindex();
@@ -230,7 +226,11 @@ export class AgentWorker {
       const result = await this.executeTask(task);
 
       // Sync artifacts after task execution
-      await this.artifactSyncer.sync();
+      try {
+        await this.artifactSyncer.sync();
+      } catch (err) {
+        this.log(`Artifact sync failed: ${err}`, "error");
+      }
 
       if (result.success) {
         this.log(`Completed: ${task.title}`, "success");

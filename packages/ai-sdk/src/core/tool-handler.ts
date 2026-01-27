@@ -1,6 +1,6 @@
 import type { ToolCall } from "@langchain/core/messages/tool";
-import { type $FixMe, type AIArtifact, SuggestedAction } from "@locusai/shared";
-import { ToolExecutionResult } from "src/interfaces";
+import { type $FixMe, type AIArtifact } from "@locusai/shared";
+import { ToolExecutionResult } from "../interfaces";
 import { getAgentTools } from "../tools/index";
 import { ILocusProvider, ToolResponse } from "../tools/interfaces";
 
@@ -40,12 +40,10 @@ export class ToolHandler {
       new Map(artifacts.map((a) => [a.id, a])).values()
     );
 
-    const suggestedActions = this.generateSuggestedActions(uniqueArtifacts);
-
     return {
       observations,
       artifacts: uniqueArtifacts,
-      suggestedActions,
+      suggestedActions: [],
     };
   }
 
@@ -79,11 +77,17 @@ export class ToolHandler {
       }
       // Single Sprint
       else if (res.sprintId) {
+        const startDate = args.startDate
+          ? new Date(args.startDate).toLocaleDateString()
+          : "TBD";
+        const endDate = args.endDate
+          ? new Date(args.endDate).toLocaleDateString()
+          : "TBD";
         artifacts.push({
           id: res.sprintId,
           type: "sprint",
           title: args.name || "New Sprint",
-          content: "", // Sprints don't have content per se
+          content: `### Sprint: ${args.name || "New Sprint"}\n\n**Duration:** ${startDate} - ${endDate}\n\n**Goal:** ${args.goal || "Not specified"}`,
           metadata: { status: "PLANNED" },
         });
       }
@@ -114,11 +118,17 @@ export class ToolHandler {
       // List of Sprints
       else if (res.sprints && Array.isArray(res.sprints)) {
         res.sprints.forEach((s) => {
+          const startDate = s.startDate
+            ? new Date(s.startDate).toLocaleDateString()
+            : "TBD";
+          const endDate = s.endDate
+            ? new Date(s.endDate).toLocaleDateString()
+            : "TBD";
           artifacts.push({
             id: s.id,
             type: "sprint",
             title: s.name,
-            content: "",
+            content: `### Sprint: ${s.name}\n\n**Duration:** ${startDate} - ${endDate}\n\n**Status:** ${s.status}`,
             metadata: {
               status: s.status,
               startDate: s.startDate,
@@ -130,21 +140,5 @@ export class ToolHandler {
     } catch (_e) {
       // Ignore non-JSON results
     }
-  }
-
-  private generateSuggestedActions(artifacts: AIArtifact[]): SuggestedAction[] {
-    const actions: SuggestedAction[] = [];
-
-    // Heuristic: If we just created tasks, maybe start a sprint?
-    const tasks = artifacts.filter((a) => a.type === "task");
-    if (tasks.length > 0) {
-      actions.push({
-        label: "Create Sprint with Tasks",
-        type: "start_sprint", // This type should match SuggestedAction['type']
-        payload: { taskIds: tasks.map((a) => a.id) },
-      });
-    }
-
-    return actions;
   }
 }

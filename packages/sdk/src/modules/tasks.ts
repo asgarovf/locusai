@@ -108,6 +108,17 @@ export class TasksModule extends BaseModule {
     return data.comment;
   }
 
+  async batchUpdate(
+    ids: string[],
+    workspaceId: string,
+    updates: UpdateTask
+  ): Promise<void> {
+    await this.api.patch(`/workspaces/${workspaceId}/tasks/batch`, {
+      ids,
+      updates,
+    });
+  }
+
   /**
    * Fetch the formatted context for a task (Project Manifest + Task Details).
    * This is used by the local AI agent to align with the project.

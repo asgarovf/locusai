@@ -14,6 +14,11 @@ export interface ITaskProvider {
     data: CreateTask & { userId?: string; workspaceId?: string }
   ): Promise<Task>;
   update(id: string, workspaceId: string, data: UpdateTask): Promise<Task>;
+  batchUpdate(
+    ids: string[],
+    workspaceId: string,
+    data: UpdateTask
+  ): Promise<void>;
   list(workspaceId: string, options?: { sprintId?: string }): Promise<Task[]>;
   getById(id: string, workspaceId: string): Promise<Task>;
 }

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import "../../test-setup";
-import { TaskStatus } from "@locusai/shared";
+import { TaskPriority, TaskStatus } from "@locusai/shared";
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -56,7 +56,14 @@ describe("TasksService", () => {
   });
 
   it("should create a task with default checklist items", async () => {
-    const data = { title: "Test Task", workspaceId: "ws-1" };
+    const data = {
+      title: "Test Task",
+      workspaceId: "ws-1",
+      description: "",
+      status: TaskStatus.BACKLOG,
+      priority: TaskPriority.MEDIUM,
+      labels: [],
+    };
     taskRepo.create.mockImplementation(
       (dto) => ({ id: "task-1", ...dto }) as any
     );

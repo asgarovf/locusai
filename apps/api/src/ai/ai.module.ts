@@ -8,6 +8,7 @@ import { SprintsModule } from "../sprints/sprints.module";
 import { TasksModule } from "../tasks/tasks.module";
 import { AiController } from "./ai.controller";
 import { AiService } from "./ai.service";
+import { AiProviderFactory } from "./ai-provider.factory";
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { AiService } from "./ai.service";
     forwardRef(() => SprintsModule),
   ],
   controllers: [AiController],
-  providers: [AiService],
+  providers: [AiService, AiProviderFactory],
   exports: [AiService],
 })
 export class AiModule {}

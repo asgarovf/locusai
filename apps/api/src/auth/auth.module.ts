@@ -15,7 +15,7 @@ import { UsersModule } from "@/users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { OtpService } from "./otp.service";
-import { JwtStrategy } from "./strategies";
+import { GoogleStrategy, JwtStrategy } from "./strategies";
 
 @Global()
 @Module({
@@ -40,7 +40,7 @@ import { JwtStrategy } from "./strategies";
       }),
     }),
   ],
-  providers: [AuthService, OtpService, JwtStrategy],
+  providers: [AuthService, OtpService, JwtStrategy, GoogleStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

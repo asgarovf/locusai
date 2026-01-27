@@ -13,7 +13,12 @@ import {
   createListSprintsTool,
   createPlanSprintTool,
 } from "./sprints";
-import { createCreateTaskTool, createListTasksTool } from "./tasks";
+import {
+  createBatchUpdateTasksTool,
+  createCreateTaskTool,
+  createListTasksTool,
+  createUpdateTaskTool,
+} from "./tasks";
 
 export const getAgentTools = (
   provider: ILocusProvider,
@@ -22,6 +27,8 @@ export const getAgentTools = (
 ): DynamicStructuredTool[] => {
   const tools: DynamicStructuredTool[] = [
     createCreateTaskTool(provider.tasks, workspaceId),
+    createUpdateTaskTool(provider.tasks, workspaceId),
+    createBatchUpdateTasksTool(provider.tasks, workspaceId),
     createListTasksTool(provider.tasks, workspaceId),
     createReadDocTool(provider.docs, workspaceId),
     createListDocsTool(provider.docs, workspaceId),

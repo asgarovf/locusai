@@ -1,20 +1,28 @@
 import { EventType, SprintStatus } from "@locusai/shared";
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { ModuleRef } from "@nestjs/core";
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AiService } from "@/ai/ai.service";
 import { Task } from "@/entities";
 import { Sprint } from "@/entities/sprint.entity";
 import { EventsService } from "@/events/events.service";
+import { TasksService } from "@/tasks/tasks.service";
 
 @Injectable()
 export class SprintsService {
   constructor(
     @InjectRepository(Sprint)
     private readonly sprintRepository: Repository<Sprint>,
+    private readonly tasksService: TasksService,
     private readonly eventsService: EventsService,
-    private readonly moduleRef: ModuleRef
+
+    @Inject(forwardRef(() => AiService))
+    private readonly aiService: AiService
   ) {}
 
   async findAll(workspaceId: string): Promise<Sprint[]> {
@@ -38,6 +46,7 @@ export class SprintsService {
     startDate?: Date;
     endDate?: Date;
     userId?: string;
+    taskIds?: string[];
   }): Promise<Sprint> {
     const sprint = this.sprintRepository.create({
       name: data.name,
@@ -48,6 +57,12 @@ export class SprintsService {
     });
 
     const saved = await this.sprintRepository.save(sprint);
+
+    if (data.taskIds && data.taskIds.length > 0) {
+      await this.tasksService.batchUpdate(data.taskIds, data.workspaceId, {
+        sprintId: saved.id,
+      });
+    }
 
     await this.eventsService.logEvent({
       workspaceId: data.workspaceId,
@@ -189,8 +204,7 @@ export class SprintsService {
     if (!needsPlanning) return sprint;
 
     // Use AI Agent to generate plan
-    const aiService = this.moduleRef.get(AiService, { strict: false });
-    const agent = await aiService.getAgent(workspaceId);
+    const agent = await this.aiService.getAgent(workspaceId);
 
     const taskList = tasks
       .map(

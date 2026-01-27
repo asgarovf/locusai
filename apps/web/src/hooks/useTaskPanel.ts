@@ -144,7 +144,6 @@ export function useTaskPanel({
     mutationFn: () => locusClient.tasks.delete(taskId, workspaceId as string),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all() });
-      toast.success("Task deleted");
       onDeleted();
       onClose();
     },

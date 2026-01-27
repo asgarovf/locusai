@@ -180,7 +180,6 @@ export function useBoard() {
 
     try {
       await locusClient.tasks.delete(taskId, workspaceId);
-      toast.success("Task deleted");
       queryClient.invalidateQueries({
         queryKey: queryKeys.tasks.list(workspaceId),
       });

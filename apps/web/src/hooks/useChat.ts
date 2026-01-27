@@ -12,16 +12,21 @@ import {
 } from "@/components/chat/types";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useLocalStorage } from "./useLocalStorage";
 import { useWorkspaceId } from "./useWorkspaceId";
 
 export function useChat() {
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
 
-  const [activeSessionId, setActiveSessionId] = useState<string>("");
+  const [activeSessionId, setActiveSessionId] = useLocalStorage<string>(
+    `locus-active-chat-session-${workspaceId}`,
+    ""
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeArtifact, setActiveArtifact] = useState<Artifact | null>(null);
+  const [shouldScrollSmooth, setShouldScrollSmooth] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,11 +46,69 @@ export function useChat() {
 
   const sessions = sessionsData || [];
 
+  // 1.5 Fetch Session History with React Query
+  const { data: historyData, isLoading: isLoadingHistory } = useQuery({
+    queryKey: queryKeys.ai.session(activeSessionId, workspaceId),
+    queryFn: async () => {
+      if (!activeSessionId || !workspaceId) return [];
+      const data = await locusClient.ai.getSession(
+        workspaceId,
+        activeSessionId
+      );
+      const history = data?.history || [];
+
+      return history.map((m) => {
+        const base = {
+          id: m.id || generateUUID(),
+          role: m.role as "user" | "assistant",
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+        };
+
+        if (m.role === "assistant") {
+          return {
+            ...base,
+            role: "assistant",
+            content: m.content,
+            thoughtProcess: m.thoughtProcess,
+            artifacts: m.artifacts?.map((art) => ({
+              ...art,
+              type: ["code", "document", "sprint", "task"].includes(art.type)
+                ? art.type
+                : "document",
+            })),
+            suggestedActions: m.suggestedActions,
+          } as AssistantMessage;
+        }
+
+        return {
+          ...base,
+          role: "user",
+          content: m.content,
+        } as UserMessage;
+      });
+    },
+    enabled: !!activeSessionId && !!workspaceId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Sync history to messages state
+  useEffect(() => {
+    if (historyData) {
+      setMessages(historyData);
+      // After history is loaded, we can enable smooth scrolling for new messages
+      setTimeout(() => setShouldScrollSmooth(true), 100);
+    }
+  }, [historyData]);
+
   // Scroll to bottom effect
   // biome-ignore lint/correctness/useExhaustiveDependencies: Messages and isTyping are the only dependencies that should trigger the scroll effect
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: shouldScrollSmooth ? "smooth" : "auto",
+      });
+    }
+  }, [messages, isTyping, shouldScrollSmooth]);
 
   // 2. Mutations
   const chatMutation = useMutation({
@@ -106,15 +169,17 @@ export function useChat() {
 
     setMessages((prev) => [...prev, newMessage]);
     setIsTyping(true);
+    setShouldScrollSmooth(true);
 
     chatMutation.mutate({ text, sessionId });
   };
 
   const createNewChat = () => {
-    const newSessionId = generateUUID();
+    const newSessionId = "";
     setActiveSessionId(newSessionId);
     setMessages([]);
     setActiveArtifact(null);
+    setShouldScrollSmooth(false);
     return newSessionId;
   };
 
@@ -133,72 +198,16 @@ export function useChat() {
   const selectSession = async (id: string) => {
     if (id === activeSessionId) return;
 
+    setShouldScrollSmooth(false);
     setActiveSessionId(id);
-    setIsTyping(true);
+    setIsTyping(false);
     setActiveArtifact(null);
-
-    try {
-      console.log("[useChat] Fetching session:", id);
-      const { message: aiMessage, history } = await locusClient.ai.getSession(
-        workspaceId,
-        id
-      );
-
-      if (history && history.length > 0) {
-        const mappedMessages: Message[] = history.map((m) => {
-          const base = {
-            id: m.id || generateUUID(),
-            role: m.role as "user" | "assistant",
-            timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
-          };
-
-          if (m.role === "assistant") {
-            const assistantMsg: AssistantMessage = {
-              ...base,
-              role: "assistant",
-              content: m.content,
-              thoughtProcess: m.thoughtProcess,
-              artifacts: m.artifacts?.map((art) => ({
-                ...art,
-                type: ["code", "document", "sprint", "task"].includes(art.type)
-                  ? art.type
-                  : "document",
-              })),
-              suggestedActions: m.suggestedActions,
-            };
-            return assistantMsg;
-          }
-
-          const userMsg: UserMessage = {
-            ...base,
-            role: "user",
-            content: m.content,
-          };
-          return userMsg;
-        });
-
-        setMessages(mappedMessages);
-      } else {
-        // Fallback for sessions with no history item yet but we have a last message
-        const welcomeMessage: AssistantMessage = {
-          id: aiMessage.id,
-          role: "assistant",
-          content: aiMessage.content,
-          timestamp: new Date(aiMessage.timestamp || Date.now()),
-        };
-        setMessages([welcomeMessage]);
-      }
-    } catch (error) {
-      console.error("Failed to load session:", error);
-      setMessages([]);
-    } finally {
-      setIsTyping(false);
-    }
   };
 
   return {
     sessions,
     isLoadingSessions,
+    isLoadingHistory,
     activeSessionId,
     messages,
     isTyping,

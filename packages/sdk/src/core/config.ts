@@ -18,6 +18,7 @@ export const LOCUS_CONFIG = {
   indexFile: "codebase-index.json",
   contextFile: "CLAUDE.md",
   artifactsDir: "artifacts",
+  documentsDir: "documents",
 };
 
 export function getLocusPath(

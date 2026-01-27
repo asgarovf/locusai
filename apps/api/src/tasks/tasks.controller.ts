@@ -26,6 +26,7 @@ import {
 import { CurrentUserId, MembershipRoles } from "@/auth/decorators";
 import { MembershipRolesGuard } from "@/auth/guards";
 import { ZodValidationPipe } from "@/common/pipes";
+import { Task } from "@/entities";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
@@ -49,7 +50,9 @@ export class TasksController {
   ): Promise<TasksResponse> {
     await this.workspacesService.findById(workspaceId);
     const tasks = await this.tasksService.findAll(workspaceId);
-    return { tasks };
+
+    const tasksResponse = tasks.map((task) => this.taskToTaskResponse(task));
+    return { tasks: tasksResponse };
   }
 
   @Get("backlog")
@@ -63,7 +66,9 @@ export class TasksController {
   ): Promise<TasksResponse> {
     await this.workspacesService.findById(workspaceId);
     const tasks = await this.tasksService.findBacklog(workspaceId);
-    return { tasks };
+
+    const tasksResponse = tasks.map((task) => this.taskToTaskResponse(task));
+    return { tasks: tasksResponse };
   }
 
   @Get(":taskId")
@@ -74,7 +79,7 @@ export class TasksController {
   )
   async getById(@Param("taskId") taskId: string): Promise<TaskResponse> {
     const task = await this.tasksService.findById(taskId);
-    return { task };
+    return { task: this.taskToTaskResponse(task) };
   }
 
   @Post()
@@ -103,7 +108,7 @@ export class TasksController {
       acceptanceChecklist: body.acceptanceChecklist,
       userId: userId ?? undefined,
     });
-    return { task };
+    return { task: this.taskToTaskResponse(task) };
   }
 
   @Patch(":taskId")
@@ -122,7 +127,21 @@ export class TasksController {
       body,
       userId ?? undefined
     );
-    return { task: updated };
+    return { task: this.taskToTaskResponse(updated) };
+  }
+
+  @Patch("batch")
+  @MembershipRoles(
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN,
+    MembershipRole.MEMBER
+  )
+  async batchUpdate(
+    @Param("workspaceId") workspaceId: string,
+    @Body() body: { ids: string[]; updates: UpdateTask }
+  ) {
+    await this.tasksService.batchUpdate(body.ids, workspaceId, body.updates);
+    return { success: true };
   }
 
   @Delete(":taskId")
@@ -173,5 +192,14 @@ export class TasksController {
       },
       workspace.projectManifest
     );
+  }
+
+  taskToTaskResponse(task: Task): TaskResponse["task"] {
+    return {
+      ...task,
+      dueDate: task.dueDate ? task.dueDate.getTime() : null,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+    };
   }
 }

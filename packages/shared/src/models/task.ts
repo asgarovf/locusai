@@ -57,6 +57,9 @@ export const UpdateTaskSchema = TaskSchema.partial()
     createdAt: true,
     updatedAt: true,
     dueDate: true,
+    comments: true,
+    activityLog: true,
+    docs: true,
   })
   .extend({
     title: z.string().min(1).max(200).optional(),

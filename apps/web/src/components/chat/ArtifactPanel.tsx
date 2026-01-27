@@ -131,9 +131,39 @@ export function ArtifactPanel({
               {artifact.content}
             </SyntaxHighlighter>
           </div>
-        ) : (
+        ) : artifact.content ? (
           <div className="p-6">
             <Markdown content={artifact.content} />
+          </div>
+        ) : (
+          <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-primary/40">
+              {artifact.type === "sprint" ? (
+                <Layers size={32} />
+              ) : (
+                <CheckSquare size={32} />
+              )}
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-lg font-semibold">{artifact.title}</h4>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                This {artifact.type} has been successfully created in your
+                workspace.
+              </p>
+            </div>
+            {artifact.metadata && (
+              <div className="pt-4 flex flex-wrap justify-center gap-2">
+                {Object.entries(artifact.metadata).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="px-2.5 py-1 rounded-full bg-secondary/50 border border-border/50 text-[10px] uppercase tracking-wider font-bold"
+                  >
+                    <span className="opacity-50 mr-1">{key}:</span>
+                    {String(value)}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

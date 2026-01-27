@@ -6,7 +6,6 @@ import { PromptBuilder } from "../core/prompt-builder.js";
 export interface TaskExecutorDeps {
   aiRunner: AiRunner;
   projectPath: string;
-  taskContext?: string;
   skipPlanning?: boolean;
   log: LogFn;
 }
@@ -21,15 +20,14 @@ export class TaskExecutor {
     this.promptBuilder = new PromptBuilder(deps.projectPath);
   }
 
-  updateTaskContext(context: string) {
-    this.deps.taskContext = context;
-  }
-
-  async execute(task: Task): Promise<{ success: boolean; summary: string }> {
+  async execute(
+    task: Task,
+    context?: string
+  ): Promise<{ success: boolean; summary: string }> {
     this.deps.log(`Executing: ${task.title}`, "info");
 
     const basePrompt = await this.promptBuilder.build(task, {
-      taskContext: this.deps.taskContext,
+      taskContext: context,
     });
 
     try {

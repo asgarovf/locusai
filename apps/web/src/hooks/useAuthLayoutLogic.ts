@@ -11,7 +11,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { isCloudMode } from "@/utils/env.utils";
 
-const AUTH_SKIP_ROUTES = ["/onboarding"];
+const AUTH_SKIP_ROUTES = ["/onboarding", "/callback"];
 
 /**
  * Determines if a pathname should skip auth redirect

@@ -21,6 +21,7 @@ import { Organization } from "@/entities/organization.entity";
 import { User } from "@/entities/user.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { UsersService } from "@/users/users.service";
+import { GoogleUser } from "./interfaces/google-user.interface";
 import { OtpService } from "./otp.service";
 
 @Injectable()
@@ -230,6 +231,50 @@ export class AuthService {
         orgId: org.id,
       });
     });
+  }
+
+  async loginWithGoogle(googleUser: GoogleUser): Promise<LoginResponse> {
+    let user = await this.usersService.findByEmail(googleUser.email);
+
+    if (!user) {
+      // Create new user for first-time Google login
+      user = await this.dataSource.transaction(async (manager) => {
+        const name = `${googleUser.firstName} ${googleUser.lastName}`.trim();
+        const orgName = `${name}'s Organization`;
+
+        const org = manager.create(Organization, {
+          name: orgName,
+        });
+        await manager.save(org);
+
+        const workspace = manager.create(Workspace, {
+          orgId: org.id,
+          name: "General",
+        });
+        await manager.save(workspace);
+
+        const newUser = manager.create(User, {
+          email: googleUser.email,
+          name: name,
+          avatarUrl: googleUser.picture,
+          role: UserRole.USER,
+          onboardingCompleted: false, // Redirect to onboarding on frontend
+          emailVerified: true, // Google verifies email
+        });
+        await manager.save(newUser);
+
+        const membership = manager.create(Membership, {
+          userId: newUser.id,
+          orgId: org.id,
+          role: MembershipRole.OWNER,
+        });
+        await manager.save(membership);
+
+        return newUser;
+      });
+    }
+
+    return this.login(user);
   }
 
   async getUserWorkspaces(userId: string): Promise<Array<{ id: string }>> {

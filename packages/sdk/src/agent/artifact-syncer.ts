@@ -4,6 +4,7 @@ import {
   readdirSync,
   readFileSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { DocType } from "@locusai/shared";
@@ -63,18 +64,27 @@ export class ArtifactSyncer {
 
     try {
       const files = readdirSync(artifactsDir);
-      if (files.length === 0) return;
 
       this.deps.log(`Syncing ${files.length} artifacts to server...`, "info");
 
+      // Get all groups to map IDs to names
+      const groups = await this.deps.client.docs.listGroups(
+        this.deps.workspaceId
+      );
+      const groupMap = new Map(groups.map((g) => [g.id, g.name]));
+
       // Get or create the Artifacts group
-      const artifactsGroupId = await this.getOrCreateArtifactsGroup();
+      let artifactsGroupId = groups.find((g) => g.name === "Artifacts")?.id;
+      if (!artifactsGroupId) {
+        artifactsGroupId = await this.getOrCreateArtifactsGroup();
+      }
 
       // Get existing docs to check for updates
       const existingDocs = await this.deps.client.docs.list(
         this.deps.workspaceId
       );
 
+      // Fetch docs from server
       for (const file of files) {
         const filePath = join(artifactsDir, file);
         if (statSync(filePath).isFile()) {
@@ -104,6 +114,46 @@ export class ArtifactSyncer {
               type: DocType.GENERAL,
             });
             this.deps.log(`Created artifact: ${file}`, "success");
+          }
+        }
+      }
+
+      // Fetch docs from server
+      for (const doc of existingDocs) {
+        if (doc.groupId === artifactsGroupId) {
+          // It's an artifact, sync to artifactsDir if missing
+          const fileName = `${doc.title}.md`;
+          const filePath = join(artifactsDir, fileName);
+
+          if (!existsSync(filePath)) {
+            writeFileSync(filePath, doc.content || "");
+            this.deps.log(`Fetched artifact: ${fileName}`, "success");
+          }
+        } else {
+          // It's a general doc, sync to documentsDir
+          const documentsDir = getLocusPath(
+            this.deps.projectPath,
+            "documentsDir"
+          );
+
+          // Get group name for folder structure
+          const groupName = groupMap.get(doc.groupId || "") || "General";
+          const groupDir = join(documentsDir, groupName);
+
+          if (!existsSync(groupDir)) {
+            mkdirSync(groupDir, { recursive: true });
+          }
+
+          const fileName = `${doc.title}.md`;
+          const filePath = join(groupDir, fileName);
+
+          // Always update local docs to match server (one-way sync for knowledge)
+          if (
+            !existsSync(filePath) ||
+            readFileSync(filePath, "utf-8") !== doc.content
+          ) {
+            writeFileSync(filePath, doc.content || "");
+            // this.deps.log(`Fetched doc: ${groupName}/${fileName}`, "success");
           }
         }
       }

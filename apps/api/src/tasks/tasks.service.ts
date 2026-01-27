@@ -119,7 +119,7 @@ export class TasksService {
       labels: data.labels || [],
       assigneeRole: data.assigneeRole,
       assignedTo: data.assignedTo || null,
-      dueDate: data.dueDate || null,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
       parentId: data.parentId,
       sprintId: data.sprintId,
       acceptanceChecklist: mergedChecklist,
@@ -162,10 +162,15 @@ export class TasksService {
       task.assignedTo = null;
     }
 
-    const { comments, activityLog, ...rest } = updates;
+    const { ...rest } = updates;
     Object.assign(task, {
       ...rest,
-      dueDate: rest.dueDate ? new Date(rest.dueDate) : task.dueDate,
+      dueDate:
+        rest.dueDate !== undefined
+          ? rest.dueDate
+            ? new Date(rest.dueDate)
+            : null
+          : task.dueDate,
     });
 
     if (updates.docIds) {
@@ -210,6 +215,29 @@ export class TasksService {
     });
 
     await this.taskRepository.remove(task);
+  }
+
+  async batchUpdate(
+    ids: string[],
+    workspaceId: string,
+    updates: UpdateTask
+  ): Promise<void> {
+    const tasks = await this.taskRepository.find({
+      where: { id: In(ids), workspaceId },
+    });
+
+    if (tasks.length === 0) return;
+
+    for (const task of tasks) {
+      if (updates.sprintId !== undefined) {
+        task.sprintId = updates.sprintId;
+      }
+      if (updates.status !== undefined) {
+        task.status = updates.status as TaskStatus;
+      }
+    }
+
+    await this.taskRepository.save(tasks);
   }
 
   async addComment(

@@ -20,6 +20,7 @@ import { useChat } from "@/hooks/useChat";
 export default function ChatPage() {
   const {
     sessions,
+    isLoadingHistory,
     activeSessionId,
     messages,
     isTyping,
@@ -78,22 +79,22 @@ export default function ChatPage() {
         onNewChat={handleNewChat}
       />
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {messages.length === 0 ? (
-            <ChatEmptyState onSelectPrompt={sendMessage} />
+      <div className="flex-1 overflow-y-auto p-4 md:px-8 lg:px-12 scrollbar-thin">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {isLoadingHistory ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : messages.length === 0 ? (
+            <ChatEmptyState />
           ) : (
             <>
               {messages.map((message) => (
                 <ChatMessage
                   key={message.id}
                   message={message}
-                  // For now, only show artifact if specifically attached or in new artifacts array
-                  artifact={
-                    message.role === "assistant" && message.artifacts?.length
-                      ? message.artifacts[0]
-                      : undefined
+                  artifacts={
+                    message.role === "assistant" ? message.artifacts : undefined
                   }
                   onArtifactClick={(art) => setActiveArtifact(art)}
                 />

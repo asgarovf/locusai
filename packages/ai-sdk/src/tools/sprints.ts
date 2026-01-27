@@ -10,7 +10,7 @@ export const createCreateSprintTool = (
   new DynamicStructuredTool({
     name: "create_sprint",
     description:
-      "Create a new sprint. Sprints handle a collection of tasks for a specific time period. Set a clear goal.",
+      "Create a new sprint. Sprints handle a collection of tasks for a specific time period. You can optionally provide 'taskIds' to assign existing tasks to this sprint immediately.",
     schema: CreateSprintSchema,
     func: async (input) => {
       try {
@@ -19,6 +19,7 @@ export const createCreateSprintTool = (
           success: true,
           message: `Created sprint "${sprint.name}"`,
           sprintId: sprint.id,
+          hint: "You can now provide 'taskIds' during sprint creation to automatically assign tasks to it. If you forgot, you can still move tasks using 'batch_update_tasks' and then call 'plan_sprint' to optimize the schedule.",
         });
       } catch (error: unknown) {
         return JSON.stringify({

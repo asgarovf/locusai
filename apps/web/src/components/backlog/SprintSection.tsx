@@ -22,7 +22,7 @@
 
 import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
 import { motion } from "framer-motion";
-import { CheckCircle, Flag, Layers, Play } from "lucide-react";
+import { CheckCircle, Flag, Layers, Play, Trash2 } from "lucide-react";
 import { DraggableTask, DroppableSection } from "@/components/dnd";
 import { TaskCard } from "@/components/TaskCard";
 import { Button } from "@/components/ui";
@@ -43,6 +43,8 @@ interface SprintSectionProps {
   onComplete?: (sprintId: string) => void;
   /** Called when starting sprint */
   onStart?: (sprintId: string) => void;
+  /** Called when delete action is triggered for sprint */
+  onDelete?: (sprintId: string) => void;
   /** Called when task is selected */
   onTaskClick: (taskId: string) => void;
   /** Called when delete action is triggered */
@@ -61,6 +63,7 @@ export function SprintSection({
   isActive,
   onComplete,
   onStart,
+  onDelete,
   onTaskClick,
   onTaskDelete,
   isSubmitting,
@@ -91,29 +94,42 @@ export function SprintSection({
         accentColor={accentColor}
         badge={isActive ? "Active" : "Planned"}
         actions={
-          isActive ? (
-            <Button
-              size="sm"
-              variant="emerald-subtle"
-              onClick={() => onComplete?.(sprint.id)}
-              isLoading={isSubmitting}
-            >
-              <CheckCircle size={14} className="mr-1" />
-              Complete
-            </Button>
-          ) : (
-            canStart && (
+          <div className="flex items-center gap-2">
+            {isActive ? (
               <Button
                 size="sm"
-                variant="amber"
-                onClick={() => onStart?.(sprint.id)}
+                variant="emerald-subtle"
+                onClick={() => onComplete?.(sprint.id)}
                 isLoading={isSubmitting}
               >
-                <Play size={12} className="mr-1.5 fill-current" />
-                Start
+                <CheckCircle size={14} className="mr-1" />
+                Complete
               </Button>
-            )
-          )
+            ) : (
+              canStart && (
+                <Button
+                  size="sm"
+                  variant="amber"
+                  onClick={() => onStart?.(sprint.id)}
+                  isLoading={isSubmitting}
+                >
+                  <Play size={12} className="mr-1.5 fill-current" />
+                  Start
+                </Button>
+              )
+            )}
+            {onDelete && tasks.length === 0 && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                onClick={() => onDelete(sprint.id)}
+                disabled={isSubmitting}
+              >
+                <Trash2 size={14} />
+              </Button>
+            )}
+          </div>
         }
       >
         <DroppableSection id={`sprint-${sprint.id}`}>

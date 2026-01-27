@@ -257,10 +257,28 @@ export function useBacklog() {
     }
   };
 
+  const handleDeleteSprint = async (sprintId: string) => {
+    try {
+      setIsSubmitting(true);
+      await locusClient.sprints.delete(sprintId, workspaceId);
+      refetchSprints();
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sprints.list(workspaceId),
+      });
+      // Also refetch tasks because tasks from deleted sprint return to backlog
+      refetchTasks();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete sprint"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     try {
       await locusClient.tasks.delete(taskId, workspaceId);
-      toast.success("Task deleted");
       refetchTasks();
     } catch (error) {
       toast.error(
@@ -296,6 +314,7 @@ export function useBacklog() {
     handleCreateSprint,
     handleStartSprint,
     handleCompleteSprint,
+    handleDeleteSprint,
     handleDeleteTask,
     refetchTasks,
     refetchSprints,
