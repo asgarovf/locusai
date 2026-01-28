@@ -18,13 +18,13 @@ function SettingsContent() {
       description="Manage your workspace preferences and configuration."
     >
       <div className="max-w-5xl space-y-8">
-        {/* Organization Section */}
-        <SettingSection title="Organization">
+        {/* Workspace Section */}
+        <SettingSection title="Workspace">
           <Link href="/settings/team">
             <SettingItem
               icon={<Users size={18} />}
               title="Team"
-              description="Invite and manage organization members"
+              description="Invite and manage workspace members"
             >
               <div className="text-muted-foreground">
                 <ChevronRight size={20} />
@@ -55,7 +55,7 @@ function SettingsContent() {
               <SettingItem
                 icon={<Trash2 size={18} className="text-destructive" />}
                 title="Danger Zone"
-                description="Delete organization and other destructive actions"
+                description="Delete workspace and other destructive actions"
               >
                 <div className="text-muted-foreground">
                   <ChevronRight size={20} />

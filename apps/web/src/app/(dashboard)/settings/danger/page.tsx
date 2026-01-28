@@ -7,50 +7,50 @@ import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
 import { Button, Input, Modal, Spinner } from "@/components/ui";
 import { useAuth } from "@/context";
-import { useAuthenticatedUser, useOrganizationQuery } from "@/hooks";
+import { useWorkspaceIdOptional, useWorkspaceQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 
 export default function DangerParamsPage() {
-  const user = useAuthenticatedUser();
   const { logout } = useAuth();
   const router = useRouter();
-  const { data: organization, isLoading: isOrgLoading } =
-    useOrganizationQuery();
+  const workspaceId = useWorkspaceIdOptional();
+  const { data: workspace, isLoading: isWorkspaceLoading } =
+    useWorkspaceQuery();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const orgName = organization?.name || "organization";
+  const workspaceName = workspace?.name || "workspace";
 
-  const handleDeleteOrganization = async () => {
-    if (!user?.orgId) return;
+  const handleDeleteWorkspace = async () => {
+    if (!workspaceId) return;
 
-    const expectedConfirmation = `delete ${orgName}`.toLowerCase();
+    const expectedConfirmation = `delete ${workspaceName}`.toLowerCase();
     if (deleteConfirmation.toLowerCase() !== expectedConfirmation) {
-      toast.error(`Please type "delete ${orgName}" to confirm`);
+      toast.error(`Please type "delete ${workspaceName}" to confirm`);
       return;
     }
 
     setIsDeleting(true);
     try {
-      await locusClient.organizations.delete(user.orgId);
-      toast.success("Organization deleted");
+      await locusClient.workspaces.delete(workspaceId);
+      toast.success("Workspace deleted");
 
-      // Logout the user
+      // Logout the user (or redirect to another workspace if available in a real app)
       logout();
 
       // Redirect to login
       router.push("/login");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete organization"
+        error instanceof Error ? error.message : "Failed to delete workspace"
       );
     } finally {
       setIsDeleting(false);
     }
   };
 
-  if (isOrgLoading) {
+  if (isWorkspaceLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Spinner />
@@ -61,18 +61,16 @@ export default function DangerParamsPage() {
   return (
     <PageLayout
       title="Danger Zone"
-      description="Destructive actions for your organization"
+      description="Destructive actions for your workspace"
     >
       <div className="max-w-2xl">
         <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-6">
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="font-medium text-foreground">
-                Delete Organization
-              </h4>
+              <h4 className="font-medium text-foreground">Delete Workspace</h4>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Permanently delete this organization and all its data. This
-                action cannot be undone.
+                Permanently delete this workspace and all its data. This action
+                cannot be undone.
               </p>
             </div>
             <Button
@@ -94,20 +92,20 @@ export default function DangerParamsPage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-xl font-bold text-foreground">
-              Delete Organization
+              Delete Workspace
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              This action cannot be undone. All organization data will be
+              This action cannot be undone. All workspace data will be
               permanently deleted.
             </p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Type "delete {orgName}" to confirm
+              Type "delete {workspaceName}" to confirm
             </label>
             <Input
-              placeholder={`delete ${orgName}`}
+              placeholder={`delete ${workspaceName}`}
               value={deleteConfirmation}
               onChange={(e) => setDeleteConfirmation(e.target.value)}
               disabled={isDeleting}
@@ -124,15 +122,15 @@ export default function DangerParamsPage() {
             </Button>
             <Button
               variant="danger"
-              onClick={handleDeleteOrganization}
+              onClick={handleDeleteWorkspace}
               disabled={
                 isDeleting ||
                 deleteConfirmation.toLowerCase() !==
-                  `delete ${orgName}`.toLowerCase()
+                  `delete ${workspaceName}`.toLowerCase()
               }
               isLoading={isDeleting}
             >
-              Delete Organization
+              Delete Workspace
             </Button>
           </div>
         </div>
