@@ -63,6 +63,7 @@ export class ToolRegistry {
       createCompileDocumentTool(
         this.compiler,
         this.provider.docs,
+        this.provider.tasks,
         this.workspaceId
       ),
     ];
