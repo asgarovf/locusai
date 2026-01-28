@@ -1,5 +1,18 @@
 # @locusai/api
 
+## 0.6.0
+
+### Minor Changes
+
+- Execution workflow improvements
+  Default sgent kills
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/ai-sdk@0.2.0
+  - @locusai/shared@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

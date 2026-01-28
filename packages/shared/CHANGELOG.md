@@ -1,5 +1,12 @@
 # @locusai/shared
 
+## 0.6.0
+
+### Minor Changes
+
+- Execution workflow improvements
+  Default sgent kills
+
 ## 0.5.1
 
 ### Patch Changes
