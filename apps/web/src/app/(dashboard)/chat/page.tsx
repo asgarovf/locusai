@@ -34,6 +34,7 @@ export default function ChatPage() {
   } = useChat();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [inputValue, setInputValue] = useState("");
 
   const handleNewChat = () => {
     createNewChat();
@@ -86,7 +87,9 @@ export default function ChatPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : messages.length === 0 ? (
-            <ChatEmptyState />
+            <ChatEmptyState
+              onSelectPrompt={(prompt) => setInputValue(prompt)}
+            />
           ) : (
             <>
               {messages.map((message) => (
@@ -110,7 +113,7 @@ export default function ChatPage() {
                     suggestions={suggestions}
                     onSelect={(suggestion: SuggestedAction) => {
                       if (suggestion.type === "chat_suggestion") {
-                        sendMessage(suggestion.payload.text);
+                        setInputValue(suggestion.payload.text);
                       }
                     }}
                     className="mt-2"
@@ -134,7 +137,12 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <ChatInput onSendMessage={sendMessage} isLoading={isTyping} />
+      <ChatInput
+        onSendMessage={sendMessage}
+        isLoading={isTyping}
+        value={inputValue}
+        onValueChange={setInputValue}
+      />
     </ChatLayout>
   );
 }

@@ -45,14 +45,16 @@ export const createListSprintsTool = (
         return JSON.stringify({
           success: true,
           count: sprints.length,
-          sprints: sprints.map((s) => ({
-            id: s.id,
-            name: s.name,
-            status: s.status,
-            goal: s.name, // Mapping name to goal for now as shared model doesn't have goal
-            startDate: s.startDate,
-            endDate: s.endDate,
-          })),
+          sprints: sprints
+            .filter((s) => s.status !== SprintStatus.COMPLETED)
+            .map((s) => ({
+              id: s.id,
+              name: s.name,
+              status: s.status,
+              goal: s.name, // Mapping name to goal for now as shared model doesn't have goal
+              startDate: s.startDate,
+              endDate: s.endDate,
+            })),
           hint: "To move tasks to the current or next sprint, use 'batch_update_tasks' with sprintId='active' or 'next'. This works even if only a PLANNED sprint exists (it will be auto-started or used).",
         });
       } catch (error: unknown) {

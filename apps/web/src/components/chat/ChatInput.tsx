@@ -8,10 +8,28 @@ import { cn } from "@/lib/utils";
 interface ChatInputProps {
   onSendMessage: (text: string) => void;
   isLoading?: boolean;
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
-export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
-  const [inputValue, setInputValue] = useState("");
+export function ChatInput({
+  onSendMessage,
+  isLoading,
+  value: controlledValue,
+  onValueChange,
+}: ChatInputProps) {
+  const [internalValue, setInternalValue] = useState("");
+  const isControlled = controlledValue !== undefined;
+  const inputValue = isControlled ? controlledValue : internalValue;
+
+  const setInputValue = (val: string) => {
+    if (isControlled) {
+      onValueChange?.(val);
+    } else {
+      setInternalValue(val);
+    }
+  };
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Input value triggers the textarea height adjustment

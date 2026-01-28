@@ -1,17 +1,29 @@
 import type { ToolCall } from "@langchain/core/messages/tool";
 import { type $FixMe, type AIArtifact } from "@locusai/shared";
 import { ToolExecutionResult } from "../interfaces";
-import { getAgentTools } from "../tools/index";
+import { ToolRegistry } from "../tools/index";
 import { ILocusProvider, ToolResponse } from "../tools/interfaces";
+import { DocumentCompiler } from "./compiler"; // Add if missing, or maybe pass via DI
 
 export class ToolHandler {
+  private registry: ToolRegistry;
+
   constructor(
     private provider: ILocusProvider,
-    private workspaceId: string
-  ) {}
+    private workspaceId: string,
+    private compiler?: DocumentCompiler // Optional dependency
+  ) {
+    this.registry = new ToolRegistry(
+      this.provider,
+      this.workspaceId,
+      this.compiler
+    );
+  }
 
   async executeCalls(toolCalls: ToolCall[]): Promise<ToolExecutionResult> {
-    const tools = getAgentTools(this.provider, this.workspaceId);
+    // For execution, we check ALL tools.
+    // Optimization: We could filter by the tool names in toolCalls if registry supported lookup by name.
+    const tools = this.registry.getAllTools();
     console.log("[LocusAgent] LLM requested tool calls");
 
     const observations: string[] = [];

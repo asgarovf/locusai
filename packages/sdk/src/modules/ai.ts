@@ -45,4 +45,10 @@ export class AIModule extends BaseModule {
   getChatStreamUrl(workspaceId: string, sessionId: string): string {
     return `${this.api.defaults.baseURL}/ai/${workspaceId}/chat/stream?sessionId=${sessionId}`;
   }
+  /**
+   * Delete a chat session.
+   */
+  async deleteSession(workspaceId: string, sessionId: string): Promise<void> {
+    await this.api.delete(`/ai/${workspaceId}/session/${sessionId}`);
+  }
 }

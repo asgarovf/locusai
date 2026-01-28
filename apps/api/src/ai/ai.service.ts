@@ -120,9 +120,26 @@ export class AiService {
     });
   }
 
+  async deleteSession(
+    workspaceId: string,
+    userId: string,
+    externalSessionId: string
+  ): Promise<void> {
+    const result = await this.sessionRepo.delete({
+      workspaceId,
+      userId,
+      externalSessionId,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Session ${externalSessionId} not found`);
+    }
+  }
+
   async getAgent(
     workspace: Workspace | string,
-    session?: AiSession
+    session?: AiSession,
+    userId?: string
   ): Promise<LocusAgent> {
     let workspaceEntity: Workspace | null = null;
 
@@ -137,7 +154,13 @@ export class AiService {
       workspaceEntity = workspace;
     }
 
-    const provider = this.providerFactory.create(workspaceEntity.id);
+    // Use session userId if available, otherwise use the passed userId, otherwise fallback to system.
+    const finalUserId = session?.userId || userId || "system";
+
+    const provider = this.providerFactory.create(
+      workspaceEntity.id,
+      finalUserId
+    );
 
     return new LocusAgent({
       apiKey: this.config.get("GOOGLE_GENERATIVE_AI_API_KEY"),

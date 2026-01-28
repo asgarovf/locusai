@@ -30,7 +30,7 @@ export const CreateDocSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().optional(),
   type: z.enum(DocType).optional().default(DocType.GENERAL),
-  groupId: z.uuid().optional(),
+  groupId: z.string().optional(),
 });
 
 export type CreateDoc = z.infer<typeof CreateDocSchema>;
@@ -39,7 +39,7 @@ export const UpdateDocSchema = z.object({
   title: z.string().min(1).optional(),
   content: z.string().optional(),
   type: z.enum(DocType).optional(),
-  groupId: z.uuid().nullable().optional(),
+  groupId: z.string().nullable().optional(),
 });
 
 export type UpdateDoc = z.infer<typeof UpdateDocSchema>;

@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot, CheckSquare, FileText, Layers, Terminal } from "lucide-react";
+import {
+  Bot,
+  CheckSquare,
+  Copy,
+  FileText,
+  Layers,
+  Terminal,
+} from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -101,7 +108,7 @@ export function ChatMessage({
           className={cn(
             "rounded-2xl px-5 py-3.5 text-sm shadow-sm leading-relaxed",
             isUser
-              ? "bg-primary text-primary-foreground rounded-tr-none"
+              ? "bg-secondary text-secondary-foreground rounded-tr-none"
               : "bg-card border border-border/50 text-foreground rounded-tl-none"
           )}
         >
@@ -113,7 +120,7 @@ export function ChatMessage({
               <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce"></span>
             </div>
           ) : (
-            <Markdown content={message.content} isInverted={!isUser} />
+            <Markdown content={message.content} />
           )}
         </div>
 
@@ -144,6 +151,18 @@ export function ChatMessage({
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                     {art.type}
                   </div>
+                  <button
+                    className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors mt2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(art.id);
+                    }}
+                  >
+                    <Copy size={12} />
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                      {art.id}
+                    </p>
+                  </button>
                 </div>
               </button>
             ))}

@@ -12,9 +12,11 @@ export const createCompileDocumentTool = (
   new DynamicStructuredTool({
     name: "compile_document_to_tasks",
     description:
-      "Compile a document (PRD, Spec, etc.) into a list of actionable engineering tasks. Use this when the user asks to 'generate tasks' from a document.",
+      "Compile a document (PRD, Spec, etc.) into a list of actionable engineering tasks. ALWAYS use a real docId found via 'list_documents'. Do NOT guess or use placeholders like '12345'.",
     schema: z.object({
-      docId: z.uuid(),
+      docId: z
+        .string()
+        .describe("The UUID of the document to compile. Must be a real ID."),
     }),
     func: async ({ docId }) => {
       try {

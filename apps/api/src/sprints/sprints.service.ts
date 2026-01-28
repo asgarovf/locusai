@@ -160,14 +160,21 @@ export class SprintsService {
     return saved;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, userId?: string): Promise<void> {
     const sprint = await this.findById(id);
+    await this.eventsService.logEvent({
+      workspaceId: sprint.workspaceId,
+      userId,
+      type: EventType.SPRINT_DELETED,
+      payload: { name: sprint.name, sprintId: id },
+    });
     await this.sprintRepository.remove(sprint);
   }
 
   async planSprintWithAi(
     sprintId: string,
-    workspaceId: string
+    workspaceId: string,
+    userId?: string
   ): Promise<Sprint> {
     const sprint = await this.findById(sprintId);
     if (sprint.workspaceId !== workspaceId) {
@@ -205,7 +212,11 @@ export class SprintsService {
 
     // Use AI Agent to generate plan
     try {
-      const agent = await this.aiService.getAgent(workspaceId);
+      const agent = await this.aiService.getAgent(
+        workspaceId,
+        undefined,
+        userId
+      );
 
       const taskList = tasks
         .map(

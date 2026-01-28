@@ -20,28 +20,60 @@ import {
   createUpdateTaskTool,
 } from "./tasks";
 
-export const getAgentTools = (
-  provider: ILocusProvider,
-  workspaceId: string,
-  compiler?: DocumentCompiler
-): DynamicStructuredTool[] => {
-  const tools: DynamicStructuredTool[] = [
-    createCreateTaskTool(provider.tasks, workspaceId),
-    createUpdateTaskTool(provider.tasks, workspaceId),
-    createBatchUpdateTasksTool(provider.tasks, provider.sprints, workspaceId),
-    createListTasksTool(provider.tasks, workspaceId),
-    createReadDocTool(provider.docs, workspaceId),
-    createListDocsTool(provider.docs, workspaceId),
-    createCreateDocTool(provider.docs, workspaceId),
-    createUpdateDocTool(provider.docs, workspaceId),
-    createCreateSprintTool(provider.sprints, workspaceId),
-    createListSprintsTool(provider.sprints, workspaceId),
-    createPlanSprintTool(provider.sprints, workspaceId),
-  ];
+export class ToolRegistry {
+  constructor(
+    private provider: ILocusProvider,
+    private workspaceId: string,
+    private compiler?: DocumentCompiler
+  ) {}
 
-  if (compiler) {
-    tools.push(createCompileDocumentTool(compiler, provider.docs, workspaceId));
+  getTaskTools(): DynamicStructuredTool[] {
+    return [
+      createCreateTaskTool(this.provider.tasks, this.workspaceId),
+      createUpdateTaskTool(this.provider.tasks, this.workspaceId),
+      createBatchUpdateTasksTool(
+        this.provider.tasks,
+        this.provider.sprints,
+        this.workspaceId
+      ),
+      createListTasksTool(this.provider.tasks, this.workspaceId),
+    ];
   }
 
-  return tools;
-};
+  getSprintTools(): DynamicStructuredTool[] {
+    return [
+      createCreateSprintTool(this.provider.sprints, this.workspaceId),
+      createListSprintsTool(this.provider.sprints, this.workspaceId),
+      createPlanSprintTool(this.provider.sprints, this.workspaceId),
+    ];
+  }
+
+  getDocTools(): DynamicStructuredTool[] {
+    return [
+      createReadDocTool(this.provider.docs, this.workspaceId),
+      createListDocsTool(this.provider.docs, this.workspaceId),
+      createCreateDocTool(this.provider.docs, this.workspaceId),
+      createUpdateDocTool(this.provider.docs, this.workspaceId),
+    ];
+  }
+
+  getCompilerTools(): DynamicStructuredTool[] {
+    if (!this.compiler) return [];
+    return [
+      createCompileDocumentTool(
+        this.compiler,
+        this.provider.docs,
+        this.workspaceId
+      ),
+    ];
+  }
+
+  getAllTools(): DynamicStructuredTool[] {
+    return [
+      ...this.getTaskTools(),
+      ...this.getDocTools(),
+      ...this.getSprintTools(),
+      ...this.getCompilerTools(),
+    ];
+  }
+}

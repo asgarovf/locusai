@@ -42,10 +42,10 @@ export const CreateTaskSchema = z.object({
   assigneeRole: z.enum(AssigneeRole).optional(),
   assignedTo: z.string().nullable().optional(),
   dueDate: z.union([z.string(), z.number()]).nullable().optional(),
-  parentId: z.uuid().nullable().optional(),
-  sprintId: z.uuid().nullable().optional(),
+  parentId: z.string().nullable().optional(),
+  sprintId: z.string().nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
-  docIds: z.array(z.uuid()).optional(),
+  docIds: z.array(z.string()).optional(),
 });
 
 export type CreateTask = z.infer<typeof CreateTaskSchema>;
@@ -65,7 +65,7 @@ export const UpdateTaskSchema = TaskSchema.partial()
     title: z.string().min(1).max(200).optional(),
     dueDate: z.union([z.string(), z.number()]).optional().nullable(),
     acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
-    docIds: z.array(z.uuid()).optional(),
+    docIds: z.array(z.string()).optional(),
   });
 
 export type UpdateTask = z.infer<typeof UpdateTaskSchema>;

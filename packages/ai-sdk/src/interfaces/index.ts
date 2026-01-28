@@ -54,6 +54,10 @@ export enum AgentMode {
   EXECUTING = "EXECUTING",
   IDLE = "IDLE",
   ANALYZING = "ANALYZING",
+  QUERY = "QUERY",
+  IDEA = "IDEA",
+  COMPILING = "COMPILING",
+  DOCUMENTING = "DOCUMENTING",
 }
 
 export interface AgentChatMessage {

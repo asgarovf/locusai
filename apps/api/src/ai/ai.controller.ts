@@ -11,6 +11,7 @@ import {
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
@@ -112,5 +113,20 @@ export class AiController {
         timestamp: new Date(),
       })),
     };
+  }
+
+  @Delete("ai/:workspaceId/session/:sessionId")
+  @MembershipRoles(
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN,
+    MembershipRole.MEMBER
+  )
+  async deleteSession(
+    @CurrentUser() user: User,
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    { workspaceId }: WorkspaceIdParam,
+    @Param("sessionId") sessionId: string
+  ): Promise<void> {
+    await this.aiService.deleteSession(workspaceId, user.id, sessionId);
   }
 }

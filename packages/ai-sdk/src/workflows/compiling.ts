@@ -1,16 +1,17 @@
 import { HumanMessage } from "@langchain/core/messages";
 import { $FixMe, AIArtifact, SuggestedAction } from "@locusai/shared";
+import { Intent } from "../chains/intent";
 import { DocumentCompiler } from "../core/compiler";
 import { ContextManager } from "../core/context";
 import { ToolHandler } from "../core/tool-handler";
 import { BaseWorkflow, WorkflowContext } from "../core/workflow";
 import { AgentMode, AgentResponse } from "../interfaces/index";
-import { getAgentTools } from "../tools/index";
+import { ToolRegistry } from "../tools/index";
 import { ILocusProvider } from "../tools/interfaces";
 
-export class ExecutionWorkflow extends BaseWorkflow {
-  readonly name = "Execution";
-  readonly mode = AgentMode.EXECUTING;
+export class CompilingWorkflow extends BaseWorkflow {
+  readonly name = "Compiling";
+  readonly mode = AgentMode.COMPILING;
 
   constructor(
     private provider: ILocusProvider,
@@ -21,16 +22,24 @@ export class ExecutionWorkflow extends BaseWorkflow {
     super();
   }
 
-  canHandle(_context: WorkflowContext): boolean {
-    // This is typically the fallback workflow for planning, execution, and general queries
-    return true;
+  canHandle(context: WorkflowContext): boolean {
+    if (context.intent === Intent.COMPILING) return true;
+    return (
+      context.state.mode === AgentMode.COMPILING &&
+      context.intent === Intent.UNKNOWN
+    );
   }
 
   async execute(context: WorkflowContext): Promise<AgentResponse> {
     const { llm, state, input } = context;
 
-    // Build tools - we need to bind them to the LLM if not already
-    const tools = getAgentTools(this.provider, this.workspaceId, this.compiler);
+    const registry = new ToolRegistry(
+      this.provider,
+      this.workspaceId,
+      this.compiler
+    );
+    const tools = registry.getAllTools();
+
     const toolLLM = (llm as $FixMe).bindTools
       ? (llm as $FixMe).bindTools(tools)
       : llm;
@@ -39,7 +48,7 @@ export class ExecutionWorkflow extends BaseWorkflow {
     const messages = ContextManager.buildMessages(
       state.history,
       input,
-      projectContext
+      `${projectContext}\n\nYou are in Compiling mode. Your task is to transform existing documents into a fully planned Sprint with tasks and mindmaps. Use the 'compile_document_to_tasks' tool.`
     );
 
     let steps = 0;
@@ -47,7 +56,6 @@ export class ExecutionWorkflow extends BaseWorkflow {
     const allArtifacts: AIArtifact[] = [];
     const allSuggestedActions: SuggestedAction[] = [];
 
-    // Loop for multi-step execution (ReAct pattern)
     while (steps < maxSteps) {
       steps++;
 
@@ -55,9 +63,8 @@ export class ExecutionWorkflow extends BaseWorkflow {
       messages.push(response);
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        // Agent is done, just talking
         const { cleanContent, actions } = this.extractAISuggestions(
-          response.content as string
+          response.content as unknown
         );
         return {
           content: cleanContent,
@@ -66,45 +73,56 @@ export class ExecutionWorkflow extends BaseWorkflow {
         };
       }
 
-      // Execute tools
       const toolResult = await this.toolHandler.executeCalls(
         response.tool_calls
       );
 
-      // Accumulate side effects
       if (toolResult.artifacts) allArtifacts.push(...toolResult.artifacts);
       if (toolResult.suggestedActions)
         allSuggestedActions.push(...toolResult.suggestedActions);
 
       const observationText = toolResult.observations.join("\n\n");
 
-      // We'll append a generic "Tool Output" as a Human Message or System Message if we can't do ToolMessage.
       messages.push(
         new HumanMessage(
           `Tool Execution Result:\n${observationText}\n\nContinue executing if needed, or answer the user.`
         )
       );
-
-      // Continue loop to let LLM decide next step
     }
 
-    // Fallback if max steps reached
     return {
-      content: "Execution limit reached. check the logs.",
+      content: "Execution limit reached.",
       artifacts: allArtifacts,
       suggestedActions: allSuggestedActions,
     };
   }
 
-  private extractAISuggestions(content: string): {
+  private extractAISuggestions(content: unknown): {
     cleanContent: string;
     actions: SuggestedAction[];
   } {
-    const suggestionsMatch = content.match(
+    let textContent = "";
+
+    if (typeof content === "string") {
+      textContent = content;
+    } else if (Array.isArray(content)) {
+      textContent = content
+        .map((c) => {
+          if (typeof c === "string") return c;
+          if (c && typeof c === "object" && "text" in c) return c.text;
+          return "";
+        })
+        .join("");
+    } else {
+      textContent = String(content || "");
+    }
+
+    const suggestionsMatch = textContent.match(
       /<suggestions>([\s\S]*?)<\/suggestions>/
     );
+
     if (!suggestionsMatch) {
-      return { cleanContent: content, actions: [] };
+      return { cleanContent: textContent, actions: [] };
     }
 
     try {
@@ -115,14 +133,14 @@ export class ExecutionWorkflow extends BaseWorkflow {
         payload: { text: a.text },
       }));
 
-      const cleanContent = content
+      const cleanContent = textContent
         .replace(/<suggestions>[\s\S]*?<\/suggestions>/, "")
         .trim();
 
       return { cleanContent, actions };
     } catch (e) {
-      console.warn("[ExecutionWorkflow] Failed to parse suggested actions:", e);
-      return { cleanContent: content, actions: [] };
+      console.warn("[CompilingWorkflow] Failed to parse suggested actions:", e);
+      return { cleanContent: textContent, actions: [] };
     }
   }
 }

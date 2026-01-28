@@ -183,16 +183,30 @@ export function useChat() {
     return newSessionId;
   };
 
+  const deleteSessionMutation = useMutation({
+    mutationFn: (sessionId: string) =>
+      locusClient.ai.deleteSession(workspaceId, sessionId),
+    onError: (error) => {
+      console.error("Failed to delete session:", error);
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ai.sessions(workspaceId),
+      });
+    },
+  });
+
   const deleteSession = (id: string) => {
-    // In real app, call delete mutation
-    if (activeSessionId === id && sessions.length > 0) {
-      setActiveSessionId(sessions.find((s) => s.id !== id)?.id || "");
+    // Optimistic update
+    if (activeSessionId === id) {
+      const nextSession = sessions.find((s) => s.id !== id);
+      setActiveSessionId(nextSession?.id || "");
     }
-    // For now we just filter locally if we don't have a mutation yet
+
     queryClient.setQueryData(
       queryKeys.ai.sessions(workspaceId),
       (old: ChatSession[] | undefined) => old?.filter((s) => s.id !== id)
     );
+
+    deleteSessionMutation.mutate(id);
   };
 
   const selectSession = async (id: string) => {

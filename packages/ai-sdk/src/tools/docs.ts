@@ -38,9 +38,10 @@ export const createUpdateDocTool = (
 ) =>
   new DynamicStructuredTool({
     name: "update_document",
-    description: "Update an existing document's content.",
+    description:
+      "Update an existing document's content. Use the ID from 'list_documents'.",
     schema: z.object({
-      id: z.uuid(),
+      id: z.string().describe("The UUID of the document to update"),
       content: z.string().optional(),
       title: z.string().optional(),
     }),
@@ -70,9 +71,10 @@ export const createReadDocTool = (
 ) =>
   new DynamicStructuredTool({
     name: "read_document",
-    description: "Read the content of a specific document by its ID.",
+    description:
+      "Read the content of a specific document by its ID. Use the ID from 'list_documents'.",
     schema: z.object({
-      id: z.uuid(),
+      id: z.string().describe("The UUID of the document to read"),
     }),
     func: async ({ id }) => {
       try {
