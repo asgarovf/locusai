@@ -2,31 +2,25 @@ import {
   AddMember,
   AddMemberSchema,
   MembershipResponse,
-  MembershipRole,
   MembersResponse,
   OrganizationResponse,
   OrganizationsResponse,
   OrgIdParam,
   OrgIdParamSchema,
 } from "@locusai/shared";
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
 import { z } from "zod";
-import { CurrentUser, MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
+import {
+  CurrentUser,
+  Member,
+  MemberAdmin,
+  MemberOwner,
+} from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { User } from "@/entities";
 import { OrganizationsService } from "./organizations.service";
 
 @Controller("organizations")
-@UseGuards(MembershipRolesGuard)
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
@@ -37,11 +31,7 @@ export class OrganizationsController {
   }
 
   @Get(":orgId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getById(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<OrganizationResponse> {
@@ -50,11 +40,7 @@ export class OrganizationsController {
   }
 
   @Get(":orgId/members")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async listMembers(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<MembersResponse> {
@@ -63,7 +49,7 @@ export class OrganizationsController {
   }
 
   @Post(":orgId/members")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async addMember(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(AddMemberSchema)) body: AddMember
@@ -76,7 +62,7 @@ export class OrganizationsController {
   }
 
   @Delete(":orgId/members/:userId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async removeMember(
     @Param("orgId") orgId: string,
     @Param("userId") userId: string
@@ -86,7 +72,7 @@ export class OrganizationsController {
   }
 
   @Delete(":orgId")
-  @MembershipRoles(MembershipRole.OWNER)
+  @MemberOwner()
   async delete(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ) {
@@ -99,7 +85,7 @@ export class OrganizationsController {
   // ============================================================================
 
   @Get(":orgId/api-keys")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async listApiKeys(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ) {
@@ -116,7 +102,7 @@ export class OrganizationsController {
   }
 
   @Post(":orgId/api-keys")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async createApiKey(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
@@ -139,7 +125,7 @@ export class OrganizationsController {
   }
 
   @Delete(":orgId/api-keys/:keyId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async deleteApiKey(
     @Param("orgId") orgId: string,
     @Param("keyId") keyId: string

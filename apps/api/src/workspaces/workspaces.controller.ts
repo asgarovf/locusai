@@ -3,7 +3,6 @@ import {
   CreateWorkspaceSchema,
   DispatchTask,
   DispatchTaskSchema,
-  MembershipRole,
   OrgIdParam,
   OrgIdParamSchema,
   TaskResponse,
@@ -26,7 +25,7 @@ import {
   Put,
   Query,
 } from "@nestjs/common";
-import { CurrentUser, MembershipRoles } from "@/auth/decorators";
+import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { Task } from "@/entities";
 import { User } from "@/entities/user.entity";
@@ -48,11 +47,7 @@ export class WorkspacesController {
   }
 
   @Get("org/:orgId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async list(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<WorkspacesResponse> {
@@ -74,7 +69,7 @@ export class WorkspacesController {
   }
 
   @Post("org/:orgId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(CreateWorkspaceSchema)) body: CreateWorkspace
@@ -88,11 +83,7 @@ export class WorkspacesController {
   }
 
   @Get(":workspaceId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getById(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam
@@ -102,7 +93,7 @@ export class WorkspacesController {
   }
 
   @Put(":workspaceId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async update(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam,
@@ -116,7 +107,7 @@ export class WorkspacesController {
   }
 
   @Delete(":workspaceId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async delete(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam
@@ -126,11 +117,7 @@ export class WorkspacesController {
   }
 
   @Get(":workspaceId/stats")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getStats(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam
@@ -139,11 +126,7 @@ export class WorkspacesController {
   }
 
   @Get(":workspaceId/activity")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getActivity(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam,
@@ -157,7 +140,7 @@ export class WorkspacesController {
   }
 
   @Post(":workspaceId/dispatch")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async dispatch(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam,

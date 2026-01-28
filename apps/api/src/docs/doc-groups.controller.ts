@@ -3,7 +3,6 @@ import {
   CreateDocGroupSchema,
   DocGroupResponse,
   DocGroupsResponse,
-  MembershipRole,
   UpdateDocGroup,
   UpdateDocGroupSchema,
 } from "@locusai/shared";
@@ -16,7 +15,7 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import { MembershipRoles } from "@/auth/decorators";
+import { AnyMember, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocGroupsService } from "./doc-groups.service";
 
@@ -25,12 +24,7 @@ export class DocGroupsController {
   constructor(private readonly docGroupsService: DocGroupsService) {}
 
   @Get()
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER,
-    MembershipRole.VIEWER
-  )
+  @AnyMember()
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<DocGroupsResponse> {
@@ -39,7 +33,7 @@ export class DocGroupsController {
   }
 
   @Post()
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async create(
     @Param("workspaceId") workspaceId: string,
     @Body(new ZodValidationPipe(CreateDocGroupSchema)) body: CreateDocGroup
@@ -53,7 +47,7 @@ export class DocGroupsController {
   }
 
   @Patch(":id")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async update(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(UpdateDocGroupSchema)) body: UpdateDocGroup
@@ -63,7 +57,7 @@ export class DocGroupsController {
   }
 
   @Delete(":id")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async delete(@Param("id") id: string) {
     await this.docGroupsService.delete(id);
     return { success: true };

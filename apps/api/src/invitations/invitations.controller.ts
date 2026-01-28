@@ -7,34 +7,23 @@ import {
   InvitationsResponse,
   InvitationVerifyParam,
   InvitationVerifyParamSchema,
-  MembershipRole,
   OrgIdParam,
   OrgIdParamSchema,
 } from "@locusai/shared";
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from "@nestjs/common";
-import { MembershipRoles } from "@/auth/decorators/membership-roles.decorator";
+import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { MemberAdmin } from "@/auth/decorators/membership-roles.decorator";
 import { Public } from "@/auth/decorators/public.decorator";
 import { CurrentUser } from "@/auth/decorators/user.decorator";
-import { MembershipRolesGuard } from "@/auth/guards/membership-roles.guard";
 import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
 import { User } from "@/entities";
 import { InvitationsService } from "./invitations.service";
 
 @Controller()
-@UseGuards(MembershipRolesGuard)
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Post("org/:orgId/invitations")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @CurrentUser() user: User,
@@ -50,7 +39,7 @@ export class InvitationsController {
   }
 
   @Get("org/:orgId/invitations")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async list(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<InvitationsResponse> {
@@ -81,7 +70,7 @@ export class InvitationsController {
   }
 
   @Delete("org/:orgId/invitations/:invitationId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async revoke(@Param("invitationId") invitationId: string) {
     await this.invitationsService.revoke(invitationId);
     return { success: true };

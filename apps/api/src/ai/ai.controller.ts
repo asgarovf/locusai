@@ -3,7 +3,6 @@ import {
   ChatRequestSchema,
   ChatResponse,
   generateUUID,
-  MembershipRole,
   User,
   WorkspaceIdParam,
   WorkspaceIdParamSchema,
@@ -16,24 +15,17 @@ import {
   NotFoundException,
   Param,
   Post,
-  UseGuards,
 } from "@nestjs/common";
-import { CurrentUser, MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
+import { CurrentUser, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { AiService } from "./ai.service";
 
 @Controller()
-@UseGuards(MembershipRolesGuard)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post("ai/:workspaceId/chat")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async chat(
     @CurrentUser() user: User,
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
@@ -44,11 +36,7 @@ export class AiController {
   }
 
   @Get("ai/:workspaceId/sessions")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async listSessions(
     @CurrentUser() user: User,
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
@@ -68,11 +56,7 @@ export class AiController {
   }
 
   @Get("ai/:workspaceId/session/:sessionId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getSession(
     @CurrentUser() user: User,
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
@@ -116,11 +100,7 @@ export class AiController {
   }
 
   @Delete("ai/:workspaceId/session/:sessionId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async deleteSession(
     @CurrentUser() user: User,
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))

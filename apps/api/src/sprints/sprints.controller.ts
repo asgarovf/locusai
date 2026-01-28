@@ -1,7 +1,6 @@
 import {
   CreateSprint,
   CreateSprintSchema,
-  MembershipRole,
   SprintResponse,
   SprintsResponse,
   UpdateSprint,
@@ -16,16 +15,13 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from "@nestjs/common";
-import { CurrentUser, MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
+import { CurrentUser, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { SprintsService } from "./sprints.service";
 
 @Controller("workspaces/:workspaceId/sprints")
-@UseGuards(MembershipRolesGuard)
 export class SprintsController {
   constructor(
     private readonly sprintsService: SprintsService,
@@ -42,11 +38,7 @@ export class SprintsController {
   }
 
   @Get()
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<SprintsResponse> {
@@ -56,11 +48,7 @@ export class SprintsController {
   }
 
   @Get("active")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getActive(
     @Param("workspaceId") workspaceId: string
   ): Promise<SprintResponse> {
@@ -75,22 +63,14 @@ export class SprintsController {
   }
 
   @Get(":sprintId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getById(@Param("sprintId") sprintId: string): Promise<SprintResponse> {
     const sprint = await this.sprintsService.findById(sprintId);
     return { sprint };
   }
 
   @Post()
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async create(
     @Param("workspaceId") workspaceId: string,
     @Body(new ZodValidationPipe(CreateSprintSchema)) body: CreateSprint
@@ -106,11 +86,7 @@ export class SprintsController {
   }
 
   @Patch(":sprintId")
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async update(
     @Param("sprintId") sprintId: string,
     @Body(new ZodValidationPipe(UpdateSprintSchema)) body: UpdateSprint
@@ -125,11 +101,7 @@ export class SprintsController {
   }
 
   @Post(":sprintId/start")
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async start(
     @CurrentUser() user: User,
     @Param("sprintId") sprintId: string
@@ -139,11 +111,7 @@ export class SprintsController {
   }
 
   @Post(":sprintId/complete")
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async complete(
     @CurrentUser() user: User,
     @Param("sprintId") sprintId: string
@@ -153,22 +121,14 @@ export class SprintsController {
   }
 
   @Delete(":sprintId")
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async delete(@Param("sprintId") sprintId: string) {
     await this.sprintsService.delete(sprintId);
     return { success: true };
   }
 
   @Post(":sprintId/trigger-ai-planning")
-  @MembershipRoles(
-    MembershipRole.MEMBER,
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN
-  )
+  @Member()
   async triggerAIPlanning(
     @Param("sprintId") sprintId: string,
     @Param("workspaceId") workspaceId: string

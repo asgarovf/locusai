@@ -5,7 +5,6 @@ import {
   CommentResponse,
   CreateTask,
   CreateTaskSchema,
-  MembershipRole,
   TaskResponse,
   TasksResponse,
   UpdateTask,
@@ -21,17 +20,14 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from "@nestjs/common";
-import { CurrentUserId, MembershipRoles } from "@/auth/decorators";
-import { MembershipRolesGuard } from "@/auth/guards";
+import { CurrentUserId, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { Task } from "@/entities";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
 @Controller("workspaces/:workspaceId/tasks")
-@UseGuards(MembershipRolesGuard)
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
@@ -40,11 +36,7 @@ export class TasksController {
   ) {}
 
   @Get()
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<TasksResponse> {
@@ -56,11 +48,7 @@ export class TasksController {
   }
 
   @Get("backlog")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getBacklog(
     @Param("workspaceId") workspaceId: string
   ): Promise<TasksResponse> {
@@ -72,22 +60,14 @@ export class TasksController {
   }
 
   @Get(":taskId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getById(@Param("taskId") taskId: string): Promise<TaskResponse> {
     const task = await this.tasksService.findById(taskId);
     return { task: this.taskToTaskResponse(task) };
   }
 
   @Post()
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async create(
     @CurrentUserId() userId: string | null,
     @Param("workspaceId") workspaceId: string,
@@ -112,11 +92,7 @@ export class TasksController {
   }
 
   @Patch(":taskId")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async update(
     @CurrentUserId() userId: string | null,
     @Param("taskId") taskId: string,
@@ -131,11 +107,7 @@ export class TasksController {
   }
 
   @Patch("batch")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async batchUpdate(
     @Param("workspaceId") workspaceId: string,
     @Body() body: { ids: string[]; updates: UpdateTask }
@@ -145,7 +117,7 @@ export class TasksController {
   }
 
   @Delete(":taskId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MemberAdmin()
   async delete(
     @CurrentUserId() userId: string | null,
     @Param("taskId") taskId: string
@@ -155,11 +127,7 @@ export class TasksController {
   }
 
   @Post(":taskId/comment")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async addComment(
     @CurrentUserId() userId: string | null,
     @Param("taskId") taskId: string,
@@ -175,11 +143,7 @@ export class TasksController {
   }
 
   @Get(":taskId/context")
-  @MembershipRoles(
-    MembershipRole.OWNER,
-    MembershipRole.ADMIN,
-    MembershipRole.MEMBER
-  )
+  @Member()
   async getTaskContext(@Param("taskId") taskId: string): Promise<string> {
     const task = await this.tasksService.findById(taskId);
     const workspace = await this.workspacesService.findById(task.workspaceId);
