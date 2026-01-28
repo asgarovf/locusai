@@ -37,16 +37,28 @@ export class ConfigManager {
       writeFileSync(locusConfigPath, JSON.stringify(config, null, 2));
     }
 
-    // 3. Create .agent/skills directory and default skills
-    const agentSkillsDir = join(this.projectPath, LOCUS_CONFIG.agentSkillsDir);
-    if (!existsSync(agentSkillsDir)) {
-      mkdirSync(agentSkillsDir, { recursive: true });
+    // 3. Create skills directories and default skills (non-destructive)
+    const skillLocations = [
+      LOCUS_CONFIG.agentSkillsDir, // .agent/skills
+      ".cursor/skills",
+      ".claude/skills",
+      ".codex/skills",
+      ".gemini/skills",
+    ];
 
-      // Initialize default skills from templates
+    for (const location of skillLocations) {
+      const skillsDir = join(this.projectPath, location);
+      if (!existsSync(skillsDir)) {
+        mkdirSync(skillsDir, { recursive: true });
+      }
+
+      // Initialize default skills from templates if they don't already exist
       for (const skill of DEFAULT_SKILLS) {
-        const skillPath = join(agentSkillsDir, skill.name);
-        mkdirSync(skillPath, { recursive: true });
-        writeFileSync(join(skillPath, "SKILL.md"), skill.content);
+        const skillPath = join(skillsDir, skill.name);
+        if (!existsSync(skillPath)) {
+          mkdirSync(skillPath, { recursive: true });
+          writeFileSync(join(skillPath, "SKILL.md"), skill.content);
+        }
       }
     }
   }
