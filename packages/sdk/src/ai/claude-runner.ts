@@ -86,6 +86,7 @@ export class ClaudeRunner implements AiRunner {
       let finalResult = "";
       let errorOutput = "";
       let buffer = "";
+      let stderrBuffer = "";
 
       claude.stdout.on("data", (data: Buffer) => {
         buffer += data.toString();
@@ -99,9 +100,18 @@ export class ClaudeRunner implements AiRunner {
       });
 
       claude.stderr.on("data", (data: Buffer) => {
-        const msg = data.toString();
-        errorOutput += msg;
-        process.stderr.write(msg);
+        const chunk = data.toString();
+        errorOutput += chunk;
+        stderrBuffer += chunk;
+
+        const lines = stderrBuffer.split("\n");
+        stderrBuffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!this.shouldSuppressLine(line)) {
+            process.stderr.write(`${line}\n`);
+          }
+        }
       });
 
       claude.on("error", (err) => {
@@ -113,6 +123,10 @@ export class ClaudeRunner implements AiRunner {
       });
 
       claude.on("close", (code) => {
+        if (stderrBuffer && !this.shouldSuppressLine(stderrBuffer)) {
+          process.stderr.write(`${stderrBuffer}\n`);
+        }
+
         process.stdout.write("\n");
         if (code === 0) {
           resolve(finalResult);
@@ -161,6 +175,13 @@ export class ClaudeRunner implements AiRunner {
         );
       }
     }
+  }
+
+  private shouldSuppressLine(line: string): boolean {
+    // Suppress lines that look like: [HH:mm:ss] [id] ℹ
+    // Example: [23:36:04] [-pww3x9m] ℹ
+    const infoLogRegex = /^\[\d{2}:\d{2}:\d{2}\]\s\[.*?\]\sℹ\s*$/;
+    return infoLogRegex.test(line.trim());
   }
 
   private createExecutionError(code: number | null, detail: string): Error {
