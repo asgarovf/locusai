@@ -50,7 +50,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' blob: data:",
+              "img-src 'self' blob: data: https: http:",
               "font-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
