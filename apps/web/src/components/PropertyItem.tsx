@@ -24,7 +24,7 @@
 "use client";
 
 import { Check, Edit2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SecondaryText } from "./typography";
 import { Button } from "./ui/Button";
 import { Dropdown } from "./ui/Dropdown";
@@ -58,6 +58,14 @@ export function PropertyItem({
 }: PropertyItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(String(value));
+
+  // Sync editValue with value prop when not editing, or always?
+  // Ideally, if the task updates externally, we want to reflect that.
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValue(String(value));
+    }
+  }, [value, isEditing]);
 
   const handleSave = () => {
     onEdit(editValue);
