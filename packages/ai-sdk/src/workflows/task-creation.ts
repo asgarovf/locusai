@@ -68,12 +68,6 @@ YOUR GOAL:
 
 4. Confirm creation to the user, providing the new Task ID.
 
-GUIDELINES FOR SUGGESTIONS:
-If providing "Next Steps" or suggestions, ensure they are REALISTIC and ACTIONABLE using natural language.
-- VALID: "Create a sub-task for X", "Add this to the active sprint", "Draft a design doc for this".
-- INVALID: "Move to 'Sprint 1' and set status to IN_PROGRESS" (Do not suggest complex multi-step state changes that imply non-existent UI features).
-- Keep suggestions focused on creating/refining work.
-
 Always create a REAL task in the system. Do not just say "I will create it". Call the tool.`
     );
 
