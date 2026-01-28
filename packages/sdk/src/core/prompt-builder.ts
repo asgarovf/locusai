@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
-import { getLocusPath } from "./config.js";
+import { getLocusPath, LOCUS_CONFIG } from "./config.js";
 
 export interface PromptOptions {
   taskContext?: string;
@@ -18,6 +20,14 @@ export class PromptBuilder {
     }
 
     prompt += `## Description\n${task.description || "No description provided."}\n\n`;
+
+    // 0. Project Metadata (from config)
+    const projectConfig = this.getProjectConfig();
+    if (projectConfig) {
+      prompt += `## Project Metadata\n`;
+      prompt += `- Version: ${projectConfig.version || "Unknown"}\n`;
+      prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
+    }
 
     // Parse Server Context if available
     let serverContext: {
@@ -40,10 +50,20 @@ export class PromptBuilder {
     if (existsSync(contextPath)) {
       try {
         const context = readFileSync(contextPath, "utf-8");
-        prompt += `## Project Context (Local)\n${context}\n\n`;
-        hasLocalContext = true;
+        if (context.trim().length > 20) {
+          prompt += `## Project Context (Local)\n${context}\n\n`;
+          hasLocalContext = true;
+        }
       } catch (err) {
         console.warn(`Warning: Could not read context file: ${err}`);
+      }
+    }
+
+    // Fallback to README if local context is missing or thin
+    if (!hasLocalContext) {
+      const fallback = this.getFallbackContext();
+      if (fallback) {
+        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
       }
     }
 
@@ -66,8 +86,11 @@ export class PromptBuilder {
       prompt += `\n`;
     }
 
-    // 2. Project Knowledge Base (Docs & Artifacts)
+    // 2. Project Awareness (Structure & Skills)
+    prompt += this.getProjectStructure();
+    prompt += this.getSkillsInfo();
 
+    // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
     prompt += `- Artifacts: \`.locus/artifacts\`\n`;
@@ -120,6 +143,120 @@ export class PromptBuilder {
 3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
 4. When finished successfully, output: <promise>COMPLETE</promise>\n`;
     return prompt;
+  }
+
+  private getProjectConfig(): { version?: string; createdAt?: string } | null {
+    const configPath = getLocusPath(this.projectPath, "configFile");
+    if (existsSync(configPath)) {
+      try {
+        return JSON.parse(readFileSync(configPath, "utf-8"));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private getFallbackContext(): string {
+    const readmePath = join(this.projectPath, "README.md");
+    if (existsSync(readmePath)) {
+      try {
+        const content = readFileSync(readmePath, "utf-8");
+        const limit = 1000;
+        return (
+          content.slice(0, limit) +
+          (content.length > limit ? "\n...(truncated)..." : "")
+        );
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }
+
+  private getProjectStructure(): string {
+    try {
+      const entries = readdirSync(this.projectPath);
+      const folders = entries.filter((e) => {
+        if (e.startsWith(".") || e === "node_modules") return false;
+        try {
+          return statSync(join(this.projectPath, e)).isDirectory();
+        } catch {
+          return false;
+        }
+      });
+
+      if (folders.length === 0) return "";
+
+      let structure = `## Project Structure\n`;
+      structure += `Key directories in this project:\n`;
+      for (const folder of folders) {
+        structure += `- \`${folder}/\`\n`;
+      }
+      return `${structure}\n`;
+    } catch {
+      return "";
+    }
+  }
+
+  private getSkillsInfo(): string {
+    const projectSkillsDirs = [
+      LOCUS_CONFIG.agentSkillsDir, // .agent/skills
+      ".cursor/skills",
+      ".claude/skills",
+      ".codex/skills",
+      ".gemini/skills",
+    ];
+
+    const globalHome = homedir();
+    const globalSkillsDirs = [
+      join(globalHome, ".cursor/skills"),
+      join(globalHome, ".claude/skills"),
+      join(globalHome, ".codex/skills"),
+      join(globalHome, ".gemini/skills"),
+    ];
+
+    const allSkillNames = new Set<string>();
+
+    // 1. Scan Project-level skills
+    for (const relativePath of projectSkillsDirs) {
+      const fullPath = join(this.projectPath, relativePath);
+      this.scanSkillsInDirectory(fullPath, allSkillNames);
+    }
+
+    // 2. Scan Global-level skills
+    for (const fullPath of globalSkillsDirs) {
+      this.scanSkillsInDirectory(fullPath, allSkillNames);
+    }
+
+    const uniqueSkills = Array.from(allSkillNames).sort();
+    if (uniqueSkills.length === 0) return "";
+
+    return (
+      `## Available Agent Skills\n` +
+      `The project has the following specialized skills available (from project or global locations):\n` +
+      uniqueSkills.map((s) => `- ${s}`).join("\n") +
+      "\n\n"
+    );
+  }
+
+  private scanSkillsInDirectory(dirPath: string, skillSet: Set<string>): void {
+    if (!existsSync(dirPath)) return;
+
+    try {
+      const entries = readdirSync(dirPath).filter((name) => {
+        try {
+          return statSync(join(dirPath, name)).isDirectory();
+        } catch {
+          return false;
+        }
+      });
+      for (const entry of entries) {
+        skillSet.add(entry);
+      }
+    } catch {
+      // Silently ignore directory read errors
+    }
   }
 
   roleToText(role: Task["assigneeRole"]): string | null {

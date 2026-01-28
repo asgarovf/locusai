@@ -23,7 +23,19 @@ After initialization, you'll see the following structure:
 ├── config.json            # Project configuration
 ├── codebase-index.json    # Codebase semantic index (generated)
 └── artifacts/             # Task artifacts and logs
+
+.agent/
+└── skills/                # Agent-specific skill definitions
 ```
+
+## Agent Skills
+
+`locus init` automatically creates a `.agent/skills` directory containing default skills to help agents work more efficiently in your codebase. These skills include:
+
+- **locus-expert**: Specialized knowledge about Locus commands and configuration.
+- **project-navigator**: Best practices for exploring and understanding the repository.
+
+You can add your own custom skills by creating new directories within `.agent/skills/` containing a `SKILL.md` file.
 
 The `config.json` file contains basic project metadata:
 

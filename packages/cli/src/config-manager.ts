@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getLocusPath, LOCUS_CONFIG } from "@locusai/sdk/node";
+import { DEFAULT_SKILLS } from "./templates/skills";
 
 export interface LocusProjectConfig {
   version: string;
@@ -18,7 +19,7 @@ export class ConfigManager {
 
     // 1. Create CLAUDE.md if it doesn't exist
     if (!existsSync(claudeMdPath)) {
-      const template = `# Locus Project Context\n\n`;
+      const template = `# Locus Project Context\n\n# Workflow\n- Run lint and typecheck before completion\n`;
       writeFileSync(claudeMdPath, template);
     }
 
@@ -34,6 +35,19 @@ export class ConfigManager {
         projectPath: ".",
       };
       writeFileSync(locusConfigPath, JSON.stringify(config, null, 2));
+    }
+
+    // 3. Create .agent/skills directory and default skills
+    const agentSkillsDir = join(this.projectPath, LOCUS_CONFIG.agentSkillsDir);
+    if (!existsSync(agentSkillsDir)) {
+      mkdirSync(agentSkillsDir, { recursive: true });
+
+      // Initialize default skills from templates
+      for (const skill of DEFAULT_SKILLS) {
+        const skillPath = join(agentSkillsDir, skill.name);
+        mkdirSync(skillPath, { recursive: true });
+        writeFileSync(join(skillPath, "SKILL.md"), skill.content);
+      }
     }
   }
 

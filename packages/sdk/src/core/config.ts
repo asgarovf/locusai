@@ -19,6 +19,7 @@ export const LOCUS_CONFIG = {
   contextFile: "CLAUDE.md",
   artifactsDir: "artifacts",
   documentsDir: "documents",
+  agentSkillsDir: ".agent/skills",
 };
 
 export function getLocusPath(

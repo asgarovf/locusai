@@ -204,6 +204,7 @@ Created:
   📁 ${c.dim(".locus/")}                  - Locus configuration directory
   📄 ${c.dim(".locus/config.json")}      - Project configuration
   📝 ${c.dim("CLAUDE.md")}               - AI context file
+  📁 ${c.dim(".agent/skills/")}          - Agent skills (Frontend, Backend, DevOps, etc.)
 
 Next steps:
   1. Run '${c.primary("locus index")}' to index your codebase
