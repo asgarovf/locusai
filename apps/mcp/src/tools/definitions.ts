@@ -52,13 +52,19 @@ export function registerTools(
           .string()
           .optional()
           .describe("Locus Workspace ID (optional if configured)"),
+        projectPath: z
+          .string()
+          .optional()
+          .describe("Absolute path to the project root (defaults to cwd)"),
       },
     },
     async (args) => {
       const config = getClientConfig(args, requestContext?.headers);
-      const workflow = new SessionWorkflow(config);
+      const projectPath =
+        typeof args.projectPath === "string" ? args.projectPath : undefined;
+      const workflow = new SessionWorkflow(config, projectPath);
 
-      const { sprint, task } = await workflow.start();
+      const { sprint, task, instructions } = await workflow.start();
 
       return {
         content: [
@@ -68,7 +74,7 @@ export function registerTools(
               {
                 sprint,
                 current_task: task,
-                instructions: AGENT_INSTRUCTIONS,
+                instructions: instructions || AGENT_INSTRUCTIONS,
               },
               null,
               2
@@ -91,14 +97,17 @@ export function registerTools(
         // We accept auth params here too just in case state is lost/stateless
         apiKey: z.string().optional(),
         workspaceId: z.string().optional(),
+        projectPath: z.string().optional(),
       },
     },
     async (args) => {
       const config = getClientConfig(args, requestContext?.headers);
-      const workflow = new SessionWorkflow(config);
+      const projectPath =
+        typeof args.projectPath === "string" ? args.projectPath : undefined;
+      const workflow = new SessionWorkflow(config, projectPath);
 
       const { taskId, summary, artifacts } = args;
-      const nextTask = await workflow.completeAndNext(
+      const { task: nextTask, instructions } = await workflow.completeAndNext(
         taskId,
         summary,
         artifacts || []
@@ -113,9 +122,11 @@ export function registerTools(
                 completed: { taskId },
                 next_task: nextTask,
                 done: nextTask === null,
-                instructions: nextTask
-                  ? "Continue with the next task above."
-                  : "All tasks completed. Session finished.",
+                instructions:
+                  instructions ||
+                  (nextTask
+                    ? "Continue with the next task above."
+                    : "All tasks completed. Session finished."),
               },
               null,
               2

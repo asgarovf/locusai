@@ -13,9 +13,9 @@ export * from "./agent/index.js";
 export * from "./ai/index.js";
 // Node.js-only: Core utilities (uses fs)
 export * from "./core/index.js";
+export { PromptBuilder } from "./core/prompt-builder.js";
 // Re-export everything from main index (browser-safe)
 export * from "./index.js";
-
 // Node.js-only: Orchestrator
 export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator.js";
 

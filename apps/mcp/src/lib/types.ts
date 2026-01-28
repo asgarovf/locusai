@@ -3,6 +3,7 @@ import { Sprint, Task } from "@locusai/shared";
 export interface SessionContext {
   sprint: Sprint | null;
   task: Task | null;
+  instructions?: string;
 }
 
 export interface ClientConfig {
