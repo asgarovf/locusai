@@ -15,20 +15,20 @@ export type AcceptanceItem = z.infer<typeof AcceptanceItemSchema>;
 export const TaskSchema = BaseEntitySchema.extend({
   workspaceId: z.uuid().nullable().optional(),
   title: z.string().min(1, "Title is required").max(200),
-  description: z.string().default(""),
-  status: z.enum(TaskStatus).default(TaskStatus.BACKLOG),
-  priority: z.enum(TaskPriority).default(TaskPriority.MEDIUM),
-  labels: z.array(z.string()).default([]),
+  description: z.string(),
+  status: z.enum(TaskStatus),
+  priority: z.enum(TaskPriority),
+  labels: z.array(z.string()),
   assigneeRole: z.enum(AssigneeRole).nullable().optional(),
   /** Agent ID or user identifier - not necessarily a UUID */
   assignedTo: z.string().nullable().optional(),
   sprintId: z.uuid().nullable().optional(),
   parentId: z.uuid().nullable().optional(),
   dueDate: z.union([z.string(), z.number()]).nullable().optional(),
-  acceptanceChecklist: z.array(AcceptanceItemSchema).default([]),
+  acceptanceChecklist: z.array(AcceptanceItemSchema),
   comments: z.array(CommentSchema).optional(),
   activityLog: z.array(EventSchema).optional(),
-  docs: z.array(DocSchema).default([]),
+  docs: z.array(DocSchema),
 });
 
 export type Task = z.infer<typeof TaskSchema>;

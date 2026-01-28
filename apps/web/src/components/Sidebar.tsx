@@ -99,16 +99,12 @@ export function Sidebar() {
       icon: LayoutDashboard,
       description: "Overview",
     },
-    ...(process.env.NODE_ENV === "development"
-      ? [
-          {
-            href: "/chat",
-            label: "Chat",
-            icon: Sparkles,
-            description: "AI Companion",
-          },
-        ]
-      : []),
+    {
+      href: "/chat",
+      label: "Chat",
+      icon: Sparkles,
+      description: "AI Companion",
+    },
     {
       href: "/board",
       label: "Board",

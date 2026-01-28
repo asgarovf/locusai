@@ -199,7 +199,7 @@ export class AgentOrchestrator extends EventEmitter {
       agentId,
       "--workspace-id",
       this.config.workspaceId,
-      "--api-base",
+      "--api-url",
       this.config.apiBase,
       "--api-key",
       this.config.apiKey,

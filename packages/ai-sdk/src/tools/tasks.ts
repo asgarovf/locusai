@@ -1,11 +1,12 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   CreateTaskSchema,
-  TaskStatus,
+  SprintStatus,
+  UpdateTask,
   UpdateTaskSchema,
 } from "@locusai/shared";
 import { z } from "zod";
-import { ITaskProvider } from "./interfaces";
+import { ISprintProvider, ITaskProvider } from "./interfaces";
 
 export const createCreateTaskTool = (
   provider: ITaskProvider,
@@ -42,7 +43,12 @@ export const createListTasksTool = (
     name: "list_tasks",
     description: "List all tasks in the workspace. Can be filtered by status.",
     schema: z.object({
-      status: z.enum(TaskStatus).optional(),
+      status: z
+        .string()
+        .optional()
+        .describe(
+          "Status to filter by (e.g. 'BACKLOG', 'TODO', 'IN_PROGRESS')"
+        ),
       search: z
         .string()
         .optional()
@@ -50,10 +56,30 @@ export const createListTasksTool = (
     }),
     func: async ({ status, search }) => {
       try {
-        let tasks = await provider.list(workspaceId);
+        const allTasks = await provider.list(workspaceId);
+        let tasks = allTasks;
+        let warning = "";
 
         if (status) {
-          tasks = tasks.filter((t) => t.status === status);
+          const filtered = tasks.filter(
+            (t) => t.status.toLowerCase() === status.toLowerCase()
+          );
+          if (filtered.length === 0) {
+            warning = `No tasks found with status '${status}'. Showing all tasks.`;
+            // specific fallback: if user asked for BACKLOG but tasks are TODO
+            if (status.toUpperCase() === "BACKLOG") {
+              const todoTasks = tasks.filter(
+                (t) => (t.status as string) === "TODO"
+              ); // cast to string to handle potential data inconsistency
+              if (todoTasks.length > 0) {
+                tasks = todoTasks;
+                warning =
+                  "No 'BACKLOG' tasks found, but found 'TODO' tasks. Showing those.";
+              }
+            }
+          } else {
+            tasks = filtered;
+          }
         }
 
         if (search) {
@@ -68,6 +94,7 @@ export const createListTasksTool = (
         return JSON.stringify({
           success: true,
           count: tasks.length,
+          warning: warning || undefined,
           tasks: tasks.map((t) => ({
             id: t.id,
             title: t.title,
@@ -117,22 +144,67 @@ export const createUpdateTaskTool = (
 
 export const createBatchUpdateTasksTool = (
   provider: ITaskProvider,
+  sprintProvider: ISprintProvider, // Add sprint provider
   workspaceId: string
 ) =>
   new DynamicStructuredTool({
     name: "batch_update_tasks",
     description:
-      "Update multiple tasks at once. Useful for moving multiple tasks to a sprint or changing their status together.",
+      "Update multiple tasks at once. ESSENTIAL usage: 1) Move tasks to active sprint: set sprintId='active'. 2) Move to next sprint: set sprintId='next'. The system AUTO-DETECTS the correct sprint (Active or Planned) or creates one if missing. Do NOT fail if you don't see an ACTIVE sprint in list_sprints; just use this tool.",
     schema: z.object({
       ids: z.array(z.string()).describe("List of task IDs to update"),
-      updates: UpdateTaskSchema,
+      updates: UpdateTaskSchema.extend({
+        sprintId: z
+          .string()
+          .describe(
+            "UUID of the sprint. USE 'active' (or 'next') to automatically target the active/planned sprint. Do not fail if you don't have an ID."
+          )
+          .optional()
+          .nullable(),
+      }),
     }),
     func: async ({ ids, updates }) => {
       try {
-        await provider.batchUpdate(ids, workspaceId, updates);
+        let sprintId = updates.sprintId;
+
+        let sprintCreated = false;
+        // Auto-resolve sprint alias
+        if (sprintId === "active" || sprintId === "next") {
+          const sprints = await sprintProvider.list(workspaceId);
+          const activeSprint =
+            sprints.find((s) => s.status === SprintStatus.ACTIVE) ||
+            sprints.find((s) => s.status === SprintStatus.PLANNED);
+
+          if (!activeSprint) {
+            // Create a new sprint if none exists
+            const nextSprintNum = sprints.length + 1;
+            const newSprint = await sprintProvider.create(workspaceId, {
+              name: `Sprint ${nextSprintNum}`,
+            });
+            sprintId = newSprint.id;
+            sprintCreated = true;
+          } else {
+            sprintId = activeSprint.id;
+          }
+        }
+
+        // Apply potentially resolved sprintId
+        const finalUpdates = { ...updates };
+        if (sprintId) {
+          finalUpdates.sprintId = sprintId;
+        }
+
+        await provider.batchUpdate(
+          ids,
+          workspaceId,
+          finalUpdates as UpdateTask
+        );
         return JSON.stringify({
           success: true,
-          message: `Successfully updated ${ids.length} tasks.`,
+          message: `Successfully updated ${ids.length} tasks to sprint (ID: ${sprintId}).${sprintCreated ? " Created a new sprint as none existed." : ""}`,
+          resolvedSprintId: sprintId,
+          sprintCreated,
+          hint: "If you moved tasks to a sprint, consider running 'plan_sprint' to optimize the schedule.",
         });
       } catch (error: unknown) {
         return JSON.stringify({

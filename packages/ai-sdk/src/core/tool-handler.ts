@@ -23,6 +23,7 @@ export class ToolHandler {
         console.log(`[LocusAgent] Executing tool: ${tool.name}`);
         try {
           const resultString = await (tool as $FixMe).invoke(call.args);
+
           observations.push(`Tool ${tool.name} executed successfully.`);
 
           this.parseArtifacts(resultString, call.args, artifacts);

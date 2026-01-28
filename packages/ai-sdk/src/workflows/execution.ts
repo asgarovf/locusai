@@ -1,4 +1,5 @@
-import { $FixMe, SuggestedAction } from "@locusai/shared";
+import { HumanMessage } from "@langchain/core/messages";
+import { $FixMe, AIArtifact, SuggestedAction } from "@locusai/shared";
 import { DocumentCompiler } from "../core/compiler";
 import { ContextManager } from "../core/context";
 import { ToolHandler } from "../core/tool-handler";
@@ -41,46 +42,57 @@ export class ExecutionWorkflow extends BaseWorkflow {
       projectContext
     );
 
-    const response = await toolLLM.invoke(messages);
+    let steps = 0;
+    const maxSteps = 5;
+    const allArtifacts: AIArtifact[] = [];
+    const allSuggestedActions: SuggestedAction[] = [];
 
-    if (response.tool_calls?.length > 0) {
+    // Loop for multi-step execution (ReAct pattern)
+    while (steps < maxSteps) {
+      steps++;
+
+      const response = await toolLLM.invoke(messages);
+      messages.push(response);
+
+      if (!response.tool_calls || response.tool_calls.length === 0) {
+        // Agent is done, just talking
+        const { cleanContent, actions } = this.extractAISuggestions(
+          response.content as string
+        );
+        return {
+          content: cleanContent,
+          artifacts: allArtifacts,
+          suggestedActions: [...allSuggestedActions, ...actions],
+        };
+      }
+
+      // Execute tools
       const toolResult = await this.toolHandler.executeCalls(
         response.tool_calls
       );
 
-      if (toolResult.observations.length > 0) {
-        const systemPrompt = ContextManager.getToolExecutionSystemPrompt(
-          projectContext,
-          toolResult.observations
-        );
-        const finalMessages = ContextManager.buildMessages(
-          state.history,
-          input,
-          systemPrompt
-        );
-        const finalResponse = await llm.invoke(finalMessages);
-        const content = finalResponse.content as string;
+      // Accumulate side effects
+      if (toolResult.artifacts) allArtifacts.push(...toolResult.artifacts);
+      if (toolResult.suggestedActions)
+        allSuggestedActions.push(...toolResult.suggestedActions);
 
-        const { cleanContent, actions } = this.extractAISuggestions(content);
+      const observationText = toolResult.observations.join("\n\n");
 
-        return {
-          content: cleanContent,
-          artifacts: toolResult.artifacts,
-          suggestedActions: [
-            ...(toolResult.suggestedActions || []),
-            ...(actions || []),
-          ],
-        };
-      }
+      // We'll append a generic "Tool Output" as a Human Message or System Message if we can't do ToolMessage.
+      messages.push(
+        new HumanMessage(
+          `Tool Execution Result:\n${observationText}\n\nContinue executing if needed, or answer the user.`
+        )
+      );
+
+      // Continue loop to let LLM decide next step
     }
 
-    const { cleanContent, actions } = this.extractAISuggestions(
-      response.content as string
-    );
-
+    // Fallback if max steps reached
     return {
-      content: cleanContent,
-      suggestedActions: actions,
+      content: "Execution limit reached. check the logs.",
+      artifacts: allArtifacts,
+      suggestedActions: allSuggestedActions,
     };
   }
 

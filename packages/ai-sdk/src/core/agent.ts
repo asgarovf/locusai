@@ -132,4 +132,9 @@ export class LocusAgent {
   getState(): AgentState {
     return this.state;
   }
+
+  async invoke(prompt: string): Promise<string> {
+    const response = await this.llm.invoke(prompt);
+    return response.content as string;
+  }
 }

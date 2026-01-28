@@ -32,7 +32,6 @@ export class TaskExecutor {
 
     try {
       let plan: string | null = null;
-      // ...
 
       if (this.deps.skipPlanning) {
         this.deps.log("Skipping Phase 1: Planning (CLI)...", "info");

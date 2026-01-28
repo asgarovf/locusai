@@ -86,7 +86,11 @@ export class SprintsController {
   }
 
   @Post()
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async create(
     @Param("workspaceId") workspaceId: string,
     @Body(new ZodValidationPipe(CreateSprintSchema)) body: CreateSprint
@@ -102,7 +106,11 @@ export class SprintsController {
   }
 
   @Patch(":sprintId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async update(
     @Param("sprintId") sprintId: string,
     @Body(new ZodValidationPipe(UpdateSprintSchema)) body: UpdateSprint
@@ -117,7 +125,11 @@ export class SprintsController {
   }
 
   @Post(":sprintId/start")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async start(
     @CurrentUser() user: User,
     @Param("sprintId") sprintId: string
@@ -127,7 +139,11 @@ export class SprintsController {
   }
 
   @Post(":sprintId/complete")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async complete(
     @CurrentUser() user: User,
     @Param("sprintId") sprintId: string
@@ -137,14 +153,22 @@ export class SprintsController {
   }
 
   @Delete(":sprintId")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async delete(@Param("sprintId") sprintId: string) {
     await this.sprintsService.delete(sprintId);
     return { success: true };
   }
 
   @Post(":sprintId/trigger-ai-planning")
-  @MembershipRoles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @MembershipRoles(
+    MembershipRole.MEMBER,
+    MembershipRole.OWNER,
+    MembershipRole.ADMIN
+  )
   async triggerAIPlanning(
     @Param("sprintId") sprintId: string,
     @Param("workspaceId") workspaceId: string

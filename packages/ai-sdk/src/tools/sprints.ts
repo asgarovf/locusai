@@ -1,5 +1,5 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { CreateSprintSchema } from "@locusai/shared";
+import { CreateSprintSchema, SprintStatus } from "@locusai/shared";
 import { z } from "zod";
 import { ISprintProvider } from "./interfaces";
 
@@ -53,6 +53,7 @@ export const createListSprintsTool = (
             startDate: s.startDate,
             endDate: s.endDate,
           })),
+          hint: "To move tasks to the current or next sprint, use 'batch_update_tasks' with sprintId='active' or 'next'. This works even if only a PLANNED sprint exists (it will be auto-started or used).",
         });
       } catch (error: unknown) {
         return JSON.stringify({
@@ -77,7 +78,21 @@ export const createPlanSprintTool = (
     }),
     func: async ({ sprintId }) => {
       try {
-        const sprint = await provider.plan(workspaceId, sprintId);
+        let finalSprintId = sprintId;
+
+        if (sprintId === "active" || sprintId === "next") {
+          const sprints = await provider.list(workspaceId);
+          const activeSprint =
+            sprints.find((s) => s.status === SprintStatus.ACTIVE) ||
+            sprints.find((s) => s.status === SprintStatus.PLANNED);
+
+          if (!activeSprint) {
+            throw new Error("No active or planned sprint found to plan.");
+          }
+          finalSprintId = activeSprint.id;
+        }
+
+        const sprint = await provider.plan(workspaceId, finalSprintId);
         return JSON.stringify({
           success: true,
           message: `Sprint "${sprint.name}" has been successfully planned and reordered.`,

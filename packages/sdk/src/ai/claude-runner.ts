@@ -151,13 +151,9 @@ export class ClaudeRunner implements AiRunner {
   }
 
   private handleEvent(event: Required<ClaudeStreamItem>["event"]) {
-    const { type, delta, content_block } = event;
+    const { type, content_block } = event;
 
-    if (type === "content_block_delta" && delta) {
-      if (delta.type === "text_delta" && delta.text) {
-        this.log?.(delta.text, "info");
-      }
-    } else if (type === "content_block_start" && content_block) {
+    if (type === "content_block_start" && content_block) {
       if (content_block.type === "tool_use" && content_block.name) {
         this.log?.(
           `\n\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`,

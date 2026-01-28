@@ -34,13 +34,13 @@ bun run cli <command> --dir /path/to/your/demo-project
 ```
 
 ### 4. Testing with Local Backend
-To test the CLI against your local API server, use the `--api-base` argument:
+To test the CLI against your local API server, use the `--api-url` argument:
 ```bash
 # Start the local backend
 bun run dev
 
 # Run CLI commands against local backend
-bun run cli <command> --dir /path/to/your/demo-project --api-base http://localhost:8000
+bun run cli <command> --dir /path/to/your/demo-project --api-url http://localhost:8000
 ```
 
 ### 5. Building the CLI Bundle

@@ -28,7 +28,7 @@ export const getAgentTools = (
   const tools: DynamicStructuredTool[] = [
     createCreateTaskTool(provider.tasks, workspaceId),
     createUpdateTaskTool(provider.tasks, workspaceId),
-    createBatchUpdateTasksTool(provider.tasks, workspaceId),
+    createBatchUpdateTasksTool(provider.tasks, provider.sprints, workspaceId),
     createListTasksTool(provider.tasks, workspaceId),
     createReadDocTool(provider.docs, workspaceId),
     createListDocsTool(provider.docs, workspaceId),

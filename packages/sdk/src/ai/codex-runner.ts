@@ -90,7 +90,13 @@ export class CodexRunner implements AiRunner {
   }
 
   private buildArgs(outputPath: string): string[] {
-    const args = ["exec", "--full-auto", "--output-last-message", outputPath];
+    const args = [
+      "exec",
+      "--full-auto",
+      "--skip-git-repo-check",
+      "--output-last-message",
+      outputPath,
+    ];
 
     if (this.model) {
       args.push("--model", this.model);

@@ -194,11 +194,19 @@ export class AgentWorker {
       );
 
       // Trigger server-side planning (it will check if AI planning is needed)
-      await this.client.sprints.triggerAIPlanning(
-        sprint.id,
-        this.config.workspaceId
-      );
-      this.log(`Sprint plan sync checked on server.`, "success");
+      // Trigger server-side planning (it will check if AI planning is needed)
+      try {
+        await this.client.sprints.triggerAIPlanning(
+          sprint.id,
+          this.config.workspaceId
+        );
+        this.log(`Sprint plan sync checked on server.`, "success");
+      } catch (err) {
+        this.log(
+          `Sprint planning sync failed (non-critical): ${err instanceof Error ? err.message : String(err)}`,
+          "warn"
+        );
+      }
     } else {
       this.log("No active sprint found for planning.", "warn");
     }
@@ -270,7 +278,7 @@ if (
     if (arg === "--agent-id") config.agentId = args[++i];
     else if (arg === "--workspace-id") config.workspaceId = args[++i];
     else if (arg === "--sprint-id") config.sprintId = args[++i];
-    else if (arg === "--api-base") config.apiBase = args[++i];
+    else if (arg === "--api-url") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
