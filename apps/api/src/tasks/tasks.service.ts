@@ -152,6 +152,16 @@ export class TasksService {
 
     const oldStatus = task.status;
 
+    // Only tasks in VERIFICATION status can be moved to DONE
+    if (
+      updates.status === TaskStatus.DONE &&
+      oldStatus !== TaskStatus.VERIFICATION
+    ) {
+      throw new BadRequestException(
+        "Only tasks in VERIFICATION status can be moved to DONE"
+      );
+    }
+
     // Handle rejection: If moving from VERIFICATION back to IN_PROGRESS or BACKLOG,
     // clear the assignedTo field so it can be re-dispatched.
     if (

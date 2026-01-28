@@ -321,7 +321,7 @@ export function DocsSidebar({
             ) : (
               <ChevronRight size={14} />
             )}
-            <SectionLabel className="m-0 flex-1">Unsorted</SectionLabel>
+            <SectionLabel className="m-0 flex-1">Other</SectionLabel>
             <span className="ml-auto opacity-0 group-hover:opacity-100 bg-secondary/50 px-1.5 py-0.5 rounded text-[8px]">
               {docsByGroup.ungrouped?.length || 0}
             </span>

@@ -4,6 +4,7 @@ import "../../test-setup"; // Shared entity mocks - must be before other imports
 import { UserRole } from "@locusai/shared";
 import { UnauthorizedException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { TypedConfigService } from "../../config/config.service";
 import { AuthController } from "../auth.controller";
 import { AuthService } from "../auth.service";
 
@@ -25,6 +26,12 @@ describe("AuthController", () => {
             requestLoginOtp: jest.fn(),
             verifyOtpAndLogin: jest.fn(),
             completeRegistration: jest.fn(),
+          },
+        },
+        {
+          provide: TypedConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue("http://localhost:3000"),
           },
         },
       ],

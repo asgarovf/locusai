@@ -13,7 +13,7 @@ import {
 import { Reflector } from "@nestjs/core";
 import { OrganizationsService } from "@/organizations/organizations.service";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
-import { MEMBERSHIP_ROLES_KEY } from "../decorators/membership-roles.decorator";
+import { MEMBERSHIP_ROLES_KEY } from "../constants";
 
 @Injectable()
 export class MembershipRolesGuard implements CanActivate {

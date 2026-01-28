@@ -5,7 +5,7 @@ import { ConflictException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { ApiKey, Membership, Organization } from "@/entities";
+import { ApiKey, Membership, Organization, User } from "@/entities";
 import { OrganizationsService } from "../organizations.service";
 
 describe("OrganizationsService", () => {
@@ -13,6 +13,7 @@ describe("OrganizationsService", () => {
   let orgRepo: jest.Mocked<Repository<Organization>>;
   let membershipRepo: jest.Mocked<Repository<Membership>>;
   let apiKeyRepo: jest.Mocked<Repository<ApiKey>>;
+  let userRepo: jest.Mocked<Repository<User>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -49,6 +50,12 @@ describe("OrganizationsService", () => {
             remove: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            delete: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -56,6 +63,7 @@ describe("OrganizationsService", () => {
     orgRepo = module.get(getRepositoryToken(Organization));
     membershipRepo = module.get(getRepositoryToken(Membership));
     apiKeyRepo = module.get(getRepositoryToken(ApiKey));
+    userRepo = module.get(getRepositoryToken(User));
   });
 
   describe("removeMember", () => {
@@ -69,7 +77,7 @@ describe("OrganizationsService", () => {
 
       await service.removeMember(orgId, userId);
 
-      expect(membershipRepo.remove).toHaveBeenCalled();
+      expect(userRepo.delete).toHaveBeenCalledWith(userId);
     });
 
     it("should throw ConflictException when removing the last owner", async () => {

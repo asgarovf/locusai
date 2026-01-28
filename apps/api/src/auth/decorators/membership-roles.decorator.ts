@@ -1,8 +1,7 @@
 import { MembershipRole } from "@locusai/shared";
 import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common";
+import { MEMBERSHIP_ROLES_KEY } from "../constants";
 import { MembershipRolesGuard } from "../guards/membership-roles.guard";
-
-export const MEMBERSHIP_ROLES_KEY = "membership_roles";
 
 export const MembershipRoles = (...roles: MembershipRole[]) =>
   applyDecorators(

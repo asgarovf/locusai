@@ -4,8 +4,10 @@ import { SprintStatus } from "@locusai/shared";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { AiService } from "@/ai/ai.service";
 import { Sprint } from "@/entities/sprint.entity";
 import { EventsService } from "@/events/events.service";
+import { TasksService } from "@/tasks/tasks.service";
 import { SprintsService } from "../sprints.service";
 
 describe("SprintsService", () => {
@@ -31,6 +33,18 @@ describe("SprintsService", () => {
           provide: EventsService,
           useValue: {
             logEvent: jest.fn(),
+          },
+        },
+        {
+          provide: TasksService,
+          useValue: {
+            batchUpdate: jest.fn(),
+          },
+        },
+        {
+          provide: AiService,
+          useValue: {
+            getAgent: jest.fn(),
           },
         },
       ],

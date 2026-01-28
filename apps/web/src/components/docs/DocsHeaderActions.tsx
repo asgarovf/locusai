@@ -88,7 +88,7 @@ export function DocsHeaderActions({
               }
               className="bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer appearance-none pr-2"
             >
-              <option value="">Unsorted</option>
+              <option value="">Other</option>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.name}
