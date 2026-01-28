@@ -2,6 +2,7 @@ import { ILocusProvider } from "@locusai/ai-sdk/src/tools/interfaces";
 import { Injectable } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { DocsService } from "../docs/docs.service";
+import { SPRINTS_SERVICE_TOKEN } from "../sprints/sprints.constants";
 import type { SprintsService } from "../sprints/sprints.service";
 import { TasksService } from "../tasks/tasks.service";
 import { DocAdapter } from "./adapters/doc.adapter";
@@ -17,7 +18,7 @@ export class AiProviderFactory {
   ) {}
 
   create(_workspaceId: string, userId: string): ILocusProvider {
-    const sprintsService = this.moduleRef.get("SprintsService", {
+    const sprintsService = this.moduleRef.get(SPRINTS_SERVICE_TOKEN, {
       strict: false,
     }) as SprintsService;
     return {
