@@ -68,7 +68,9 @@ export class IdeaWorkflow extends BaseWorkflow {
         );
         return {
           content: cleanContent,
-          artifacts: allArtifacts,
+          artifacts: Array.from(
+            new Map(allArtifacts.map((a) => [a.id, a])).values()
+          ),
           suggestedActions: [...allSuggestedActions, ...actions],
         };
       }
@@ -92,7 +94,9 @@ export class IdeaWorkflow extends BaseWorkflow {
 
     return {
       content: "Execution limit reached.",
-      artifacts: allArtifacts,
+      artifacts: Array.from(
+        new Map(allArtifacts.map((a) => [a.id, a])).values()
+      ),
       suggestedActions: allSuggestedActions,
     };
   }

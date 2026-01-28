@@ -36,7 +36,9 @@ export class ToolHandler {
         try {
           const resultString = await (tool as $FixMe).invoke(call.args);
 
-          observations.push(`Tool ${tool.name} executed successfully.`);
+          observations.push(
+            `Tool ${tool.name} executed successfully.\nOutput: ${resultString}`
+          );
 
           this.parseArtifacts(resultString, call.args, artifacts);
         } catch (error) {
