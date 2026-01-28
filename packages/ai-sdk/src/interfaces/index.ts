@@ -67,12 +67,27 @@ export interface AgentChatMessage {
   suggestedActions?: SuggestedAction[];
 }
 
+export interface WorkflowEntity {
+  id: string;
+  type: "document" | "task" | "sprint";
+  title: string;
+  createdAt: string;
+}
+
+export interface WorkflowState {
+  currentIntent: string;
+  createdEntities: WorkflowEntity[];
+  pendingActions: string[];
+  manifestSummary: string; // Condensed context
+}
+
 export interface AgentState {
   mode: AgentMode;
   scratchpad: string[]; // Temporary reasoning buffer
   missingInfo: string[]; // e.g. ["tech_stack", "timelines"]
   history: AgentChatMessage[];
   manifest?: Partial<ProjectManifest>;
+  workflow?: WorkflowState;
 }
 
 export interface AgentResponse {

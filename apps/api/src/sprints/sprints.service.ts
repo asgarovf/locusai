@@ -232,7 +232,7 @@ export class SprintsService {
         Analyze dependencies and prioritize specific tasks.
         Return a JSON object with two fields:
         1. "summary": A markdown formatted explanation of the sprint plan, highlighting key focus areas and dependencies.
-        2. "taskIds": A JSON array of sorted task IDs.
+        2. "taskIds": A JSON array of sorted task IDs. **IMPORTANT: You should try to include ALL provided task IDs in the order you think is best.**
         
         Example format:
         {
@@ -273,11 +273,28 @@ export class SprintsService {
         }
       }
 
-      if (planData && planData.taskIds.length > 0) {
-        const { summary, taskIds } = planData;
+      if (planData) {
+        const { summary, taskIds: aiTaskIds } = planData;
 
-        // Prepare task orders
-        const taskOrders = taskIds.map((id, index) => ({
+        // --- Defensive Ordering Logic ---
+
+        // 1. Get Set of all real Task IDs in this sprint
+        const allRealTaskIds = new Set(tasks.map((t) => t.id));
+
+        // 2. Filter AI list to only include valid IDs (remove hallucinations)
+        const validAiTaskIds = aiTaskIds.filter((id) => allRealTaskIds.has(id));
+
+        // 3. Find IDs that were missed by the AI
+        const includedSet = new Set(validAiTaskIds);
+        const missingTaskIds = tasks
+          .filter((t) => !includedSet.has(t.id))
+          .map((t) => t.id);
+
+        // 4. Construct Final Ordered List: AI suggestions + Leftovers
+        const finalOrderedIds = [...validAiTaskIds, ...missingTaskIds];
+
+        // 5. Create Update Map
+        const taskOrders = finalOrderedIds.map((id, index) => ({
           taskId: id,
           order: index,
         }));
@@ -294,7 +311,10 @@ export class SprintsService {
             taskOrders.map(({ taskId, order }) =>
               this.sprintRepository.manager
                 .createQueryBuilder()
-                .update("tasks")
+                .update("tasks") // Assuming 'tasks' is the table name. Use entity name 'Task' if using repository.
+                // Better to use repository update for safety if table name varies, but query builder is fine if standard.
+                // Let's use the Entity class 'Task' to be safe with TypeORM.
+                .update(Task)
                 .set({ order })
                 .where("id = :id", { id: taskId })
                 .execute()

@@ -15,6 +15,7 @@ import { TechnicalDocumentingWorkflow } from "../workflows/documenting_technical
 import { IdeaWorkflow } from "../workflows/idea";
 import { InterviewWorkflow } from "../workflows/interview";
 import { QueryWorkflow } from "../workflows/query";
+import { TaskCreationWorkflow } from "../workflows/task-creation";
 import { DocumentCompiler } from "./compiler";
 import { WorkflowEngine } from "./engine";
 import { type LLMConfig, LLMFactory } from "./llm-factory";
@@ -100,6 +101,15 @@ export class LocusAgent {
           this.compiler
         )
       );
+
+      this.engine.registerWorkflow(
+        new TaskCreationWorkflow(
+          this.locusProvider,
+          this.workspaceId,
+          this.toolHandler,
+          this.compiler
+        )
+      );
     }
   }
 
@@ -138,6 +148,12 @@ export class LocusAgent {
       manifest,
       missingInfo,
       history: [],
+      workflow: {
+        currentIntent: "PLANNING",
+        createdEntities: [],
+        pendingActions: [],
+        manifestSummary: "",
+      },
       ...initial,
     };
   }

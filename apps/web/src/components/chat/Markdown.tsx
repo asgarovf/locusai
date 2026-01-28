@@ -10,6 +10,8 @@ interface MarkdownProps {
 }
 
 export function Markdown({ content, className }: MarkdownProps) {
+  if (!content?.trim?.()) return null;
+
   return (
     <div
       className={cn(

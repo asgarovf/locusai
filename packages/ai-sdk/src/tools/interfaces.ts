@@ -51,6 +51,7 @@ export interface ILocusProvider {
 export interface ToolBaseResponse {
   success: boolean;
   message?: string;
+  instruction?: string; // Guidance for the Agent on what to do next
   error?: string;
 }
 

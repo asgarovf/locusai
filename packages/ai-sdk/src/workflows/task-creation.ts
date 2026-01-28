@@ -9,9 +9,9 @@ import { AgentMode, AgentResponse } from "../interfaces/index";
 import { ToolRegistry } from "../tools/index";
 import { ILocusProvider } from "../tools/interfaces";
 
-export class QueryWorkflow extends BaseWorkflow {
-  readonly name = "Query";
-  readonly mode = AgentMode.QUERY;
+export class TaskCreationWorkflow extends BaseWorkflow {
+  readonly name = "Task Creation";
+  readonly mode = AgentMode.EXECUTING; // Generic executing mode
 
   constructor(
     private provider: ILocusProvider,
@@ -23,23 +23,19 @@ export class QueryWorkflow extends BaseWorkflow {
   }
 
   canHandle(context: WorkflowContext): boolean {
-    if (context.intent === Intent.QUERY) return true;
-    return (
-      context.state.mode === AgentMode.QUERY &&
-      context.intent === Intent.UNKNOWN
-    );
+    return context.intent === Intent.CREATE_TASK;
   }
 
   async execute(context: WorkflowContext): Promise<AgentResponse> {
     const { llm, state, input } = context;
 
-    // Build tools
     const registry = new ToolRegistry(
       this.provider,
       this.workspaceId,
       this.compiler
     );
-    const tools = registry.getAllTools();
+    // Limit tools to just what is needed for task creation to reduce noise
+    const tools = [registry.getCreateTaskTool(), registry.getListTasksTool()];
 
     const toolLLM = (llm as $FixMe).bindTools
       ? (llm as $FixMe).bindTools(tools)
@@ -49,15 +45,43 @@ export class QueryWorkflow extends BaseWorkflow {
     const messages = ContextManager.buildMessages(
       state.history,
       input,
-      projectContext
+      `${projectContext}\n\nYou are a Senior Technical Lead responsible for creating high-quality engineering tasks.
+
+YOUR GOAL:
+1. Analyze the user's request to create a task or fix a bug.
+2. If the request is vague, infer the necessary technical details (Acceptance Criteria, Priority).
+3. Use the 'create_task' tool to create the task.
+   - Title: Clear and action-oriented.
+   - Description: Detailed, including context.
+   - Priority: ONE OF: "LOW", "MEDIUM", "HIGH", "CRITICAL".
+   - acceptanceChecklist: MUST be an ARRAY of objects.
+     Example: [ { "text": "Verify login", "done": false, "id": "1" } ]
+     DO NOT wrap it in an "items" object.
+   
+   Output Format for Tool Call:
+   {
+     "title": "...",
+     "description": "...",
+     "priority": "HIGH",
+     "acceptanceChecklist": [ ... ]
+   }
+
+4. Confirm creation to the user, providing the new Task ID.
+
+GUIDELINES FOR SUGGESTIONS:
+If providing "Next Steps" or suggestions, ensure they are REALISTIC and ACTIONABLE using natural language.
+- VALID: "Create a sub-task for X", "Add this to the active sprint", "Draft a design doc for this".
+- INVALID: "Move to 'Sprint 1' and set status to IN_PROGRESS" (Do not suggest complex multi-step state changes that imply non-existent UI features).
+- Keep suggestions focused on creating/refining work.
+
+Always create a REAL task in the system. Do not just say "I will create it". Call the tool.`
     );
 
     let steps = 0;
-    const maxSteps = 5;
+    const maxSteps = 3; // Should be quick
     const allArtifacts: AIArtifact[] = [];
     const allSuggestedActions: SuggestedAction[] = [];
 
-    // Loop for multi-step execution (ReAct pattern)
     while (steps < maxSteps) {
       steps++;
 
@@ -65,11 +89,15 @@ export class QueryWorkflow extends BaseWorkflow {
       messages.push(response);
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        const { cleanContent, actions } = this.extractAISuggestions(
-          response.content as unknown
-        );
+        const rawContent = this.extractContent(response.content);
+        const { cleanContent, actions } = this.extractAISuggestions(rawContent);
+
         return {
-          content: cleanContent,
+          content:
+            cleanContent ||
+            (allArtifacts.length > 0
+              ? "Task created successfully."
+              : "No task created."),
           artifacts: Array.from(
             new Map(allArtifacts.map((a) => [a.id, a])).values()
           ),
@@ -77,30 +105,31 @@ export class QueryWorkflow extends BaseWorkflow {
         };
       }
 
-      // Execute tools
       const toolResult = await this.toolHandler.executeCalls(
         response.tool_calls
       );
 
-      // Accumulate side effects
       if (toolResult.artifacts) {
         allArtifacts.push(...toolResult.artifacts);
         this.updateWorkflowState(state, toolResult.artifacts);
       }
-      if (toolResult.suggestedActions)
-        allSuggestedActions.push(...toolResult.suggestedActions);
+
+      // Add visual feedback action if a task was created
+      if (toolResult.artifacts.some((a) => a.type === "task")) {
+        // Maybe suggest viewing the board?
+      }
 
       const observationText = toolResult.observations.join("\n\n");
 
       messages.push(
         new HumanMessage(
-          `Tool Execution Result:\n${observationText}\n\nContinue executing if needed, or answer the user.`
+          `Tool Execution Result:\n${observationText}\n\nConclude by confirming the task creation to the user.`
         )
       );
     }
 
     return {
-      content: "Execution limit reached.",
+      content: "Task creation sequence finished.",
       artifacts: Array.from(
         new Map(allArtifacts.map((a) => [a.id, a])).values()
       ),
@@ -108,26 +137,24 @@ export class QueryWorkflow extends BaseWorkflow {
     };
   }
 
-  private extractAISuggestions(content: unknown): {
-    cleanContent: string;
-    actions: SuggestedAction[];
-  } {
-    let textContent = "";
-
-    if (typeof content === "string") {
-      textContent = content;
-    } else if (Array.isArray(content)) {
-      textContent = content
+  private extractContent(content: unknown): string {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content
         .map((c) => {
           if (typeof c === "string") return c;
           if (c && typeof c === "object" && "text" in c) return c.text;
           return "";
         })
         .join("");
-    } else {
-      textContent = String(content || "");
     }
+    return "";
+  }
 
+  private extractAISuggestions(textContent: string): {
+    cleanContent: string;
+    actions: SuggestedAction[];
+  } {
     const suggestionsMatch = textContent.match(
       /<suggestions>([\s\S]*?)<\/suggestions>/
     );
@@ -150,7 +177,10 @@ export class QueryWorkflow extends BaseWorkflow {
 
       return { cleanContent, actions };
     } catch (e) {
-      console.warn("[QueryWorkflow] Failed to parse suggested actions:", e);
+      console.warn(
+        "[TaskCreationWorkflow] Failed to parse suggested actions:",
+        e
+      );
       return { cleanContent: textContent, actions: [] };
     }
   }

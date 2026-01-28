@@ -27,6 +27,14 @@ export class ToolRegistry {
     private compiler?: DocumentCompiler
   ) {}
 
+  getCreateTaskTool() {
+    return createCreateTaskTool(this.provider.tasks, this.workspaceId);
+  }
+
+  getListTasksTool() {
+    return createListTasksTool(this.provider.tasks, this.workspaceId);
+  }
+
   getTaskTools(): DynamicStructuredTool[] {
     return [
       createCreateTaskTool(this.provider.tasks, this.workspaceId),

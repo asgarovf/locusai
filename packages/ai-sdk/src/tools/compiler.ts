@@ -31,21 +31,31 @@ export const createCompileDocumentTool = (
         // 3. Persist tasks to database
         const createdTasks = [];
         for (const t of result.tasks) {
+          let priority = TaskPriority.MEDIUM;
+          switch (t.estimatedComplexity) {
+            case "high":
+              priority = TaskPriority.HIGH;
+              break;
+            case "low":
+              priority = TaskPriority.LOW;
+              break;
+            default:
+              priority = TaskPriority.MEDIUM;
+          }
+
+          let description = t.description;
+          if (t.acceptanceCriteria && t.acceptanceCriteria.length > 0) {
+            description +=
+              "\n\n### Acceptance Checklist\n" +
+              t.acceptanceCriteria.map((c) => `- [ ] ${c}`).join("\n");
+          }
+
           const newTask = await taskProvider.create(workspaceId, {
             title: t.title,
-            description: t.description,
+            description: description,
             status: TaskStatus.BACKLOG,
-            priority: TaskPriority.MEDIUM,
+            priority: priority,
             labels: [],
-            // Metdata not supported by CreateTask interface
-            /*
-            metadata: {
-              acceptanceCriteria: t.acceptanceCriteria,
-              complexity: t.estimatedComplexity,
-              dependencies: t.dependencies,
-              sourceDocId: docId,
-            },
-            */
           });
           createdTasks.push(newTask);
         }
@@ -54,6 +64,7 @@ export const createCompileDocumentTool = (
         return JSON.stringify({
           success: true,
           message: `Compiled and created ${createdTasks.length} tasks from "${doc.title}"`,
+          instruction: `Successfully created ${createdTasks.length} tasks. Use tool 'batch_update_tasks' or 'create_sprint' with these IDs to move forward.`,
           tasks: createdTasks.map((t) => ({
             id: t.id,
             title: t.title,

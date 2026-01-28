@@ -48,7 +48,17 @@ export class CompilingWorkflow extends BaseWorkflow {
     const messages = ContextManager.buildMessages(
       state.history,
       input,
-      `${projectContext}\n\nYou are in Compiling mode. Your task is to transform existing documents into a fully planned Sprint with tasks and mindmaps. Use the 'compile_document_to_tasks' tool.`
+      `${projectContext}\n\nYou are in Compiling mode. Your task is to transform existing documents into a fully planned Sprint with tasks and mindmaps.
+      
+SEQUENCE OF OPERATIONS:
+1. Check "Current Workflow State" above. 
+   - IF the document you want to compile is listed there, use its ID directly.
+   - IF NOT, call 'list_documents' to find the ID.
+2. Call 'compile_document_to_tasks' with the EXACT docId.
+3. Review the created tasks (they will appear in the output).
+4. (Optional) Create a Sprint using the created task IDs.
+
+NEVER guess IDs or use titles as IDs.`
     );
 
     let steps = 0;
@@ -79,7 +89,10 @@ export class CompilingWorkflow extends BaseWorkflow {
         response.tool_calls
       );
 
-      if (toolResult.artifacts) allArtifacts.push(...toolResult.artifacts);
+      if (toolResult.artifacts) {
+        allArtifacts.push(...toolResult.artifacts);
+        this.updateWorkflowState(state, toolResult.artifacts);
+      }
       if (toolResult.suggestedActions)
         allSuggestedActions.push(...toolResult.suggestedActions);
 

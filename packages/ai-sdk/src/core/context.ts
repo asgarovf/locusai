@@ -59,6 +59,9 @@ Project Knowledge (MANIFEST):
 - Success Metrics: ${m.successMetrics?.join(", ") || "Not yet defined"}
 - Completeness Score: ${m.completenessScore}%
 
+CURRENT WORKFLOW STATE:
+${ContextManager.formatWorkflowState(state)}
+
 SPRINT MANAGEMENT GUIDELINES:
 - If 'list_sprints' returns no COMPLETED or ACTIVE sprints, but has PLANNED sprints, consider the first PLANNED sprint as the "Current Sprint" for planning purposes.
 - Do NOT say "There are no active sprints" as a blocker. Instead, say "We are currently planning [Sprint Name]" or "Tasks have been added to the upcoming sprint".
@@ -73,8 +76,14 @@ YOUR MISSION:
 4. You are not just a simple assistant; you are the architect. Be proactive and suggest next steps.
 5. If the user asks for status or information, use the 'list' tools to get real data before answering.
 6. AT THE END OF EVERY RESPONSE, you MUST provide 2-3 suggested next steps for the user to keep the momentum.
+ 
 Format them exactly as: <suggestions>[{"label": "Brief Label", "text": "What the user says if they click this"}]</suggestions>
-Keep descriptions in 'text' proactive and specific.`;
+ 
+GUIDELINES FOR SUGGESTIONS:
+- Keep them SIMPLE and ACTIONABLE (e.g., "Create related task", "View details", "Draft specs").
+- DO NOT suggest complex state changes (e.g., "Move to progress and assign to me") unless you are sure the user can do it dynamically.
+- DO NOT hallucinate specific sprint names or IDs that you haven't seen.
+- Keep descriptions in 'text' proactive and specific.`;
   }
 
   static getToolExecutionSystemPrompt(
@@ -119,5 +128,26 @@ Include IDs in your summary if they will be useful for next steps (e.g. moving t
       null,
       2
     );
+  }
+
+  static formatWorkflowState(state: AgentState): string {
+    const w = state.workflow;
+    if (!w) return "No active workflow state.";
+
+    const entities = w.createdEntities
+      .map(
+        (e) =>
+          `- [${e.type.toUpperCase()}] ${e.title} (ID: ${e.id}) (Created: ${e.createdAt})`
+      )
+      .join("\n");
+
+    return `
+Current Intent: ${w.currentIntent}
+Created Entities (USE THESE IDs):
+${entities || "No entities created yet."}
+
+Pending Actions:
+${w.pendingActions.map((a) => `- ${a}`).join("\n") || "None"}
+`;
   }
 }

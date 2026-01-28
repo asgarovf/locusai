@@ -18,7 +18,7 @@ export class LLMFactory {
     switch (provider) {
       case "gemini":
         return new ChatGoogleGenerativeAI({
-          model: config.modelName || "gemini-2.5-flash",
+          model: config.modelName || "gemini-3-flash-preview",
           temperature,
           apiKey: config.apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
         });

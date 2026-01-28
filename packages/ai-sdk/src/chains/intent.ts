@@ -10,6 +10,7 @@ export enum Intent {
   PRODUCT_DOCUMENTING = "PRODUCT_DOCUMENTING",
   TECHNICAL_DOCUMENTING = "TECHNICAL_DOCUMENTING",
   COMPILING = "COMPILING",
+  CREATE_TASK = "CREATE_TASK",
   UNKNOWN = "UNKNOWN",
 }
 
@@ -29,6 +30,7 @@ Possible Intents:
 4. PRODUCT_DOCUMENTING: The user wants to create, update, or discuss a specific product document (PRD, Timeline, Budget, User Stories, etc.).
 5. TECHNICAL_DOCUMENTING: The user wants to create, update, or discuss a specific technical document (Sequence diagrams, User flows, technical architecture, schema, etc.).
 6. COMPILING: The user wants to turn a document into a sprint with detailed tasks and a mindmap.
+7. CREATE_TASK: The user wants to create a single specific engineering task or bug ticket (e.g., "create a ticket for...", "add a task to...", "fix bug...").
 
 Recent Conversation History:
 {history}
@@ -37,7 +39,7 @@ User Input: {input}
 
 Return only a JSON object with the following structure:
 {{
-  "intent": "INTERVIEW" | "QUERY" | "IDEA" | "PRODUCT_DOCUMENTING" | "TECHNICAL_DOCUMENTING" | "COMPILING",
+  "intent": "INTERVIEW" | "QUERY" | "IDEA" | "PRODUCT_DOCUMENTING" | "TECHNICAL_DOCUMENTING" | "COMPILING" | "CREATE_TASK",
   "confidence": number (0-1),
   "reasoning": "brief explanation"
 }}`;
