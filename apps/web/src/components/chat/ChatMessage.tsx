@@ -10,6 +10,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -289,6 +290,7 @@ function ArtifactCard({
           onClick={(e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(artifact.id);
+            toast.success("Artifact ID copied to clipboard");
           }}
         >
           <Copy size={12} />

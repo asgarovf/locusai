@@ -38,7 +38,7 @@ export class Event {
   @Column({ name: "user_id", nullable: true })
   userId: string;
 
-  @ManyToOne(() => User, { onDelete: "CASCADE", nullable: true })
+  @ManyToOne(() => User, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "user_id" })
   user: User;
 

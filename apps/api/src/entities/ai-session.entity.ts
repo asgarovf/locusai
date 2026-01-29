@@ -4,9 +4,13 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { User } from "./user.entity";
+import { Workspace } from "./workspace.entity";
 
 @Entity("ai_sessions")
 @Index(["workspaceId", "externalSessionId"], { unique: true })
@@ -17,8 +21,16 @@ export class AiSession {
   @Column({ name: "workspace_id" })
   workspaceId: string;
 
+  @ManyToOne(() => Workspace, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "workspace_id" })
+  workspace: Workspace;
+
   @Column({ name: "user_id", nullable: true })
   userId: string;
+
+  @ManyToOne(() => User, { onDelete: "CASCADE", nullable: true })
+  @JoinColumn({ name: "user_id" })
+  user: User;
 
   @Column({ name: "external_session_id" })
   externalSessionId: string;
