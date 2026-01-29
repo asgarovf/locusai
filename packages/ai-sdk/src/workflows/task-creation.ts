@@ -83,8 +83,9 @@ Always create a REAL task in the system. Do not just say "I will create it". Cal
       messages.push(response);
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        const rawContent = this.extractContent(response.content);
-        const { cleanContent, actions } = this.extractAISuggestions(rawContent);
+        const { cleanContent, actions } = this.extractAISuggestions(
+          response.content
+        );
 
         return {
           content:
@@ -129,53 +130,5 @@ Always create a REAL task in the system. Do not just say "I will create it". Cal
       ),
       suggestedActions: allSuggestedActions,
     };
-  }
-
-  private extractContent(content: unknown): string {
-    if (typeof content === "string") return content;
-    if (Array.isArray(content)) {
-      return content
-        .map((c) => {
-          if (typeof c === "string") return c;
-          if (c && typeof c === "object" && "text" in c) return c.text;
-          return "";
-        })
-        .join("");
-    }
-    return "";
-  }
-
-  private extractAISuggestions(textContent: string): {
-    cleanContent: string;
-    actions: SuggestedAction[];
-  } {
-    const suggestionsMatch = textContent.match(
-      /<suggestions>([\s\S]*?)<\/suggestions>/
-    );
-
-    if (!suggestionsMatch) {
-      return { cleanContent: textContent, actions: [] };
-    }
-
-    try {
-      const actionsJson = JSON.parse(suggestionsMatch[1]);
-      const actions = actionsJson.map((a: { label: string; text: string }) => ({
-        label: a.label,
-        type: "chat_suggestion",
-        payload: { text: a.text },
-      }));
-
-      const cleanContent = textContent
-        .replace(/<suggestions>[\s\S]*?<\/suggestions>/, "")
-        .trim();
-
-      return { cleanContent, actions };
-    } catch (e) {
-      console.warn(
-        "[TaskCreationWorkflow] Failed to parse suggested actions:",
-        e
-      );
-      return { cleanContent: textContent, actions: [] };
-    }
   }
 }

@@ -27,7 +27,7 @@
     },
     "apps/api": {
       "name": "@locusai/api",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "dependencies": {
         "@locusai/ai-sdk": "workspace:*",
         "@locusai/shared": "workspace:*",
@@ -76,7 +76,7 @@
     },
     "apps/mcp": {
       "name": "@locusai/mcp-server",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "dependencies": {
         "@locusai/sdk": "workspace:*",
         "@locusai/shared": "workspace:*",
@@ -94,7 +94,7 @@
     },
     "apps/web": {
       "name": "@locusai/web",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -125,6 +125,7 @@
         "html-react-parser": "^5.2.11",
         "lowlight": "^3.3.0",
         "lucide-react": "^0.453.0",
+        "mermaid": "^11.4.1",
         "next": "15.4.10",
         "react": "^19.0.0",
         "react-beautiful-dnd": "^13.1.1",
@@ -149,7 +150,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@next/third-parties": "^16.1.4",
@@ -187,7 +188,7 @@
     },
     "packages/ai-sdk": {
       "name": "@locusai/ai-sdk",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
         "@langchain/core": "^1.1.17",
         "@langchain/google-genai": "2.1.13",
@@ -203,7 +204,7 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "bin": {
         "locus": "./bin/locus.js",
       },
@@ -213,9 +214,9 @@
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "dependencies": {
-        "@locusai/shared": "^0.5.1",
+        "@locusai/shared": "^0.6.0",
         "axios": "^1.13.2",
         "events": "^3.3.0",
         "globby": "^14.0.2",
@@ -227,7 +228,7 @@
     },
     "packages/shared": {
       "name": "@locusai/shared",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "dependencies": {
         "zod": "^4.3.6",
       },

@@ -66,7 +66,7 @@ export class QueryWorkflow extends BaseWorkflow {
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
         const { cleanContent, actions } = this.extractAISuggestions(
-          response.content as unknown
+          response.content
         );
         return {
           content: cleanContent,
@@ -106,52 +106,5 @@ export class QueryWorkflow extends BaseWorkflow {
       ),
       suggestedActions: allSuggestedActions,
     };
-  }
-
-  private extractAISuggestions(content: unknown): {
-    cleanContent: string;
-    actions: SuggestedAction[];
-  } {
-    let textContent = "";
-
-    if (typeof content === "string") {
-      textContent = content;
-    } else if (Array.isArray(content)) {
-      textContent = content
-        .map((c) => {
-          if (typeof c === "string") return c;
-          if (c && typeof c === "object" && "text" in c) return c.text;
-          return "";
-        })
-        .join("");
-    } else {
-      textContent = String(content || "");
-    }
-
-    const suggestionsMatch = textContent.match(
-      /<suggestions>([\s\S]*?)<\/suggestions>/
-    );
-
-    if (!suggestionsMatch) {
-      return { cleanContent: textContent, actions: [] };
-    }
-
-    try {
-      const actionsJson = JSON.parse(suggestionsMatch[1]);
-      const actions = actionsJson.map((a: { label: string; text: string }) => ({
-        label: a.label,
-        type: "chat_suggestion",
-        payload: { text: a.text },
-      }));
-
-      const cleanContent = textContent
-        .replace(/<suggestions>[\s\S]*?<\/suggestions>/, "")
-        .trim();
-
-      return { cleanContent, actions };
-    } catch (e) {
-      console.warn("[QueryWorkflow] Failed to parse suggested actions:", e);
-      return { cleanContent: textContent, actions: [] };
-    }
   }
 }

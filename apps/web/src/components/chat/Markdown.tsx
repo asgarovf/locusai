@@ -1,8 +1,10 @@
 "use client";
 
+import { $FixMe } from "@locusai/shared";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
+import { MermaidRenderer } from "../editor/MermaidRenderer";
 
 interface MarkdownProps {
   content: string;
@@ -50,10 +52,20 @@ export function Markdown({ content, className }: MarkdownProps) {
               className="border-l-4 border-primary/30 pl-4 italic text-muted-foreground bg-primary/5 py-1 rounded-r-lg my-4"
             />
           ),
-          code: (props) => {
-            const { children, className, ...rest } = props;
+          code: ({ node, inline, className, children, ...props }: $FixMe) => {
+            const match = /language-(\w+)/.exec(className || "");
+            const language = match ? match[1] : "";
+
+            if (!inline && language === "mermaid") {
+              return (
+                <MermaidRenderer
+                  content={String(children).replace(/\n$/, "")}
+                />
+              );
+            }
+
             return (
-              <code {...rest} className={className}>
+              <code {...props} className={className}>
                 {children}
               </code>
             );

@@ -57,6 +57,7 @@ import {
 import { useEffect, useMemo, useRef } from "react";
 import { Markdown } from "tiptap-markdown";
 import { cn } from "@/lib/utils";
+import { Markdown as UnifiedMarkdown } from "./chat/Markdown";
 
 const lowlight = createLowlight(common);
 
@@ -304,7 +305,14 @@ export function Editor({ value, onChange, readOnly = false }: EditorProps) {
     <div className="w-full h-full flex flex-col">
       {!readOnly && <MenuBar editor={editor} />}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <EditorContent editor={editor} />
+        {readOnly ? (
+          <UnifiedMarkdown
+            content={value}
+            className="p-8 prose-invert prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-strong:font-bold prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:rounded-r-xl"
+          />
+        ) : (
+          <EditorContent editor={editor} />
+        )}
       </div>
     </div>
   );
