@@ -25,6 +25,7 @@ interface BoardContentProps {
   onTaskClick: (taskId: string) => void;
   onTaskDelete: (taskId: string) => void;
   onNewTask: () => void;
+  isCompact: boolean;
 }
 
 export function BoardContent({
@@ -38,6 +39,7 @@ export function BoardContent({
   onTaskClick,
   onTaskDelete,
   onNewTask,
+  isCompact,
 }: BoardContentProps) {
   return (
     <DndContext
@@ -65,6 +67,7 @@ export function BoardContent({
                 tasks={tasksByStatus[status.key] || []}
                 onTaskClick={onTaskClick}
                 onTaskDelete={onTaskDelete}
+                isCompact={isCompact}
               />
             ))}
           </div>
@@ -75,7 +78,7 @@ export function BoardContent({
       <DragOverlay>
         {activeTask && (
           <div className="opacity-90 rotate-2 shadow-2xl cursor-grabbing w-72">
-            <TaskCard task={activeTask} />
+            <TaskCard task={activeTask} variant={isCompact ? "list" : "card"} />
           </div>
         )}
       </DragOverlay>

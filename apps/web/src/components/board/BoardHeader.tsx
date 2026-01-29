@@ -5,18 +5,22 @@
 
 import { type Sprint } from "@locusai/shared";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, Toggle } from "@/components/ui";
 
 interface BoardHeaderProps {
   activeSprint?: Sprint | null;
   filteredTasksCount: number;
   onNewTask: () => void;
+  isCompact: boolean;
+  onToggleCompact: () => void;
 }
 
 export function BoardHeader({
   activeSprint,
   filteredTasksCount,
   onNewTask,
+  isCompact,
+  onToggleCompact,
 }: BoardHeaderProps) {
   return {
     title: "Board",
@@ -34,14 +38,22 @@ export function BoardHeader({
       </div>
     ),
     actions: (
-      <Button
-        onClick={onNewTask}
-        size="md"
-        className="shadow-lg shadow-primary/20"
-      >
-        <Plus size={18} className="mr-2" />
-        New Task
-      </Button>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-lg border border-border/50">
+          <span className="text-sm font-medium text-muted-foreground mr-1">
+            Compact
+          </span>
+          <Toggle checked={isCompact} onChange={onToggleCompact} />
+        </div>
+        <Button
+          onClick={onNewTask}
+          size="md"
+          className="shadow-lg shadow-primary/20"
+        >
+          <Plus size={18} className="mr-2" />
+          New Task
+        </Button>
+      </div>
     ),
   };
 }

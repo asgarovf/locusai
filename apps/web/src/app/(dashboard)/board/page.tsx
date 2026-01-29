@@ -3,7 +3,12 @@
 import { LayoutGrid, Map as MapIcon } from "lucide-react";
 import { Suspense } from "react";
 import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
-import { BoardContent, BoardHeader, SprintMindmap } from "@/components/board";
+import {
+  BoardContent,
+  BoardHeader,
+  FlowchartView,
+  SprintMindmap,
+} from "@/components/board";
 import { Button, Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
 
@@ -26,6 +31,8 @@ function BoardPageContent() {
     setRoleFilter,
     view,
     setView,
+    isCompact,
+    setIsCompact,
     sensors,
     handleDragStart,
     handleDragEnd,
@@ -45,6 +52,8 @@ function BoardPageContent() {
     activeSprint,
     filteredTasksCount: filteredTasks.length,
     onNewTask: () => setIsCreateModalOpen(true),
+    isCompact,
+    onToggleCompact: () => setIsCompact(!isCompact),
   });
 
   return (
@@ -85,6 +94,15 @@ function BoardPageContent() {
                 <MapIcon className="w-4 h-4" />
                 Mindmap
               </Button>
+              <Button
+                variant={view === "canvas" ? "secondary" : "ghost"}
+                size="sm"
+                className="gap-2"
+                onClick={() => setView("canvas")}
+              >
+                <LayoutGrid className="w-4 h-4 rotate-90" />
+                Canvas
+              </Button>
             </div>
           </div>
         )}
@@ -101,9 +119,16 @@ function BoardPageContent() {
             onTaskClick={setSelectedTaskId}
             onTaskDelete={handleDeleteTask}
             onNewTask={() => setIsCreateModalOpen(true)}
+            isCompact={isCompact}
           />
-        ) : (
+        ) : view === "mindmap" ? (
           <SprintMindmap mindmap={activeSprint?.mindmap || null} />
+        ) : (
+          <FlowchartView
+            tasks={filteredTasks}
+            onTaskClick={setSelectedTaskId}
+            onTaskDelete={handleDeleteTask}
+          />
         )}
       </PageLayout>
 

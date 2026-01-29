@@ -49,7 +49,7 @@ export function Toggle({ checked, onChange, disabled }: ToggleProps) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-        checked ? "bg-primary" : "bg-secondary"
+        checked ? "bg-background" : "bg-secondary"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <motion.span

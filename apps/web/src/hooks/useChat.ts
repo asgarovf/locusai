@@ -46,6 +46,16 @@ export function useChat() {
 
   const sessions = sessionsData || [];
 
+  // Validate active session against loaded sessions
+  useEffect(() => {
+    if (!isLoadingSessions && activeSessionId) {
+      const isValidSession = sessions.some((s) => s.id === activeSessionId);
+      if (!isValidSession) {
+        setActiveSessionId("");
+      }
+    }
+  }, [sessions, isLoadingSessions, activeSessionId, setActiveSessionId]);
+
   // 1.5 Fetch Session History with React Query
   const { data: historyData, isLoading: isLoadingHistory } = useQuery({
     queryKey: queryKeys.ai.session(activeSessionId, workspaceId),

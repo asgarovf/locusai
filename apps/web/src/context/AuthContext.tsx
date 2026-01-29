@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const switchWorkspace = useCallback((workspaceId: string) => {
+    localStorage.setItem("lastWorkspaceId", workspaceId);
     setUser((prev) => (prev ? { ...prev, workspaceId } : null));
   }, []);
 
@@ -52,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await locusClient.auth.getMe();
       const workspacesData = await locusClient.workspaces.listAll();
 
-      let effectiveWorkspaceId = userData.workspaceId;
+      const storedWorkspaceId = localStorage.getItem("lastWorkspaceId");
+      let effectiveWorkspaceId = userData.workspaceId || storedWorkspaceId;
 
       // Validation: Ensure current workspaceId is valid
       if (workspacesData.length > 0) {
@@ -62,6 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isValid) {
           effectiveWorkspaceId = workspacesData[0].id;
         }
+      }
+
+      // Update localStorage with the verified effective ID
+      if (effectiveWorkspaceId) {
+        localStorage.setItem("lastWorkspaceId", String(effectiveWorkspaceId));
       }
 
       setUser({
@@ -88,6 +95,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (token: string, userData: User) => {
     setClientToken(token);
     setUser(userData);
+
+    if (userData.workspaceId) {
+      localStorage.setItem("lastWorkspaceId", userData.workspaceId);
+    }
 
     // Fetch workspaces to ensure they're loaded before navigation
     await refreshUser();

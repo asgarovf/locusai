@@ -7,9 +7,14 @@ import { cn } from "@/lib/utils";
 interface DroppableSectionProps {
   id: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-export function DroppableSection({ id, children }: DroppableSectionProps) {
+export function DroppableSection({
+  id,
+  children,
+  className,
+}: DroppableSectionProps) {
   const { isOver, setNodeRef } = useDroppable({ id });
 
   return (
@@ -17,7 +22,8 @@ export function DroppableSection({ id, children }: DroppableSectionProps) {
       ref={setNodeRef}
       className={cn(
         "rounded-lg transition-all duration-200",
-        isOver && "bg-primary/10 ring-2 ring-primary/30 ring-dashed"
+        isOver && "bg-primary/10 ring-2 ring-primary/30 ring-dashed",
+        className
       )}
     >
       {children}
