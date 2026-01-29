@@ -8,18 +8,21 @@ export interface LLMConfig {
   apiKey?: string;
   temperature?: number;
   modelName?: string;
+  maxOutputTokens?: number;
 }
 
 export class LLMFactory {
   static create(config: LLMConfig = {}): BaseChatModel {
     const provider = config.provider || "gemini";
     const temperature = config.temperature ?? 0.7;
+    const maxOutputTokens = config.maxOutputTokens;
 
     switch (provider) {
       case "gemini":
         return new ChatGoogleGenerativeAI({
-          model: config.modelName || "gemini-3-flash-preview",
+          model: config.modelName || "gemini-3-pro-preview",
           temperature,
+          maxOutputTokens,
           apiKey: config.apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
         });
       case "claude":

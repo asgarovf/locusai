@@ -81,6 +81,12 @@ export interface WorkflowState {
   manifestSummary: string; // Condensed context
 }
 
+export interface PendingExecution {
+  intent: string;
+  originalInput: string;
+  executionId: string;
+}
+
 export interface AgentState {
   mode: AgentMode;
   scratchpad: string[]; // Temporary reasoning buffer
@@ -88,6 +94,7 @@ export interface AgentState {
   history: AgentChatMessage[];
   manifest?: Partial<ProjectManifest>;
   workflow?: WorkflowState;
+  pendingExecution?: PendingExecution;
 }
 
 export interface AgentResponse {

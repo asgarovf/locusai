@@ -31,6 +31,8 @@ export default function ChatPage() {
     createNewChat,
     deleteSession,
     selectSession,
+    loadingState,
+    intent,
   } = useChat();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -129,6 +131,8 @@ export default function ChatPage() {
                     timestamp: new Date(),
                   }}
                   isTyping={true}
+                  loadingState={loadingState}
+                  intent={intent}
                 />
               )}
             </>

@@ -121,12 +121,18 @@ export function useChat() {
   }, [messages, isTyping, shouldScrollSmooth]);
 
   // 2. Mutations
-  const chatMutation = useMutation({
-    mutationFn: (variables: { text: string; sessionId: string }) =>
-      locusClient.ai.chat(workspaceId, {
-        message: variables.text,
+  const [loadingState, setLoadingState] = useState<
+    "IDLE" | "DETECTING" | "EXECUTING"
+  >("IDLE");
+  const [intent, setIntent] = useState<string>("");
+
+  const executeMutation = useMutation({
+    mutationFn: (variables: { sessionId: string; executionId: string }) =>
+      locusClient.ai.executeIntent(workspaceId, {
         sessionId: variables.sessionId,
+        executionId: variables.executionId,
       }),
+    retry: false, // Do not retry execution on failure
     onSuccess: (data) => {
       const aiMessage = data.message;
       const assistantMessage: AssistantMessage = {
@@ -146,6 +152,8 @@ export function useChat() {
 
       setMessages((prev) => [...prev, assistantMessage]);
       setIsTyping(false);
+      setLoadingState("IDLE");
+      setIntent("");
 
       // Invalidate sessions list as a new chat message might change the title/updatedAt
       queryClient.invalidateQueries({
@@ -157,8 +165,43 @@ export function useChat() {
       }
     },
     onError: (error) => {
-      console.error("Failed to send message:", error);
+      console.error("Failed to execute intent:", error);
       setIsTyping(false);
+      setLoadingState("IDLE");
+
+      // Optionally add a system message saying it failed
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content:
+            "I'm sorry, something went wrong while handling your request. Please try again.",
+          timestamp: new Date(),
+        } as AssistantMessage,
+      ]);
+    },
+  });
+
+  const detectMutation = useMutation({
+    mutationFn: (variables: { text: string; sessionId: string }) =>
+      locusClient.ai.detectIntent(workspaceId, {
+        message: variables.text,
+        sessionId: variables.sessionId,
+      }),
+    retry: false,
+    onSuccess: (data) => {
+      setLoadingState("EXECUTING");
+      setIntent(data.intent);
+      executeMutation.mutate({
+        sessionId: data.sessionId,
+        executionId: data.executionId,
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to detect intent:", error);
+      setIsTyping(false);
+      setLoadingState("IDLE");
     },
   });
 
@@ -179,9 +222,10 @@ export function useChat() {
 
     setMessages((prev) => [...prev, newMessage]);
     setIsTyping(true);
+    setLoadingState("DETECTING");
     setShouldScrollSmooth(true);
 
-    chatMutation.mutate({ text, sessionId });
+    detectMutation.mutate({ text, sessionId });
   };
 
   const createNewChat = () => {
@@ -235,6 +279,8 @@ export function useChat() {
     activeSessionId,
     messages,
     isTyping,
+    loadingState,
+    intent,
     activeArtifact,
     setActiveArtifact,
     messagesEndRef,

@@ -15,8 +15,12 @@ export class WorkflowEngine {
     this.workflows.push(workflow);
   }
 
-  async execute(state: AgentState, input: string): Promise<AgentResponse> {
-    const intent = await this.detectIntent(state, input);
+  async execute(
+    state: AgentState,
+    input: string,
+    intentOverride?: Intent
+  ): Promise<AgentResponse> {
+    const intent = intentOverride || (await this.detectIntent(state, input));
 
     const context: WorkflowContext = {
       llm: this.llm,
@@ -46,10 +50,7 @@ export class WorkflowEngine {
     return response;
   }
 
-  private async detectIntent(
-    state: AgentState,
-    input: string
-  ): Promise<Intent> {
+  public async detectIntent(state: AgentState, input: string): Promise<Intent> {
     const intentChain = createIntentChain(this.llm);
     const historyText = state.history
       .slice(-5)

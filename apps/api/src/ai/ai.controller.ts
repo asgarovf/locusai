@@ -16,9 +16,16 @@ import {
   Param,
   Post,
 } from "@nestjs/common";
+import { z } from "zod";
 import { CurrentUser, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { AiService } from "./ai.service";
+
+const ExecutionSchema = z.object({
+  executionId: z.string(),
+  sessionId: z.string(),
+});
+type ExecutionRequest = z.infer<typeof ExecutionSchema>;
 
 @Controller()
 export class AiController {
@@ -33,6 +40,31 @@ export class AiController {
     @Body(new ZodValidationPipe(ChatRequestSchema)) request: ChatRequest
   ): Promise<ChatResponse> {
     return this.aiService.chat(workspaceId, user.id, request);
+  }
+
+  @Post("ai/:workspaceId/chat/intent")
+  @Member()
+  async detectIntent(
+    @CurrentUser() user: User,
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    { workspaceId }: WorkspaceIdParam,
+    @Body(new ZodValidationPipe(ChatRequestSchema)) request: ChatRequest
+  ) {
+    return this.aiService.detectIntent(workspaceId, user.id, request);
+  }
+
+  @Post("ai/:workspaceId/chat/execute")
+  @Member()
+  async executeIntent(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    { workspaceId }: WorkspaceIdParam,
+    @Body(new ZodValidationPipe(ExecutionSchema)) request: ExecutionRequest
+  ): Promise<ChatResponse> {
+    return this.aiService.executeIntent(
+      workspaceId,
+      request.sessionId,
+      request.executionId
+    );
   }
 
   @Get("ai/:workspaceId/sessions")

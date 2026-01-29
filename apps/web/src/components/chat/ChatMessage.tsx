@@ -9,7 +9,7 @@ import {
   Layers,
   Terminal,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/AuthContext";
@@ -22,6 +22,8 @@ interface ChatMessageProps {
   artifacts?: Artifact[];
   onArtifactClick?: (artifact: Artifact) => void;
   isTyping?: boolean;
+  loadingState?: "IDLE" | "DETECTING" | "EXECUTING";
+  intent?: string;
 }
 
 export function ChatMessage({
@@ -29,8 +31,83 @@ export function ChatMessage({
   artifacts,
   onArtifactClick,
   isTyping,
+  loadingState,
+  intent,
 }: ChatMessageProps) {
   const { user } = useAuth();
+
+  const [loadingMsg, setLoadingMsg] = useState("Processing...");
+
+  useEffect(() => {
+    if (loadingState !== "EXECUTING") return;
+
+    const messages = [
+      "Analyzing your request...",
+      "Consulting the neural network...",
+      "Reviewing project context...",
+      "Generating optimized code...",
+      "Checking database schemas...",
+      "Validating dependencies...",
+      "Constructing the response...",
+      "Synthesizing output...",
+      "Aligning with project manifesto...",
+      "Fetching relevant documentation...",
+      "Executing workflow steps...",
+      "Calibrating confidence levels...",
+      "Parsing intended actions...",
+      "Formatting artifact data...",
+      "Optimizing performance metrics...",
+      "Double-checking security rules...",
+      "Applying best practices...",
+      "Drafting the solution...",
+      "Finalizing response...",
+      "Almost there...",
+    ];
+
+    // Pick a random start
+    let index = Math.floor(Math.random() * messages.length);
+    setLoadingMsg(messages[index]);
+
+    const interval = setInterval(() => {
+      index = (index + 1) % messages.length;
+      setLoadingMsg(messages[index]);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [loadingState]);
+
+  // Typewriter effect
+  const [displayedMsg, setDisplayedMsg] = useState("");
+
+  useEffect(() => {
+    setDisplayedMsg("");
+    let charIndex = 0;
+
+    // Slight delay before starting to type
+    const startTimeout = setTimeout(() => {
+      const typeInterval = setInterval(() => {
+        if (charIndex < loadingMsg.length) {
+          setDisplayedMsg(loadingMsg.slice(0, charIndex + 1));
+          charIndex++;
+        } else {
+          clearInterval(typeInterval);
+        }
+      }, 30); // Speed of typing
+
+      // Cleanup interval on unmount or change
+      return () => clearInterval(typeInterval);
+    }, 100);
+
+    return () => clearTimeout(startTimeout);
+  }, [loadingMsg]);
+
+  // Dynamic loading message
+  const getLoadingText = () => {
+    if (loadingState === "DETECTING") return "Understanding your request...";
+    if (loadingState === "EXECUTING")
+      return intent ? `Executing: ${intent.toLowerCase()}...` : "Executing...";
+    return "Thinking...";
+  };
 
   // Handle System Messages
   if (message.role === "system") {
@@ -54,8 +131,8 @@ export function ChatMessage({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className={cn(
         "flex gap-4 max-w-5xl mx-auto w-full group transition-all",
         isUser ? "flex-row-reverse" : ""
@@ -109,18 +186,42 @@ export function ChatMessage({
         {(isTyping || message.content) && (
           <div
             className={cn(
-              "rounded-2xl px-5 py-3.5 text-sm shadow-sm leading-relaxed",
+              "rounded-2xl px-5 py-3.5 text-sm shadow-sm leading-relaxed relative overflow-hidden",
               isUser
                 ? "bg-secondary text-secondary-foreground rounded-tr-none"
                 : "bg-card border border-border/50 text-foreground rounded-tl-none"
             )}
           >
-            {/* If typing, show dots, else standard markdown content */}
+            {/* If typing, show dynamic loading state */}
             {isTyping ? (
-              <div className="flex items-center gap-1 h-5">
-                <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce"></span>
+              <div className="flex items-center gap-3 min-h-[24px]">
+                {loadingState && loadingState !== "IDLE" ? (
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-primary/20 border-2 border-primary/60"></span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-foreground/90 animate-pulse">
+                        {getLoadingText()}
+                      </span>
+                      {intent && loadingState === "EXECUTING" && (
+                        <span className="text-[10px] text-muted-foreground transition-all duration-500 font-mono">
+                          {displayedMsg}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 bg-current/40 rounded-full animate-bounce"></span>
+                  </div>
+                )}
+
+                {/* Subtle sheen effect for loading */}
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite] pointer-events-none" />
               </div>
             ) : (
               <Markdown content={message.content} />

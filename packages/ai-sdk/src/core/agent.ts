@@ -1,5 +1,10 @@
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { type AIArtifact, type SuggestedAction } from "@locusai/shared";
+import {
+  type AIArtifact,
+  generateUUID,
+  type SuggestedAction,
+} from "@locusai/shared";
+import { Intent } from "../chains/intent";
 import { createManifestUpdaterChain } from "../chains/manifest-updater";
 import { REQUIRED_MANIFEST_FIELDS } from "../constants";
 import {
@@ -167,6 +172,58 @@ export class LocusAgent {
     }
 
     this.updateHistory("user", input);
+    this.updateHistory(
+      "assistant",
+      response.content,
+      response.artifacts,
+      response.suggestedActions
+    );
+
+    return response;
+  }
+
+  async detectIntent(
+    input: string
+  ): Promise<{ intent: string; executionId: string }> {
+    const intent = await this.engine.detectIntent(this.state, input);
+    const executionId = generateUUID();
+
+    this.state.pendingExecution = {
+      intent,
+      originalInput: input,
+      executionId,
+    };
+
+    return { intent, executionId };
+  }
+
+  async executePending(executionId: string): Promise<AgentResponse> {
+    if (
+      !this.state.pendingExecution ||
+      this.state.pendingExecution.executionId !== executionId
+    ) {
+      throw new Error("No matching pending execution found");
+    }
+
+    const { intent, originalInput } = this.state.pendingExecution;
+
+    // Execute with the stored intent
+    // We cast string to Intent enum here assuming engine handles validation or type compatibility
+    const response = await this.engine.execute(
+      this.state,
+      originalInput,
+      intent as Intent
+    );
+
+    // Clear pending execution
+    delete this.state.pendingExecution;
+
+    // Passively update manifest if not in Interview mode
+    if (this.state.mode !== AgentMode.INTERVIEW) {
+      this.updateManifestInBackground(originalInput);
+    }
+
+    this.updateHistory("user", originalInput);
     this.updateHistory(
       "assistant",
       response.content,

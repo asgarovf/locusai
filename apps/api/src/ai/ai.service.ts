@@ -24,6 +24,95 @@ export class AiService {
     private readonly providerFactory: AiProviderFactory
   ) {}
 
+  async detectIntent(
+    workspaceId: string,
+    userId: string,
+    request: ChatRequest
+  ): Promise<{ intent: string; executionId: string; sessionId: string }> {
+    const externalSessionId = request.sessionId || generateUUID();
+
+    // 1. Load Workspace & Session
+    const [workspace, existingSession] = await Promise.all([
+      this.workspaceRepo.findOne({ where: { id: workspaceId } }),
+      this.sessionRepo.findOne({ where: { workspaceId, externalSessionId } }),
+    ]);
+
+    if (!workspace) {
+      throw new NotFoundException(`Workspace ${workspaceId} not found`);
+    }
+
+    let session = existingSession;
+    if (!session) {
+      session = this.sessionRepo.create({
+        workspaceId,
+        userId,
+        externalSessionId,
+        state: {},
+      });
+      await this.sessionRepo.save(session);
+    }
+
+    const agent = await this.getAgent(workspace, session);
+
+    // 2. Detect Intent
+    const { intent, executionId } = await agent.detectIntent(request.message);
+    const updatedState = agent.getState();
+
+    // 3. Persist State (including pending execution)
+    await this.persistState(workspace, session, updatedState);
+
+    return {
+      intent,
+      executionId,
+      sessionId: externalSessionId,
+    };
+  }
+
+  async executeIntent(
+    workspaceId: string,
+    sessionId: string,
+    executionId: string
+  ): Promise<ChatResponse> {
+    // 1. Load Workspace & Session
+    const [workspace, session] = await Promise.all([
+      this.workspaceRepo.findOne({ where: { id: workspaceId } }),
+      this.sessionRepo.findOne({
+        where: { workspaceId, externalSessionId: sessionId },
+      }),
+    ]);
+
+    if (!workspace) {
+      throw new NotFoundException(`Workspace ${workspaceId} not found`);
+    }
+    if (!session) {
+      throw new NotFoundException(`Session ${sessionId} not found`);
+    }
+
+    const agent = await this.getAgent(workspace, session);
+
+    // 2. Execute Pending Intent
+    const response = await agent.executePending(executionId);
+    const updatedState = agent.getState();
+
+    // 3. Persist State
+    await this.persistState(workspace, session, updatedState);
+
+    // 4. Return Response
+    const message: AIMessage = {
+      id: generateUUID(),
+      role: "assistant",
+      content: response.content,
+      artifacts: response.artifacts,
+      suggestedActions: response.suggestedActions,
+      timestamp: new Date(),
+    };
+
+    return {
+      message,
+      sessionId: sessionId,
+    };
+  }
+
   async chat(
     workspaceId: string,
     userId: string,
@@ -93,6 +182,7 @@ export class AiService {
       scratchpad: updatedState.scratchpad,
       missingInfo: updatedState.missingInfo,
       history: updatedState.history,
+      pendingExecution: updatedState.pendingExecution,
     };
 
     await Promise.all([
@@ -172,6 +262,7 @@ export class AiService {
         history: session?.state?.history || [],
         mode: session?.state?.mode || undefined,
         missingInfo: session?.state?.missingInfo || undefined,
+        pendingExecution: session?.state?.pendingExecution || undefined,
       },
     });
   }

@@ -14,6 +14,35 @@ export class AIModule extends BaseModule {
   }
 
   /**
+   * Detect intent of the message.
+   */
+  async detectIntent(
+    workspaceId: string,
+    body: ChatRequest
+  ): Promise<{ intent: string; executionId: string; sessionId: string }> {
+    const { data } = await this.api.post<{
+      intent: string;
+      executionId: string;
+      sessionId: string;
+    }>(`/ai/${workspaceId}/chat/intent`, body);
+    return data;
+  }
+
+  /**
+   * Execute a pending intent.
+   */
+  async executeIntent(
+    workspaceId: string,
+    body: { sessionId: string; executionId: string }
+  ): Promise<ChatResponse> {
+    const { data } = await this.api.post<ChatResponse>(
+      `/ai/${workspaceId}/chat/execute`,
+      body
+    );
+    return data;
+  }
+
+  /**
    * List all chat sessions for the current user in a workspace.
    */
   async listSessions(
