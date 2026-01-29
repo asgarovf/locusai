@@ -104,11 +104,18 @@ export function useChat() {
   // Sync history to messages state
   useEffect(() => {
     if (historyData) {
+      // If we are currently typing (sending a message), and it's a new session,
+      // we avoid overwriting to keep the local user message visible.
+      // Once isTyping becomes false, this effect will run again and sync the full history.
+      if (isTyping && messages.length > 0 && !activeSessionId) {
+        return;
+      }
+
       setMessages(historyData);
       // After history is loaded, we can enable smooth scrolling for new messages
       setTimeout(() => setShouldScrollSmooth(true), 100);
     }
-  }, [historyData]);
+  }, [historyData, isTyping, activeSessionId, messages.length]);
 
   // Scroll to bottom effect
   // biome-ignore lint/correctness/useExhaustiveDependencies: Messages and isTyping are the only dependencies that should trigger the scroll effect
@@ -193,6 +200,16 @@ export function useChat() {
     onSuccess: (data) => {
       setLoadingState("EXECUTING");
       setIntent(data.intent);
+
+      // Focus on the session as soon as we have an ID
+      if (!activeSessionId) {
+        setActiveSessionId(data.sessionId);
+        // Invalidate sessions list so the new session appears in the sidebar
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.ai.sessions(workspaceId),
+        });
+      }
+
       executeMutation.mutate({
         sessionId: data.sessionId,
         executionId: data.executionId,
