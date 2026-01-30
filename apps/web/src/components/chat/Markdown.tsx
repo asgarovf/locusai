@@ -14,6 +14,9 @@ interface MarkdownProps {
 export function Markdown({ content, className }: MarkdownProps) {
   if (!content?.trim?.()) return null;
 
+  // Unescape literal \n sequences often found in raw API data or LLM outputs
+  const unescapedContent = content.replace(/\\n/g, "\n");
+
   return (
     <div
       className={cn(
@@ -72,7 +75,7 @@ export function Markdown({ content, className }: MarkdownProps) {
           },
         }}
       >
-        {content}
+        {unescapedContent}
       </ReactMarkdown>
     </div>
   );
