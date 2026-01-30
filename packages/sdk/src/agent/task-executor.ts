@@ -6,7 +6,6 @@ import { PromptBuilder } from "../core/prompt-builder.js";
 export interface TaskExecutorDeps {
   aiRunner: AiRunner;
   projectPath: string;
-  skipPlanning?: boolean;
   log: LogFn;
 }
 
@@ -33,17 +32,13 @@ export class TaskExecutor {
     try {
       let plan: string | null = null;
 
-      if (this.deps.skipPlanning) {
-        this.deps.log("Skipping Phase 1: Planning (CLI)...", "info");
-      } else {
-        this.deps.log("Phase 1: Planning (CLI)...", "info");
-        const planningPrompt = `${basePrompt}
+      this.deps.log("Phase 1: Planning (CLI)...", "info");
+      const planningPrompt = `${basePrompt}
 
 ## Phase 1: Planning
 Analyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
 
-        plan = await this.deps.aiRunner.run(planningPrompt, true);
-      }
+      plan = await this.deps.aiRunner.run(planningPrompt, true);
 
       // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");

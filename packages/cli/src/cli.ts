@@ -39,12 +39,12 @@ const VERSION = getVersion();
 function printBanner() {
   console.log(
     c.primary(`
-  ##       ######   ######  ##    ##  ###### 
-  ##      ##    ## ##       ##    ## ##       
-  ##      ##    ## ##       ##    ## ######   
-  ##      ##    ## ##       ##    ##      ## 
-  #######  ######   ######   ######  ######   v${VERSION}
-`)
+ _      ____   ____ _   _  ____ 
+| |    / __ \\ / ___| | | |/ ___|
+| |   | |  | | |   | | | |\\___ \\ 
+| |___| |__| | |___| |_| |___) |
+|_____|\\____/ \\____|\\___/|____/  ${c.dim(`v${VERSION}`)}
+    `)
   );
 }
 
@@ -56,13 +56,13 @@ function isProjectInitialized(projectPath: string): boolean {
 
 function requireInitialization(projectPath: string, command: string): void {
   if (!isProjectInitialized(projectPath)) {
-    console.error(`\n${c.error("❌ Error: Locus is not initialized in this directory.")}\n
-The '${c.bold(command)}' command requires a Locus project to be initialized.
+    console.error(`\n  ${c.error("✖ Error")} ${c.red(`Locus is not initialized in this directory.`)}\n
+  The '${c.bold(command)}' command requires a Locus project to be initialized.
 
-To initialize Locus in this directory, run:
-  ${c.primary("locus init")}
+  To initialize Locus in this directory, run:
+    ${c.primary("locus init")}
 
-This will create a .locus directory with the necessary configuration.
+  This will create a ${c.dim(".locus")} directory with the necessary configuration.
 `);
     process.exit(1);
   }
@@ -139,17 +139,20 @@ async function runCommand(args: string[]) {
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
-    skipPlanning: Boolean(values["skip-planning"]),
   });
 
   orchestrator.on("task:assigned", (data) =>
-    console.log(`ℹ [CLAIMED] ${data.title}`)
+    console.log(`  ${c.info("●")} ${c.bold("Claimed:")} ${data.title}`)
   );
   orchestrator.on("task:completed", (data) =>
-    console.log(`✓ [COMPLETED] ${data.taskId}`)
+    console.log(
+      `  ${c.success("✔")} ${c.success("Completed:")} ${c.dim(data.taskId)}`
+    )
   );
   orchestrator.on("task:failed", (data) =>
-    console.log(`✗ [FAILED] ${data.taskId}: ${data.error}`)
+    console.log(
+      `  ${c.error("✖")} ${c.error("Failed:")} ${c.bold(data.taskId)}: ${data.error}`
+    )
   );
 
   // Handle graceful shutdown
@@ -162,7 +165,9 @@ async function runCommand(args: string[]) {
   process.on("SIGINT", () => handleSignal("SIGINT"));
   process.on("SIGTERM", () => handleSignal("SIGTERM"));
 
-  console.log(`${c.primary("🚀 Starting agent in")} ${c.bold(projectPath)}...`);
+  console.log(
+    `\n  ${c.primary("🚀")} ${c.bold("Starting Locus agent in")} ${c.primary(projectPath)}...`
+  );
   await orchestrator.start();
 }
 
@@ -191,7 +196,7 @@ async function indexCommand(args: string[]) {
   const indexer = new CodebaseIndexer(projectPath);
 
   console.log(
-    `${c.primary("🔍 Indexing codebase in")} ${c.bold(projectPath)}...`
+    `\n  ${c.step(" INDEX ")} ${c.primary("Analyzing codebase in")} ${c.bold(projectPath)}...`
   );
   const index = await indexer.index(
     (msg) => console.log(`  ${c.dim(msg)}`),
@@ -202,7 +207,7 @@ async function indexCommand(args: string[]) {
     indexer.saveIndex(index);
   }
 
-  console.log(c.success("✅ Indexing complete!"));
+  console.log(`\n  ${c.success("✔")} ${c.success("Indexing complete!")}\n`);
 }
 
 async function initCommand() {
@@ -221,19 +226,19 @@ If you want to reinitialize, please remove the .locus directory first.
 
   await new ConfigManager(projectPath).init(VERSION);
   console.log(`
-${c.success("✨ Locus initialized successfully!")}
+  ${c.success("✨ Locus initialized successfully!")}
 
-Created:
-  📁 ${c.dim(".locus/")}                  - Locus configuration directory
-  📄 ${c.dim(".locus/config.json")}      - Project configuration
-  📝 ${c.dim("CLAUDE.md")}               - AI context file
-  📁 ${c.dim(".agent/skills/")}          - Agent skills (Frontend, Backend, DevOps, etc.)
+  ${c.bold("Created:")}
+    ${c.primary("📁")} ${c.bold(".locus/")}             ${c.dim("Configuration directory")}
+    ${c.primary("📄")} ${c.bold(".locus/config.json")} ${c.dim("Project settings")}
+    ${c.primary("📝")} ${c.bold("CLAUDE.md")}          ${c.dim("AI instructions & context")}
+    ${c.primary("📁")} ${c.bold(".agent/skills/")}     ${c.dim("Domain-specific agent skills")}
 
-Next steps:
-  1. Run '${c.primary("locus index")}' to index your codebase
-  2. Run '${c.primary("locus run")}' to start an agent (requires --api-key)
+  ${c.bold("Next steps:")}
+    1. Run '${c.primary("locus index")}' to index your codebase
+    2. Run '${c.primary("locus run")}' to start an agent (requires --api-key)
 
-For more information, visit: ${c.underline("https://locusai.dev/docs")}
+  For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);
 }
 
@@ -254,29 +259,29 @@ async function main() {
       break;
     default:
       console.log(`
-Usage: locus <command>
+  ${c.header(" USAGE ")}
+    ${c.primary("locus")} ${c.dim("<command> [options]")}
 
-Commands:
-  init     Initialize Locus in the current directory
-  index    Index the codebase for AI context
-  run      Start an agent to work on tasks
+  ${c.header(" COMMANDS ")}
+    ${c.success("init")}      Initialize Locus in the current directory
+    ${c.success("index")}     Index the codebase for AI context
+    ${c.success("run")}       Start an agent to work on tasks
 
-Options:
-  --help   Show this help message
-  --provider <name>  AI provider: claude or codex (default: claude)
-  --skip-planning    Skip the planning phase (CLI planning)
+  ${c.header(" OPTIONS ")}
+    ${c.secondary("--help")}           Show this help message
+    ${c.secondary("--provider")} <name>  AI provider: ${c.dim("claude")} or ${c.dim("codex")} (default: ${c.dim("claude")})
 
-Examples:
-  locus init
-  locus index
-  locus run --api-key YOUR_KEY
+  ${c.header(" EXAMPLES ")}
+    ${c.dim("$")} ${c.primary("locus init")}
+    ${c.dim("$")} ${c.primary("locus index")}
+    ${c.dim("$")} ${c.primary("locus run --api-key YOUR_KEY")}
 
-For more information, visit: https://locusai.dev/docs
+  For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);
   }
 }
 
 main().catch((err) => {
-  console.error(`Fatal error: ${err.message}`);
+  console.error(`\n  ${c.error("✖ Fatal Error")} ${c.red(err.message)}`);
   process.exit(1);
 });

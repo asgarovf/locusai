@@ -31,7 +31,6 @@ export interface WorkerConfig {
   apiKey: string;
   model?: string;
   provider?: AiProvider;
-  skipPlanning?: boolean;
 }
 
 /**
@@ -95,7 +94,6 @@ export class AgentWorker {
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,
       projectPath,
-      skipPlanning: config.skipPlanning,
       log,
     });
 
@@ -286,7 +284,7 @@ if (
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;
       config.provider = resolveProvider(value);
-    } else if (arg === "--skip-planning") config.skipPlanning = true;
+    }
   }
 
   if (

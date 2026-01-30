@@ -32,6 +32,15 @@ const colors = {
   brightMagenta: `${ESC}95m`,
   brightCyan: `${ESC}96m`,
   brightWhite: `${ESC}97m`,
+  // Background colors
+  bgBlack: `${ESC}40m`,
+  bgRed: `${ESC}41m`,
+  bgGreen: `${ESC}42m`,
+  bgYellow: `${ESC}43m`,
+  bgBlue: `${ESC}44m`,
+  bgMagenta: `${ESC}45m`,
+  bgCyan: `${ESC}46m`,
+  bgWhite: `${ESC}47m`,
 };
 
 type ColorName = keyof typeof colors;
@@ -53,11 +62,18 @@ export const c = {
   cyan: (t: string) => c.text(t, "cyan"),
   gray: (t: string) => c.text(t, "gray"),
 
+  white: (t: string) => c.text(t, "white"),
+  brightBlue: (t: string) => c.text(t, "brightBlue"),
+  bgBlue: (t: string) => c.text(t, "bgBlue", "white", "bold"),
+
   // Combinations
   success: (t: string) => c.text(t, "green", "bold"),
   error: (t: string) => c.text(t, "red", "bold"),
   warning: (t: string) => c.text(t, "yellow", "bold"),
   info: (t: string) => c.text(t, "cyan", "bold"),
   primary: (t: string) => c.text(t, "blue", "bold"),
+  secondary: (t: string) => c.text(t, "magenta", "bold"),
+  header: (t: string) => c.text(` ${t} `, "bgBlue", "white", "bold"),
+  step: (t: string) => c.text(` ${t} `, "bgCyan", "black", "bold"),
   underline: (t: string) => c.text(t, "underline"),
 };
