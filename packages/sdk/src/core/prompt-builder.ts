@@ -145,6 +145,67 @@ export class PromptBuilder {
     return prompt;
   }
 
+  async buildGenericPrompt(query: string): Promise<string> {
+    let prompt = `# Direct Execution\n\n`;
+    prompt += `## Prompt\n${query}\n\n`;
+
+    // 0. Project Metadata (from config)
+    const projectConfig = this.getProjectConfig();
+    if (projectConfig) {
+      prompt += `## Project Metadata\n`;
+      prompt += `- Version: ${projectConfig.version || "Unknown"}\n`;
+      prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
+    }
+
+    // 1. Project Context (Smart Merge)
+    const contextPath = getLocusPath(this.projectPath, "contextFile");
+    let hasLocalContext = false;
+
+    if (existsSync(contextPath)) {
+      try {
+        const context = readFileSync(contextPath, "utf-8");
+        if (context.trim().length > 20) {
+          prompt += `## Project Context (Local)\n${context}\n\n`;
+          hasLocalContext = true;
+        }
+      } catch (err) {
+        console.warn(`Warning: Could not read context file: ${err}`);
+      }
+    }
+
+    // Fallback to README if local context is missing or thin
+    if (!hasLocalContext) {
+      const fallback = this.getFallbackContext();
+      if (fallback) {
+        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
+      }
+    }
+
+    // 2. Project Awareness (Structure & Skills)
+    prompt += this.getProjectStructure();
+    prompt += this.getSkillsInfo();
+
+    // 3. Project Knowledge Base (Docs & Artifacts)
+    prompt += `## Project Knowledge Base\n`;
+    prompt += `You have access to the following documentation directories for context:\n`;
+    prompt += `- Artifacts: \`.locus/artifacts\`\n`;
+    prompt += `- Documents: \`.locus/documents\`\n`;
+    prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
+
+    // 4. Codebase Index context
+    const indexPath = getLocusPath(this.projectPath, "indexFile");
+    if (existsSync(indexPath)) {
+      prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
+    }
+
+    prompt += `## Instructions
+1. Execute the prompt based on the provided project context.
+2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
+3. When finished successfully, output: <promise>COMPLETE</promise>\n`;
+
+    return prompt;
+  }
+
   private getProjectConfig(): { version?: string; createdAt?: string } | null {
     const configPath = getLocusPath(this.projectPath, "configFile");
     if (existsSync(configPath)) {

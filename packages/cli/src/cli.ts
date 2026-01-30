@@ -13,6 +13,7 @@ import {
   DEFAULT_MODEL,
   LOCUS_CONFIG,
   PROVIDER,
+  PromptBuilder,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "./config-manager";
 import { TreeSummarizer } from "./tree-summarizer";
@@ -219,6 +220,68 @@ async function indexCommand(args: string[]) {
   console.log(`\n  ${c.success("✔")} ${c.success("Indexing complete!")}\n`);
 }
 
+async function execCommand(args: string[]) {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      model: { type: "string" },
+      provider: { type: "string" },
+      dir: { type: "string" },
+    },
+    strict: false,
+  });
+
+  const promptInput = positionals.join(" ");
+  if (!promptInput) {
+    console.error(
+      c.error('Error: Prompt is required. Usage: locus exec "your prompt"')
+    );
+    process.exit(1);
+  }
+
+  const projectPath = (values.dir as string) || process.cwd();
+  requireInitialization(projectPath, "exec");
+
+  const provider = resolveProvider(values.provider as string);
+  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+
+  const aiRunner = createAiRunner(provider, {
+    projectPath,
+    model,
+    log: (msg) => {
+      // Filter out some of the verbose output if needed, but show tool calls
+      if (msg.includes("[Claude] Running")) {
+        console.log(
+          `  ${c.info("●")} ${msg.replace("\n\n", "").replace("\n", "")}`
+        );
+      }
+    },
+  });
+
+  const builder = new PromptBuilder(projectPath);
+  const fullPrompt = await builder.buildGenericPrompt(promptInput);
+
+  console.log(
+    `\n  ${c.primary("🚀")} ${c.bold("Executing prompt with repository context...")}\n`
+  );
+
+  try {
+    const result = await aiRunner.run(fullPrompt);
+    // If the runner doesn't stream to stdout, we print the result here.
+    // ClaudeRunner currently prints to stdout if it's not captured.
+    // However, it returns the final result.
+    if (!result.includes("<promise>COMPLETE</promise>")) {
+      console.log(result);
+    }
+    console.log(`\n  ${c.success("✔")} ${c.success("Execution finished!")}\n`);
+  } catch (error) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.error("Execution failed:")} ${c.red(error instanceof Error ? error.message : String(error))}\n`
+    );
+    process.exit(1);
+  }
+}
+
 async function initCommand() {
   const projectPath = process.cwd();
 
@@ -266,6 +329,9 @@ async function main() {
     case "init":
       await initCommand();
       break;
+    case "exec":
+      await execCommand(args);
+      break;
     default:
       console.log(`
   ${c.header(" USAGE ")}
@@ -275,6 +341,7 @@ async function main() {
     ${c.success("init")}      Initialize Locus in the current directory
     ${c.success("index")}     Index the codebase for AI context
     ${c.success("run")}       Start an agent to work on tasks
+    ${c.success("exec")}      Run a prompt with repository context
 
   ${c.header(" OPTIONS ")}
     ${c.secondary("--help")}           Show this help message
