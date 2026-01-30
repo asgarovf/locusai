@@ -1,5 +1,17 @@
 # @locusai/mcp-server
 
+## 0.4.0
+
+### Minor Changes
+
+- Remove workspace argument requirement
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.7.0
+  - @locusai/shared@0.7.0
+
 ## 0.3.0
 
 ### Minor Changes

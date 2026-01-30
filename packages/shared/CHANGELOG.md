@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.7.0
+
+### Minor Changes
+
+- Remove workspace argument requirement
+
 ## 0.6.0
 
 ### Minor Changes
