@@ -1,4 +1,4 @@
-import { ChatRequest, ChatResponse } from "@locusai/shared";
+import { ChatRequest, ChatResponse, ShareChatRequest } from "@locusai/shared";
 import { BaseModule } from "./base.js";
 
 export class AIModule extends BaseModule {
@@ -81,5 +81,26 @@ export class AIModule extends BaseModule {
    */
   async deleteSession(workspaceId: string, sessionId: string): Promise<void> {
     await this.api.delete(`/ai/${workspaceId}/session/${sessionId}`);
+  }
+
+  /**
+   * Toggle chat session sharing.
+   */
+  async shareSession(
+    workspaceId: string,
+    sessionId: string,
+    body: ShareChatRequest
+  ): Promise<void> {
+    await this.api.post(`/ai/${workspaceId}/session/${sessionId}/share`, body);
+  }
+
+  /**
+   * Get a shared chat session (public).
+   */
+  async getSharedSession(sessionId: string): Promise<ChatResponse> {
+    const { data } = await this.api.get<ChatResponse>(
+      `/ai/shared/${sessionId}`
+    );
+    return data;
   }
 }

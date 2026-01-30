@@ -1,27 +1,142 @@
 "use client";
 
-import { Menu, SquarePen } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Check, Copy, Globe, Menu, Share2, SquarePen } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button, Modal } from "@/components/ui";
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void;
   title: string;
   onNewChat: () => void;
+  isShared?: boolean;
+  onShare?: (isShared: boolean) => void;
+  isSharing?: boolean;
+  sessionId?: string;
 }
 
 export function ChatHeader({
   onToggleSidebar,
   title,
   onNewChat,
+  isShared,
+  onShare,
+  isSharing,
+  sessionId,
 }: ChatHeaderProps) {
+  const [isCopied, setIsCopied] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/share/${sessionId}`
+      : "";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      toast.success("Link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3 p-4 border-b border-border/40 lg:hidden bg-background/50 backdrop-blur-md sticky top-0 z-10">
-      <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
+    <div className="flex items-center gap-3 p-4 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-10 h-16">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggleSidebar}
+        className="lg:hidden"
+      >
         <Menu size={20} />
       </Button>
-      <span className="font-semibold text-sm">{title}</span>
-      <div className="ml-auto">
-        <Button variant="ghost" size="icon" onClick={onNewChat}>
+      <div className="flex flex-col min-w-0">
+        <span className="font-semibold text-sm truncate">{title}</span>
+        {isShared && (
+          <span className="text-[10px] text-primary flex items-center gap-1">
+            <Globe size={10} /> Publicly shared
+          </span>
+        )}
+      </div>
+
+      <div className="ml-auto flex items-center gap-2">
+        {sessionId && onShare && (
+          <>
+            <Button
+              variant={isShared ? "subtle" : "ghost"}
+              size="sm"
+              className="gap-2 h-9"
+              onClick={() => setIsShareModalOpen(true)}
+              isLoading={isSharing}
+            >
+              <Share2 size={16} />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
+
+            <Modal
+              isOpen={isShareModalOpen}
+              onClose={() => setIsShareModalOpen(false)}
+              title="Share Chat"
+              size="sm"
+            >
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Anyone with the link can view this chat.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <Globe
+                      size={14}
+                      className={
+                        isShared ? "text-primary" : "text-muted-foreground"
+                      }
+                    />
+                    <span className="text-sm font-medium">Public access</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={isShared ? "primary" : "outline"}
+                    onClick={() => onShare(!isShared)}
+                    className="h-8 text-xs"
+                  >
+                    {isShared ? "Shared" : "Share"}
+                  </Button>
+                </div>
+
+                {isShared && (
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <div className="relative">
+                      <input
+                        readOnly
+                        value={shareUrl}
+                        className="w-full bg-secondary/50 border border-border/40 rounded-md px-3 py-1.5 text-xs pr-10 focus:outline-none"
+                      />
+                      <button
+                        onClick={handleCopy}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {isCopied ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Modal>
+          </>
+        )}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNewChat}
+          title="New Chat"
+        >
           <SquarePen size={20} />
         </Button>
       </div>

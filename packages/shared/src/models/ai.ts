@@ -54,3 +54,8 @@ export const ChatResponseSchema = z.object({
   history: z.array(AIMessageSchema).optional(),
 });
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
+
+export const ShareChatRequestSchema = z.object({
+  isShared: z.boolean(),
+});
+export type ShareChatRequest = z.infer<typeof ShareChatRequestSchema>;

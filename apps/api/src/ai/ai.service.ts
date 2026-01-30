@@ -226,6 +226,29 @@ export class AiService {
     }
   }
 
+  async shareSession(
+    workspaceId: string,
+    userId: string,
+    externalSessionId: string,
+    isShared: boolean
+  ): Promise<void> {
+    const result = await this.sessionRepo.update(
+      { workspaceId, userId, externalSessionId },
+      { isShared }
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Session ${externalSessionId} not found`);
+    }
+  }
+
+  async getSharedSession(externalSessionId: string): Promise<AiSession | null> {
+    const session = await this.sessionRepo.findOne({
+      where: { externalSessionId, isShared: true },
+    });
+    return session;
+  }
+
   async getAgent(
     workspace: Workspace | string,
     session?: AiSession,

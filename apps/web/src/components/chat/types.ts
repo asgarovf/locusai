@@ -75,4 +75,5 @@ export interface ChatSession {
   title: string;
   updatedAt: Date;
   summary?: string;
+  isShared?: boolean;
 }

@@ -33,6 +33,8 @@ export default function ChatPage() {
     selectSession,
     loadingState,
     intent,
+    shareSession,
+    isSharing,
   } = useChat();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -78,6 +80,10 @@ export default function ChatPage() {
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         title={sessions.find((s) => s.id === activeSessionId)?.title || "Chat"}
         onNewChat={handleNewChat}
+        isShared={sessions.find((s) => s.id === activeSessionId)?.isShared}
+        onShare={(isShared) => shareSession(activeSessionId, isShared)}
+        isSharing={isSharing}
+        sessionId={activeSessionId}
       />
 
       <div className="flex-1 overflow-y-auto p-4 md:px-8 lg:px-12 scrollbar-thin">

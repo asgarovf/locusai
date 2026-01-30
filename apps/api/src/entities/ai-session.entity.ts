@@ -38,6 +38,9 @@ export class AiSession {
   @Column({ type: "jsonb", default: {} })
   state: Partial<AgentState>;
 
+  @Column({ name: "is_shared", type: "boolean", default: false })
+  isShared: boolean;
+
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 

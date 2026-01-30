@@ -1,6 +1,6 @@
 "use client";
 
-import { generateUUID } from "@locusai/shared";
+import { $FixMe, generateUUID } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -65,6 +65,7 @@ export function useChat() {
       return fetchedSessions.map((s) => ({
         ...s,
         updatedAt: new Date(s.updatedAt),
+        isShared: (s as $FixMe).isShared,
       })) as ChatSession[];
     },
     enabled: !!workspaceId,
@@ -365,6 +366,27 @@ export function useChat() {
     setMessages([]); // Clear previous messages while loading
     tempSessionIdRef.current = null; // Clear temp ref on switch
   };
+  const shareSessionMutation = useMutation({
+    mutationFn: (variables: { id: string; isShared: boolean }) =>
+      locusClient.ai.shareSession(workspaceId, variables.id, {
+        isShared: variables.isShared,
+      }),
+    onSuccess: (_, variables) => {
+      // Update local state
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === variables.id ? { ...s, isShared: variables.isShared } : s
+        )
+      );
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.ai.sessions(workspaceId),
+      });
+    },
+  });
+
+  const shareSession = (id: string, isShared: boolean) => {
+    shareSessionMutation.mutate({ id, isShared });
+  };
 
   return {
     sessions,
@@ -382,5 +404,7 @@ export function useChat() {
     createNewChat,
     deleteSession,
     selectSession,
+    shareSession,
+    isSharing: shareSessionMutation.isPending,
   };
 }

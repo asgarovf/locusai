@@ -3,6 +3,8 @@ import {
   ChatRequestSchema,
   ChatResponse,
   generateUUID,
+  ShareChatRequest,
+  ShareChatRequestSchema,
   User,
   WorkspaceIdParam,
   WorkspaceIdParamSchema,
@@ -17,7 +19,7 @@ import {
   Post,
 } from "@nestjs/common";
 import { z } from "zod";
-import { CurrentUser, Member } from "@/auth/decorators";
+import { CurrentUser, Member, Public } from "@/auth/decorators";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { AiService } from "./ai.service";
 
@@ -83,6 +85,7 @@ export class AiController {
         id: s.externalSessionId,
         title: s.state.history?.[0]?.content?.slice(0, 50) || "New Chat",
         updatedAt: s.updatedAt,
+        isShared: s.isShared,
       })),
     };
   }
@@ -140,5 +143,50 @@ export class AiController {
     @Param("sessionId") sessionId: string
   ): Promise<void> {
     await this.aiService.deleteSession(workspaceId, user.id, sessionId);
+  }
+
+  @Post("ai/:workspaceId/session/:sessionId/share")
+  @Member()
+  async shareSession(
+    @CurrentUser() user: User,
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    { workspaceId }: WorkspaceIdParam,
+    @Param("sessionId") sessionId: string,
+    @Body(new ZodValidationPipe(ShareChatRequestSchema))
+    request: ShareChatRequest
+  ): Promise<void> {
+    await this.aiService.shareSession(
+      workspaceId,
+      user.id,
+      sessionId,
+      request.isShared
+    );
+  }
+
+  @Get("ai/shared/:sessionId")
+  @Public()
+  async getSharedSession(
+    @Param("sessionId") sessionId: string
+  ): Promise<ChatResponse> {
+    const session = await this.aiService.getSharedSession(sessionId);
+    if (!session) {
+      throw new NotFoundException("Shared session not found");
+    }
+
+    const history = session.state.history || [];
+    return {
+      sessionId,
+      message: {
+        id: generateUUID(),
+        role: "assistant",
+        content: "Viewing shared chat history",
+        timestamp: new Date(),
+      },
+      history: history.map((m) => ({
+        ...m,
+        id: generateUUID(),
+        timestamp: new Date(),
+      })),
+    };
   }
 }
