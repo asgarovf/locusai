@@ -8,7 +8,8 @@ export class AIModule extends BaseModule {
   async chat(workspaceId: string, body: ChatRequest): Promise<ChatResponse> {
     const { data } = await this.api.post<ChatResponse>(
       `/ai/${workspaceId}/chat`,
-      body
+      body,
+      { timeout: 300000 }
     );
     return data;
   }
@@ -24,7 +25,7 @@ export class AIModule extends BaseModule {
       intent: string;
       executionId: string;
       sessionId: string;
-    }>(`/ai/${workspaceId}/chat/intent`, body);
+    }>(`/ai/${workspaceId}/chat/intent`, body, { timeout: 300000 });
     return data;
   }
 
@@ -37,7 +38,8 @@ export class AIModule extends BaseModule {
   ): Promise<ChatResponse> {
     const { data } = await this.api.post<ChatResponse>(
       `/ai/${workspaceId}/chat/execute`,
-      body
+      body,
+      { timeout: 300000 }
     );
     return data;
   }
