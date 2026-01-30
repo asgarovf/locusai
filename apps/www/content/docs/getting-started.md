@@ -64,6 +64,14 @@ The agent will:
 4. Execute the work LOCALLY on your machine.
 5. Push changes and report status back to the cloud.
 
+### 4. Direct Execution (Optional)
+
+If you just want to ask a question or perform a one-off task without using the Locus Cloud:
+
+```bash
+locus exec "Explain the project structure"
+```
+
 <Tip>
 Use `--provider codex` to run with Codex instead of Claude.
 </Tip>

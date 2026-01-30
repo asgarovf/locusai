@@ -248,14 +248,6 @@ async function execCommand(args: string[]) {
   const aiRunner = createAiRunner(provider, {
     projectPath,
     model,
-    log: (msg) => {
-      // Filter out some of the verbose output if needed, but show tool calls
-      if (msg.includes("[Claude] Running")) {
-        console.log(
-          `  ${c.info("●")} ${msg.replace("\n\n", "").replace("\n", "")}`
-        );
-      }
-    },
   });
 
   const builder = new PromptBuilder(projectPath);
@@ -267,12 +259,7 @@ async function execCommand(args: string[]) {
 
   try {
     const result = await aiRunner.run(fullPrompt);
-    // If the runner doesn't stream to stdout, we print the result here.
-    // ClaudeRunner currently prints to stdout if it's not captured.
-    // However, it returns the final result.
-    if (!result.includes("<promise>COMPLETE</promise>")) {
-      console.log(result);
-    }
+    console.log(result);
     console.log(`\n  ${c.success("✔")} ${c.success("Execution finished!")}\n`);
   } catch (error) {
     console.error(

@@ -78,3 +78,29 @@ locus run [options]
 - Spawns a local agent worker.
 - Executes tasks, runs tests, and commits changes.
 - Reports progress back to the Cloud dashboard.
+
+---
+
+### `exec`
+
+Runs a direct prompt with full repository context.
+
+```bash
+locus exec "your prompt" [options]
+```
+
+**Options:**
+- `--provider <name>`: AI provider to use (`claude` or `codex`, default `claude`).
+- `--model <name>`: Model override for the chosen provider.
+- `--dir <path>`: Directory context for execution (defaults to current directory).
+
+**What it does:**
+- Gathers project context (CLAUDE.md, README.md, project structure, skills).
+- Includes the codebase index if available.
+- Sends the prompt to the AI runner.
+- Executes tools (bash, read, etc.) locally to fulfill the prompt.
+
+**When to use:**
+- When you want to ask questions about the codebase.
+- When you need the AI to perform a one-off task (e.g., "Refactor this file", "Explain this logic").
+- When you don't want to create a formal task in the Locus Cloud.
