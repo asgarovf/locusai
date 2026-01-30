@@ -44,18 +44,23 @@ export class CodebaseIndexer {
 
     const existingIndex = this.loadIndex();
 
-    // 2. Quick check: if tree hash matches, no file additions/deletions
-    if (!force && existingIndex?.treeHash === newTreeHash) {
-      onProgress?.("No file changes detected, skipping reindex");
-      return null;
-    }
-
     // 3. Compute content hashes for all current files
     const currentHashes = this.computeFileHashes(currentFiles);
 
     // 4. Check if we can do incremental update
     const existingHashes = existingIndex?.fileHashes;
-    const canIncremental = !force && existingIndex && existingHashes;
+
+    // We can do incremental if:
+    // 1. It's not a forced reindex
+    // 2. We have an existing index with hashes
+    // 3. The existing index has actual content (symbols or responsibilities)
+    const hasExistingContent =
+      existingIndex &&
+      (Object.keys(existingIndex.symbols).length > 0 ||
+        Object.keys(existingIndex.responsibilities).length > 0);
+
+    const canIncremental =
+      !force && existingIndex && existingHashes && hasExistingContent;
 
     if (canIncremental) {
       onProgress?.("Performing incremental update");
@@ -131,8 +136,14 @@ export class CodebaseIndexer {
 
     // 5. Full reindex
     onProgress?.("AI is analyzing codebase structure...");
-    const index = await treeSummarizer(treeString);
-    return this.applyIndexMetadata(index, currentHashes, newTreeHash);
+    try {
+      const index = await treeSummarizer(treeString);
+      return this.applyIndexMetadata(index, currentHashes, newTreeHash);
+    } catch (error) {
+      throw new Error(
+        `AI analysis failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 
   private async getFileTree(): Promise<string[]> {

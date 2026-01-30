@@ -198,13 +198,22 @@ async function indexCommand(args: string[]) {
   console.log(
     `\n  ${c.step(" INDEX ")} ${c.primary("Analyzing codebase in")} ${c.bold(projectPath)}...`
   );
-  const index = await indexer.index(
-    (msg) => console.log(`  ${c.dim(msg)}`),
-    (tree) => summarizer.summarize(tree)
-  );
+  try {
+    const index = await indexer.index(
+      (msg) => console.log(`  ${c.dim(msg)}`),
+      (tree) => summarizer.summarize(tree)
+    );
 
-  if (index) {
-    indexer.saveIndex(index);
+    if (index) {
+      indexer.saveIndex(index);
+    }
+  } catch (error) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.error("Indexing failed:")} ${c.red(error instanceof Error ? error.message : String(error))}`
+    );
+    console.error(
+      c.dim("  The agent might have limited context until indexing succeeds.\n")
+    );
   }
 
   console.log(`\n  ${c.success("✔")} ${c.success("Indexing complete!")}\n`);
