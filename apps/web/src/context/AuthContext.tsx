@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const workspacesData = await locusClient.workspaces.listAll();
 
       const storedWorkspaceId = localStorage.getItem("lastWorkspaceId");
-      let effectiveWorkspaceId = userData.workspaceId || storedWorkspaceId;
+      let effectiveWorkspaceId = storedWorkspaceId || userData.workspaceId;
 
       // Validation: Ensure current workspaceId is valid
       if (workspacesData.length > 0) {
