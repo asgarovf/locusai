@@ -269,11 +269,17 @@ export class LocusAgent {
 
   private updateHistory(
     role: "user" | "assistant",
-    content: string,
+    content: string | undefined | null,
     artifacts?: AIArtifact[],
     suggestedActions?: SuggestedAction[]
   ) {
-    this.state.history.push({ role, content, artifacts, suggestedActions });
+    const safeContent = typeof content === "string" ? content : "";
+    this.state.history.push({
+      role,
+      content: safeContent,
+      artifacts,
+      suggestedActions,
+    });
   }
 
   getState(): AgentState {

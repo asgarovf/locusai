@@ -19,10 +19,12 @@ export class ContextManager {
 
     // Add conversation history
     for (const msg of history) {
+      if (!msg) continue;
+      const content = msg.content || "";
       if (msg.role === "user") {
-        messages.push(new HumanMessage(msg.content));
+        messages.push(new HumanMessage(content));
       } else {
-        messages.push(new AIMessage(msg.content));
+        messages.push(new AIMessage(content));
       }
     }
 
