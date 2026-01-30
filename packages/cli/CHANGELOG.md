@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.7.2
+
+### Patch Changes
+
+- Add exec command
+- Updated dependencies
+  - @locusai/sdk@0.7.2
+
 ## 0.7.1
 
 ### Patch Changes

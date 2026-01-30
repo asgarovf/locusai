@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.7.2
+
+### Patch Changes
+
+- Add exec command
+
 ## 0.7.1
 
 ### Patch Changes

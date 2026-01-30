@@ -1,5 +1,14 @@
 # @locusai/api
 
+## 0.7.2
+
+### Patch Changes
+
+- Add exec command
+- Updated dependencies
+  - @locusai/ai-sdk@0.3.2
+  - @locusai/shared@0.7.2
+
 ## 0.7.1
 
 ### Patch Changes
