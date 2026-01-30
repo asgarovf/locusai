@@ -57,7 +57,7 @@ export function useOrganizationQuery() {
 /**
  * API Keys Query Hook
  */
-export function useApiKeysQuery() {
+export function useOrganizationApiKeysQuery() {
   const { user } = useAuth();
   const orgId = user?.orgId;
 

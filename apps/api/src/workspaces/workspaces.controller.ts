@@ -25,6 +25,7 @@ import {
   Put,
   Query,
 } from "@nestjs/common";
+import { z } from "zod";
 import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { Task } from "@/entities";
@@ -152,6 +153,66 @@ export class WorkspacesController {
       body.sprintId
     );
     return { task: this.taskToTaskResponse(task) };
+  }
+
+  // ============================================================================
+  // API Key Management
+  // ============================================================================
+
+  @Get(":workspaceId/api-keys")
+  @MemberAdmin()
+  async listApiKeys(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam
+  ) {
+    const apiKeys = await this.workspacesService.listApiKeys(
+      params.workspaceId
+    );
+
+    const maskedKeys = apiKeys.map((apiKey) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { keyHash: _, ...rest } = apiKey;
+      return {
+        ...rest,
+        key: `${apiKey.keyPrefix}...`,
+      };
+    });
+    return { apiKeys: maskedKeys };
+  }
+
+  @Post(":workspaceId/api-keys")
+  @MemberAdmin()
+  async createApiKey(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam,
+    @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
+    body: { name: string }
+  ) {
+    const { apiKey, key } = await this.workspacesService.createApiKey(
+      params.workspaceId,
+      body.name
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { keyHash: _, ...rest } = apiKey;
+
+    // Return full key only on creation
+    return {
+      apiKey: {
+        ...rest,
+        key, // Full key returned only once
+      },
+    };
+  }
+
+  @Delete(":workspaceId/api-keys/:keyId")
+  @MemberAdmin()
+  async deleteApiKey(
+    @Param("workspaceId") workspaceId: string,
+    @Param("keyId") keyId: string
+  ) {
+    await this.workspacesService.deleteApiKey(workspaceId, keyId);
+    return { success: true };
   }
 
   private taskToTaskResponse(task: Task): TaskResponse["task"] {

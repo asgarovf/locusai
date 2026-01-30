@@ -3,13 +3,11 @@
 import { MessageSquare, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { ChatSession } from "./types";
+import { useChatStore } from "@/stores/chat-store";
 
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  sessions: ChatSession[];
-  activeSessionId?: string;
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
   onDeleteSession: (id: string) => void;
@@ -18,12 +16,12 @@ interface ChatSidebarProps {
 export function ChatSidebar({
   isOpen,
   onClose,
-  sessions,
-  activeSessionId,
   onSelectSession,
   onNewChat,
   onDeleteSession,
 }: ChatSidebarProps) {
+  const { sessions, activeSessionId } = useChatStore();
+
   return (
     <>
       {/* Mobile overlay */}

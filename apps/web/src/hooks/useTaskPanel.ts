@@ -3,7 +3,7 @@
 import { type AcceptanceItem, type Task, TaskStatus } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
@@ -102,7 +102,7 @@ export function useTaskPanel({
           context.previousTask
         );
       }
-      toast.error("Failed to update task");
+      showToast.error("Failed to update task");
     },
     // On success, refetch to confirm
     onSuccess: () => {
@@ -120,9 +120,9 @@ export function useTaskPanel({
       await updateTaskMutation.mutateAsync({
         docIds: [...currentDocIds, docId],
       });
-      toast.success("Document linked");
+      showToast.success("Document linked");
     } catch {
-      toast.error("Failed to link document");
+      showToast.error("Failed to link document");
     }
   };
 
@@ -134,9 +134,9 @@ export function useTaskPanel({
       await updateTaskMutation.mutateAsync({
         docIds: currentDocIds.filter((id) => id !== docId),
       });
-      toast.success("Document unlinked");
+      showToast.success("Document unlinked");
     } catch {
-      toast.error("Failed to unlink document");
+      showToast.error("Failed to unlink document");
     }
   };
 
@@ -148,7 +148,7 @@ export function useTaskPanel({
       onClose();
     },
     onError: () => {
-      toast.error("Failed to delete task");
+      showToast.error("Failed to delete task");
     },
   });
 
@@ -159,7 +159,7 @@ export function useTaskPanel({
       fetchTask();
     },
     onError: () => {
-      toast.error("Failed to add comment");
+      showToast.error("Failed to add comment");
     },
   });
 
@@ -251,7 +251,7 @@ export function useTaskPanel({
         text: newComment,
       });
       setNewComment("");
-      toast.success("Comment added");
+      showToast.success("Comment added");
     } catch (err) {
       console.error("Failed to add comment:", err);
     }
@@ -269,22 +269,22 @@ export function useTaskPanel({
       });
       setShowRejectModal(false);
       setRejectReason("");
-      toast.success("Task rejected and moved back to in progress");
+      showToast.success("Task rejected and moved back to in progress");
       onUpdated();
     } catch (err) {
       console.error("Failed to reject task:", err);
-      toast.error("Failed to reject task");
+      showToast.error("Failed to reject task");
     }
   };
 
   const handleApprove = async () => {
     try {
       await updateTaskMutation.mutateAsync({ status: TaskStatus.DONE });
-      toast.success("Task approved and marked as done");
+      showToast.success("Task approved and marked as done");
       onUpdated();
     } catch (err) {
       console.error("Failed to approve task:", err);
-      toast.error("Failed to approve task");
+      showToast.error("Failed to approve task");
     }
   };
 

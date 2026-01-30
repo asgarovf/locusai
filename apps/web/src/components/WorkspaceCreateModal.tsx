@@ -16,9 +16,8 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { CreateModal } from "@/components/CreateModal";
-import { Input } from "@/components/ui";
+import { Input, showToast } from "@/components/ui";
 import { useAuthenticatedUser } from "@/hooks";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { locusClient } from "@/lib/api-client";
@@ -61,7 +60,7 @@ export function WorkspaceCreateModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orgId) {
-      toast.error("You must be in an organization to create a workspace");
+      showToast.error("You must be in an organization to create a workspace");
       return;
     }
     createWorkspace.mutate({ name });

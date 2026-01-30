@@ -1,7 +1,7 @@
 import { type Doc, DocType } from "@locusai/shared";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import {
   useCreateDocGroupMutation,
   useCreateDocMutation,
@@ -169,9 +169,9 @@ export function useDocs() {
         id: selectedId,
         updates: { content },
       });
-      toast.success("Document saved");
+      showToast.success("Document saved");
     } catch {
-      toast.error("Failed to save document");
+      showToast.error("Failed to save document");
     }
   };
 
@@ -197,9 +197,9 @@ export function useDocs() {
       params.set("docId", newDoc.id);
       router.push(`${pathname}?${params.toString()}`);
 
-      toast.success("Document created");
+      showToast.success("Document created");
     } catch {
-      toast.error("Failed to create document");
+      showToast.error("Failed to create document");
     }
   };
 
@@ -210,18 +210,18 @@ export function useDocs() {
       if (selectedId === id) {
         handleSelectDoc(null);
       }
-      toast.success("Document deleted");
+      showToast.success("Document deleted");
     } catch {
-      toast.error("Failed to delete document");
+      showToast.error("Failed to delete document");
     }
   };
 
   const handleCreateGroup = async (name: string) => {
     try {
       await createGroupMutation.mutateAsync({ name });
-      toast.success("Group created");
+      showToast.success("Group created");
     } catch {
-      toast.error("Failed to create group");
+      showToast.error("Failed to create group");
     }
   };
 
@@ -261,9 +261,9 @@ export function useDocs() {
         id: docId,
         updates: { groupId },
       });
-      toast.success("Document moved");
+      showToast.success("Document moved");
     } catch {
-      toast.error("Failed to move document");
+      showToast.error("Failed to move document");
     }
   };
 

@@ -3,8 +3,7 @@
 import { Copy, Key, LayoutDashboard, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui";
+import { Button, showToast } from "@/components/ui";
 import { ConnectionModal } from "./ConnectionModal";
 
 interface WorkspaceSetupProps {
@@ -58,7 +57,7 @@ export function WorkspaceSetup({ workspaceId }: WorkspaceSetupProps) {
             className="mt-6 bg-muted/50 hover:bg-muted p-3 rounded-lg flex items-center justify-between cursor-pointer transition-colors border border-border/50"
             onClick={() => {
               navigator.clipboard.writeText(workspaceId);
-              toast.success("Workspace ID copied to clipboard");
+              showToast.success("Workspace ID copied to clipboard");
             }}
           >
             <code className="text-sm font-mono truncate max-w-[200px] text-foreground">

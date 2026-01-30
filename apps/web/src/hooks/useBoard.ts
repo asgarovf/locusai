@@ -11,8 +11,8 @@ import { SprintStatus, type Task, TaskStatus } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { BOARD_STATUSES } from "@/components/board/constants";
+import { showToast } from "@/components/ui";
 import { useSprintsQuery, useTasksQuery } from "@/hooks";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
@@ -161,7 +161,7 @@ export function useBoard() {
           previousTasks
         );
       }
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to update task"
       );
     }
@@ -192,7 +192,7 @@ export function useBoard() {
           previousTasks
         );
       }
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete task"
       );
     }

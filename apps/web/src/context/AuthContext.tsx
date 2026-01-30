@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const userData = await locusClient.auth.getMe();
+      const userData = await locusClient.auth.getProfile();
       const workspacesData = await locusClient.workspaces.listAll();
 
       const storedWorkspaceId = localStorage.getItem("lastWorkspaceId");

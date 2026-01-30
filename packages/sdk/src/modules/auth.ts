@@ -7,8 +7,18 @@ import {
 import { BaseModule } from "./base.js";
 
 export class AuthModule extends BaseModule {
-  async getMe(): Promise<User> {
+  async getProfile(): Promise<User> {
     const { data } = await this.api.get<User>("/auth/me");
+    return data;
+  }
+
+  async getApiKeyInfo(): Promise<{
+    authType: string;
+    workspaceId?: string;
+    orgId?: string;
+    apiKeyName: string;
+  }> {
+    const { data } = await this.api.get("/auth/api-key");
     return data;
   }
 

@@ -60,7 +60,8 @@ export class AuthService {
       authType: "api_key",
       apiKeyId: keyRecord.id,
       apiKeyName: keyRecord.name,
-      orgId: keyRecord.organizationId,
+      orgId: keyRecord.organizationId || undefined,
+      workspaceId: keyRecord.workspaceId || undefined,
     };
   }
 

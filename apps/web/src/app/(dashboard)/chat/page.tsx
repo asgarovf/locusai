@@ -61,8 +61,6 @@ export default function ChatPage() {
         <ChatSidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          sessions={sessions}
-          activeSessionId={activeSessionId}
           onSelectSession={handleSelectSession}
           onNewChat={handleNewChat}
           onDeleteSession={deleteSession}

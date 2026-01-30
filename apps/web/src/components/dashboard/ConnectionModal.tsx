@@ -3,8 +3,7 @@
 import { Copy } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button, Modal } from "@/components/ui";
+import { Button, Modal, showToast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface ConnectionModalProps {
@@ -24,7 +23,7 @@ export function ConnectionModal({
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+    showToast.success(`${label} copied to clipboard`);
   };
 
   const cliCommand = `locus run --api-key=<YOUR_API_KEY> --workspace=${workspaceId}`;

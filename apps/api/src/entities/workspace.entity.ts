@@ -6,9 +6,11 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { ApiKey } from "./api-key.entity";
 import { Organization } from "./organization.entity";
 
 @Entity("workspaces")
@@ -45,4 +47,10 @@ export class Workspace {
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
+
+  @OneToMany(
+    () => ApiKey,
+    (key) => key.workspace
+  )
+  apiKeys: ApiKey[];
 }

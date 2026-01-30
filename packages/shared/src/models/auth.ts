@@ -31,9 +31,10 @@ export type JwtAuthUser = z.infer<typeof JwtAuthUserSchema>;
  */
 export const ApiKeyAuthUserSchema = z.object({
   authType: z.literal("api_key"),
-  apiKeyId: z.uuid(),
+  apiKeyId: z.string(),
   apiKeyName: z.string(),
-  orgId: z.uuid(),
+  orgId: z.string().optional(),
+  workspaceId: z.string().optional(),
 });
 
 export type ApiKeyAuthUser = z.infer<typeof ApiKeyAuthUserSchema>;

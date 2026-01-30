@@ -4,8 +4,7 @@ import { ChecklistItem } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, showToast } from "@/components/ui";
 import { useWorkspaceIdOptional, useWorkspaceQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -37,9 +36,9 @@ export function WorkspaceChecklistSettings() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.detail(workspaceId),
       });
-      toast.success("Default checklist updated");
+      showToast.success("Default checklist updated");
     } catch (_error) {
-      toast.error("Failed to save checklist");
+      showToast.error("Failed to save checklist");
     }
   };
 

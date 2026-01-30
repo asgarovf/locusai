@@ -2,8 +2,7 @@
 
 import { Check, Clipboard } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui";
+import { Button, showToast } from "@/components/ui";
 import { SettingSection } from "./SettingSection";
 
 interface ProjectSetupGuideProps {
@@ -20,7 +19,7 @@ export function ProjectSetupGuide({
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedCommand(id);
-    toast.success("Command copied to clipboard");
+    showToast.success("Command copied to clipboard");
     setTimeout(() => setCopiedCommand(null), 2000);
   };
 

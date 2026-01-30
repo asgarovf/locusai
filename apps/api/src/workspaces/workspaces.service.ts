@@ -2,6 +2,7 @@ import { ChecklistItem, MembershipRole } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
 import { Task } from "@/entities/task.entity";
@@ -19,6 +20,8 @@ export class WorkspacesService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(ApiKey)
+    private readonly apiKeyRepository: Repository<ApiKey>,
     private readonly eventsService: EventsService
   ) {}
 
@@ -149,5 +152,84 @@ export class WorkspacesService {
 
   async getActivity(id: string, limit = 50) {
     return this.eventsService.getWorkspaceActivity(id, limit);
+  }
+
+  // ============================================================================
+  // API Key Management
+  // ============================================================================
+
+  /**
+   * Generate a secure API key with prefix
+   */
+  private generateApiKey(): { key: string; hash: string; prefix: string } {
+    // Dynamically import crypto to avoid issues if not available in some envs (schema only)
+    // but here we are in Node environment
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const crypto = require("node:crypto");
+    const randomBytes = crypto.randomBytes(32).toString("hex");
+    const key = `lk_${randomBytes}`;
+    const hash = crypto.createHash("sha256").update(key).digest("hex");
+    const prefix = key.slice(0, 8); // "lk_XXXX"
+    return { key, hash, prefix };
+  }
+
+  /**
+   * List all API keys for a workspace
+   */
+  async listApiKeys(workspaceId: string) {
+    // Import ApiKey entity (using any to avoid circular dep issues in service if any, but we injected it?)
+    // Actually we need to inject ApiKey repository
+    // We haven't injected it yet in constructor, will do that in next step
+    // For now assuming we will fix constructor
+    return this.apiKeyRepository.find({
+      where: { workspaceId },
+      order: { createdAt: "DESC" },
+    });
+  }
+
+  /**
+   * Create a new API key for a workspace
+   */
+  async createApiKey(workspaceId: string, name: string) {
+    // Verify workspace exists
+    await this.findById(workspaceId);
+
+    const { key, hash, prefix } = this.generateApiKey();
+
+    const apiKey = this.apiKeyRepository.create({
+      workspaceId,
+      name,
+      keyHash: hash,
+      keyPrefix: prefix,
+      active: true,
+      // For backward compatibility, we might want to also set orgId if we can resolve it
+      // But for new keys, we focus on workspaceId.
+      // Ideally we should look up orgId from workspace
+    });
+
+    // Resolve orgId
+    const workspace = await this.findById(workspaceId);
+    if (workspace.orgId) {
+      apiKey.organizationId = workspace.orgId;
+    }
+
+    const saved = await this.apiKeyRepository.save(apiKey);
+
+    return { apiKey: saved, key };
+  }
+
+  /**
+   * Delete an API key
+   */
+  async deleteApiKey(workspaceId: string, keyId: string): Promise<void> {
+    const apiKey = await this.apiKeyRepository.findOne({
+      where: { id: keyId, workspaceId },
+    });
+
+    if (!apiKey) {
+      throw new NotFoundException("API key not found");
+    }
+
+    await this.apiKeyRepository.remove(apiKey);
   }
 }

@@ -9,7 +9,7 @@ import {
 } from "@locusai/shared";
 import { BaseModule } from "./base.js";
 
-export interface ApiKey {
+export interface OrganizationApiKey {
   id: string;
   organizationId: string;
   name: string;
@@ -21,11 +21,11 @@ export interface ApiKey {
 }
 
 interface ApiKeysResponse {
-  apiKeys: ApiKey[];
+  apiKeys: OrganizationApiKey[];
 }
 
 interface ApiKeyResponse {
-  apiKey: ApiKey;
+  apiKey: OrganizationApiKey;
 }
 
 export class OrganizationsModule extends BaseModule {
@@ -65,18 +65,14 @@ export class OrganizationsModule extends BaseModule {
     await this.api.delete(`/organizations/${orgId}`);
   }
 
-  // ============================================================================
-  // API Key Management
-  // ============================================================================
-
-  async listApiKeys(orgId: string): Promise<ApiKey[]> {
+  async listApiKeys(orgId: string): Promise<OrganizationApiKey[]> {
     const { data } = await this.api.get<ApiKeysResponse>(
       `/organizations/${orgId}/api-keys`
     );
     return data.apiKeys;
   }
 
-  async createApiKey(orgId: string, name: string): Promise<ApiKey> {
+  async createApiKey(orgId: string, name: string): Promise<OrganizationApiKey> {
     const { data } = await this.api.post<ApiKeyResponse>(
       `/organizations/${orgId}/api-keys`,
       { name }

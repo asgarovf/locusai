@@ -4,8 +4,7 @@
  */
 
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input, Modal, showToast } from "@/components/ui";
 
 interface CreateApiKeyModalProps {
   isOpen: boolean;
@@ -25,7 +24,7 @@ export function CreateApiKeyModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error("Please enter a name for the API key");
+      showToast.error("Please enter a name for the API key");
       return;
     }
 
@@ -35,7 +34,7 @@ export function CreateApiKeyModal({
       setName("");
       onClose();
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to create API key"
       );
     } finally {

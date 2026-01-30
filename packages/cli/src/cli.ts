@@ -97,13 +97,74 @@ async function runCommand(args: string[]) {
   requireInitialization(projectPath, "run");
   new ConfigManager(projectPath).updateVersion(VERSION);
 
-  const apiKey = values["api-key"];
-  const workspaceId = values.workspace;
+  const apiKey = values["api-key"] as string;
+  let workspaceId = values.workspace as string | undefined;
+
   const provider = resolveProvider(values.provider as string);
   const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const apiBase =
+    (values["api-url"] as string) || "https://api.locusai.dev/api";
 
-  if (!apiKey || !workspaceId) {
-    console.error(c.error("Error: --api-key and --workspace are required"));
+  if (!apiKey) {
+    console.error(c.error("Error: --api-key is required"));
+    console.error(
+      c.dim("You can create an API key in Workspace Settings > API Keys")
+    );
+    process.exit(1);
+  }
+
+  // If workspace ID is not provided, try to derive it from the API key
+  if (!workspaceId) {
+    try {
+      console.log(c.dim("ℹ  Resolving workspace from API key..."));
+
+      const resp = await fetch(`${apiBase}/auth/api-key`, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          throw new Error("Invalid API key");
+        }
+        throw new Error(`Failed to resolve workspace: ${resp.statusText}`);
+      }
+
+      const data = await resp.json();
+      // data format: { data: { workspaceId: ... } } or just { ... } depending on interceptors.
+      // SDK interceptor handles { data: ... }. Direct fetch returns raw JSON.
+      // NestJS usually returns object directly unless wrapped.
+      // Our SDK interceptor unwraps `data` property if present.
+      // Let's assume standard NestJS response.
+
+      const info = data.data || data; // Handle potential wrapping
+
+      if (info.workspaceId) {
+        workspaceId = info.workspaceId;
+        console.log(c.success(`✓  Resolved workspace: ${workspaceId}`));
+      } else {
+        throw new Error(
+          "API key is not associated with a workspace. Please specify --workspace."
+        );
+      }
+    } catch (error) {
+      console.error(
+        c.error(
+          `Error resolving workspace: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+      process.exit(1);
+    }
+  }
+
+  if (!workspaceId) {
+    console.error(
+      c.error(
+        "Error: --workspace is required or must be derivable from API key"
+      )
+    );
     process.exit(1);
   }
 
@@ -112,7 +173,7 @@ async function runCommand(args: string[]) {
     sprintId: (values.sprint as string) || "",
     model,
     provider,
-    apiBase: (values["api-url"] as string) || "https://api.locusai.dev/api",
+    apiBase,
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,

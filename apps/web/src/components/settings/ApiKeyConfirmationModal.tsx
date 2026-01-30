@@ -4,8 +4,7 @@
  */
 
 import { Copy } from "lucide-react";
-import { toast } from "sonner";
-import { Button, Modal } from "@/components/ui";
+import { Button, Modal, showToast } from "@/components/ui";
 
 interface ApiKeyConfirmationModalProps {
   isOpen: boolean;
@@ -23,7 +22,7 @@ export function ApiKeyConfirmationModal({
   const handleCopy = () => {
     if (!apiKey) return;
     navigator.clipboard.writeText(apiKey);
-    toast.success("API key copied to clipboard");
+    showToast.success("API key copied to clipboard");
   };
 
   return (

@@ -7,7 +7,7 @@
 import { MembershipRole } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import {
   useAuthenticatedUserWithOrg,
   useInvitationsQuery,
@@ -37,12 +37,12 @@ export function useTeamManagement() {
 
     try {
       await locusClient.organizations.removeMember(currentUser.orgId, userId);
-      toast.success("Member removed");
+      showToast.success("Member removed");
       queryClient.invalidateQueries({
         queryKey: queryKeys.organizations.members(currentUser.orgId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to remove member"
       );
     }
@@ -51,12 +51,12 @@ export function useTeamManagement() {
   const handleRevokeInvitation = async (invitationId: string) => {
     try {
       await locusClient.invitations.revoke(currentUser.orgId, invitationId);
-      toast.success("Invitation revoked");
+      showToast.success("Invitation revoked");
       queryClient.invalidateQueries({
         queryKey: queryKeys.invitations.list(currentUser.orgId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to revoke invitation"
       );
     }
@@ -70,7 +70,7 @@ export function useTeamManagement() {
     const inviteUrl = `${baseUrl}/invite?token=${token}`;
 
     navigator.clipboard.writeText(inviteUrl);
-    toast.success("Invitation link copied to clipboard");
+    showToast.success("Invitation link copied to clipboard");
   };
 
   const isLoading = membersLoading || invitationsLoading;

@@ -6,7 +6,7 @@
 
 import { type User } from "@locusai/shared";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
 
@@ -41,9 +41,9 @@ export function useLoginForm(): UseLoginFormReturn {
     try {
       await locusClient.auth.requestLoginOtp(email);
       setStep("otp");
-      toast.success("Verification code sent to your email");
+      showToast.success("Verification code sent to your email");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to send OTP"
       );
     } finally {
@@ -57,9 +57,9 @@ export function useLoginForm(): UseLoginFormReturn {
     try {
       const response = await locusClient.auth.verifyLogin({ email, otp });
       await login(response.token, response.user as User);
-      toast.success("Welcome back!");
+      showToast.success("Welcome back!");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Invalid code");
+      showToast.error(error instanceof Error ? error.message : "Invalid code");
     } finally {
       setLoading(false);
     }

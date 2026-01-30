@@ -7,7 +7,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -47,11 +47,11 @@ export function useWorkspaceCreateForm(): UseWorkspaceCreateFormReturn {
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
       // Refresh user data to get the new workspaceId
       await refreshUser();
-      toast.success("Workspace created!");
+      showToast.success("Workspace created!");
       router.push("/");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create workspace");
+      showToast.error(error.message || "Failed to create workspace");
     },
   });
 

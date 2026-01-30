@@ -11,7 +11,7 @@ import { type Sprint, SprintStatus, type Task } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useSprintsQuery, useTasksQuery } from "@/hooks";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
@@ -173,7 +173,7 @@ export function useBacklog() {
       if (previousTasks) {
         queryClient.setQueryData(queryKey, previousTasks);
       }
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to move task"
       );
     }
@@ -184,14 +184,14 @@ export function useBacklog() {
     try {
       setIsSubmitting(true);
       await locusClient.sprints.create(workspaceId, { name });
-      toast.success("Sprint created");
+      showToast.success("Sprint created");
       setIsSprintModalOpen(false);
       refetchSprints();
       queryClient.invalidateQueries({
         queryKey: queryKeys.sprints.list(workspaceId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to create sprint"
       );
     } finally {
@@ -203,13 +203,13 @@ export function useBacklog() {
     try {
       setIsSubmitting(true);
       await locusClient.sprints.start(sprintId, workspaceId);
-      toast.success("Sprint started");
+      showToast.success("Sprint started");
       refetchSprints();
       queryClient.invalidateQueries({
         queryKey: queryKeys.sprints.list(workspaceId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to start sprint"
       );
     } finally {
@@ -241,7 +241,7 @@ export function useBacklog() {
       }
 
       await locusClient.sprints.complete(sprintId, workspaceId);
-      toast.success("Sprint completed");
+      showToast.success("Sprint completed");
 
       // Full sync
       queryClient.invalidateQueries({ queryKey: sprintKey });
@@ -249,7 +249,7 @@ export function useBacklog() {
         queryKey: queryKeys.tasks.list(workspaceId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to complete sprint"
       );
     } finally {
@@ -268,7 +268,7 @@ export function useBacklog() {
       // Also refetch tasks because tasks from deleted sprint return to backlog
       refetchTasks();
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete sprint"
       );
     } finally {
@@ -281,7 +281,7 @@ export function useBacklog() {
       await locusClient.tasks.delete(taskId, workspaceId);
       refetchTasks();
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete task"
       );
     }

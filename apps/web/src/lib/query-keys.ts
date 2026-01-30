@@ -15,6 +15,8 @@ export const queryKeys = {
       [...queryKeys.workspaces.all(), "stats", id] as const,
     activity: (id: string) =>
       [...queryKeys.workspaces.all(), "activity", id] as const,
+    apiKeys: (id: string) =>
+      [...queryKeys.workspaces.all(), "api-keys", id] as const,
   },
   tasks: {
     all: () => ["tasks"] as const,

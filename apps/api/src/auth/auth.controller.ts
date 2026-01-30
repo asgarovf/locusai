@@ -79,6 +79,23 @@ export class AuthController {
     };
   }
 
+  @Get("api-key")
+  async getApiKeyInfo(@CurrentUser() authUser: AuthenticatedUser) {
+    // This endpoint only works for API Key authenticated users
+    if (isJwtUser(authUser)) {
+      throw new UnauthorizedException(
+        "This endpoint requires API Key authentication"
+      );
+    }
+
+    return {
+      authType: "api_key",
+      workspaceId: authUser.workspaceId,
+      orgId: authUser.orgId,
+      apiKeyName: authUser.apiKeyName,
+    };
+  }
+
   // ============================================================================
   // OTP-Based Authentication (Cloud Mode)
   // ============================================================================

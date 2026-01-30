@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { Organization } from "./organization.entity";
+import { Workspace } from "./workspace.entity";
 
 @Entity("api_keys")
 export class ApiKey {
@@ -16,12 +17,20 @@ export class ApiKey {
   id: string;
 
   @Index()
-  @Column({ name: "organization_id" })
-  organizationId: string;
+  @Column({ name: "organization_id", nullable: true })
+  organizationId: string | null;
 
-  @ManyToOne(() => Organization, { onDelete: "CASCADE" })
+  @ManyToOne(() => Organization, { onDelete: "CASCADE", nullable: true })
   @JoinColumn({ name: "organization_id" })
-  organization: Organization;
+  organization: Organization | null;
+
+  @Index()
+  @Column({ name: "workspace_id", nullable: true })
+  workspaceId: string | null;
+
+  @ManyToOne("Workspace", { onDelete: "CASCADE", nullable: true })
+  @JoinColumn({ name: "workspace_id" })
+  workspace: Workspace;
 
   @Column()
   name: string;

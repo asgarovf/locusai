@@ -7,7 +7,7 @@
 import { type Invitation } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -77,7 +77,7 @@ export function useInviteForm(token: string | null): UseInviteFormReturn {
         name: userExists ? undefined : name,
       });
 
-      toast.success(
+      showToast.success(
         userExists
           ? "Successfully joined organization!"
           : "Account created and organization joined!"
@@ -101,7 +101,7 @@ export function useInviteForm(token: string | null): UseInviteFormReturn {
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to join";
-      toast.error(message);
+      showToast.error(message);
       return { success: false };
     } finally {
       setIsSubmitting(false);

@@ -2,18 +2,17 @@
 
 import { ImageIcon, Mail, User as UserIcon } from "lucide-react";
 import { Suspense } from "react";
-import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
 import { SettingItem } from "@/components/settings/SettingItem";
 import { SettingSection } from "@/components/settings/SettingSection";
-import { Avatar, Button, Input, Spinner } from "@/components/ui";
+import { Avatar, Button, Input, Spinner, showToast } from "@/components/ui";
 import { useSafeAuth } from "@/context/AuthContext";
 
 function ProfileContent() {
   const { user } = useSafeAuth();
 
   const handleSave = () => {
-    toast.success("Profile updated successfully");
+    showToast.success("Profile updated successfully");
   };
 
   return (

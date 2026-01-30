@@ -8,13 +8,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Key } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui";
-import {
-  useApiKeysQuery,
-  useAuthenticatedUserWithOrg,
-  useWorkspaceIdOptional,
-} from "@/hooks";
+import { Button, showToast } from "@/components/ui";
+import { useApiKeysQuery, useWorkspaceIdOptional } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { ApiKeyConfirmationModal } from "./ApiKeyConfirmationModal";
@@ -24,7 +19,6 @@ import { ProjectSetupGuide } from "./ProjectSetupGuide";
 import { SettingSection } from "./SettingSection";
 
 export function ApiKeysSettings() {
-  const { orgId } = useAuthenticatedUserWithOrg();
   const workspaceId = useWorkspaceIdOptional();
   const queryClient = useQueryClient();
   const { data: apiKeys = [], isLoading } = useApiKeysQuery();
@@ -35,11 +29,11 @@ export function ApiKeysSettings() {
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
   const handleCreateApiKey = async (name: string) => {
-    if (!orgId) return;
+    if (!workspaceId) return;
 
     try {
-      const response = await locusClient.organizations.createApiKey(
-        orgId,
+      const response = await locusClient.workspaces.createApiKey(
+        workspaceId,
         name
       );
       setNewApiKey(response.key);
@@ -49,26 +43,26 @@ export function ApiKeysSettings() {
 
       // Invalidate cache
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organizations.apiKeys(orgId),
+        queryKey: queryKeys.workspaces.apiKeys(workspaceId),
       });
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to create API key"
       );
     }
   };
 
   const handleDeleteApiKey = async (id: string) => {
-    if (!orgId) return;
+    if (!workspaceId) return;
 
     try {
-      await locusClient.organizations.deleteApiKey(orgId, id);
+      await locusClient.workspaces.deleteApiKey(workspaceId, id);
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organizations.apiKeys(orgId),
+        queryKey: queryKeys.workspaces.apiKeys(workspaceId),
       });
-      toast.success("API key deleted");
+      showToast.success("API key deleted");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete API key"
       );
     }

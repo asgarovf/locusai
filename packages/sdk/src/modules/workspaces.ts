@@ -80,6 +80,10 @@ export class WorkspacesModule extends BaseModule {
    * Dispatch a task from the workspace backlog to an agent.
    * Atomically moves a task from BACKLOG to IN_PROGRESS and assigns it.
    */
+  /**
+   * Dispatch a task from the workspace backlog to an agent.
+   * Atomically moves a task from BACKLOG to IN_PROGRESS and assigns it.
+   */
   async dispatch(
     id: string,
     workerId: string,
@@ -91,4 +95,50 @@ export class WorkspacesModule extends BaseModule {
     );
     return data.task;
   }
+
+  // ============================================================================
+  // API Key Management
+  // ============================================================================
+
+  async listApiKeys(workspaceId: string): Promise<WorkspaceApiKey[]> {
+    const { data } = await this.api.get<ApiKeysResponse>(
+      `/workspaces/${workspaceId}/api-keys`
+    );
+    return data.apiKeys;
+  }
+
+  async createApiKey(
+    workspaceId: string,
+    name: string
+  ): Promise<WorkspaceApiKey> {
+    const { data } = await this.api.post<ApiKeyResponse>(
+      `/workspaces/${workspaceId}/api-keys`,
+      { name }
+    );
+    return data.apiKey;
+  }
+
+  async deleteApiKey(workspaceId: string, keyId: string): Promise<void> {
+    await this.api.delete(`/workspaces/${workspaceId}/api-keys/${keyId}`);
+  }
+}
+
+export interface WorkspaceApiKey {
+  id: string;
+  organizationId?: string | null;
+  workspaceId?: string | null;
+  name: string;
+  key: string;
+  active: boolean;
+  lastUsedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ApiKeysResponse {
+  apiKeys: WorkspaceApiKey[];
+}
+
+interface ApiKeyResponse {
+  apiKey: WorkspaceApiKey;
 }

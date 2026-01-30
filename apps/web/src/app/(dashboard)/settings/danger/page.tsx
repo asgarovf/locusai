@@ -3,9 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
-import { Button, Input, Modal, Spinner } from "@/components/ui";
+import { Button, Input, Modal, Spinner, showToast } from "@/components/ui";
 import { useAuth } from "@/context";
 import { useWorkspaceIdOptional, useWorkspaceQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
@@ -27,14 +26,14 @@ export default function DangerParamsPage() {
 
     const expectedConfirmation = `delete ${workspaceName}`.toLowerCase();
     if (deleteConfirmation.toLowerCase() !== expectedConfirmation) {
-      toast.error(`Please type "delete ${workspaceName}" to confirm`);
+      showToast.error(`Please type "delete ${workspaceName}" to confirm`);
       return;
     }
 
     setIsDeleting(true);
     try {
       await locusClient.workspaces.delete(workspaceId);
-      toast.success("Workspace deleted");
+      showToast.success("Workspace deleted");
 
       // Logout the user (or redirect to another workspace if available in a real app)
       logout();
@@ -42,7 +41,7 @@ export default function DangerParamsPage() {
       // Redirect to login
       router.push("/login");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete workspace"
       );
     } finally {

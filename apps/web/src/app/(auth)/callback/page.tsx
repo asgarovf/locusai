@@ -2,8 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
-import { toast } from "sonner";
-import { LoadingPage } from "@/components/ui";
+import { LoadingPage, showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
 
@@ -26,11 +25,11 @@ function CallbackHandler() {
           localStorage.setItem("locus_token", token);
           locusClient.setToken(token);
 
-          const userData = await locusClient.auth.getMe();
+          const userData = await locusClient.auth.getProfile();
           await login(token, userData);
         } catch (error) {
           console.error("Auth callback error:", error);
-          toast.error("Authentication failed. Please try again.");
+          showToast.error("Authentication failed. Please try again.");
           router.push("/login");
         }
       } else {

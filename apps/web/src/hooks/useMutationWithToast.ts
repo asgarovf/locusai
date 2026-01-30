@@ -5,7 +5,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 
 interface UseMutationWithToastConfig<T, DTO> {
   mutationFn: (data: DTO) => Promise<T>;
@@ -43,14 +43,14 @@ export function useMutationWithToast<T, DTO = void>({
   return useMutation({
     mutationFn,
     onSuccess: (data) => {
-      toast.success(successMessage);
+      showToast.success(successMessage);
       invalidateKeys.forEach((key) => {
         queryClient.invalidateQueries({ queryKey: key });
       });
       onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast.error(errorMessage ?? error.message ?? "An error occurred");
+      showToast.error(errorMessage ?? error.message ?? "An error occurred");
     },
   });
 }

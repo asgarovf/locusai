@@ -5,8 +5,7 @@
 
 import { Copy, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, showToast } from "@/components/ui";
 
 export interface ApiKey {
   id: string;
@@ -48,16 +47,16 @@ export function ApiKeysList({
 
   const copyToClipboard = (key: string) => {
     navigator.clipboard.writeText(key);
-    toast.success("API key copied to clipboard");
+    showToast.success("API key copied to clipboard");
   };
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
       await onDelete(id);
-      toast.success("API key deleted");
+      showToast.success("API key deleted");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to delete API key"
       );
     } finally {

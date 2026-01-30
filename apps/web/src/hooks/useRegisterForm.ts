@@ -6,7 +6,7 @@
 
 import { type User } from "@locusai/shared";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
 import { deduplicateEmails, validateInvitationEmails } from "@/lib/validation";
@@ -87,9 +87,9 @@ export function useRegisterForm(): UseRegisterFormReturn {
     try {
       await locusClient.auth.requestRegisterOtp(email);
       setStep("otp");
-      toast.success("Verification code sent to your email");
+      showToast.success("Verification code sent to your email");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Failed to send OTP"
       );
     } finally {
@@ -102,26 +102,26 @@ export function useRegisterForm(): UseRegisterFormReturn {
     if (otp.length === 6) {
       setStep("profile");
     } else {
-      toast.error("Please enter a valid 6-digit code");
+      showToast.error("Please enter a valid 6-digit code");
     }
   };
 
   const handleAddInvite = () => {
     if (!currentInviteEmail.trim()) {
-      toast.error("Please enter an email address");
+      showToast.error("Please enter an email address");
       return;
     }
 
     if (currentInviteEmail.includes("@")) {
       const normalized = currentInviteEmail.toLowerCase();
       if (invitedEmails.includes(normalized)) {
-        toast.error("Email already added");
+        showToast.error("Email already added");
         return;
       }
       setInvitedEmails([...invitedEmails, normalized]);
       setCurrentInviteEmail("");
     } else {
-      toast.error("Invalid email address");
+      showToast.error("Invalid email address");
     }
   };
 
@@ -137,7 +137,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
       validateInvitationEmails(invitedEmails);
 
     if (invalidEmails.length > 0) {
-      toast.error(`Invalid email addresses: ${invalidEmails.join(", ")}`);
+      showToast.error(`Invalid email addresses: ${invalidEmails.join(", ")}`);
       return;
     }
 
@@ -162,9 +162,9 @@ export function useRegisterForm(): UseRegisterFormReturn {
       });
 
       await login(response.token, response.user as User);
-      toast.success("Account created successfully!");
+      showToast.success("Account created successfully!");
     } catch (error) {
-      toast.error(
+      showToast.error(
         error instanceof Error ? error.message : "Registration failed"
       );
     } finally {
