@@ -1,5 +1,16 @@
 # @locusai/mcp-server
 
+## 0.4.1
+
+### Patch Changes
+
+- CLI Improvements
+  Remove skip-planning option
+  Fix repository indexing issue
+- Updated dependencies
+  - @locusai/sdk@0.7.1
+  - @locusai/shared@0.7.1
+
 ## 0.4.0
 
 ### Minor Changes

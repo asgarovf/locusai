@@ -1,5 +1,15 @@
 # @locusai/cli
 
+## 0.7.1
+
+### Patch Changes
+
+- CLI Improvements
+  Remove skip-planning option
+  Fix repository indexing issue
+- Updated dependencies
+  - @locusai/sdk@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @locusai/shared
 
+## 0.7.1
+
+### Patch Changes
+
+- CLI Improvements
+  Remove skip-planning option
+  Fix repository indexing issue
+
 ## 0.7.0
 
 ### Minor Changes
