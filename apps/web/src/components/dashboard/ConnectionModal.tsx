@@ -9,16 +9,11 @@ import { cn } from "@/lib/utils";
 interface ConnectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  workspaceId: string;
 }
 
 type Tab = "cli" | "mcp";
 
-export function ConnectionModal({
-  isOpen,
-  onClose,
-  workspaceId,
-}: ConnectionModalProps) {
+export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>("cli");
 
   const copyToClipboard = (text: string, label: string) => {
@@ -26,15 +21,14 @@ export function ConnectionModal({
     showToast.success(`${label} copied to clipboard`);
   };
 
-  const cliCommand = `locus run --api-key=<YOUR_API_KEY> --workspace=${workspaceId}`;
+  const cliCommand = `locus run --api-key=<YOUR_API_KEY>`;
 
   const mcpConfig = `{
   "mcpServers": {
     "locus-mcp": {
       "url": "https://mcp.locusai.dev/mcp",
       "headers": {
-        "x-api-key": "<YOUR_LOCUS_API_KEY>",
-        "x-workspace-id": "${workspaceId}"
+        "x-api-key": "<YOUR_LOCUS_API_KEY>"
       },
       "alwaysAllow": ["read_resource", "list_resources", "call_tool"]
     }

@@ -7,13 +7,9 @@ import { SettingSection } from "./SettingSection";
 
 interface ProjectSetupGuideProps {
   hasApiKeys: boolean;
-  workspaceId?: string;
 }
 
-export function ProjectSetupGuide({
-  hasApiKeys,
-  workspaceId,
-}: ProjectSetupGuideProps) {
+export function ProjectSetupGuide({ hasApiKeys }: ProjectSetupGuideProps) {
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -54,7 +50,7 @@ export function ProjectSetupGuide({
       description:
         "Run this command to start an agent that will poll for tasks from your dashboard.",
       status: "action",
-      command: `npx @locusai/cli run --api-key YOUR_API_KEY --workspace ${workspaceId || "YOUR_WORKSPACE_ID"}`,
+      command: `npx @locusai/cli run --api-key YOUR_API_KEY`,
     },
   ];
 

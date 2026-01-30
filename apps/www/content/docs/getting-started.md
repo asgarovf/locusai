@@ -8,7 +8,7 @@ Locus is an AI-native project management platform for engineering teams. Plan sp
 
 - **Node.js**: v18 or higher (using `npx`).
 - **Git**: Your project must be a git repository.
-- **Locus Account**: You need a Workspace ID and API Key from the Locus Cloud dashboard.
+- **Locus Account**: You need an API Key from the Locus Cloud dashboard.
 - **AI CLI**: Install the provider you plan to use (`claude` or `codex`) and ensure it is on your PATH.
 
 
@@ -54,7 +54,7 @@ This generates a semantic map of your project that allows the agent to navigate 
 Now you're ready to let the agent work! You'll need your credentials from the web dashboard.
 
 ```bash
-locus run --api-key YOUR_KEY --workspace YOUR_WORKSPACE_ID
+locus run --api-key YOUR_KEY
 ```
 
 The agent will:

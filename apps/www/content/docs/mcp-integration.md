@@ -36,8 +36,7 @@ Use the following configuration to connect to the Locus MCP server directly via 
     "locus-mcp": {
       "url": "https://mcp.locusai.dev/mcp",
       "headers": {
-        "x-api-key": "<YOUR_LOCUS_API_KEY>",
-        "x-workspace-id": "<YOUR_WORKSPACE_ID>"
+        "x-api-key": "<YOUR_LOCUS_API_KEY>"
       },
       "alwaysAllow": ["read_resource", "list_resources", "call_tool"]
     }

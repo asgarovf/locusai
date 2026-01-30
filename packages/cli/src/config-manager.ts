@@ -7,6 +7,7 @@ export interface LocusProjectConfig {
   version: string;
   createdAt: string;
   projectPath: string;
+  workspaceId?: string;
 }
 
 export class ConfigManager {
@@ -75,8 +76,24 @@ export class ConfigManager {
     const config = this.loadConfig();
     if (config && config.version !== version) {
       config.version = version;
-      const path = getLocusPath(this.projectPath, "configFile");
-      writeFileSync(path, JSON.stringify(config, null, 2));
+      this.saveConfig(config);
     }
+  }
+
+  getWorkspaceId(): string | undefined {
+    return this.loadConfig()?.workspaceId;
+  }
+
+  setWorkspaceId(workspaceId: string): void {
+    const config = this.loadConfig();
+    if (config) {
+      config.workspaceId = workspaceId;
+      this.saveConfig(config);
+    }
+  }
+
+  private saveConfig(config: LocusProjectConfig): void {
+    const path = getLocusPath(this.projectPath, "configFile");
+    writeFileSync(path, JSON.stringify(config, null, 2));
   }
 }

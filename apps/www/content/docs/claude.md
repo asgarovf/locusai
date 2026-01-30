@@ -24,7 +24,7 @@ locus run
 If you haven't set your Locus credentials in the environment, pass them explicitly:
 
 ```bash
-locus run --api-key <YOUR_KEY> --workspace <YOUR_WORKSPACE_ID>
+locus run --api-key <YOUR_KEY>
 ```
 
 ### Custom Model Selection

@@ -66,7 +66,7 @@ locus run [options]
 
 **Options:**
 - `--api-key <key>`: (Required) Your Locus API key.
-- `--workspace <id>`: (Required) Your Locus Workspace ID.
+- `--workspace <id>`: (Optional) Your Locus Workspace ID. Usually resolved automatically from the API key.
 - `--sprint <id>`: (Optional) Limit work to a specific sprint.
 - `--provider <name>`: (Optional) AI provider to use (`claude` or `codex`, default `claude`).
 - `--model <name>`: (Optional) AI model to use (defaults to `sonnet` for `claude`).

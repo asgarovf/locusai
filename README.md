@@ -52,7 +52,7 @@ npx @locusai/cli index
 ### 3. Run the Agent
 Connect to the Locus Cloud and start working:
 ```bash
-npx @locusai/cli run --api-key <YOUR_KEY> --workspace <WORKSPACE_ID>
+npx @locusai/cli run --api-key <YOUR_KEY>
 ```
 Optional: add `--provider codex` to use Codex instead of Claude.
 

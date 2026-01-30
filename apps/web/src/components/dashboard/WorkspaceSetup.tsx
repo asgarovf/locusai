@@ -95,7 +95,6 @@ export function WorkspaceSetup({ workspaceId }: WorkspaceSetupProps) {
       <ConnectionModal
         isOpen={isConnectionModalOpen}
         onClose={() => setIsConnectionModalOpen(false)}
-        workspaceId={workspaceId}
       />
     </>
   );

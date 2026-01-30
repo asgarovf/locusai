@@ -16,6 +16,7 @@ import {
 } from "@locusai/sdk/node";
 import { ConfigManager } from "./config-manager";
 import { TreeSummarizer } from "./tree-summarizer";
+import { WorkspaceResolver } from "./workspace-resolver";
 
 // Get version from package.json
 function getVersion(): string {
@@ -95,7 +96,8 @@ async function runCommand(args: string[]) {
 
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "run");
-  new ConfigManager(projectPath).updateVersion(VERSION);
+  const configManager = new ConfigManager(projectPath);
+  configManager.updateVersion(VERSION);
 
   const apiKey = values["api-key"] as string;
   let workspaceId = values.workspace as string | undefined;
@@ -113,57 +115,17 @@ async function runCommand(args: string[]) {
     process.exit(1);
   }
 
-  // If workspace ID is not provided, try to derive it from the API key
-  if (!workspaceId) {
-    try {
-      console.log(c.dim("ℹ  Resolving workspace from API key..."));
-
-      const resp = await fetch(`${apiBase}/auth/api-key`, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!resp.ok) {
-        if (resp.status === 401) {
-          throw new Error("Invalid API key");
-        }
-        throw new Error(`Failed to resolve workspace: ${resp.statusText}`);
-      }
-
-      const data = await resp.json();
-      // data format: { data: { workspaceId: ... } } or just { ... } depending on interceptors.
-      // SDK interceptor handles { data: ... }. Direct fetch returns raw JSON.
-      // NestJS usually returns object directly unless wrapped.
-      // Our SDK interceptor unwraps `data` property if present.
-      // Let's assume standard NestJS response.
-
-      const info = data.data || data; // Handle potential wrapping
-
-      if (info.workspaceId) {
-        workspaceId = info.workspaceId;
-        console.log(c.success(`✓  Resolved workspace: ${workspaceId}`));
-      } else {
-        throw new Error(
-          "API key is not associated with a workspace. Please specify --workspace."
-        );
-      }
-    } catch (error) {
-      console.error(
-        c.error(
-          `Error resolving workspace: ${error instanceof Error ? error.message : String(error)}`
-        )
-      );
-      process.exit(1);
-    }
-  }
-
-  if (!workspaceId) {
+  // Resolve workspace ID
+  try {
+    const resolver = new WorkspaceResolver(configManager, {
+      apiKey,
+      apiBase,
+      workspaceId: values.workspace as string | undefined,
+    });
+    workspaceId = await resolver.resolve();
+  } catch (error) {
     console.error(
-      c.error(
-        "Error: --workspace is required or must be derivable from API key"
-      )
+      c.error(error instanceof Error ? error.message : String(error))
     );
     process.exit(1);
   }
@@ -269,7 +231,7 @@ Created:
 
 Next steps:
   1. Run '${c.primary("locus index")}' to index your codebase
-  2. Run '${c.primary("locus run")}' to start an agent (requires --api-key and --workspace)
+  2. Run '${c.primary("locus run")}' to start an agent (requires --api-key)
 
 For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);
@@ -307,7 +269,7 @@ Options:
 Examples:
   locus init
   locus index
-  locus run --api-key YOUR_KEY --workspace WORKSPACE_ID
+  locus run --api-key YOUR_KEY
 
 For more information, visit: https://locusai.dev/docs
 `);

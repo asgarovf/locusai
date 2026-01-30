@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const steps = [
   {
-    text: "locus run --api-key=lk_123_123 --workspace-id=123",
+    text: "locus run --api-key=lk_123_123",
     color: "text-foreground",
   },
   { text: "", color: "text-foreground" },
@@ -23,7 +23,7 @@ const steps = [
     color: "text-blue-400",
   },
   {
-    text: "Workspace: 123",
+    text: "Workspace: 7bbf5573-6c08-4f6a-8e59-db312290e535",
     color: "text-zinc-400",
   },
   {

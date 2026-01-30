@@ -1,3 +1,4 @@
+import { LocusClient } from "@locusai/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { AGENT_INSTRUCTIONS, ClientConfig } from "../lib/types.js";
@@ -7,7 +8,10 @@ type ToolArgs = Record<string, unknown>;
 type Headers = Record<string, string | string[] | undefined>;
 
 // Helper to validate and extract config from various sources
-function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
+async function resolveClientConfig(
+  args: ToolArgs,
+  headers?: Headers
+): Promise<ClientConfig> {
   // 1. Try Tool Arguments (if user passed them explicitly)
   let apiKey = typeof args?.apiKey === "string" ? args.apiKey : undefined;
   let workspaceId =
@@ -17,17 +21,42 @@ function getClientConfig(args: ToolArgs, headers?: Headers): ClientConfig {
   if (!apiKey && headers) {
     const rawApiKey = headers["x-api-key"] || headers["x-locus-api-key"];
     apiKey = Array.isArray(rawApiKey) ? rawApiKey[0] : rawApiKey;
+  }
 
+  if (!workspaceId && headers) {
     const rawWorkspace =
       headers["x-workspace-id"] || headers["x-locus-workspace-id"];
     workspaceId = Array.isArray(rawWorkspace) ? rawWorkspace[0] : rawWorkspace;
   }
 
-  if (!apiKey || !workspaceId) {
+  if (!apiKey) {
     throw new Error(
-      "Missing configuration: apiKey and workspaceId are required. " +
-        "Please provide them as arguments or configure the server."
+      "Missing configuration: apiKey is required. " +
+        "Please provide it as an argument or configure the server."
     );
+  }
+
+  // 3. Resolve Workspace ID from API Key if missing
+  if (!workspaceId) {
+    try {
+      const client = new LocusClient({
+        baseUrl:
+          (process.env.API_URL as string) || "https://api.locusai.dev/api",
+        token: apiKey,
+      });
+
+      const info = await client.auth.getApiKeyInfo();
+
+      if (info.workspaceId) {
+        workspaceId = info.workspaceId;
+      } else {
+        throw new Error("API key is not associated with a workspace.");
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to resolve workspace from API key: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 
   return { apiKey, workspaceId };
@@ -59,7 +88,7 @@ export function registerTools(
       },
     },
     async (args) => {
-      const config = getClientConfig(args, requestContext?.headers);
+      const config = await resolveClientConfig(args, requestContext?.headers);
       const projectPath =
         typeof args.projectPath === "string" ? args.projectPath : undefined;
       const workflow = new SessionWorkflow(config, projectPath);
@@ -101,7 +130,7 @@ export function registerTools(
       },
     },
     async (args) => {
-      const config = getClientConfig(args, requestContext?.headers);
+      const config = await resolveClientConfig(args, requestContext?.headers);
       const projectPath =
         typeof args.projectPath === "string" ? args.projectPath : undefined;
       const workflow = new SessionWorkflow(config, projectPath);

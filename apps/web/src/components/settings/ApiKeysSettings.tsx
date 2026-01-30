@@ -93,10 +93,7 @@ export function ApiKeysSettings() {
         />
       </SettingSection>
 
-      <ProjectSetupGuide
-        hasApiKeys={apiKeys.length > 0}
-        workspaceId={workspaceId || undefined}
-      />
+      <ProjectSetupGuide hasApiKeys={apiKeys.length > 0} />
 
       <CreateApiKeyModal
         isOpen={isCreateModalOpen}
