@@ -135,11 +135,11 @@ export function TaskPanel({
               onReject={() => setShowRejectModal(true)}
             />
 
-            <div className="flex-1 overflow-hidden min-h-0">
-              <div className="w-full max-w-7xl mx-auto px-4 lg:px-6 h-full">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 h-full">
+            <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+              <div className="w-full max-w-7xl mx-auto px-4 lg:px-6 flex-1 flex flex-col">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1">
                   {/* Main content */}
-                  <div className="min-w-0 flex flex-col overflow-y-auto scrollbar-thin">
+                  <div className="min-w-0 flex flex-col overflow-y-auto scrollbar-thin py-4">
                     {/* Tab navigation */}
                     <div className="flex border-b border-border mb-4 sticky top-0 bg-background z-10">
                       {tabs.map((tab) => (
@@ -208,11 +208,12 @@ export function TaskPanel({
 
                   {/* Sidebar */}
                   <aside className={`
-                    fixed lg:static top-0 right-0 h-full lg:h-auto
+                    fixed lg:static top-0 right-0 h-full
                     bg-background lg:bg-transparent
                     ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
                     transition-transform duration-300 ease-in-out
-                    lg:sticky lg:top-4 lg:h-fit flex flex-col border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden
+                    flex flex-col lg:border-l border-border lg:bg-secondary/10 lg:backdrop-blur-3xl lg:shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden
+                    w-[360px] lg:w-auto
                     z-[960]
                   `}>
                     {/* Toggle button (desktop) */}
@@ -224,7 +225,7 @@ export function TaskPanel({
                       {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelRight size={16} />}
                     </button>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
+                    <div className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin">
                       <TaskProperties
                         task={task}
                         isLoading={isLoading}
