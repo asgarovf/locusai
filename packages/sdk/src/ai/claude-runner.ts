@@ -170,7 +170,7 @@ export class ClaudeRunner implements AiRunner {
     if (type === "content_block_start" && content_block) {
       if (content_block.type === "tool_use" && content_block.name) {
         this.log?.(
-          `\n\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`,
+          `\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`,
           "info"
         );
       }
