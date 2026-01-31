@@ -13,9 +13,9 @@ import {
 import { LoadingPage } from "@/components/ui";
 import { useAuthenticatedUser } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
-import { dashboardTour } from "@/lib/tour-steps";
-import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { getStorageItem, setStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { dashboardTour } from "@/lib/tour-steps";
 
 interface WorkspaceStats {
   taskCounts: Record<string, number>;

@@ -97,7 +97,13 @@ export function CreateModal({
   shortcutHint,
 }: CreateModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size={size} shortcutHint={shortcutHint}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size={size}
+      shortcutHint={shortcutHint}
+    >
       <form
         onSubmit={onSubmit}
         className={cn("space-y-6 py-2", "md:space-y-8")}

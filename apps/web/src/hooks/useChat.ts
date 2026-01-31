@@ -11,8 +11,8 @@ import {
   UserMessage,
 } from "@/components/chat/types";
 import { locusClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
 import { getChatSessionKey } from "@/lib/local-storage-keys";
+import { queryKeys } from "@/lib/query-keys";
 import { useChatStore } from "@/stores/chat-store";
 import { useLocalStorage } from "./useLocalStorage";
 import { useWorkspaceId } from "./useWorkspaceId";

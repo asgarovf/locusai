@@ -6,7 +6,7 @@
 
 "use client";
 
-import { type Sprint, type Task, SprintStatus } from "@locusai/shared";
+import { type Sprint, SprintStatus, type Task } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
@@ -23,7 +23,10 @@ export interface BacklogActionsHandlers {
   handleStartSprint: (sprintId: string) => Promise<void>;
   handleCompleteSprint: (sprintId: string) => Promise<void>;
   handleDeleteTask: (taskId: string) => Promise<void>;
-  handleBulkMoveToSprint: (taskIds: string[], sprintId: string) => Promise<void>;
+  handleBulkMoveToSprint: (
+    taskIds: string[],
+    sprintId: string
+  ) => Promise<void>;
 }
 
 interface BacklogActionsOptions {
@@ -136,7 +139,10 @@ export function useBacklogActions(
     }
   };
 
-  const handleBulkMoveToSprint = async (taskIds: string[], sprintId: string) => {
+  const handleBulkMoveToSprint = async (
+    taskIds: string[],
+    sprintId: string
+  ) => {
     try {
       setIsSubmitting(true);
 

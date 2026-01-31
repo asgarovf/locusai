@@ -193,7 +193,12 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
   );
 };
 
-export function Editor({ value, onChange, readOnly = false, placeholder = "Initialize content flow..." }: EditorProps) {
+export function Editor({
+  value,
+  onChange,
+  readOnly = false,
+  placeholder = "Initialize content flow...",
+}: EditorProps) {
   // useRef for debouncing to avoid re-creating the debounce function on every render
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastEmittedValue = useRef<string>(value);

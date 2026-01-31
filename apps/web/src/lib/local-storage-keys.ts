@@ -4,24 +4,24 @@
  */
 export const STORAGE_KEYS = {
   // Authentication
-  AUTH_TOKEN: 'locus_token',
+  AUTH_TOKEN: "locus_token",
 
   // UI State
-  SIDEBAR_COLLAPSED: 'locus_sidebar_collapsed',
-  TASK_SIDEBAR_OPEN: 'locus_task_sidebar_open',
-  EXPAND_COMPLETED_SPRINTS: 'locus_expand_completed_sprints',
+  SIDEBAR_COLLAPSED: "locus_sidebar_collapsed",
+  TASK_SIDEBAR_OPEN: "locus_task_sidebar_open",
+  EXPAND_COMPLETED_SPRINTS: "locus_expand_completed_sprints",
 
   // User Onboarding Tours
-  TOUR_DASHBOARD_SEEN: 'locus_tour_dashboard_seen',
-  TOUR_BOARD_SEEN: 'locus_tour_board_seen',
-  TOUR_CHAT_SEEN: 'locus_tour_chat_seen',
-  TOUR_BACKLOG_SEEN: 'locus_tour_backlog_seen',
+  TOUR_DASHBOARD_SEEN: "locus_tour_dashboard_seen",
+  TOUR_BOARD_SEEN: "locus_tour_board_seen",
+  TOUR_CHAT_SEEN: "locus_tour_chat_seen",
+  TOUR_BACKLOG_SEEN: "locus_tour_backlog_seen",
 
   // Workspace
-  LAST_WORKSPACE_ID: 'locus_last_workspace_id',
+  LAST_WORKSPACE_ID: "locus_last_workspace_id",
 
   // Chat Sessions (dynamic key - use getChatSessionKey function)
-  CHAT_SESSION_PREFIX: 'locus_chat_session_',
+  CHAT_SESSION_PREFIX: "locus_chat_session_",
 } as const;
 
 /**
@@ -35,13 +35,13 @@ export function getChatSessionKey(workspaceId: string): string {
  * Migration mapping from old keys to new keys
  */
 export const STORAGE_KEY_MIGRATIONS: Record<string, string> = {
-  'sidebar-collapsed': STORAGE_KEYS.SIDEBAR_COLLAPSED,
-  'task-sidebar-open': STORAGE_KEYS.TASK_SIDEBAR_OPEN,
-  'expandCompletedSprints': STORAGE_KEYS.EXPAND_COMPLETED_SPRINTS,
-  'hasSeenDashboardTour': STORAGE_KEYS.TOUR_DASHBOARD_SEEN,
-  'hasSeenBoardTour': STORAGE_KEYS.TOUR_BOARD_SEEN,
-  'hasSeenChatTour': STORAGE_KEYS.TOUR_CHAT_SEEN,
-  'hasSeenBacklogTour': STORAGE_KEYS.TOUR_BACKLOG_SEEN,
-  'lastWorkspaceId': STORAGE_KEYS.LAST_WORKSPACE_ID,
-  'locus-active-chat-session': STORAGE_KEYS.CHAT_SESSION_PREFIX, // Prefix migration
+  "sidebar-collapsed": STORAGE_KEYS.SIDEBAR_COLLAPSED,
+  "task-sidebar-open": STORAGE_KEYS.TASK_SIDEBAR_OPEN,
+  expandCompletedSprints: STORAGE_KEYS.EXPAND_COMPLETED_SPRINTS,
+  hasSeenDashboardTour: STORAGE_KEYS.TOUR_DASHBOARD_SEEN,
+  hasSeenBoardTour: STORAGE_KEYS.TOUR_BOARD_SEEN,
+  hasSeenChatTour: STORAGE_KEYS.TOUR_CHAT_SEEN,
+  hasSeenBacklogTour: STORAGE_KEYS.TOUR_BACKLOG_SEEN,
+  lastWorkspaceId: STORAGE_KEYS.LAST_WORKSPACE_ID,
+  "locus-active-chat-session": STORAGE_KEYS.CHAT_SESSION_PREFIX, // Prefix migration
 };

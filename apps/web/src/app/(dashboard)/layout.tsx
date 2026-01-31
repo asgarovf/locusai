@@ -4,7 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Menu } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { BottomNav, Sidebar, TaskPanel, WorkspaceProtected } from "@/components";
+import {
+  BottomNav,
+  Sidebar,
+  TaskPanel,
+  WorkspaceProtected,
+} from "@/components";
 import { Drawer, LoadingPage, LoadingSkeleton } from "@/components/ui";
 import { useDashboardLayout, useWorkspaceIdOptional } from "@/hooks";
 import { queryKeys } from "@/lib/query-keys";

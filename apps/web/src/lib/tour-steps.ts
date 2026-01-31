@@ -3,11 +3,15 @@
  * Interactive step-by-step guides using driver.js
  */
 
-import { driver, DriveStep, Config } from "driver.js";
+import { Config, DriveStep, driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import "@/styles/driver-theme.css";
+import {
+  getStorageItem,
+  removeStorageItem,
+  setStorageItem,
+} from "./local-storage";
 import { STORAGE_KEYS } from "./local-storage-keys";
-import { setStorageItem, removeStorageItem, getStorageItem } from "./local-storage";
 
 // Common driver configuration
 const driverConfig: Partial<Config> = {

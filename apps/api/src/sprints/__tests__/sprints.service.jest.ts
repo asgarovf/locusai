@@ -134,7 +134,10 @@ describe("SprintsService", () => {
       ];
 
       repository.findOne.mockResolvedValue(sprint as any);
-      repository.save.mockResolvedValue({ ...sprint, status: SprintStatus.COMPLETED } as any);
+      repository.save.mockResolvedValue({
+        ...sprint,
+        status: SprintStatus.COMPLETED,
+      } as any);
       mockTaskRepository.find.mockResolvedValue(tasksInSprint);
       mockTaskRepository.save.mockImplementation(async (tasks) => tasks);
 
@@ -149,7 +152,7 @@ describe("SprintsService", () => {
           expect.objectContaining({
             id: "task-1",
             status: TaskStatus.DONE,
-          })
+          }),
         ])
       );
       expect(eventsService.logEvent).toHaveBeenCalledWith(
@@ -186,7 +189,10 @@ describe("SprintsService", () => {
       ];
 
       repository.findOne.mockResolvedValue(sprint as any);
-      repository.save.mockResolvedValue({ ...sprint, status: SprintStatus.COMPLETED } as any);
+      repository.save.mockResolvedValue({
+        ...sprint,
+        status: SprintStatus.COMPLETED,
+      } as any);
       mockTaskRepository.find.mockResolvedValue(tasksInSprint);
       mockTaskRepository.save.mockImplementation(async (tasks) => tasks);
 
@@ -199,7 +205,7 @@ describe("SprintsService", () => {
             status: TaskStatus.BACKLOG,
             sprintId: null,
             assignedTo: null,
-          })
+          }),
         ])
       );
       expect(eventsService.logEvent).toHaveBeenCalledWith(
@@ -242,7 +248,10 @@ describe("SprintsService", () => {
       ];
 
       repository.findOne.mockResolvedValue(sprint as any);
-      repository.save.mockResolvedValue({ ...sprint, status: SprintStatus.COMPLETED } as any);
+      repository.save.mockResolvedValue({
+        ...sprint,
+        status: SprintStatus.COMPLETED,
+      } as any);
       mockTaskRepository.find.mockResolvedValue(tasksInSprint);
       mockTaskRepository.save.mockImplementation(async (tasks) => tasks);
 
@@ -288,7 +297,10 @@ describe("SprintsService", () => {
       ];
 
       repository.findOne.mockResolvedValue(sprint as any);
-      repository.save.mockResolvedValue({ ...sprint, status: SprintStatus.COMPLETED } as any);
+      repository.save.mockResolvedValue({
+        ...sprint,
+        status: SprintStatus.COMPLETED,
+      } as any);
       mockTaskRepository.find.mockResolvedValue(tasksInSprint);
       mockTaskRepository.save.mockImplementation(async (tasks) => tasks);
 
@@ -305,7 +317,7 @@ describe("SprintsService", () => {
             status: TaskStatus.BACKLOG,
             sprintId: null,
             assignedTo: null,
-          })
+          }),
         ])
       );
       expect(mockTaskRepository.save).toHaveBeenCalledTimes(1); // Bulk save called once

@@ -122,7 +122,9 @@
   background: var(--primary) !important;
   color: var(--primary-foreground) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.2),
+    0 2px 4px -2px rgb(0 0 0 / 0.2) !important;
 }
 
 /* Previous button - IMPROVED to match BUTTON_VARIANTS.outline exactly */

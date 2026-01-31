@@ -25,11 +25,18 @@
 
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { PanelLeftClose, PanelRight, FileText, CheckSquare, BookOpen, Activity } from "lucide-react";
-import { useTaskPanel } from "@/hooks/useTaskPanel";
+import {
+  Activity,
+  BookOpen,
+  CheckSquare,
+  FileText,
+  PanelLeftClose,
+  PanelRight,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { useGlobalKeydowns } from "@/hooks";
+import { useTaskPanel } from "@/hooks/useTaskPanel";
 import {
   TaskActivity,
   TaskChecklist,
@@ -84,18 +91,36 @@ export function TaskPanel({
     handleUnlinkDoc,
   } = useTaskPanel({ taskId, onUpdated, onDeleted, onClose });
 
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, [setSidebarOpen]);
+
   useGlobalKeydowns({
-    onToggleSidebar: () => setSidebarOpen((prev) => !prev),
+    onToggleSidebar: handleToggleSidebar,
   });
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'checklist' | 'docs' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "checklist" | "docs" | "activity"
+  >("overview");
 
-  const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: FileText },
-    { id: 'checklist' as const, label: 'Checklist', icon: CheckSquare },
-    { id: 'docs' as const, label: 'Documents', icon: BookOpen },
-    { id: 'activity' as const, label: 'Activity', icon: Activity },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: "overview" as const, label: "Overview", icon: FileText },
+      { id: "checklist" as const, label: "Checklist", icon: CheckSquare },
+      { id: "docs" as const, label: "Documents", icon: BookOpen },
+      { id: "activity" as const, label: "Activity", icon: Activity },
+    ],
+    []
+  );
+
+  const handleCloseRejectModal = useCallback(() => {
+    setShowRejectModal(false);
+    setRejectReason("");
+  }, [setShowRejectModal, setRejectReason]);
+
+  const handleOpenRejectModal = useCallback(() => {
+    setShowRejectModal(true);
+  }, [setShowRejectModal]);
 
   return (
     <>
@@ -104,7 +129,7 @@ export function TaskPanel({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[940]"
         onClick={onClose}
       />
       <motion.div
@@ -112,7 +137,7 @@ export function TaskPanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.5 }}
-        className="fixed top-0 right-0 bottom-0 w-[1000px] max-w-[95vw] bg-background border-l border-border z-950 flex flex-col shadow-2xl"
+        className="fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[800px] lg:w-[1000px] max-w-full bg-background border-l border-border z-950 flex flex-col shadow-2xl"
       >
         {!task ? (
           <div className="flex-1 flex items-center justify-center">
@@ -132,100 +157,125 @@ export function TaskPanel({
               onClose={onClose}
               onDelete={handleDelete}
               onApprove={handleApprove}
-              onReject={() => setShowRejectModal(true)}
+              onReject={handleOpenRejectModal}
             />
 
             <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-              <div className="w-full max-w-7xl mx-auto px-4 lg:px-6 flex-1 flex flex-col">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1">
+              <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 flex-1 flex flex-col min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 min-h-0 overflow-hidden">
                   {/* Main content */}
-                  <div className="min-w-0 flex flex-col overflow-y-auto scrollbar-thin py-4">
+                  <div className="min-w-0 flex flex-col min-h-0 overflow-hidden">
                     {/* Tab navigation */}
-                    <div className="flex border-b border-border mb-4 sticky top-0 bg-background z-10">
+                    <div className="flex overflow-x-auto scrollbar-thin border-b border-border mb-4 bg-background z-10 shrink-0">
                       {tabs.map((tab) => (
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
                           className={`
-                            flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all
-                            ${activeTab === tab.id
-                              ? 'border-b-2 border-primary text-primary'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}
+                            flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 font-semibold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0
+                            ${
+                              activeTab === tab.id
+                                ? "border-b-2 border-primary text-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            }
                           `}
                         >
                           <tab.icon className="w-4 h-4" />
-                          {tab.label}
+                          <span className="hidden sm:inline">{tab.label}</span>
                         </button>
                       ))}
                     </div>
 
-                    {/* Tab content */}
-                    {activeTab === 'overview' && (
-                      <TaskDescription
-                        task={task}
-                        isLoading={isLoading}
-                        onUpdate={handleUpdateTask}
-                      />
-                    )}
-                    {activeTab === 'checklist' && (
-                      <TaskChecklist
-                        task={task}
-                        isLoading={isLoading}
-                        checklistProgress={checklistProgress}
-                        newChecklistItem={newChecklistItem}
-                        setNewChecklistItem={setNewChecklistItem}
-                        handleAddChecklistItem={handleAddChecklistItem}
-                        handleToggleChecklistItem={handleToggleChecklistItem}
-                        handleRemoveChecklistItem={handleRemoveChecklistItem}
-                      />
-                    )}
-                    {activeTab === 'docs' && (
-                      <TaskDocs
-                        task={task}
-                        onLinkDoc={handleLinkDoc}
-                        onUnlinkDoc={handleUnlinkDoc}
-                      />
-                    )}
-                    {activeTab === 'activity' && (
-                      <TaskActivity
-                        task={task}
-                        isLoading={isLoading}
-                        newComment={newComment}
-                        setNewComment={setNewComment}
-                        handleAddComment={handleAddComment}
-                      />
-                    )}
+                    {/* Tab content - scrollable area */}
+                    <div className="flex-1 overflow-y-auto scrollbar-thin min-h-0">
+                      {activeTab === "overview" && (
+                        <TaskDescription
+                          task={task}
+                          isLoading={isLoading}
+                          onUpdate={handleUpdateTask}
+                        />
+                      )}
+                      {activeTab === "checklist" && (
+                        <TaskChecklist
+                          task={task}
+                          isLoading={isLoading}
+                          checklistProgress={checklistProgress}
+                          newChecklistItem={newChecklistItem}
+                          setNewChecklistItem={setNewChecklistItem}
+                          handleAddChecklistItem={handleAddChecklistItem}
+                          handleToggleChecklistItem={handleToggleChecklistItem}
+                          handleRemoveChecklistItem={handleRemoveChecklistItem}
+                        />
+                      )}
+                      {activeTab === "docs" && (
+                        <TaskDocs
+                          task={task}
+                          onLinkDoc={handleLinkDoc}
+                          onUnlinkDoc={handleUnlinkDoc}
+                        />
+                      )}
+                      {activeTab === "activity" && (
+                        <TaskActivity
+                          task={task}
+                          isLoading={isLoading}
+                          newComment={newComment}
+                          setNewComment={setNewComment}
+                          handleAddComment={handleAddComment}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {/* Toggle button (mobile) */}
                   <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="lg:hidden fixed bottom-6 right-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all z-10"
+                    onClick={handleToggleSidebar}
+                    className="lg:hidden fixed bottom-6 right-6 p-3 sm:p-4 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all z-[945]"
                     aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
                   >
-                    {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelRight size={20} />}
+                    {sidebarOpen ? (
+                      <PanelLeftClose size={20} />
+                    ) : (
+                      <PanelRight size={20} />
+                    )}
                   </button>
 
+                  {/* Sidebar backdrop (mobile only) */}
+                  {sidebarOpen && (
+                    <div
+                      className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-952"
+                      onClick={handleToggleSidebar}
+                    />
+                  )}
+
                   {/* Sidebar */}
-                  <aside className={`
+                  <aside
+                    className={`
                     fixed lg:static top-0 right-0 h-full
-                    bg-background lg:bg-transparent
-                    ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                    bg-background lg:bg-transparent border-l border-border
+                    ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
                     transition-transform duration-300 ease-in-out
-                    flex flex-col lg:border-l border-border lg:bg-secondary/10 lg:backdrop-blur-3xl lg:shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden
-                    w-[360px] lg:w-auto
-                    z-[960]
-                  `}>
+                    flex flex-col lg:bg-secondary/10 lg:backdrop-blur-3xl lg:shadow-[inset_1px_0_0_rgba(255,255,255,0.02)]
+                    w-full sm:w-[360px] max-w-[85vw] lg:w-auto
+                    min-h-0 overflow-hidden
+                    z-955
+                  `}
+                  >
                     {/* Toggle button (desktop) */}
                     <button
-                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      onClick={handleToggleSidebar}
                       className="hidden lg:flex absolute top-4 -left-10 p-2 bg-secondary/50 hover:bg-secondary rounded-lg transition-colors"
-                      aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                      aria-label={
+                        sidebarOpen ? "Close sidebar" : "Open sidebar"
+                      }
                     >
-                      {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelRight size={16} />}
+                      {sidebarOpen ? (
+                        <PanelLeftClose size={16} />
+                      ) : (
+                        <PanelRight size={16} />
+                      )}
                     </button>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin">
+                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8 scrollbar-thin min-h-0">
                       <TaskProperties
                         task={task}
                         isLoading={isLoading}
@@ -242,11 +292,11 @@ export function TaskPanel({
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-960 flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-970 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-card border border-border/40 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl shadow-black"
+            className="bg-card border border-border/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 w-full max-w-[500px] shadow-2xl shadow-black"
           >
             <h3 className="text-xl font-black uppercase tracking-widest text-destructive mb-4">
               Reject Task
@@ -265,10 +315,7 @@ export function TaskPanel({
             <div className="flex gap-4 justify-end">
               <Button
                 variant="ghost"
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectReason("");
-                }}
+                onClick={handleCloseRejectModal}
                 className="px-6 rounded-xl font-black uppercase tracking-widest text-[10px]"
               >
                 Cancel

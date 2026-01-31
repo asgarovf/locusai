@@ -10,8 +10,8 @@ import {
   useState,
 } from "react";
 import { locusClient, setClientToken } from "@/lib/api-client";
-import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { getStorageItem, setStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 
 interface AuthContextType {
   user: User | null;
@@ -70,7 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Update localStorage with the verified effective ID
       if (effectiveWorkspaceId) {
-        setStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID, String(effectiveWorkspaceId));
+        setStorageItem(
+          STORAGE_KEYS.LAST_WORKSPACE_ID,
+          String(effectiveWorkspaceId)
+        );
       }
 
       setUser({

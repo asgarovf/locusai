@@ -1,11 +1,17 @@
 import { LocusClient, LocusEvent } from "@locusai/sdk";
 import { config } from "./config";
+import {
+  getStorageItem,
+  removeStorageItem,
+  setStorageItem,
+} from "./local-storage";
 import { STORAGE_KEYS } from "./local-storage-keys";
-import { getStorageItem, setStorageItem, removeStorageItem } from "./local-storage";
 
 // Get initial token from localStorage if available
 const initialToken =
-  typeof window !== "undefined" ? getStorageItem(STORAGE_KEYS.AUTH_TOKEN) : null;
+  typeof window !== "undefined"
+    ? getStorageItem(STORAGE_KEYS.AUTH_TOKEN)
+    : null;
 
 export const locusClient = new LocusClient({
   baseUrl: config.NEXT_PUBLIC_API_URL,

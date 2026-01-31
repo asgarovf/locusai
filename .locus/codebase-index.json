@@ -1,204 +1,88 @@
 {
   "symbols": {
-    "EmailService": [
-      "apps/api/src/common/services/email.service.ts"
-    ],
+    "EmailService": ["apps/api/src/common/services/email.service.ts"],
     "emailBaseTemplate": [
       "apps/api/src/common/templates/email-base.template.ts"
     ],
     "invitationEmailTemplate": [
       "apps/api/src/common/templates/invitation-email.template.ts"
     ],
-    "otpEmailTemplate": [
-      "apps/api/src/common/templates/otp-email.template.ts"
-    ],
+    "otpEmailTemplate": ["apps/api/src/common/templates/otp-email.template.ts"],
     "welcomeEmailTemplate": [
       "apps/api/src/common/templates/welcome-email.template.ts"
     ],
-    "Docs": [
-      "apps/web/src/views/Docs.tsx"
-    ],
-    "useGlobalKeydowns": [
-      "apps/web/src/hooks/useGlobalKeydowns.ts"
-    ],
+    "Docs": ["apps/web/src/views/Docs.tsx"],
+    "useGlobalKeydowns": ["apps/web/src/hooks/useGlobalKeydowns.ts"],
     "useTaskPanel": [
       "apps/web/src/components/TaskPanel.tsx",
       "apps/web/src/hooks/useTaskPanel.ts"
     ],
-    "TaskPanel": [
-      "apps/web/src/components/TaskPanel.tsx"
-    ],
-    "TaskPanelProps": [
-      "apps/web/src/components/TaskPanel.tsx"
-    ],
-    "Tooltip": [
-      "apps/web/src/components/ui/Tooltip.tsx"
-    ],
-    "useBacklog": [
-      "apps/web/src/hooks/useBacklog.ts"
-    ],
-    "useBacklogActions": [
-      "apps/web/src/hooks/backlog/useBacklogActions.ts"
-    ],
-    "BacklogActionsState": [
-      "apps/web/src/hooks/backlog/useBacklogActions.ts"
-    ],
+    "TaskPanel": ["apps/web/src/components/TaskPanel.tsx"],
+    "TaskPanelProps": ["apps/web/src/components/TaskPanel.tsx"],
+    "Tooltip": ["apps/web/src/components/ui/Tooltip.tsx"],
+    "useBacklog": ["apps/web/src/hooks/useBacklog.ts"],
+    "useBacklogActions": ["apps/web/src/hooks/backlog/useBacklogActions.ts"],
+    "BacklogActionsState": ["apps/web/src/hooks/backlog/useBacklogActions.ts"],
     "BacklogActionsHandlers": [
       "apps/web/src/hooks/backlog/useBacklogActions.ts"
     ],
     "BacklogActionsOptions": [
       "apps/web/src/hooks/backlog/useBacklogActions.ts"
     ],
-    "BacklogList": [
-      "apps/web/src/components/backlog/BacklogList.tsx"
-    ],
-    "BacklogPage": [
-      "apps/web/src/app/(dashboard)/backlog/page.tsx"
-    ],
-    "PropertyItem": [
-      "apps/web/src/components/PropertyItem.tsx"
-    ],
-    "CreateModal": [
-      "apps/web/src/components/CreateModal/CreateModal.tsx"
-    ],
-    "TaskProperties": [
-      "apps/web/src/components/task-panel/TaskProperties.tsx"
-    ],
-    "Modal": [
-      "apps/web/src/components/ui/Modal.tsx"
-    ],
-    "ModalProps": [
-      "apps/web/src/components/ui/Modal.tsx"
-    ],
-    "UI_CONSTANTS": [
-      "apps/web/src/components/ui/constants.ts"
-    ],
-    "COLORS": [
-      "apps/web/src/components/ui/constants.ts"
-    ],
-    "SPACING": [
-      "apps/web/src/components/ui/constants.ts"
-    ],
-    "BREAKPOINTS": [
-      "apps/web/src/components/ui/constants.ts"
-    ],
-    "Z_INDEX": [
-      "apps/web/src/components/ui/constants.ts"
-    ],
-    "Editor": [
-      "apps/web/src/components/Editor.tsx"
-    ],
-    "TaskCreateModal": [
-      "apps/web/src/components/TaskCreateModal.tsx"
-    ],
-    "BoardEmptyState": [
-      "apps/web/src/components/board/BoardEmptyState.tsx"
-    ],
+    "BacklogList": ["apps/web/src/components/backlog/BacklogList.tsx"],
+    "BacklogPage": ["apps/web/src/app/(dashboard)/backlog/page.tsx"],
+    "PropertyItem": ["apps/web/src/components/PropertyItem.tsx"],
+    "CreateModal": ["apps/web/src/components/CreateModal/CreateModal.tsx"],
+    "TaskProperties": ["apps/web/src/components/task-panel/TaskProperties.tsx"],
+    "Modal": ["apps/web/src/components/ui/Modal.tsx"],
+    "ModalProps": ["apps/web/src/components/ui/Modal.tsx"],
+    "UI_CONSTANTS": ["apps/web/src/components/ui/constants.ts"],
+    "COLORS": ["apps/web/src/components/ui/constants.ts"],
+    "SPACING": ["apps/web/src/components/ui/constants.ts"],
+    "BREAKPOINTS": ["apps/web/src/components/ui/constants.ts"],
+    "Z_INDEX": ["apps/web/src/components/ui/constants.ts"],
+    "Editor": ["apps/web/src/components/Editor.tsx"],
+    "TaskCreateModal": ["apps/web/src/components/TaskCreateModal.tsx"],
+    "BoardEmptyState": ["apps/web/src/components/board/BoardEmptyState.tsx"],
     "TaskDescription": [
       "apps/web/src/components/task-panel/TaskDescription.tsx"
     ],
-    "BoardContent": [
-      "apps/web/src/components/board/BoardContent.tsx"
-    ],
-    "TaskCard": [
-      "apps/web/src/components/TaskCard.tsx"
-    ],
-    "TaskCardProps": [
-      "apps/web/src/components/TaskCard.tsx"
-    ],
-    "LOCAL_STORAGE_KEYS": [
-      "apps/web/src/lib/local-storage-keys.ts"
-    ],
-    "LocalStorage": [
-      "apps/web/src/lib/local-storage.ts"
-    ],
-    "AuthContext": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
-    "AuthProvider": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
-    "useAuth": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
-    "useChat": [
-      "apps/web/src/hooks/useChat.ts"
-    ],
-    "useLocalStorage": [
-      "apps/web/src/hooks/useLocalStorage.ts"
-    ],
-    "apiClient": [
-      "apps/web/src/lib/api-client.ts"
-    ],
-    "config": [
-      "apps/web/src/lib/config.ts"
-    ],
-    "taskTemplates": [
-      "apps/web/src/lib/task-templates.ts"
-    ],
-    "TASK_TEMPLATES": [
-      "apps/web/src/lib/task-templates.ts"
-    ],
-    "tourSteps": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "TOUR_STEPS": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "Dashboard": [
-      "apps/web/src/views/Dashboard.tsx"
-    ],
-    "SprintMindmap": [
-      "apps/web/src/components/board/SprintMindmap.tsx"
-    ],
-    "OnboardingTour": [
-      "apps/web/src/components/onboarding/OnboardingTour.tsx"
-    ],
-    "CallbackPage": [
-      "apps/web/src/app/(auth)/callback/page.tsx"
-    ],
-    "BoardFilter": [
-      "apps/web/src/components/BoardFilter.tsx"
-    ],
-    "BoardHeader": [
-      "apps/web/src/components/board/BoardHeader.tsx"
-    ],
-    "BoardPage": [
-      "apps/web/src/app/(dashboard)/board/page.tsx"
-    ],
-    "ChatInput": [
-      "apps/web/src/components/chat/ChatInput.tsx"
-    ],
-    "ChatPage": [
-      "apps/web/src/app/(dashboard)/chat/page.tsx"
-    ],
-    "BottomNav": [
-      "apps/web/src/components/BottomNav.tsx"
-    ],
-    "DashboardLayout": [
-      "apps/web/src/app/(dashboard)/layout.tsx"
-    ],
-    "PageLayout": [
-      "apps/web/src/components/PageLayout.tsx"
-    ],
-    "BacklogSection": [
-      "apps/web/src/components/backlog/BacklogSection.tsx"
-    ],
-    "BulkActionsBar": [
-      "apps/web/src/components/backlog/BulkActionsBar.tsx"
-    ],
+    "BoardContent": ["apps/web/src/components/board/BoardContent.tsx"],
+    "TaskCard": ["apps/web/src/components/TaskCard.tsx"],
+    "TaskCardProps": ["apps/web/src/components/TaskCard.tsx"],
+    "LOCAL_STORAGE_KEYS": ["apps/web/src/lib/local-storage-keys.ts"],
+    "LocalStorage": ["apps/web/src/lib/local-storage.ts"],
+    "AuthContext": ["apps/web/src/context/AuthContext.tsx"],
+    "AuthProvider": ["apps/web/src/context/AuthContext.tsx"],
+    "useAuth": ["apps/web/src/context/AuthContext.tsx"],
+    "useChat": ["apps/web/src/hooks/useChat.ts"],
+    "useLocalStorage": ["apps/web/src/hooks/useLocalStorage.ts"],
+    "apiClient": ["apps/web/src/lib/api-client.ts"],
+    "config": ["apps/web/src/lib/config.ts"],
+    "taskTemplates": ["apps/web/src/lib/task-templates.ts"],
+    "TASK_TEMPLATES": ["apps/web/src/lib/task-templates.ts"],
+    "tourSteps": ["apps/web/src/lib/tour-steps.ts"],
+    "TOUR_STEPS": ["apps/web/src/lib/tour-steps.ts"],
+    "Dashboard": ["apps/web/src/views/Dashboard.tsx"],
+    "SprintMindmap": ["apps/web/src/components/board/SprintMindmap.tsx"],
+    "OnboardingTour": ["apps/web/src/components/onboarding/OnboardingTour.tsx"],
+    "CallbackPage": ["apps/web/src/app/(auth)/callback/page.tsx"],
+    "BoardFilter": ["apps/web/src/components/BoardFilter.tsx"],
+    "BoardHeader": ["apps/web/src/components/board/BoardHeader.tsx"],
+    "BoardPage": ["apps/web/src/app/(dashboard)/board/page.tsx"],
+    "ChatInput": ["apps/web/src/components/chat/ChatInput.tsx"],
+    "ChatPage": ["apps/web/src/app/(dashboard)/chat/page.tsx"],
+    "BottomNav": ["apps/web/src/components/BottomNav.tsx"],
+    "DashboardLayout": ["apps/web/src/app/(dashboard)/layout.tsx"],
+    "PageLayout": ["apps/web/src/components/PageLayout.tsx"],
+    "BacklogSection": ["apps/web/src/components/backlog/BacklogSection.tsx"],
+    "BulkActionsBar": ["apps/web/src/components/backlog/BulkActionsBar.tsx"],
     "CompletedSprintsSection": [
       "apps/web/src/components/backlog/CompletedSprintsSection.tsx"
     ],
-    "SprintSection": [
-      "apps/web/src/components/backlog/SprintSection.tsx"
-    ],
-    "ChatSidebar": [
-      "apps/web/src/components/chat/ChatSidebar.tsx"
-    ],
-    "Drawer": [
-      "apps/web/src/components/ui/Drawer.tsx"
-    ]
+    "SprintSection": ["apps/web/src/components/backlog/SprintSection.tsx"],
+    "ChatSidebar": ["apps/web/src/components/chat/ChatSidebar.tsx"],
+    "Drawer": ["apps/web/src/components/ui/Drawer.tsx"]
   },
   "responsibilities": {
     "CLAUDE.md": "Project context and workflow instructions for Claude AI assistant",

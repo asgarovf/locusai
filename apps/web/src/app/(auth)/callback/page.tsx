@@ -5,8 +5,8 @@ import { Suspense, useEffect, useRef } from "react";
 import { LoadingPage, showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
-import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { setStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 
 function CallbackHandler() {
   const router = useRouter();

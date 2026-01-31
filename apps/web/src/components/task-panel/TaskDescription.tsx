@@ -82,9 +82,9 @@ export function TaskDescription({
   }, [editDesc, task.description, descMode, handleDescSave]);
 
   return (
-    <div className="p-8">
+    <div className="px-8 py-8">
       {/* Title Section */}
-      <div className="mb-8">
+      <div className="mb-8 flex-shrink-0">
         {isEditingTitle ? (
           <div className="relative">
             <Input

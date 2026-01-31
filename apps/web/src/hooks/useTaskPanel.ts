@@ -1,15 +1,15 @@
 "use client";
 
-import { type AcceptanceItem, type Task, TaskStatus } from "@locusai/shared";
+import { AcceptanceItem, type Task, TaskStatus } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
-import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { getStorageItem, setStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { queryKeys } from "@/lib/query-keys";
 
 interface UseTaskPanelProps {
   taskId: string;
@@ -123,34 +123,40 @@ export function useTaskPanel({
     },
   });
 
-  const handleLinkDoc = async (docId: string) => {
-    if (!task) return;
-    const currentDocIds = task.docs?.map((d) => d.id) || [];
-    if (currentDocIds.includes(docId)) return;
+  const handleLinkDoc = useCallback(
+    async (docId: string) => {
+      if (!task) return;
+      const currentDocIds = task.docs?.map((d) => d.id) || [];
+      if (currentDocIds.includes(docId)) return;
 
-    try {
-      await updateTaskMutation.mutateAsync({
-        docIds: [...currentDocIds, docId],
-      });
-      showToast.success("Document linked");
-    } catch {
-      showToast.error("Failed to link document");
-    }
-  };
+      try {
+        await updateTaskMutation.mutateAsync({
+          docIds: [...currentDocIds, docId],
+        });
+        showToast.success("Document linked");
+      } catch {
+        showToast.error("Failed to link document");
+      }
+    },
+    [task, updateTaskMutation]
+  );
 
-  const handleUnlinkDoc = async (docId: string) => {
-    if (!task) return;
-    const currentDocIds = task.docs?.map((d) => d.id) || [];
+  const handleUnlinkDoc = useCallback(
+    async (docId: string) => {
+      if (!task) return;
+      const currentDocIds = task.docs?.map((d) => d.id) || [];
 
-    try {
-      await updateTaskMutation.mutateAsync({
-        docIds: currentDocIds.filter((id) => id !== docId),
-      });
-      showToast.success("Document unlinked");
-    } catch {
-      showToast.error("Failed to unlink document");
-    }
-  };
+      try {
+        await updateTaskMutation.mutateAsync({
+          docIds: currentDocIds.filter((id) => id !== docId),
+        });
+        showToast.success("Document unlinked");
+      } catch {
+        showToast.error("Failed to unlink document");
+      }
+    },
+    [task, updateTaskMutation]
+  );
 
   const deleteTaskMutation = useMutation({
     mutationFn: () => locusClient.tasks.delete(taskId, workspaceId as string),
@@ -175,15 +181,18 @@ export function useTaskPanel({
     },
   });
 
-  const handleUpdateTask = async (updates: Partial<Task>) => {
-    try {
-      await updateTaskMutation.mutateAsync(updates);
-    } catch (err) {
-      console.error("Failed to update task:", err);
-    }
-  };
+  const handleUpdateTask = useCallback(
+    async (updates: Partial<Task>) => {
+      try {
+        await updateTaskMutation.mutateAsync(updates);
+      } catch (err) {
+        console.error("Failed to update task:", err);
+      }
+    },
+    [updateTaskMutation]
+  );
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (
       !confirm(
         "Are you sure you want to delete this task? This action cannot be undone."
@@ -196,37 +205,37 @@ export function useTaskPanel({
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
-  };
+  }, [deleteTaskMutation]);
 
-  const handleTitleSave = () => {
+  const handleTitleSave = useCallback(() => {
     if (editTitle.trim() && editTitle !== task?.title) {
       handleUpdateTask({ title: editTitle.trim() });
     }
     setIsEditingTitle(false);
-  };
+  }, [editTitle, task?.title, handleUpdateTask]);
 
-  const handleDescSave = () => {
+  const handleDescSave = useCallback(() => {
     if (editDesc !== task?.description) {
       handleUpdateTask({ description: editDesc });
     }
-  };
+  }, [editDesc, task?.description, handleUpdateTask]);
 
-  const handleAssignedToSave = () => {
+  const handleAssignedToSave = useCallback(() => {
     if (editAssignedTo !== (task?.assignedTo || "")) {
       handleUpdateTask({ assignedTo: editAssignedTo || null });
     }
-  };
+  }, [editAssignedTo, task?.assignedTo, handleUpdateTask]);
 
-  const handleDueDateSave = () => {
+  const handleDueDateSave = useCallback(() => {
     if (editDueDate) {
       const newDate = new Date(editDueDate);
       handleUpdateTask({ dueDate: newDate.getTime() });
     } else if (task?.dueDate) {
       handleUpdateTask({ dueDate: null });
     }
-  };
+  }, [editDueDate, task?.dueDate, handleUpdateTask]);
 
-  const handleAddChecklistItem = () => {
+  const handleAddChecklistItem = useCallback(() => {
     if (!newChecklistItem.trim() || !task) return;
     const newItem: AcceptanceItem = {
       id: crypto.randomUUID(),
@@ -237,25 +246,31 @@ export function useTaskPanel({
       acceptanceChecklist: [...(task.acceptanceChecklist || []), newItem],
     });
     setNewChecklistItem("");
-  };
+  }, [newChecklistItem, task, handleUpdateTask]);
 
-  const handleToggleChecklistItem = (itemId: string) => {
-    if (!task?.acceptanceChecklist) return;
-    const updated = task.acceptanceChecklist.map((item) =>
-      item.id === itemId ? { ...item, done: !item.done } : item
-    );
-    handleUpdateTask({ acceptanceChecklist: updated });
-  };
+  const handleToggleChecklistItem = useCallback(
+    (itemId: string) => {
+      if (!task?.acceptanceChecklist) return;
+      const updated = task.acceptanceChecklist.map((item) =>
+        item.id === itemId ? { ...item, done: !item.done } : item
+      );
+      handleUpdateTask({ acceptanceChecklist: updated });
+    },
+    [task, handleUpdateTask]
+  );
 
-  const handleRemoveChecklistItem = (itemId: string) => {
-    if (!task?.acceptanceChecklist) return;
-    const updated = task.acceptanceChecklist.filter(
-      (item) => item.id !== itemId
-    );
-    handleUpdateTask({ acceptanceChecklist: updated });
-  };
+  const handleRemoveChecklistItem = useCallback(
+    (itemId: string) => {
+      if (!task?.acceptanceChecklist) return;
+      const updated = task.acceptanceChecklist.filter(
+        (item) => item.id !== itemId
+      );
+      handleUpdateTask({ acceptanceChecklist: updated });
+    },
+    [task, handleUpdateTask]
+  );
 
-  const handleAddComment = async () => {
+  const handleAddComment = useCallback(async () => {
     if (!newComment.trim()) return;
     try {
       await addCommentMutation.mutateAsync({
@@ -267,9 +282,9 @@ export function useTaskPanel({
     } catch (err) {
       console.error("Failed to add comment:", err);
     }
-  };
+  }, [newComment, addCommentMutation, user?.name]);
 
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     if (!rejectReason.trim()) return;
     try {
       await updateTaskMutation.mutateAsync({
@@ -287,9 +302,15 @@ export function useTaskPanel({
       console.error("Failed to reject task:", err);
       showToast.error("Failed to reject task");
     }
-  };
+  }, [
+    rejectReason,
+    updateTaskMutation,
+    addCommentMutation,
+    user?.name,
+    onUpdated,
+  ]);
 
-  const handleApprove = async () => {
+  const handleApprove = useCallback(async () => {
     try {
       await updateTaskMutation.mutateAsync({ status: TaskStatus.DONE });
       showToast.success("Task approved and marked as done");
@@ -298,7 +319,7 @@ export function useTaskPanel({
       console.error("Failed to approve task:", err);
       showToast.error("Failed to approve task");
     }
-  };
+  }, [updateTaskMutation, onUpdated]);
 
   const checklistProgress = task?.acceptanceChecklist?.length
     ? Math.round(

@@ -56,11 +56,18 @@ export function PageLayout({
               </div>
             )}
           </div>
-          {actions && <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">{actions}</div>}
+          {actions && (
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
+              {actions}
+            </div>
+          )}
         </div>
       </div>
       <div
-        className={cn("flex-1 overflow-y-auto pb-20 lg:pb-12 mt-4", contentClassName)}
+        className={cn(
+          "flex-1 overflow-y-auto pb-20 lg:pb-12 mt-4",
+          contentClassName
+        )}
       >
         {children}
       </div>

@@ -287,7 +287,10 @@ export function useBacklog() {
     }
   };
 
-  const handleBulkMoveToSprint = async (taskIds: string[], sprintId: string) => {
+  const handleBulkMoveToSprint = async (
+    taskIds: string[],
+    sprintId: string
+  ) => {
     const tasksKey = queryKeys.tasks.list(workspaceId);
     const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
 

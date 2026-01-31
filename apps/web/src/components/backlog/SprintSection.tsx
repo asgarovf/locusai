@@ -88,8 +88,7 @@ export function SprintSection({
       ).length,
       done: sprintTasks.filter((t) => t.status === TaskStatus.DONE).length,
     };
-    const completionPercentage =
-      total > 0 ? (byStatus.done / total) * 100 : 0;
+    const completionPercentage = total > 0 ? (byStatus.done / total) * 100 : 0;
 
     return { total, byStatus, completionPercentage };
   };
@@ -165,10 +164,18 @@ export function SprintSection({
               />
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-              <span className="whitespace-nowrap">Backlog: {progress.byStatus.backlog}</span>
-              <span className="whitespace-nowrap">In Progress: {progress.byStatus.inProgress}</span>
-              <span className="whitespace-nowrap">Verification: {progress.byStatus.verification}</span>
-              <span className="whitespace-nowrap">Done: {progress.byStatus.done}</span>
+              <span className="whitespace-nowrap">
+                Backlog: {progress.byStatus.backlog}
+              </span>
+              <span className="whitespace-nowrap">
+                In Progress: {progress.byStatus.inProgress}
+              </span>
+              <span className="whitespace-nowrap">
+                Verification: {progress.byStatus.verification}
+              </span>
+              <span className="whitespace-nowrap">
+                Done: {progress.byStatus.done}
+              </span>
             </div>
           </div>
         )}

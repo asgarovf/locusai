@@ -11,8 +11,8 @@ import { type Sprint, type Task } from "@locusai/shared";
 import { motion } from "framer-motion";
 import { Archive, ChevronsDown, ChevronsUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { getStorageItem, setStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { BacklogSection } from "./BacklogSection";
 import { CompletedSprintItem } from "./CompletedSprintItem";
 

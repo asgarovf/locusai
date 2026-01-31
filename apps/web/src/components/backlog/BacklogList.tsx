@@ -18,7 +18,7 @@
 
 "use client";
 
-import { type Task, TaskStatus, type Sprint } from "@locusai/shared";
+import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
 import { motion } from "framer-motion";
 import { Inbox, Plus } from "lucide-react";
 import { useState } from "react";

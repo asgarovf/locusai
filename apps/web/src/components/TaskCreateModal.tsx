@@ -64,7 +64,9 @@ export function TaskCreateModal({
   const [assigneeRole, setAssigneeRole] = useState<AssigneeRole | undefined>();
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(
+    null
+  );
 
   const applyTemplate = (templateKey: TaskTemplate) => {
     const templateData = TASK_TEMPLATES[templateKey];
@@ -241,7 +243,6 @@ export function TaskCreateModal({
       ))}
     </div>
   );
-
 
   // Define all fields
   const allFields = [

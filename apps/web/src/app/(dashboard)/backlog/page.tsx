@@ -138,7 +138,10 @@ function BacklogContent() {
               onTaskClick={setSelectedTaskId}
               onTaskDelete={handleDeleteTask}
               onBulkMoveToSprint={handleBulkMoveToSprint}
-              sprints={[...plannedSprints, ...(activeSprint ? [activeSprint] : [])]}
+              sprints={[
+                ...plannedSprints,
+                ...(activeSprint ? [activeSprint] : []),
+              ]}
               onNewTask={() => setIsTaskModalOpen(true)}
             />
 

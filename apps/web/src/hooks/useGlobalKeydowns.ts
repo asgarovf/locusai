@@ -57,5 +57,10 @@ export const useGlobalKeydowns = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onOpenCreateTask, onOpenCreateSprint, onCloseCreateTask, onToggleSidebar]);
+  }, [
+    onOpenCreateTask,
+    onOpenCreateSprint,
+    onCloseCreateTask,
+    onToggleSidebar,
+  ]);
 };

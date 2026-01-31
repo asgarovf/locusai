@@ -1,4 +1,4 @@
-import { STORAGE_KEY_MIGRATIONS } from './local-storage-keys';
+import { STORAGE_KEY_MIGRATIONS } from "./local-storage-keys";
 
 /**
  * Safely get an item from localStorage with automatic migration from old keys
@@ -6,7 +6,7 @@ import { STORAGE_KEY_MIGRATIONS } from './local-storage-keys';
  * @returns The value from localStorage or null if not found
  */
 export function getStorageItem(key: string): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   // First try to get the value with the new key
   let value = localStorage.getItem(key);
@@ -39,12 +39,12 @@ export function getStorageItem(key: string): string | null {
  * @param value - The value to store
  */
 export function setStorageItem(key: string, value: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     localStorage.setItem(key, value);
   } catch (error) {
-    console.error('Failed to set localStorage item:', error);
+    console.error("Failed to set localStorage item:", error);
   }
 }
 
@@ -53,12 +53,12 @@ export function setStorageItem(key: string, value: string): void {
  * @param key - The storage key
  */
 export function removeStorageItem(key: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.error('Failed to remove localStorage item:', error);
+    console.error("Failed to remove localStorage item:", error);
   }
 }
 
@@ -89,6 +89,6 @@ export function setStorageJSON<T>(key: string, value: T): void {
   try {
     setStorageItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error('Failed to stringify and set localStorage item:', error);
+    console.error("Failed to stringify and set localStorage item:", error);
   }
 }

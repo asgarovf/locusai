@@ -47,64 +47,70 @@ export function TaskActivity({
   const activityLog = task.activityLog || [];
 
   return (
-    <div>
-      <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
-        Activity
-      </SectionLabel>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 px-8 pt-8">
+        <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
+          Activity
+        </SectionLabel>
 
-      <div className="flex gap-3 mb-6 bg-background/30 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/30 transition-all">
-        <Input
-          value={newComment}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            !isLoading && setNewComment(e.target.value)
-          }
-          disabled={isLoading}
-          placeholder="Write a comment..."
-          className="h-10 text-xs font-bold bg-transparent border-none focus:ring-0 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em]"
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter" && !isLoading) handleAddComment();
-          }}
-        />
-        <Button
-          onClick={handleAddComment}
-          disabled={!newComment.trim() || isLoading}
-          variant="ghost"
-          className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group shrink-0"
-        >
-          <MessageSquare
-            size={16}
-            className="group-hover:rotate-12 transition-transform"
+        <div className="flex gap-3 mb-6 bg-background/30 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/30 transition-all">
+          <Input
+            value={newComment}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              !isLoading && setNewComment(e.target.value)
+            }
+            disabled={isLoading}
+            placeholder="Write a comment..."
+            className="h-10 text-xs font-bold bg-transparent border-none focus:ring-0 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em]"
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter" && !isLoading) handleAddComment();
+            }}
           />
-        </Button>
+          <Button
+            onClick={handleAddComment}
+            disabled={!newComment.trim() || isLoading}
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all group shrink-0"
+          >
+            <MessageSquare
+              size={16}
+              className="group-hover:rotate-12 transition-transform"
+            />
+          </Button>
+        </div>
       </div>
 
-      <div className="space-y-10 pr-4">
-        {activityLog.length > 0 ? (
-          activityLog.map((event) => (
-            <div key={event.id} className="relative flex gap-6 group">
-              <div className="absolute left-[19px] top-10 bottom-[-28px] w-px bg-border/40 group-last:hidden" />
-              <div className="h-10 w-10 rounded-2xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm">
-                {getActivityIcon(event)}
+      {/* Activity log - Scrollable */}
+      <div className="flex-1 overflow-y-auto px-8 pb-8 min-h-0">
+        <div className="space-y-10 pr-4">
+          {activityLog.length > 0 ? (
+            activityLog.map((event) => (
+              <div key={event.id} className="relative flex gap-6 group">
+                <div className="absolute left-[19px] top-10 bottom-[-28px] w-px bg-border/40 group-last:hidden" />
+                <div className="h-10 w-10 rounded-2xl bg-card border border-border/60 flex items-center justify-center shrink-0 z-10 shadow-sm">
+                  {getActivityIcon(event)}
+                </div>
+                <div className="pt-2 min-w-0">
+                  <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
+                    {formatActivityEvent(event as TaskEvent)}
+                  </p>
+                  <MetadataText size="sm">
+                    {formatDistanceToNow(new Date(event.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </MetadataText>
+                </div>
               </div>
-              <div className="pt-2 min-w-0">
-                <p className="text-xs font-bold text-foreground/80 leading-snug mb-2">
-                  {formatActivityEvent(event as TaskEvent)}
-                </p>
-                <MetadataText size="sm">
-                  {formatDistanceToNow(new Date(event.createdAt), {
-                    addSuffix: true,
-                  })}
-                </MetadataText>
-              </div>
-            </div>
-          ))
-        ) : (
-          <EmptyState
-            variant="minimal"
-            title="No Activity"
-            className="py-12 opacity-30"
-          />
-        )}
+            ))
+          ) : (
+            <EmptyState
+              variant="minimal"
+              title="No Activity"
+              className="py-12 opacity-30"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
