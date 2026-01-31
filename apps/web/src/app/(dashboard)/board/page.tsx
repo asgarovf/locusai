@@ -1,6 +1,5 @@
 "use client";
 
-import { LayoutGrid, Map as MapIcon } from "lucide-react";
 import { Suspense } from "react";
 import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
 import {
@@ -9,7 +8,7 @@ import {
   FlowchartView,
   SprintMindmap,
 } from "@/components/board";
-import { Button, Spinner } from "@/components/ui";
+import { Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
 
 function BoardPageContent() {
@@ -54,6 +53,8 @@ function BoardPageContent() {
     onNewTask: () => setIsCreateModalOpen(true),
     isCompact,
     onToggleCompact: () => setIsCompact(!isCompact),
+    view,
+    onViewChange: setView,
   });
 
   return (
@@ -61,11 +62,11 @@ function BoardPageContent() {
       <PageLayout
         title={title}
         description={description}
-        actions={actions}
+        actions={<div id="board-header">{actions}</div>}
         contentClassName="flex flex-col"
       >
         {activeSprint != null && (
-          <div className="flex items-center justify-between gap-4 mb-6">
+          <div id="board-filters" className="w-full mb-4 sm:mb-6">
             <BoardFilter
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -74,36 +75,6 @@ function BoardPageContent() {
               roleFilter={roleFilter}
               onRoleChange={setRoleFilter}
             />
-
-            <div className="flex items-center bg-muted/50 p-1 rounded-lg border">
-              <Button
-                variant={view === "board" ? "secondary" : "ghost"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setView("board")}
-              >
-                <LayoutGrid className="w-4 h-4" />
-                Board
-              </Button>
-              <Button
-                variant={view === "mindmap" ? "secondary" : "ghost"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setView("mindmap")}
-              >
-                <MapIcon className="w-4 h-4" />
-                Mindmap
-              </Button>
-              <Button
-                variant={view === "canvas" ? "secondary" : "ghost"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setView("canvas")}
-              >
-                <LayoutGrid className="w-4 h-4 rotate-90" />
-                Canvas
-              </Button>
-            </div>
           </div>
         )}
 

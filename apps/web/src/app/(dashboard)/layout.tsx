@@ -1,10 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { Menu } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { Sidebar, TaskPanel, WorkspaceProtected } from "@/components";
-import { LoadingPage, LoadingSkeleton } from "@/components/ui";
+import { Suspense, useState } from "react";
+import { BottomNav, Sidebar, TaskPanel, WorkspaceProtected } from "@/components";
+import { Drawer, LoadingPage, LoadingSkeleton } from "@/components/ui";
 import { useDashboardLayout, useWorkspaceIdOptional } from "@/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceIdOptional();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const taskId = searchParams.get("taskId");
 
@@ -60,10 +62,27 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {isAuthenticated && <Sidebar />}
+      {/* Mobile Menu Button */}
+      {isAuthenticated && (
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="fixed top-4 left-4 z-30 lg:hidden bg-card border border-border rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shadow-md"
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
+      {/* Sidebar with Drawer wrapper */}
+      {isAuthenticated && (
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          <Sidebar onNavigate={() => setDrawerOpen(false)} />
+        </Drawer>
+      )}
+
       <main
         className={cn(
-          "flex-1 overflow-auto bg-background",
+          "flex-1 overflow-hidden bg-background",
           isChatPage ? "p-0" : "p-6"
         )}
       >
@@ -78,6 +97,9 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
           onDeleted={handleTaskDelete}
         />
       )}
+
+      {/* Bottom Navigation - Mobile Only */}
+      {isAuthenticated && <BottomNav />}
     </div>
   );
 }

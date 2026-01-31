@@ -12,6 +12,7 @@ import {
 } from "@/components/chat/types";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { getChatSessionKey } from "@/lib/local-storage-keys";
 import { useChatStore } from "@/stores/chat-store";
 import { useLocalStorage } from "./useLocalStorage";
 import { useWorkspaceId } from "./useWorkspaceId";
@@ -39,7 +40,7 @@ export function useChat() {
   } = useChatStore();
 
   const [localActiveSessionId, setLocalActiveSessionId] =
-    useLocalStorage<string>(`locus-active-chat-session-${workspaceId}`, "");
+    useLocalStorage<string>(getChatSessionKey(workspaceId), "");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const tempSessionIdRef = useRef<string | null>(null);

@@ -1,6 +1,7 @@
 export * from "./AuthLayoutUI";
 export * from "./BoardFilter";
 export * from "./BoardFilter";
+export * from "./BottomNav";
 export * from "./Header";
 export * from "./PageLayout";
 export * from "./PropertyItem";
@@ -12,3 +13,4 @@ export * from "./TaskPanel";
 export * from "./typography";
 export * from "./typography-scales";
 export * from "./WorkspaceProtected";
+export * from "./onboarding";

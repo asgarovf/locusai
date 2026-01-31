@@ -9,7 +9,10 @@
 
 import { type Sprint, type Task } from "@locusai/shared";
 import { motion } from "framer-motion";
-import { Archive } from "lucide-react";
+import { Archive, ChevronsDown, ChevronsUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { getStorageItem, setStorageItem } from "@/lib/local-storage";
 import { BacklogSection } from "./BacklogSection";
 import { CompletedSprintItem } from "./CompletedSprintItem";
 
@@ -39,6 +42,15 @@ export function CompletedSprintsSection({
   onToggleSprint,
   onTaskClick,
 }: CompletedSprintsSectionProps) {
+  const [expandAll, setExpandAll] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return getStorageItem(STORAGE_KEYS.EXPAND_COMPLETED_SPRINTS) === "true";
+  });
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.EXPAND_COMPLETED_SPRINTS, expandAll.toString());
+  }, [expandAll]);
+
   if (sprints.length === 0) return null;
 
   return (
@@ -57,21 +69,43 @@ export function CompletedSprintsSection({
         isExpanded={isExpanded}
         onToggle={onToggle}
         accentColor="green"
+        actions={
+          <button
+            onClick={() => setExpandAll(!expandAll)}
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-md transition-colors"
+            title={expandAll ? "Collapse All" : "Expand All"}
+          >
+            {expandAll ? (
+              <>
+                <ChevronsUp size={14} />
+                <span className="hidden sm:inline">Collapse All</span>
+              </>
+            ) : (
+              <>
+                <ChevronsDown size={14} />
+                <span className="hidden sm:inline">Expand All</span>
+              </>
+            )}
+          </button>
+        }
       >
         <div className="space-y-2 mt-2">
-          {sprints.map((sprint) => (
-            <CompletedSprintItem
-              key={sprint.id}
-              name={sprint.name}
-              taskCount={getSprintTasks(sprint.id).length}
-              tasks={getSprintTasks(sprint.id)}
-              isExpanded={collapsedSections.has(
-                `completed-sprint-${sprint.id}`
-              )}
-              onToggle={() => onToggleSprint(`completed-sprint-${sprint.id}`)}
-              onTaskClick={onTaskClick}
-            />
-          ))}
+          {sprints.map((sprint) => {
+            const sprintKey = `completed-sprint-${sprint.id}`;
+            const isIndividuallyExpanded = collapsedSections.has(sprintKey);
+
+            return (
+              <CompletedSprintItem
+                key={sprint.id}
+                name={sprint.name}
+                taskCount={getSprintTasks(sprint.id).length}
+                tasks={getSprintTasks(sprint.id)}
+                isExpanded={expandAll || isIndividuallyExpanded}
+                onToggle={() => onToggleSprint(sprintKey)}
+                onTaskClick={onTaskClick}
+              />
+            );
+          })}
         </div>
       </BacklogSection>
     </motion.div>

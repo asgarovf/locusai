@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getStorageJSON, setStorageJSON } from "@/lib/local-storage";
 
 export function useLocalStorage<T>(
   key: string,
@@ -8,13 +9,7 @@ export function useLocalStorage<T>(
     if (typeof window === "undefined") {
       return initialValue;
     }
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.warn("Error reading localStorage key:", key, error);
-      return initialValue;
-    }
+    return getStorageJSON<T>(key, initialValue);
   });
 
   const setValue = (value: T | ((val: T) => T)) => {
@@ -23,7 +18,7 @@ export function useLocalStorage<T>(
         value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        setStorageJSON(key, valueToStore);
       }
     } catch (error) {
       console.warn("Error setting localStorage key:", key, error);

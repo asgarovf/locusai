@@ -35,7 +35,7 @@ interface TaskPropertiesProps {
  * - Assignee role selection
  * - Priority level
  * - Due date picker
- * - Operator/assignee field
+ * - Assignee field
  *
  * @component
  */
@@ -51,11 +51,11 @@ export function TaskProperties({
   return (
     <div className="mb-10">
       <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
-        Mission Specs
+        Task Properties
       </SectionLabel>
       <div className="space-y-3">
         <PropertyItem
-          label="State"
+          label="Status"
           value={task.status}
           onEdit={(newValue: string) =>
             onUpdate({ status: newValue as TaskStatus })
@@ -63,6 +63,7 @@ export function TaskProperties({
           options={Object.values(TaskStatus)}
           type="dropdown"
           disabled={isLoading}
+          tooltip="Current state of the task in its lifecycle"
         />
         <PropertyItem
           label="Role"
@@ -75,6 +76,7 @@ export function TaskProperties({
           options={Object.values(AssigneeRole)}
           type="dropdown"
           disabled={isLoading}
+          tooltip="Team member role responsible for this task"
         />
         <PropertyItem
           label="Priority"
@@ -85,6 +87,7 @@ export function TaskProperties({
           options={Object.values(TaskPriority)}
           type="dropdown"
           disabled={isLoading}
+          tooltip="Urgency level for task completion"
         />
         <PropertyItem
           label="Deadline"
@@ -94,16 +97,18 @@ export function TaskProperties({
           }
           type="date"
           disabled={isLoading}
+          tooltip="Target completion date for the task"
         />
         <PropertyItem
-          label="Operator"
+          label="Assignee"
           value={task.assignedTo || "Available"}
           onEdit={(newValue: string) =>
             onUpdate({ assignedTo: newValue || null })
           }
           type="text"
           disabled={isLoading}
-          placeholder="Enter operator name or ID"
+          placeholder="Enter assignee name or ID"
+          tooltip="Team member responsible for implementing this task"
         />
       </div>
     </div>

@@ -1,0 +1,250 @@
+/**
+ * Custom Driver.js Theme for Locus
+ * Matches the Locus design system with glassmorphism, dark theme, and accent colors
+ */
+
+/* Override default driver.js styles with Locus branding - IMPROVED visibility */
+.driver-popover {
+  background: rgba(12, 13, 18, 0.98) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 0.75rem !important;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.4),
+    0 10px 10px -5px rgb(0 0 0 / 0.3),
+    0 0 40px rgba(56, 189, 248, 0.2) !important;
+  color: #fafafa !important;
+  max-width: 360px !important;
+  padding: 0 !important;
+  animation: driverFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  z-index: 10001 !important;
+}
+
+@keyframes driverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Popover header/title */
+.driver-popover-title {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  padding: 1rem 1.25rem !important;
+  margin: 0 !important;
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+/* Popover description */
+.driver-popover-description {
+  color: var(--muted-foreground) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+  padding: 1rem 1.25rem !important;
+  margin: 0 !important;
+}
+
+/* Progress text */
+.driver-popover-progress-text {
+  color: var(--muted-foreground) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.75rem 1.25rem 0 !important;
+}
+
+/* Footer with buttons */
+.driver-popover-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--border) !important;
+  padding: 1rem 1.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+}
+
+/* Button group */
+.driver-popover-navigation-btns {
+  display: flex !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+}
+
+/* Base button styles - IMPROVED alignment with Locus design system */
+.driver-popover-btn {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.5rem !important;
+  color: var(--foreground) !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.625rem 1.25rem !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+.driver-popover-btn:hover {
+  background: var(--secondary) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.driver-popover-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Next/Primary button - IMPROVED to match BUTTON_VARIANTS.primary exactly */
+.driver-popover-next-btn {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1) !important;
+}
+
+.driver-popover-next-btn:hover {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2) !important;
+}
+
+/* Previous button - IMPROVED to match BUTTON_VARIANTS.outline exactly */
+.driver-popover-prev-btn {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  font-weight: 500 !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Close button - IMPROVED to match BUTTON_VARIANTS.ghost */
+.driver-popover-close-btn {
+  position: absolute !important;
+  top: 0.875rem !important;
+  right: 0.875rem !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--muted-foreground) !important;
+  cursor: pointer !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  padding: 0.25rem !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.25rem !important;
+  opacity: 0.7 !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: var(--foreground) !important;
+  background: var(--secondary) !important;
+  opacity: 1 !important;
+}
+
+/* Highlighted element overlay - MINIMAL styling for clear visibility */
+.driver-active-element {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  position: relative !important;
+  z-index: 10000 !important;
+  border: none !important;
+}
+
+/* Stage/overlay background - MINIMAL for better focused element visibility */
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.02) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation: driverOverlayFadeIn 0.3s ease-out !important;
+}
+
+@keyframes driverOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Arrow pointing to highlighted element */
+.driver-popover-arrow {
+  border-color: rgba(12, 13, 18, 0.95) !important;
+}
+
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: rgba(12, 13, 18, 0.95) !important;
+}
+
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: rgba(12, 13, 18, 0.95) !important;
+}
+
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: rgba(12, 13, 18, 0.95) !important;
+}
+
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: rgba(12, 13, 18, 0.95) !important;
+}
+
+/* Disable button state */
+.driver-popover-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.driver-popover-btn:disabled:hover {
+  transform: none !important;
+  background: transparent !important;
+}
+
+/* Progress bar (if using showProgress) */
+.driver-popover-progress {
+  background: rgba(255, 255, 255, 0.05) !important;
+  height: 3px !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  margin: 0.75rem 1.25rem 0 !important;
+}
+
+.driver-popover-progress-bar {
+  background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 100%) !important;
+  height: 100% !important;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: calc(100vw - 2rem) !important;
+  }
+}

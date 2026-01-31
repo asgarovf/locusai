@@ -6,7 +6,7 @@
 
 "use client";
 
-import { type Sprint, SprintStatus } from "@locusai/shared";
+import { type Sprint, type Task, SprintStatus } from "@locusai/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
@@ -23,6 +23,7 @@ export interface BacklogActionsHandlers {
   handleStartSprint: (sprintId: string) => Promise<void>;
   handleCompleteSprint: (sprintId: string) => Promise<void>;
   handleDeleteTask: (taskId: string) => Promise<void>;
+  handleBulkMoveToSprint: (taskIds: string[], sprintId: string) => Promise<void>;
 }
 
 interface BacklogActionsOptions {
@@ -30,6 +31,7 @@ interface BacklogActionsOptions {
   onSprintStarted?: () => void;
   onSprintCompleted?: () => void;
   onTaskDeleted?: () => void;
+  onBulkMoved?: () => void;
 }
 
 /**
@@ -134,11 +136,56 @@ export function useBacklogActions(
     }
   };
 
+  const handleBulkMoveToSprint = async (taskIds: string[], sprintId: string) => {
+    try {
+      setIsSubmitting(true);
+
+      // Optimistic update
+      const tasksKey = queryKeys.tasks.list(workspaceId);
+      const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
+
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(tasksKey, (old) => {
+          if (!old) return old;
+          return old.map((task) =>
+            taskIds.includes(task.id) ? { ...task, sprintId } : task
+          );
+        });
+      }
+
+      // Execute all updates in parallel
+      await Promise.all(
+        taskIds.map((taskId) =>
+          locusClient.tasks.update(taskId, workspaceId, { sprintId })
+        )
+      );
+
+      notifications.success(
+        `${taskIds.length} task${taskIds.length > 1 ? "s" : ""} moved to sprint`
+      );
+      options.onBulkMoved?.();
+
+      // Full sync
+      queryClient.invalidateQueries({ queryKey: tasksKey });
+    } catch (error) {
+      notifications.error(
+        error instanceof Error ? error.message : "Failed to move tasks"
+      );
+      // Rollback on error
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.list(workspaceId),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     isSubmitting,
     handleCreateSprint,
     handleStartSprint,
     handleCompleteSprint,
     handleDeleteTask,
+    handleBulkMoveToSprint,
   };
 }

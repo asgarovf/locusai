@@ -41,6 +41,10 @@ interface TaskCardProps {
   isDragging?: boolean;
   /** Display variant (card or list) */
   variant?: "card" | "list";
+  /** Whether task is selected for bulk operations */
+  selected?: boolean;
+  /** Called when task selection is toggled */
+  onSelect?: () => void;
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
@@ -56,6 +60,8 @@ export function TaskCard({
   onDelete,
   isDragging,
   variant = "card",
+  selected = false,
+  onSelect,
 }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -76,50 +82,89 @@ export function TaskCard({
     return (
       <div
         className={cn(
-          "group relative glass border-b-0 last:border-b border-border/10 rounded-none first:rounded-t-xl last:rounded-b-xl overflow-hidden transition-all duration-200 cursor-pointer flex items-center h-14 px-4 gap-4 hover:bg-secondary/30",
-          isDragging && "opacity-50 scale-[0.98] shadow-lg rounded-xl border"
+          "group relative glass border-b-0 last:border-b border-border/10 rounded-none first:rounded-t-xl last:rounded-b-xl overflow-hidden transition-all duration-200 cursor-pointer flex items-center h-12 px-3 gap-2.5 hover:bg-secondary/30",
+          isDragging && "opacity-50 scale-[0.98] shadow-lg rounded-xl border",
+          selected && "bg-primary/10 border-primary/30 hover:bg-primary/15"
         )}
         onClick={onClick}
       >
         {/* Priority Indicator Line */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80 group-hover:opacity-100 transition-opacity"
+          className="absolute left-0 top-0 bottom-0 w-[3px] opacity-80 group-hover:opacity-100 transition-opacity"
           style={{ backgroundColor: PRIORITY_COLORS[priority] }}
         />
 
-        {/* Priority Badge */}
-        <div className="flex items-center justify-center w-6 shrink-0">
+        {/* Selection Checkbox */}
+        {onSelect && (
           <div
-            className="w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-background group-hover:ring-transparent transition-all"
+            className="flex items-center justify-center w-4 h-4 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+          >
+            <div
+              className={cn(
+                "w-4 h-4 rounded border-2 transition-all cursor-pointer flex items-center justify-center",
+                selected
+                  ? "bg-primary border-primary"
+                  : "border-muted-foreground/30 hover:border-primary/50"
+              )}
+            >
+              {selected && (
+                <svg
+                  viewBox="0 0 12 12"
+                  className="w-2.5 h-2.5 text-primary-foreground stroke-current"
+                  fill="none"
+                  strokeWidth={2.5}
+                >
+                  <title>Selected</title>
+                  <path d="M2 6 L5 9 L10 3" />
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Priority Badge */}
+        <div className="flex items-center justify-center w-5 shrink-0">
+          <div
+            className="w-2 h-2 rounded-full shadow-sm ring-2 ring-background group-hover:ring-transparent transition-all"
             style={{
               backgroundColor: PRIORITY_COLORS[priority],
-              boxShadow: `0 0 10px ${PRIORITY_COLORS[priority]}60`,
+              boxShadow: `0 0 8px ${PRIORITY_COLORS[priority]}50`,
             }}
           />
         </div>
 
-        {/* Title */}
-        <div className="flex-1 min-w-0 pr-4">
-          <h4 className="text-[14px] font-medium text-foreground/90 truncate tracking-tight group-hover:text-foreground transition-colors">
+        {/* Title - More space for text */}
+        <div className="flex-1 min-w-0">
+          <h4 className="text-[13px] font-medium text-foreground/90 truncate tracking-tight group-hover:text-foreground transition-colors">
             {task.title}
           </h4>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground/50 font-mono">
-              #{task.id.slice(-4)}
-            </span>
-            {task.labels?.map((label, i) => (
+        </div>
+
+        {/* Labels - Compact display */}
+        {task.labels && task.labels.length > 0 && (
+          <div className="hidden md:flex items-center gap-1 shrink-0">
+            {task.labels.slice(0, 2).map((label, i) => (
               <span
                 key={i}
-                className="text-[10px] bg-secondary/70 text-secondary-foreground/70 px-1.5 rounded-[3px] border border-border/20"
+                className="text-[9px] bg-secondary/70 text-secondary-foreground/70 px-1.5 py-0.5 rounded-[3px] border border-border/20"
               >
                 {label}
               </span>
             ))}
+            {task.labels.length > 2 && (
+              <span className="text-[9px] text-muted-foreground/50">
+                +{task.labels.length - 2}
+              </span>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Metadata section - Right Aligned */}
-        <div className="flex items-center gap-5 text-muted-foreground/70 shrink-0">
+        <div className="flex items-center gap-3 text-muted-foreground/70 shrink-0">
           {/* Stats / Checklist */}
           {task.acceptanceChecklist?.length > 0 && (
             <div
@@ -157,35 +202,6 @@ export function TaskCard({
               </span>
             )}
           </div>
-
-          {/* Date with Icon */}
-          <div className="flex items-center gap-1.5 text-[11px] font-medium min-w-[70px] justify-end group-hover:text-foreground/80 transition-colors">
-            <Calendar size={12} className="opacity-70" />
-            <span>
-              {new Date(task.createdAt).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-
-          {/* Actions - Always visible on hover but subtle otherwise */}
-          {onDelete && (
-            <div
-              className="flex items-center pl-2 border-l border-border/10"
-              ref={menuRef}
-            >
-              <button
-                className="p-2 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all active:scale-95"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Delete task?")) onDelete(task.id);
-                }}
-              >
-                <Trash2 size={15} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -195,10 +211,43 @@ export function TaskCard({
     <div
       className={cn(
         "group relative bg-card border rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-muted-foreground/20 cursor-pointer",
-        isDragging && "opacity-50 scale-95 rotate-1 shadow-lg"
+        isDragging && "opacity-50 scale-95 rotate-1 shadow-lg",
+        selected && "ring-2 ring-primary/50 border-primary/50"
       )}
       onClick={onClick}
     >
+      {/* Selection Checkbox - Top Right */}
+      {onSelect && (
+        <div
+          className="absolute top-2 left-2 z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
+        >
+          <div
+            className={cn(
+              "w-5 h-5 rounded border-2 transition-all cursor-pointer flex items-center justify-center",
+              selected
+                ? "bg-primary border-primary"
+                : "border-muted-foreground/30 hover:border-primary/50 opacity-0 group-hover:opacity-100"
+            )}
+          >
+            {selected && (
+              <svg
+                viewBox="0 0 12 12"
+                className="w-3 h-3 text-primary-foreground stroke-current"
+                fill="none"
+                strokeWidth={2.5}
+              >
+                <title>Selected</title>
+                <path d="M2 6 L5 9 L10 3" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="p-3.5">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-2">

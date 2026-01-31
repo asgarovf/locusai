@@ -5,6 +5,8 @@ import { Suspense, useEffect, useRef } from "react";
 import { LoadingPage, showToast } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { locusClient } from "@/lib/api-client";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { setStorageItem } from "@/lib/local-storage";
 
 function CallbackHandler() {
   const router = useRouter();
@@ -22,7 +24,7 @@ function CallbackHandler() {
       if (token) {
         try {
           // Temporarily set the token to fetch user info
-          localStorage.setItem("locus_token", token);
+          setStorageItem(STORAGE_KEYS.AUTH_TOKEN, token);
           locusClient.setToken(token);
 
           const userData = await locusClient.auth.getProfile();

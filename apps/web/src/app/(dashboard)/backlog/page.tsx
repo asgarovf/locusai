@@ -41,6 +41,7 @@ function BacklogContent() {
     handleCompleteSprint,
     handleDeleteSprint,
     handleDeleteTask,
+    handleBulkMoveToSprint,
     refetchTasks,
   } = useBacklog();
 
@@ -136,6 +137,9 @@ function BacklogContent() {
               onToggle={() => toggleSection("backlog")}
               onTaskClick={setSelectedTaskId}
               onTaskDelete={handleDeleteTask}
+              onBulkMoveToSprint={handleBulkMoveToSprint}
+              sprints={[...plannedSprints, ...(activeSprint ? [activeSprint] : [])]}
+              onNewTask={() => setIsTaskModalOpen(true)}
             />
 
             {/* 4. Completed Sprints */}

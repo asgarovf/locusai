@@ -65,6 +65,7 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
+  placeholder?: string;
 }
 
 const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
@@ -192,7 +193,7 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
   );
 };
 
-export function Editor({ value, onChange, readOnly = false }: EditorProps) {
+export function Editor({ value, onChange, readOnly = false, placeholder = "Initialize content flow..." }: EditorProps) {
   // useRef for debouncing to avoid re-creating the debounce function on every render
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastEmittedValue = useRef<string>(value);
@@ -220,7 +221,7 @@ export function Editor({ value, onChange, readOnly = false }: EditorProps) {
         codeBlock: false,
       }),
       Placeholder.configure({
-        placeholder: "Initialize content flow...",
+        placeholder,
       }),
       Markdown.configure({
         html: true,
@@ -248,7 +249,7 @@ export function Editor({ value, onChange, readOnly = false }: EditorProps) {
       TextStyle,
       Color,
     ],
-    []
+    [placeholder]
   );
 
   // Memoize editor props

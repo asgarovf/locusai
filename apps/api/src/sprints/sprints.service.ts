@@ -1,4 +1,4 @@
-import { EventType, SprintStatus } from "@locusai/shared";
+import { EventType, SprintStatus, TaskStatus } from "@locusai/shared";
 import {
   forwardRef,
   Inject,
@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AiService } from "@/ai/ai.service";
-import { Task } from "@/entities";
+import { Event, Task } from "@/entities";
 import { Sprint } from "@/entities/sprint.entity";
 import { EventsService } from "@/events/events.service";
 import { TasksService } from "@/tasks/tasks.service";
@@ -145,17 +145,74 @@ export class SprintsService {
     sprint.endDate = sprint.endDate || new Date();
     const saved = await this.sprintRepository.save(sprint);
 
-    await this.eventsService.logEvent({
-      workspaceId: saved.workspaceId,
-      userId,
-      type: EventType.SPRINT_STATUS_CHANGED,
-      payload: {
-        name: saved.name,
-        sprintId: id,
-        oldStatus,
-        newStatus: SprintStatus.COMPLETED,
-      },
+    // Fetch all tasks in this sprint
+    const tasks = await this.sprintRepository.manager.getRepository(Task).find({
+      where: { sprintId: id },
     });
+
+    // Prepare bulk updates
+    const tasksToUpdate: Task[] = [];
+    const eventPromises: Promise<Event>[] = [];
+
+    // Process each task and collect updates
+    for (const task of tasks) {
+      const oldTaskStatus = task.status;
+      let taskUpdated = false;
+
+      if (task.status === TaskStatus.VERIFICATION) {
+        // Auto-approve tasks in verification
+        task.status = TaskStatus.DONE;
+        taskUpdated = true;
+      } else if (task.status === TaskStatus.IN_PROGRESS) {
+        // Move in-progress tasks to backlog and unassign
+        task.status = TaskStatus.BACKLOG;
+        task.sprintId = null;
+        task.assignedTo = null;
+        taskUpdated = true;
+      }
+
+      if (taskUpdated) {
+        tasksToUpdate.push(task);
+
+        // Prepare event logging (to be executed in parallel later)
+        eventPromises.push(
+          this.eventsService.logEvent({
+            workspaceId: saved.workspaceId,
+            taskId: task.id,
+            userId,
+            type: EventType.STATUS_CHANGED,
+            payload: {
+              title: task.title,
+              oldStatus: oldTaskStatus,
+              newStatus: task.status,
+              reason: "Sprint completed",
+            },
+          })
+        );
+      }
+    }
+
+    // Execute bulk operations in parallel
+    await Promise.all([
+      // Bulk save all updated tasks in a single operation
+      tasksToUpdate.length > 0
+        ? this.sprintRepository.manager.getRepository(Task).save(tasksToUpdate)
+        : Promise.resolve(),
+      // Log all events in parallel
+      ...eventPromises,
+      // Log sprint status change event
+      this.eventsService.logEvent({
+        workspaceId: saved.workspaceId,
+        userId,
+        type: EventType.SPRINT_STATUS_CHANGED,
+        payload: {
+          name: saved.name,
+          sprintId: id,
+          oldStatus,
+          newStatus: SprintStatus.COMPLETED,
+        },
+      }),
+    ]);
 
     return saved;
   }

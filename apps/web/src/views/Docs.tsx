@@ -72,7 +72,7 @@ export function Docs() {
 
   return (
     <PageLayout
-      title="Library"
+      title="Documentation"
       description={headerStats}
       actions={headerActions}
       contentClassName="p-0 flex h-full gap-6 overflow-hidden pt-2 pb-6"

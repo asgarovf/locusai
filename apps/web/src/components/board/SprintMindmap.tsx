@@ -53,13 +53,6 @@ export function SprintMindmap({ mindmap }: SprintMindmapProps) {
           </div>
         </div>
       </div>
-
-      {/* Floating Badge */}
-      <div className="absolute top-6 right-6 z-20">
-        <div className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[10px] font-bold tracking-widest text-indigo-400 uppercase backdrop-blur-sm">
-          Agent Strategy Core
-        </div>
-      </div>
     </motion.div>
   );
 }

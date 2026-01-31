@@ -123,9 +123,9 @@ export function ChatInput({
   };
 
   return (
-    <div className="p-4 md:p-6 bg-linear-to-t from-background via-background to-transparent">
-      <div className="max-w-3xl mx-auto">
-        <div className="relative flex items-end gap-2 p-2 bg-card border border-border/60 rounded-xl shadow-lg focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
+    <div className="p-4 md:p-6 pb-20 lg:pb-6 bg-linear-to-t from-background via-background to-transparent">
+      <div className="max-w-3xl mx-auto w-full">
+        <div className="relative flex items-end gap-2 p-2 bg-card border border-border/60 rounded-xl shadow-lg focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all w-full">
           <textarea
             ref={textareaRef}
             value={inputValue}

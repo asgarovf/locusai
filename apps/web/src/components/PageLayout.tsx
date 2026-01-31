@@ -45,8 +45,8 @@ export function PageLayout({
   return (
     <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       <div className="flex-none pb-2">
-        <div className="flex items-center justify-between mb-2">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-2">
+          <div className="flex-1 min-w-0">
             <h1 className={cn(getTypographyClass("h1"), "text-foreground/90")}>
               {title}
             </h1>
@@ -56,11 +56,11 @@ export function PageLayout({
               </div>
             )}
           </div>
-          {actions && <div className="flex items-center gap-3">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">{actions}</div>}
         </div>
       </div>
       <div
-        className={cn("flex-1 overflow-y-auto pb-12 mt-4", contentClassName)}
+        className={cn("flex-1 overflow-y-auto pb-20 lg:pb-12 mt-4", contentClassName)}
       >
         {children}
       </div>

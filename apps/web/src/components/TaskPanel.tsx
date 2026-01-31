@@ -25,8 +25,11 @@
 
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { PanelLeftClose, PanelRight, FileText, CheckSquare, BookOpen, Activity } from "lucide-react";
 import { useTaskPanel } from "@/hooks/useTaskPanel";
+import { useGlobalKeydowns } from "@/hooks";
 import {
   TaskActivity,
   TaskChecklist,
@@ -66,6 +69,8 @@ export function TaskPanel({
     setShowRejectModal,
     rejectReason,
     setRejectReason,
+    sidebarOpen,
+    setSidebarOpen,
     checklistProgress,
     handleUpdateTask,
     handleDelete,
@@ -78,6 +83,19 @@ export function TaskPanel({
     handleLinkDoc,
     handleUnlinkDoc,
   } = useTaskPanel({ taskId, onUpdated, onDeleted, onClose });
+
+  useGlobalKeydowns({
+    onToggleSidebar: () => setSidebarOpen((prev) => !prev),
+  });
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'checklist' | 'docs' | 'activity'>('overview');
+
+  const tabs = [
+    { id: 'overview' as const, label: 'Overview', icon: FileText },
+    { id: 'checklist' as const, label: 'Checklist', icon: CheckSquare },
+    { id: 'docs' as const, label: 'Documents', icon: BookOpen },
+    { id: 'activity' as const, label: 'Activity', icon: Activity },
+  ];
 
   return (
     <>
@@ -117,45 +135,103 @@ export function TaskPanel({
               onReject={() => setShowRejectModal(true)}
             />
 
-            <div className="flex-1 grid grid-cols-[1fr_360px] overflow-hidden min-h-0">
-              <div className="flex flex-col overflow-y-auto scrollbar-thin">
-                <TaskDescription
-                  task={task}
-                  isLoading={isLoading}
-                  onUpdate={handleUpdateTask}
-                />
+            <div className="flex-1 overflow-hidden min-h-0">
+              <div className="w-full max-w-7xl mx-auto px-4 lg:px-6 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 h-full">
+                  {/* Main content */}
+                  <div className="min-w-0 flex flex-col overflow-y-auto scrollbar-thin">
+                    {/* Tab navigation */}
+                    <div className="flex border-b border-border mb-4 sticky top-0 bg-background z-10">
+                      {tabs.map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`
+                            flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all
+                            ${activeTab === tab.id
+                              ? 'border-b-2 border-primary text-primary'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}
+                          `}
+                        >
+                          <tab.icon className="w-4 h-4" />
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
 
-                <TaskChecklist
-                  task={task}
-                  isLoading={isLoading}
-                  checklistProgress={checklistProgress}
-                  newChecklistItem={newChecklistItem}
-                  setNewChecklistItem={setNewChecklistItem}
-                  handleAddChecklistItem={handleAddChecklistItem}
-                  handleToggleChecklistItem={handleToggleChecklistItem}
-                  handleRemoveChecklistItem={handleRemoveChecklistItem}
-                />
-              </div>
+                    {/* Tab content */}
+                    {activeTab === 'overview' && (
+                      <TaskDescription
+                        task={task}
+                        isLoading={isLoading}
+                        onUpdate={handleUpdateTask}
+                      />
+                    )}
+                    {activeTab === 'checklist' && (
+                      <TaskChecklist
+                        task={task}
+                        isLoading={isLoading}
+                        checklistProgress={checklistProgress}
+                        newChecklistItem={newChecklistItem}
+                        setNewChecklistItem={setNewChecklistItem}
+                        handleAddChecklistItem={handleAddChecklistItem}
+                        handleToggleChecklistItem={handleToggleChecklistItem}
+                        handleRemoveChecklistItem={handleRemoveChecklistItem}
+                      />
+                    )}
+                    {activeTab === 'docs' && (
+                      <TaskDocs
+                        task={task}
+                        onLinkDoc={handleLinkDoc}
+                        onUnlinkDoc={handleUnlinkDoc}
+                      />
+                    )}
+                    {activeTab === 'activity' && (
+                      <TaskActivity
+                        task={task}
+                        isLoading={isLoading}
+                        newComment={newComment}
+                        setNewComment={setNewComment}
+                        handleAddComment={handleAddComment}
+                      />
+                    )}
+                  </div>
 
-              <div className="flex flex-col border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
-                  <TaskProperties
-                    task={task}
-                    isLoading={isLoading}
-                    onUpdate={handleUpdateTask}
-                  />
-                  <TaskDocs
-                    task={task}
-                    onLinkDoc={handleLinkDoc}
-                    onUnlinkDoc={handleUnlinkDoc}
-                  />
-                  <TaskActivity
-                    task={task}
-                    isLoading={isLoading}
-                    newComment={newComment}
-                    setNewComment={setNewComment}
-                    handleAddComment={handleAddComment}
-                  />
+                  {/* Toggle button (mobile) */}
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="lg:hidden fixed bottom-6 right-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all z-10"
+                    aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                  >
+                    {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelRight size={20} />}
+                  </button>
+
+                  {/* Sidebar */}
+                  <aside className={`
+                    fixed lg:static top-0 right-0 h-full lg:h-auto
+                    bg-background lg:bg-transparent
+                    ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                    transition-transform duration-300 ease-in-out
+                    lg:sticky lg:top-4 lg:h-fit flex flex-col border-l border-border bg-secondary/10 backdrop-blur-3xl shadow-[inset_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden
+                    z-[960]
+                  `}>
+                    {/* Toggle button (desktop) */}
+                    <button
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      className="hidden lg:flex absolute top-4 -left-10 p-2 bg-secondary/50 hover:bg-secondary rounded-lg transition-colors"
+                      aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                    >
+                      {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelRight size={16} />}
+                    </button>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
+                      <TaskProperties
+                        task={task}
+                        isLoading={isLoading}
+                        onUpdate={handleUpdateTask}
+                      />
+                    </div>
+                  </aside>
                 </div>
               </div>
             </div>
@@ -172,10 +248,10 @@ export function TaskPanel({
             className="bg-card border border-border/40 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl shadow-black"
           >
             <h3 className="text-xl font-black uppercase tracking-widest text-destructive mb-4">
-              Reject Mission
+              Reject Task
             </h3>
             <p className="text-sm text-muted-foreground/80 mb-6 font-medium leading-relaxed">
-              This task will be demoted to IN_PROGRESS. Assigned operators will
+              This task will be demoted to IN_PROGRESS. Assigned assignees will
               receive your feedback for recalibration.
             </p>
             <Textarea

@@ -1,11 +1,11 @@
 import { LocusClient, LocusEvent } from "@locusai/sdk";
 import { config } from "./config";
-
-const tokenKey = "locus_token";
+import { STORAGE_KEYS } from "./local-storage-keys";
+import { getStorageItem, setStorageItem, removeStorageItem } from "./local-storage";
 
 // Get initial token from localStorage if available
 const initialToken =
-  typeof window !== "undefined" ? localStorage.getItem(tokenKey) : null;
+  typeof window !== "undefined" ? getStorageItem(STORAGE_KEYS.AUTH_TOKEN) : null;
 
 export const locusClient = new LocusClient({
   baseUrl: config.NEXT_PUBLIC_API_URL,
@@ -15,7 +15,7 @@ export const locusClient = new LocusClient({
 // Setup event listeners for the web app
 if (typeof window !== "undefined") {
   locusClient.emitter.on(LocusEvent.TOKEN_EXPIRED, () => {
-    localStorage.removeItem(tokenKey);
+    removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
     // Only redirect if not already on login/register/invite pages
     if (!window.location.pathname.match(/\/(login|register|invite)/)) {
       window.location.href = "/login";
@@ -36,10 +36,10 @@ if (typeof window !== "undefined") {
  */
 export const setClientToken = (token: string | null) => {
   if (token) {
-    localStorage.setItem(tokenKey, token);
+    setStorageItem(STORAGE_KEYS.AUTH_TOKEN, token);
     locusClient.setToken(token);
   } else {
-    localStorage.removeItem(tokenKey);
+    removeStorageItem(STORAGE_KEYS.AUTH_TOKEN);
     locusClient.setToken(null);
   }
 };

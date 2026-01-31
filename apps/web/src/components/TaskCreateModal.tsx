@@ -17,10 +17,11 @@
 "use client";
 
 import { AssigneeRole, TaskPriority, TaskStatus } from "@locusai/shared";
-import { Plus, X } from "lucide-react";
+import { HelpCircle, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { CreateModal } from "@/components/CreateModal";
-import { Button, Dropdown, Input, Textarea } from "@/components/ui";
+import { Editor } from "@/components/Editor";
+import { Button, Dropdown, Input, Tooltip } from "@/components/ui";
 import { useWorkspaceId } from "@/hooks";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { locusClient } from "@/lib/api-client";
@@ -30,6 +31,7 @@ import {
   getStatusOptions,
 } from "@/lib/options";
 import { queryKeys } from "@/lib/query-keys";
+import { TASK_TEMPLATES, TaskTemplate } from "@/lib/task-templates";
 
 interface TaskCreateModalProps {
   /** Whether modal is open */
@@ -62,6 +64,15 @@ export function TaskCreateModal({
   const [assigneeRole, setAssigneeRole] = useState<AssigneeRole | undefined>();
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
+
+  const applyTemplate = (templateKey: TaskTemplate) => {
+    const templateData = TASK_TEMPLATES[templateKey];
+    setDescription(templateData.description);
+    setPriority(templateData.priority as TaskPriority);
+    setStatus(templateData.status as TaskStatus);
+    setSelectedTemplate(templateKey);
+  };
 
   const createTaskMutation = useMutationWithToast({
     mutationFn: (data: Parameters<typeof locusClient.tasks.create>[1]) =>
@@ -83,6 +94,7 @@ export function TaskCreateModal({
     setAssigneeRole(undefined);
     setLabels([]);
     setLabelInput("");
+    setSelectedTemplate(null);
   };
 
   const handleAddLabel = () => {
@@ -170,72 +182,128 @@ export function TaskCreateModal({
 
   const dropdownsFieldComponent = (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Dropdown<TaskStatus>
-        label="Initial Status"
-        value={status}
-        onChange={setStatus}
-        options={getStatusOptions()}
-      />
-      <Dropdown<TaskPriority>
-        label="Priority Level"
-        value={priority}
-        onChange={setPriority}
-        options={getPriorityOptions()}
-      />
-      <Dropdown<AssigneeRole>
-        label="Primary Assignee"
-        value={assigneeRole}
-        onChange={setAssigneeRole}
-        options={getAssigneeOptions()}
-        placeholder="Unassigned"
-      />
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="text-sm font-medium">Initial Status</label>
+          <Tooltip content="Starting state for the new task">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        </div>
+        <Dropdown<TaskStatus>
+          value={status}
+          onChange={setStatus}
+          options={getStatusOptions()}
+        />
+      </div>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="text-sm font-medium">Priority Level</label>
+          <Tooltip content="Urgency level for task completion">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        </div>
+        <Dropdown<TaskPriority>
+          value={priority}
+          onChange={setPriority}
+          options={getPriorityOptions()}
+        />
+      </div>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="text-sm font-medium">Primary Assignee</label>
+          <Tooltip content="Team member role responsible for this task">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        </div>
+        <Dropdown<AssigneeRole>
+          value={assigneeRole}
+          onChange={setAssigneeRole}
+          options={getAssigneeOptions()}
+          placeholder="Unassigned"
+        />
+      </div>
     </div>
   );
+
+  const templateSelectorComponent = (
+    <div className="flex gap-2 flex-wrap">
+      {(Object.keys(TASK_TEMPLATES) as TaskTemplate[]).map((key) => (
+        <Button
+          key={key}
+          type="button"
+          onClick={() => applyTemplate(key)}
+          variant={selectedTemplate === key ? "primary" : "outline"}
+          size="sm"
+          className="text-xs"
+        >
+          {key.charAt(0).toUpperCase() + key.slice(1)}
+        </Button>
+      ))}
+    </div>
+  );
+
+
+  // Define all fields
+  const allFields = [
+    {
+      name: "templates",
+      label: "Templates",
+      component: templateSelectorComponent,
+    },
+    {
+      name: "title",
+      label: "Task Title",
+      component: (
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Implement authentication flow"
+          autoFocus
+          className="text-lg font-medium h-12"
+        />
+      ),
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      component: (
+        <div className="border border-border/40 rounded-2xl overflow-hidden bg-secondary/5">
+          <Editor
+            value={description}
+            onChange={setDescription}
+            readOnly={false}
+            placeholder="Define implementation architecture, requirements, and scope..."
+          />
+        </div>
+      ),
+    },
+    {
+      name: "properties",
+      label: "Task Properties",
+      component: dropdownsFieldComponent,
+    },
+    {
+      name: "labels",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Task Labels</span>
+          <Tooltip content="Tags for categorizing and filtering tasks">
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        </div>
+      ),
+      component: labelFieldComponent,
+    },
+  ];
 
   return (
     <CreateModal
       isOpen={isOpen}
       title="Create New Task"
-      size="lg"
-      fields={[
-        {
-          name: "title",
-          label: "Task Title",
-          component: (
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Implement authentication flow"
-              autoFocus
-              className="text-lg font-medium h-12"
-            />
-          ),
-          required: true,
-        },
-        {
-          name: "description",
-          label: "Description",
-          component: (
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide context for this task..."
-              rows={5}
-              className="resize-none"
-            />
-          ),
-        },
-        {
-          name: "properties",
-          label: "Task Properties",
-          component: dropdownsFieldComponent,
-        },
-        {
-          name: "labels",
-          label: "Task Labels",
-          component: labelFieldComponent,
-        },
-      ]}
+      size="responsive"
+      shortcutHint="Alt+N"
+      fields={allFields}
       onSubmit={handleSubmit}
       onClose={handleClose}
       submitText="Create Task"

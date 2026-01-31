@@ -13,9 +13,10 @@
  * - Keyboard shortcuts (Cmd+K for workspace switcher)
  * - Logout functionality
  * - Workspace-aware routing
+ * - Mobile drawer support
  *
  * @example
- * <Sidebar />
+ * <Sidebar onNavigate={() => setDrawerOpen(false)} />
  */
 
 "use client";
@@ -45,13 +46,59 @@ import { useState } from "react";
 import { Avatar } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { useGlobalKeydowns, useLocalStorage } from "@/hooks";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { locusClient } from "@/lib/api-client";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
 import { queryKeys } from "@/lib/query-keys";
 import { getTypographyClass } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 import { WorkspaceCreateModal } from "./WorkspaceCreateModal";
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Optional callback when navigation occurs (for mobile drawer) */
+  onNavigate?: () => void;
+}
+
+const mainMenuItems = [
+  {
+    href: "/",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    description: "Overview",
+  },
+  {
+    href: "/chat",
+    label: "Chat",
+    icon: Sparkles,
+    description: "AI Companion",
+  },
+  {
+    href: "/board",
+    label: "Board",
+    icon: FolderKanban,
+    description: "Sprint board",
+  },
+  {
+    href: "/backlog",
+    label: "Backlog",
+    icon: List,
+    description: "All tasks",
+  },
+  {
+    href: "/activity",
+    label: "Activity",
+    icon: Activity,
+    description: "Workspace history",
+  },
+  {
+    href: "/docs",
+    label: "Documentation",
+    icon: FileText,
+    description: "Documentation",
+  },
+];
+
+export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -60,9 +107,11 @@ export function Sidebar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useLocalStorage(
-    "sidebar-collapsed",
+    STORAGE_KEYS.SIDEBAR_COLLAPSED,
     false
   );
+  const isMobile = useIsMobile();
+  const effectiveIsCollapsed = isMobile ? false : isCollapsed;
 
   const { data: workspaces = [] } = useQuery<Workspace[]>({
     queryKey: queryKeys.workspaces.all(),
@@ -92,60 +141,21 @@ export function Sidebar() {
     },
   });
 
-  const mainMenuItems = [
-    {
-      href: "/",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      description: "Overview",
-    },
-    {
-      href: "/chat",
-      label: "Chat",
-      icon: Sparkles,
-      description: "AI Companion",
-    },
-    {
-      href: "/board",
-      label: "Board",
-      icon: FolderKanban,
-      description: "Sprint board",
-    },
-    {
-      href: "/backlog",
-      label: "Backlog",
-      icon: List,
-      description: "All tasks",
-    },
-    {
-      href: "/activity",
-      label: "Activity",
-      icon: Activity,
-      description: "Workspace history",
-    },
-    {
-      href: "/docs",
-      label: "Library",
-      icon: FileText,
-      description: "Documentation",
-    },
-  ];
-
   return (
     <aside
       className={cn(
         "flex flex-col border-r border-border/50 bg-card/30 backdrop-blur-xl h-full transition-all duration-300 ease-in-out z-50",
-        isCollapsed ? "w-[70px]" : "w-[260px]"
+        effectiveIsCollapsed ? "w-[70px]" : "w-[260px]"
       )}
     >
       {/* Logo & Toggle */}
       <div
         className={cn(
           "flex items-center gap-3 p-4 border-b border-border/30",
-          isCollapsed ? "justify-center px-2" : "justify-between"
+          effectiveIsCollapsed ? "justify-center px-2" : "justify-between"
         )}
       >
-        {!isCollapsed && (
+        {!effectiveIsCollapsed && (
           <Image
             src="/logo.png"
             alt="Locus"
@@ -154,11 +164,15 @@ export function Sidebar() {
             className="rounded-xl"
           />
         )}
+        {/* Collapse button - only show on desktop, not on mobile drawer */}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setIsCollapsed(!effectiveIsCollapsed)}
+          className="hidden lg:inline-flex text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={
+            effectiveIsCollapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
         >
-          {isCollapsed ? (
+          {effectiveIsCollapsed ? (
             <PanelLeftOpen size={20} />
           ) : (
             <PanelLeftClose size={18} />
@@ -168,19 +182,22 @@ export function Sidebar() {
 
       {/* Workspace Selector */}
       <div
-        className={cn("border-b border-border/30", isCollapsed ? "p-2" : "p-3")}
+        className={cn(
+          "border-b border-border/30",
+          effectiveIsCollapsed ? "p-2" : "p-3"
+        )}
       >
         <button
           onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
           className={cn(
             "w-full flex items-center gap-3 rounded-xl hover:bg-secondary/50 transition-all group relative",
-            isCollapsed ? "justify-center p-2" : "p-2.5"
+            effectiveIsCollapsed ? "justify-center p-2" : "p-2.5"
           )}
         >
           <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-linear-to-br from-primary/20 to-primary/5 border border-border/50 text-lg shrink-0">
             {"🚀"}
           </div>
-          {!isCollapsed && (
+          {!effectiveIsCollapsed && (
             <>
               <div className="flex-1 text-left min-w-0">
                 <div className="text-sm font-semibold text-foreground truncate">
@@ -211,7 +228,7 @@ export function Sidebar() {
           <div
             className={cn(
               "mt-2 bg-secondary/30 rounded-xl border border-border/30 animate-in fade-in slide-in-from-top-2 duration-200 z-9999",
-              isCollapsed
+              effectiveIsCollapsed
                 ? "absolute left-20 top-20 w-[200px] shadow-xl p-2 bg-card"
                 : "p-2 relative"
             )}
@@ -254,10 +271,10 @@ export function Sidebar() {
       <div
         className={cn(
           "flex-1 overflow-y-auto overflow-x-hidden",
-          isCollapsed ? "px-2 py-3" : "p-3"
+          effectiveIsCollapsed ? "px-2 py-3" : "p-3"
         )}
       >
-        {!isCollapsed && (
+        {!effectiveIsCollapsed && (
           <div
             className={cn(
               getTypographyClass("label"),
@@ -275,10 +292,11 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                title={isCollapsed ? item.label : undefined}
+                title={effectiveIsCollapsed ? item.label : undefined}
+                onClick={onNavigate}
                 className={cn(
                   "group flex items-center gap-3 rounded-xl transition-all duration-200",
-                  isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5",
+                  effectiveIsCollapsed ? "justify-center p-2.5" : "px-3 py-2.5",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                     : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
@@ -291,12 +309,12 @@ export function Sidebar() {
                     !isActive && "group-hover:scale-110 transition-transform"
                   )}
                 />
-                {!isCollapsed && (
+                {!effectiveIsCollapsed && (
                   <span className="flex-1 text-sm font-medium">
                     {item.label}
                   </span>
                 )}
-                {!isCollapsed && isActive && (
+                {!effectiveIsCollapsed && isActive && (
                   <ChevronRight size={14} className="opacity-70" />
                 )}
               </Link>
@@ -306,7 +324,7 @@ export function Sidebar() {
 
         {/* Quick Actions */}
         <div className="mt-6">
-          {!isCollapsed && (
+          {!effectiveIsCollapsed && (
             <div
               className={cn(
                 getTypographyClass("label"),
@@ -320,13 +338,13 @@ export function Sidebar() {
             <button
               className={cn(
                 "w-full flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all",
-                isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
+                effectiveIsCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
               )}
-              title={isCollapsed ? "New Task" : undefined}
+              title={effectiveIsCollapsed ? "New Task" : undefined}
               onClick={() => router.push("/backlog?createTask=true")}
             >
               <Plus size={18} className="shrink-0" />
-              {!isCollapsed && (
+              {!effectiveIsCollapsed && (
                 <>
                   <span className="text-sm font-medium">New Task</span>
                   <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-secondary/80 border border-border/50 text-muted-foreground/70">
@@ -338,13 +356,13 @@ export function Sidebar() {
             <button
               className={cn(
                 "w-full flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all",
-                isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
+                effectiveIsCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
               )}
-              title={isCollapsed ? "New Sprint" : undefined}
+              title={effectiveIsCollapsed ? "New Sprint" : undefined}
               onClick={() => router.push("/backlog?createSprint=true")}
             >
               <FolderKanban size={18} className="shrink-0" />
-              {!isCollapsed && (
+              {!effectiveIsCollapsed && (
                 <>
                   <span className="text-sm font-medium">New Sprint</span>
                   <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-secondary/80 border border-border/50 text-muted-foreground/70">
@@ -359,7 +377,10 @@ export function Sidebar() {
 
       {/* Bottom Section */}
       <div
-        className={cn("border-t border-border/30", isCollapsed ? "p-2" : "p-3")}
+        className={cn(
+          "border-t border-border/30",
+          effectiveIsCollapsed ? "p-2" : "p-3"
+        )}
       >
         {/* User Profile */}
         <div className="relative">
@@ -367,7 +388,7 @@ export function Sidebar() {
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             className={cn(
               "w-full flex items-center gap-3 rounded-xl hover:bg-secondary/50 transition-all group",
-              isCollapsed ? "justify-center p-2" : "p-2.5"
+              effectiveIsCollapsed ? "justify-center p-2" : "p-2.5"
             )}
           >
             <Avatar
@@ -375,7 +396,7 @@ export function Sidebar() {
               src={user?.avatarUrl}
               size="md"
             />
-            {!isCollapsed && (
+            {!effectiveIsCollapsed && (
               <>
                 <div className="flex-1 text-left min-w-0">
                   <div className="text-sm font-semibold text-foreground truncate">
@@ -401,14 +422,17 @@ export function Sidebar() {
             <div
               className={cn(
                 "absolute bottom-full mb-2 bg-popover rounded-xl border border-border shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 z-9999",
-                isCollapsed ? "left-14 w-48" : "left-0 right-0 p-2"
+                effectiveIsCollapsed ? "left-14 w-48" : "left-0 right-0 p-2"
               )}
             >
-              <div className={cn(isCollapsed && "p-2")}>
+              <div className={cn(effectiveIsCollapsed && "p-2")}>
                 <Link
                   href="/settings/profile"
                   className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-                  onClick={() => setIsUserMenuOpen(false)}
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    onNavigate?.();
+                  }}
                 >
                   <UserIcon size={16} />
                   <span>Profile</span>
@@ -416,7 +440,10 @@ export function Sidebar() {
                 <Link
                   href="/settings"
                   className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-                  onClick={() => setIsUserMenuOpen(false)}
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    onNavigate?.();
+                  }}
                 >
                   <Settings size={16} />
                   <span>Settings</span>

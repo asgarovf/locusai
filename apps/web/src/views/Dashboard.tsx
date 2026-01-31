@@ -13,6 +13,9 @@ import {
 import { LoadingPage } from "@/components/ui";
 import { useAuthenticatedUser } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
+import { dashboardTour } from "@/lib/tour-steps";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { getStorageItem, setStorageItem } from "@/lib/local-storage";
 
 interface WorkspaceStats {
   taskCounts: Record<string, number>;
@@ -48,6 +51,18 @@ export function Dashboard() {
     loadData();
   }, [user?.workspaceId]);
 
+  // First-time user tour trigger
+  useEffect(() => {
+    const hasSeenTour = getStorageItem(STORAGE_KEYS.TOUR_DASHBOARD_SEEN);
+    if (!hasSeenTour && !loading) {
+      // Delay to ensure elements are rendered
+      setTimeout(() => {
+        dashboardTour();
+        setStorageItem(STORAGE_KEYS.TOUR_DASHBOARD_SEEN, "true");
+      }, 500);
+    }
+  }, [loading]);
+
   if (loading) {
     return <LoadingPage />;
   }
@@ -76,10 +91,17 @@ export function Dashboard() {
     <PageLayout title={welcomeTitle} description={welcomeDesc}>
       <div className="max-w-7xl mx-auto space-y-8 pt-4">
         {/* Workspace Quick Info & Setup */}
-        {user?.workspaceId && <WorkspaceSetup workspaceId={user.workspaceId} />}
+        {user?.workspaceId && (
+          <div data-tour="workspace-selector">
+            <WorkspaceSetup workspaceId={user.workspaceId} />
+          </div>
+        )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          data-tour="stats-cards"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           <StatCard
             title="Total Tasks"
             value={totalTasks}
@@ -118,11 +140,11 @@ export function Dashboard() {
 
         {/* Feed & Quick Actions Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8">
+          <div data-tour="activity-feed" className="lg:col-span-8">
             <ActivityFeed activity={activity} />
           </div>
 
-          <div className="lg:col-span-4 space-y-6">
+          <div data-tour="quick-actions" className="lg:col-span-4 space-y-6">
             <QuickActions />
           </div>
         </div>

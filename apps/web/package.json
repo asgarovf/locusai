@@ -37,6 +37,7 @@
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "driver.js": "^1.4.0",
     "framer-motion": "^12.26.2",
     "html-react-parser": "^5.2.11",
     "lowlight": "^3.3.0",

@@ -6,6 +6,7 @@ type UseGlobalKeydownsProps = {
   onOpenCreateTask?: () => void;
   onOpenCreateSprint?: () => void;
   onCloseCreateTask?: () => void;
+  onToggleSidebar?: () => void;
 };
 
 export const useGlobalKeydowns = ({
@@ -16,6 +17,9 @@ export const useGlobalKeydowns = ({
     /* no-op */
   },
   onCloseCreateTask = () => {
+    /* no-op */
+  },
+  onToggleSidebar = () => {
     /* no-op */
   },
 }: UseGlobalKeydownsProps) => {
@@ -41,6 +45,11 @@ export const useGlobalKeydowns = ({
         onOpenCreateSprint();
       }
 
+      if (e.altKey && e.code === "KeyP") {
+        e.preventDefault();
+        onToggleSidebar();
+      }
+
       if (e.key === "Escape") {
         onCloseCreateTask();
       }
@@ -48,5 +57,5 @@ export const useGlobalKeydowns = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onOpenCreateTask, onOpenCreateSprint, onCloseCreateTask]);
+  }, [onOpenCreateTask, onOpenCreateSprint, onCloseCreateTask, onToggleSidebar]);
 };

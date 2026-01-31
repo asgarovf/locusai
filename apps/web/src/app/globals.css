@@ -230,6 +230,15 @@
   background: var(--text-muted);
 }
 
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Shared Components */
 .button-primary {
   background: var(--accent);

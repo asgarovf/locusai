@@ -8,6 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceId } from "@/hooks/useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { getStorageItem, setStorageItem } from "@/lib/local-storage";
 
 interface UseTaskPanelProps {
   taskId: string;
@@ -53,6 +55,12 @@ export function useTaskPanel({
   const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = getStorageItem(STORAGE_KEYS.TASK_SIDEBAR_OPEN);
+    if (stored !== null) return stored === "true";
+    return window.innerWidth >= 1024;
+  });
 
   useEffect(() => {
     if (task) {
@@ -64,6 +72,10 @@ export function useTaskPanel({
       );
     }
   }, [task]);
+
+  useEffect(() => {
+    setStorageItem(STORAGE_KEYS.TASK_SIDEBAR_OPEN, String(sidebarOpen));
+  }, [sidebarOpen]);
 
   // Mutations with Optimistic Updates
   const updateTaskMutation = useMutation({
@@ -318,6 +330,8 @@ export function useTaskPanel({
     setShowRejectModal,
     rejectReason,
     setRejectReason,
+    sidebarOpen,
+    setSidebarOpen,
     checklistProgress,
     isLoading: updateTaskMutation.isPending || addCommentMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,

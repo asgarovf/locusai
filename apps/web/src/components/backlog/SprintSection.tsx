@@ -76,6 +76,26 @@ export function SprintSection({
     <Layers size={18} className="text-amber-500/80" />
   );
 
+  const getSprintProgress = (sprintTasks: Task[]) => {
+    const total = sprintTasks.length;
+    const byStatus = {
+      backlog: sprintTasks.filter((t) => t.status === TaskStatus.BACKLOG)
+        .length,
+      inProgress: sprintTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS)
+        .length,
+      verification: sprintTasks.filter(
+        (t) => t.status === TaskStatus.VERIFICATION
+      ).length,
+      done: sprintTasks.filter((t) => t.status === TaskStatus.DONE).length,
+    };
+    const completionPercentage =
+      total > 0 ? (byStatus.done / total) * 100 : 0;
+
+    return { total, byStatus, completionPercentage };
+  };
+
+  const progress = getSprintProgress(tasks);
+
   return (
     <motion.div
       layout="position"
@@ -94,16 +114,17 @@ export function SprintSection({
         accentColor={accentColor}
         badge={isActive ? "Active" : "Planned"}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {isActive ? (
               <Button
                 size="sm"
                 variant="emerald-subtle"
                 onClick={() => onComplete?.(sprint.id)}
                 isLoading={isSubmitting}
+                className="text-xs sm:text-sm px-2 sm:px-3"
               >
-                <CheckCircle size={14} className="mr-1" />
-                Complete
+                <CheckCircle size={14} className="sm:mr-1" />
+                <span className="hidden sm:inline">Complete</span>
               </Button>
             ) : (
               canStart && (
@@ -112,9 +133,10 @@ export function SprintSection({
                   variant="amber"
                   onClick={() => onStart?.(sprint.id)}
                   isLoading={isSubmitting}
+                  className="text-xs sm:text-sm px-2 sm:px-3"
                 >
-                  <Play size={12} className="mr-1.5 fill-current" />
-                  Start
+                  <Play size={12} className="sm:mr-1.5 fill-current" />
+                  <span className="hidden sm:inline">Start</span>
                 </Button>
               )
             )}
@@ -132,6 +154,24 @@ export function SprintSection({
           </div>
         }
       >
+        {tasks.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all ${
+                  isActive ? "bg-emerald-500" : "bg-amber-500"
+                }`}
+                style={{ width: `${progress.completionPercentage}%` }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">Backlog: {progress.byStatus.backlog}</span>
+              <span className="whitespace-nowrap">In Progress: {progress.byStatus.inProgress}</span>
+              <span className="whitespace-nowrap">Verification: {progress.byStatus.verification}</span>
+              <span className="whitespace-nowrap">Done: {progress.byStatus.done}</span>
+            </div>
+          </div>
+        )}
         <DroppableSection id={`sprint-${sprint.id}`}>
           {tasks.length === 0 ? (
             <div

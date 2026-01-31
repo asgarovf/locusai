@@ -24,6 +24,8 @@ interface ModalProps {
   title?: string;
   /** Modal size */
   size?: keyof typeof MODAL_SIZES;
+  /** Optional keyboard shortcut hint */
+  shortcutHint?: string;
 }
 
 export function Modal({
@@ -32,6 +34,7 @@ export function Modal({
   children,
   title,
   size = "md",
+  shortcutHint,
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +68,7 @@ export function Modal({
       <div
         className={`bg-background border border-border rounded-xl shadow-lg animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col ${
           MODAL_SIZES[size]
-        } max-w-[90vw] ${Z_INDEXES.modal}`}
+        } ${Z_INDEXES.modal}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
@@ -78,13 +81,20 @@ export function Modal({
             >
               {title}
             </h3>
-            <button
-              className="bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer p-0 transition-colors duration-200"
-              onClick={onClose}
-              aria-label="Close modal"
-            >
-              <X size={20} aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-3">
+              {shortcutHint && (
+                <kbd className="px-2 py-1 text-xs bg-muted rounded">
+                  {shortcutHint}
+                </kbd>
+              )}
+              <button
+                className="bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer p-0 transition-colors duration-200"
+                onClick={onClose}
+                aria-label="Close modal"
+              >
+                <X size={20} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         )}
         <div className="p-6 overflow-y-auto">{children}</div>

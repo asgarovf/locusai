@@ -57,8 +57,8 @@ export function BoardContent({
           <BoardEmptyState hasActiveSprint={true} onNewTask={onNewTask} />
         </div>
       ) : (
-        <div className="flex-1 overflow-x-auto min-h-0">
-          <div className="flex gap-4 h-full min-w-max pb-4">
+        <div className="flex-1 min-h-0 overflow-x-auto">
+          <div id="task-columns" className="flex gap-4 h-full min-w-max pb-4">
             {BOARD_STATUSES.map((status) => (
               <BoardColumn
                 key={status.key}

@@ -9,7 +9,7 @@ export interface CreateModalField {
   /** Field identifier */
   name: string;
   /** Display label */
-  label: string;
+  label: string | React.ReactNode;
   /** Form component (Input, Textarea, etc) */
   component: React.ReactNode;
   /** Whether field is required */
@@ -42,7 +42,9 @@ export interface CreateModalProps {
   /** Optional icon for modal header */
   icon?: React.ReactNode;
   /** Modal size */
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "responsive";
+  /** Optional keyboard shortcut hint */
+  shortcutHint?: string;
 }
 
 /**
@@ -92,9 +94,10 @@ export function CreateModal({
   submitDisabled = false,
   icon,
   size = "md",
+  shortcutHint,
 }: CreateModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size={size}>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size={size} shortcutHint={shortcutHint}>
       <form
         onSubmit={onSubmit}
         className={cn("space-y-6 py-2", "md:space-y-8")}

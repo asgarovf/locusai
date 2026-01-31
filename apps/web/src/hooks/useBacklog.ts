@@ -287,6 +287,49 @@ export function useBacklog() {
     }
   };
 
+  const handleBulkMoveToSprint = async (taskIds: string[], sprintId: string) => {
+    const tasksKey = queryKeys.tasks.list(workspaceId);
+    const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
+
+    try {
+      setIsSubmitting(true);
+
+      // Optimistic update
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(
+          tasksKey,
+          previousTasks.map((task) =>
+            taskIds.includes(task.id) ? { ...task, sprintId } : task
+          )
+        );
+      }
+
+      // Execute all updates in parallel
+      await Promise.all(
+        taskIds.map((taskId) =>
+          locusClient.tasks.update(taskId, workspaceId, { sprintId })
+        )
+      );
+
+      showToast.success(
+        `${taskIds.length} task${taskIds.length > 1 ? "s" : ""} moved to sprint`
+      );
+
+      // Full sync
+      queryClient.invalidateQueries({ queryKey: tasksKey });
+    } catch (error) {
+      showToast.error(
+        error instanceof Error ? error.message : "Failed to move tasks"
+      );
+      // Rollback on error
+      if (previousTasks) {
+        queryClient.setQueryData(tasksKey, previousTasks);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isLoading = tasksLoading || sprintsLoading;
 
   return {
@@ -316,6 +359,7 @@ export function useBacklog() {
     handleCompleteSprint,
     handleDeleteSprint,
     handleDeleteTask,
+    handleBulkMoveToSprint,
     refetchTasks,
     refetchSprints,
   };

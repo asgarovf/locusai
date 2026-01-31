@@ -64,7 +64,7 @@ export function BoardColumn({
     <div
       className={cn(
         "flex flex-col shrink-0 h-full",
-        isCompact ? "w-96" : "w-80"
+        isCompact ? "w-56 sm:w-64 lg:w-72" : "w-64 sm:w-72 lg:w-80"
       )}
     >
       {/* Column Header */}
@@ -80,9 +80,9 @@ export function BoardColumn({
 
       {/* Column Content */}
       <DroppableSection id={statusKey} className="flex-1 min-h-0">
-        <div className="flex-1 h-full rounded-xl bg-secondary/10 border border-border/40 p-2 min-h-[calc(100vh-220px)] backdrop-blur-sm transition-colors hover:bg-secondary/20 overflow-y-auto custom-scrollbar">
+        <div className="h-full rounded-xl bg-secondary/10 border border-border/40 p-2 backdrop-blur-sm transition-colors hover:bg-secondary/20 overflow-y-auto custom-scrollbar">
           {tasks.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground/60 gap-2 opacity-0 hover:opacity-100 transition-opacity">
+            <div className="min-h-[200px] flex flex-col items-center justify-center text-xs text-muted-foreground/60 gap-2 opacity-0 hover:opacity-100 transition-opacity">
               <span>Drop tasks here</span>
             </div>
           ) : (

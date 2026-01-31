@@ -37,7 +37,7 @@ export default function ChatPage() {
     isSharing,
   } = useChat();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   const handleNewChat = () => {
@@ -60,20 +60,24 @@ export default function ChatPage() {
     <ChatLayout
       isArtifactOpen={!!activeArtifact}
       sidebar={
-        <ChatSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onSelectSession={handleSelectSession}
-          onNewChat={handleNewChat}
-          onDeleteSession={deleteSession}
-        />
+        <div id="chat-sidebar-toggle">
+          <ChatSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            onSelectSession={handleSelectSession}
+            onNewChat={handleNewChat}
+            onDeleteSession={deleteSession}
+          />
+        </div>
       }
       artifactPanel={
-        <ArtifactPanel
-          isOpen={!!activeArtifact}
-          artifact={activeArtifact}
-          onClose={() => setActiveArtifact(null)}
-        />
+        <div id="artifact-panel">
+          <ArtifactPanel
+            isOpen={!!activeArtifact}
+            artifact={activeArtifact}
+            onClose={() => setActiveArtifact(null)}
+          />
+        </div>
       }
     >
       <ChatHeader
@@ -86,7 +90,10 @@ export default function ChatPage() {
         sessionId={activeSessionId}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 md:px-8 lg:px-12 scrollbar-thin">
+      <div
+        id="chat-context"
+        className="flex-1 overflow-y-auto p-4 md:px-8 lg:px-12 scrollbar-thin"
+      >
         <div className="max-w-5xl mx-auto space-y-6">
           {isLoadingHistory ? (
             <div className="flex items-center justify-center py-20">
@@ -145,12 +152,14 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <ChatInput
-        onSendMessage={sendMessage}
-        isLoading={isTyping}
-        value={inputValue}
-        onValueChange={setInputValue}
-      />
+      <div id="chat-input">
+        <ChatInput
+          onSendMessage={sendMessage}
+          isLoading={isTyping}
+          value={inputValue}
+          onValueChange={setInputValue}
+        />
+      </div>
     </ChatLayout>
   );
 }

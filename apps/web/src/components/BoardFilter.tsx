@@ -52,9 +52,9 @@ export function BoardFilter({
   onRoleChange,
 }: BoardFilterProps) {
   return (
-    <div className="flex items-center flex-wrap gap-3 p-2 bg-secondary/20 rounded-xl border border-border/40">
+    <div className="flex items-center flex-wrap gap-2 sm:gap-3 p-2 sm:p-3 bg-secondary/20 rounded-xl border border-border/40">
       {/* Search */}
-      <div className="flex-1 min-w-[180px] relative">
+      <div className="flex-1 min-w-[120px] sm:min-w-[180px] relative">
         <input
           type="text"
           placeholder="Filter tasks..."
@@ -72,7 +72,7 @@ export function BoardFilter({
       <select
         value={priorityFilter || ""}
         onChange={(e) => onPriorityChange(e.target.value || null)}
-        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8"
+        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[90px] sm:min-w-[100px] flex-shrink-0"
       >
         <option value="">All Priorities</option>
         <option value="LOW">Low</option>
@@ -85,7 +85,7 @@ export function BoardFilter({
       <select
         value={roleFilter || ""}
         onChange={(e) => onRoleChange(e.target.value || null)}
-        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8"
+        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[80px] sm:min-w-[90px] flex-shrink-0"
       >
         <option value="">All Roles</option>
         <option value={AssigneeRole.BACKEND}>Backend</option>

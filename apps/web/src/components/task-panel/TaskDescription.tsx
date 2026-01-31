@@ -13,11 +13,12 @@
 
 import { type Task } from "@locusai/shared";
 import { Edit, FileText, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Editor } from "@/components/Editor";
 import { SectionLabel } from "@/components/typography";
-import { Input, Textarea } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { useTaskDescription } from "@/hooks/useTaskDescription";
 import { cn } from "@/lib/utils";
-import { Markdown } from "../chat/Markdown";
 
 interface TaskDescriptionProps {
   /** Task to display */
@@ -57,6 +58,28 @@ export function TaskDescription({
     descMode,
     setDescMode,
   } = useTaskDescription({ task, onUpdate });
+
+  // Auto-save timer for description changes
+  const saveTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useEffect(() => {
+    if (editDesc !== task.description && descMode === "edit") {
+      // Clear existing timer
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      // Set new timer for auto-save
+      saveTimerRef.current = setTimeout(() => {
+        handleDescSave();
+      }, 1000);
+    }
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [editDesc, task.description, descMode, handleDescSave]);
 
   return (
     <div className="p-8">
@@ -155,45 +178,23 @@ export function TaskDescription({
           </div>
         </div>
 
-        {descMode === "edit" ? (
-          <div
-            className={cn(
-              "group border border-border/40 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all bg-secondary/5 shadow-inner",
-              isLoading && "opacity-60"
-            )}
-          >
-            <Textarea
-              value={editDesc}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                !isLoading && setEditDesc(e.target.value)
+        <div
+          className={cn(
+            "border border-border/40 rounded-2xl overflow-hidden bg-secondary/5 shadow-inner min-h-[500px]",
+            isLoading && "opacity-60 pointer-events-none"
+          )}
+        >
+          <Editor
+            value={editDesc}
+            onChange={(newValue) => {
+              if (!isLoading) {
+                setEditDesc(newValue);
               }
-              disabled={isLoading}
-              placeholder="Define implementation architecture, requirements, and scope..."
-              rows={12}
-              className="border-none focus:ring-0 text-base leading-relaxed p-8 bg-transparent scrollbar-thin"
-              onBlur={handleDescSave}
-              aria-label="Task description (markdown)"
-            />
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "bg-secondary/10 p-10 rounded-3xl border border-border/40 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] relative group",
-              isLoading && "opacity-60 pointer-events-none"
-            )}
-          >
-            {task.description ? (
-              <Markdown content={task.description} />
-            ) : (
-              <div className="flex flex-col items-center justify-center py-10 opacity-30 select-none">
-                <FileText size={32} className="mb-4" aria-hidden="true" />
-                <span className="text-xs font-black uppercase tracking-[0.2em]">
-                  Waiting for Specs
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+            }}
+            readOnly={descMode === "preview"}
+            placeholder="Define implementation architecture, requirements, and scope..."
+          />
+        </div>
       </div>
     </div>
   );

@@ -23,12 +23,13 @@
 
 "use client";
 
-import { Check, Edit2, X } from "lucide-react";
+import { Check, Edit2, HelpCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SecondaryText } from "./typography";
 import { Button } from "./ui/Button";
 import { Dropdown } from "./ui/Dropdown";
 import { Input } from "./ui/Input";
+import { Tooltip } from "./ui/Tooltip";
 
 export interface PropertyItemProps {
   /** Property label */
@@ -45,6 +46,8 @@ export interface PropertyItemProps {
   disabled?: boolean;
   /** Placeholder text for text input */
   placeholder?: string;
+  /** Optional tooltip text to show help icon */
+  tooltip?: string;
 }
 
 export function PropertyItem({
@@ -55,6 +58,7 @@ export function PropertyItem({
   type = "text",
   disabled = false,
   placeholder,
+  tooltip,
 }: PropertyItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(String(value));
@@ -79,9 +83,16 @@ export function PropertyItem({
 
   return (
     <div className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
-      <SecondaryText as="span" size="xs" className="items-center">
-        {label}
-      </SecondaryText>
+      <div className="flex items-center gap-2">
+        <SecondaryText as="span" size="xs" className="items-center">
+          {label}
+        </SecondaryText>
+        {tooltip && (
+          <Tooltip content={tooltip}>
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        )}
+      </div>
       <div className="relative group min-h-[32px] flex items-center">
         {isEditing ? (
           <div className="flex items-center gap-2 w-full">

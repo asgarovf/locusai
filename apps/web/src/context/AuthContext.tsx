@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 import { locusClient, setClientToken } from "@/lib/api-client";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { getStorageItem, setStorageItem } from "@/lib/local-storage";
 
 interface AuthContextType {
   user: User | null;
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const switchWorkspace = useCallback((workspaceId: string) => {
-    localStorage.setItem("lastWorkspaceId", workspaceId);
+    setStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID, workspaceId);
     setUser((prev) => (prev ? { ...prev, workspaceId } : null));
   }, []);
 
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if token exists first - skip API call if not
       const token =
         typeof window !== "undefined"
-          ? localStorage.getItem("locus_token")
+          ? getStorageItem(STORAGE_KEYS.AUTH_TOKEN)
           : null;
 
       if (!token) {
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await locusClient.auth.getProfile();
       const workspacesData = await locusClient.workspaces.listAll();
 
-      const storedWorkspaceId = localStorage.getItem("lastWorkspaceId");
+      const storedWorkspaceId = getStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID);
       let effectiveWorkspaceId = storedWorkspaceId || userData.workspaceId;
 
       // Validation: Ensure current workspaceId is valid
@@ -68,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Update localStorage with the verified effective ID
       if (effectiveWorkspaceId) {
-        localStorage.setItem("lastWorkspaceId", String(effectiveWorkspaceId));
+        setStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID, String(effectiveWorkspaceId));
       }
 
       setUser({
@@ -97,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
 
     if (userData.workspaceId) {
-      localStorage.setItem("lastWorkspaceId", userData.workspaceId);
+      setStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID, userData.workspaceId);
     }
 
     // Fetch workspaces to ensure they're loaded before navigation

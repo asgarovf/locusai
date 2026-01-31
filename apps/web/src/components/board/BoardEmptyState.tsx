@@ -58,7 +58,7 @@ export function BoardEmptyState({
               onClick={() => router.push("/backlog?createSprint=true")}
             >
               <Plus size={16} />
-              Create Sprint
+              Create Sprint (Alt+S)
             </Button>
           </div>
         }

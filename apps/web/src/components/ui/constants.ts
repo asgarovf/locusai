@@ -62,6 +62,7 @@ export const MODAL_SIZES = {
   sm: "w-[400px]",
   md: "w-[520px]",
   lg: "w-[680px]",
+  responsive: "w-[95vw] md:w-[680px]",
 } as const;
 
 /**
