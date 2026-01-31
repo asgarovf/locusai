@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.7.3
+
+### Patch Changes
+
+- Improve CLI logs
+
 ## 0.7.2
 
 ### Patch Changes

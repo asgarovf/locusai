@@ -1,5 +1,14 @@
 # @locusai/api
 
+## 0.7.3
+
+### Patch Changes
+
+- Improve CLI logs
+- Updated dependencies
+  - @locusai/ai-sdk@0.3.3
+  - @locusai/shared@0.7.3
+
 ## 0.7.2
 
 ### Patch Changes
