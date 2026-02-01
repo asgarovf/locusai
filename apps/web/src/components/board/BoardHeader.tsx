@@ -70,7 +70,7 @@ export function BoardHeader({
         {view && onViewChange && activeSprint && (
           <div
             id="view-switcher"
-            className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border flex-shrink-0"
+            className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border shrink-0"
           >
             <div className="flex items-center gap-0.5 sm:gap-1">
               {viewTypes.map((viewType) => (
@@ -78,7 +78,7 @@ export function BoardHeader({
                   <Button
                     variant={view === viewType.id ? "secondary" : "ghost"}
                     size="sm"
-                    className="gap-1 sm:gap-2 flex-shrink-0 px-1.5 sm:px-3"
+                    className="gap-1 sm:gap-2 shrink-0 px-1.5 sm:px-3"
                     onClick={() => onViewChange(viewType.id)}
                   >
                     <viewType.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -89,24 +89,24 @@ export function BoardHeader({
             </div>
           </div>
         )}
-        <div className="hidden sm:flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-lg border border-border/50 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-lg border border-border/50 shrink-0">
           <span className="text-sm font-medium text-muted-foreground mr-1">
             Compact
           </span>
           <Toggle checked={isCompact} onChange={onToggleCompact} />
         </div>
         <Tooltip content="Toggle compact mode">
-          <div className="sm:hidden flex items-center bg-secondary/50 px-2 py-1.5 rounded-lg border border-border/50 flex-shrink-0">
+          <div className="sm:hidden flex items-center bg-secondary/50 px-2 py-1.5 rounded-lg border border-border/50 shrink-0">
             <Toggle checked={isCompact} onChange={onToggleCompact} />
           </div>
         </Tooltip>
         <Button
           onClick={onNewTask}
           size="md"
-          className="shadow-lg shadow-primary/20 flex-shrink-0 px-2 sm:px-4"
+          className="shadow-lg shadow-primary/20 shrink-0 px-2 sm:px-4"
         >
           <Plus size={16} className="sm:mr-2" />
-          <span className="hidden sm:inline">New Task</span>
+          <span className="">New Task</span>
         </Button>
       </div>
     ),

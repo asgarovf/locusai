@@ -84,7 +84,7 @@ export function TaskDescription({
   return (
     <div className="px-8 py-8">
       {/* Title Section */}
-      <div className="mb-8 flex-shrink-0">
+      <div className="mb-8 shrink-0">
         {isEditingTitle ? (
           <div className="relative">
             <Input

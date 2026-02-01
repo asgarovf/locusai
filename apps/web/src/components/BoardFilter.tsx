@@ -72,7 +72,7 @@ export function BoardFilter({
       <select
         value={priorityFilter || ""}
         onChange={(e) => onPriorityChange(e.target.value || null)}
-        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[90px] sm:min-w-[100px] flex-shrink-0"
+        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[90px] sm:min-w-[100px] shrink-0"
       >
         <option value="">All Priorities</option>
         <option value="LOW">Low</option>
@@ -85,7 +85,7 @@ export function BoardFilter({
       <select
         value={roleFilter || ""}
         onChange={(e) => onRoleChange(e.target.value || null)}
-        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[80px] sm:min-w-[90px] flex-shrink-0"
+        className="bg-background border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none h-8 min-w-[80px] sm:min-w-[90px] shrink-0"
       >
         <option value="">All Roles</option>
         <option value={AssigneeRole.BACKEND}>Backend</option>

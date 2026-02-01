@@ -86,7 +86,7 @@ export function BacklogSection({
         )}
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <div className="p-1 rounded-md text-muted-foreground/60 group-hover:text-foreground transition-colors flex-shrink-0">
+          <div className="p-1 rounded-md text-muted-foreground/60 group-hover:text-foreground transition-colors shrink-0">
             {isExpanded ? (
               <ChevronDown size={16} />
             ) : (
@@ -96,7 +96,7 @@ export function BacklogSection({
 
           <div
             className={cn(
-              "transition-opacity flex items-center gap-1.5 sm:gap-2 flex-shrink-0",
+              "transition-opacity flex items-center gap-1.5 sm:gap-2 shrink-0",
               colors[accentColor]
             )}
           >
@@ -106,14 +106,14 @@ export function BacklogSection({
             </span>
           </div>
 
-          <span className="text-[11px] text-muted-foreground/50 bg-secondary/50 px-1.5 sm:px-2 py-0.5 rounded-full font-mono font-medium flex-shrink-0">
+          <span className="text-[11px] text-muted-foreground/50 bg-secondary/50 px-1.5 sm:px-2 py-0.5 rounded-full font-mono font-medium shrink-0">
             {count}
           </span>
 
           {badge && (
             <span
               className={cn(
-                "text-[10px] uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full font-bold border flex-shrink-0 hidden sm:inline-block",
+                "text-[10px] uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full font-bold border shrink-0 hidden sm:inline-block",
                 badgeColors[accentColor]
               )}
             >
@@ -124,7 +124,7 @@ export function BacklogSection({
 
         {actions && (
           <div
-            className="flex items-center flex-shrink-0 ml-2"
+            className="flex items-center shrink-0 ml-2"
             onClick={(e) => e.stopPropagation()}
           >
             {actions}

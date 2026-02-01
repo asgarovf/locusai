@@ -57,7 +57,7 @@ export function PageLayout({
             )}
           </div>
           {actions && (
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
               {actions}
             </div>
           )}

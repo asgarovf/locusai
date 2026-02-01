@@ -49,7 +49,7 @@ export function TaskActivity({
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header - Fixed */}
-      <div className="flex-shrink-0 px-8 pt-8">
+      <div className="shrink-0 px-8 pt-8">
         <SectionLabel as="h4" className="mb-6 pb-2 border-b border-border/40">
           Activity
         </SectionLabel>

@@ -30,7 +30,7 @@ export function TaskChecklist({
 }: TaskChecklistProps) {
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex-shrink-0 px-8 pt-8">
+      <div className="shrink-0 px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
@@ -122,7 +122,7 @@ export function TaskChecklist({
       </div>
 
       {/* Sticky add item footer */}
-      <div className="flex-shrink-0 px-8 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent border-t border-border/20">
+      <div className="shrink-0 px-8 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent border-t border-border/20">
         <div className="flex gap-4 p-2.5 bg-secondary/10 backdrop-blur-md rounded-2xl border border-border/40 focus-within:border-primary/40 transition-all shadow-xl">
           <Input
             value={newChecklistItem}
