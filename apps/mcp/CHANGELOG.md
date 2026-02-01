@@ -1,5 +1,14 @@
 # @locusai/mcp-server
 
+## 0.4.4
+
+### Patch Changes
+
+- Exec command improvements
+- Updated dependencies
+  - @locusai/sdk@0.7.4
+  - @locusai/shared@0.7.4
+
 ## 0.4.3
 
 ### Patch Changes

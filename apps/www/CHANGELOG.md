@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.7.4
+
+### Patch Changes
+
+- Exec command improvements
+- Updated dependencies
+  - @locusai/shared@0.7.4
+
 ## 0.7.3
 
 ### Patch Changes
