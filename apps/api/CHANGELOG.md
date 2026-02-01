@@ -1,5 +1,14 @@
 # @locusai/api
 
+## 0.7.6
+
+### Patch Changes
+
+- Make the all package versions unified
+- Updated dependencies
+  - @locusai/ai-sdk@0.7.6
+  - @locusai/shared@0.7.6
+
 ## 0.7.5
 
 ### Patch Changes
