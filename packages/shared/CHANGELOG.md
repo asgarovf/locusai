@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.7.5
+
+### Patch Changes
+
+- Fix locus version detection and display on banner
+
 ## 0.7.4
 
 ### Patch Changes

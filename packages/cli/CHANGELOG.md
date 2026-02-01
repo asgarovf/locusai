@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.7.5
+
+### Patch Changes
+
+- Fix locus version detection and display on banner
+- Updated dependencies
+  - @locusai/sdk@0.7.5
+
 ## 0.7.4
 
 ### Patch Changes
