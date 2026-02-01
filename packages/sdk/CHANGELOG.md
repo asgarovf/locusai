@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.7.7
+
+### Patch Changes
+
+- Add process name on spawned workers
+- Updated dependencies
+  - @locusai/shared@0.7.7
+
 ## 0.7.6
 
 ### Patch Changes
