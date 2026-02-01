@@ -4,11 +4,11 @@ import { DocsEditorArea } from "@/components/docs/DocsEditorArea";
 import { DocsHeaderActions } from "@/components/docs/DocsHeaderActions";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { PageLayout } from "@/components/PageLayout";
-import { useDocs, useGlobalKeydowns } from "@/hooks";
+import { useDocs } from "@/hooks";
 
 export function Docs() {
   const {
-    docs,
+    allDocs,
     groups,
     docsByGroup,
     selectedId,
@@ -34,21 +34,18 @@ export function Docs() {
     handleDelete,
     handleCreateGroup,
     handleGroupChange,
+    handleDuplicate,
+    handleRename,
+    handleCreateWithTemplate,
+    handleDeleteGroup,
+    handleRenameGroup,
   } = useDocs();
-
-  useGlobalKeydowns({
-    onCloseCreateTask: () => {
-      if (isCreating) setIsCreating(false);
-      else if (selectedId) setSelectedId(null);
-    },
-  });
 
   const headerActions = (
     <DocsHeaderActions
       selectedDoc={selectedDoc}
       contentMode={contentMode}
       setContentMode={setContentMode}
-      onNewDoc={() => setIsCreating(true)}
       onSave={handleSave}
       hasUnsavedChanges={hasUnsavedChanges}
       groups={groups}
@@ -58,7 +55,7 @@ export function Docs() {
 
   const headerStats = (
     <div className="flex items-center gap-2">
-      <span className="text-primary font-bold">{docs.length} documents</span>
+      <span className="text-primary font-bold">{allDocs.length} documents</span>
       {selectedDoc && (
         <>
           <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
@@ -79,6 +76,7 @@ export function Docs() {
     >
       <DocsSidebar
         groups={groups}
+        allDocs={allDocs}
         docsByGroup={docsByGroup}
         selectedId={selectedId}
         onSelect={setSelectedId}
@@ -95,6 +93,11 @@ export function Docs() {
         onCreateGroup={handleCreateGroup}
         selectedGroupId={selectedGroupId}
         onGroupSelect={setSelectedGroupId}
+        onDuplicate={handleDuplicate}
+        onRename={handleRename}
+        onReorder={handleGroupChange}
+        onDeleteGroup={handleDeleteGroup}
+        onRenameGroup={handleRenameGroup}
       />
 
       <main className="flex-1 flex flex-col min-w-0">
@@ -103,7 +106,7 @@ export function Docs() {
           content={content}
           onContentChange={setContent}
           contentMode={contentMode}
-          onNewDoc={() => setIsCreating(true)}
+          onCreateWithTemplate={handleCreateWithTemplate}
         />
       </main>
     </PageLayout>

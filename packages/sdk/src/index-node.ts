@@ -14,6 +14,8 @@ export * from "./ai/index.js";
 // Node.js-only: Core utilities (uses fs)
 export * from "./core/index.js";
 export { PromptBuilder } from "./core/prompt-builder.js";
+// Node.js-only: Exec streaming types
+export * from "./exec/index.js";
 // Re-export everything from main index (browser-safe)
 export * from "./index.js";
 // Node.js-only: Orchestrator

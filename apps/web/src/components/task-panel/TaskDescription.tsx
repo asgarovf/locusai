@@ -229,7 +229,9 @@ export function TaskDescription({
               </div>
             )}
             {/* Save button - shows when there are unsaved changes or during saving/error */}
-            {(hasUnsavedChanges || saveStatus === "saving" || saveStatus === "error") && (
+            {(hasUnsavedChanges ||
+              saveStatus === "saving" ||
+              saveStatus === "error") && (
               <Button
                 size="sm"
                 onClick={handleManualSave}

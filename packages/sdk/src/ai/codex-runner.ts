@@ -4,6 +4,7 @@ import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
+import type { StreamChunk } from "../exec/types.js";
 import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
@@ -35,6 +36,115 @@ export class CodexRunner implements AiRunner {
     }
 
     throw lastError || new Error("Codex CLI failed after multiple attempts");
+  }
+
+  async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
+    const outputPath = join(tmpdir(), `locus-codex-${randomUUID()}.txt`);
+    const args = this.buildArgs(outputPath);
+
+    const codex = spawn("codex", args, {
+      cwd: this.projectPath,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: process.env,
+      shell: false,
+    });
+
+    let resolveChunk: ((chunk: StreamChunk | null) => void) | null = null;
+    const chunkQueue: StreamChunk[] = [];
+    let processEnded = false;
+    let errorMessage = "";
+    let finalOutput = "";
+
+    const enqueueChunk = (chunk: StreamChunk) => {
+      if (resolveChunk) {
+        const resolve = resolveChunk;
+        resolveChunk = null;
+        resolve(chunk);
+      } else {
+        chunkQueue.push(chunk);
+      }
+    };
+
+    const signalEnd = () => {
+      processEnded = true;
+      if (resolveChunk) {
+        resolveChunk(null);
+        resolveChunk = null;
+      }
+    };
+
+    const processOutput = (data: Buffer) => {
+      const msg = data.toString();
+      finalOutput += msg;
+
+      for (const rawLine of msg.split("\n")) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        // Parse thinking status
+        if (/^thinking\b/i.test(line)) {
+          enqueueChunk({ type: "thinking", content: line });
+        }
+        // Parse tool/action indicators
+        else if (/^[→•✓]/.test(line) || /^Plan update\b/.test(line)) {
+          enqueueChunk({
+            type: "tool_use",
+            tool: line.replace(/^[→•✓]\s*/, ""),
+          });
+        }
+        // All other content as text delta
+        else if (this.shouldDisplay(line)) {
+          enqueueChunk({ type: "text_delta", content: `${line}\n` });
+        }
+      }
+    };
+
+    codex.stdout.on("data", processOutput);
+    codex.stderr.on("data", processOutput);
+
+    codex.on("error", (err) => {
+      errorMessage = `Failed to start Codex CLI: ${err.message}. Ensure 'codex' is installed and available in PATH.`;
+      signalEnd();
+    });
+
+    codex.on("close", (code) => {
+      this.cleanupTempFile(outputPath);
+
+      if (code === 0) {
+        const result = this.readOutput(outputPath, finalOutput);
+        enqueueChunk({ type: "result", content: result });
+      } else if (!errorMessage) {
+        errorMessage = this.createErrorFromOutput(code, finalOutput).message;
+      }
+      signalEnd();
+    });
+
+    codex.stdin.write(prompt);
+    codex.stdin.end();
+
+    // Yield chunks as they arrive
+    while (true) {
+      if (chunkQueue.length > 0) {
+        const chunk = chunkQueue.shift();
+        if (chunk) yield chunk;
+      } else if (processEnded) {
+        if (errorMessage) {
+          yield { type: "error", error: errorMessage };
+        }
+        break;
+      } else {
+        const chunk = await new Promise<StreamChunk | null>((resolve) => {
+          resolveChunk = resolve;
+        });
+        if (chunk === null) {
+          if (errorMessage) {
+            yield { type: "error", error: errorMessage };
+          }
+          break;
+        }
+        yield chunk;
+      }
+    }
   }
 
   private executeRun(prompt: string): Promise<string> {

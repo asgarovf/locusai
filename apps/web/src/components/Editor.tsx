@@ -8,6 +8,8 @@
  * Features:
  * - Markdown support with live preview
  * - Rich formatting toolbar
+ * - Floating toolbar on text selection
+ * - Slash commands for quick insertion
  * - Code syntax highlighting
  * - Task lists and checkboxes
  * - Link editing
@@ -41,6 +43,7 @@ import { common, createLowlight } from "lowlight";
 import {
   Bold,
   CheckSquare,
+  ChevronDown,
   Code as CodeIcon,
   Heading1,
   Heading2,
@@ -54,8 +57,10 @@ import {
   Terminal,
   Undo,
 } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Markdown } from "tiptap-markdown";
+import { FloatingToolbar } from "@/components/docs/editor/FloatingToolbar";
+import { SlashCommands } from "@/components/docs/editor/SlashCommands";
 import { cn } from "@/lib/utils";
 import { Markdown as UnifiedMarkdown } from "./chat/Markdown";
 
@@ -69,29 +74,57 @@ interface EditorProps {
 }
 
 const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
+  const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const headingMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        headingMenuRef.current &&
+        !headingMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowHeadingMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!editor) {
     return null;
   }
 
-  const buttons = [
+  const headingButtons = [
     {
       icon: Heading1,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      onClick: () => {
+        editor.chain().focus().toggleHeading({ level: 1 }).run();
+        setShowHeadingMenu(false);
+      },
       isActive: editor.isActive("heading", { level: 1 }),
-      label: "H1",
+      label: "Heading 1",
     },
     {
       icon: Heading2,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      onClick: () => {
+        editor.chain().focus().toggleHeading({ level: 2 }).run();
+        setShowHeadingMenu(false);
+      },
       isActive: editor.isActive("heading", { level: 2 }),
-      label: "H2",
+      label: "Heading 2",
     },
     {
       icon: Heading3,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      onClick: () => {
+        editor.chain().focus().toggleHeading({ level: 3 }).run();
+        setShowHeadingMenu(false);
+      },
       isActive: editor.isActive("heading", { level: 3 }),
-      label: "H3",
+      label: "Heading 3",
     },
+  ];
+
+  const formatButtons = [
     {
       icon: Bold,
       onClick: () => editor.chain().focus().toggleBold().run(),
@@ -116,12 +149,9 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
       isActive: editor.isActive("code"),
       label: "Code",
     },
-    {
-      icon: Terminal,
-      onClick: () => editor.chain().focus().toggleCodeBlock().run(),
-      isActive: editor.isActive("codeBlock"),
-      label: "Code Block",
-    },
+  ];
+
+  const blockButtons = [
     {
       icon: List,
       onClick: () => editor.chain().focus().toggleBulletList().run(),
@@ -146,11 +176,58 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
       isActive: editor.isActive("blockquote"),
       label: "Quote",
     },
+    {
+      icon: Terminal,
+      onClick: () => editor.chain().focus().toggleCodeBlock().run(),
+      isActive: editor.isActive("codeBlock"),
+      label: "Code Block",
+    },
   ];
+
+  const currentHeading = headingButtons.find((b) => b.isActive);
+  const HeadingIcon = currentHeading?.icon || Heading1;
 
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 bg-card/50 backdrop-blur-md border-b border-border/40 sticky top-0 z-10">
-      {buttons.map((btn, i) => (
+      {/* Heading Dropdown */}
+      <div className="relative" ref={headingMenuRef}>
+        <button
+          onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+          className={cn(
+            "flex items-center gap-1 px-2 py-1.5 rounded-lg transition-all text-xs font-medium",
+            currentHeading
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-secondary/80"
+          )}
+        >
+          <HeadingIcon size={16} />
+          <ChevronDown size={12} />
+        </button>
+        {showHeadingMenu && (
+          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 min-w-[140px] z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+            {headingButtons.map((btn, i) => (
+              <button
+                key={i}
+                onClick={btn.onClick}
+                className={cn(
+                  "flex items-center gap-2 w-full px-3 py-2 text-xs transition-colors",
+                  btn.isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                )}
+              >
+                <btn.icon size={14} />
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-5 bg-border/40 mx-1" />
+
+      {/* Format Buttons */}
+      {formatButtons.map((btn, i) => (
         <button
           key={i}
           onClick={(e) => {
@@ -168,7 +245,32 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
           <btn.icon size={16} />
         </button>
       ))}
-      <div className="w-px h-6 bg-border/40 mx-1" />
+
+      <div className="w-px h-5 bg-border/40 mx-1" />
+
+      {/* Block Buttons */}
+      {blockButtons.map((btn, i) => (
+        <button
+          key={i}
+          onClick={(e) => {
+            e.preventDefault();
+            btn.onClick();
+          }}
+          className={cn(
+            "p-2 rounded-lg transition-all hover:bg-secondary/80",
+            btn.isActive
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground"
+          )}
+          title={btn.label}
+        >
+          <btn.icon size={16} />
+        </button>
+      ))}
+
+      <div className="w-px h-5 bg-border/40 mx-1" />
+
+      {/* Undo/Redo */}
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -176,6 +278,7 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
         }}
         disabled={!editor.can().chain().focus().undo().run()}
         className="p-2 rounded-lg text-muted-foreground hover:bg-secondary/80 disabled:opacity-30"
+        title="Undo"
       >
         <Undo size={16} />
       </button>
@@ -186,9 +289,16 @@ const MenuBar = ({ editor }: { editor: TiptapEditor | null }) => {
         }}
         disabled={!editor.can().chain().focus().redo().run()}
         className="p-2 rounded-lg text-muted-foreground hover:bg-secondary/80 disabled:opacity-30"
+        title="Redo"
       >
         <Redo size={16} />
       </button>
+
+      {/* Slash Command Hint */}
+      <div className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/50">
+        <kbd className="px-1.5 py-0.5 bg-secondary/30 rounded font-mono">/</kbd>
+        <span>for commands</span>
+      </div>
     </div>
   );
 };
@@ -197,7 +307,7 @@ export function Editor({
   value,
   onChange,
   readOnly = false,
-  placeholder = "Initialize content flow...",
+  placeholder = "Start writing... (type / for commands)",
 }: EditorProps) {
   // useRef for debouncing to avoid re-creating the debounce function on every render
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -253,6 +363,7 @@ export function Editor({
       }),
       TextStyle,
       Color,
+      SlashCommands,
     ],
     [placeholder]
   );
@@ -317,7 +428,10 @@ export function Editor({
             className="p-8 prose-invert prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-strong:font-bold prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:rounded-r-xl"
           />
         ) : (
-          <EditorContent editor={editor} />
+          <>
+            <EditorContent editor={editor} />
+            {editor && <FloatingToolbar editor={editor} />}
+          </>
         )}
       </div>
     </div>

@@ -4,8 +4,8 @@ import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
-import { ArtifactSyncer } from "./artifact-syncer.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
+import { DocumentFetcher } from "./document-fetcher.js";
 import { TaskExecutor } from "./task-executor.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -43,7 +43,7 @@ export class AgentWorker {
 
   // Services
   private indexerService: CodebaseIndexerService;
-  private artifactSyncer: ArtifactSyncer;
+  private documentFetcher: DocumentFetcher;
   private taskExecutor: TaskExecutor;
 
   // State
@@ -84,7 +84,7 @@ export class AgentWorker {
       log,
     });
 
-    this.artifactSyncer = new ArtifactSyncer({
+    this.documentFetcher = new DocumentFetcher({
       client: this.client,
       workspaceId: config.workspaceId,
       projectPath,
@@ -231,11 +231,11 @@ export class AgentWorker {
 
       const result = await this.executeTask(task);
 
-      // Sync artifacts after task execution
+      // Fetch documents from server after task execution
       try {
-        await this.artifactSyncer.sync();
+        await this.documentFetcher.fetch();
       } catch (err) {
-        this.log(`Artifact sync failed: ${err}`, "error");
+        this.log(`Document fetch failed: ${err}`, "error");
       }
 
       if (result.success) {

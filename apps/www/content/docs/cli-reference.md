@@ -83,24 +83,35 @@ locus run [options]
 
 ### `exec`
 
-Runs a direct prompt with full repository context.
+Runs a direct prompt with full repository context. Supports single execution, interactive REPL sessions, and session management.
 
 ```bash
 locus exec "your prompt" [options]
+locus exec --interactive
+locus exec sessions <subcommand>
 ```
 
 **Options:**
 - `--provider <name>`: AI provider to use (`claude` or `codex`, default `claude`).
 - `--model <name>`: Model override for the chosen provider.
 - `--dir <path>`: Directory context for execution (defaults to current directory).
+- `--interactive` / `-i`: Start interactive REPL session.
+- `--session <id>` / `-s`: Resume an existing session.
+- `--no-stream`: Disable streaming output.
 
 **What it does:**
 - Gathers project context (CLAUDE.md, README.md, project structure, skills).
 - Includes the codebase index if available.
 - Sends the prompt to the AI runner.
-- Executes tools (bash, read, etc.) locally to fulfill the prompt.
+- Executes tools (bash, read, write, edit, grep, glob, etc.) locally to fulfill the prompt.
+- Streams real-time output with tool execution progress.
 
 **When to use:**
 - When you want to ask questions about the codebase.
 - When you need the AI to perform a one-off task (e.g., "Refactor this file", "Explain this logic").
 - When you don't want to create a formal task in the Locus Cloud.
+- When you need multi-turn conversations with context preservation.
+
+<Note>
+For comprehensive documentation including interactive mode, session management, and advanced usage, see the [Exec Command](/docs/exec-command) guide.
+</Note>

@@ -129,7 +129,7 @@ export function TaskPanel({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[940]"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-940"
         onClick={onClose}
       />
       <motion.div
@@ -161,7 +161,7 @@ export function TaskPanel({
             />
 
             <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-              <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 flex-1 flex flex-col min-h-0">
+              <div className="w-full max-w-7xl mx-auto py-4 flex-1 flex flex-col min-h-0">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 flex-1 min-h-0 overflow-hidden">
                   {/* Main content */}
                   <div className="min-w-0 flex flex-col min-h-0 overflow-hidden">
@@ -275,7 +275,7 @@ export function TaskPanel({
                       )}
                     </button>
 
-                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8 scrollbar-thin min-h-0">
+                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2 scrollbar-thin min-h-0">
                       <TaskProperties
                         task={task}
                         isLoading={isLoading}

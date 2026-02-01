@@ -82,3 +82,9 @@ pids
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
 packages/cli/bin/agent/
+
+# Locus AI - Session data (user-specific, can grow large)
+.locus/sessions/
+
+# Locus AI - Artifacts (local-only, user-specific)
+.locus/artifacts/

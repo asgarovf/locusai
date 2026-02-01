@@ -886,3 +886,39 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
   border: 2px solid transparent;
   background-clip: content-box;
 }
+
+/* Slash Command Menu Styles */
+.tippy-box[data-theme="slash-command"] {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.4);
+  min-width: 220px;
+}
+
+.tippy-box[data-theme="slash-command"] .tippy-content {
+  padding: 0;
+}
+
+.tippy-box[data-theme="slash-command"][data-animation="shift-away"][data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Scrollbar thin utility */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}

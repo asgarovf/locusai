@@ -1,7 +1,9 @@
 export {
   DEFAULT_MODEL,
+  getAgentArtifactsPath,
   getLocusPath,
   LOCUS_CONFIG,
+  LOCUS_GITIGNORE_PATTERNS,
   PROVIDER,
   type Provider,
 } from "./config.js";

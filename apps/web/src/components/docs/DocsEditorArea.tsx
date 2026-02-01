@@ -1,8 +1,10 @@
 /**
  * Docs Editor Area Component
  *
- * Displays the main editor for documentation files.
- * Supports edit and preview modes with rich text editing.
+ * Enhanced editor area with:
+ * - Modern empty state with quick start cards
+ * - Table of contents sidebar
+ * - Edit and preview modes
  *
  * @example
  * <DocsEditorArea
@@ -10,17 +12,20 @@
  *   content={content}
  *   onContentChange={handleChange}
  *   contentMode="edit"
- *   onNewDoc={handleCreate}
+ *   onCreateWithTemplate={handleCreate}
  * />
  */
 
 "use client";
 
 import { type Doc } from "@locusai/shared";
-import { BookOpen, Plus } from "lucide-react";
+import { List } from "lucide-react";
+import { useState } from "react";
 import { Editor } from "@/components/Editor";
 import { SecondaryText } from "@/components/typography";
-import { Button, EmptyState } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { DocsEmptyState } from "./DocsEmptyState";
+import { TableOfContents } from "./TableOfContents";
 
 interface DocsEditorAreaProps {
   /** Selected documentation file */
@@ -31,8 +36,8 @@ interface DocsEditorAreaProps {
   onContentChange: (content: string) => void;
   /** Edit or preview mode */
   contentMode: "edit" | "preview";
-  /** Called to create new doc */
-  onNewDoc: () => void;
+  /** Called to create new doc with template */
+  onCreateWithTemplate: (templateId: string) => void;
 }
 
 export function DocsEditorArea({
@@ -40,46 +45,63 @@ export function DocsEditorArea({
   content,
   onContentChange,
   contentMode,
-  onNewDoc,
+  onCreateWithTemplate,
 }: DocsEditorAreaProps) {
+  const [showToc, setShowToc] = useState(true);
+
   if (!selectedDoc) {
     return (
-      <div className="h-full flex items-center justify-center p-12 bg-secondary/5 border border-dashed border-border/40 rounded-3xl group transition-all hover:bg-secondary/10">
-        <EmptyState
-          icon={BookOpen}
-          title="Documentation Nexus"
-          description="Access the collective engineering intelligence. Forge new product requirements, architectural designs, or team processes."
-          action={
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-11 px-8 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg border-border/40"
-              onClick={onNewDoc}
-            >
-              <Plus size={16} className="mr-2" />
-              New Document
-            </Button>
-          }
-          className="max-w-xl scale-110 group-hover:scale-[1.12] transition-transform duration-500"
-        />
+      <div className="h-full bg-secondary/5 border border-dashed border-border/40 rounded-3xl overflow-hidden">
+        <DocsEmptyState onCreateWithTemplate={onCreateWithTemplate} />
       </div>
     );
   }
 
+  // Check if content has enough headings to show TOC
+  const hasHeadings = /^#{1,3}\s+/m.test(content);
+
   return (
-    <div className="flex flex-col h-full gap-5">
-      <div className="flex-1 bg-card/20 backdrop-blur-sm border border-border/40 rounded-2xl overflow-hidden shadow-xl shadow-black/5 relative group">
-        <Editor
-          value={content}
-          onChange={onContentChange}
-          readOnly={contentMode === "preview"}
-        />
-        {contentMode === "preview" && (
-          <div className="absolute top-4 right-4 pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity">
-            <SecondaryText size="xs" className="text-muted-foreground/20">
-              Vision Mode Only
-            </SecondaryText>
+    <div className="flex flex-col h-full gap-4">
+      <div className="flex-1 flex gap-4 min-h-0">
+        {/* Main Editor */}
+        <div className="flex-1 bg-card/20 backdrop-blur-sm border border-border/40 rounded-2xl overflow-hidden shadow-xl shadow-black/5 relative group">
+          <Editor
+            value={content}
+            onChange={onContentChange}
+            readOnly={contentMode === "preview"}
+          />
+          {contentMode === "preview" && (
+            <div className="absolute top-4 right-4 pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity">
+              <SecondaryText size="xs" className="text-muted-foreground/20">
+                Preview Mode
+              </SecondaryText>
+            </div>
+          )}
+        </div>
+
+        {/* Table of Contents Sidebar */}
+        {hasHeadings && showToc && (
+          <div className="shrink-0 animate-in slide-in-from-right-4 duration-300">
+            <TableOfContents
+              content={content}
+              onClose={() => setShowToc(false)}
+              collapsible
+            />
           </div>
+        )}
+
+        {/* TOC Toggle Button (when collapsed) */}
+        {hasHeadings && !showToc && (
+          <button
+            onClick={() => setShowToc(true)}
+            className={cn(
+              "shrink-0 p-2.5 h-fit rounded-xl bg-card/30 backdrop-blur-sm border border-border/40",
+              "hover:bg-card/50 transition-colors animate-in fade-in duration-200"
+            )}
+            title="Show Table of Contents"
+          >
+            <List size={16} className="text-muted-foreground" />
+          </button>
         )}
       </div>
     </div>

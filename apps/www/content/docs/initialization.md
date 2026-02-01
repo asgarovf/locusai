@@ -22,7 +22,9 @@ After initialization, you'll see the following structure:
 .locus/
 ├── config.json            # Project configuration
 ├── codebase-index.json    # Codebase semantic index (generated)
-└── artifacts/             # Task artifacts and logs
+├── artifacts/             # Local-only artifacts (not synced to cloud)
+├── documents/             # Documents synced from cloud
+└── sessions/              # Session data for interactive mode
 
 .agent/
 └── skills/                # Agent-specific skill definitions
@@ -61,13 +63,22 @@ The agent reads this file before starting every task to ensure it adheres to you
 
 ## Git Integration
 
-We recommend adding the following to your `.gitignore`:
+The `locus init` command automatically adds the following to your `.gitignore`:
 
 ```
-.locus/artifacts
-.locus/codebase-index.json
+# Locus AI - Session data (user-specific, can grow large)
+.locus/sessions/
+
+# Locus AI - Artifacts (local-only, user-specific)
+.locus/artifacts/
 ```
+
+These directories are gitignored by default because:
+- **Artifacts** are local-only and not synced to the cloud. Each developer can generate their own artifacts without conflicting with others.
+- **Sessions** contain user-specific interactive session data.
 
 You should **commit** `.locus/config.json` and `CLAUDE.md` to ensure all team members (and their agents) share the same configuration and context.
+
+The `.locus/documents/` directory contains documents synced from the cloud dashboard. You can choose to commit these if you want version control, or gitignore them if you prefer the cloud as the source of truth.
 
 

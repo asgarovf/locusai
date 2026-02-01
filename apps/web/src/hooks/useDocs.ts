@@ -5,9 +5,11 @@ import { showToast } from "@/components/ui";
 import {
   useCreateDocGroupMutation,
   useCreateDocMutation,
+  useDeleteDocGroupMutation,
   useDeleteDocMutation,
   useDocGroupsQuery,
   useDocsQuery,
+  useUpdateDocGroupMutation,
   useUpdateDocMutation,
 } from "./useDocsQuery";
 
@@ -120,6 +122,8 @@ export function useDocs() {
   const updateDocMutation = useUpdateDocMutation();
   const deleteDocMutation = useDeleteDocMutation();
   const createGroupMutation = useCreateDocGroupMutation();
+  const updateGroupMutation = useUpdateDocGroupMutation();
+  const deleteGroupMutation = useDeleteDocGroupMutation();
 
   // Derived State (URL is source of truth)
   const selectedId = searchParams.get("docId");
@@ -267,8 +271,70 @@ export function useDocs() {
     }
   };
 
+  const handleDuplicate = async (doc: Doc) => {
+    try {
+      const newDoc = await createDocMutation.mutateAsync({
+        title: `${doc.title}-copy`,
+        content: doc.content || "",
+        groupId: doc.groupId || undefined,
+        type: DocType.GENERAL,
+      });
+      handleSelectDoc(newDoc.id);
+      showToast.success("Document duplicated");
+    } catch {
+      showToast.error("Failed to duplicate document");
+    }
+  };
+
+  const handleRename = (doc: Doc) => {
+    const newTitle = prompt("Enter new document name:", doc.title);
+    if (newTitle?.trim() && newTitle !== doc.title) {
+      updateDocMutation.mutate(
+        { id: doc.id, updates: { title: newTitle.trim() } },
+        {
+          onSuccess: () => showToast.success("Document renamed"),
+          onError: () => showToast.error("Failed to rename document"),
+        }
+      );
+    }
+  };
+
+  const handleCreateWithTemplate = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    setIsCreating(true);
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this group? Documents in this group will be moved to 'Other'."
+      )
+    )
+      return;
+    try {
+      await deleteGroupMutation.mutateAsync(groupId);
+      showToast.success("Group deleted");
+    } catch {
+      showToast.error("Failed to delete group");
+    }
+  };
+
+  const handleRenameGroup = (groupId: string, currentName: string) => {
+    const newName = prompt("Enter new group name:", currentName);
+    if (newName?.trim() && newName !== currentName) {
+      updateGroupMutation.mutate(
+        { id: groupId, name: newName.trim() },
+        {
+          onSuccess: () => showToast.success("Group renamed"),
+          onError: () => showToast.error("Failed to rename group"),
+        }
+      );
+    }
+  };
+
   return {
     docs: filteredDocs,
+    allDocs: docs,
     groups,
     docsByGroup,
     selectedId,
@@ -298,5 +364,10 @@ export function useDocs() {
     handleDelete,
     handleCreateGroup,
     handleGroupChange,
+    handleDuplicate,
+    handleRename,
+    handleCreateWithTemplate,
+    handleDeleteGroup,
+    handleRenameGroup,
   };
 }

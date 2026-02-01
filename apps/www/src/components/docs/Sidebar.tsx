@@ -63,6 +63,15 @@ export const groups = [
     ],
   },
   {
+    title: "Exec Command",
+    items: [
+      {
+        title: "Overview & Usage",
+        href: "/docs/exec-command",
+      },
+    ],
+  },
+  {
     title: "Technical",
     items: [
       {

@@ -93,7 +93,7 @@ export class PromptBuilder {
     // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Artifacts: \`.locus/artifacts\`\n`;
+    prompt += `- Artifacts: \`.locus/artifacts\`)\n`;
     prompt += `- Documents: \`.locus/documents\`\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
@@ -188,8 +188,8 @@ export class PromptBuilder {
     // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Artifacts: \`.locus/artifacts\`\n`;
-    prompt += `- Documents: \`.locus/documents\`\n`;
+    prompt += `- Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)\n`;
+    prompt += `- Documents: \`.locus/documents\` (synced from cloud)\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
     // 4. Codebase Index context

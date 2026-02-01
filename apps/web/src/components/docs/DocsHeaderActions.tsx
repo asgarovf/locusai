@@ -2,14 +2,13 @@
  * Docs Header Actions Component
  *
  * Displays header actions for documentation editor.
- * Includes mode toggle, new doc, and save buttons.
+ * Includes mode toggle and save button.
  *
  * @example
  * <DocsHeaderActions
  *   selectedDoc={doc}
  *   contentMode="edit"
  *   setContentMode={setMode}
- *   onNewDoc={handleNew}
  *   onSave={handleSave}
  *   hasUnsavedChanges={true}
  * />
@@ -18,7 +17,7 @@
 "use client";
 
 import { type Doc, type DocGroup } from "@locusai/shared";
-import { FolderOpen, Plus, Save } from "lucide-react";
+import { FolderOpen, Save } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +28,6 @@ interface DocsHeaderActionsProps {
   contentMode: "edit" | "preview";
   /** Called when changing mode */
   setContentMode: (mode: "edit" | "preview") => void;
-  /** Called to create new doc */
-  onNewDoc: () => void;
   /** Called to save doc */
   onSave: () => void;
   /** Whether there are unsaved changes */
@@ -45,7 +42,6 @@ export function DocsHeaderActions({
   selectedDoc,
   contentMode,
   setContentMode,
-  onNewDoc,
   onSave,
   hasUnsavedChanges,
   groups,
@@ -96,25 +92,15 @@ export function DocsHeaderActions({
               ))}
             </select>
           </div>
+          <Button
+            onClick={onSave}
+            className="h-9 px-6 shadow-lg shadow-primary/20"
+            disabled={!hasUnsavedChanges}
+          >
+            <Save size={16} className="mr-2" />
+            Commit
+          </Button>
         </>
-      )}
-      <Button
-        onClick={onNewDoc}
-        variant="outline"
-        className="h-9 border-border/50"
-      >
-        <Plus size={16} className="mr-2" />
-        New Document
-      </Button>
-      {selectedDoc && (
-        <Button
-          onClick={onSave}
-          className="h-9 px-6 shadow-lg shadow-primary/20"
-          disabled={!hasUnsavedChanges}
-        >
-          <Save size={16} className="mr-2" />
-          Commit
-        </Button>
       )}
     </div>
   );

@@ -97,3 +97,35 @@ export function useCreateDocGroupMutation() {
     },
   });
 }
+
+export function useUpdateDocGroupMutation() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      locusClient.docs.updateGroup(id, workspaceId, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.docGroups.list(workspaceId),
+      });
+    },
+  });
+}
+
+export function useDeleteDocGroupMutation() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => locusClient.docs.deleteGroup(id, workspaceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.docGroups.list(workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.docs.list(workspaceId),
+      });
+    },
+  });
+}

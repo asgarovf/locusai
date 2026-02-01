@@ -2,6 +2,7 @@ export * from "./Avatar";
 export * from "./Badge";
 export * from "./Button";
 export * from "./Checkbox";
+export * from "./ContextMenu";
 export * from "./Drawer";
 export * from "./Dropdown";
 export * from "./EmptyState";
