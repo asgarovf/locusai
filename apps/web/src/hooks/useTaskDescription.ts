@@ -8,7 +8,9 @@
 "use client";
 
 import { type Task } from "@locusai/shared";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface UseTaskDescriptionProps {
   task: Task;
@@ -22,7 +24,8 @@ interface UseTaskDescriptionReturn {
 
   // Description state
   editDesc: string;
-  descMode: "edit" | "preview";
+  hasUnsavedChanges: boolean;
+  saveStatus: SaveStatus;
 
   // Handlers
   setIsEditingTitle: (val: boolean) => void;
@@ -30,10 +33,9 @@ interface UseTaskDescriptionReturn {
   handleTitleSave: () => void;
   setEditDesc: (val: string) => void;
   handleDescSave: () => void;
-  setDescMode: (mode: "edit" | "preview") => void;
+  setSaveStatus: (status: SaveStatus) => void;
 
   // Quick actions
-  toggleEditMode: () => void;
   cancelEdit: () => void;
 }
 
@@ -42,7 +44,7 @@ interface UseTaskDescriptionReturn {
  *
  * Handles state for:
  * - Title editing mode and content
- * - Description editing mode and content
+ * - Description content and save status
  * - Save operations for both
  *
  * @example
@@ -50,6 +52,8 @@ interface UseTaskDescriptionReturn {
  *   isEditingTitle,
  *   editTitle,
  *   handleTitleSave,
+ *   hasUnsavedChanges,
+ *   saveStatus,
  *   // ... other handlers
  * } = useTaskDescription({ task, onUpdate });
  */
@@ -60,7 +64,18 @@ export function useTaskDescription({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDesc, setEditDesc] = useState(task.description || "");
-  const [descMode, setDescMode] = useState<"edit" | "preview">("preview");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+
+  // Derive hasUnsavedChanges from comparing editDesc with task.description
+  const hasUnsavedChanges = useMemo(() => {
+    return editDesc !== (task.description || "");
+  }, [editDesc, task.description]);
+
+  // Synchronize local edit state when task prop changes
+  useEffect(() => {
+    setEditTitle(task.title);
+    setEditDesc(task.description || "");
+  }, [task.title, task.description]);
 
   const handleTitleSave = useCallback(() => {
     if (editTitle !== task.title && editTitle.trim()) {
@@ -75,10 +90,6 @@ export function useTaskDescription({
     }
   }, [editDesc, task.description, onUpdate]);
 
-  const toggleEditMode = useCallback(() => {
-    setDescMode(descMode === "edit" ? "preview" : "edit");
-  }, [descMode]);
-
   const cancelEdit = useCallback(() => {
     setEditTitle(task.title);
     setEditDesc(task.description || "");
@@ -89,14 +100,14 @@ export function useTaskDescription({
     isEditingTitle,
     editTitle,
     editDesc,
-    descMode,
+    hasUnsavedChanges,
+    saveStatus,
     setIsEditingTitle,
     setEditTitle,
     handleTitleSave,
     setEditDesc,
     handleDescSave,
-    setDescMode,
-    toggleEditMode,
+    setSaveStatus,
     cancelEdit,
   };
 }

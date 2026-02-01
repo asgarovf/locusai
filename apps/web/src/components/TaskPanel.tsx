@@ -137,7 +137,7 @@ export function TaskPanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ ease: [0.23, 1, 0.32, 1], duration: 0.5 }}
-        className="fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[800px] lg:w-[1000px] max-w-full bg-background border-l border-border z-950 flex flex-col shadow-2xl"
+        className="fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[750px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] max-w-full bg-background border-l border-border z-950 flex flex-col shadow-2xl"
       >
         {!task ? (
           <div className="flex-1 flex items-center justify-center">
@@ -161,8 +161,8 @@ export function TaskPanel({
             />
 
             <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-              <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 flex-1 flex flex-col min-h-0">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 min-h-0 overflow-hidden">
+              <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 flex-1 flex flex-col min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 flex-1 min-h-0 overflow-hidden">
                   {/* Main content */}
                   <div className="min-w-0 flex flex-col min-h-0 overflow-hidden">
                     {/* Tab navigation */}
@@ -172,7 +172,7 @@ export function TaskPanel({
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
                           className={`
-                            flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 font-semibold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0
+                            flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 min-h-[44px] font-semibold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0
                             ${
                               activeTab === tab.id
                                 ? "border-b-2 border-primary text-primary"
@@ -229,7 +229,7 @@ export function TaskPanel({
                   {/* Toggle button (mobile) */}
                   <button
                     onClick={handleToggleSidebar}
-                    className="lg:hidden fixed bottom-6 right-6 p-3 sm:p-4 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all z-[945]"
+                    className="lg:hidden fixed bottom-6 right-6 p-3 min-w-[44px] min-h-[44px] bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all z-[945]"
                     aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
                   >
                     {sidebarOpen ? (
@@ -255,7 +255,7 @@ export function TaskPanel({
                     ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
                     transition-transform duration-300 ease-in-out
                     flex flex-col lg:bg-secondary/10 lg:backdrop-blur-3xl lg:shadow-[inset_1px_0_0_rgba(255,255,255,0.02)]
-                    w-full sm:w-[360px] max-w-[85vw] lg:w-auto
+                    w-full sm:w-[400px] max-w-[85vw] lg:w-auto
                     min-h-0 overflow-hidden
                     z-955
                   `}
