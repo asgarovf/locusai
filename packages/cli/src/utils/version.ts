@@ -9,11 +9,23 @@ export function getVersion(): string {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    // Go up from utils/ to cli/src/ to cli/
-    const packagePath = join(__dirname, "..", "..", "package.json");
-    if (existsSync(packagePath)) {
-      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
-      return pkg.version || "0.0.0";
+    // When bundled, the output is in bin/locus.js, so go up one level to find package.json
+    // When running from source, we're in src/utils/, so we need to go up two levels
+    const bundledPath = join(__dirname, "..", "package.json");
+    const sourcePath = join(__dirname, "..", "..", "package.json");
+
+    if (existsSync(bundledPath)) {
+      const pkg = JSON.parse(readFileSync(bundledPath, "utf-8"));
+      if (pkg.name === "@locusai/cli") {
+        return pkg.version || "0.0.0";
+      }
+    }
+
+    if (existsSync(sourcePath)) {
+      const pkg = JSON.parse(readFileSync(sourcePath, "utf-8"));
+      if (pkg.name === "@locusai/cli") {
+        return pkg.version || "0.0.0";
+      }
     }
   } catch {
     // Silent fallback
