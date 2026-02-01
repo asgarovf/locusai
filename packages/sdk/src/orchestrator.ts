@@ -222,12 +222,16 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Use node to run the worker script
+    // Set LOCUS_WORKER env var to make processes easily identifiable in Activity Monitor
+    // You can find workers with: ps aux | grep LOCUS_WORKER or pgrep -f "locus-worker"
     const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs], {
       stdio: ["pipe", "pipe", "pipe"],
       env: {
         ...process.env,
         FORCE_COLOR: "1",
         TERM: "xterm-256color",
+        LOCUS_WORKER: agentId,
+        LOCUS_WORKSPACE: this.config.workspaceId,
       },
     });
 

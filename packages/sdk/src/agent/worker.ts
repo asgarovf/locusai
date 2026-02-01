@@ -269,6 +269,10 @@ if (
   process.argv[1]?.includes("agent-worker") ||
   process.argv[1]?.includes("worker")
 ) {
+  // Set process title for easy identification in Activity Monitor / ps
+  // Find with: ps aux | grep "locus-worker" or pgrep -f "locus-worker"
+  process.title = "locus-worker";
+
   const args = process.argv.slice(2);
   const config: Partial<WorkerConfig> = {};
   for (let i = 0; i < args.length; i++) {
