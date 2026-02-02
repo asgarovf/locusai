@@ -146,7 +146,9 @@ export class TasksController {
   @Member()
   async getTaskContext(@Param("taskId") taskId: string): Promise<string> {
     const task = await this.tasksService.findById(taskId);
-    const workspace = await this.workspacesService.findById(task.workspaceId);
+    const workspace = await this.workspacesService.findByIdRaw(
+      task.workspaceId
+    );
 
     return ContextManager.formatTaskContextForLocalAI(
       {

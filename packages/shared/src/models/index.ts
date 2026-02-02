@@ -6,6 +6,7 @@ export * from "./ci";
 export * from "./doc";
 export * from "./doc-group";
 export * from "./invitation";
+export * from "./manifest";
 export * from "./organization";
 export * from "./sprint";
 export * from "./task";

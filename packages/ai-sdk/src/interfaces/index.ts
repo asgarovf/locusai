@@ -4,24 +4,6 @@ export * from "./context";
 
 export type ProjectPhase = "PLANNING" | "MVP_BUILD" | "SCALING" | "MAINTENANCE";
 
-export interface ProjectSprint {
-  id: string;
-  goal: string;
-  tasks: string[]; // Task IDs
-  status: "PLANNED" | "ACTIVE" | "COMPLETED";
-}
-
-export interface ProjectMilestone {
-  title: string;
-  date?: string;
-  status: "PENDING" | "COMPLETED";
-}
-
-export interface ProjectTimeline {
-  sprints: ProjectSprint[];
-  milestones: ProjectMilestone[];
-}
-
 export interface RepositoryContext {
   summary: string;
   fileStructure: string;
@@ -42,34 +24,29 @@ export interface ProjectManifest {
   brandVoice?: string;
   successMetrics?: string[];
   completenessScore: number; // 0-100
-
-  // New Architecture Fields
-  timeline?: ProjectTimeline;
   repositoryState?: RepositoryContext;
 }
 
 export enum AgentMode {
   INTERVIEW = "INTERVIEW",
   PLANNING = "PLANNING",
-  EXECUTING = "EXECUTING",
   IDLE = "IDLE",
-  ANALYZING = "ANALYZING",
   QUERY = "QUERY",
   IDEA = "IDEA",
-  COMPILING = "COMPILING",
   DOCUMENTING = "DOCUMENTING",
 }
 
 export interface AgentChatMessage {
   role: "user" | "assistant";
   content: string;
+  timestamp: Date;
   artifacts?: AIArtifact[];
   suggestedActions?: SuggestedAction[];
 }
 
 export interface WorkflowEntity {
   id: string;
-  type: "document" | "task" | "sprint";
+  type: "document";
   title: string;
   createdAt: string;
 }
@@ -101,10 +78,4 @@ export interface AgentResponse {
   content: string;
   artifacts?: AIArtifact[];
   suggestedActions?: SuggestedAction[];
-}
-
-export interface ToolExecutionResult {
-  observations: string[];
-  artifacts: AIArtifact[];
-  suggestedActions: SuggestedAction[];
 }

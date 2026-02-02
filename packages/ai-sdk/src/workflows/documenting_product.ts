@@ -1,26 +1,11 @@
-import { HumanMessage } from "@langchain/core/messages";
-import { $FixMe, AIArtifact, SuggestedAction } from "@locusai/shared";
 import { Intent } from "../chains/intent";
-import { DocumentCompiler } from "../core/compiler";
 import { ContextManager } from "../core/context";
-import { ToolHandler } from "../core/tool-handler";
 import { BaseWorkflow, WorkflowContext } from "../core/workflow";
 import { AgentMode, AgentResponse } from "../interfaces/index";
-import { ToolRegistry } from "../tools/index";
-import { ILocusProvider } from "../tools/interfaces";
 
 export class ProductDocumentingWorkflow extends BaseWorkflow {
   readonly name = "Product Documenting";
   readonly mode = AgentMode.DOCUMENTING;
-
-  constructor(
-    private provider: ILocusProvider,
-    private workspaceId: string,
-    private toolHandler: ToolHandler,
-    private compiler: DocumentCompiler
-  ) {
-    super();
-  }
 
   canHandle(context: WorkflowContext): boolean {
     if (context.intent === Intent.PRODUCT_DOCUMENTING) return true;
@@ -33,76 +18,31 @@ export class ProductDocumentingWorkflow extends BaseWorkflow {
   async execute(context: WorkflowContext): Promise<AgentResponse> {
     const { llm, state, input } = context;
 
-    // Build tools - Product Documenting needs Doc, Task, and Sprint tools (for context), but NOT compiling.
-    const registry = new ToolRegistry(
-      this.provider,
-      this.workspaceId,
-      this.compiler
-    );
-    const tools = [
-      ...registry.getDocTools(),
-      ...registry.getTaskTools(),
-      ...registry.getSprintTools(),
-    ];
-
-    const toolLLM = (llm as $FixMe).bindTools
-      ? (llm as $FixMe).bindTools(tools)
-      : llm;
-
     const projectContext = ContextManager.getProjectContext(state);
     const messages = ContextManager.buildMessages(
       state.history,
       input,
-      `${projectContext}\n\nYou are in Product Documenting mode. Focus on creating or updating Product Requirements Documents (PRD), Timelines, and User Stories. Use 'create_document' with type='PRD' when starting a new document.`
+      `${projectContext}\n\nYou are an expert Product Manager and Documentation Specialist.
+
+Your role is to help with:
+- Product Requirements Documents (PRD)
+- User Stories and use cases
+- Product roadmaps and timelines
+- Feature specifications
+- Budget and resource planning
+- Market analysis and competitive research
+
+Provide detailed, well-structured advice. Help users think through their product documentation needs and offer templates or frameworks when appropriate.`
     );
 
-    let steps = 0;
-    const maxSteps = 5;
-    const allArtifacts: AIArtifact[] = [];
-    const allSuggestedActions: SuggestedAction[] = [];
-
-    while (steps < maxSteps) {
-      steps++;
-
-      const response = await toolLLM.invoke(messages);
-      messages.push(response);
-
-      if (!response.tool_calls || response.tool_calls.length === 0) {
-        const { cleanContent, actions } = this.extractAISuggestions(
-          response.content
-        );
-        return {
-          content: cleanContent,
-          artifacts: Array.from(
-            new Map(allArtifacts.map((a) => [a.id, a])).values()
-          ),
-          suggestedActions: [...allSuggestedActions, ...actions],
-        };
-      }
-
-      const toolResult = await this.toolHandler.executeCalls(
-        response.tool_calls
-      );
-
-      if (toolResult.artifacts) allArtifacts.push(...toolResult.artifacts);
-      if (toolResult.suggestedActions)
-        allSuggestedActions.push(...toolResult.suggestedActions);
-
-      const observationText = toolResult.observations.join("\n\n");
-
-      messages.push(
-        new HumanMessage(
-          `Tool Execution Result:\n${observationText}\n\nContinue executing if needed, or answer the user.`
-        )
-      );
-    }
+    const response = await llm.invoke(messages);
+    const { cleanContent, actions } = this.extractAISuggestions(
+      response.content as string
+    );
 
     return {
-      content: "Execution limit reached.",
-      artifacts: Array.from(
-        new Map(allArtifacts.map((a) => [a.id, a])).values()
-      ),
-      suggestedActions: allSuggestedActions,
+      content: cleanContent,
+      suggestedActions: actions,
     };
   }
 }

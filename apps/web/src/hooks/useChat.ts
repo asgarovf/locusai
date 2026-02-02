@@ -2,20 +2,36 @@
 
 import { $FixMe, generateUUID } from "@locusai/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Artifact,
   AssistantMessage,
   ChatSession,
   Message,
   UserMessage,
 } from "@/components/chat/types";
 import { locusClient } from "@/lib/api-client";
-import { getChatSessionKey } from "@/lib/local-storage-keys";
+import { getStorageJSON, removeStorageItem } from "@/lib/local-storage";
+import {
+  getChatSessionKey,
+  getInterviewBackupKey,
+} from "@/lib/local-storage-keys";
 import { queryKeys } from "@/lib/query-keys";
 import { useChatStore } from "@/stores/chat-store";
+import type { InterviewChatBackup } from "./useInterviewPersistence";
 import { useLocalStorage } from "./useLocalStorage";
 import { useWorkspaceId } from "./useWorkspaceId";
+
+/**
+ * Sort messages by timestamp to ensure consistent ordering.
+ * Messages without timestamps are placed at the end.
+ */
+function sortMessagesByTimestamp(messages: Message[]): Message[] {
+  return [...messages].sort((a, b) => {
+    const timeA = a.timestamp?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const timeB = b.timestamp?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    return timeA - timeB;
+  });
+}
 
 export function useChat() {
   const queryClient = useQueryClient();
@@ -27,7 +43,6 @@ export function useChat() {
     isTyping,
     loadingState,
     sessions,
-    activeArtifact,
     intent,
     setActiveSessionId,
     setMessages,
@@ -36,7 +51,6 @@ export function useChat() {
     setLoadingState,
     setIntent,
     setSessions,
-    setActiveArtifact,
   } = useChatStore();
 
   const [localActiveSessionId, setLocalActiveSessionId] =
@@ -44,6 +58,35 @@ export function useChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const tempSessionIdRef = useRef<string | null>(null);
+  const hasRestoredBackupRef = useRef(false);
+
+  /**
+   * Get interview backup from localStorage
+   */
+  const getInterviewBackup = useCallback((): InterviewChatBackup | null => {
+    if (!workspaceId) return null;
+    const backupKey = getInterviewBackupKey(workspaceId);
+    const backup = getStorageJSON<InterviewChatBackup | null>(backupKey, null);
+    if (backup) {
+      return {
+        ...backup,
+        messages: backup.messages.map((msg) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        })),
+      };
+    }
+    return null;
+  }, [workspaceId]);
+
+  /**
+   * Clear interview backup from localStorage
+   */
+  const clearInterviewBackup = useCallback(() => {
+    if (!workspaceId) return;
+    const backupKey = getInterviewBackupKey(workspaceId);
+    removeStorageItem(backupKey);
+  }, [workspaceId]);
 
   // Sync store with local storage on mount/change
   useEffect(() => {
@@ -118,12 +161,6 @@ export function useChat() {
             role: "assistant",
             content: m.content,
             thoughtProcess: m.thoughtProcess,
-            artifacts: m.artifacts?.map((art) => ({
-              ...art,
-              type: ["code", "document", "sprint", "task"].includes(art.type)
-                ? art.type
-                : "document",
-            })),
             suggestedActions: m.suggestedActions,
           } as AssistantMessage;
         }
@@ -142,12 +179,54 @@ export function useChat() {
     staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
-  // Sync history to store
+  // Sync history to store and restore backup if needed
   useEffect(() => {
     if (historyData && loadingState === "IDLE" && !isTyping) {
+      // Check for interview backup to restore unsent messages
+      if (!hasRestoredBackupRef.current) {
+        const backup = getInterviewBackup();
+        hasRestoredBackupRef.current = true;
+
+        if (backup && backup.messages.length > 0) {
+          // Find user messages in backup that are not in server history
+          // These are messages that were sent but not synced (network failure)
+          const serverMessageIds = new Set(historyData.map((m) => m.id));
+          const serverMessageContents = new Set(
+            historyData.filter((m) => m.role === "user").map((m) => m.content)
+          );
+
+          // Get unsent user messages (not in server by ID or content)
+          const unsentMessages = backup.messages.filter(
+            (m) =>
+              m.role === "user" &&
+              !serverMessageIds.has(m.id) &&
+              !serverMessageContents.has(m.content)
+          );
+
+          if (unsentMessages.length > 0) {
+            // Merge server history with unsent messages
+            const mergedMessages = [...historyData, ...unsentMessages];
+            setMessages(mergedMessages);
+            // Clear the backup since we've restored
+            clearInterviewBackup();
+            return;
+          }
+
+          // If backup matches server or has no new messages, just clear it
+          clearInterviewBackup();
+        }
+      }
+
       setMessages(historyData);
     }
-  }, [historyData, loadingState, isTyping, setMessages]);
+  }, [
+    historyData,
+    loadingState,
+    isTyping,
+    setMessages,
+    getInterviewBackup,
+    clearInterviewBackup,
+  ]);
 
   // Scroll to bottom
   const [shouldScrollSmooth, setShouldScrollSmooth] = useState(false);
@@ -174,12 +253,6 @@ export function useChat() {
         content: aiMessage.content,
         timestamp: new Date(aiMessage.timestamp),
         thoughtProcess: aiMessage.thoughtProcess,
-        artifacts: aiMessage.artifacts?.map((art) => ({
-          ...art,
-          type: (["code", "document", "sprint", "task"].includes(art.type)
-            ? art.type
-            : "document") as Artifact["type"],
-        })),
         suggestedActions: aiMessage.suggestedActions,
       };
 
@@ -188,17 +261,20 @@ export function useChat() {
       setLoadingState("IDLE");
       setIntent("");
 
-      // Update Cache immediately
+      // Update Cache immediately - sort by timestamp for consistency
       queryClient.setQueryData<Message[]>(
         queryKeys.ai.session(activeSessionId, workspaceId),
-        (old) => {
-          return [...(old || []), assistantMessage];
-        }
+        (old) => sortMessagesByTimestamp([...(old || []), assistantMessage])
       );
 
       // Invalidate sessions to get the final title from server
       queryClient.invalidateQueries({
         queryKey: queryKeys.ai.sessions(workspaceId),
+      });
+
+      // Invalidate manifest status to update progress after AI response
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.manifestStatus(workspaceId),
       });
     },
     onError: (error) => {
@@ -217,9 +293,7 @@ export function useChat() {
       // Update Cache with error message so it persists
       queryClient.setQueryData<Message[]>(
         queryKeys.ai.session(activeSessionId, workspaceId),
-        (old) => {
-          return [...(old || []), errorMessage];
-        }
+        (old) => sortMessagesByTimestamp([...(old || []), errorMessage])
       );
     },
   });
@@ -314,9 +388,7 @@ export function useChat() {
     if (!tempSessionIdRef.current) {
       queryClient.setQueryData<Message[]>(
         queryKeys.ai.session(activeSessionId, workspaceId),
-        (old) => {
-          return [...(old || []), newMessage];
-        }
+        (old) => sortMessagesByTimestamp([...(old || []), newMessage])
       );
     }
 
@@ -330,7 +402,6 @@ export function useChat() {
     setActiveSessionId("");
     setLocalActiveSessionId("");
     setMessages([]);
-    setActiveArtifact(null);
     setShouldScrollSmooth(false);
     tempSessionIdRef.current = null;
     return "";
@@ -362,10 +433,10 @@ export function useChat() {
     setActiveSessionId(id);
     setLocalActiveSessionId(id);
     setIsTyping(false);
-    setActiveArtifact(null);
     setLoadingState("IDLE");
     setMessages([]); // Clear previous messages while loading
     tempSessionIdRef.current = null; // Clear temp ref on switch
+    hasRestoredBackupRef.current = false; // Allow backup restoration for new session
   };
   const shareSessionMutation = useMutation({
     mutationFn: (variables: { id: string; isShared: boolean }) =>
@@ -398,8 +469,6 @@ export function useChat() {
     isTyping,
     loadingState,
     intent,
-    activeArtifact,
-    setActiveArtifact,
     messagesEndRef,
     sendMessage,
     createNewChat,

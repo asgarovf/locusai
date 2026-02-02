@@ -117,7 +117,9 @@ export class AiController {
             role: "assistant",
             content: lastAssistantMessage.content,
             artifacts: lastAssistantMessage.artifacts,
-            timestamp: new Date(),
+            timestamp: lastAssistantMessage.timestamp
+              ? new Date(lastAssistantMessage.timestamp)
+              : new Date(),
           }
         : {
             id: generateUUID(),
@@ -129,7 +131,7 @@ export class AiController {
       history: history.map((m) => ({
         ...m,
         id: generateUUID(),
-        timestamp: new Date(),
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
       })),
     };
   }
@@ -185,7 +187,7 @@ export class AiController {
       history: history.map((m) => ({
         ...m,
         id: generateUUID(),
-        timestamp: new Date(),
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
       })),
     };
   }

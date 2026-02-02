@@ -57,17 +57,30 @@ export const WorkspaceAndUserParamSchema = z.object({
 export type WorkspaceAndUserParam = z.infer<typeof WorkspaceAndUserParamSchema>;
 
 // ============================================================================
+// Workspace with Manifest Info
+// ============================================================================
+
+export const WorkspaceWithManifestInfoSchema = WorkspaceSchema.extend({
+  isManifestComplete: z.boolean(),
+  manifestCompletionPercentage: z.number().min(0).max(100),
+});
+
+export type WorkspaceWithManifestInfo = z.infer<
+  typeof WorkspaceWithManifestInfoSchema
+>;
+
+// ============================================================================
 // Response Schemas
 // ============================================================================
 
 export const WorkspaceResponseSchema = z.object({
-  workspace: WorkspaceSchema,
+  workspace: WorkspaceWithManifestInfoSchema,
 });
 
 export type WorkspaceResponse = z.infer<typeof WorkspaceResponseSchema>;
 
 export const WorkspacesResponseSchema = z.object({
-  workspaces: z.array(WorkspaceSchema),
+  workspaces: z.array(WorkspaceWithManifestInfoSchema),
 });
 
 export type WorkspacesResponse = z.infer<typeof WorkspacesResponseSchema>;
@@ -86,4 +99,20 @@ export const WorkspaceStatsResponseSchema = z.object({
 
 export type WorkspaceStatsResponse = z.infer<
   typeof WorkspaceStatsResponseSchema
+>;
+
+// ============================================================================
+// Manifest Status Response
+// ============================================================================
+
+export const ManifestStatusResponseSchema = z.object({
+  isComplete: z.boolean(),
+  percentage: z.number().min(0).max(100),
+  missingFields: z.array(z.string()),
+  filledFields: z.array(z.string()),
+  completenessScore: z.number().min(0).max(100).nullable(),
+});
+
+export type ManifestStatusResponse = z.infer<
+  typeof ManifestStatusResponseSchema
 >;

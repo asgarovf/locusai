@@ -53,7 +53,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <>
-            <Spinner size="sm" className="mr-2" aria-hidden="true" />
+            <Spinner
+              size="sm"
+              className="mr-2 border-current"
+              aria-hidden="true"
+            />
             {loadingText || children}
           </>
         ) : (

@@ -1,4 +1,10 @@
-import { ChecklistItem, MembershipRole } from "@locusai/shared";
+import {
+  ChecklistItem,
+  ManifestStatusResponse,
+  MembershipRole,
+  ProjectManifestType,
+  WorkspaceWithManifestInfo,
+} from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -8,6 +14,7 @@ import { Organization } from "@/entities/organization.entity";
 import { Task } from "@/entities/task.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
+import { ManifestValidatorService } from "./manifest-validator.service";
 
 @Injectable()
 export class WorkspacesService {
@@ -22,20 +29,42 @@ export class WorkspacesService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(ApiKey)
     private readonly apiKeyRepository: Repository<ApiKey>,
-    private readonly eventsService: EventsService
+    private readonly eventsService: EventsService,
+    private readonly manifestValidator: ManifestValidatorService
   ) {}
 
-  async findById(id: string): Promise<Workspace> {
+  /**
+   * Enriches a workspace entity with manifest completion info.
+   */
+  private enrichWithManifestInfo(
+    workspace: Workspace
+  ): WorkspaceWithManifestInfo {
+    const completion = this.manifestValidator.calculateCompletion(
+      workspace.projectManifest as Partial<ProjectManifestType>
+    );
+
+    return {
+      ...workspace,
+      isManifestComplete: completion.isManifestComplete,
+      manifestCompletionPercentage: completion.manifestCompletionPercentage,
+    };
+  }
+
+  /**
+   * Enriches multiple workspace entities with manifest completion info.
+   */
+  private enrichMultipleWithManifestInfo(
+    workspaces: Workspace[]
+  ): WorkspaceWithManifestInfo[] {
+    return workspaces.map((ws) => this.enrichWithManifestInfo(ws));
+  }
+
+  /**
+   * Find workspace by ID - returns raw entity for internal use.
+   */
+  async findByIdRaw(id: string): Promise<Workspace> {
     const workspace = await this.workspaceRepository.findOne({
       where: { id },
-      select: [
-        "id",
-        "orgId",
-        "name",
-        "defaultChecklist",
-        "createdAt",
-        "updatedAt",
-      ],
       relations: ["organization"],
     });
     if (!workspace) {
@@ -44,23 +73,85 @@ export class WorkspacesService {
     return workspace;
   }
 
-  async findByUser(userId: string): Promise<Workspace[]> {
+  async findById(id: string): Promise<WorkspaceWithManifestInfo> {
+    const workspace = await this.findByIdRaw(id);
+    return this.enrichWithManifestInfo(workspace);
+  }
+
+  async findByUser(userId: string): Promise<WorkspaceWithManifestInfo[]> {
     // This is a bit simplified, usually we'd join with memberships
     // But since workspaces belong to orgs and users have memberships in orgs:
-    return this.workspaceRepository
+    const workspaces = await this.workspaceRepository
       .createQueryBuilder("workspace")
       .innerJoin("memberships", "m", "m.org_id = workspace.org_id")
       .where("m.user_id = :userId", { userId })
       .getMany();
+    return this.enrichMultipleWithManifestInfo(workspaces);
   }
 
-  async findByOrg(orgId: string): Promise<Workspace[]> {
-    return this.workspaceRepository.find({
+  async findByOrg(orgId: string): Promise<WorkspaceWithManifestInfo[]> {
+    const workspaces = await this.workspaceRepository.find({
       where: { orgId },
     });
+    return this.enrichMultipleWithManifestInfo(workspaces);
   }
 
-  async create(orgId: string, name: string): Promise<Workspace> {
+  /**
+   * Find workspace by ID with manifest validation and auto-repair.
+   * This method loads the full workspace including projectManifest,
+   * validates it against the schema, and repairs any missing or corrupted fields.
+   */
+  async findByIdWithManifest(id: string): Promise<WorkspaceWithManifestInfo> {
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException("Workspace not found");
+    }
+
+    // Validate and repair manifest
+    const validationResult = this.manifestValidator.validateAndRepair(
+      workspace.projectManifest as Partial<ProjectManifestType>,
+      workspace.id
+    );
+
+    // If manifest was repaired, persist the changes
+    if (validationResult.wasRepaired && validationResult.manifest) {
+      workspace.projectManifest = validationResult.manifest;
+      await this.workspaceRepository.save(workspace);
+    }
+
+    return this.enrichWithManifestInfo(workspace);
+  }
+
+  /**
+   * Validates and repairs the manifest for a given workspace.
+   * Returns the validation result without fetching the workspace.
+   */
+  async validateWorkspaceManifest(
+    workspace: Workspace
+  ): Promise<{ wasRepaired: boolean; repairedFields: string[] }> {
+    const validationResult = this.manifestValidator.validateAndRepair(
+      workspace.projectManifest as Partial<ProjectManifestType>,
+      workspace.id
+    );
+
+    if (validationResult.wasRepaired && validationResult.manifest) {
+      workspace.projectManifest = validationResult.manifest;
+      await this.workspaceRepository.save(workspace);
+    }
+
+    return {
+      wasRepaired: validationResult.wasRepaired,
+      repairedFields: validationResult.repairedFields,
+    };
+  }
+
+  async create(
+    orgId: string,
+    name: string
+  ): Promise<WorkspaceWithManifestInfo> {
     const org = await this.orgRepository.findOne({ where: { id: orgId } });
 
     if (!org) {
@@ -72,10 +163,14 @@ export class WorkspacesService {
       name,
     });
 
-    return this.workspaceRepository.save(workspace);
+    const savedWorkspace = await this.workspaceRepository.save(workspace);
+    return this.enrichWithManifestInfo(savedWorkspace);
   }
 
-  async createWithAutoOrg(userId: string, name: string): Promise<Workspace> {
+  async createWithAutoOrg(
+    userId: string,
+    name: string
+  ): Promise<WorkspaceWithManifestInfo> {
     // Get user's current organization or create one if they don't have one
     const userMemberships = await this.membershipRepository.find({
       where: { userId },
@@ -110,8 +205,8 @@ export class WorkspacesService {
       name?: string;
       defaultChecklist?: Array<Partial<ChecklistItem>>;
     }
-  ): Promise<Workspace> {
-    const workspace = await this.findById(id);
+  ): Promise<WorkspaceWithManifestInfo> {
+    const workspace = await this.findByIdRaw(id);
     if (updateData.name) {
       workspace.name = updateData.name;
     }
@@ -119,16 +214,44 @@ export class WorkspacesService {
       // biome-ignore lint/suspicious/noExplicitAny: DTO has partial items while entity requires complete items
       workspace.defaultChecklist = updateData.defaultChecklist as any;
     }
-    return this.workspaceRepository.save(workspace);
+    const savedWorkspace = await this.workspaceRepository.save(workspace);
+    return this.enrichWithManifestInfo(savedWorkspace);
   }
 
   async delete(id: string): Promise<void> {
-    const workspace = await this.findById(id);
+    const workspace = await this.findByIdRaw(id);
     await this.workspaceRepository.remove(workspace);
   }
 
+  /**
+   * Get detailed manifest completion status for a workspace.
+   * Returns completion percentage and missing fields.
+   */
+  async getManifestStatus(
+    workspaceId: string
+  ): Promise<ManifestStatusResponse> {
+    const workspace = await this.findByIdRaw(workspaceId);
+
+    const completion = this.manifestValidator.calculateCompletion(
+      workspace.projectManifest as Partial<ProjectManifestType>
+    );
+
+    // Extract AI-calculated completeness score from manifest
+    const manifest =
+      workspace.projectManifest as Partial<ProjectManifestType> | null;
+    const completenessScore = manifest?.completenessScore ?? null;
+
+    return {
+      isComplete: completion.isManifestComplete,
+      percentage: completion.manifestCompletionPercentage,
+      missingFields: completion.missingFields,
+      filledFields: completion.filledFields,
+      completenessScore,
+    };
+  }
+
   async getStats(id: string) {
-    const workspace = await this.findById(id);
+    const workspace = await this.findByIdRaw(id);
 
     const taskCounts: Record<string, number> = {};
     const tasks = await this.taskRepository.find({
@@ -191,8 +314,8 @@ export class WorkspacesService {
    * Create a new API key for a workspace
    */
   async createApiKey(workspaceId: string, name: string) {
-    // Verify workspace exists
-    await this.findById(workspaceId);
+    // Verify workspace exists and get it
+    const workspace = await this.findByIdRaw(workspaceId);
 
     const { key, hash, prefix } = this.generateApiKey();
 
@@ -202,13 +325,9 @@ export class WorkspacesService {
       keyHash: hash,
       keyPrefix: prefix,
       active: true,
-      // For backward compatibility, we might want to also set orgId if we can resolve it
-      // But for new keys, we focus on workspaceId.
-      // Ideally we should look up orgId from workspace
     });
 
     // Resolve orgId
-    const workspace = await this.findById(workspaceId);
     if (workspace.orgId) {
       apiKey.organizationId = workspace.orgId;
     }

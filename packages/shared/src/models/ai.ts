@@ -5,7 +5,7 @@ export type AIRole = z.infer<typeof AIRoleSchema>;
 
 export const AIArtifactSchema = z.object({
   id: z.string(),
-  type: z.enum(["code", "document", "sprint", "task_list", "task"]),
+  type: z.enum(["code", "document"]),
   title: z.string(),
   content: z.string(),
   language: z.string().optional(),
@@ -15,13 +15,7 @@ export type AIArtifact = z.infer<typeof AIArtifactSchema>;
 
 export const SuggestedActionSchema = z.object({
   label: z.string(),
-  type: z.enum([
-    "create_task",
-    "create_doc",
-    "chat_suggestion",
-    "start_sprint",
-    "plan_sprint",
-  ]),
+  type: z.enum(["chat_suggestion", "create_doc"]),
   payload: z.any(),
 });
 export type SuggestedAction = z.infer<typeof SuggestedActionSchema>;

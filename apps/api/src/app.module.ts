@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
@@ -39,6 +40,9 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
 
     // Register entities for global use
     TypeOrmModule.forFeature([ApiKey]),
+
+    // Schedule Module for cron jobs
+    ScheduleModule.forRoot(),
 
     // Global Modules
     CommonModule,

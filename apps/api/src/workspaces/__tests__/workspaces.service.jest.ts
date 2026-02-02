@@ -10,6 +10,8 @@ import { Organization } from "@/entities/organization.entity";
 import { Task } from "@/entities/task.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
+import { InterviewAnalyticsService } from "../interview-analytics.service";
+import { ManifestValidatorService } from "../manifest-validator.service";
 import { WorkspacesService } from "../workspaces.service";
 
 // Mock repository functions
@@ -81,6 +83,27 @@ describe("WorkspacesService", () => {
           provide: EventsService,
           useValue: { getWorkspaceActivity: jest.fn() },
         },
+        {
+          provide: ManifestValidatorService,
+          useValue: {
+            calculateCompletion: jest.fn().mockReturnValue({
+              isManifestComplete: false,
+              manifestCompletionPercentage: 0,
+              filledFields: [],
+              missingFields: [],
+            }),
+            validateAndRepair: jest.fn(),
+          },
+        },
+        {
+          provide: InterviewAnalyticsService,
+          useValue: {
+            trackManifestProgress: jest.fn(),
+            emitInterviewStarted: jest.fn(),
+            emitFieldCompleted: jest.fn(),
+            emitInterviewCompleted: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -94,7 +117,10 @@ describe("WorkspacesService", () => {
     workspaceRepo.findOne.mockResolvedValue(workspace as any);
 
     const result = await service.findById("ws-1");
-    expect(result).toEqual(workspace);
+    // findById enriches the workspace with manifest completion info
+    expect(result).toMatchObject(workspace);
+    expect(result).toHaveProperty("isManifestComplete");
+    expect(result).toHaveProperty("manifestCompletionPercentage");
   });
 
   it("should throw NotFoundException if workspace not found", async () => {

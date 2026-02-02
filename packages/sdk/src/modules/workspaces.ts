@@ -2,6 +2,7 @@ import {
   ActivityResponse,
   CreateWorkspace,
   Event,
+  ManifestStatusResponse,
   Task,
   TaskResponse,
   UpdateWorkspace,
@@ -62,6 +63,19 @@ export class WorkspacesModule extends BaseModule {
   async getStats(id: string): Promise<WorkspaceStats> {
     const { data } = await this.api.get<WorkspaceStats>(
       `/workspaces/${id}/stats`
+    );
+    return data;
+  }
+
+  /**
+   * Get detailed manifest completion status for a workspace.
+   * Returns completion percentage and missing fields.
+   */
+  async getManifestStatus(
+    workspaceId: string
+  ): Promise<ManifestStatusResponse> {
+    const { data } = await this.api.get<ManifestStatusResponse>(
+      `/workspaces/${workspaceId}/manifest-status`
     );
     return data;
   }

@@ -4,6 +4,7 @@ import {
   ChatRequest,
   ChatResponse,
   generateUUID,
+  ProjectManifestType,
 } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -11,6 +12,8 @@ import { Repository } from "typeorm";
 import { TypedConfigService } from "../config/config.service";
 import { AiSession } from "../entities/ai-session.entity";
 import { Workspace } from "../entities/workspace.entity";
+import { InterviewAnalyticsService } from "../workspaces/interview-analytics.service";
+import { ManifestValidatorService } from "../workspaces/manifest-validator.service";
 import { AiProviderFactory } from "./ai-provider.factory";
 
 @Injectable()
@@ -21,7 +24,9 @@ export class AiService {
     private readonly workspaceRepo: Repository<Workspace>,
     @InjectRepository(AiSession)
     private readonly sessionRepo: Repository<AiSession>,
-    private readonly providerFactory: AiProviderFactory
+    private readonly providerFactory: AiProviderFactory,
+    private readonly manifestValidator: ManifestValidatorService,
+    private readonly interviewAnalytics: InterviewAnalyticsService
   ) {}
 
   async detectIntent(
@@ -171,7 +176,19 @@ export class AiService {
     session: AiSession,
     updatedState: AgentState
   ) {
-    workspace.projectManifest = updatedState.manifest;
+    // Capture old manifest for analytics comparison
+    const oldManifest =
+      workspace.projectManifest as Partial<ProjectManifestType>;
+
+    // Validate and repair manifest before persisting
+    const validationResult = this.manifestValidator.validateAndRepair(
+      updatedState.manifest as Partial<ProjectManifestType>,
+      workspace.id
+    );
+
+    const newManifest = validationResult.manifest;
+
+    workspace.projectManifest = newManifest;
     workspace.agentState = {
       mode: updatedState.mode,
       missingInfo: updatedState.missingInfo,
@@ -189,6 +206,19 @@ export class AiService {
       this.workspaceRepo.save(workspace),
       this.sessionRepo.save(session),
     ]);
+
+    // Track manifest changes for interview analytics (non-blocking)
+    this.interviewAnalytics
+      .trackManifestProgress(
+        workspace,
+        oldManifest,
+        newManifest,
+        session.userId
+      )
+      .catch((error) => {
+        // Log but don't fail the main operation
+        console.error("Failed to track interview analytics:", error);
+      });
   }
 
   async getSession(
@@ -265,6 +295,18 @@ export class AiService {
       }
     } else {
       workspaceEntity = workspace;
+    }
+
+    // Validate and repair manifest on fetch
+    const validationResult = this.manifestValidator.validateAndRepair(
+      workspaceEntity.projectManifest as Partial<ProjectManifestType>,
+      workspaceEntity.id
+    );
+
+    // If manifest was repaired, persist the changes
+    if (validationResult.wasRepaired && validationResult.manifest) {
+      workspaceEntity.projectManifest = validationResult.manifest;
+      await this.workspaceRepo.save(workspaceEntity);
     }
 
     // Use session userId if available, otherwise use the passed userId, otherwise fallback to system.

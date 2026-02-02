@@ -25,6 +25,7 @@ import { type Workspace } from "@locusai/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -45,7 +46,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
-import { useGlobalKeydowns, useLocalStorage } from "@/hooks";
+import {
+  useGlobalKeydowns,
+  useLocalStorage,
+  useManifestCompletion,
+} from "@/hooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { locusClient } from "@/lib/api-client";
 import { STORAGE_KEYS } from "@/lib/local-storage-keys";
@@ -112,6 +117,11 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   );
   const isMobile = useIsMobile();
   const effectiveIsCollapsed = isMobile ? false : isCollapsed;
+  const {
+    isComplete,
+    isLoading: isManifestLoading,
+    percentage,
+  } = useManifestCompletion();
 
   const { data: workspaces = [] } = useQuery<Workspace[]>({
     queryKey: queryKeys.workspaces.all(),
@@ -264,6 +274,30 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Completion Required Indicator */}
+        {!isManifestLoading && !isComplete && (
+          <Link
+            href="/chat"
+            onClick={onNavigate}
+            title={
+              effectiveIsCollapsed
+                ? `Setup Required (${percentage}%)`
+                : undefined
+            }
+            className={cn(
+              "mt-2 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 transition-all hover:bg-amber-500/20",
+              effectiveIsCollapsed ? "justify-center p-2" : "px-3 py-2"
+            )}
+          >
+            <AlertTriangle size={16} className="shrink-0" />
+            {!effectiveIsCollapsed && (
+              <span className="text-xs font-medium">
+                Setup Required ({percentage}%)
+              </span>
+            )}
+          </Link>
         )}
       </div>
 

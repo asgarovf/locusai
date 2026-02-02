@@ -13,37 +13,27 @@ import {
   type AgentState,
   type ProjectManifest,
 } from "../interfaces/index";
-import { ILocusProvider } from "../tools/interfaces";
-import { CompilingWorkflow } from "../workflows/compiling";
 import { ProductDocumentingWorkflow } from "../workflows/documenting_product";
 import { TechnicalDocumentingWorkflow } from "../workflows/documenting_technical";
 import { IdeaWorkflow } from "../workflows/idea";
 import { InterviewWorkflow } from "../workflows/interview";
 import { QueryWorkflow } from "../workflows/query";
-import { TaskCreationWorkflow } from "../workflows/task-creation";
-import { DocumentCompiler } from "./compiler";
 import { WorkflowEngine } from "./engine";
 import { type LLMConfig, LLMFactory } from "./llm-factory";
-import { ToolHandler } from "./tool-handler";
 
 export interface AgentSettings extends LLMConfig {
   initialState?: Partial<AgentState>;
-  locusProvider?: ILocusProvider;
   workspaceId?: string;
 }
 
 export class LocusAgent {
   private llm: BaseChatModel;
   private state: AgentState;
-  private locusProvider?: ILocusProvider;
   private workspaceId?: string;
-  private toolHandler?: ToolHandler;
-  private compiler?: DocumentCompiler;
   private engine: WorkflowEngine;
 
   constructor(settings: AgentSettings = {}) {
     this.llm = LLMFactory.create(settings);
-    this.locusProvider = settings.locusProvider;
     this.workspaceId = settings.workspaceId;
     this.state = this.initializeState(settings.initialState);
 
@@ -52,70 +42,12 @@ export class LocusAgent {
   }
 
   private setupWorkflows() {
+    // Register all conversational workflows
     this.engine.registerWorkflow(new InterviewWorkflow());
-
-    if (this.locusProvider && this.workspaceId) {
-      this.compiler = new DocumentCompiler(this.llm);
-      this.toolHandler = new ToolHandler(
-        this.locusProvider,
-        this.workspaceId,
-        this.compiler
-      );
-
-      this.engine.registerWorkflow(
-        new QueryWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-
-      this.engine.registerWorkflow(
-        new IdeaWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-
-      this.engine.registerWorkflow(
-        new ProductDocumentingWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-
-      this.engine.registerWorkflow(
-        new TechnicalDocumentingWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-
-      this.engine.registerWorkflow(
-        new CompilingWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-
-      this.engine.registerWorkflow(
-        new TaskCreationWorkflow(
-          this.locusProvider,
-          this.workspaceId,
-          this.toolHandler,
-          this.compiler
-        )
-      );
-    }
+    this.engine.registerWorkflow(new QueryWorkflow());
+    this.engine.registerWorkflow(new IdeaWorkflow());
+    this.engine.registerWorkflow(new ProductDocumentingWorkflow());
+    this.engine.registerWorkflow(new TechnicalDocumentingWorkflow());
   }
 
   private initializeState(initial?: Partial<AgentState>): AgentState {
@@ -208,7 +140,6 @@ export class LocusAgent {
     const { intent, originalInput } = this.state.pendingExecution;
 
     // Execute with the stored intent
-    // We cast string to Intent enum here assuming engine handles validation or type compatibility
     const response = await this.engine.execute(
       this.state,
       originalInput,
@@ -249,14 +180,10 @@ export class LocusAgent {
       });
 
       if (Object.keys(updates).length > 0) {
-        // Merge updates
         this.state.manifest = {
           ...this.state.manifest,
           ...updates,
         };
-        // Ensure arrays are merged or replaced?
-        // The prompt says "Partial Manifest". Simple spread override is likely intended by the prompt logic.
-        // However, we might want to be careful. For now, spread is standard.
         console.log(
           "[LocusAgent] Passive Manifest Update:",
           JSON.stringify(updates, null, 2)
@@ -277,6 +204,7 @@ export class LocusAgent {
     this.state.history.push({
       role,
       content: safeContent,
+      timestamp: new Date(),
       artifacts,
       suggestedActions,
     });

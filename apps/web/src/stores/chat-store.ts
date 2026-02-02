@@ -1,5 +1,17 @@
 import { create } from "zustand";
-import { Artifact, ChatSession, Message } from "@/components/chat/types";
+import { ChatSession, Message } from "@/components/chat/types";
+
+/**
+ * Sort messages by timestamp to ensure consistent ordering.
+ * Messages without timestamps are placed at the end.
+ */
+function sortMessagesByTimestamp(messages: Message[]): Message[] {
+  return [...messages].sort((a, b) => {
+    const timeA = a.timestamp?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const timeB = b.timestamp?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    return timeA - timeB;
+  });
+}
 
 interface ChatState {
   activeSessionId: string;
@@ -8,7 +20,6 @@ interface ChatState {
   loadingState: "IDLE" | "DETECTING" | "EXECUTING";
   intent: string;
   sessions: ChatSession[];
-  activeArtifact: Artifact | null;
 
   // Actions
   setName: (name: string) => void;
@@ -21,7 +32,6 @@ interface ChatState {
   setSessions: (
     sessions: ChatSession[] | ((prev: ChatSession[]) => ChatSession[])
   ) => void;
-  setActiveArtifact: (artifact: Artifact | null) => void;
   resetChat: () => void;
 }
 
@@ -32,7 +42,6 @@ export const useChatStore = create<ChatState>((set) => ({
   loadingState: "IDLE",
   intent: "",
   sessions: [],
-  activeArtifact: null,
 
   setName: (name) => set((state) => ({ ...state, name })),
   setActiveSessionId: (id) =>
@@ -40,12 +49,15 @@ export const useChatStore = create<ChatState>((set) => ({
       activeSessionId: id,
     }),
   setMessages: (messages) =>
-    set((state) => ({
-      messages:
-        typeof messages === "function" ? messages(state.messages) : messages,
-    })),
+    set((state) => {
+      const newMessages =
+        typeof messages === "function" ? messages(state.messages) : messages;
+      return { messages: sortMessagesByTimestamp(newMessages) };
+    }),
   addMessage: (message) =>
-    set((state) => ({ messages: [...state.messages, message] })),
+    set((state) => ({
+      messages: sortMessagesByTimestamp([...state.messages, message]),
+    })),
   setIsTyping: (isTyping) => set({ isTyping }),
   setLoadingState: (loadingState) => set({ loadingState }),
   setIntent: (intent) => set({ intent }),
@@ -54,7 +66,6 @@ export const useChatStore = create<ChatState>((set) => ({
       sessions:
         typeof sessions === "function" ? sessions(state.sessions) : sessions,
     })),
-  setActiveArtifact: (activeArtifact) => set({ activeArtifact }),
   resetChat: () =>
     set({
       activeSessionId: "",
@@ -62,6 +73,5 @@ export const useChatStore = create<ChatState>((set) => ({
       isTyping: false,
       loadingState: "IDLE",
       intent: "",
-      activeArtifact: null,
     }),
 }));

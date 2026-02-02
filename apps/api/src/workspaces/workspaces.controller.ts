@@ -3,6 +3,7 @@ import {
   CreateWorkspaceSchema,
   DispatchTask,
   DispatchTaskSchema,
+  ManifestStatusResponse,
   OrgIdParam,
   OrgIdParamSchema,
   TaskResponse,
@@ -124,6 +125,15 @@ export class WorkspacesController {
     params: WorkspaceIdParam
   ) {
     return this.workspacesService.getStats(params.workspaceId);
+  }
+
+  @Get(":workspaceId/manifest-status")
+  @Member()
+  async getManifestStatus(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam
+  ): Promise<ManifestStatusResponse> {
+    return this.workspacesService.getManifestStatus(params.workspaceId);
   }
 
   @Get(":workspaceId/activity")

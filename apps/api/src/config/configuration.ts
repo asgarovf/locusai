@@ -1,3 +1,4 @@
+import { MANIFEST_COMPLETION_THRESHOLD } from "@locusai/ai-sdk";
 import { z } from "zod";
 
 export const ConfigSchema = z.object({
@@ -17,6 +18,11 @@ export const ConfigSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().optional(),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
+  MANIFEST_COMPLETION_THRESHOLD: z.coerce
+    .number()
+    .min(0)
+    .max(100)
+    .default(MANIFEST_COMPLETION_THRESHOLD),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

@@ -18,6 +18,7 @@
 import { useState } from "react";
 import { CreateModal } from "@/components/CreateModal";
 import { Input, showToast } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 import { useAuthenticatedUser } from "@/hooks";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { locusClient } from "@/lib/api-client";
@@ -39,6 +40,7 @@ export function WorkspaceCreateModal({
 }: WorkspaceCreateModalProps) {
   const [name, setName] = useState("");
   const user = useAuthenticatedUser();
+  const { switchWorkspace } = useAuth();
   const orgId = user.orgId;
 
   const createWorkspace = useMutationWithToast({
@@ -50,8 +52,12 @@ export function WorkspaceCreateModal({
     },
     successMessage: "Workspace created successfully",
     invalidateKeys: [queryKeys.workspaces.all()],
-    onSuccess: () => {
+    onSuccess: (workspace) => {
       setName("");
+      // Switch to the newly created workspace
+      if (workspace?.id) {
+        switchWorkspace(String(workspace.id));
+      }
       onSuccess();
       onClose();
     },

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,10 +9,12 @@ import { Button, Input, Modal, Spinner, showToast } from "@/components/ui";
 import { useAuth } from "@/context";
 import { useWorkspaceIdOptional, useWorkspaceQuery } from "@/hooks";
 import { locusClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export default function DangerParamsPage() {
-  const { logout } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { logout, workspaces, refreshUser, switchWorkspace } = useAuth();
   const workspaceId = useWorkspaceIdOptional();
   const { data: workspace, isLoading: isWorkspaceLoading } =
     useWorkspaceQuery();
@@ -35,11 +38,29 @@ export default function DangerParamsPage() {
       await locusClient.workspaces.delete(workspaceId);
       showToast.success("Workspace deleted");
 
-      // Logout the user (or redirect to another workspace if available in a real app)
-      logout();
+      // Close modal immediately after successful deletion
+      setIsDeleteModalOpen(false);
 
-      // Redirect to login
-      router.push("/login");
+      // Invalidate the workspaces query so sidebar updates
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
+
+      // Refresh to get updated workspace list
+      await refreshUser();
+
+      // Find remaining workspaces (excluding the deleted one)
+      const remainingWorkspaces = workspaces.filter(
+        (w) => String(w.id) !== workspaceId
+      );
+
+      if (remainingWorkspaces.length > 0) {
+        // Switch to the first available workspace
+        switchWorkspace(String(remainingWorkspaces[0].id));
+        // Navigate to dashboard
+        router.push("/");
+      } else {
+        // No workspaces left, logout the user
+        logout();
+      }
     } catch (error) {
       showToast.error(
         error instanceof Error ? error.message : "Failed to delete workspace"

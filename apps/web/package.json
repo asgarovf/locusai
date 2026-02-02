@@ -37,6 +37,7 @@
     "@tiptap/starter-kit": "^3.15.3",
     "@tiptap/suggestion": "^3.18.0",
     "axios": "^1.13.2",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "driver.js": "^1.4.0",
@@ -60,6 +61,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.0",
     "@types/react-beautiful-dnd": "^13.1.8",

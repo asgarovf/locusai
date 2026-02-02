@@ -86,6 +86,33 @@ export const CiRanPayloadSchema = z.object({
   commands: z.array(z.object({ cmd: z.string(), exitCode: z.number() })),
 });
 
+// ============================================================================
+// Interview Event Payloads
+// ============================================================================
+
+export const InterviewStartedPayloadSchema = z.object({
+  workspaceName: z.string(),
+  firstFieldName: z.string(),
+});
+
+export const InterviewFieldCompletedPayloadSchema = z.object({
+  fieldName: z.string(),
+  completionPercentage: z.number(),
+});
+
+export const InterviewCompletedPayloadSchema = z.object({
+  workspaceName: z.string(),
+  timeToCompleteMs: z.number(),
+  completedVia: z.enum(["interview", "manual_bypass"]),
+});
+
+export const InterviewAbandonedPayloadSchema = z.object({
+  workspaceName: z.string(),
+  lastActiveAt: z.union([z.date(), z.string()]),
+  completionPercentage: z.number(),
+  daysInactive: z.number(),
+});
+
 export const EventPayloadSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(EventType.TASK_CREATED),
@@ -130,6 +157,22 @@ export const EventPayloadSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(EventType.CI_RAN),
     payload: CiRanPayloadSchema,
+  }),
+  z.object({
+    type: z.literal(EventType.INTERVIEW_STARTED),
+    payload: InterviewStartedPayloadSchema,
+  }),
+  z.object({
+    type: z.literal(EventType.INTERVIEW_FIELD_COMPLETED),
+    payload: InterviewFieldCompletedPayloadSchema,
+  }),
+  z.object({
+    type: z.literal(EventType.INTERVIEW_COMPLETED),
+    payload: InterviewCompletedPayloadSchema,
+  }),
+  z.object({
+    type: z.literal(EventType.INTERVIEW_ABANDONED),
+    payload: InterviewAbandonedPayloadSchema,
   }),
 ]);
 

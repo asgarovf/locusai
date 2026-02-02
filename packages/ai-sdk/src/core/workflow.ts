@@ -22,10 +22,10 @@ export abstract class BaseWorkflow {
     if (!state.workflow) return;
 
     const newEntities = artifacts
-      .filter((a) => ["document", "task", "sprint"].includes(a.type))
+      .filter((a) => a.type === "document")
       .map((a) => ({
         id: a.id,
-        type: a.type as "document" | "task" | "sprint",
+        type: "document" as const,
         title: a.title,
         createdAt: new Date().toISOString(),
       }));

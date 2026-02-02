@@ -1,26 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Bot,
-  CheckSquare,
-  Copy,
-  FileText,
-  Layers,
-  Terminal,
-} from "lucide-react";
+import { Bot } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import { showToast } from "../ui";
 import { Markdown } from "./Markdown";
-import { Artifact, Message } from "./types";
+import { Message } from "./types";
 
 interface ChatMessageProps {
   message: Message;
-  artifacts?: Artifact[];
-  onArtifactClick?: (artifact: Artifact) => void;
   isTyping?: boolean;
   loadingState?: "IDLE" | "DETECTING" | "EXECUTING";
   intent?: string;
@@ -28,8 +18,6 @@ interface ChatMessageProps {
 
 export function ChatMessage({
   message,
-  artifacts,
-  onArtifactClick,
   isTyping,
   loadingState,
   intent,
@@ -45,19 +33,18 @@ export function ChatMessage({
       "Analyzing your request...",
       "Consulting the neural network...",
       "Reviewing project context...",
-      "Generating optimized code...",
-      "Checking database schemas...",
-      "Validating dependencies...",
+      "Generating response...",
+      "Checking project details...",
+      "Validating information...",
       "Constructing the response...",
       "Synthesizing output...",
-      "Aligning with project manifesto...",
-      "Fetching relevant documentation...",
+      "Aligning with project context...",
+      "Fetching relevant information...",
       "Executing workflow steps...",
       "Calibrating confidence levels...",
       "Parsing intended actions...",
-      "Formatting artifact data...",
-      "Optimizing performance metrics...",
-      "Double-checking security rules...",
+      "Formatting response data...",
+      "Optimizing output...",
       "Applying best practices...",
       "Drafting the solution...",
       "Finalizing response...",
@@ -180,7 +167,7 @@ export function ChatMessage({
           message.thoughtProcess &&
           !isTyping && (
             <div className="text-[11px] text-muted-foreground/60 italic mb-1 px-1 max-w-lg line-clamp-2 hover:line-clamp-none transition-all cursor-help">
-              💭 {message.thoughtProcess}
+              {message.thoughtProcess}
             </div>
           )}
         {(isTyping || message.content) && (
@@ -228,178 +215,7 @@ export function ChatMessage({
             )}
           </div>
         )}
-
-        {/* Artifact Attachments / Previews */}
-        {artifacts && artifacts.length > 0 && !isTyping && (
-          <ArtifactList
-            artifacts={artifacts}
-            onArtifactClick={onArtifactClick}
-          />
-        )}
       </div>
     </motion.div>
-  );
-}
-
-function ArtifactList({
-  artifacts,
-  onArtifactClick,
-}: {
-  artifacts: Artifact[];
-  onArtifactClick?: (artifact: Artifact) => void;
-}) {
-  const MAX_VISIBLE = 4;
-  const shouldGroup = artifacts.length > MAX_VISIBLE;
-
-  if (shouldGroup) {
-    // Group by type
-    const groups = artifacts.reduce(
-      (acc, art) => {
-        const type = art.type || "unknown";
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(art);
-        return acc;
-      },
-      {} as Record<string, Artifact[]>
-    );
-
-    return (
-      <div className="grid grid-cols-1 gap-2 mt-1 w-full max-w-2xl">
-        {Object.entries(groups).map(([type, items]) => (
-          <ArtifactGroup
-            key={type}
-            type={type}
-            count={items.length}
-            items={items}
-            onArtifactClick={onArtifactClick}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 w-full max-w-2xl">
-      {artifacts.map((art) => (
-        <ArtifactCard
-          key={art.id}
-          artifact={art}
-          onClick={() => onArtifactClick?.(art)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ArtifactGroup({
-  type,
-  count,
-  items,
-  onArtifactClick,
-}: {
-  type: string;
-  count: number;
-  items: Artifact[];
-  onArtifactClick?: (artifact: Artifact) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  // Icon based on type
-  const Icon =
-    type === "code"
-      ? Terminal
-      : type === "sprint"
-        ? Layers
-        : type === "task"
-          ? CheckSquare
-          : FileText;
-
-  return (
-    <div className="w-full">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 transition-all text-left w-full group"
-      >
-        <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-secondary/50 text-foreground/70 group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
-          <Icon size={20} />
-        </div>
-        <div className="flex-1">
-          <div className="text-sm font-medium text-foreground">
-            {count} {type.charAt(0).toUpperCase() + type.slice(1)}s Created
-          </div>
-          <div className="text-[10px] text-muted-foreground">
-            {expanded ? "Click to collapse" : "Click to view details"}
-          </div>
-        </div>
-        <div className="text-xs text-primary font-medium px-2">
-          {expanded ? "Collapse" : "View All"}
-        </div>
-      </button>
-
-      {expanded && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pl-4 border-l-2 border-border/50"
-        >
-          {items.map((art) => (
-            <ArtifactCard
-              key={art.id}
-              artifact={art}
-              onClick={() => onArtifactClick?.(art)}
-            />
-          ))}
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-function ArtifactCard({
-  artifact,
-  onClick,
-}: {
-  artifact: Artifact;
-  onClick: () => void;
-}) {
-  const Icon =
-    artifact.type === "code"
-      ? Terminal
-      : artifact.type === "sprint"
-        ? Layers
-        : artifact.type === "task"
-          ? CheckSquare
-          : FileText;
-
-  return (
-    <div
-      onClick={onClick}
-      className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 hover:border-primary/30 transition-all text-left group/artifact w-full cursor-pointer"
-    >
-      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-secondary/50 text-foreground/70 group-hover/artifact:text-primary group-hover/artifact:bg-primary/10 transition-colors shrink-0">
-        <Icon size={20} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground truncate">
-          {artifact.title}
-        </div>
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-          {artifact.type}
-        </div>
-        <button
-          className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors mt-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(artifact.id);
-            showToast.success("Artifact ID copied to clipboard");
-          }}
-        >
-          <Copy size={12} />
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-            {artifact.id}
-          </p>
-        </button>
-      </div>
-    </div>
   );
 }

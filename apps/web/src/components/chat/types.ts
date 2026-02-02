@@ -1,12 +1,6 @@
 import { $FixMe } from "@locusai/shared";
 
-export type ArtifactType =
-  | "code"
-  | "document"
-  | "image"
-  | "sprint"
-  | "task"
-  | "task_list";
+export type ArtifactType = "code" | "document" | "image";
 
 export interface Artifact {
   id: string;
@@ -17,7 +11,7 @@ export interface Artifact {
   metadata?: Record<string, unknown>;
 }
 
-export type ReferenceType = "file" | "documentation" | "task";
+export type ReferenceType = "file" | "documentation";
 
 export interface Reference {
   id: string;
@@ -49,12 +43,7 @@ export interface UserMessage extends BaseMessage {
 
 export interface SuggestedAction {
   label: string;
-  type:
-    | "chat_suggestion"
-    | "create_task"
-    | "create_doc"
-    | "start_sprint"
-    | "plan_sprint";
+  type: "chat_suggestion" | "create_doc";
   payload?: $FixMe;
 }
 

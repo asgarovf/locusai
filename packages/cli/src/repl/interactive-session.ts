@@ -40,6 +40,11 @@ export class InteractiveSession {
   private model: string;
   private provider: string;
 
+  // Multi-line paste support
+  private inputBuffer: string[] = [];
+  private inputDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly PASTE_DEBOUNCE_MS = 50;
+
   constructor(options: InteractiveSessionOptions) {
     this.aiRunner = createAiRunner(options.provider, {
       projectPath: options.projectPath,
@@ -104,6 +109,13 @@ export class InteractiveSession {
 
     // Handle CTRL+C gracefully
     process.on("SIGINT", () => {
+      // Clear any pending input buffer on interrupt
+      if (this.inputDebounceTimer) {
+        clearTimeout(this.inputDebounceTimer);
+        this.inputDebounceTimer = null;
+      }
+      this.inputBuffer = [];
+
       if (this.isProcessing) {
         this.renderer.stopThinkingAnimation();
         console.log(c.dim("\n[Interrupted]"));
@@ -115,20 +127,44 @@ export class InteractiveSession {
     });
   }
 
-  private async handleLine(input: string): Promise<void> {
-    const trimmed = input.trim();
+  private handleLine(input: string): void {
+    // Buffer the input line
+    this.inputBuffer.push(input);
+
+    // Clear any existing debounce timer
+    if (this.inputDebounceTimer) {
+      clearTimeout(this.inputDebounceTimer);
+    }
+
+    // Set a new debounce timer - when pasting multi-line text,
+    // lines come in rapid succession. We wait for a pause to detect
+    // when the paste is complete.
+    this.inputDebounceTimer = setTimeout(() => {
+      this.processBufferedInput();
+    }, InteractiveSession.PASTE_DEBOUNCE_MS);
+  }
+
+  private async processBufferedInput(): Promise<void> {
+    // Join all buffered lines and clear the buffer
+    const fullInput = this.inputBuffer.join("\n");
+    this.inputBuffer = [];
+    this.inputDebounceTimer = null;
+
+    const trimmed = fullInput.trim();
 
     if (trimmed === "") {
       this.readline?.prompt();
       return;
     }
 
-    // Check for special commands
-    const command = parseCommand(trimmed);
-    if (command) {
-      await command.execute(this, trimmed.slice(command.name.length).trim());
-      if (this.readline) this.readline.prompt();
-      return;
+    // Check for special commands (only if single line)
+    if (!trimmed.includes("\n")) {
+      const command = parseCommand(trimmed);
+      if (command) {
+        await command.execute(this, trimmed.slice(command.name.length).trim());
+        if (this.readline) this.readline.prompt();
+        return;
+      }
     }
 
     await this.executePrompt(trimmed);
@@ -294,6 +330,11 @@ export class InteractiveSession {
    * Shutdown the interactive session.
    */
   shutdown(): void {
+    // Clear any pending input debounce timer
+    if (this.inputDebounceTimer) {
+      clearTimeout(this.inputDebounceTimer);
+      this.inputDebounceTimer = null;
+    }
     this.renderer.stopThinkingAnimation();
     console.log(c.dim("\nGoodbye!"));
     this.readline?.close();
