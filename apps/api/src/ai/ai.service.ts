@@ -14,7 +14,6 @@ import { AiSession } from "../entities/ai-session.entity";
 import { Workspace } from "../entities/workspace.entity";
 import { InterviewAnalyticsService } from "../workspaces/interview-analytics.service";
 import { ManifestValidatorService } from "../workspaces/manifest-validator.service";
-import { AiProviderFactory } from "./ai-provider.factory";
 
 @Injectable()
 export class AiService {
@@ -24,7 +23,6 @@ export class AiService {
     private readonly workspaceRepo: Repository<Workspace>,
     @InjectRepository(AiSession)
     private readonly sessionRepo: Repository<AiSession>,
-    private readonly providerFactory: AiProviderFactory,
     private readonly manifestValidator: ManifestValidatorService,
     private readonly interviewAnalytics: InterviewAnalyticsService
   ) {}
@@ -281,8 +279,7 @@ export class AiService {
 
   async getAgent(
     workspace: Workspace | string,
-    session?: AiSession,
-    userId?: string
+    session?: AiSession
   ): Promise<LocusAgent> {
     let workspaceEntity: Workspace | null = null;
 

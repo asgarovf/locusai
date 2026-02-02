@@ -230,8 +230,7 @@ export class SprintsService {
 
   async planSprintWithAi(
     sprintId: string,
-    workspaceId: string,
-    userId?: string
+    workspaceId: string
   ): Promise<Sprint> {
     const sprint = await this.findById(sprintId);
     if (sprint.workspaceId !== workspaceId) {
@@ -269,11 +268,7 @@ export class SprintsService {
 
     // Use AI Agent to generate plan
     try {
-      const agent = await this.aiService.getAgent(
-        workspaceId,
-        undefined,
-        userId
-      );
+      const agent = await this.aiService.getAgent(workspaceId, undefined);
 
       const taskList = tasks
         .map(
