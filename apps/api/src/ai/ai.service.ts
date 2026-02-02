@@ -309,17 +309,8 @@ export class AiService {
       await this.workspaceRepo.save(workspaceEntity);
     }
 
-    // Use session userId if available, otherwise use the passed userId, otherwise fallback to system.
-    const finalUserId = session?.userId || userId || "system";
-
-    const provider = this.providerFactory.create(
-      workspaceEntity.id,
-      finalUserId
-    );
-
     return new LocusAgent({
       apiKey: this.config.get("GOOGLE_GENERATIVE_AI_API_KEY"),
-      locusProvider: provider,
       workspaceId: workspaceEntity.id,
       initialState: {
         manifest:
