@@ -1,5 +1,18 @@
 # @locusai/web
 
+## 0.8.0
+
+### Minor Changes
+
+- Exec command improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/ai-sdk@0.8.0
+  - @locusai/sdk@0.8.0
+  - @locusai/shared@0.8.0
+
 ## 0.7.7
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @locusai/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- Exec command improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.8.0
+
 ## 0.7.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.8.0
+
+### Minor Changes
+
+- Exec command improvements
+
 ## 0.7.7
 
 ### Patch Changes
