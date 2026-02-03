@@ -9,6 +9,7 @@ export function showHelp(): void {
     ${c.success("init")}      Initialize Locus in the current directory
     ${c.success("index")}     Index the codebase for AI context
     ${c.success("run")}       Start an agent to work on tasks
+    ${c.success("review")}    Review staged changes with AI
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
               ${c.dim("--session, -s <id> Resume a previous session")}
@@ -25,6 +26,7 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus init")}
     ${c.dim("$")} ${c.primary("locus index")}
     ${c.dim("$")} ${c.primary("locus run --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 
   For more information, visit: ${c.underline("https://locusai.dev/docs")}

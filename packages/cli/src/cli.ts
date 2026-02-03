@@ -5,6 +5,7 @@ import {
   execCommand,
   indexCommand,
   initCommand,
+  reviewCommand,
   runCommand,
   showHelp,
 } from "./commands";
@@ -31,6 +32,9 @@ async function main() {
       break;
     case "exec":
       await execCommand(args);
+      break;
+    case "review":
+      await reviewCommand(args);
       break;
     default:
       showHelp();

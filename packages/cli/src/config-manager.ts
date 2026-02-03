@@ -9,36 +9,86 @@ import { DEFAULT_SKILLS } from "./templates/skills";
 
 const LOCUS_GITIGNORE_MARKER = "# Locus AI";
 
+const CLAUDE_MD_TEMPLATE = `# CLAUDE.md
+
+## Planning First
+
+Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Update the plan if the approach changes. Mark complete when done.
+
+## Code
+
+- Follow the existing formatter, linter, and code style. Run them before finishing.
+- Keep changes minimal and atomic. Separate refactors from behavioral changes.
+- No new dependencies without explicit approval.
+- Never put raw secrets or credentials in the codebase.
+
+## Testing
+
+- Every behavioral change needs a test. Bug fixes need a regression test.
+- Run the relevant test suite before marking work complete.
+- Don't modify tests just to make them pass — understand why they fail.
+
+## Communication
+
+- If the plan needs to change, update it and explain why before continuing.
+`;
+
 /**
  * Updates or creates .gitignore with locus-specific patterns.
- * This function is idempotent - it won't add duplicate entries.
+ * If locus patterns already exist, replaces them with the current set.
+ * This ensures new patterns (e.g. reviews/, plans/) are added on reinit.
  */
 function updateGitignore(projectPath: string): void {
   const gitignorePath = join(projectPath, ".gitignore");
   let content = "";
+  const locusBlock = LOCUS_GITIGNORE_PATTERNS.join("\n");
 
   if (existsSync(gitignorePath)) {
     content = readFileSync(gitignorePath, "utf-8");
 
-    // Check if locus patterns are already present
     if (content.includes(LOCUS_GITIGNORE_MARKER)) {
-      return; // Already configured
+      // Find the existing locus block and replace it.
+      // The block starts at the first "# Locus AI" line and continues
+      // through all consecutive comment/pattern lines until a blank line
+      // followed by non-locus content or end of file.
+      const lines = content.split("\n");
+      const startIdx = lines.findIndex((l) => l.includes(LOCUS_GITIGNORE_MARKER));
+      let endIdx = startIdx;
+
+      // Walk forward past all lines that are part of the locus block:
+      // comment lines starting with "# Locus AI", pattern lines, and empty separator lines
+      for (let i = startIdx; i < lines.length; i++) {
+        if (
+          lines[i].startsWith(LOCUS_GITIGNORE_MARKER) ||
+          lines[i].startsWith(".locus/") ||
+          lines[i].trim() === ""
+        ) {
+          endIdx = i;
+        } else {
+          break;
+        }
+      }
+
+      // Replace the old block with the current patterns
+      const before = lines.slice(0, startIdx);
+      const after = lines.slice(endIdx + 1);
+
+      content = [...before, locusBlock, ...after].join("\n");
+      writeFileSync(gitignorePath, content);
+      return;
     }
 
-    // Ensure we have a newline at the end before appending
+    // No existing locus block — append
     if (content.length > 0 && !content.endsWith("\n")) {
       content += "\n";
     }
 
-    // Add an extra newline for separation if file has content
     if (content.trim().length > 0) {
       content += "\n";
     }
   }
 
-  // Append locus patterns
-  content += `${LOCUS_GITIGNORE_PATTERNS.join("\n")}\n`;
-
+  content += `${locusBlock}\n`;
   writeFileSync(gitignorePath, content);
 }
 
@@ -59,13 +109,28 @@ export class ConfigManager {
 
     // 1. Create CLAUDE.md if it doesn't exist
     if (!existsSync(claudeMdPath)) {
-      const template = `# Locus Project Context\n\n# Workflow\n- Run lint and typecheck before completion\n`;
-      writeFileSync(claudeMdPath, template);
+      writeFileSync(claudeMdPath, CLAUDE_MD_TEMPLATE);
     }
 
-    // 2. Create .locus directory and config
+    // 2. Create .locus directory, subdirectories, and config
     if (!existsSync(locusConfigDir)) {
       mkdirSync(locusConfigDir, { recursive: true });
+    }
+
+    // Ensure required subdirectories exist
+    const locusSubdirs = [
+      LOCUS_CONFIG.artifactsDir,
+      LOCUS_CONFIG.documentsDir,
+      LOCUS_CONFIG.sessionsDir,
+      LOCUS_CONFIG.reviewsDir,
+      LOCUS_CONFIG.plansDir,
+    ];
+
+    for (const subdir of locusSubdirs) {
+      const subdirPath = join(locusConfigDir, subdir);
+      if (!existsSync(subdirPath)) {
+        mkdirSync(subdirPath, { recursive: true });
+      }
     }
 
     if (!existsSync(locusConfigPath)) {
@@ -163,8 +228,7 @@ export class ConfigManager {
 
     // 2. Ensure CLAUDE.md exists
     if (!existsSync(claudeMdPath)) {
-      const template = `# Locus Project Context\n\n# Workflow\n- Run lint and typecheck before completion\n`;
-      writeFileSync(claudeMdPath, template);
+      writeFileSync(claudeMdPath, CLAUDE_MD_TEMPLATE);
       result.directoriesCreated.push("CLAUDE.md");
     }
 
@@ -174,6 +238,7 @@ export class ConfigManager {
       LOCUS_CONFIG.documentsDir,
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
+      LOCUS_CONFIG.plansDir,
     ];
 
     for (const subdir of locusSubdirs) {
@@ -211,15 +276,16 @@ export class ConfigManager {
       }
     }
 
-    // 5. Update .gitignore with any missing patterns
+    // 5. Update .gitignore with any missing or outdated patterns
     const gitignorePath = join(this.projectPath, ".gitignore");
-    const hadLocusPatterns =
-      existsSync(gitignorePath) &&
-      readFileSync(gitignorePath, "utf-8").includes(LOCUS_GITIGNORE_MARKER);
+    const gitignoreBefore = existsSync(gitignorePath)
+      ? readFileSync(gitignorePath, "utf-8")
+      : "";
 
     updateGitignore(this.projectPath);
 
-    if (!hadLocusPatterns) {
+    const gitignoreAfter = readFileSync(gitignorePath, "utf-8");
+    if (gitignoreBefore !== gitignoreAfter) {
       result.gitignoreUpdated = true;
     }
 

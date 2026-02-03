@@ -88,3 +88,9 @@ packages/cli/bin/agent/
 
 # Locus AI - Artifacts (local-only, user-specific)
 .locus/artifacts/
+
+# Locus AI - Review reports (generated per sprint)
+.locus/reviews/
+
+# Locus AI - Plans (generated per task)
+.locus/plans/
