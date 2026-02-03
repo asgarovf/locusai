@@ -1,5 +1,17 @@
 # @locusai/web
 
+## 0.8.1
+
+### Patch Changes
+
+- Update CLAUDE.md template
+  Introduce plans folder
+  Introduce reviews folder
+- Updated dependencies
+  - @locusai/ai-sdk@0.8.1
+  - @locusai/sdk@0.8.1
+  - @locusai/shared@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes

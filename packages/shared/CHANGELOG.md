@@ -1,5 +1,13 @@
 # @locusai/shared
 
+## 0.8.1
+
+### Patch Changes
+
+- Update CLAUDE.md template
+  Introduce plans folder
+  Introduce reviews folder
+
 ## 0.8.0
 
 ### Minor Changes
