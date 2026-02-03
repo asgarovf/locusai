@@ -3,7 +3,7 @@ import type { ExecEventEmitter } from "../exec/event-emitter.js";
 import type { StreamChunk } from "../exec/types.js";
 
 export interface AiRunner {
-  run(prompt: string, isPlanning?: boolean): Promise<string>;
+  run(prompt: string): Promise<string>;
   runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown>;
   /**
    * Set an event emitter to receive execution events.

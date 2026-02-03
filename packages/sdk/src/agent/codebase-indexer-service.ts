@@ -37,7 +37,7 @@ ${tree}
 
 Return ONLY valid JSON, no markdown formatting.`;
 
-          const response = await this.deps.aiRunner.run(prompt, true);
+          const response = await this.deps.aiRunner.run(prompt);
 
           // Extract JSON from response (handle markdown code blocks)
           const jsonMatch = response.match(/\{[\s\S]*\}/);

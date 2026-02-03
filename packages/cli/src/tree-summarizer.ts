@@ -15,7 +15,7 @@ Return ONLY a JSON object with this structure:
 File Tree:
 ${tree}`;
 
-    const output = await this.aiRunner.run(prompt, true);
+    const output = await this.aiRunner.run(prompt);
 
     const jsonMatch = output.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]);

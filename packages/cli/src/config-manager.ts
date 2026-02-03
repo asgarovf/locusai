@@ -173,6 +173,7 @@ export class ConfigManager {
       LOCUS_CONFIG.artifactsDir,
       LOCUS_CONFIG.documentsDir,
       LOCUS_CONFIG.sessionsDir,
+      LOCUS_CONFIG.reviewsDir,
     ];
 
     for (const subdir of locusSubdirs) {

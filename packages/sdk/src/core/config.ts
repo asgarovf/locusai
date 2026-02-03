@@ -21,6 +21,7 @@ export const LOCUS_CONFIG = {
   documentsDir: "documents",
   agentSkillsDir: ".agent/skills",
   sessionsDir: "sessions",
+  reviewsDir: "reviews",
 };
 
 // Patterns to add to .gitignore for locus projects
@@ -31,6 +32,9 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "",
   "# Locus AI - Artifacts (local-only, user-specific)",
   ".locus/artifacts/",
+  "",
+  "# Locus AI - Review reports (generated per sprint)",
+  ".locus/reviews/",
 ] as const;
 
 export function getLocusPath(

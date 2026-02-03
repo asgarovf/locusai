@@ -10,7 +10,7 @@ export interface TaskExecutorDeps {
 }
 
 /**
- * Handles task execution with two-phase approach (planning + execution)
+ * Handles direct task execution (single-pass, no separate planning phase)
  */
 export class TaskExecutor {
   private promptBuilder: PromptBuilder;
@@ -30,27 +30,9 @@ export class TaskExecutor {
     });
 
     try {
-      let plan: string | null = null;
-
-      this.deps.log("Phase 1: Planning (CLI)...", "info");
-      const planningPrompt = `${basePrompt}
-
-## Phase 1: Planning
-Analyze and create a detailed plan for THIS SPECIFIC TASK. Do NOT execute changes yet.`;
-
-      plan = await this.deps.aiRunner.run(planningPrompt, true);
-
-      // Phase 2: Execution (always using the selected CLI)
       this.deps.log("Starting Execution...", "info");
 
-      let executionPrompt = basePrompt;
-      if (plan != null) {
-        executionPrompt += `\n\n## Phase 2: Execution\nBased on the plan, execute the task:\n\n${plan}`;
-      } else {
-        executionPrompt += `\n\n## Execution\nExecute the task directly.`;
-      }
-
-      executionPrompt += `\n\nWhen finished, output: <promise>COMPLETE</promise>`;
+      const executionPrompt = `${basePrompt}\n\nWhen finished, output: <promise>COMPLETE</promise>`;
       const output = await this.deps.aiRunner.run(executionPrompt);
 
       const success = output.includes("<promise>COMPLETE</promise>");

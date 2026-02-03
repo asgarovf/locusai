@@ -58,7 +58,7 @@ export class ClaudeRunner implements AiRunner {
     this.eventEmitter = emitter;
   }
 
-  async run(prompt: string, _isPlanning = false): Promise<string> {
+  async run(prompt: string): Promise<string> {
     const maxRetries = 3;
     let lastError: Error | null = null;
 

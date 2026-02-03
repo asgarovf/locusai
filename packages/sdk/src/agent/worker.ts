@@ -1,11 +1,14 @@
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
-import { PROVIDER } from "../core/config.js";
+import { LOCUS_CONFIG, PROVIDER } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
 import { DocumentFetcher } from "./document-fetcher.js";
+import { ReviewService } from "./review-service.js";
 import { TaskExecutor } from "./task-executor.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -45,13 +48,11 @@ export class AgentWorker {
   private indexerService: CodebaseIndexerService;
   private documentFetcher: DocumentFetcher;
   private taskExecutor: TaskExecutor;
+  private reviewService: ReviewService;
 
   // State
-  private consecutiveEmpty = 0;
-  private maxEmpty = 60; // 10 minutes (60 * 10s)
   private maxTasks = 50;
   private tasksCompleted = 0;
-  private pollInterval = 10_000;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -92,6 +93,12 @@ export class AgentWorker {
     });
 
     this.taskExecutor = new TaskExecutor({
+      aiRunner: this.aiRunner,
+      projectPath,
+      log,
+    });
+
+    this.reviewService = new ReviewService({
       aiRunner: this.aiRunner,
       projectPath,
       log,
@@ -177,56 +184,66 @@ export class AgentWorker {
     return result;
   }
 
+  private async runStagedChangesReview(
+    sprint: Sprint | null
+  ): Promise<void> {
+    try {
+      const report = await this.reviewService.reviewStagedChanges(sprint);
+      if (report) {
+        // Save review report to .locus/reviews/
+        const reviewsDir = join(
+          this.config.projectPath,
+          LOCUS_CONFIG.dir,
+          "reviews"
+        );
+        if (!existsSync(reviewsDir)) {
+          mkdirSync(reviewsDir, { recursive: true });
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const sprintSlug = sprint?.name
+          ? sprint.name.toLowerCase().replace(/\s+/g, "-").slice(0, 40)
+          : "no-sprint";
+        const fileName = `review-${sprintSlug}-${timestamp}.md`;
+        const filePath = join(reviewsDir, fileName);
+
+        writeFileSync(filePath, report);
+        this.log(`Review report saved to .locus/reviews/${fileName}`, "success");
+      } else {
+        this.log("No staged changes to review.", "info");
+      }
+    } catch (err) {
+      this.log(
+        `Review failed: ${err instanceof Error ? err.message : String(err)}`,
+        "error"
+      );
+    }
+  }
+
   async run(): Promise<void> {
     this.log(
       `Agent started in ${this.config.projectPath || process.cwd()}`,
       "success"
     );
 
-    // Initial Sprint Planning Phase
     const sprint = await this.getActiveSprint();
     if (sprint) {
-      this.log(
-        `Active sprint found: ${sprint.name}. Ensuring plan is up to date...`,
-        "info"
-      );
-
-      // Trigger server-side planning (it will check if AI planning is needed)
-      // Trigger server-side planning (it will check if AI planning is needed)
-      try {
-        await this.client.sprints.triggerAIPlanning(
-          sprint.id,
-          this.config.workspaceId
-        );
-        this.log(`Sprint plan sync checked on server.`, "success");
-      } catch (err) {
-        this.log(
-          `Sprint planning sync failed (non-critical): ${err instanceof Error ? err.message : String(err)}`,
-          "warn"
-        );
-      }
+      this.log(`Active sprint found: ${sprint.name}`, "info");
     } else {
-      this.log("No active sprint found for planning.", "warn");
+      this.log("No active sprint found.", "warn");
     }
 
     // Main task execution loop
-    while (
-      this.tasksCompleted < this.maxTasks &&
-      this.consecutiveEmpty < this.maxEmpty
-    ) {
+    while (this.tasksCompleted < this.maxTasks) {
       const task = await this.getNextTask();
 
       if (!task) {
-        if (this.consecutiveEmpty === 0) {
-          this.log("Queue empty, waiting for tasks...", "info");
-        }
-        this.consecutiveEmpty++;
-        if (this.consecutiveEmpty >= this.maxEmpty) break;
-        await new Promise((r) => setTimeout(r, this.pollInterval));
-        continue;
+        // No tasks dispatched — run a review on staged changes and exit
+        this.log("No tasks remaining. Running review on staged changes...", "info");
+        await this.runStagedChangesReview(sprint);
+        break;
       }
 
-      this.consecutiveEmpty = 0;
       this.log(`Claimed: ${task.title}`, "success");
 
       const result = await this.executeTask(task);
