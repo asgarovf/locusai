@@ -5,8 +5,8 @@ import { CommentSchema, EventSchema } from "./activity";
 import { DocSchema } from "./doc";
 
 export const AcceptanceItemSchema = z.object({
-  id: z.string(),
-  text: z.string(),
+  id: z.string().max(100),
+  text: z.string().max(500),
   done: z.boolean(),
 });
 
@@ -15,16 +15,16 @@ export type AcceptanceItem = z.infer<typeof AcceptanceItemSchema>;
 export const TaskSchema = BaseEntitySchema.extend({
   workspaceId: z.uuid().nullable().optional(),
   title: z.string().min(1, "Title is required").max(200),
-  description: z.string(),
+  description: z.string().max(10000),
   status: z.enum(TaskStatus),
   priority: z.enum(TaskPriority),
-  labels: z.array(z.string()),
+  labels: z.array(z.string().max(100)),
   assigneeRole: z.enum(AssigneeRole).nullable().optional(),
   /** Agent ID or user identifier - not necessarily a UUID */
-  assignedTo: z.string().nullable().optional(),
+  assignedTo: z.string().max(100).nullable().optional(),
   sprintId: z.uuid().nullable().optional(),
   parentId: z.uuid().nullable().optional(),
-  dueDate: z.union([z.string(), z.number()]).nullable().optional(),
+  dueDate: z.union([z.string().max(100), z.number()]).nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema),
   comments: z.array(CommentSchema).optional(),
   activityLog: z.array(EventSchema).optional(),
@@ -35,17 +35,17 @@ export type Task = z.infer<typeof TaskSchema>;
 
 export const CreateTaskSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
-  description: z.string().optional().default(""),
+  description: z.string().max(10000).optional().default(""),
   status: z.enum(TaskStatus).optional().default(TaskStatus.BACKLOG),
   priority: z.enum(TaskPriority).optional().default(TaskPriority.MEDIUM),
-  labels: z.array(z.string()).optional().default([]),
+  labels: z.array(z.string().max(100)).optional().default([]),
   assigneeRole: z.enum(AssigneeRole).optional(),
-  assignedTo: z.string().nullable().optional(),
-  dueDate: z.union([z.string(), z.number()]).nullable().optional(),
-  parentId: z.string().nullable().optional(),
-  sprintId: z.string().nullable().optional(),
+  assignedTo: z.string().max(100).nullable().optional(),
+  dueDate: z.union([z.string().max(100), z.number()]).nullable().optional(),
+  parentId: z.string().max(100).nullable().optional(),
+  sprintId: z.string().max(100).nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
-  docIds: z.array(z.string()).optional(),
+  docIds: z.array(z.string().max(100)).optional(),
 });
 
 export type CreateTask = z.infer<typeof CreateTaskSchema>;
@@ -71,14 +71,14 @@ export const UpdateTaskSchema = TaskSchema.partial()
 export type UpdateTask = z.infer<typeof UpdateTaskSchema>;
 
 export const AddCommentSchema = z.object({
-  author: z.string().min(1, "Author is required"),
-  text: z.string().min(1, "Comment text is required"),
+  author: z.string().min(1, "Author is required").max(100),
+  text: z.string().min(1, "Comment text is required").max(5000),
 });
 
 export type AddComment = z.infer<typeof AddCommentSchema>;
 
 export const DispatchTaskSchema = z.object({
-  workerId: z.string().optional(),
+  workerId: z.string().max(100).optional(),
   sprintId: z.uuid().optional().nullable(),
 });
 

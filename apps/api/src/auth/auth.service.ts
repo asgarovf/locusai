@@ -13,16 +13,28 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, LessThan, Repository } from "typeorm";
 import { EmailService } from "@/common/services/email.service";
+import { TypedConfigService } from "@/config/config.service";
 import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
+import { RefreshToken } from "@/entities/refresh-token.entity";
 import { User } from "@/entities/user.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { UsersService } from "@/users/users.service";
 import { GoogleUser } from "./interfaces/google-user.interface";
 import { OtpService } from "./otp.service";
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenMetadata {
+  userAgent?: string;
+  ipAddress?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -32,9 +44,13 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
+    private readonly configService: TypedConfigService,
 
     @InjectRepository(ApiKey)
-    private readonly apiKeyRepository: Repository<ApiKey>
+    private readonly apiKeyRepository: Repository<ApiKey>,
+
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>
   ) {}
 
   async validateApiKey(apiKey: string): Promise<ApiKeyAuthUser> {
@@ -235,6 +251,15 @@ export class AuthService {
   }
 
   async loginWithGoogle(googleUser: GoogleUser): Promise<LoginResponse> {
+    const user = await this.processGoogleUser(googleUser);
+    return this.login(user);
+  }
+
+  /**
+   * Process a Google OAuth user - find existing user or create a new one.
+   * This method is separated from loginWithGoogle to support the one-time code flow.
+   */
+  async processGoogleUser(googleUser: GoogleUser): Promise<User> {
     let user = await this.usersService.findByEmail(googleUser.email);
 
     if (!user) {
@@ -275,7 +300,7 @@ export class AuthService {
       });
     }
 
-    return this.login(user);
+    return user;
   }
 
   async getUserWorkspaces(userId: string): Promise<Array<{ id: string }>> {
@@ -300,5 +325,148 @@ export class AuthService {
 
   async getUserById(userId: string): Promise<User | null> {
     return this.usersService.findById(userId);
+  }
+
+  // ============================================================================
+  // Refresh Token Management (Cookie-based Auth)
+  // ============================================================================
+
+  /**
+   * Generate a cryptographically secure refresh token
+   */
+  private generateRefreshTokenValue(): string {
+    return crypto.randomBytes(64).toString("base64url");
+  }
+
+  /**
+   * Hash a refresh token for secure storage
+   */
+  private hashRefreshToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
+  }
+
+  /**
+   * Create a new access token (short-lived JWT)
+   */
+  createAccessToken(user: User): string {
+    const expiresInMinutes = this.configService.get(
+      "ACCESS_TOKEN_EXPIRES_IN_MINUTES"
+    );
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      name: user.name,
+      role: user.role,
+    };
+    return this.jwtService.sign(payload, { expiresIn: `${expiresInMinutes}m` });
+  }
+
+  /**
+   * Create and store a new refresh token
+   */
+  async createRefreshToken(
+    user: User,
+    metadata?: RefreshTokenMetadata
+  ): Promise<string> {
+    const tokenValue = this.generateRefreshTokenValue();
+    const tokenHash = this.hashRefreshToken(tokenValue);
+    const expiresInDays = this.configService.get("REFRESH_TOKEN_EXPIRES_IN_DAYS");
+    const expiresAt = new Date(
+      Date.now() + expiresInDays * 24 * 60 * 60 * 1000
+    );
+
+    const refreshToken = this.refreshTokenRepository.create({
+      tokenHash,
+      userId: user.id,
+      expiresAt,
+      userAgent: metadata?.userAgent || null,
+      ipAddress: metadata?.ipAddress || null,
+    });
+
+    await this.refreshTokenRepository.save(refreshToken);
+    return tokenValue;
+  }
+
+  /**
+   * Create both access and refresh tokens for a user
+   */
+  async createTokenPair(
+    user: User,
+    metadata?: RefreshTokenMetadata
+  ): Promise<TokenPair> {
+    const accessToken = this.createAccessToken(user);
+    const refreshToken = await this.createRefreshToken(user, metadata);
+    return { accessToken, refreshToken };
+  }
+
+  /**
+   * Validate and refresh tokens using a refresh token
+   * Implements token rotation for security
+   */
+  async refreshTokens(
+    refreshTokenValue: string,
+    metadata?: RefreshTokenMetadata
+  ): Promise<TokenPair> {
+    const tokenHash = this.hashRefreshToken(refreshTokenValue);
+
+    const storedToken = await this.refreshTokenRepository.findOne({
+      where: { tokenHash },
+      relations: ["user"],
+    });
+
+    if (!storedToken) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+
+    if (storedToken.revoked) {
+      // Potential token reuse detected - revoke all tokens for this user
+      await this.revokeAllUserRefreshTokens(storedToken.userId);
+      throw new UnauthorizedException(
+        "Refresh token has been revoked. Please log in again."
+      );
+    }
+
+    if (storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException("Refresh token has expired");
+    }
+
+    // Revoke the current token (rotation)
+    storedToken.revoked = true;
+    storedToken.revokedAt = new Date();
+    await this.refreshTokenRepository.save(storedToken);
+
+    // Create new token pair
+    return this.createTokenPair(storedToken.user, metadata);
+  }
+
+  /**
+   * Revoke a specific refresh token (e.g., on logout)
+   */
+  async revokeRefreshToken(refreshTokenValue: string): Promise<void> {
+    const tokenHash = this.hashRefreshToken(refreshTokenValue);
+    await this.refreshTokenRepository.update(
+      { tokenHash },
+      { revoked: true, revokedAt: new Date() }
+    );
+  }
+
+  /**
+   * Revoke all refresh tokens for a user (e.g., on password change)
+   */
+  async revokeAllUserRefreshTokens(userId: string): Promise<void> {
+    await this.refreshTokenRepository.update(
+      { userId, revoked: false },
+      { revoked: true, revokedAt: new Date() }
+    );
+  }
+
+  /**
+   * Clean up expired refresh tokens (call periodically via cron)
+   */
+  async cleanupExpiredRefreshTokens(): Promise<number> {
+    const result = await this.refreshTokenRepository.delete({
+      expiresAt: LessThan(new Date()),
+    });
+    return result.affected || 0;
   }
 }

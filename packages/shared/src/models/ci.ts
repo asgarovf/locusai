@@ -5,16 +5,16 @@ export const RecordCiSchema = z.object({
   workspaceId: z.uuid(),
   result: z.object({
     ok: z.boolean(),
-    summary: z.string(),
+    summary: z.string().max(5000),
     commands: z.array(
       z.object({
-        cmd: z.string(),
+        cmd: z.string().max(1000),
         exitCode: z.number(),
         durationMs: z.number().optional(),
-        error: z.string().optional(),
+        error: z.string().max(5000).optional(),
       })
     ),
-    preset: z.string(),
+    preset: z.string().max(100),
   }),
 });
 

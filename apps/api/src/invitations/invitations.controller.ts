@@ -14,6 +14,7 @@ import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
 import { MemberAdmin } from "@/auth/decorators/membership-roles.decorator";
 import { Public } from "@/auth/decorators/public.decorator";
 import { CurrentUser } from "@/auth/decorators/user.decorator";
+import { AuditLog } from "@/common/decorators/audit-log.decorator";
 import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
 import { User } from "@/entities";
 import { InvitationsService } from "./invitations.service";
@@ -24,6 +25,7 @@ export class InvitationsController {
 
   @Post("org/:orgId/invitations")
   @MemberAdmin()
+  @AuditLog("INVITATION_CREATE", "organization")
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @CurrentUser() user: User,
@@ -59,6 +61,7 @@ export class InvitationsController {
 
   @Public()
   @Post("invitations/accept")
+  @AuditLog("INVITATION_ACCEPT", "organization")
   async accept(
     @Body(new ZodValidationPipe(AcceptInvitationSchema)) body: AcceptInvitation
   ) {
@@ -71,6 +74,7 @@ export class InvitationsController {
 
   @Delete("org/:orgId/invitations/:invitationId")
   @MemberAdmin()
+  @AuditLog("INVITATION_REVOKE", "organization")
   async revoke(@Param("invitationId") invitationId: string) {
     await this.invitationsService.revoke(invitationId);
     return { success: true };

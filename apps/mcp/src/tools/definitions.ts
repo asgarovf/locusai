@@ -75,14 +75,17 @@ export function registerTools(
       inputSchema: {
         apiKey: z
           .string()
+          .max(500)
           .optional()
           .describe("Locus API Key (optional if configured)"),
         workspaceId: z
           .string()
+          .max(100)
           .optional()
           .describe("Locus Workspace ID (optional if configured)"),
         projectPath: z
           .string()
+          .max(1000)
           .optional()
           .describe("Absolute path to the project root (defaults to cwd)"),
       },
@@ -120,13 +123,13 @@ export function registerTools(
     {
       description: "Complete the current task and get the next one.",
       inputSchema: {
-        taskId: z.string(),
-        summary: z.string(),
-        artifacts: z.array(z.string()).optional(),
+        taskId: z.string().max(100),
+        summary: z.string().max(5000),
+        artifacts: z.array(z.string().max(1000)).optional(),
         // We accept auth params here too just in case state is lost/stateless
-        apiKey: z.string().optional(),
-        workspaceId: z.string().optional(),
-        projectPath: z.string().optional(),
+        apiKey: z.string().max(500).optional(),
+        workspaceId: z.string().max(100).optional(),
+        projectPath: z.string().max(1000).optional(),
       },
     },
     async (args) => {

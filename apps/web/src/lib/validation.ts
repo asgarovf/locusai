@@ -11,6 +11,7 @@ import { z } from "zod";
 export const EmailSchema = z
   .string()
   .email("Invalid email address")
+  .max(320, "Email must be less than 320 characters")
   .toLowerCase();
 
 /**
@@ -24,7 +25,7 @@ export const OtpSchema = z.string().regex(/^\d{6}$/, "OTP must be 6 digits");
 export const NameSchema = z
   .string()
   .min(1, "Name is required")
-  .max(255, "Name must be less than 255 characters");
+  .max(100, "Name must be less than 100 characters");
 
 /**
  * Company/organization name validation
@@ -32,7 +33,7 @@ export const NameSchema = z
 export const CompanyNameSchema = z
   .string()
   .min(1, "Company name is required")
-  .max(255, "Company name must be less than 255 characters");
+  .max(100, "Company name must be less than 100 characters");
 
 /**
  * Workspace name validation
@@ -40,7 +41,7 @@ export const CompanyNameSchema = z
 export const WorkspaceNameSchema = z
   .string()
   .min(1, "Workspace name is required")
-  .max(255, "Workspace name must be less than 255 characters");
+  .max(100, "Workspace name must be less than 100 characters");
 
 /**
  * Team size options

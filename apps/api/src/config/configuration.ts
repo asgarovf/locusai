@@ -18,11 +18,21 @@ export const ConfigSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().optional(),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
+  THROTTLE_TTL: z.coerce.number().default(60000),
+  THROTTLE_LIMIT: z.coerce.number().default(100),
+  REQUEST_TIMEOUT: z.coerce.number().default(30000),
   MANIFEST_COMPLETION_THRESHOLD: z.coerce
     .number()
     .min(0)
     .max(100)
     .default(MANIFEST_COMPLETION_THRESHOLD),
+  // Cookie configuration for secure auth
+  COOKIE_SECRET: z.string().min(32).optional(),
+  COOKIE_DOMAIN: z.string().optional(),
+  REFRESH_TOKEN_EXPIRES_IN_DAYS: z.coerce.number().default(30),
+  ACCESS_TOKEN_EXPIRES_IN_MINUTES: z.coerce.number().default(15),
+  // CSRF configuration
+  CSRF_SECRET: z.string().min(32),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

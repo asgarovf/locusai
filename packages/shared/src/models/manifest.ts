@@ -20,9 +20,9 @@ export type ProjectPhase = z.infer<typeof ProjectPhaseSchema>;
 export const SprintStatusSchema = z.enum(["PLANNED", "ACTIVE", "COMPLETED"]);
 
 export const ProjectSprintSchema = z.object({
-  id: z.string(),
-  goal: z.string(),
-  tasks: z.array(z.string()),
+  id: z.string().max(100),
+  goal: z.string().max(500),
+  tasks: z.array(z.string().max(200)),
   status: SprintStatusSchema,
 });
 
@@ -31,8 +31,8 @@ export type ProjectSprint = z.infer<typeof ProjectSprintSchema>;
 export const MilestoneStatusSchema = z.enum(["PENDING", "COMPLETED"]);
 
 export const ProjectMilestoneSchema = z.object({
-  title: z.string(),
-  date: z.string().optional(),
+  title: z.string().max(255),
+  date: z.string().max(100).optional(),
   status: MilestoneStatusSchema,
 });
 
@@ -50,12 +50,12 @@ export type ProjectTimeline = z.infer<typeof ProjectTimelineSchema>;
 // ============================================================================
 
 export const RepositoryContextSchema = z.object({
-  summary: z.string(),
-  fileStructure: z.string(),
-  dependencies: z.record(z.string(), z.string()),
-  frameworks: z.array(z.string()),
-  configFiles: z.array(z.string()),
-  lastAnalysis: z.string(),
+  summary: z.string().max(5000),
+  fileStructure: z.string().max(50000),
+  dependencies: z.record(z.string().max(100), z.string().max(50)),
+  frameworks: z.array(z.string().max(100)),
+  configFiles: z.array(z.string().max(255)),
+  lastAnalysis: z.string().max(100),
 });
 
 export type RepositoryContext = z.infer<typeof RepositoryContextSchema>;
@@ -65,15 +65,15 @@ export type RepositoryContext = z.infer<typeof RepositoryContextSchema>;
 // ============================================================================
 
 export const ProjectManifestSchema = z.object({
-  name: z.string(),
-  mission: z.string(),
-  targetUsers: z.array(z.string()),
-  techStack: z.array(z.string()),
+  name: z.string().max(100),
+  mission: z.string().max(1000),
+  targetUsers: z.array(z.string().max(255)),
+  techStack: z.array(z.string().max(100)),
   phase: ProjectPhaseSchema,
-  features: z.array(z.string()),
-  competitors: z.array(z.string()),
-  brandVoice: z.string().optional(),
-  successMetrics: z.array(z.string()).optional(),
+  features: z.array(z.string().max(500)),
+  competitors: z.array(z.string().max(255)),
+  brandVoice: z.string().max(2000).optional(),
+  successMetrics: z.array(z.string().max(500)).optional(),
   completenessScore: z.number().min(0).max(100),
   timeline: ProjectTimelineSchema.optional(),
   repositoryState: RepositoryContextSchema.optional(),

@@ -3,21 +3,21 @@ import { BaseEntitySchema } from "../common";
 
 export const DocGroupSchema = BaseEntitySchema.extend({
   workspaceId: z.uuid(),
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").max(100),
   order: z.number().default(0),
 });
 
 export type DocGroup = z.infer<typeof DocGroupSchema>;
 
 export const CreateDocGroupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").max(100),
   order: z.number().optional(),
 });
 
 export type CreateDocGroup = z.infer<typeof CreateDocGroupSchema>;
 
 export const UpdateDocGroupSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(100).optional(),
   order: z.number().optional(),
 });
 

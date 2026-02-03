@@ -9,7 +9,9 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { EmailService } from "@/common/services/email.service";
 import { ApiKey } from "@/entities/api-key.entity";
+import { RefreshToken } from "@/entities/refresh-token.entity";
 import { UsersService } from "@/users/users.service";
+import { TypedConfigService } from "@/config/config.service";
 import { AuthService } from "../auth.service";
 import { OtpService } from "../otp.service";
 
@@ -61,10 +63,26 @@ describe("AuthService", () => {
           },
         },
         {
+          provide: TypedConfigService,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+        {
           provide: getRepositoryToken(ApiKey),
           useValue: {
             findOne: jest.fn(),
             save: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(RefreshToken),
+          useValue: {
+            create: jest.fn(),
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            delete: jest.fn(),
           },
         },
       ],

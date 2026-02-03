@@ -4,9 +4,9 @@ import { MembershipRole } from "../enums";
 
 export const InvitationSchema = BaseEntitySchema.extend({
   orgId: z.string().uuid("Invalid Organization ID"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").max(320),
   role: z.enum(MembershipRole),
-  token: z.string(),
+  token: z.string().max(500),
   expiresAt: z.number(),
   acceptedAt: z.number().nullable().optional(),
   invitedBy: z.uuid(),
@@ -16,15 +16,15 @@ export type Invitation = z.infer<typeof InvitationSchema>;
 
 export const CreateInvitationSchema = z.object({
   orgId: z.string().uuid("Invalid Organization ID"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").max(320),
   role: z.enum(MembershipRole).default(MembershipRole.MEMBER),
 });
 
 export type CreateInvitation = z.infer<typeof CreateInvitationSchema>;
 
 export const AcceptInvitationSchema = z.object({
-  token: z.string().min(1, "Invitation token is required"),
-  name: z.string().min(1, "Name is required").optional(),
+  token: z.string().min(1, "Invitation token is required").max(500),
+  name: z.string().min(1, "Name is required").max(100).optional(),
 });
 
 export type AcceptInvitation = z.infer<typeof AcceptInvitationSchema>;
@@ -40,7 +40,7 @@ export const InvitationIdParamSchema = z.object({
 export type InvitationIdParam = z.infer<typeof InvitationIdParamSchema>;
 
 export const InvitationVerifyParamSchema = z.object({
-  token: z.string().min(1, "Token required"),
+  token: z.string().min(1, "Token required").max(500),
 });
 
 export type InvitationVerifyParam = z.infer<typeof InvitationVerifyParamSchema>;

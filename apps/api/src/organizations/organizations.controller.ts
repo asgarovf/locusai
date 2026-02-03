@@ -16,6 +16,11 @@ import {
   MemberAdmin,
   MemberOwner,
 } from "@/auth/decorators";
+import { AuditLog } from "@/common/decorators/audit-log.decorator";
+import {
+  byUserId,
+  CustomThrottle,
+} from "@/common/decorators/custom-throttle.decorator";
 import { ZodValidationPipe } from "@/common/pipes";
 import { User } from "@/entities";
 import { OrganizationsService } from "./organizations.service";
@@ -50,6 +55,7 @@ export class OrganizationsController {
 
   @Post(":orgId/members")
   @MemberAdmin()
+  @AuditLog("MEMBER_ADD", "organization")
   async addMember(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(AddMemberSchema)) body: AddMember
@@ -63,6 +69,7 @@ export class OrganizationsController {
 
   @Delete(":orgId/members/:userId")
   @MemberAdmin()
+  @AuditLog("MEMBER_REMOVE", "organization")
   async removeMember(
     @Param("orgId") orgId: string,
     @Param("userId") userId: string
@@ -73,6 +80,7 @@ export class OrganizationsController {
 
   @Delete(":orgId")
   @MemberOwner()
+  @AuditLog("ORGANIZATION_DELETE", "organization")
   async delete(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ) {
@@ -86,6 +94,7 @@ export class OrganizationsController {
 
   @Get(":orgId/api-keys")
   @MemberAdmin()
+  @CustomThrottle({ limit: 20, ttl: 60000, keyGenerator: byUserId() })
   async listApiKeys(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ) {
@@ -103,6 +112,8 @@ export class OrganizationsController {
 
   @Post(":orgId/api-keys")
   @MemberAdmin()
+  @CustomThrottle({ limit: 20, ttl: 60000, keyGenerator: byUserId() })
+  @AuditLog("API_KEY_CREATE", "organization")
   async createApiKey(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
@@ -126,6 +137,8 @@ export class OrganizationsController {
 
   @Delete(":orgId/api-keys/:keyId")
   @MemberAdmin()
+  @CustomThrottle({ limit: 20, ttl: 60000, keyGenerator: byUserId() })
+  @AuditLog("API_KEY_DELETE", "organization")
   async deleteApiKey(
     @Param("orgId") orgId: string,
     @Param("keyId") keyId: string

@@ -11,6 +11,7 @@ describe("ConfigModule", () => {
     // Set required env vars for validation to pass
     process.env.DATABASE_URL = "postgres://localhost:5432/db";
     process.env.JWT_SECRET = "a-very-long-secret-that-is-at-least-32-chars";
+    process.env.CSRF_SECRET = "another-very-long-secret-at-least-32-chars";
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [

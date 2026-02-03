@@ -3,15 +3,15 @@ import { BaseEntitySchema } from "../common";
 import { UserRole } from "../enums";
 
 export const UserSchema = BaseEntitySchema.extend({
-  email: z.string().email(),
-  name: z.string().min(1),
-  avatarUrl: z.string().url().nullable().optional(),
+  email: z.string().email().max(320),
+  name: z.string().min(1).max(100),
+  avatarUrl: z.string().max(2048).url().nullable().optional(),
   role: z.enum(UserRole),
   orgId: z.uuid().optional().nullable(),
   workspaceId: z.uuid().optional().nullable(),
-  companyName: z.string().optional(),
-  userRole: z.string().optional(),
-  teamSize: z.string().optional(),
+  companyName: z.string().max(100).optional(),
+  userRole: z.string().max(50).optional(),
+  teamSize: z.string().max(20).optional(),
   onboardingCompleted: z.boolean().default(false),
   emailVerified: z.boolean().default(false),
 });
@@ -19,8 +19,8 @@ export const UserSchema = BaseEntitySchema.extend({
 export type User = z.infer<typeof UserSchema>;
 
 export const CreateUserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1),
+  email: z.string().email().max(320),
+  name: z.string().min(1).max(100),
 });
 
 export type CreateUser = z.infer<typeof CreateUserSchema>;

@@ -22,7 +22,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["jest", "node"]
+    "types": ["jest", "node", "multer"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

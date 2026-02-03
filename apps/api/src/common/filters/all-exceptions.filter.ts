@@ -94,10 +94,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return "FORBIDDEN";
       case HttpStatus.NOT_FOUND:
         return "NOT_FOUND";
+      case HttpStatus.REQUEST_TIMEOUT:
+        return "REQUEST_TIMEOUT";
       case HttpStatus.CONFLICT:
         return "CONFLICT";
       case HttpStatus.UNPROCESSABLE_ENTITY:
         return "VALIDATION_ERROR";
+      case HttpStatus.TOO_MANY_REQUESTS:
+        return "TOO_MANY_REQUESTS";
       default:
         return "INTERNAL_SERVER_ERROR";
     }

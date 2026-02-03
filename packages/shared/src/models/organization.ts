@@ -5,6 +5,7 @@ export const OrganizationSchema = BaseEntitySchema.extend({
   name: z.string().min(1, "Name is required").max(100),
   avatarUrl: z
     .string()
+    .max(2048)
     .url("Invalid avatar URL")
     .nullable()
     .optional()
@@ -15,7 +16,7 @@ export type Organization = z.infer<typeof OrganizationSchema>;
 
 export const CreateOrganizationSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  avatarUrl: z.string().url("Invalid avatar URL").optional().or(z.literal("")),
+  avatarUrl: z.string().max(2048).url("Invalid avatar URL").optional().or(z.literal("")),
 });
 
 export type CreateOrganization = z.infer<typeof CreateOrganizationSchema>;
@@ -39,13 +40,13 @@ export const MembershipWithUserSchema = z.object({
   id: z.uuid(),
   userId: z.uuid(),
   orgId: z.uuid(),
-  role: z.string(),
+  role: z.string().max(50),
   createdAt: z.number(),
   user: z.object({
     id: z.uuid(),
-    email: z.string().email(),
-    name: z.string(),
-    avatarUrl: z.string().url().nullable().optional(),
+    email: z.string().email().max(320),
+    name: z.string().max(100),
+    avatarUrl: z.string().max(2048).url().nullable().optional(),
   }),
 });
 

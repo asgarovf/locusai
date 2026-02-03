@@ -2,8 +2,8 @@ import { z } from "zod";
 import { BaseEntitySchema } from "../common";
 
 export const ChecklistItemSchema = z.object({
-  id: z.string(),
-  text: z.string(),
+  id: z.string().max(100),
+  text: z.string().max(500),
   done: z.boolean(),
 });
 
@@ -34,7 +34,7 @@ export type UpdateWorkspace = z.infer<typeof UpdateWorkspaceSchema>;
 
 export const AddWorkspaceMemberSchema = z.object({
   userId: z.string().uuid("Invalid User ID"),
-  role: z.string().optional(),
+  role: z.string().max(50).optional(),
 });
 
 export type AddWorkspaceMember = z.infer<typeof AddWorkspaceMemberSchema>;
@@ -86,8 +86,8 @@ export const WorkspacesResponseSchema = z.object({
 export type WorkspacesResponse = z.infer<typeof WorkspacesResponseSchema>;
 
 export const WorkspaceStatsSchema = z.object({
-  workspaceName: z.string(),
-  taskCounts: z.record(z.string(), z.number()),
+  workspaceName: z.string().max(100),
+  taskCounts: z.record(z.string().max(50), z.number()),
   memberCount: z.number(),
 });
 

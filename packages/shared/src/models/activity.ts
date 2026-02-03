@@ -4,21 +4,21 @@ import { EventType, SprintStatus, TaskStatus } from "../enums";
 
 export const CommentSchema = BaseEntitySchema.extend({
   taskId: z.uuid(),
-  author: z.string().min(1),
-  text: z.string().min(1),
+  author: z.string().min(1).max(100),
+  text: z.string().min(1).max(5000),
 });
 
 export type Comment = z.infer<typeof CommentSchema>;
 
 export const ArtifactSchema = BaseEntitySchema.extend({
   taskId: z.uuid(),
-  type: z.string().min(1),
-  title: z.string().min(1),
-  contentText: z.string().optional(),
-  filePath: z.string().optional(),
-  url: z.string().optional(),
-  size: z.string().optional(),
-  createdBy: z.string().min(1),
+  type: z.string().min(1).max(100),
+  title: z.string().min(1).max(255),
+  contentText: z.string().max(50000).optional(),
+  filePath: z.string().max(1000).optional(),
+  url: z.string().max(2048).optional(),
+  size: z.string().max(50).optional(),
+  createdBy: z.string().min(1).max(100),
 });
 
 export type Artifact = z.infer<typeof ArtifactSchema>;
@@ -28,45 +28,45 @@ export type Artifact = z.infer<typeof ArtifactSchema>;
 // ============================================================================
 
 export const TaskCreatedPayloadSchema = z.object({
-  title: z.string(),
+  title: z.string().max(200),
 });
 
 export const TaskDeletedPayloadSchema = z.object({
-  title: z.string(),
+  title: z.string().max(200),
 });
 
 export const StatusChangedPayloadSchema = z.object({
-  title: z.string(),
+  title: z.string().max(200),
   oldStatus: z.enum(TaskStatus),
   newStatus: z.enum(TaskStatus),
 });
 
 export const CommentAddedPayloadSchema = z.object({
-  title: z.string(),
-  author: z.string(),
-  text: z.string(),
+  title: z.string().max(200),
+  author: z.string().max(100),
+  text: z.string().max(5000),
 });
 
 export const WorkspaceCreatedPayloadSchema = z.object({
-  name: z.string(),
+  name: z.string().max(100),
 });
 
 export const MemberAddedPayloadSchema = z.object({
-  userId: z.string(),
-  role: z.string(),
+  userId: z.string().max(100),
+  role: z.string().max(50),
 });
 
 export const MemberInvitedPayloadSchema = z.object({
-  email: z.string(),
+  email: z.string().max(320),
 });
 
 export const SprintCreatedPayloadSchema = z.object({
-  name: z.string(),
+  name: z.string().max(100),
   sprintId: z.uuid(),
 });
 
 export const SprintStatusChangedPayloadSchema = z.object({
-  name: z.string(),
+  name: z.string().max(100),
   sprintId: z.uuid(),
   oldStatus: z.enum(SprintStatus),
   newStatus: z.enum(SprintStatus),
@@ -77,13 +77,13 @@ export const ChecklistInitializedPayloadSchema = z.object({
 });
 
 export const CiRanPayloadSchema = z.object({
-  preset: z.string(),
+  preset: z.string().max(100),
   ok: z.boolean(),
-  summary: z.string(),
-  source: z.string(),
+  summary: z.string().max(5000),
+  source: z.string().max(100),
   deferred: z.boolean(),
   processed: z.boolean(),
-  commands: z.array(z.object({ cmd: z.string(), exitCode: z.number() })),
+  commands: z.array(z.object({ cmd: z.string().max(1000), exitCode: z.number() })),
 });
 
 // ============================================================================
@@ -91,24 +91,24 @@ export const CiRanPayloadSchema = z.object({
 // ============================================================================
 
 export const InterviewStartedPayloadSchema = z.object({
-  workspaceName: z.string(),
-  firstFieldName: z.string(),
+  workspaceName: z.string().max(100),
+  firstFieldName: z.string().max(100),
 });
 
 export const InterviewFieldCompletedPayloadSchema = z.object({
-  fieldName: z.string(),
+  fieldName: z.string().max(100),
   completionPercentage: z.number(),
 });
 
 export const InterviewCompletedPayloadSchema = z.object({
-  workspaceName: z.string(),
+  workspaceName: z.string().max(100),
   timeToCompleteMs: z.number(),
   completedVia: z.enum(["interview", "manual_bypass"]),
 });
 
 export const InterviewAbandonedPayloadSchema = z.object({
-  workspaceName: z.string(),
-  lastActiveAt: z.union([z.date(), z.string()]),
+  workspaceName: z.string().max(100),
+  lastActiveAt: z.union([z.date(), z.string().max(100)]),
   completionPercentage: z.number(),
   daysInactive: z.number(),
 });
@@ -179,12 +179,12 @@ export const EventPayloadSchema = z.discriminatedUnion("type", [
 export type EventPayload = z.infer<typeof EventPayloadSchema>;
 
 export const EventSchema = z.object({
-  id: z.string(),
-  workspaceId: z.string(),
+  id: z.string().max(100),
+  workspaceId: z.string().max(100),
   taskId: z.uuid().optional().nullable(),
-  userId: z.string().optional().nullable(),
+  userId: z.string().max(100).optional().nullable(),
   type: z.enum(EventType),
-  payload: z.record(z.string(), z.unknown()),
+  payload: z.record(z.string().max(100), z.unknown()),
   createdAt: z.union([z.date(), z.number()]),
 });
 
@@ -196,8 +196,8 @@ export type Event = z.infer<typeof EventSchema>;
 
 export const ArtifactParamSchema = z.object({
   taskId: z.string().uuid("Invalid Task ID"),
-  type: z.string().min(1, "Artifact type required"),
-  filename: z.string().min(1, "Filename required"),
+  type: z.string().min(1, "Artifact type required").max(100),
+  filename: z.string().min(1, "Filename required").max(255),
 });
 
 export type ArtifactParam = z.infer<typeof ArtifactParamSchema>;
@@ -256,9 +256,9 @@ export type ArtifactsResponse = z.infer<typeof ArtifactsResponseSchema>;
 
 export const CreateArtifactSchema = z.object({
   taskId: z.uuid(),
-  type: z.string().min(1),
-  title: z.string().min(1),
-  contentText: z.string().optional(),
+  type: z.string().min(1).max(100),
+  title: z.string().min(1).max(255),
+  contentText: z.string().max(50000).optional(),
 });
 
 export type CreateArtifact = z.infer<typeof CreateArtifactSchema>;
@@ -266,12 +266,12 @@ export type CreateArtifact = z.infer<typeof CreateArtifactSchema>;
 export const ReportCiResultSchema = z.object({
   workspaceId: z.uuid(),
   taskId: z.uuid().optional(),
-  preset: z.string(),
+  preset: z.string().max(100),
   ok: z.boolean(),
-  summary: z.string(),
+  summary: z.string().max(5000),
   commands: z.array(
     z.object({
-      cmd: z.string(),
+      cmd: z.string().max(1000),
       exitCode: z.number(),
     })
   ),

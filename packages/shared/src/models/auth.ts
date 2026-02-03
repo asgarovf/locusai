@@ -16,8 +16,8 @@ import { UserSchema } from "./user";
 export const JwtAuthUserSchema = z.object({
   authType: z.literal("jwt"),
   id: z.uuid(),
-  email: z.string().email(),
-  name: z.string(),
+  email: z.string().email().max(320),
+  name: z.string().max(100),
   role: z.enum(UserRole),
   orgId: z.uuid().nullable().optional(),
   workspaceId: z.uuid().nullable().optional(),
@@ -31,10 +31,10 @@ export type JwtAuthUser = z.infer<typeof JwtAuthUserSchema>;
  */
 export const ApiKeyAuthUserSchema = z.object({
   authType: z.literal("api_key"),
-  apiKeyId: z.string(),
-  apiKeyName: z.string(),
-  orgId: z.string().optional(),
-  workspaceId: z.string().optional(),
+  apiKeyId: z.string().max(100),
+  apiKeyName: z.string().max(100),
+  orgId: z.string().max(100).optional(),
+  workspaceId: z.string().max(100).optional(),
 });
 
 export type ApiKeyAuthUser = z.infer<typeof ApiKeyAuthUserSchema>;
@@ -76,7 +76,7 @@ export function getAuthUserId(user: AuthenticatedUser): string | null {
 // ============================================================================
 
 export const AuthResponseSchema = z.object({
-  token: z.string(),
+  token: z.string().max(2000),
   user: UserSchema,
 });
 
@@ -88,20 +88,20 @@ export type LoginResponse = AuthResponse;
 // ============================================================================
 
 export const OtpRequestSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").max(320),
 });
 
 export type OtpRequest = z.infer<typeof OtpRequestSchema>;
 
 export const VerifyOtpSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").max(320),
   otp: z.string().length(6, "Verification code must be 6 digits"),
 });
 
 export type VerifyOtp = z.infer<typeof VerifyOtpSchema>;
 
 export const CompleteRegistrationSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").max(320),
   otp: z.string().length(6, "Verification code must be 6 digits"),
   name: z.string().min(1, "Name is required").max(100),
   companyName: z.string().max(100).optional(),
@@ -110,7 +110,7 @@ export const CompleteRegistrationSchema = z.object({
     .enum(["developer", "designer", "product_manager", "other"])
     .optional(),
   workspaceName: z.string().max(100).optional(),
-  invitedEmails: z.array(z.string().email()).optional(),
+  invitedEmails: z.array(z.string().email().max(320)).optional(),
 });
 
 export type CompleteRegistration = z.infer<typeof CompleteRegistrationSchema>;
@@ -120,10 +120,10 @@ export type CompleteRegistration = z.infer<typeof CompleteRegistrationSchema>;
 // ============================================================================
 
 export const JWTPayloadSchema = z.object({
-  sub: z.string(), // User ID
-  email: z.string().email(),
-  name: z.string(),
-  role: z.string(),
+  sub: z.string().max(100), // User ID
+  email: z.string().email().max(320),
+  name: z.string().max(100),
+  role: z.string().max(50),
   orgId: z.uuid().optional(),
   iat: z.number(),
   exp: z.number(),
@@ -132,10 +132,10 @@ export const JWTPayloadSchema = z.object({
 export type JWTPayload = z.infer<typeof JWTPayloadSchema>;
 
 export const AuthContextSchema = z.object({
-  userId: z.string(),
-  email: z.string().email(),
-  name: z.string(),
-  role: z.string(),
+  userId: z.string().max(100),
+  email: z.string().email().max(320),
+  name: z.string().max(100),
+  role: z.string().max(50),
   orgId: z.uuid().optional(),
   workspaceId: z.uuid().optional(),
   authType: z.enum(["jwt", "api_key", "local"]),
@@ -144,10 +144,10 @@ export const AuthContextSchema = z.object({
 export type AuthContext = z.infer<typeof AuthContextSchema>;
 
 export const APIKeySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  keyPrefix: z.string(),
-  workspaceId: z.string(),
+  id: z.string().max(100),
+  name: z.string().max(100),
+  keyPrefix: z.string().max(50),
+  workspaceId: z.string().max(100),
   lastUsedAt: z.number().nullable(),
   createdAt: z.number(),
 });
@@ -155,10 +155,10 @@ export const APIKeySchema = z.object({
 export type APIKey = z.infer<typeof APIKeySchema>;
 
 export const APIKeyCreateResponseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  keyPrefix: z.string(),
-  key: z.string(),
+  id: z.string().max(100),
+  name: z.string().max(100),
+  keyPrefix: z.string().max(50),
+  key: z.string().max(500),
   createdAt: z.number(),
 });
 

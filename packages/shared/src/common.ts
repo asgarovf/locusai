@@ -44,16 +44,16 @@ export const ApiResponseSchema = z.object({
   data: z.unknown().optional(),
   error: z
     .object({
-      code: z.string(),
-      message: z.string(),
+      code: z.string().max(100),
+      message: z.string().max(1000),
       details: z.unknown().optional(),
     })
     .optional(),
   meta: z
     .object({
       pagination: PaginationMetaSchema.optional(),
-      timestamp: z.string(),
-      path: z.string(),
+      timestamp: z.string().max(100),
+      path: z.string().max(2048),
     })
     .optional(),
 });
@@ -75,14 +75,14 @@ export type ApiResponse<T = unknown> = {
 
 export const SuccessResponseSchema = z.object({
   success: z.literal(true),
-  message: z.string().optional(),
+  message: z.string().max(1000).optional(),
 });
 
 export const ErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.object({
-    code: z.string(),
-    message: z.string(),
+    code: z.string().max(100),
+    message: z.string().max(1000),
     details: z.unknown().optional(),
   }),
 });

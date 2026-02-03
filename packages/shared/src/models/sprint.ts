@@ -8,7 +8,7 @@ export const SprintSchema = BaseEntitySchema.extend({
   status: z.enum(SprintStatus),
   startDate: z.union([z.date(), z.number()]).nullable().optional(),
   endDate: z.union([z.date(), z.number()]).nullable().optional(),
-  mindmap: z.string().nullable().optional(),
+  mindmap: z.string().max(100000).nullable().optional(),
   mindmapUpdatedAt: z.union([z.date(), z.number()]).nullable().optional(),
 });
 

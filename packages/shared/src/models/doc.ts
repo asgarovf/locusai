@@ -4,7 +4,7 @@ import { BaseEntitySchema } from "../common";
 // Forward declaration for circular reference
 export const DocGroupSchemaForDoc = z.object({
   id: z.uuid(),
-  name: z.string(),
+  name: z.string().max(100),
 });
 
 export enum DocType {
@@ -18,8 +18,8 @@ export enum DocType {
 export const DocSchema = BaseEntitySchema.extend({
   workspaceId: z.uuid(),
   groupId: z.uuid().nullable().optional(),
-  title: z.string().min(1, "Title is required"),
-  content: z.string().default(""),
+  title: z.string().min(1, "Title is required").max(255),
+  content: z.string().max(50000).default(""),
   type: z.enum(DocType).default(DocType.GENERAL),
   group: DocGroupSchemaForDoc.nullable().optional(),
 });
@@ -27,19 +27,19 @@ export const DocSchema = BaseEntitySchema.extend({
 export type Doc = z.infer<typeof DocSchema>;
 
 export const CreateDocSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().optional(),
+  title: z.string().min(1, "Title is required").max(255),
+  content: z.string().max(50000).optional(),
   type: z.enum(DocType).optional().default(DocType.GENERAL),
-  groupId: z.string().optional(),
+  groupId: z.string().max(100).optional(),
 });
 
 export type CreateDoc = z.infer<typeof CreateDocSchema>;
 
 export const UpdateDocSchema = z.object({
-  title: z.string().min(1).optional(),
-  content: z.string().optional(),
+  title: z.string().min(1).max(255).optional(),
+  content: z.string().max(50000).optional(),
   type: z.enum(DocType).optional(),
-  groupId: z.string().nullable().optional(),
+  groupId: z.string().max(100).nullable().optional(),
 });
 
 export type UpdateDoc = z.infer<typeof UpdateDocSchema>;

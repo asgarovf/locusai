@@ -7,6 +7,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TypedConfigService } from "../../config/config.service";
 import { AuthController } from "../auth.controller";
 import { AuthService } from "../auth.service";
+import { CookieService } from "../cookie.service";
+import { CsrfService } from "../csrf.service";
+import { IpBlockService } from "../ip-block.service";
+import { OAuthCodeService } from "../oauth-code.service";
 
 describe("AuthController", () => {
   let controller: AuthController;
@@ -32,6 +36,32 @@ describe("AuthController", () => {
           provide: TypedConfigService,
           useValue: {
             get: jest.fn().mockReturnValue("http://localhost:3000"),
+          },
+        },
+        {
+          provide: CookieService,
+          useValue: {
+            setAuthCookies: jest.fn(),
+            setCsrfCookies: jest.fn(),
+            clearAuthCookies: jest.fn(),
+          },
+        },
+        {
+          provide: CsrfService,
+          useValue: {
+            generateSecret: jest.fn(),
+            generateToken: jest.fn(),
+          },
+        },
+        {
+          provide: OAuthCodeService,
+          useValue: {},
+        },
+        {
+          provide: IpBlockService,
+          useValue: {
+            recordFailedAttempt: jest.fn(),
+            clearFailedAttempts: jest.fn(),
           },
         },
       ],
