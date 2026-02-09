@@ -1,4 +1,3 @@
-import { AgentState, ProjectManifest } from "@locusai/ai-sdk";
 import {
   Column,
   CreateDateColumn,
@@ -35,29 +34,6 @@ export class Workspace {
 
   @Column({ name: "default_checklist", type: "jsonb", nullable: true })
   defaultChecklist: Array<{ id: string; text: string; done: boolean }>;
-
-  @Column({ name: "project_manifest", type: "jsonb", nullable: true })
-  projectManifest: Partial<ProjectManifest>;
-
-  @Column({ name: "agent_state", type: "jsonb", nullable: true })
-  agentState: Partial<AgentState>;
-
-  @Column({ name: "interview_started_at", type: "timestamptz", nullable: true })
-  interviewStartedAt: Date | null;
-
-  @Column({
-    name: "interview_completed_at",
-    type: "timestamptz",
-    nullable: true,
-  })
-  interviewCompletedAt: Date | null;
-
-  @Column({
-    name: "interview_last_activity_at",
-    type: "timestamptz",
-    nullable: true,
-  })
-  interviewLastActivityAt: Date | null;
 
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;

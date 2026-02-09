@@ -4,7 +4,6 @@ import { SprintStatus, TaskStatus } from "@locusai/shared";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { AiService } from "@/ai/ai.service";
 import { Sprint } from "@/entities/sprint.entity";
 import { EventsService } from "@/events/events.service";
 import { TasksService } from "@/tasks/tasks.service";
@@ -48,12 +47,6 @@ describe("SprintsService", () => {
           provide: TasksService,
           useValue: {
             batchUpdate: jest.fn(),
-          },
-        },
-        {
-          provide: AiService,
-          useValue: {
-            getAgent: jest.fn(),
           },
         },
       ],

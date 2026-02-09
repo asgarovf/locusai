@@ -4,7 +4,7 @@ import { $FixMe } from "@locusai/shared";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
-import { MermaidRenderer } from "../editor/MermaidRenderer";
+import { MermaidRenderer } from "./editor/MermaidRenderer";
 
 interface MarkdownProps {
   content: string;

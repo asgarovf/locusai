@@ -12,7 +12,6 @@ import {
 import { locusClient, setClientToken } from "@/lib/api-client";
 import { getStorageItem, setStorageItem } from "@/lib/local-storage";
 import { STORAGE_KEYS } from "@/lib/local-storage-keys";
-import { useChatStore } from "@/stores/chat-store";
 
 interface AuthContextType {
   user: User | null;
@@ -36,8 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchWorkspace = useCallback((workspaceId: string) => {
     setStorageItem(STORAGE_KEYS.LAST_WORKSPACE_ID, workspaceId);
     setUser((prev) => (prev ? { ...prev, workspaceId } : null));
-    // Reset chat store to clear selected session from previous workspace
-    useChatStore.getState().resetChat();
   }, []);
 
   const refreshUser = useCallback(async () => {

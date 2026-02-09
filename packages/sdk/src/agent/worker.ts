@@ -164,19 +164,8 @@ export class AgentWorker {
       this.config.workspaceId
     );
 
-    // Fetch and inject server-side context
-    let context = "";
-    try {
-      context = await this.client.tasks.getContext(
-        task.id,
-        this.config.workspaceId
-      );
-    } catch (err) {
-      this.log(`Failed to fetch task context: ${err}`, "warn");
-    }
-
-    // Execute the task
-    const result = await this.taskExecutor.execute(fullTask, context);
+    // Execute the task (context is read from local .locus/project/ files)
+    const result = await this.taskExecutor.execute(fullTask);
 
     // Reindex codebase after execution to ensure fresh context
     await this.indexerService.reindex();
@@ -184,9 +173,7 @@ export class AgentWorker {
     return result;
   }
 
-  private async runStagedChangesReview(
-    sprint: Sprint | null
-  ): Promise<void> {
+  private async runStagedChangesReview(sprint: Sprint | null): Promise<void> {
     try {
       const report = await this.reviewService.reviewStagedChanges(sprint);
       if (report) {
@@ -208,7 +195,10 @@ export class AgentWorker {
         const filePath = join(reviewsDir, fileName);
 
         writeFileSync(filePath, report);
-        this.log(`Review report saved to .locus/reviews/${fileName}`, "success");
+        this.log(
+          `Review report saved to .locus/reviews/${fileName}`,
+          "success"
+        );
       } else {
         this.log("No staged changes to review.", "info");
       }
@@ -239,7 +229,10 @@ export class AgentWorker {
 
       if (!task) {
         // No tasks dispatched — run a review on staged changes and exit
-        this.log("No tasks remaining. Running review on staged changes...", "info");
+        this.log(
+          "No tasks remaining. Running review on staged changes...",
+          "info"
+        );
         await this.runStagedChangesReview(sprint);
         break;
       }

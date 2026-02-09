@@ -118,15 +118,4 @@ export class TasksModule extends BaseModule {
       updates,
     });
   }
-
-  /**
-   * Fetch the formatted context for a task (Project Manifest + Task Details).
-   * This is used by the local AI agent to align with the project.
-   */
-  async getContext(id: string, workspaceId: string): Promise<string> {
-    const { data } = await this.api.get<string>(
-      `/workspaces/${workspaceId}/tasks/${id}/context`
-    );
-    return data;
-  }
 }

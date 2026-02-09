@@ -19,15 +19,10 @@ export class TaskExecutor {
     this.promptBuilder = new PromptBuilder(deps.projectPath);
   }
 
-  async execute(
-    task: Task,
-    context?: string
-  ): Promise<{ success: boolean; summary: string }> {
+  async execute(task: Task): Promise<{ success: boolean; summary: string }> {
     this.deps.log(`Executing: ${task.title}`, "info");
 
-    const basePrompt = await this.promptBuilder.build(task, {
-      taskContext: context,
-    });
+    const basePrompt = await this.promptBuilder.build(task);
 
     try {
       this.deps.log("Starting Execution...", "info");

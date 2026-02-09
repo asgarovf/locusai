@@ -3,8 +3,6 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ApiKey, Membership, Organization, Task, Workspace } from "@/entities";
 import { EventsModule } from "@/events/events.module";
 import { TasksModule } from "@/tasks/tasks.module";
-import { InterviewAnalyticsService } from "./interview-analytics.service";
-import { ManifestValidatorService } from "./manifest-validator.service";
 import { WorkspacesController } from "./workspaces.controller";
 import { WorkspacesService } from "./workspaces.service";
 
@@ -16,21 +14,13 @@ import { WorkspacesService } from "./workspaces.service";
       Organization,
       Task,
       Membership,
-      ApiKey, // Added ApiKey repository
+      ApiKey,
     ]),
     EventsModule,
     forwardRef(() => TasksModule),
   ],
   controllers: [WorkspacesController],
-  providers: [
-    WorkspacesService,
-    ManifestValidatorService,
-    InterviewAnalyticsService,
-  ],
-  exports: [
-    WorkspacesService,
-    ManifestValidatorService,
-    InterviewAnalyticsService,
-  ],
+  providers: [WorkspacesService],
+  exports: [WorkspacesService],
 })
 export class WorkspacesModule {}

@@ -126,17 +126,4 @@ export class SprintsController {
     await this.sprintsService.delete(sprintId);
     return { success: true };
   }
-
-  @Post(":sprintId/trigger-ai-planning")
-  @Member()
-  async triggerAIPlanning(
-    @Param("sprintId") sprintId: string,
-    @Param("workspaceId") workspaceId: string
-  ): Promise<SprintResponse> {
-    const sprint = await this.sprintsService.planSprintWithAi(
-      sprintId,
-      workspaceId
-    );
-    return { sprint };
-  }
 }

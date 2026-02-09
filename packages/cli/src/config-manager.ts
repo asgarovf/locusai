@@ -9,9 +9,30 @@ import { DEFAULT_SKILLS } from "./templates/skills";
 
 const LOCUS_GITIGNORE_MARKER = "# Locus AI";
 
-const CLAUDE_MD_TEMPLATE = `# CLAUDE.md
+const DEFAULT_CONTEXT_MD = `# Project
 
-## Planning First
+## Mission
+<!-- Describe your project's core purpose and value proposition -->
+
+## Tech Stack
+<!-- List your technologies -->
+
+## Architecture
+<!-- Describe your high-level architecture -->
+
+## Key Decisions
+<!-- Document important technical decisions and their rationale -->
+
+## Feature Areas
+<!-- List your main feature areas and their status -->
+`;
+
+const DEFAULT_PROGRESS_MD = `# Project Progress
+
+No sprints started yet.
+`;
+
+const CLAUDE_MD_TEMPLATE = ` ## Planning First
 
 Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Update the plan if the approach changes. Mark complete when done.
 
@@ -22,15 +43,14 @@ Every task must be planned before writing code. Create \`.locus/plans/<task-name
 - No new dependencies without explicit approval.
 - Never put raw secrets or credentials in the codebase.
 
-## Testing
+## Avoiding Hallucinated / Slop Code
 
-- Every behavioral change needs a test. Bug fixes need a regression test.
-- Run the relevant test suite before marking work complete.
-- Don't modify tests just to make them pass — understand why they fail.
-
-## Communication
-
-- If the plan needs to change, update it and explain why before continuing.
+- Ask before assuming. If requirements are ambiguous, incomplete, or could be interpreted multiple ways, stop and ask clarifying questions rather than guessing.
+- Never invent APIs, libraries, functions, or config options.** Only use APIs and methods you can verify exist in the project's dependencies or documentation. If unsure whether something exists, ask or look it up first.
+- No placeholder or stub logic unless explicitly requested. Every piece of code you write should be functional and intentional. Do not leave TODO blocks, fake return values, or mock implementations without flagging them clearly.
+- Do not generate boilerplate "just in case." Only write code that is directly required by the task. No speculative utilities, unused helpers, or premature abstractions.
+- If you're uncertain, say so. State your confidence level. "I believe this is correct but haven't verified X" is always better than silent guessing.
+- Read before writing Before modifying a file, read the relevant existing code to match conventions, understand context, and avoid duplicating logic that already exists.
 `;
 
 /**
@@ -52,7 +72,9 @@ function updateGitignore(projectPath: string): void {
       // through all consecutive comment/pattern lines until a blank line
       // followed by non-locus content or end of file.
       const lines = content.split("\n");
-      const startIdx = lines.findIndex((l) => l.includes(LOCUS_GITIGNORE_MARKER));
+      const startIdx = lines.findIndex((l) =>
+        l.includes(LOCUS_GITIGNORE_MARKER)
+      );
       let endIdx = startIdx;
 
       // Walk forward past all lines that are part of the locus block:
@@ -124,6 +146,7 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
+      LOCUS_CONFIG.projectDir,
     ];
 
     for (const subdir of locusSubdirs) {
@@ -131,6 +154,23 @@ export class ConfigManager {
       if (!existsSync(subdirPath)) {
         mkdirSync(subdirPath, { recursive: true });
       }
+    }
+
+    // Create initial project knowledge base files
+    const contextFilePath = getLocusPath(
+      this.projectPath,
+      "projectContextFile"
+    );
+    if (!existsSync(contextFilePath)) {
+      writeFileSync(contextFilePath, DEFAULT_CONTEXT_MD);
+    }
+
+    const progressFilePath = getLocusPath(
+      this.projectPath,
+      "projectProgressFile"
+    );
+    if (!existsSync(progressFilePath)) {
+      writeFileSync(progressFilePath, DEFAULT_PROGRESS_MD);
     }
 
     if (!existsSync(locusConfigPath)) {
@@ -239,6 +279,7 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
+      LOCUS_CONFIG.projectDir,
     ];
 
     for (const subdir of locusSubdirs) {
@@ -247,6 +288,25 @@ export class ConfigManager {
         mkdirSync(subdirPath, { recursive: true });
         result.directoriesCreated.push(`.locus/${subdir}`);
       }
+    }
+
+    // 3b. Ensure project knowledge base files exist
+    const contextFilePath = getLocusPath(
+      this.projectPath,
+      "projectContextFile"
+    );
+    if (!existsSync(contextFilePath)) {
+      writeFileSync(contextFilePath, DEFAULT_CONTEXT_MD);
+      result.directoriesCreated.push(".locus/project/context.md");
+    }
+
+    const progressFilePath = getLocusPath(
+      this.projectPath,
+      "projectProgressFile"
+    );
+    if (!existsSync(progressFilePath)) {
+      writeFileSync(progressFilePath, DEFAULT_PROGRESS_MD);
+      result.directoriesCreated.push(".locus/project/progress.md");
     }
 
     // 4. Ensure skills directories exist and have default skills

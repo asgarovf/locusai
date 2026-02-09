@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
@@ -22,7 +25,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "inlineSources": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

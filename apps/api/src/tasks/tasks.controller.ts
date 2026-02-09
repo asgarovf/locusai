@@ -1,4 +1,3 @@
-import { ContextManager } from "@locusai/ai-sdk";
 import {
   AddComment,
   AddCommentSchema,
@@ -140,24 +139,6 @@ export class TasksController {
       userId ?? undefined
     );
     return { comment };
-  }
-
-  @Get(":taskId/context")
-  @Member()
-  async getTaskContext(@Param("taskId") taskId: string): Promise<string> {
-    const task = await this.tasksService.findById(taskId);
-    const workspace = await this.workspacesService.findByIdRaw(
-      task.workspaceId
-    );
-
-    return ContextManager.formatTaskContextForLocalAI(
-      {
-        title: task.title,
-        description: task.description,
-        status: task.status,
-      },
-      workspace.projectManifest
-    );
   }
 
   taskToTaskResponse(task: Task): TaskResponse["task"] {

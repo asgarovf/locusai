@@ -17,8 +17,6 @@ export const queryKeys = {
       [...queryKeys.workspaces.all(), "activity", id] as const,
     apiKeys: (id: string) =>
       [...queryKeys.workspaces.all(), "api-keys", id] as const,
-    manifestStatus: (id: string) =>
-      [...queryKeys.workspaces.all(), "manifest-status", id] as const,
   },
   tasks: {
     all: () => ["tasks"] as const,
@@ -93,23 +91,5 @@ export const queryKeys = {
     all: () => ["invitations"] as const,
     list: (orgId: string) =>
       [...queryKeys.invitations.all(), "list", orgId] as const,
-  },
-  ai: {
-    all: () => ["ai"] as const,
-    sessions: (workspaceId?: string | null) =>
-      [
-        ...queryKeys.ai.all(),
-        "sessions",
-        "list",
-        { workspaceId: workspaceId ?? undefined },
-      ] as const,
-    session: (id: string, workspaceId?: string | null) =>
-      [
-        ...queryKeys.ai.all(),
-        "sessions",
-        "detail",
-        id,
-        { workspaceId: workspaceId ?? undefined },
-      ] as const,
   },
 };

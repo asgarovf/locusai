@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { LocusConfig, LocusEmitter, LocusEvent } from "./events.js";
-import { AIModule } from "./modules/ai.js";
 import { AuthModule } from "./modules/auth.js";
 import { CiModule } from "./modules/ci.js";
 import { DocsModule } from "./modules/docs.js";
@@ -13,7 +12,6 @@ import { RetryOptions } from "./utils/retry.js";
 
 // Browser-safe exports only
 export * from "./events.js";
-export * from "./modules/ai.js";
 export * from "./modules/auth.js";
 export * from "./modules/ci.js";
 export * from "./modules/docs.js";
@@ -28,7 +26,6 @@ export class LocusClient {
   public readonly emitter: LocusEmitter;
 
   public readonly auth: AuthModule;
-  public readonly ai: AIModule;
   public readonly tasks: TasksModule;
   public readonly sprints: SprintsModule;
   public readonly workspaces: WorkspacesModule;
@@ -53,7 +50,6 @@ export class LocusClient {
 
     // Initialize modules
     this.auth = new AuthModule(this.api, this.emitter);
-    this.ai = new AIModule(this.api, this.emitter);
     this.tasks = new TasksModule(this.api, this.emitter);
     this.sprints = new SprintsModule(this.api, this.emitter);
     this.workspaces = new WorkspacesModule(this.api, this.emitter);

@@ -62,7 +62,7 @@ import { Markdown } from "tiptap-markdown";
 import { FloatingToolbar } from "@/components/docs/editor/FloatingToolbar";
 import { SlashCommands } from "@/components/docs/editor/SlashCommands";
 import { cn } from "@/lib/utils";
-import { Markdown as UnifiedMarkdown } from "./chat/Markdown";
+import { Markdown as UnifiedMarkdown } from "./Markdown";
 
 const lowlight = createLowlight(common);
 

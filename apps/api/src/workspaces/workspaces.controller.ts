@@ -3,7 +3,6 @@ import {
   CreateWorkspaceSchema,
   DispatchTask,
   DispatchTaskSchema,
-  ManifestStatusResponse,
   OrgIdParam,
   OrgIdParamSchema,
   TaskResponse,
@@ -11,8 +10,6 @@ import {
   UpdateWorkspaceSchema,
   WorkspaceIdParam,
   WorkspaceIdParamSchema,
-  WorkspaceResponse,
-  WorkspacesResponse,
 } from "@locusai/shared";
 import {
   Body,
@@ -43,7 +40,7 @@ export class WorkspacesController {
   ) {}
 
   @Get()
-  async listAll(@CurrentUser() user: User): Promise<WorkspacesResponse> {
+  async listAll(@CurrentUser() user: User) {
     const workspaces = await this.workspacesService.findByUser(user.id);
     return { workspaces };
   }
@@ -52,7 +49,7 @@ export class WorkspacesController {
   @Member()
   async list(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
-  ): Promise<WorkspacesResponse> {
+  ) {
     const workspaces = await this.workspacesService.findByOrg(params.orgId);
     return { workspaces };
   }
@@ -61,8 +58,7 @@ export class WorkspacesController {
   async createWithAutoOrg(
     @CurrentUser() user: User,
     @Body(new ZodValidationPipe(CreateWorkspaceSchema)) body: CreateWorkspace
-  ): Promise<WorkspaceResponse> {
-    // Auto-create workspace with organization if user has none
+  ) {
     const workspace = await this.workspacesService.createWithAutoOrg(
       user.id,
       body.name
@@ -75,8 +71,7 @@ export class WorkspacesController {
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(CreateWorkspaceSchema)) body: CreateWorkspace
-  ): Promise<WorkspaceResponse> {
-    // STRICT CONVENTION: orgId comes from URL params, not body
+  ) {
     const workspace = await this.workspacesService.create(
       params.orgId,
       body.name
@@ -89,7 +84,7 @@ export class WorkspacesController {
   async getById(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam
-  ): Promise<WorkspaceResponse> {
+  ) {
     const workspace = await this.workspacesService.findById(params.workspaceId);
     return { workspace };
   }
@@ -125,15 +120,6 @@ export class WorkspacesController {
     params: WorkspaceIdParam
   ) {
     return this.workspacesService.getStats(params.workspaceId);
-  }
-
-  @Get(":workspaceId/manifest-status")
-  @Member()
-  async getManifestStatus(
-    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
-    params: WorkspaceIdParam
-  ): Promise<ManifestStatusResponse> {
-    return this.workspacesService.getManifestStatus(params.workspaceId);
   }
 
   @Get(":workspaceId/activity")

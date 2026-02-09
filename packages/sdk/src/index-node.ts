@@ -20,6 +20,8 @@ export * from "./exec/index.js";
 export * from "./index.js";
 // Node.js-only: Orchestrator
 export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator.js";
+// Node.js-only: Project knowledge base
+export { KnowledgeBase } from "./project/knowledge-base.js";
 
 // Utilities
 export { c } from "./utils/colors.js";

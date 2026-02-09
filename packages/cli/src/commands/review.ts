@@ -61,7 +61,11 @@ export async function reviewCommand(args: string[]): Promise<void> {
   }
 
   // Save the report
-  const reviewsDir = join(projectPath, LOCUS_CONFIG.dir, LOCUS_CONFIG.reviewsDir);
+  const reviewsDir = join(
+    projectPath,
+    LOCUS_CONFIG.dir,
+    LOCUS_CONFIG.reviewsDir
+  );
   if (!existsSync(reviewsDir)) {
     mkdirSync(reviewsDir, { recursive: true });
   }

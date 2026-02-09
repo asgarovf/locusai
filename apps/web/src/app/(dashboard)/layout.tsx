@@ -13,7 +13,6 @@ import {
 import { Drawer, LoadingPage, LoadingSkeleton } from "@/components/ui";
 import { useDashboardLayout, useWorkspaceIdOptional } from "@/hooks";
 import { queryKeys } from "@/lib/query-keys";
-import { cn } from "@/lib/utils";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -63,8 +62,6 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
     return null;
   }
 
-  const isChatPage = pathname?.startsWith("/chat");
-
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Mobile Menu Button */}
@@ -85,12 +82,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
         </Drawer>
       )}
 
-      <main
-        className={cn(
-          "flex-1 overflow-hidden bg-background",
-          isChatPage ? "p-0" : "p-6"
-        )}
-      >
+      <main className="flex-1 overflow-hidden bg-background p-6">
         <WorkspaceProtected>{children}</WorkspaceProtected>
       </main>
 

@@ -23,6 +23,9 @@ export const LOCUS_CONFIG = {
   sessionsDir: "sessions",
   reviewsDir: "reviews",
   plansDir: "plans",
+  projectDir: "project",
+  projectContextFile: "context.md",
+  projectProgressFile: "progress.md",
 };
 
 // Patterns to add to .gitignore for locus projects
@@ -47,6 +50,15 @@ export function getLocusPath(
 ): string {
   if (fileName === "contextFile") {
     return join(projectPath, LOCUS_CONFIG.contextFile);
+  }
+  // Project knowledge base files live under .locus/project/
+  if (fileName === "projectContextFile" || fileName === "projectProgressFile") {
+    return join(
+      projectPath,
+      LOCUS_CONFIG.dir,
+      LOCUS_CONFIG.projectDir,
+      LOCUS_CONFIG[fileName]
+    );
   }
   return join(projectPath, LOCUS_CONFIG.dir, LOCUS_CONFIG[fileName]);
 }

@@ -63,10 +63,12 @@ export async function initCommand(): Promise<void> {
   ${c.success("✨ Locus initialized successfully!")}
 
   ${c.bold("Created:")}
-    ${c.primary("📁")} ${c.bold(".locus/")}             ${c.dim("Configuration directory")}
-    ${c.primary("📄")} ${c.bold(".locus/config.json")} ${c.dim("Project settings")}
-    ${c.primary("📝")} ${c.bold("CLAUDE.md")}          ${c.dim("AI instructions & context")}
-    ${c.primary("📁")} ${c.bold(".agent/skills/")}     ${c.dim("Domain-specific agent skills")}
+    ${c.primary("📁")} ${c.bold(".locus/")}                     ${c.dim("Configuration directory")}
+    ${c.primary("📄")} ${c.bold(".locus/config.json")}         ${c.dim("Project settings")}
+    ${c.primary("📄")} ${c.bold(".locus/project/context.md")}  ${c.dim("Project context & knowledge")}
+    ${c.primary("📄")} ${c.bold(".locus/project/progress.md")} ${c.dim("Sprint progress tracking")}
+    ${c.primary("📝")} ${c.bold("CLAUDE.md")}                  ${c.dim("AI agent instructions")}
+    ${c.primary("📁")} ${c.bold(".agent/skills/")}             ${c.dim("Domain-specific agent skills")}
 
   ${c.bold("Next steps:")}
     1. Run '${c.primary("locus index")}' to index your codebase

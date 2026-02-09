@@ -37,10 +37,13 @@ export class ReviewService {
     // Get the staged diff
     let diff: string;
     try {
-      diff = execSync("git diff --cached --stat && echo '---' && git diff --cached", {
-        cwd: projectPath,
-        maxBuffer: 10 * 1024 * 1024,
-      }).toString();
+      diff = execSync(
+        "git diff --cached --stat && echo '---' && git diff --cached",
+        {
+          cwd: projectPath,
+          maxBuffer: 10 * 1024 * 1024,
+        }
+      ).toString();
     } catch (err) {
       log(
         `Failed to get staged diff: ${err instanceof Error ? err.message : String(err)}`,

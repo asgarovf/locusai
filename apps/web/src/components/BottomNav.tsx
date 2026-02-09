@@ -17,7 +17,7 @@
 
 "use client";
 
-import { FolderKanban, LayoutDashboard, List, Sparkles } from "lucide-react";
+import { Activity, FolderKanban, LayoutDashboard, List } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -40,8 +40,8 @@ export function BottomNav() {
   const navItems: NavItem[] = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: FolderKanban, label: "Board", href: "/board" },
-    { icon: Sparkles, label: "Chat", href: "/chat" },
     { icon: List, label: "Backlog", href: "/backlog" },
+    { icon: Activity, label: "Activity", href: "/activity" },
   ];
 
   return (
