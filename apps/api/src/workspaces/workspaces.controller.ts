@@ -1,4 +1,6 @@
 import {
+  AgentHeartbeat,
+  AgentHeartbeatSchema,
   CreateWorkspace,
   CreateWorkspaceSchema,
   DispatchTask,
@@ -149,6 +151,57 @@ export class WorkspacesController {
       body.sprintId
     );
     return { task: this.taskToTaskResponse(task) };
+  }
+
+  // ============================================================================
+  // Agent Heartbeat & Registration
+  // ============================================================================
+
+  @Post(":workspaceId/agents/heartbeat")
+  @MemberAdmin()
+  async agentHeartbeat(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam,
+    @Body(new ZodValidationPipe(AgentHeartbeatSchema)) body: AgentHeartbeat
+  ) {
+    const registration = await this.workspacesService.recordHeartbeat(
+      params.workspaceId,
+      body
+    );
+    return {
+      agent: {
+        agentId: registration.agentId,
+        workspaceId: registration.workspaceId,
+        currentTaskId: registration.currentTaskId,
+        status: registration.status,
+        lastHeartbeat: registration.lastHeartbeat.toISOString(),
+        createdAt: registration.createdAt.toISOString(),
+      },
+    };
+  }
+
+  @Get(":workspaceId/agents")
+  @Member()
+  async listAgents(
+    @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
+    params: WorkspaceIdParam
+  ) {
+    // Clean up stale registrations first
+    await this.workspacesService.cleanupStaleAgents(params.workspaceId);
+
+    const agents = await this.workspacesService.getActiveAgents(
+      params.workspaceId
+    );
+    return {
+      agents: agents.map((a) => ({
+        agentId: a.agentId,
+        workspaceId: a.workspaceId,
+        currentTaskId: a.currentTaskId,
+        status: a.status,
+        lastHeartbeat: a.lastHeartbeat.toISOString(),
+        createdAt: a.createdAt.toISOString(),
+      })),
+    };
   }
 
   // ============================================================================

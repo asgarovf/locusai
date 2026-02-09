@@ -19,9 +19,16 @@ export * from "./exec/index.js";
 // Re-export everything from main index (browser-safe)
 export * from "./index.js";
 // Node.js-only: Orchestrator
-export { AgentOrchestrator, type OrchestratorConfig } from "./orchestrator.js";
+export {
+  AgentOrchestrator,
+  type AgentState,
+  type OrchestratorConfig,
+} from "./orchestrator.js";
+// Node.js-only: Planning meeting pipeline
+export * from "./planning/index.js";
 // Node.js-only: Project knowledge base
 export { KnowledgeBase } from "./project/knowledge-base.js";
-
 // Utilities
 export { c } from "./utils/colors.js";
+// Node.js-only: Worktree management for parallel agents
+export * from "./worktree/index.js";

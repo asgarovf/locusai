@@ -70,6 +70,13 @@ export class Task {
   assignedTo: string | null;
 
   @Column({
+    name: "assigned_at",
+    type: "timestamptz",
+    nullable: true,
+  })
+  assignedAt: Date | null;
+
+  @Column({
     name: "due_date",
     type: "timestamptz",
     nullable: true,

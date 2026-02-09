@@ -4,12 +4,10 @@ import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
 import { getLocusPath, LOCUS_CONFIG } from "./config.js";
 
-export interface PromptOptions {}
-
 export class PromptBuilder {
   constructor(private projectPath: string) {}
 
-  async build(task: Task, options: PromptOptions = {}): Promise<string> {
+  async build(task: Task): Promise<string> {
     let prompt = `# Task: ${task.title}\n\n`;
 
     const roleText = this.roleToText(task.assigneeRole);

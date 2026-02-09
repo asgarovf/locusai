@@ -1,7 +1,13 @@
-import { ChecklistItem, MembershipRole } from "@locusai/shared";
+import {
+  AgentHeartbeat,
+  ChecklistItem,
+  MembershipRole,
+  STALE_AGENT_TIMEOUT_MS,
+} from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { LessThan, Repository } from "typeorm";
+import { AgentRegistration } from "@/entities/agent-registration.entity";
 import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
@@ -22,6 +28,8 @@ export class WorkspacesService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(ApiKey)
     private readonly apiKeyRepository: Repository<ApiKey>,
+    @InjectRepository(AgentRegistration)
+    private readonly agentRegistrationRepository: Repository<AgentRegistration>,
     private readonly eventsService: EventsService
   ) {}
 
@@ -211,5 +219,67 @@ export class WorkspacesService {
     }
 
     await this.apiKeyRepository.remove(apiKey);
+  }
+
+  // ============================================================================
+  // Agent Heartbeat & Registration
+  // ============================================================================
+
+  /**
+   * Record an agent heartbeat. Creates or updates the agent registration.
+   */
+  async recordHeartbeat(
+    workspaceId: string,
+    heartbeat: AgentHeartbeat
+  ): Promise<AgentRegistration> {
+    let registration = await this.agentRegistrationRepository.findOne({
+      where: { workspaceId, agentId: heartbeat.agentId },
+    });
+
+    if (registration) {
+      registration.lastHeartbeat = new Date();
+      registration.status = heartbeat.status ?? "WORKING";
+      registration.currentTaskId = heartbeat.currentTaskId ?? null;
+    } else {
+      registration = this.agentRegistrationRepository.create({
+        workspaceId,
+        agentId: heartbeat.agentId,
+        lastHeartbeat: new Date(),
+        status: heartbeat.status ?? "WORKING",
+        currentTaskId: heartbeat.currentTaskId ?? null,
+      });
+    }
+
+    return this.agentRegistrationRepository.save(registration);
+  }
+
+  /**
+   * Get all agents for a workspace, ordered by most recent heartbeat.
+   */
+  async getActiveAgents(workspaceId: string): Promise<AgentRegistration[]> {
+    return this.agentRegistrationRepository.find({
+      where: { workspaceId },
+      order: { lastHeartbeat: "DESC" },
+    });
+  }
+
+  /**
+   * Remove stale agent registrations (not heard from in 10+ minutes).
+   */
+  async cleanupStaleAgents(workspaceId: string): Promise<number> {
+    const staleThreshold = new Date(Date.now() - STALE_AGENT_TIMEOUT_MS);
+
+    const staleAgents = await this.agentRegistrationRepository.find({
+      where: {
+        workspaceId,
+        lastHeartbeat: LessThan(staleThreshold),
+      },
+    });
+
+    if (staleAgents.length > 0) {
+      await this.agentRegistrationRepository.remove(staleAgents);
+    }
+
+    return staleAgents.length;
   }
 }

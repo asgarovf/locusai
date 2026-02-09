@@ -5,6 +5,7 @@ import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { LOCUS_CONFIG, PROVIDER } from "../core/config.js";
 import { LocusClient } from "../index.js";
+import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
 import { DocumentFetcher } from "./document-fetcher.js";
@@ -34,6 +35,8 @@ export interface WorkerConfig {
   apiKey: string;
   model?: string;
   provider?: AiProvider;
+  /** When running in a worktree, this is the path to the main repo for progress updates */
+  mainProjectPath?: string;
 }
 
 /**
@@ -49,10 +52,13 @@ export class AgentWorker {
   private documentFetcher: DocumentFetcher;
   private taskExecutor: TaskExecutor;
   private reviewService: ReviewService;
+  private knowledgeBase: KnowledgeBase;
 
   // State
   private maxTasks = 50;
   private tasksCompleted = 0;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private currentTaskId: string | null = null;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -104,9 +110,20 @@ export class AgentWorker {
       log,
     });
 
+    // Knowledge base points to the main project for progress updates
+    const mainPath = config.mainProjectPath ?? projectPath;
+    this.knowledgeBase = new KnowledgeBase(mainPath);
+
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Using ${providerLabel} CLI for all phases`, "info");
+
+    if (config.mainProjectPath) {
+      this.log(
+        `Running in worktree. Progress updates go to: ${config.mainProjectPath}`,
+        "info"
+      );
+    }
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
@@ -210,11 +227,72 @@ export class AgentWorker {
     }
   }
 
+  /**
+   * Update progress.md in the main project after task completion
+   */
+  private updateProgress(task: Task, success: boolean): void {
+    try {
+      if (success) {
+        this.knowledgeBase.updateProgress({
+          type: "task_completed",
+          title: task.title,
+          details: `Agent: ${this.config.agentId.slice(-8)}`,
+        });
+        this.log(`Updated progress.md: ${task.title}`, "info");
+      }
+    } catch (err) {
+      this.log(
+        `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,
+        "warn"
+      );
+    }
+  }
+
+  /**
+   * Start sending periodic heartbeats to the API so the server
+   * knows this agent is alive and which task it's working on.
+   */
+  private startHeartbeat(): void {
+    // Send initial heartbeat immediately
+    this.sendHeartbeat();
+
+    // Then send every 60 seconds
+    this.heartbeatInterval = setInterval(() => {
+      this.sendHeartbeat();
+    }, 60_000);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  private sendHeartbeat(): void {
+    this.client.workspaces
+      .heartbeat(
+        this.config.workspaceId,
+        this.config.agentId,
+        this.currentTaskId,
+        this.currentTaskId ? "WORKING" : "IDLE"
+      )
+      .catch((err) => {
+        this.log(
+          `Heartbeat failed: ${err instanceof Error ? err.message : String(err)}`,
+          "warn"
+        );
+      });
+  }
+
   async run(): Promise<void> {
     this.log(
       `Agent started in ${this.config.projectPath || process.cwd()}`,
       "success"
     );
+
+    // Start periodic heartbeat reporting
+    this.startHeartbeat();
 
     const sprint = await this.getActiveSprint();
     if (sprint) {
@@ -238,6 +316,8 @@ export class AgentWorker {
       }
 
       this.log(`Claimed: ${task.title}`, "success");
+      this.currentTaskId = task.id;
+      this.sendHeartbeat();
 
       const result = await this.executeTask(task);
 
@@ -258,6 +338,9 @@ export class AgentWorker {
           text: `✅ ${result.summary}`,
         });
         this.tasksCompleted++;
+
+        // Update progress.md in main project
+        this.updateProgress(task, true);
       } else {
         this.log(`Failed: ${task.title} - ${result.summary}`, "error");
         await this.client.tasks.update(task.id, this.config.workspaceId, {
@@ -269,7 +352,24 @@ export class AgentWorker {
           text: `❌ ${result.summary}`,
         });
       }
+
+      this.currentTaskId = null;
     }
+
+    // Send final heartbeat with COMPLETED status and stop
+    this.currentTaskId = null;
+    this.stopHeartbeat();
+    this.client.workspaces
+      .heartbeat(
+        this.config.workspaceId,
+        this.config.agentId,
+        null,
+        "COMPLETED"
+      )
+      .catch(() => {
+        // Best-effort final heartbeat — ignore errors on shutdown
+      });
+
     process.exit(0);
   }
 }
@@ -293,6 +393,7 @@ if (
     else if (arg === "--api-url") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
+    else if (arg === "--main-project-path") config.mainProjectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
     else if (arg === "--provider") {
       const value = args[i + 1];

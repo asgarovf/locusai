@@ -13,6 +13,8 @@ export async function runCommand(args: string[]): Promise<void> {
       sprint: { type: "string" },
       model: { type: "string" },
       provider: { type: "string" },
+      agents: { type: "string" },
+      worktree: { type: "boolean" },
       "skip-planning": { type: "boolean" },
       "api-url": { type: "string" },
       dir: { type: "string" },
@@ -32,6 +34,14 @@ export async function runCommand(args: string[]): Promise<void> {
   const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
   const apiBase =
     (values["api-url"] as string) || "https://api.locusai.dev/api";
+
+  // Parse agent count
+  const agentCount = Math.min(
+    Math.max(Number.parseInt(values.agents as string, 10) || 1, 1),
+    5
+  );
+  const useWorktrees =
+    (values.worktree as boolean | undefined) ?? agentCount > 1;
 
   if (!apiKey) {
     console.error(c.error("Error: --api-key is required"));
@@ -65,8 +75,13 @@ export async function runCommand(args: string[]): Promise<void> {
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
+    agentCount,
+    useWorktrees,
   });
 
+  orchestrator.on("agent:spawned", (data) =>
+    console.log(`  ${c.info("●")} ${c.bold("Agent spawned:")} ${data.agentId}`)
+  );
   orchestrator.on("task:assigned", (data) =>
     console.log(`  ${c.info("●")} ${c.bold("Claimed:")} ${data.title}`)
   );
@@ -80,6 +95,11 @@ export async function runCommand(args: string[]): Promise<void> {
       `  ${c.error("✖")} ${c.error("Failed:")} ${c.bold(data.taskId)}: ${data.error}`
     )
   );
+  orchestrator.on("agent:stale", (data) =>
+    console.log(
+      `  ${c.error("⚠")} ${c.error("Stale agent killed:")} ${data.agentId}`
+    )
+  );
 
   // Handle graceful shutdown
   const handleSignal = async (signal: string) => {
@@ -91,8 +111,12 @@ export async function runCommand(args: string[]): Promise<void> {
   process.on("SIGINT", () => handleSignal("SIGINT"));
   process.on("SIGTERM", () => handleSignal("SIGTERM"));
 
+  const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
   console.log(
-    `\n  ${c.primary("🚀")} ${c.bold("Starting Locus agent in")} ${c.primary(projectPath)}...`
+    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel} in`)} ${c.primary(projectPath)}...`
   );
+  if (useWorktrees && agentCount > 1) {
+    console.log(`  ${c.dim("Each agent will work in an isolated worktree")}`);
+  }
   await orchestrator.start();
 }

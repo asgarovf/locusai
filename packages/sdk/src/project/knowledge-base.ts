@@ -19,7 +19,7 @@ export class KnowledgeBase {
   private contextPath: string;
   private progressPath: string;
 
-  constructor(private projectPath: string) {
+  constructor(projectPath: string) {
     this.contextPath = getLocusPath(projectPath, "projectContextFile");
     this.progressPath = getLocusPath(projectPath, "projectProgressFile");
   }

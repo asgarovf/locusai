@@ -8,7 +8,13 @@ export function showHelp(): void {
   ${c.header(" COMMANDS ")}
     ${c.success("init")}      Initialize Locus in the current directory
     ${c.success("index")}     Index the codebase for AI context
-    ${c.success("run")}       Start an agent to work on tasks
+    ${c.success("run")}       Start agents to work on tasks
+              ${c.dim("--agents <N>  Number of parallel agents (1-5, default: 1)")}
+              ${c.dim("--worktree    Enable worktree isolation (auto when agents > 1)")}
+    ${c.success("plan")}      Run async planning meeting to create sprint plans
+    ${c.success("agents")}    Manage agent worktrees
+              ${c.dim("list          List active agent worktrees")}
+              ${c.dim("clean         Prune stale worktrees (--all to remove all)")}
     ${c.success("review")}    Review staged changes with AI
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
@@ -20,12 +26,16 @@ export function showHelp(): void {
 
   ${c.header(" OPTIONS ")}
     ${c.secondary("--help")}           Show this help message
-    ${c.secondary("--provider")} <name>  AI provider: ${c.dim("claude")} or ${c.dim("codex")} (default: ${c.dim("claude")})
+    ${c.secondary("--provider")} <name>  AI provider: ${c.dim(
+      "claude"
+    )} or ${c.dim("codex")} (default: ${c.dim("claude")})
 
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary("locus init")}
     ${c.dim("$")} ${c.primary("locus index")}
     ${c.dim("$")} ${c.primary("locus run --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus run --agents 3 --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus agents list")}
     ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 

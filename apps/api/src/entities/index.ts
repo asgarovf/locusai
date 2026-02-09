@@ -1,3 +1,4 @@
+export * from "./agent-registration.entity";
 export * from "./api-key.entity";
 export * from "./comment.entity";
 export * from "./doc.entity";

@@ -1,5 +1,7 @@
 import {
   ActivityResponse,
+  AgentRegistrationInfo,
+  AgentsList,
   CreateWorkspace,
   Event,
   Task,
@@ -78,11 +80,7 @@ export class WorkspacesModule extends BaseModule {
 
   /**
    * Dispatch a task from the workspace backlog to an agent.
-   * Atomically moves a task from BACKLOG to IN_PROGRESS and assigns it.
-   */
-  /**
-   * Dispatch a task from the workspace backlog to an agent.
-   * Atomically moves a task from BACKLOG to IN_PROGRESS and assigns it.
+   * Uses server-side locking to prevent double-assignment.
    */
   async dispatch(
     id: string,
@@ -94,6 +92,41 @@ export class WorkspacesModule extends BaseModule {
       { workerId, sprintId }
     );
     return data.task;
+  }
+
+  // ============================================================================
+  // Agent Heartbeat & Registration
+  // ============================================================================
+
+  /**
+   * Send an agent heartbeat to the API.
+   * Creates or updates the agent registration with current status.
+   */
+  async heartbeat(
+    workspaceId: string,
+    agentId: string,
+    currentTaskId?: string | null,
+    status?: "IDLE" | "WORKING" | "COMPLETED" | "FAILED"
+  ): Promise<AgentRegistrationInfo> {
+    const { data } = await this.api.post<{ agent: AgentRegistrationInfo }>(
+      `/workspaces/${workspaceId}/agents/heartbeat`,
+      {
+        agentId,
+        currentTaskId: currentTaskId ?? null,
+        status: status ?? "WORKING",
+      }
+    );
+    return data.agent;
+  }
+
+  /**
+   * Get active agents for a workspace.
+   */
+  async getAgents(workspaceId: string): Promise<AgentRegistrationInfo[]> {
+    const { data } = await this.api.get<AgentsList>(
+      `/workspaces/${workspaceId}/agents`
+    );
+    return data.agents;
   }
 
   // ============================================================================

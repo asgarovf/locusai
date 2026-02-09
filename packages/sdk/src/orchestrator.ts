@@ -2,11 +2,18 @@ import { ChildProcess, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Task, TaskPriority, TaskStatus } from "@locusai/shared";
+import {
+  STALE_AGENT_TIMEOUT_MS,
+  Task,
+  TaskPriority,
+  TaskStatus,
+} from "@locusai/shared";
 import { EventEmitter } from "events";
 import type { AiProvider } from "./ai/runner.js";
 import { LocusClient } from "./index.js";
 import { c } from "./utils/colors.js";
+import type { WorktreeCleanupPolicy } from "./worktree/worktree-config.js";
+import { WorktreeManager } from "./worktree/worktree-manager.js";
 
 export interface AgentConfig {
   id: string;
@@ -21,6 +28,8 @@ export interface AgentState {
   tasksFailed: number;
   lastHeartbeat: Date;
   process?: ChildProcess;
+  worktreePath?: string;
+  worktreeBranch?: string;
 }
 
 export interface OrchestratorConfig {
@@ -32,7 +41,12 @@ export interface OrchestratorConfig {
   apiKey: string;
   model?: string;
   provider?: AiProvider;
+  agentCount?: number;
+  useWorktrees?: boolean;
+  worktreeCleanupPolicy?: WorktreeCleanupPolicy;
 }
+
+const MAX_AGENTS = 5;
 
 export class AgentOrchestrator extends EventEmitter {
   private client: LocusClient;
@@ -41,6 +55,8 @@ export class AgentOrchestrator extends EventEmitter {
   private isRunning = false;
   private processedTasks: Set<string> = new Set();
   private resolvedSprintId: string | null = null;
+  private worktreeManager: WorktreeManager | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: OrchestratorConfig) {
     super();
@@ -49,6 +65,15 @@ export class AgentOrchestrator extends EventEmitter {
       baseUrl: config.apiBase,
       token: config.apiKey,
     });
+  }
+
+  private get agentCount(): number {
+    return Math.min(Math.max(this.config.agentCount ?? 1, 1), MAX_AGENTS);
+  }
+
+  private get useWorktrees(): boolean {
+    // Default: on when agents > 1
+    return this.config.useWorktrees ?? this.agentCount > 1;
   }
 
   /**
@@ -100,7 +125,7 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Main orchestration loop - runs 1 agent continuously
+   * Main orchestration loop - spawns N agents and monitors them
    */
   private async orchestrationLoop(): Promise<void> {
     // Resolve sprint ID first
@@ -118,6 +143,10 @@ export class AgentOrchestrator extends EventEmitter {
     if (this.resolvedSprintId) {
       console.log(`${c.bold("Sprint:")} ${this.resolvedSprintId}`);
     }
+    console.log(`${c.bold("Agents:")} ${this.agentCount}`);
+    console.log(
+      `${c.bold("Worktrees:")} ${this.useWorktrees ? "enabled" : "disabled"}`
+    );
     console.log(`${c.bold("API Base:")} ${this.config.apiBase}`);
     console.log(c.dim("----------------------------------------------\n"));
 
@@ -129,13 +158,26 @@ export class AgentOrchestrator extends EventEmitter {
       return;
     }
 
-    // Spawn single agent
-    await this.spawnAgent();
+    // Initialize worktree manager if needed
+    if (this.useWorktrees) {
+      this.worktreeManager = new WorktreeManager(this.config.projectPath, {
+        cleanupPolicy: this.config.worktreeCleanupPolicy ?? "retain-on-failure",
+      });
+    }
 
-    // Wait for agent to complete
+    // Start heartbeat monitoring
+    this.startHeartbeatMonitor();
+
+    // Spawn agents — up to agentCount or available task count, whichever is smaller
+    const agentsToSpawn = Math.min(this.agentCount, tasks.length);
+    const spawnPromises: Promise<void>[] = [];
+    for (let i = 0; i < agentsToSpawn; i++) {
+      spawnPromises.push(this.spawnAgent(i));
+    }
+    await Promise.all(spawnPromises);
+
+    // Wait for all agents to complete
     while (this.agents.size > 0 && this.isRunning) {
-      await this.reapAgents();
-
       if (this.agents.size === 0) {
         break;
       }
@@ -147,10 +189,10 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Spawn a single agent process
+   * Spawn a single agent process, optionally in its own worktree
    */
-  private async spawnAgent(): Promise<void> {
-    const agentId = `agent-${Date.now()}-${Math.random()
+  private async spawnAgent(index: number): Promise<void> {
+    const agentId = `agent-${index}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 9)}`;
 
@@ -165,31 +207,39 @@ export class AgentOrchestrator extends EventEmitter {
 
     this.agents.set(agentId, agentState);
 
+    // Create worktree if multi-agent mode
+    let workerProjectPath = this.config.projectPath;
+    if (this.useWorktrees && this.worktreeManager) {
+      try {
+        const result = this.worktreeManager.create({
+          taskId: `pool-${index}`,
+          taskSlug: `agent-${index}`,
+          agentId,
+        });
+        agentState.worktreePath = result.worktreePath;
+        agentState.worktreeBranch = result.branch;
+        workerProjectPath = result.worktreePath;
+        console.log(
+          `${c.primary("🌳 Worktree created:")} ${c.dim(result.worktreePath)} (${result.branch})`
+        );
+      } catch (err) {
+        console.log(
+          c.error(
+            `Failed to create worktree for ${agentId}: ${err instanceof Error ? err.message : String(err)}`
+          )
+        );
+        this.agents.delete(agentId);
+        return;
+      }
+    }
+
     console.log(`${c.primary("🚀 Agent started:")} ${c.bold(agentId)}\n`);
 
-    const potentialPaths: string[] = [];
+    const workerPath = this.resolveWorkerPath();
 
-    // Use import.meta.url to get the actual module location
-    // This works correctly with npm/npx installations
-    const currentModulePath = fileURLToPath(import.meta.url);
-    const currentModuleDir = dirname(currentModulePath);
-
-    // Check multiple potential locations for the worker file
-    potentialPaths.push(
-      // When running from built SDK (dist/orchestrator.js -> dist/agent/worker.js)
-      join(currentModuleDir, "agent", "worker.js"),
-      // When running from built SDK (dist/orchestrator.js -> dist/worker.js)
-      join(currentModuleDir, "worker.js"),
-      join(currentModuleDir, "agent", "worker.ts")
-    );
-
-    const workerPath = potentialPaths.find((p) => existsSync(p));
-
-    // Verify worker file exists
     if (!workerPath) {
       throw new Error(
-        `Worker file not found. Checked: ${potentialPaths.join(", ")}. ` +
-          `Make sure the SDK is properly built and installed.`
+        "Worker file not found. Make sure the SDK is properly built and installed."
       );
     }
 
@@ -203,8 +253,13 @@ export class AgentOrchestrator extends EventEmitter {
       "--api-key",
       this.config.apiKey,
       "--project-path",
-      this.config.projectPath,
+      workerProjectPath,
     ];
+
+    // Pass the main project path so worker can update progress.md there
+    if (this.useWorktrees && workerProjectPath !== this.config.projectPath) {
+      workerArgs.push("--main-project-path", this.config.projectPath);
+    }
 
     // Add model if specified
     if (this.config.model) {
@@ -222,8 +277,6 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Use node to run the worker script
-    // Set LOCUS_WORKER env var to make processes easily identifiable in Activity Monitor
-    // You can find workers with: ps aux | grep LOCUS_WORKER or pgrep -f "locus-worker"
     const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs], {
       stdio: ["pipe", "pipe", "pipe"],
       env: {
@@ -242,6 +295,9 @@ export class AgentOrchestrator extends EventEmitter {
         agentState.tasksCompleted = (msg.tasksCompleted as number) || 0;
         agentState.tasksFailed = (msg.tasksFailed as number) || 0;
       }
+      if (msg.type === "heartbeat") {
+        agentState.lastHeartbeat = new Date();
+      }
     });
 
     agentProcess.stdout?.on("data", (data) => {
@@ -257,6 +313,9 @@ export class AgentOrchestrator extends EventEmitter {
       const agent = this.agents.get(agentId);
       if (agent) {
         agent.status = code === 0 ? "COMPLETED" : "FAILED";
+
+        // Clean up worktree
+        this.cleanupWorktree(agent);
 
         // Ensure CLI gets the absolute latest stats
         this.emit("agent:completed", {
@@ -275,11 +334,72 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Reap completed agents
+   * Resolve the worker script path from the SDK module location
    */
-  private async reapAgents(): Promise<void> {
-    // No-op: agents now remove themselves in the 'exit' listener
-    // to ensure events are emitted with correct stats before deletion.
+  private resolveWorkerPath(): string | undefined {
+    const currentModulePath = fileURLToPath(import.meta.url);
+    const currentModuleDir = dirname(currentModulePath);
+
+    const potentialPaths = [
+      join(currentModuleDir, "agent", "worker.js"),
+      join(currentModuleDir, "worker.js"),
+      join(currentModuleDir, "agent", "worker.ts"),
+    ];
+
+    return potentialPaths.find((p) => existsSync(p));
+  }
+
+  /**
+   * Clean up a worktree after agent completion based on cleanup policy
+   */
+  private cleanupWorktree(agent: AgentState): void {
+    if (!this.worktreeManager || !agent.worktreePath) return;
+
+    const policy = this.config.worktreeCleanupPolicy ?? "retain-on-failure";
+
+    if (policy === "manual") return;
+
+    if (policy === "retain-on-failure" && agent.status === "FAILED") {
+      console.log(
+        c.dim(
+          `Retaining worktree for failed agent ${agent.id}: ${agent.worktreePath}`
+        )
+      );
+      return;
+    }
+
+    // Auto-clean or successful with retain-on-failure
+    try {
+      this.worktreeManager.remove(agent.worktreePath, true);
+      console.log(c.dim(`Cleaned up worktree for ${agent.id}`));
+    } catch {
+      console.log(c.dim(`Could not clean up worktree: ${agent.worktreePath}`));
+    }
+  }
+
+  /**
+   * Start monitoring agent heartbeats for stale detection
+   */
+  private startHeartbeatMonitor(): void {
+    this.heartbeatInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [agentId, agent] of this.agents.entries()) {
+        if (
+          agent.status === "WORKING" &&
+          now - agent.lastHeartbeat.getTime() > STALE_AGENT_TIMEOUT_MS
+        ) {
+          console.log(
+            c.error(
+              `Agent ${agentId} is stale (no heartbeat for 10 minutes). Killing.`
+            )
+          );
+          if (agent.process && !agent.process.killed) {
+            agent.process.kill();
+          }
+          this.emit("agent:stale", { agentId });
+        }
+      }
+    }, 60_000);
   }
 
   /**
@@ -422,9 +542,28 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Cleanup - kill all agent processes
+   * Stop a specific agent by ID
+   */
+  stopAgent(agentId: string): boolean {
+    const agent = this.agents.get(agentId);
+    if (!agent) return false;
+
+    if (agent.process && !agent.process.killed) {
+      agent.process.kill();
+    }
+    return true;
+  }
+
+  /**
+   * Cleanup - kill all agent processes and worktrees
    */
   private async cleanup(): Promise<void> {
+    // Stop heartbeat monitor
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+
     for (const [agentId, agent] of this.agents.entries()) {
       if (agent.process && !agent.process.killed) {
         console.log(`Killing agent: ${agentId}`);
@@ -441,6 +580,8 @@ export class AgentOrchestrator extends EventEmitter {
   getStats() {
     return {
       activeAgents: this.agents.size,
+      agentCount: this.agentCount,
+      useWorktrees: this.useWorktrees,
       processedTasks: this.processedTasks.size,
       totalTasksCompleted: Array.from(this.agents.values()).reduce(
         (sum, agent) => sum + agent.tasksCompleted,
@@ -451,6 +592,13 @@ export class AgentOrchestrator extends EventEmitter {
         0
       ),
     };
+  }
+
+  /**
+   * Get all agent states for status display
+   */
+  getAgentStates(): AgentState[] {
+    return Array.from(this.agents.values());
   }
 
   private sleep(ms: number): Promise<void> {

@@ -3,13 +3,14 @@ import {
   CreateTask,
   EventType,
   SprintStatus,
+  STALE_AGENT_TIMEOUT_MS,
   TaskPriority,
   TaskStatus,
   UpdateTask,
 } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, IsNull, Repository } from "typeorm";
+import { DataSource, In, IsNull, LessThan, Repository } from "typeorm";
 import { Comment } from "@/entities/comment.entity";
 import { Doc } from "@/entities/doc.entity";
 import { Event } from "@/entities/event.entity";
@@ -30,7 +31,8 @@ export class TasksService {
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
     private readonly eventsService: EventsService,
-    private readonly processor: TaskProcessor
+    private readonly processor: TaskProcessor,
+    private readonly dataSource: DataSource
   ) {}
 
   async findAll(workspaceId: string): Promise<Task[]> {
@@ -269,56 +271,124 @@ export class TasksService {
 
   /**
    * Dispatch a task from BACKLOG to an agent.
-   * Simply finds a BACKLOG task in the sprint and moves it to IN_PROGRESS.
+   * Uses SELECT FOR UPDATE SKIP LOCKED to prevent double-assignment
+   * when multiple agents request tasks simultaneously.
    */
   async dispatchTask(
     workspaceId: string,
     workerId: string,
     sprintId?: string
   ): Promise<Task> {
-    // Find a BACKLOG or IN_PROGRESS (unassigned) task in the workspace/sprint
-    const task = await this.taskRepository.findOne({
-      where: [
-        {
-          workspaceId,
-          ...(sprintId ? { sprintId } : {}),
-          status: TaskStatus.BACKLOG,
-        },
-        {
-          workspaceId,
-          ...(sprintId ? { sprintId } : {}),
-          status: TaskStatus.IN_PROGRESS,
-          assignedTo: IsNull(),
-        },
-      ],
-      order: { order: "ASC", priority: "DESC", createdAt: "ASC" },
-    });
+    return this.dataSource.transaction(async (manager) => {
+      const taskRepo = manager.getRepository(Task);
 
-    if (!task) {
-      throw new NotFoundException("No available tasks");
-    }
+      // Build query with FOR UPDATE SKIP LOCKED to atomically claim a task
+      let query = taskRepo
+        .createQueryBuilder("task")
+        .setLock("pessimistic_write_or_fail")
+        .where(
+          "(task.status = :backlog OR (task.status = :inProgress AND task.assigned_to IS NULL))",
+          {
+            backlog: TaskStatus.BACKLOG,
+            inProgress: TaskStatus.IN_PROGRESS,
+          }
+        )
+        .andWhere("task.workspace_id = :workspaceId", { workspaceId });
 
-    const oldStatus = task.status;
+      if (sprintId) {
+        query = query.andWhere("task.sprint_id = :sprintId", { sprintId });
+      }
 
-    // Move to IN_PROGRESS and assign to worker
-    task.status = TaskStatus.IN_PROGRESS;
-    task.assignedTo = workerId;
+      query = query
+        .orderBy("task.order", "ASC")
+        .addOrderBy("task.priority", "DESC")
+        .addOrderBy("task.created_at", "ASC")
+        .limit(1);
 
-    const saved = await this.taskRepository.save(task);
-    const result = (Array.isArray(saved) ? saved[0] : saved) as Task;
+      // Use SKIP LOCKED via raw setLock override
+      const rawSql = query.getQuery();
+      const params = query.getParameters();
 
-    await this.eventsService.logEvent({
-      workspaceId: result.workspaceId,
-      taskId: result.id,
-      type: EventType.STATUS_CHANGED,
-      payload: {
-        title: result.title,
-        oldStatus,
-        newStatus: TaskStatus.IN_PROGRESS,
+      // Execute with SKIP LOCKED instead of NOWAIT (pessimistic_write_or_fail)
+      const skipLockedSql = rawSql.replace(
+        "FOR UPDATE NOWAIT",
+        "FOR UPDATE SKIP LOCKED"
+      );
+      const rows = await manager.query(skipLockedSql, Object.values(params));
+
+      if (!rows || rows.length === 0) {
+        throw new NotFoundException("No available tasks");
+      }
+
+      const row = rows[0];
+      const taskId = row.id;
+      const oldStatus = row.status;
+
+      // Update the task atomically within the same transaction
+      await taskRepo.update(taskId, {
+        status: TaskStatus.IN_PROGRESS,
         assignedTo: workerId,
+        assignedAt: new Date(),
+      });
+
+      const result = await taskRepo.findOneOrFail({ where: { id: taskId } });
+
+      await this.eventsService.logEvent({
+        workspaceId: result.workspaceId,
+        taskId: result.id,
+        type: EventType.TASK_DISPATCHED,
+        payload: {
+          title: result.title,
+          oldStatus,
+          newStatus: TaskStatus.IN_PROGRESS,
+          assignedTo: workerId,
+        },
+      });
+
+      return result;
+    });
+  }
+
+  /**
+   * Release tasks assigned to stale agents (no heartbeat for 10 minutes).
+   * Moves them back to BACKLOG and clears the assignment.
+   */
+  async releaseStaleAgentTasks(workspaceId: string): Promise<Task[]> {
+    const staleThreshold = new Date(Date.now() - STALE_AGENT_TIMEOUT_MS);
+
+    // Find tasks that are IN_PROGRESS, assigned, and were assigned before the threshold
+    const staleTasks = await this.taskRepository.find({
+      where: {
+        workspaceId,
+        status: TaskStatus.IN_PROGRESS,
+        assignedAt: LessThan(staleThreshold),
       },
     });
 
-    return result;
+    // Only release tasks where assignedTo is set (i.e., assigned to an agent)
+    const tasksToRelease = staleTasks.filter((t) => t.assignedTo !== null);
+
+    for (const task of tasksToRelease) {
+      const oldAssignee = task.assignedTo;
+      task.status = TaskStatus.BACKLOG;
+      task.assignedTo = null;
+      task.assignedAt = null;
+      await this.taskRepository.save(task);
+
+      await this.eventsService.logEvent({
+        workspaceId,
+        taskId: task.id,
+        type: EventType.STATUS_CHANGED,
+        payload: {
+          title: task.title,
+          oldStatus: TaskStatus.IN_PROGRESS,
+          newStatus: TaskStatus.BACKLOG,
+          reason: "stale_agent",
+          releasedFrom: oldAssignee,
+        },
+      });
+    }
+
+    return tasksToRelease;
   }
 }

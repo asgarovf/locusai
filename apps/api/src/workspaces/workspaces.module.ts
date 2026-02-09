@@ -1,6 +1,13 @@
 import { forwardRef, Global, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ApiKey, Membership, Organization, Task, Workspace } from "@/entities";
+import {
+  AgentRegistration,
+  ApiKey,
+  Membership,
+  Organization,
+  Task,
+  Workspace,
+} from "@/entities";
 import { EventsModule } from "@/events/events.module";
 import { TasksModule } from "@/tasks/tasks.module";
 import { WorkspacesController } from "./workspaces.controller";
@@ -10,6 +17,7 @@ import { WorkspacesService } from "./workspaces.service";
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      AgentRegistration,
       Workspace,
       Organization,
       Task,

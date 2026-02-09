@@ -2,9 +2,11 @@
 
 import { c } from "@locusai/sdk/node";
 import {
+  agentsCommand,
   execCommand,
   indexCommand,
   initCommand,
+  planCommand,
   reviewCommand,
   runCommand,
   showHelp,
@@ -33,8 +35,14 @@ async function main() {
     case "exec":
       await execCommand(args);
       break;
+    case "plan":
+      await planCommand(args);
+      break;
     case "review":
       await reviewCommand(args);
+      break;
+    case "agents":
+      await agentsCommand(args);
       break;
     default:
       showHelp();

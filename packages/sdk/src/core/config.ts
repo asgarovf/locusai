@@ -42,6 +42,9 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "",
   "# Locus AI - Plans (generated per task)",
   ".locus/plans/",
+  "",
+  "# Locus AI - Agent worktrees (parallel execution)",
+  ".locus-worktrees/",
 ] as const;
 
 export function getLocusPath(
