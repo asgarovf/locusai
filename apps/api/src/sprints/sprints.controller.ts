@@ -5,7 +5,6 @@ import {
   SprintsResponse,
   UpdateSprint,
   UpdateSprintSchema,
-  User,
 } from "@locusai/shared";
 import {
   Body,
@@ -16,7 +15,7 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import { CurrentUser, Member } from "@/auth/decorators";
+import { CurrentUserId, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { SprintsService } from "./sprints.service";
@@ -103,20 +102,26 @@ export class SprintsController {
   @Post(":sprintId/start")
   @Member()
   async start(
-    @CurrentUser() user: User,
+    @CurrentUserId() userId: string | null,
     @Param("sprintId") sprintId: string
   ): Promise<SprintResponse> {
-    const sprint = await this.sprintsService.startSprint(sprintId, user.id);
+    const sprint = await this.sprintsService.startSprint(
+      sprintId,
+      userId ?? undefined
+    );
     return { sprint };
   }
 
   @Post(":sprintId/complete")
   @Member()
   async complete(
-    @CurrentUser() user: User,
+    @CurrentUserId() userId: string | null,
     @Param("sprintId") sprintId: string
   ): Promise<SprintResponse> {
-    const sprint = await this.sprintsService.completeSprint(sprintId, user.id);
+    const sprint = await this.sprintsService.completeSprint(
+      sprintId,
+      userId ?? undefined
+    );
     return { sprint };
   }
 
