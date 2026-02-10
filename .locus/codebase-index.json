@@ -1,334 +1,120 @@
 {
   "symbols": {
-    "BaseEntitySchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "BaseEntity": [
-      "packages/shared/src/common.ts"
-    ],
-    "PaginationMetaSchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "PaginationMeta": [
-      "packages/shared/src/common.ts"
-    ],
-    "PaginationRequestSchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "PaginationRequest": [
-      "packages/shared/src/common.ts"
-    ],
-    "$FixMe": [
-      "packages/shared/src/common.ts"
-    ],
-    "ApiResponseSchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "ApiResponse": [
-      "packages/shared/src/common.ts"
-    ],
-    "SuccessResponseSchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "ErrorResponseSchema": [
-      "packages/shared/src/common.ts"
-    ],
-    "SuccessResponse": [
-      "packages/shared/src/common.ts"
-    ],
-    "ErrorResponse": [
-      "packages/shared/src/common.ts"
-    ],
-    "generateUUID": [
-      "packages/shared/src/common.ts"
-    ],
-    "STALE_AGENT_TIMEOUT_MS": [
-      "packages/shared/src/constants.ts"
-    ],
-    "WorkspaceSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "Workspace": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "CreateWorkspaceSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "UpdateWorkspaceSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "ChecklistItemSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "ChecklistItem": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "AddWorkspaceMemberSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "WorkspaceIdParamSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "WorkspaceStatsSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
+    "BaseEntitySchema": ["packages/shared/src/common.ts"],
+    "BaseEntity": ["packages/shared/src/common.ts"],
+    "PaginationMetaSchema": ["packages/shared/src/common.ts"],
+    "PaginationMeta": ["packages/shared/src/common.ts"],
+    "PaginationRequestSchema": ["packages/shared/src/common.ts"],
+    "PaginationRequest": ["packages/shared/src/common.ts"],
+    "$FixMe": ["packages/shared/src/common.ts"],
+    "ApiResponseSchema": ["packages/shared/src/common.ts"],
+    "ApiResponse": ["packages/shared/src/common.ts"],
+    "SuccessResponseSchema": ["packages/shared/src/common.ts"],
+    "ErrorResponseSchema": ["packages/shared/src/common.ts"],
+    "SuccessResponse": ["packages/shared/src/common.ts"],
+    "ErrorResponse": ["packages/shared/src/common.ts"],
+    "generateUUID": ["packages/shared/src/common.ts"],
+    "STALE_AGENT_TIMEOUT_MS": ["packages/shared/src/constants.ts"],
+    "WorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
+    "Workspace": ["packages/shared/src/models/workspace.ts"],
+    "CreateWorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
+    "UpdateWorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
+    "ChecklistItemSchema": ["packages/shared/src/models/workspace.ts"],
+    "ChecklistItem": ["packages/shared/src/models/workspace.ts"],
+    "AddWorkspaceMemberSchema": ["packages/shared/src/models/workspace.ts"],
+    "WorkspaceIdParamSchema": ["packages/shared/src/models/workspace.ts"],
+    "WorkspaceStatsSchema": ["packages/shared/src/models/workspace.ts"],
     "WorkspaceStats": [
       "packages/shared/src/models/workspace.ts",
       "apps/web/src/views/Dashboard.tsx"
     ],
-    "UserSchema": [
-      "packages/shared/src/models/user.ts"
-    ],
-    "User": [
-      "packages/shared/src/models/user.ts"
-    ],
-    "CreateUserSchema": [
-      "packages/shared/src/models/user.ts"
-    ],
-    "UpdateUserSchema": [
-      "packages/shared/src/models/user.ts"
-    ],
-    "JwtAuthUserSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "JwtAuthUser": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "ApiKeyAuthUserSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "ApiKeyAuthUser": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "AuthenticatedUserSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "AuthenticatedUser": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "isJwtUser": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "isApiKeyUser": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "getAuthUserId": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "AuthResponseSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "AuthResponse": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "LoginResponse": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "OtpRequestSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "VerifyOtpSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "CompleteRegistrationSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "JWTPayloadSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "JWTPayload": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "AuthContextSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
+    "UserSchema": ["packages/shared/src/models/user.ts"],
+    "User": ["packages/shared/src/models/user.ts"],
+    "CreateUserSchema": ["packages/shared/src/models/user.ts"],
+    "UpdateUserSchema": ["packages/shared/src/models/user.ts"],
+    "JwtAuthUserSchema": ["packages/shared/src/models/auth.ts"],
+    "JwtAuthUser": ["packages/shared/src/models/auth.ts"],
+    "ApiKeyAuthUserSchema": ["packages/shared/src/models/auth.ts"],
+    "ApiKeyAuthUser": ["packages/shared/src/models/auth.ts"],
+    "AuthenticatedUserSchema": ["packages/shared/src/models/auth.ts"],
+    "AuthenticatedUser": ["packages/shared/src/models/auth.ts"],
+    "isJwtUser": ["packages/shared/src/models/auth.ts"],
+    "isApiKeyUser": ["packages/shared/src/models/auth.ts"],
+    "getAuthUserId": ["packages/shared/src/models/auth.ts"],
+    "AuthResponseSchema": ["packages/shared/src/models/auth.ts"],
+    "AuthResponse": ["packages/shared/src/models/auth.ts"],
+    "LoginResponse": ["packages/shared/src/models/auth.ts"],
+    "OtpRequestSchema": ["packages/shared/src/models/auth.ts"],
+    "VerifyOtpSchema": ["packages/shared/src/models/auth.ts"],
+    "CompleteRegistrationSchema": ["packages/shared/src/models/auth.ts"],
+    "JWTPayloadSchema": ["packages/shared/src/models/auth.ts"],
+    "JWTPayload": ["packages/shared/src/models/auth.ts"],
+    "AuthContextSchema": ["packages/shared/src/models/auth.ts"],
     "AuthContext": [
       "packages/shared/src/models/auth.ts",
       "apps/web/src/context/AuthContext.tsx"
     ],
-    "APIKeySchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "APIKey": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "APIKeyCreateResponseSchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "CreateApiKeySchema": [
-      "packages/shared/src/models/auth.ts"
-    ],
-    "DocType": [
-      "packages/shared/src/models/doc.ts"
-    ],
-    "DocSchema": [
-      "packages/shared/src/models/doc.ts"
-    ],
-    "Doc": [
-      "packages/shared/src/models/doc.ts"
-    ],
-    "CreateDocSchema": [
-      "packages/shared/src/models/doc.ts"
-    ],
-    "UpdateDocSchema": [
-      "packages/shared/src/models/doc.ts"
-    ],
-    "DocGroupSchema": [
-      "packages/shared/src/models/doc-group.ts"
-    ],
-    "DocGroup": [
-      "packages/shared/src/models/doc-group.ts"
-    ],
-    "CreateDocGroupSchema": [
-      "packages/shared/src/models/doc-group.ts"
-    ],
-    "UpdateDocGroupSchema": [
-      "packages/shared/src/models/doc-group.ts"
-    ],
-    "OrganizationSchema": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "Organization": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "CreateOrganizationSchema": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "AddMemberSchema": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "MembershipWithUserSchema": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "MembershipWithUser": [
-      "packages/shared/src/models/organization.ts"
-    ],
-    "InvitationSchema": [
-      "packages/shared/src/models/invitation.ts"
-    ],
-    "Invitation": [
-      "packages/shared/src/models/invitation.ts"
-    ],
-    "CreateInvitationSchema": [
-      "packages/shared/src/models/invitation.ts"
-    ],
-    "AcceptInvitationSchema": [
-      "packages/shared/src/models/invitation.ts"
-    ],
-    "LockSchema": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "UnlockSchema": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "AgentHeartbeatSchema": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "AgentHeartbeat": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "AgentRegistrationResponse": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "AgentsListResponse": [
-      "packages/shared/src/models/agent.ts"
-    ],
-    "CommentSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "Comment": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "ArtifactSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "Artifact": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "EventSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "Event": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "EventPayloadSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "ReportCiResultSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "RecordCiSchema": [
-      "packages/shared/src/models/ci.ts"
-    ],
-    "RecordCi": [
-      "packages/shared/src/models/ci.ts"
-    ],
-    "LocusClient": [
-      "packages/sdk/src/index.ts"
-    ],
-    "LocusEvent": [
-      "packages/sdk/src/events.ts"
-    ],
-    "LocusConfig": [
-      "packages/sdk/src/events.ts"
-    ],
-    "LocusEmitter": [
-      "packages/sdk/src/events.ts"
-    ],
-    "BaseModule": [
-      "packages/sdk/src/modules/base.ts"
-    ],
-    "AuthModule": [
-      "packages/sdk/src/modules/auth.ts"
-    ],
-    "TasksModule": [
-      "packages/sdk/src/modules/tasks.ts"
-    ],
-    "SprintsModule": [
-      "packages/sdk/src/modules/sprints.ts"
-    ],
-    "WorkspacesModule": [
-      "packages/sdk/src/modules/workspaces.ts"
-    ],
-    "OrganizationsModule": [
-      "packages/sdk/src/modules/organizations.ts"
-    ],
-    "InvitationsModule": [
-      "packages/sdk/src/modules/invitations.ts"
-    ],
-    "DocsModule": [
-      "packages/sdk/src/modules/docs.ts"
-    ],
-    "CiModule": [
-      "packages/sdk/src/modules/ci.ts"
-    ],
-    "PROVIDER": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "Provider": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "DEFAULT_MODEL": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "LOCUS_CONFIG": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "LOCUS_GITIGNORE_PATTERNS": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "getLocusPath": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "getAgentArtifactsPath": [
-      "packages/sdk/src/core/config.ts"
-    ],
-    "CodebaseIndex": [
-      "packages/sdk/src/core/indexer.ts"
-    ],
-    "CodebaseIndexer": [
-      "packages/sdk/src/core/indexer.ts"
-    ],
+    "APIKeySchema": ["packages/shared/src/models/auth.ts"],
+    "APIKey": ["packages/shared/src/models/auth.ts"],
+    "APIKeyCreateResponseSchema": ["packages/shared/src/models/auth.ts"],
+    "CreateApiKeySchema": ["packages/shared/src/models/auth.ts"],
+    "DocType": ["packages/shared/src/models/doc.ts"],
+    "DocSchema": ["packages/shared/src/models/doc.ts"],
+    "Doc": ["packages/shared/src/models/doc.ts"],
+    "CreateDocSchema": ["packages/shared/src/models/doc.ts"],
+    "UpdateDocSchema": ["packages/shared/src/models/doc.ts"],
+    "DocGroupSchema": ["packages/shared/src/models/doc-group.ts"],
+    "DocGroup": ["packages/shared/src/models/doc-group.ts"],
+    "CreateDocGroupSchema": ["packages/shared/src/models/doc-group.ts"],
+    "UpdateDocGroupSchema": ["packages/shared/src/models/doc-group.ts"],
+    "OrganizationSchema": ["packages/shared/src/models/organization.ts"],
+    "Organization": ["packages/shared/src/models/organization.ts"],
+    "CreateOrganizationSchema": ["packages/shared/src/models/organization.ts"],
+    "AddMemberSchema": ["packages/shared/src/models/organization.ts"],
+    "MembershipWithUserSchema": ["packages/shared/src/models/organization.ts"],
+    "MembershipWithUser": ["packages/shared/src/models/organization.ts"],
+    "InvitationSchema": ["packages/shared/src/models/invitation.ts"],
+    "Invitation": ["packages/shared/src/models/invitation.ts"],
+    "CreateInvitationSchema": ["packages/shared/src/models/invitation.ts"],
+    "AcceptInvitationSchema": ["packages/shared/src/models/invitation.ts"],
+    "LockSchema": ["packages/shared/src/models/agent.ts"],
+    "UnlockSchema": ["packages/shared/src/models/agent.ts"],
+    "AgentHeartbeatSchema": ["packages/shared/src/models/agent.ts"],
+    "AgentHeartbeat": ["packages/shared/src/models/agent.ts"],
+    "AgentRegistrationResponse": ["packages/shared/src/models/agent.ts"],
+    "AgentsListResponse": ["packages/shared/src/models/agent.ts"],
+    "CommentSchema": ["packages/shared/src/models/activity.ts"],
+    "Comment": ["packages/shared/src/models/activity.ts"],
+    "ArtifactSchema": ["packages/shared/src/models/activity.ts"],
+    "Artifact": ["packages/shared/src/models/activity.ts"],
+    "EventSchema": ["packages/shared/src/models/activity.ts"],
+    "Event": ["packages/shared/src/models/activity.ts"],
+    "EventPayloadSchema": ["packages/shared/src/models/activity.ts"],
+    "ReportCiResultSchema": ["packages/shared/src/models/activity.ts"],
+    "RecordCiSchema": ["packages/shared/src/models/ci.ts"],
+    "RecordCi": ["packages/shared/src/models/ci.ts"],
+    "LocusClient": ["packages/sdk/src/index.ts"],
+    "LocusEvent": ["packages/sdk/src/events.ts"],
+    "LocusConfig": ["packages/sdk/src/events.ts"],
+    "LocusEmitter": ["packages/sdk/src/events.ts"],
+    "BaseModule": ["packages/sdk/src/modules/base.ts"],
+    "AuthModule": ["packages/sdk/src/modules/auth.ts"],
+    "TasksModule": ["packages/sdk/src/modules/tasks.ts"],
+    "SprintsModule": ["packages/sdk/src/modules/sprints.ts"],
+    "WorkspacesModule": ["packages/sdk/src/modules/workspaces.ts"],
+    "OrganizationsModule": ["packages/sdk/src/modules/organizations.ts"],
+    "InvitationsModule": ["packages/sdk/src/modules/invitations.ts"],
+    "DocsModule": ["packages/sdk/src/modules/docs.ts"],
+    "CiModule": ["packages/sdk/src/modules/ci.ts"],
+    "PROVIDER": ["packages/sdk/src/core/config.ts"],
+    "Provider": ["packages/sdk/src/core/config.ts"],
+    "DEFAULT_MODEL": ["packages/sdk/src/core/config.ts"],
+    "LOCUS_CONFIG": ["packages/sdk/src/core/config.ts"],
+    "LOCUS_GITIGNORE_PATTERNS": ["packages/sdk/src/core/config.ts"],
+    "getLocusPath": ["packages/sdk/src/core/config.ts"],
+    "getAgentArtifactsPath": ["packages/sdk/src/core/config.ts"],
+    "CodebaseIndex": ["packages/sdk/src/core/indexer.ts"],
+    "CodebaseIndexer": ["packages/sdk/src/core/indexer.ts"],
     "TaskExecutor": [
       "packages/sdk/src/agent/index.ts",
       "packages/sdk/src/agent/task-executor.ts"
@@ -349,180 +135,70 @@
       "packages/sdk/src/agent/document-fetcher.ts",
       "packages/sdk/src/agent/index.ts"
     ],
-    "AiRunner": [
-      "packages/sdk/src/ai/runner.ts"
-    ],
-    "AiProvider": [
-      "packages/sdk/src/ai/runner.ts"
-    ],
-    "createAiRunner": [
-      "packages/sdk/src/ai/factory.ts"
-    ],
-    "LogFn": [
-      "packages/sdk/src/ai/factory.ts"
-    ],
-    "AiRunnerConfig": [
-      "packages/sdk/src/ai/factory.ts"
-    ],
-    "PlanManager": [
-      "packages/sdk/src/planning/plan-manager.ts"
-    ],
-    "SprintPlan": [
-      "packages/sdk/src/planning/sprint-plan.ts"
-    ],
-    "PlannedTask": [
-      "packages/sdk/src/planning/sprint-plan.ts"
-    ],
-    "SprintPlanRisk": [
-      "packages/sdk/src/planning/sprint-plan.ts"
-    ],
-    "sprintPlanToMarkdown": [
-      "packages/sdk/src/planning/sprint-plan.ts"
-    ],
+    "AiRunner": ["packages/sdk/src/ai/runner.ts"],
+    "AiProvider": ["packages/sdk/src/ai/runner.ts"],
+    "createAiRunner": ["packages/sdk/src/ai/factory.ts"],
+    "LogFn": ["packages/sdk/src/ai/factory.ts"],
+    "AiRunnerConfig": ["packages/sdk/src/ai/factory.ts"],
+    "PlanManager": ["packages/sdk/src/planning/plan-manager.ts"],
+    "SprintPlan": ["packages/sdk/src/planning/sprint-plan.ts"],
+    "PlannedTask": ["packages/sdk/src/planning/sprint-plan.ts"],
+    "SprintPlanRisk": ["packages/sdk/src/planning/sprint-plan.ts"],
+    "sprintPlanToMarkdown": ["packages/sdk/src/planning/sprint-plan.ts"],
     "plannedTasksToCreatePayloads": [
       "packages/sdk/src/planning/sprint-plan.ts"
     ],
-    "parseSprintPlanFromAI": [
-      "packages/sdk/src/planning/sprint-plan.ts"
-    ],
-    "PlanningMeeting": [
-      "packages/sdk/src/planning/planning-meeting.ts"
-    ],
-    "PlanningMeetingConfig": [
-      "packages/sdk/src/planning/planning-meeting.ts"
-    ],
-    "PlanningMeetingResult": [
-      "packages/sdk/src/planning/planning-meeting.ts"
-    ],
-    "PlanningPhase": [
-      "packages/sdk/src/planning/planning-meeting.ts"
-    ],
-    "buildTechLeadPrompt": [
-      "packages/sdk/src/planning/agents/tech-lead.ts"
-    ],
-    "TechLeadInput": [
-      "packages/sdk/src/planning/agents/tech-lead.ts"
-    ],
-    "buildArchitectPrompt": [
-      "packages/sdk/src/planning/agents/architect.ts"
-    ],
-    "ArchitectInput": [
-      "packages/sdk/src/planning/agents/architect.ts"
-    ],
+    "parseSprintPlanFromAI": ["packages/sdk/src/planning/sprint-plan.ts"],
+    "PlanningMeeting": ["packages/sdk/src/planning/planning-meeting.ts"],
+    "PlanningMeetingConfig": ["packages/sdk/src/planning/planning-meeting.ts"],
+    "PlanningMeetingResult": ["packages/sdk/src/planning/planning-meeting.ts"],
+    "PlanningPhase": ["packages/sdk/src/planning/planning-meeting.ts"],
+    "buildTechLeadPrompt": ["packages/sdk/src/planning/agents/tech-lead.ts"],
+    "TechLeadInput": ["packages/sdk/src/planning/agents/tech-lead.ts"],
+    "buildArchitectPrompt": ["packages/sdk/src/planning/agents/architect.ts"],
+    "ArchitectInput": ["packages/sdk/src/planning/agents/architect.ts"],
     "buildSprintOrganizerPrompt": [
       "packages/sdk/src/planning/agents/sprint-organizer.ts"
     ],
     "SprintOrganizerInput": [
       "packages/sdk/src/planning/agents/sprint-organizer.ts"
     ],
-    "WorktreeConfig": [
-      "packages/sdk/src/worktree/worktree-config.ts"
-    ],
-    "WorktreeInfo": [
-      "packages/sdk/src/worktree/worktree-config.ts"
-    ],
-    "CreateWorktreeOptions": [
-      "packages/sdk/src/worktree/worktree-config.ts"
-    ],
-    "CreateWorktreeResult": [
-      "packages/sdk/src/worktree/worktree-config.ts"
-    ],
-    "ExecSession": [
-      "packages/sdk/src/exec/exec-session.ts"
-    ],
-    "ExecSessionConfig": [
-      "packages/sdk/src/exec/exec-session.ts"
-    ],
-    "ExecResult": [
-      "packages/sdk/src/exec/exec-session.ts"
-    ],
-    "ExecEventEmitter": [
-      "packages/sdk/src/exec/event-emitter.ts"
-    ],
-    "ExecEventType": [
-      "packages/sdk/src/exec/events.ts"
-    ],
-    "HistoryManager": [
-      "packages/sdk/src/exec/history-manager.ts"
-    ],
-    "ConversationSession": [
-      "packages/sdk/src/exec/history-manager.ts"
-    ],
-    "ConversationMessage": [
-      "packages/sdk/src/exec/history-manager.ts"
-    ],
-    "ContextTracker": [
-      "packages/sdk/src/exec/context-tracker.ts"
-    ],
-    "StreamChunk": [
-      "packages/sdk/src/exec/types.ts"
-    ],
-    "execCommand": [
-      "packages/cli/src/commands/exec.ts"
-    ],
-    "planCommand": [
-      "packages/cli/src/commands/plan.ts"
-    ],
-    "initCommand": [
-      "packages/cli/src/commands/init.ts"
-    ],
-    "reviewCommand": [
-      "packages/cli/src/commands/review.ts"
-    ],
-    "indexCommand": [
-      "packages/cli/src/commands/index-codebase.ts"
-    ],
-    "agentsCommand": [
-      "packages/cli/src/commands/agents.ts"
-    ],
-    "showHelp": [
-      "packages/cli/src/commands/help.ts"
-    ],
-    "WorkspaceResolver": [
-      "packages/cli/src/workspace-resolver.ts"
-    ],
-    "TreeSummarizer": [
-      "packages/cli/src/tree-summarizer.ts"
-    ],
-    "StatusBar": [
-      "packages/cli/src/display/status-bar.ts"
-    ],
-    "ToolDisplay": [
-      "packages/cli/src/display/tool-display.ts"
-    ],
-    "ExecutionStatsTracker": [
-      "packages/cli/src/display/execution-stats.ts"
-    ],
-    "LLMFactory": [
-      "packages/ai-sdk/src/core/llm-factory.ts"
-    ],
-    "LLMConfig": [
-      "packages/ai-sdk/src/core/llm-factory.ts"
-    ],
-    "AIProvider": [
-      "packages/ai-sdk/src/core/llm-factory.ts"
-    ],
-    "registerTools": [
-      "apps/mcp/src/tools/definitions.ts"
-    ],
-    "SessionWorkflow": [
-      "apps/mcp/src/workflows/session.workflow.ts"
-    ],
-    "locusClient": [
-      "apps/web/src/lib/api-client.ts"
-    ],
-    "setClientToken": [
-      "apps/web/src/lib/api-client.ts"
-    ],
-    "AuthProvider": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
-    "useAuth": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
-    "useSafeAuth": [
-      "apps/web/src/context/AuthContext.tsx"
-    ],
+    "WorktreeConfig": ["packages/sdk/src/worktree/worktree-config.ts"],
+    "WorktreeInfo": ["packages/sdk/src/worktree/worktree-config.ts"],
+    "CreateWorktreeOptions": ["packages/sdk/src/worktree/worktree-config.ts"],
+    "CreateWorktreeResult": ["packages/sdk/src/worktree/worktree-config.ts"],
+    "ExecSession": ["packages/sdk/src/exec/exec-session.ts"],
+    "ExecSessionConfig": ["packages/sdk/src/exec/exec-session.ts"],
+    "ExecResult": ["packages/sdk/src/exec/exec-session.ts"],
+    "ExecEventEmitter": ["packages/sdk/src/exec/event-emitter.ts"],
+    "ExecEventType": ["packages/sdk/src/exec/events.ts"],
+    "HistoryManager": ["packages/sdk/src/exec/history-manager.ts"],
+    "ConversationSession": ["packages/sdk/src/exec/history-manager.ts"],
+    "ConversationMessage": ["packages/sdk/src/exec/history-manager.ts"],
+    "ContextTracker": ["packages/sdk/src/exec/context-tracker.ts"],
+    "StreamChunk": ["packages/sdk/src/exec/types.ts"],
+    "execCommand": ["packages/cli/src/commands/exec.ts"],
+    "planCommand": ["packages/cli/src/commands/plan.ts"],
+    "initCommand": ["packages/cli/src/commands/init.ts"],
+    "reviewCommand": ["packages/cli/src/commands/review.ts"],
+    "indexCommand": ["packages/cli/src/commands/index-codebase.ts"],
+    "agentsCommand": ["packages/cli/src/commands/agents.ts"],
+    "showHelp": ["packages/cli/src/commands/help.ts"],
+    "WorkspaceResolver": ["packages/cli/src/workspace-resolver.ts"],
+    "TreeSummarizer": ["packages/cli/src/tree-summarizer.ts"],
+    "StatusBar": ["packages/cli/src/display/status-bar.ts"],
+    "ToolDisplay": ["packages/cli/src/display/tool-display.ts"],
+    "ExecutionStatsTracker": ["packages/cli/src/display/execution-stats.ts"],
+    "LLMFactory": ["packages/ai-sdk/src/core/llm-factory.ts"],
+    "LLMConfig": ["packages/ai-sdk/src/core/llm-factory.ts"],
+    "AIProvider": ["packages/ai-sdk/src/core/llm-factory.ts"],
+    "registerTools": ["apps/mcp/src/tools/definitions.ts"],
+    "SessionWorkflow": ["apps/mcp/src/workflows/session.workflow.ts"],
+    "locusClient": ["apps/web/src/lib/api-client.ts"],
+    "setClientToken": ["apps/web/src/lib/api-client.ts"],
+    "AuthProvider": ["apps/web/src/context/AuthContext.tsx"],
+    "useAuth": ["apps/web/src/context/AuthContext.tsx"],
+    "useSafeAuth": ["apps/web/src/context/AuthContext.tsx"],
     "ReviewerConfig": [
       "packages/sdk/src/agent/index.ts",
       "packages/sdk/src/agent/reviewer-worker.ts"
@@ -547,15 +223,9 @@
       "packages/sdk/src/git/git-utils.ts",
       "packages/sdk/src/git/index.ts"
     ],
-    "isGitAvailable": [
-      "packages/sdk/src/git/git-utils.ts"
-    ],
-    "isGhAvailable": [
-      "packages/sdk/src/git/git-utils.ts"
-    ],
-    "getGhUsername": [
-      "packages/sdk/src/git/git-utils.ts"
-    ],
+    "isGitAvailable": ["packages/sdk/src/git/git-utils.ts"],
+    "isGhAvailable": ["packages/sdk/src/git/git-utils.ts"],
+    "getGhUsername": ["packages/sdk/src/git/git-utils.ts"],
     "detectRemoteProvider": [
       "packages/sdk/src/git/git-utils.ts",
       "packages/sdk/src/git/index.ts"
@@ -572,15 +242,9 @@
       "packages/sdk/src/git/git-utils.ts",
       "packages/sdk/src/git/index.ts"
     ],
-    "updateGitignore": [
-      "packages/cli/src/config-manager.ts"
-    ],
-    "LocusProjectConfig": [
-      "packages/cli/src/config-manager.ts"
-    ],
-    "ConfigManager": [
-      "packages/cli/src/config-manager.ts"
-    ],
+    "updateGitignore": ["packages/cli/src/config-manager.ts"],
+    "LocusProjectConfig": ["packages/cli/src/config-manager.ts"],
+    "ConfigManager": ["packages/cli/src/config-manager.ts"],
     "AgentState": [
       "packages/sdk/src/index-node.ts",
       "packages/sdk/src/orchestrator.ts"
@@ -593,30 +257,14 @@
       "packages/sdk/src/index-node.ts",
       "packages/sdk/src/orchestrator.ts"
     ],
-    "UserRole": [
-      "packages/shared/src/enums.ts"
-    ],
-    "MembershipRole": [
-      "packages/shared/src/enums.ts"
-    ],
-    "TaskStatus": [
-      "packages/shared/src/enums.ts"
-    ],
-    "TaskPriority": [
-      "packages/shared/src/enums.ts"
-    ],
-    "AssigneeRole": [
-      "packages/shared/src/enums.ts"
-    ],
-    "SprintStatus": [
-      "packages/shared/src/enums.ts"
-    ],
-    "EventType": [
-      "packages/shared/src/enums.ts"
-    ],
-    "runCommand": [
-      "packages/cli/src/commands/run.ts"
-    ],
+    "UserRole": ["packages/shared/src/enums.ts"],
+    "MembershipRole": ["packages/shared/src/enums.ts"],
+    "TaskStatus": ["packages/shared/src/enums.ts"],
+    "TaskPriority": ["packages/shared/src/enums.ts"],
+    "AssigneeRole": ["packages/shared/src/enums.ts"],
+    "SprintStatus": ["packages/shared/src/enums.ts"],
+    "EventType": ["packages/shared/src/enums.ts"],
+    "runCommand": ["packages/cli/src/commands/run.ts"],
     "PromptBuilder": [
       "packages/sdk/src/index-node.ts",
       "packages/sdk/src/core/prompt-builder.ts"
@@ -629,251 +277,97 @@
       "packages/sdk/src/agent/index.ts",
       "packages/sdk/src/agent/worker.ts"
     ],
-    "ProjectInfo": [
-      "packages/sdk/src/project/knowledge-base.ts"
-    ],
-    "ProgressEvent": [
-      "packages/sdk/src/project/knowledge-base.ts"
-    ],
+    "ProjectInfo": ["packages/sdk/src/project/knowledge-base.ts"],
+    "ProgressEvent": ["packages/sdk/src/project/knowledge-base.ts"],
     "KnowledgeBase": [
       "packages/sdk/src/project/knowledge-base.ts",
       "packages/sdk/src/index-node.ts"
     ],
-    "ClaudeStreamItem": [
-      "packages/sdk/src/ai/claude-runner.ts"
-    ],
-    "ActiveToolExecution": [
-      "packages/sdk/src/ai/claude-runner.ts"
-    ],
-    "ClaudeRunner": [
-      "packages/sdk/src/ai/claude-runner.ts"
-    ],
-    "CodexRunner": [
-      "packages/sdk/src/ai/codex-runner.ts"
-    ],
-    "SprintSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "Sprint": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "CreateSprintSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "CreateSprint": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "UpdateSprintSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "UpdateSprint": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintIdParamSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintIdParam": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintQuerySchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintQuery": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintResponseSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintResponse": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintsResponseSchema": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "SprintsResponse": [
-      "packages/shared/src/models/sprint.ts"
-    ],
-    "AcceptanceItemSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "AcceptanceItem": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
+    "ClaudeStreamItem": ["packages/sdk/src/ai/claude-runner.ts"],
+    "ActiveToolExecution": ["packages/sdk/src/ai/claude-runner.ts"],
+    "ClaudeRunner": ["packages/sdk/src/ai/claude-runner.ts"],
+    "CodexRunner": ["packages/sdk/src/ai/codex-runner.ts"],
+    "SprintSchema": ["packages/shared/src/models/sprint.ts"],
+    "Sprint": ["packages/shared/src/models/sprint.ts"],
+    "CreateSprintSchema": ["packages/shared/src/models/sprint.ts"],
+    "CreateSprint": ["packages/shared/src/models/sprint.ts"],
+    "UpdateSprintSchema": ["packages/shared/src/models/sprint.ts"],
+    "UpdateSprint": ["packages/shared/src/models/sprint.ts"],
+    "SprintIdParamSchema": ["packages/shared/src/models/sprint.ts"],
+    "SprintIdParam": ["packages/shared/src/models/sprint.ts"],
+    "SprintQuerySchema": ["packages/shared/src/models/sprint.ts"],
+    "SprintQuery": ["packages/shared/src/models/sprint.ts"],
+    "SprintResponseSchema": ["packages/shared/src/models/sprint.ts"],
+    "SprintResponse": ["packages/shared/src/models/sprint.ts"],
+    "SprintsResponseSchema": ["packages/shared/src/models/sprint.ts"],
+    "SprintsResponse": ["packages/shared/src/models/sprint.ts"],
+    "AcceptanceItemSchema": ["packages/shared/src/models/task.ts"],
+    "AcceptanceItem": ["packages/shared/src/models/task.ts"],
+    "TaskSchema": ["packages/shared/src/models/task.ts"],
     "Task": [
       "packages/shared/src/models/task.ts",
       "apps/api/src/entities/task.entity.ts"
     ],
-    "CreateTaskSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "CreateTask": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "UpdateTaskSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "UpdateTask": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "AddCommentSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "AddComment": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "DispatchTaskSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "DispatchTask": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskIdParamSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskIdParam": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskQuerySchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskQuery": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskResponseSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskResponse": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TasksResponseSchema": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TasksResponse": [
-      "packages/shared/src/models/task.ts"
-    ],
-    "TaskCreateModalProps": [
-      "apps/web/src/components/TaskCreateModal.tsx"
-    ],
-    "TaskCreateModal": [
-      "apps/web/src/components/TaskCreateModal.tsx"
-    ],
-    "OptionItem": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "getStatusOptions": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "getStatusColor": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "getPriorityOptions": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "getAssigneeOptions": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "getMembershipRoleOptions": [
-      "apps/web/src/lib/options.ts"
-    ],
-    "Dashboard": [
-      "apps/web/src/views/Dashboard.tsx"
-    ],
-    "LocusService": [
-      "apps/mcp/src/services/locus.service.ts"
-    ],
-    "TasksService": [
-      "apps/api/src/tasks/tasks.service.ts"
-    ],
-    "SprintsService": [
-      "apps/api/src/sprints/sprints.service.ts"
-    ],
-    "BOARD_STATUSES": [
-      "apps/web/src/components/board/constants.ts"
-    ],
-    "BadgeProps": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "Badge": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "PriorityBadgeProps": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "PriorityBadge": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "StatusBadgeProps": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "StatusBadge": [
-      "apps/web/src/components/ui/Badge.tsx"
-    ],
-    "SprintSectionProps": [
-      "apps/web/src/components/backlog/SprintSection.tsx"
-    ],
-    "SprintSection": [
-      "apps/web/src/components/backlog/SprintSection.tsx"
-    ],
-    "TaskHeaderProps": [
-      "apps/web/src/components/task-panel/TaskHeader.tsx"
-    ],
-    "TaskHeader": [
-      "apps/web/src/components/task-panel/TaskHeader.tsx"
-    ],
-    "ViewType": [
-      "apps/web/src/components/board/BoardHeader.tsx"
-    ],
-    "BoardHeaderProps": [
-      "apps/web/src/components/board/BoardHeader.tsx"
-    ],
-    "viewTypes": [
-      "apps/web/src/components/board/BoardHeader.tsx"
-    ],
-    "BoardHeader": [
-      "apps/web/src/components/board/BoardHeader.tsx"
-    ],
-    "BoardContentProps": [
-      "apps/web/src/components/board/BoardContent.tsx"
-    ],
-    "BoardContent": [
-      "apps/web/src/components/board/BoardContent.tsx"
-    ],
-    "BoardColumnProps": [
-      "apps/web/src/components/board/BoardColumn.tsx"
-    ],
-    "BoardColumn": [
-      "apps/web/src/components/board/BoardColumn.tsx"
-    ],
-    "BoardPageContent": [
-      "apps/web/src/app/(dashboard)/board/page.tsx"
-    ],
-    "BoardPage": [
-      "apps/web/src/app/(dashboard)/board/page.tsx"
-    ],
-    "WorktreeManager": [
-      "packages/sdk/src/worktree/worktree-manager.ts"
-    ],
+    "CreateTaskSchema": ["packages/shared/src/models/task.ts"],
+    "CreateTask": ["packages/shared/src/models/task.ts"],
+    "UpdateTaskSchema": ["packages/shared/src/models/task.ts"],
+    "UpdateTask": ["packages/shared/src/models/task.ts"],
+    "AddCommentSchema": ["packages/shared/src/models/task.ts"],
+    "AddComment": ["packages/shared/src/models/task.ts"],
+    "DispatchTaskSchema": ["packages/shared/src/models/task.ts"],
+    "DispatchTask": ["packages/shared/src/models/task.ts"],
+    "TaskIdParamSchema": ["packages/shared/src/models/task.ts"],
+    "TaskIdParam": ["packages/shared/src/models/task.ts"],
+    "TaskQuerySchema": ["packages/shared/src/models/task.ts"],
+    "TaskQuery": ["packages/shared/src/models/task.ts"],
+    "TaskResponseSchema": ["packages/shared/src/models/task.ts"],
+    "TaskResponse": ["packages/shared/src/models/task.ts"],
+    "TasksResponseSchema": ["packages/shared/src/models/task.ts"],
+    "TasksResponse": ["packages/shared/src/models/task.ts"],
+    "TaskCreateModalProps": ["apps/web/src/components/TaskCreateModal.tsx"],
+    "TaskCreateModal": ["apps/web/src/components/TaskCreateModal.tsx"],
+    "OptionItem": ["apps/web/src/lib/options.ts"],
+    "getStatusOptions": ["apps/web/src/lib/options.ts"],
+    "getStatusColor": ["apps/web/src/lib/options.ts"],
+    "getPriorityOptions": ["apps/web/src/lib/options.ts"],
+    "getAssigneeOptions": ["apps/web/src/lib/options.ts"],
+    "getMembershipRoleOptions": ["apps/web/src/lib/options.ts"],
+    "Dashboard": ["apps/web/src/views/Dashboard.tsx"],
+    "LocusService": ["apps/mcp/src/services/locus.service.ts"],
+    "TasksService": ["apps/api/src/tasks/tasks.service.ts"],
+    "SprintsService": ["apps/api/src/sprints/sprints.service.ts"],
+    "BOARD_STATUSES": ["apps/web/src/components/board/constants.ts"],
+    "BadgeProps": ["apps/web/src/components/ui/Badge.tsx"],
+    "Badge": ["apps/web/src/components/ui/Badge.tsx"],
+    "PriorityBadgeProps": ["apps/web/src/components/ui/Badge.tsx"],
+    "PriorityBadge": ["apps/web/src/components/ui/Badge.tsx"],
+    "StatusBadgeProps": ["apps/web/src/components/ui/Badge.tsx"],
+    "StatusBadge": ["apps/web/src/components/ui/Badge.tsx"],
+    "SprintSectionProps": ["apps/web/src/components/backlog/SprintSection.tsx"],
+    "SprintSection": ["apps/web/src/components/backlog/SprintSection.tsx"],
+    "TaskHeaderProps": ["apps/web/src/components/task-panel/TaskHeader.tsx"],
+    "TaskHeader": ["apps/web/src/components/task-panel/TaskHeader.tsx"],
+    "ViewType": ["apps/web/src/components/board/BoardHeader.tsx"],
+    "BoardHeaderProps": ["apps/web/src/components/board/BoardHeader.tsx"],
+    "viewTypes": ["apps/web/src/components/board/BoardHeader.tsx"],
+    "BoardHeader": ["apps/web/src/components/board/BoardHeader.tsx"],
+    "BoardContentProps": ["apps/web/src/components/board/BoardContent.tsx"],
+    "BoardContent": ["apps/web/src/components/board/BoardContent.tsx"],
+    "BoardColumnProps": ["apps/web/src/components/board/BoardColumn.tsx"],
+    "BoardColumn": ["apps/web/src/components/board/BoardColumn.tsx"],
+    "BoardPageContent": ["apps/web/src/app/(dashboard)/board/page.tsx"],
+    "BoardPage": ["apps/web/src/app/(dashboard)/board/page.tsx"],
+    "WorktreeManager": ["packages/sdk/src/worktree/worktree-manager.ts"],
     "WorktreeManager.buildBranchName": [
       "packages/sdk/src/worktree/worktree-manager.ts"
     ],
-    "WorktreeManager.create": [
-      "packages/sdk/src/worktree/worktree-manager.ts"
-    ],
-    "WorktreeManager.list": [
-      "packages/sdk/src/worktree/worktree-manager.ts"
-    ],
+    "WorktreeManager.create": ["packages/sdk/src/worktree/worktree-manager.ts"],
+    "WorktreeManager.list": ["packages/sdk/src/worktree/worktree-manager.ts"],
     "WorktreeManager.listAgentWorktrees": [
       "packages/sdk/src/worktree/worktree-manager.ts"
     ],
-    "WorktreeManager.remove": [
-      "packages/sdk/src/worktree/worktree-manager.ts"
-    ],
-    "WorktreeManager.prune": [
-      "packages/sdk/src/worktree/worktree-manager.ts"
-    ],
+    "WorktreeManager.remove": ["packages/sdk/src/worktree/worktree-manager.ts"],
+    "WorktreeManager.prune": ["packages/sdk/src/worktree/worktree-manager.ts"],
     "WorktreeManager.removeAll": [
       "packages/sdk/src/worktree/worktree-manager.ts"
     ],
@@ -883,60 +377,26 @@
     "WorktreeManager.pushBranch": [
       "packages/sdk/src/worktree/worktree-manager.ts"
     ],
-    "driverConfig": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "dashboardTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "boardTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "chatTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "backlogTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "interviewTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "keyboardShortcutsTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "hasSeenTour": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "resetAllTours": [
-      "apps/web/src/lib/tour-steps.ts"
-    ],
-    "driverFadeIn": [
-      "apps/web/src/styles/driver-theme.css"
-    ],
-    "driverOverlayFadeIn": [
-      "apps/web/src/styles/driver-theme.css"
-    ],
-    "AgentConfig": [
-      "packages/sdk/src/orchestrator.ts"
-    ],
-    "TaskCardProps": [
-      "apps/web/src/components/TaskCard.tsx"
-    ],
-    "PRIORITY_COLORS": [
-      "apps/web/src/components/TaskCard.tsx"
-    ],
-    "TaskCard": [
-      "apps/web/src/components/TaskCard.tsx"
-    ],
-    "PromptBuilder.build": [
-      "packages/sdk/src/core/prompt-builder.ts"
-    ],
+    "driverConfig": ["apps/web/src/lib/tour-steps.ts"],
+    "dashboardTour": ["apps/web/src/lib/tour-steps.ts"],
+    "boardTour": ["apps/web/src/lib/tour-steps.ts"],
+    "chatTour": ["apps/web/src/lib/tour-steps.ts"],
+    "backlogTour": ["apps/web/src/lib/tour-steps.ts"],
+    "interviewTour": ["apps/web/src/lib/tour-steps.ts"],
+    "keyboardShortcutsTour": ["apps/web/src/lib/tour-steps.ts"],
+    "hasSeenTour": ["apps/web/src/lib/tour-steps.ts"],
+    "resetAllTours": ["apps/web/src/lib/tour-steps.ts"],
+    "driverFadeIn": ["apps/web/src/styles/driver-theme.css"],
+    "driverOverlayFadeIn": ["apps/web/src/styles/driver-theme.css"],
+    "AgentConfig": ["packages/sdk/src/orchestrator.ts"],
+    "TaskCardProps": ["apps/web/src/components/TaskCard.tsx"],
+    "PRIORITY_COLORS": ["apps/web/src/components/TaskCard.tsx"],
+    "TaskCard": ["apps/web/src/components/TaskCard.tsx"],
+    "PromptBuilder.build": ["packages/sdk/src/core/prompt-builder.ts"],
     "PromptBuilder.buildGenericPrompt": [
       "packages/sdk/src/core/prompt-builder.ts"
     ],
-    "PromptBuilder.roleToText": [
-      "packages/sdk/src/core/prompt-builder.ts"
-    ],
+    "PromptBuilder.roleToText": ["packages/sdk/src/core/prompt-builder.ts"],
     "resolveProvider": [
       "packages/sdk/src/agent/reviewer-worker.ts",
       "packages/sdk/src/agent/worker.ts"
@@ -944,57 +404,27 @@
     "ReviewerWorker.getNextReviewTask": [
       "packages/sdk/src/agent/reviewer-worker.ts"
     ],
-    "ReviewerWorker.reviewTask": [
-      "packages/sdk/src/agent/reviewer-worker.ts"
-    ],
-    "ReviewerWorker.run": [
-      "packages/sdk/src/agent/reviewer-worker.ts"
-    ],
-    "TaskExecutorDeps": [
-      "packages/sdk/src/agent/task-executor.ts"
-    ],
-    "TaskExecutor.execute": [
-      "packages/sdk/src/agent/task-executor.ts"
-    ],
+    "ReviewerWorker.reviewTask": ["packages/sdk/src/agent/reviewer-worker.ts"],
+    "ReviewerWorker.run": ["packages/sdk/src/agent/reviewer-worker.ts"],
+    "TaskExecutorDeps": ["packages/sdk/src/agent/task-executor.ts"],
+    "TaskExecutor.execute": ["packages/sdk/src/agent/task-executor.ts"],
     "ReviewService.reviewStagedChanges": [
       "packages/sdk/src/agent/review-service.ts"
     ],
-    "CommitPushResult": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.getActiveSprint": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.getNextTask": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.createTaskWorktree": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.commitAndPushWorktree": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.createPullRequest": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.cleanupTaskWorktree": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.executeTask": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.updateProgress": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
-    "AgentWorker.run": [
-      "packages/sdk/src/agent/worker.ts"
-    ],
+    "CommitPushResult": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.getActiveSprint": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.getNextTask": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.createTaskWorktree": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.commitAndPushWorktree": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.createPullRequest": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.cleanupTaskWorktree": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.executeTask": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.updateProgress": ["packages/sdk/src/agent/worker.ts"],
+    "AgentWorker.run": ["packages/sdk/src/agent/worker.ts"],
     "InteractiveSessionOptions": [
       "packages/cli/src/repl/interactive-session.ts"
     ],
-    "InteractiveSession": [
-      "packages/cli/src/repl/interactive-session.ts"
-    ],
+    "InteractiveSession": ["packages/cli/src/repl/interactive-session.ts"],
     "InteractiveSession.start": [
       "packages/cli/src/repl/interactive-session.ts"
     ],
@@ -1010,21 +440,15 @@
     "InteractiveSession.shutdown": [
       "packages/cli/src/repl/interactive-session.ts"
     ],
-    "StreamRenderer": [
-      "packages/cli/src/display/stream-renderer.ts"
-    ],
+    "StreamRenderer": ["packages/cli/src/display/stream-renderer.ts"],
     "StreamRenderer.renderChunk": [
       "packages/cli/src/display/stream-renderer.ts"
     ],
-    "StreamRenderer.finalize": [
-      "packages/cli/src/display/stream-renderer.ts"
-    ],
+    "StreamRenderer.finalize": ["packages/cli/src/display/stream-renderer.ts"],
     "ProgressRendererOptions": [
       "packages/cli/src/display/progress-renderer.ts"
     ],
-    "ProgressRenderer": [
-      "packages/cli/src/display/progress-renderer.ts"
-    ],
+    "ProgressRenderer": ["packages/cli/src/display/progress-renderer.ts"],
     "ProgressRenderer.showThinkingStarted": [
       "packages/cli/src/display/progress-renderer.ts"
     ],

@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import { c, DocumentFetcher, LocusClient } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
+import { SettingsManager } from "../settings-manager";
 import { requireInitialization, VERSION } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
 
@@ -42,14 +43,24 @@ async function docsSyncCommand(args: string[]): Promise<void> {
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const apiKey = values["api-key"] as string;
+  const settingsManager = new SettingsManager(projectPath);
+  const settings = settingsManager.load();
+
+  const apiKey = (values["api-key"] as string) || settings.apiKey;
   if (!apiKey) {
-    console.error(`\n  ${c.error("✖")} ${c.red("--api-key is required")}\n`);
+    console.error(
+      `\n  ${c.error("✖")} ${c.red("API key is required")}\n` +
+        `  ${c.dim(
+          "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
+        )}\n`
+    );
     process.exit(1);
   }
 
   const apiBase =
-    (values["api-url"] as string) || "https://api.locusai.dev/api";
+    (values["api-url"] as string) ||
+    settings.apiUrl ||
+    "https://api.locusai.dev/api";
 
   const resolver = new WorkspaceResolver(configManager, {
     apiKey,
@@ -121,8 +132,8 @@ function showDocsHelp(): void {
     ${c.success("sync")}      Sync workspace docs from API to .locus/documents
 
   ${c.header(" EXAMPLES ")}
-    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY")}
-    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY --workspace ws_123")}
+    ${c.dim("$")} ${c.primary("locus docs sync")}
+    ${c.dim("$")} ${c.primary("locus docs sync --workspace ws_123")}
 `);
 }
 
@@ -132,14 +143,14 @@ function showDocsSyncHelp(): void {
     ${c.primary("locus docs sync")} ${c.dim("[options]")}
 
   ${c.header(" OPTIONS ")}
-    ${c.secondary("--api-key")} <key>     API key for Locus (required)
+    ${c.secondary("--api-key")} <key>     API key override (reads from settings.json)
     ${c.secondary("--api-url")} <url>     API base URL (default: https://api.locusai.dev/api)
     ${c.secondary("--workspace")} <id>    Workspace ID (optional if persisted or resolvable)
     ${c.secondary("--dir")} <path>        Project directory (default: current)
     ${c.secondary("--help")}              Show docs sync help
 
   ${c.header(" EXAMPLES ")}
-    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY")}
-    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY --workspace ws_123")}
+    ${c.dim("$")} ${c.primary("locus docs sync")}
+    ${c.dim("$")} ${c.primary("locus docs sync --workspace ws_123")}
 `);
 }

@@ -182,4 +182,3 @@ export function parseSprintPlanFromAI(
     updatedAt: now,
   };
 }
-

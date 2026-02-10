@@ -78,15 +78,22 @@ export function SprintSection({
 
   const getSprintProgress = (sprintTasks: Task[]) => {
     const total = sprintTasks.length;
+    const backlog = sprintTasks.filter(
+      (t) => t.status === TaskStatus.BACKLOG
+    ).length;
+    const inProgress = sprintTasks.filter(
+      (t) => t.status === TaskStatus.IN_PROGRESS
+    ).length;
+    const inReview = sprintTasks.filter(
+      (t) => t.status === TaskStatus.IN_REVIEW
+    ).length;
+    const done = sprintTasks.filter((t) => t.status === TaskStatus.DONE).length;
+
     const byStatus = {
-      backlog: sprintTasks.filter((t) => t.status === TaskStatus.BACKLOG)
-        .length,
-      inProgress: sprintTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS)
-        .length,
-      inReview: sprintTasks.filter(
-        (t) => t.status === TaskStatus.IN_REVIEW
-      ).length,
-      done: sprintTasks.filter((t) => t.status === TaskStatus.DONE).length,
+      backlog,
+      inProgress,
+      inReview,
+      done,
     };
     const completionPercentage = total > 0 ? (byStatus.done / total) * 100 : 0;
 

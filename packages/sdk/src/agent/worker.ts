@@ -660,7 +660,9 @@ export class AgentWorker {
         } else {
           this.log(`Completed: ${task.title}`, "success");
 
-          const updatePayload: Record<string, unknown> = { status: TaskStatus.IN_REVIEW };
+          const updatePayload: Record<string, unknown> = {
+            status: TaskStatus.IN_REVIEW,
+          };
           if (result.prUrl) {
             updatePayload.prUrl = result.prUrl;
           }

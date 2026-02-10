@@ -82,7 +82,7 @@ function updateGitignore(projectPath: string): void {
       for (let i = startIdx; i < lines.length; i++) {
         if (
           lines[i].startsWith(LOCUS_GITIGNORE_MARKER) ||
-          lines[i].startsWith(".locus/") ||
+          lines[i].startsWith(".locus") ||
           lines[i].trim() === ""
         ) {
           endIdx = i;

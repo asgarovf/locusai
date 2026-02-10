@@ -8,6 +8,7 @@ import {
   PlanningMeeting,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
+import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider, VERSION } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
 
@@ -92,8 +93,15 @@ export async function planCommand(args: string[]): Promise<void> {
     return;
   }
 
-  const provider = resolveProvider(values.provider as string);
-  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const planSettings = new SettingsManager(projectPath).load();
+
+  const provider = resolveProvider(
+    (values.provider as string) || planSettings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    planSettings.model ||
+    DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {
     projectPath,
@@ -168,7 +176,7 @@ export async function planCommand(args: string[]): Promise<void> {
     );
     console.log(
       `  ${c.dim("To approve:")} ${c.cyan(
-        `locus plan --approve ${result.plan.id} --api-key <key>`
+        `locus plan --approve ${result.plan.id}`
       )}`
     );
     console.log(
@@ -317,11 +325,7 @@ async function approvePlan(
       );
     }
 
-    console.log(
-      `\n  ${c.dim("Start agents with:")} ${c.cyan(
-        `locus run --api-key <key>`
-      )}\n`
-    );
+    console.log(`\n  ${c.dim("Start agents with:")} ${c.cyan("locus run")}\n`);
   } catch (error) {
     console.error(
       `\n  ${c.error("✖")} ${c.red(
@@ -341,18 +345,26 @@ async function resolveApiContext(
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const apiKey = values["api-key"] as string;
+  const settingsManager = new SettingsManager(projectPath);
+  const settings = settingsManager.load();
+
+  const apiKey = (values["api-key"] as string) || settings.apiKey;
   if (!apiKey) {
     console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        "--api-key is required for this operation"
+      `\n  ${c.error("✖")} ${c.red("API key is required for this operation")}\n`
+    );
+    console.error(
+      `  ${c.dim(
+        "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
       )}\n`
     );
     process.exit(1);
   }
 
   const apiBase =
-    (values["api-url"] as string) || "https://api.locusai.dev/api";
+    (values["api-url"] as string) ||
+    settings.apiUrl ||
+    "https://api.locusai.dev/api";
 
   const resolver = new WorkspaceResolver(configManager, {
     apiKey,
@@ -422,7 +434,7 @@ function showPlanHelp(): void {
     ${c.cyan("locus plan --cancel <id>")}         Cancel a plan
 
   ${c.bold("Options:")}
-    ${c.dim("--api-key <key>")}    API key for Locus (required for --approve)
+    ${c.dim("--api-key <key>")}    API key override (reads from settings.json)
     ${c.dim(
       "--api-url <url>"
     )}    API base URL (default: https://api.locusai.dev/api)
@@ -437,7 +449,7 @@ function showPlanHelp(): void {
     ${c.cyan('locus plan "build user authentication with OAuth and email"')}
 
     ${c.dim("# Approve the resulting plan")}
-    ${c.cyan("locus plan --approve plan-1234567890 --api-key sk-xxx")}
+    ${c.cyan("locus plan --approve plan-1234567890")}
 
     ${c.dim("# Reject and re-plan")}
     ${c.cyan(

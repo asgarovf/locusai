@@ -16,7 +16,8 @@
       "!**/packages/cli/public",
       "!**/coverage",
       "!**/*.min.js",
-      "!**/*.min.css"
+      "!**/*.min.css",
+      "!**/packages/telegram/bin"
     ]
   },
   "formatter": {

@@ -1,0 +1,16 @@
+/**
+ * Centralized timeout configuration for all Telegram bot commands and processes.
+ * All values are in milliseconds.
+ */
+
+/** Telegraf handler timeout — must exceed the longest command timeout. */
+export const HANDLER_TIMEOUT = 600_000; // 10 minutes
+
+/** Default timeout for `execute()` — used by most commands (plans, exec, status, etc.). */
+export const EXECUTE_DEFAULT_TIMEOUT = 600_000; // 10 minutes
+
+/** Timeout for the /plan command. */
+export const PLAN_TIMEOUT = 300_000; // 5 minutes
+
+/** Default timeout for `executeStreaming()` — used by long-running commands like /run. */
+export const STREAMING_DEFAULT_TIMEOUT = 3_600_000; // 1 hour

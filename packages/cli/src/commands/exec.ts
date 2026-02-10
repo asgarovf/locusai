@@ -7,6 +7,7 @@ import {
 } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "../display/execution-stats";
 import { ProgressRenderer } from "../display/progress-renderer";
+import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider } from "../utils";
 import { SessionCommands, showSessionsHelp } from "./exec-sessions";
 
@@ -53,8 +54,15 @@ export async function execCommand(args: string[]): Promise<void> {
     }
   }
 
-  const provider = resolveProvider(values.provider as string);
-  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const execSettings = new SettingsManager(projectPath).load();
+
+  const provider = resolveProvider(
+    (values.provider as string) || execSettings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    execSettings.model ||
+    DEFAULT_MODEL[provider];
   const isInteractive = values.interactive as boolean;
   const sessionId = values.session as string | undefined;
 

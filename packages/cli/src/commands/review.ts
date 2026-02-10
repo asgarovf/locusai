@@ -11,6 +11,7 @@ import {
   ReviewService,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
+import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider, VERSION } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
 
@@ -51,12 +52,17 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const apiKey = values["api-key"] as string;
+  const settingsManager = new SettingsManager(projectPath);
+  const settings = settingsManager.load();
+
+  const apiKey = (values["api-key"] as string) || settings.apiKey;
 
   if (!apiKey) {
-    console.error(c.error("Error: --api-key is required for PR review"));
+    console.error(c.error("Error: API key is required for PR review"));
     console.error(
-      c.dim("You can create an API key in Workspace Settings > API Keys")
+      c.dim(
+        "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
+      )
     );
     console.error(
       c.dim("For local staged-changes review, use: locus review local")
@@ -64,10 +70,17 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const provider = resolveProvider(values.provider as string);
-  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const provider = resolveProvider(
+    (values.provider as string) || settings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    settings.model ||
+    DEFAULT_MODEL[provider];
   const apiBase =
-    (values["api-url"] as string) || "https://api.locusai.dev/api";
+    (values["api-url"] as string) ||
+    settings.apiUrl ||
+    "https://api.locusai.dev/api";
 
   // Resolve workspace ID
   let workspaceId: string;
@@ -86,8 +99,16 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
   }
 
   // Check for unreviewed PRs first
-  const log = (msg: string, level: "info" | "success" | "warn" | "error" = "info") => {
-    const colorFn = { info: c.cyan, success: c.green, warn: c.yellow, error: c.red }[level];
+  const log = (
+    msg: string,
+    level: "info" | "success" | "warn" | "error" = "info"
+  ) => {
+    const colorFn = {
+      info: c.cyan,
+      success: c.green,
+      warn: c.yellow,
+      error: c.red,
+    }[level];
     const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
     console.log(`  ${colorFn(`${prefix} ${msg}`)}`);
   };
@@ -121,7 +142,9 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
   const handleSignal = () => {
     if (isShuttingDown) return;
     isShuttingDown = true;
-    console.log(`\n${c.info("Received shutdown signal. Stopping reviewer...")}`);
+    console.log(
+      `\n${c.info("Received shutdown signal. Stopping reviewer...")}`
+    );
     process.exit(0);
   };
 
@@ -148,8 +171,15 @@ async function reviewLocalCommand(args: string[]): Promise<void> {
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "review local");
 
-  const provider = resolveProvider(values.provider as string);
-  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const localSettings = new SettingsManager(projectPath).load();
+
+  const provider = resolveProvider(
+    (values.provider as string) || localSettings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    localSettings.model ||
+    DEFAULT_MODEL[provider];
 
   const aiRunner = createAiRunner(provider, {
     projectPath,

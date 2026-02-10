@@ -7,6 +7,11 @@ export function showHelp(): void {
 
   ${c.header(" COMMANDS ")}
     ${c.success("init")}      Initialize Locus in the current directory
+    ${c.success("config")}    Manage settings (API key, provider, model)
+              ${c.dim("setup         Interactive one-time setup")}
+              ${c.dim("show          Show current settings")}
+              ${c.dim("set <k> <v>   Update a setting")}
+              ${c.dim("remove        Remove all settings")}
     ${c.success("index")}     Index the codebase for AI context
     ${c.success("run")}       Start agents to work on tasks
               ${c.dim("--agents <N>  Number of parallel agents (1-5, default: 1)")}
@@ -19,6 +24,11 @@ export function showHelp(): void {
               ${c.dim("sync          Sync docs from API to .locus/documents")}
     ${c.success("review")}    Review open Locus PRs on GitHub with AI
               ${c.dim("local         Review staged changes locally (no GitHub)")}
+    ${c.success("telegram")}  Configure the Telegram bot
+              ${c.dim("setup         Interactive bot token and chat ID setup")}
+              ${c.dim("config        Show current configuration")}
+              ${c.dim("set <k> <v>   Update a config value")}
+              ${c.dim("remove        Remove Telegram configuration")}
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
               ${c.dim("--session, -s <id> Resume a previous session")}
@@ -33,15 +43,19 @@ export function showHelp(): void {
       "claude"
     )} or ${c.dim("codex")} (default: ${c.dim("claude")})
 
-  ${c.header(" EXAMPLES ")}
+  ${c.header(" GETTING STARTED ")}
     ${c.dim("$")} ${c.primary("locus init")}
-    ${c.dim("$")} ${c.primary("locus index")}
-    ${c.dim("$")} ${c.primary("locus run --api-key YOUR_KEY")}
-    ${c.dim("$")} ${c.primary("locus run --agents 3 --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus config setup")}
+    ${c.dim("$")} ${c.primary("locus run")}
+
+  ${c.header(" EXAMPLES ")}
+    ${c.dim("$")} ${c.primary("locus config show")}
+    ${c.dim("$")} ${c.primary("locus run --agents 3")}
     ${c.dim("$")} ${c.primary("locus agents list")}
-    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY")}
-    ${c.dim("$")} ${c.primary("locus review --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus docs sync")}
+    ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus review local")}
+    ${c.dim("$")} ${c.primary("locus telegram setup")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 
   For more information, visit: ${c.underline("https://locusai.dev/docs")}

@@ -244,14 +244,7 @@ export class PrService {
       if (event === "REQUEST_CHANGES" && msg.includes("own pull request")) {
         execFileSync(
           "gh",
-          [
-            "pr",
-            "review",
-            prIdentifier,
-            "--body",
-            body,
-            "--comment",
-          ],
+          ["pr", "review", prIdentifier, "--body", body, "--comment"],
           {
             cwd: this.projectPath,
             encoding: "utf-8",

@@ -50,8 +50,9 @@ export async function initCommand(): Promise<void> {
     }
 
     console.log(`  ${c.bold("Next steps:")}
-    1. Run '${c.primary("locus index")}' to index your codebase
-    2. Run '${c.primary("locus run")}' to start an agent (requires --api-key)
+    1. Run '${c.primary("locus config setup")}' to configure your API key
+    2. Run '${c.primary("locus index")}' to index your codebase
+    3. Run '${c.primary("locus run")}' to start an agent
 
   For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);
@@ -71,8 +72,9 @@ export async function initCommand(): Promise<void> {
     ${c.primary("📁")} ${c.bold(".agent/skills/")}              ${c.dim("Domain-specific agent skills")}
 
   ${c.bold("Next steps:")}
-    1. Run '${c.primary("locus index")}' to index your codebase
-    2. Run '${c.primary("locus run")}' to start an agent (requires --api-key)
+    1. Run '${c.primary("locus config setup")}' to configure your API key
+    2. Run '${c.primary("locus index")}' to index your codebase
+    3. Run '${c.primary("locus run")}' to start an agent
 
   For more information, visit: ${c.underline("https://locusai.dev/docs")}
 `);

@@ -1,0 +1,41 @@
+{
+  "name": "@locusai/telegram",
+  "version": "0.8.1",
+  "description": "Telegram bot for Locus - remote control your AI agents from Telegram",
+  "type": "module",
+  "main": "./src/index.ts",
+  "bin": {
+    "locus-telegram": "./bin/telegram.js"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "build": "bun build ./src/index.ts --target=node --outfile=./bin/telegram.js",
+    "dev": "bun run --watch src/index.ts",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules"
+  },
+  "files": [
+    "bin",
+    "package.json",
+    "README.md"
+  ],
+  "keywords": [
+    "locus",
+    "telegram",
+    "bot",
+    "ai-agents",
+    "remote-control"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@locusai/sdk": "^0.8.1",
+    "dotenv": "^16.4.7",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.10.7"
+  }
+}

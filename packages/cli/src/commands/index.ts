@@ -1,4 +1,5 @@
 export { agentsCommand } from "./agents";
+export { configCommand } from "./config";
 export { docsCommand } from "./docs";
 export { execCommand } from "./exec";
 export { SessionCommands, showSessionsHelp } from "./exec-sessions";
@@ -8,3 +9,4 @@ export { initCommand } from "./init";
 export { planCommand } from "./plan";
 export { reviewCommand } from "./review";
 export { runCommand } from "./run";
+export { telegramCommand } from "./telegram";

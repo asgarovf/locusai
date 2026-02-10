@@ -15,6 +15,7 @@ export const DEFAULT_MODEL: Record<Provider, string> = {
 export const LOCUS_CONFIG = {
   dir: ".locus",
   configFile: "config.json",
+  settingsFile: "settings.json",
   indexFile: "codebase-index.json",
   contextFile: "CLAUDE.md",
   artifactsDir: "artifacts",
@@ -45,6 +46,9 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "",
   "# Locus AI - Agent worktrees (parallel execution)",
   ".locus-worktrees/",
+  "",
+  "# Locus AI - Settings (contains API key, telegram config, etc.)",
+  ".locus/settings.json",
 ] as const;
 
 export function getLocusPath(

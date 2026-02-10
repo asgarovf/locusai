@@ -82,6 +82,7 @@ pids
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
 packages/cli/bin/agent/
+packages/telegram/bin/
 
 # Locus AI - Session data (user-specific, can grow large)
 .locus/sessions/
@@ -97,3 +98,6 @@ packages/cli/bin/agent/
 
 # Locus AI - Agent worktrees (parallel execution)
 .locus-worktrees/
+
+# Locus AI - Settings (contains API key, telegram config, etc.)
+.locus/settings.json

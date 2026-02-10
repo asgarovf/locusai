@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import { AgentOrchestrator, c, DEFAULT_MODEL } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
+import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider, VERSION } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
 
@@ -28,22 +29,34 @@ export async function runCommand(args: string[]): Promise<void> {
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const apiKey = values["api-key"] as string;
+  const settingsManager = new SettingsManager(projectPath);
+  const settings = settingsManager.load();
+
+  const apiKey = (values["api-key"] as string) || settings.apiKey;
 
   if (!apiKey) {
-    console.error(c.error("Error: --api-key is required"));
+    console.error(c.error("Error: API key is required"));
     console.error(
-      c.dim("You can create an API key in Workspace Settings > API Keys")
+      c.dim(
+        "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
+      )
     );
     process.exit(1);
   }
 
   let workspaceId = values.workspace as string | undefined;
 
-  const provider = resolveProvider(values.provider as string);
-  const model = (values.model as string | undefined) || DEFAULT_MODEL[provider];
+  const provider = resolveProvider(
+    (values.provider as string) || settings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    settings.model ||
+    DEFAULT_MODEL[provider];
   const apiBase =
-    (values["api-url"] as string) || "https://api.locusai.dev/api";
+    (values["api-url"] as string) ||
+    settings.apiUrl ||
+    "https://api.locusai.dev/api";
 
   // Parse agent count
   const agentCount = Math.min(

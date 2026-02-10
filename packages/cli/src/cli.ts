@@ -3,6 +3,7 @@
 import { c } from "@locusai/sdk/node";
 import {
   agentsCommand,
+  configCommand,
   docsCommand,
   execCommand,
   indexCommand,
@@ -11,6 +12,7 @@ import {
   reviewCommand,
   runCommand,
   showHelp,
+  telegramCommand,
 } from "./commands";
 import { printBanner } from "./utils";
 
@@ -45,8 +47,14 @@ async function main() {
     case "agents":
       await agentsCommand(args);
       break;
+    case "config":
+      await configCommand(args);
+      break;
     case "docs":
       await docsCommand(args);
+      break;
+    case "telegram":
+      await telegramCommand(args);
       break;
     default:
       showHelp();
