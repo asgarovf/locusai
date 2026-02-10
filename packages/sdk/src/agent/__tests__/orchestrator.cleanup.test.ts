@@ -87,10 +87,9 @@ describe("AgentOrchestrator worktree cleanup policy", () => {
     expect(prune).toHaveBeenCalledTimes(0);
   });
 
-  it("starts reviewer-only mode when backlog is empty but unreviewed PRs exist", async () => {
+  it("exits early when no tasks are available in the backlog", async () => {
     console.log = mock(() => undefined) as typeof console.log;
 
-    const spawnReviewer = mock(async () => undefined);
     const spawnAgent = mock(async (_index: number) => undefined);
     const orchestrator = new AgentOrchestrator(baseConfig);
 
@@ -99,10 +98,7 @@ describe("AgentOrchestrator worktree cleanup policy", () => {
         isRunning: boolean;
         resolveSprintId: () => Promise<string>;
         getAvailableTasks: () => Promise<Array<{ id: string }>>;
-        getUnreviewedPrs: () => Array<{ number: number; title: string; url: string; branch: string }>;
-        startHeartbeatMonitor: () => void;
         spawnAgent: (index: number) => Promise<void>;
-        spawnReviewer: () => Promise<void>;
       }
     ).isRunning = true;
 
@@ -120,81 +116,14 @@ describe("AgentOrchestrator worktree cleanup policy", () => {
 
     (
       orchestrator as unknown as {
-        getUnreviewedPrs: () => Array<{ number: number; title: string; url: string; branch: string }>;
-      }
-    ).getUnreviewedPrs = () => [{ number: 1, title: "[Locus] Task 1", url: "https://github.com/test/repo/pull/1", branch: "agent/task-1" }];
-
-    (
-      orchestrator as unknown as { startHeartbeatMonitor: () => void }
-    ).startHeartbeatMonitor = () => undefined;
-
-    (
-      orchestrator as unknown as {
         spawnAgent: (index: number) => Promise<void>;
       }
     ).spawnAgent = spawnAgent;
-    (
-      orchestrator as unknown as { spawnReviewer: () => Promise<void> }
-    ).spawnReviewer = spawnReviewer;
 
     await (
       orchestrator as unknown as { orchestrationLoop: () => Promise<void> }
     ).orchestrationLoop();
 
     expect(spawnAgent).toHaveBeenCalledTimes(0);
-    expect(spawnReviewer).toHaveBeenCalledTimes(1);
-  });
-
-  it("exits early when neither backlog nor review tasks are available", async () => {
-    console.log = mock(() => undefined) as typeof console.log;
-
-    const spawnReviewer = mock(async () => undefined);
-    const spawnAgent = mock(async (_index: number) => undefined);
-    const orchestrator = new AgentOrchestrator(baseConfig);
-
-    (
-      orchestrator as unknown as {
-        isRunning: boolean;
-        resolveSprintId: () => Promise<string>;
-        getAvailableTasks: () => Promise<Array<{ id: string }>>;
-        getUnreviewedPrs: () => Array<{ number: number; title: string; url: string; branch: string }>;
-        spawnAgent: (index: number) => Promise<void>;
-        spawnReviewer: () => Promise<void>;
-      }
-    ).isRunning = true;
-
-    (
-      orchestrator as unknown as {
-        resolveSprintId: () => Promise<string>;
-      }
-    ).resolveSprintId = async () => "";
-
-    (
-      orchestrator as unknown as {
-        getAvailableTasks: () => Promise<Array<{ id: string }>>;
-      }
-    ).getAvailableTasks = async () => [];
-
-    (
-      orchestrator as unknown as {
-        getUnreviewedPrs: () => Array<{ number: number; title: string; url: string; branch: string }>;
-      }
-    ).getUnreviewedPrs = () => [];
-
-    (
-      orchestrator as unknown as {
-        spawnAgent: (index: number) => Promise<void>;
-      }
-    ).spawnAgent = spawnAgent;
-    (
-      orchestrator as unknown as { spawnReviewer: () => Promise<void> }
-    ).spawnReviewer = spawnReviewer;
-
-    await (
-      orchestrator as unknown as { orchestrationLoop: () => Promise<void> }
-    ).orchestrationLoop();
-
-    expect(spawnAgent).toHaveBeenCalledTimes(0);
-    expect(spawnReviewer).toHaveBeenCalledTimes(0);
   });
 });

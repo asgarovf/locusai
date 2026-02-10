@@ -518,10 +518,12 @@ export class AgentWorker {
         noChanges: noChanges || undefined,
       };
     } finally {
-      if (preserveWorktree) {
+      if (preserveWorktree || keepBranch) {
+        // Preserve worktree when there are commits to keep —
+        // orchestrator-level cleanup will handle removal later.
         this.currentWorktreePath = null;
       } else {
-        // Clean up the task worktree after execution
+        // Clean up the task worktree after execution (no commits to preserve)
         this.cleanupTaskWorktree(worktreePath, keepBranch);
       }
     }

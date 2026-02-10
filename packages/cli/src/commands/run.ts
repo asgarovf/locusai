@@ -14,7 +14,6 @@ export async function runCommand(args: string[]): Promise<void> {
       model: { type: "string" },
       provider: { type: "string" },
       agents: { type: "string" },
-      reviewer: { type: "boolean" },
       worktree: { type: "boolean" },
       "auto-push": { type: "boolean" },
       "skip-planning": { type: "boolean" },
@@ -51,8 +50,6 @@ export async function runCommand(args: string[]): Promise<void> {
     Math.max(Number.parseInt(values.agents as string, 10) || 1, 1),
     5
   );
-  // Enable reviewer agent (boolean flag)
-  const enableReviewer = (values.reviewer as boolean | undefined) ?? true;
   // Worktrees are always enabled by default for per-task isolation
   const useWorktrees = (values.worktree as boolean | undefined) ?? true;
   const autoPush = (values["auto-push"] as boolean | undefined) ?? true;
@@ -82,7 +79,6 @@ export async function runCommand(args: string[]): Promise<void> {
     projectPath,
     apiKey: apiKey as string,
     agentCount,
-    enableReviewer,
     useWorktrees,
     autoPush,
   });
@@ -126,9 +122,8 @@ export async function runCommand(args: string[]): Promise<void> {
   process.on("SIGTERM", () => handleSignal("SIGTERM"));
 
   const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
-  const reviewerLabel = enableReviewer ? " + 1 reviewer" : "";
   console.log(
-    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel}${reviewerLabel} in`)} ${c.primary(projectPath)}...`
+    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel} in`)} ${c.primary(projectPath)}...`
   );
   if (useWorktrees) {
     console.log(`  ${c.dim("Each task will run in an isolated worktree")}`);
