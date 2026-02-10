@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
 import type { ExecEventEmitter } from "../exec/event-emitter.js";
@@ -42,6 +42,7 @@ export class ClaudeRunner implements AiRunner {
   private eventEmitter?: ExecEventEmitter;
   private currentToolName?: string;
   private activeTools: Map<number, ActiveToolExecution> = new Map();
+  private activeProcess: ChildProcess | null = null;
 
   constructor(
     projectPath: string,
@@ -56,6 +57,16 @@ export class ClaudeRunner implements AiRunner {
    */
   setEventEmitter(emitter: ExecEventEmitter): void {
     this.eventEmitter = emitter;
+  }
+
+  /**
+   * Abort the currently running Claude CLI process, if any.
+   */
+  abort(): void {
+    if (this.activeProcess && !this.activeProcess.killed) {
+      this.activeProcess.kill("SIGTERM");
+      this.activeProcess = null;
+    }
   }
 
   async run(prompt: string): Promise<string> {
@@ -115,6 +126,8 @@ export class ClaudeRunner implements AiRunner {
       stdio: ["pipe", "pipe", "pipe"],
       env,
     });
+
+    this.activeProcess = claude;
 
     let buffer = "";
     let stderrBuffer = "";
@@ -195,6 +208,8 @@ export class ClaudeRunner implements AiRunner {
     });
 
     claude.on("close", (code) => {
+      this.activeProcess = null;
+
       if (stderrBuffer && !this.shouldSuppressLine(stderrBuffer)) {
         process.stderr.write(`${stderrBuffer}\n`);
       }
@@ -404,6 +419,8 @@ export class ClaudeRunner implements AiRunner {
         env,
       });
 
+      this.activeProcess = claude;
+
       let finalResult = "";
       let errorOutput = "";
       let buffer = "";
@@ -444,6 +461,8 @@ export class ClaudeRunner implements AiRunner {
       });
 
       claude.on("close", (code) => {
+        this.activeProcess = null;
+
         if (stderrBuffer && !this.shouldSuppressLine(stderrBuffer)) {
           process.stderr.write(`${stderrBuffer}\n`);
         }

@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
+import { join, resolve, sep } from "node:path";
 
 import type { LogFn } from "../ai/factory.js";
 
@@ -63,9 +63,7 @@ export class WorktreeManager {
     const worktreePath = join(this.rootPath, worktreeDir);
 
     // Ensure root directory exists
-    if (!existsSync(this.rootPath)) {
-      mkdirSync(this.rootPath, { recursive: true });
-    }
+    this.ensureDirectory(this.rootPath, "Worktree root");
 
     // Determine base branch
     const baseBranch =
@@ -76,11 +74,66 @@ export class WorktreeManager {
       "info"
     );
 
+    // Clean up stale worktree directory if it exists
+    if (existsSync(worktreePath)) {
+      this.log(`Removing stale worktree directory: ${worktreePath}`, "warn");
+      try {
+        this.git(`worktree remove "${worktreePath}" --force`, this.projectPath);
+      } catch {
+        rmSync(worktreePath, { recursive: true, force: true });
+        this.git("worktree prune", this.projectPath);
+      }
+    }
+
+    // Delete existing branch if it already exists (from a previous run)
+    if (this.branchExists(branch)) {
+      this.log(`Deleting existing branch: ${branch}`, "warn");
+      const branchWorktrees = this.list().filter((wt) => wt.branch === branch);
+      for (const wt of branchWorktrees) {
+        const worktreePath = resolve(wt.path);
+        if (wt.isMain || !this.isManagedWorktreePath(worktreePath)) {
+          throw new Error(
+            `Branch "${branch}" is checked out at "${worktreePath}". Remove or detach that worktree before retrying.`
+          );
+        }
+        this.log(
+          `Removing existing worktree for branch: ${branch} (${worktreePath})`,
+          "warn"
+        );
+        this.remove(worktreePath, false);
+      }
+      try {
+        this.git(`branch -D "${branch}"`, this.projectPath);
+      } catch {
+        // Branch may be checked out in another worktree; prune first and retry
+        this.git("worktree prune", this.projectPath);
+        this.git(`branch -D "${branch}"`, this.projectPath);
+      }
+    }
+
+    const addWorktree = () =>
+      this.git(
+        `worktree add "${worktreePath}" -b "${branch}" "${baseBranch}"`,
+        this.projectPath
+      );
+
     // Create the worktree with a new branch
-    this.git(
-      `worktree add "${worktreePath}" -b "${branch}" "${baseBranch}"`,
-      this.projectPath
-    );
+    try {
+      addWorktree();
+    } catch (error) {
+      if (!this.isMissingDirectoryError(error)) {
+        throw error;
+      }
+
+      this.log(
+        `Worktree creation failed due to missing directories. Retrying after cleanup: ${worktreePath}`,
+        "warn"
+      );
+
+      this.cleanupFailedWorktree(worktreePath, branch);
+      this.ensureDirectory(this.rootPath, "Worktree root");
+      addWorktree();
+    }
 
     this.log(`Worktree created at ${worktreePath}`, "success");
 
@@ -247,10 +300,79 @@ export class WorktreeManager {
   }
 
   /**
+   * Check if a branch exists locally.
+   */
+  private branchExists(branchName: string): boolean {
+    try {
+      this.git(
+        `rev-parse --verify "refs/heads/${branchName}"`,
+        this.projectPath
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Get the current branch of the main repository.
    */
   private getCurrentBranch(): string {
     return this.git("rev-parse --abbrev-ref HEAD", this.projectPath).trim();
+  }
+
+  /**
+   * Check if a worktree path is managed by Locus.
+   */
+  private isManagedWorktreePath(worktreePath: string): boolean {
+    const rootPath = resolve(this.rootPath);
+    const candidate = resolve(worktreePath);
+    const rootWithSep = rootPath.endsWith(sep) ? rootPath : `${rootPath}${sep}`;
+    return candidate.startsWith(rootWithSep);
+  }
+
+  private ensureDirectory(dirPath: string, label: string): void {
+    if (existsSync(dirPath)) {
+      if (!statSync(dirPath).isDirectory()) {
+        throw new Error(`${label} exists but is not a directory: ${dirPath}`);
+      }
+      return;
+    }
+    mkdirSync(dirPath, { recursive: true });
+  }
+
+  private isMissingDirectoryError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes("cannot create directory") ||
+      message.includes("No such file or directory")
+    );
+  }
+
+  private cleanupFailedWorktree(worktreePath: string, branch: string): void {
+    try {
+      this.git(`worktree remove "${worktreePath}" --force`, this.projectPath);
+    } catch {
+      // Ignore cleanup errors and try manual removal below.
+    }
+
+    if (existsSync(worktreePath)) {
+      rmSync(worktreePath, { recursive: true, force: true });
+    }
+
+    try {
+      this.git("worktree prune", this.projectPath);
+    } catch {
+      // Ignore prune errors during retry cleanup.
+    }
+
+    if (this.branchExists(branch)) {
+      try {
+        this.git(`branch -D "${branch}"`, this.projectPath);
+      } catch {
+        // Branch may be checked out elsewhere; ignore and let retry handle.
+      }
+    }
   }
 
   /**

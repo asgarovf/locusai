@@ -1,4 +1,3 @@
-import { PromptBuilder } from "@locusai/sdk/node";
 import { logger } from "../lib/logger.js";
 import {
   AGENT_INSTRUCTIONS,
@@ -9,11 +8,9 @@ import { LocusService } from "../services/locus.service.js";
 
 export class SessionWorkflow {
   private locusService: LocusService;
-  private promptBuilder: PromptBuilder;
 
-  constructor(config: ClientConfig, projectPath: string = process.cwd()) {
+  constructor(config: ClientConfig) {
     this.locusService = new LocusService(config);
-    this.promptBuilder = new PromptBuilder(projectPath);
   }
 
   async start(): Promise<SessionContext> {
@@ -41,17 +38,7 @@ export class SessionWorkflow {
     logger.info("SessionWorkflow", "Dispatching task...");
     const task = await this.locusService.dispatchTask(sprint?.id);
 
-    let instructions = AGENT_INSTRUCTIONS;
-    if (task) {
-      logger.info("SessionWorkflow", `Task dispatched: ${task.id}`);
-      // Build dynamic instructions/prompt
-      const serverContext = await this.locusService.getTaskContext(task.id);
-      instructions = await this.promptBuilder.build(task, {
-        taskContext: serverContext,
-      });
-    } else {
-      logger.info("SessionWorkflow", "No task dispatched.");
-    }
+    const instructions = AGENT_INSTRUCTIONS;
 
     return { sprint, task, instructions };
   }
@@ -74,14 +61,6 @@ export class SessionWorkflow {
     const sprint = await this.locusService.getActiveSprint();
     const task = await this.locusService.dispatchTask(sprint?.id);
 
-    let instructions: string | undefined;
-    if (task) {
-      const serverContext = await this.locusService.getTaskContext(task.id);
-      instructions = await this.promptBuilder.build(task, {
-        taskContext: serverContext,
-      });
-    }
-
-    return { task, instructions };
+    return { task, instructions: AGENT_INSTRUCTIONS };
   }
 }

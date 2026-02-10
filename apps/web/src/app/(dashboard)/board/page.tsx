@@ -2,12 +2,7 @@
 
 import { Suspense } from "react";
 import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
-import {
-  BoardContent,
-  BoardHeader,
-  FlowchartView,
-  SprintMindmap,
-} from "@/components/board";
+import { BoardContent, BoardHeader, FlowchartView } from "@/components/board";
 import { Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
 
@@ -92,15 +87,13 @@ function BoardPageContent() {
             onNewTask={() => setIsCreateModalOpen(true)}
             isCompact={isCompact}
           />
-        ) : view === "mindmap" ? (
-          <SprintMindmap mindmap={activeSprint?.mindmap || null} />
-        ) : (
+        ) : view === "canvas" ? (
           <FlowchartView
             tasks={filteredTasks}
             onTaskClick={setSelectedTaskId}
             onTaskDelete={handleDeleteTask}
           />
-        )}
+        ) : null}
       </PageLayout>
 
       {/* Modals */}

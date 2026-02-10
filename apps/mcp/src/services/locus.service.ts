@@ -45,14 +45,6 @@ export class LocusService {
     await this.client.sprints.triggerAIPlanning(sprintId, this.workspaceId);
   }
 
-  async getTaskContext(taskId: string): Promise<string> {
-    try {
-      return await this.client.tasks.getContext(taskId, this.workspaceId);
-    } catch {
-      return "";
-    }
-  }
-
   async dispatchTask(sprintId?: string): Promise<Task | null> {
     const agentId = `mcp-agent-${randomUUID()}`;
     try {

@@ -4,4 +4,3 @@ export * from "./BoardEmptyState";
 export * from "./BoardHeader";
 export * from "./FlowchartView";
 export * from "./SortableTaskNode";
-export * from "./SprintMindmap";

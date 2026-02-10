@@ -48,12 +48,6 @@ export class Sprint {
   @Column({ name: "end_date", type: "timestamptz", nullable: true })
   endDate: Date | null;
 
-  @Column({ type: "text", nullable: true })
-  mindmap: string;
-
-  @Column({ name: "mindmap_updated_at", type: "timestamptz", nullable: true })
-  mindmapUpdatedAt: Date | null;
-
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt: Date;
 }

@@ -40,8 +40,8 @@ export async function runCommand(args: string[]): Promise<void> {
     Math.max(Number.parseInt(values.agents as string, 10) || 1, 1),
     5
   );
-  const useWorktrees =
-    (values.worktree as boolean | undefined) ?? agentCount > 1;
+  // Worktrees are always enabled by default for per-task isolation
+  const useWorktrees = (values.worktree as boolean | undefined) ?? true;
 
   if (!apiKey) {
     console.error(c.error("Error: --api-key is required"));
@@ -101,9 +101,13 @@ export async function runCommand(args: string[]): Promise<void> {
     )
   );
 
-  // Handle graceful shutdown
+  // Handle graceful shutdown - prevent double execution
+  let isShuttingDown = false;
   const handleSignal = async (signal: string) => {
-    console.log(`\n${c.info(`Received ${signal}. Stopping agents...`)}`);
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    console.log(`\n${c.info(`Received ${signal}. Stopping agents and cleaning up worktrees...`)}`);
     await orchestrator.stop();
     process.exit(0);
   };
@@ -115,8 +119,8 @@ export async function runCommand(args: string[]): Promise<void> {
   console.log(
     `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel} in`)} ${c.primary(projectPath)}...`
   );
-  if (useWorktrees && agentCount > 1) {
-    console.log(`  ${c.dim("Each agent will work in an isolated worktree")}`);
+  if (useWorktrees) {
+    console.log(`  ${c.dim("Each task will run in an isolated worktree")}`);
   }
   await orchestrator.start();
 }

@@ -94,3 +94,6 @@ packages/cli/bin/agent/
 
 # Locus AI - Plans (generated per task)
 .locus/plans/
+
+# Locus AI - Agent worktrees (parallel execution)
+.locus-worktrees/

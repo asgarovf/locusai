@@ -10,7 +10,7 @@ import {
 } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, In, IsNull, LessThan, Repository } from "typeorm";
+import { In, IsNull, LessThan, Repository } from "typeorm";
 import { Comment } from "@/entities/comment.entity";
 import { Doc } from "@/entities/doc.entity";
 import { Event } from "@/entities/event.entity";
@@ -31,8 +31,7 @@ export class TasksService {
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
     private readonly eventsService: EventsService,
-    private readonly processor: TaskProcessor,
-    private readonly dataSource: DataSource
+    private readonly processor: TaskProcessor
   ) {}
 
   async findAll(workspaceId: string): Promise<Task[]> {
@@ -125,6 +124,7 @@ export class TasksService {
       parentId: data.parentId,
       sprintId: data.sprintId,
       acceptanceChecklist: mergedChecklist,
+      ...(data.order !== undefined ? { order: data.order } : {}),
       docs: data.docIds
         ? await this.docRepository.find({ where: { id: In(data.docIds) } })
         : [],
@@ -156,9 +156,12 @@ export class TasksService {
 
     if (
       oldStatus === TaskStatus.VERIFICATION &&
-      (updates.status === TaskStatus.IN_PROGRESS ||
-        updates.status === TaskStatus.BACKLOG)
+      updates.status === TaskStatus.IN_PROGRESS
     ) {
+      task.assignedTo = null;
+    }
+
+    if (updates.status === TaskStatus.BACKLOG && oldStatus !== TaskStatus.BACKLOG) {
       task.assignedTo = null;
     }
 
@@ -234,6 +237,9 @@ export class TasksService {
       }
       if (updates.status !== undefined) {
         task.status = updates.status as TaskStatus;
+        if (updates.status === TaskStatus.BACKLOG) {
+          task.assignedTo = null;
+        }
       }
     }
 
@@ -270,83 +276,58 @@ export class TasksService {
   }
 
   /**
-   * Dispatch a task from BACKLOG to an agent.
-   * Uses SELECT FOR UPDATE SKIP LOCKED to prevent double-assignment
-   * when multiple agents request tasks simultaneously.
+   * Dispatch a task to an agent.
+   * Finds the first available BACKLOG task (or unassigned IN_PROGRESS task)
+   * ordered by the plan's `order` field, and assigns it to the worker.
    */
   async dispatchTask(
     workspaceId: string,
     workerId: string,
     sprintId?: string
   ): Promise<Task> {
-    return this.dataSource.transaction(async (manager) => {
-      const taskRepo = manager.getRepository(Task);
-
-      // Build query with FOR UPDATE SKIP LOCKED to atomically claim a task
-      let query = taskRepo
-        .createQueryBuilder("task")
-        .setLock("pessimistic_write_or_fail")
-        .where(
-          "(task.status = :backlog OR (task.status = :inProgress AND task.assigned_to IS NULL))",
-          {
-            backlog: TaskStatus.BACKLOG,
-            inProgress: TaskStatus.IN_PROGRESS,
-          }
-        )
-        .andWhere("task.workspace_id = :workspaceId", { workspaceId });
-
-      if (sprintId) {
-        query = query.andWhere("task.sprint_id = :sprintId", { sprintId });
-      }
-
-      query = query
-        .orderBy("task.order", "ASC")
-        .addOrderBy("task.priority", "DESC")
-        .addOrderBy("task.created_at", "ASC")
-        .limit(1);
-
-      // Use SKIP LOCKED via raw setLock override
-      const rawSql = query.getQuery();
-      const params = query.getParameters();
-
-      // Execute with SKIP LOCKED instead of NOWAIT (pessimistic_write_or_fail)
-      const skipLockedSql = rawSql.replace(
-        "FOR UPDATE NOWAIT",
-        "FOR UPDATE SKIP LOCKED"
-      );
-      const rows = await manager.query(skipLockedSql, Object.values(params));
-
-      if (!rows || rows.length === 0) {
-        throw new NotFoundException("No available tasks");
-      }
-
-      const row = rows[0];
-      const taskId = row.id;
-      const oldStatus = row.status;
-
-      // Update the task atomically within the same transaction
-      await taskRepo.update(taskId, {
+    const where: Array<Record<string, unknown>> = [
+      {
+        workspaceId,
+        status: TaskStatus.BACKLOG,
+        ...(sprintId ? { sprintId } : {}),
+      },
+      {
+        workspaceId,
         status: TaskStatus.IN_PROGRESS,
-        assignedTo: workerId,
-        assignedAt: new Date(),
-      });
+        assignedTo: IsNull(),
+        ...(sprintId ? { sprintId } : {}),
+      },
+    ];
 
-      const result = await taskRepo.findOneOrFail({ where: { id: taskId } });
-
-      await this.eventsService.logEvent({
-        workspaceId: result.workspaceId,
-        taskId: result.id,
-        type: EventType.TASK_DISPATCHED,
-        payload: {
-          title: result.title,
-          oldStatus,
-          newStatus: TaskStatus.IN_PROGRESS,
-          assignedTo: workerId,
-        },
-      });
-
-      return result;
+    const task = await this.taskRepository.findOne({
+      where,
+      order: { order: "ASC", createdAt: "ASC" },
     });
+
+    if (!task) {
+      throw new NotFoundException("No available tasks");
+    }
+
+    const oldStatus = task.status;
+
+    task.status = TaskStatus.IN_PROGRESS;
+    task.assignedTo = workerId;
+    task.assignedAt = new Date();
+    const result = await this.taskRepository.save(task);
+
+    await this.eventsService.logEvent({
+      workspaceId: result.workspaceId,
+      taskId: result.id,
+      type: EventType.TASK_DISPATCHED,
+      payload: {
+        title: result.title,
+        oldStatus,
+        newStatus: TaskStatus.IN_PROGRESS,
+        assignedTo: workerId,
+      },
+    });
+
+    return result;
   }
 
   /**

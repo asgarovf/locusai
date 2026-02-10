@@ -122,7 +122,7 @@ export class PlanManager {
       name: plan.name,
     });
 
-    // 2. Create tasks via API
+    // 2. Create tasks via API, preserving plan ordering
     const payloads = plannedTasksToCreatePayloads(plan, sprint.id);
     const tasks: Task[] = [];
 

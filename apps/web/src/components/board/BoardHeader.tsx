@@ -4,10 +4,10 @@
  */
 
 import { type Sprint } from "@locusai/shared";
-import { LayoutGrid, Network, Plus, Workflow } from "lucide-react";
+import { LayoutGrid, Plus, Workflow } from "lucide-react";
 import { Button, Toggle, Tooltip } from "@/components/ui";
 
-type ViewType = "board" | "mindmap" | "canvas";
+type ViewType = "board" | "canvas";
 
 interface BoardHeaderProps {
   activeSprint?: Sprint | null;
@@ -25,13 +25,6 @@ const viewTypes = [
     label: "Board",
     icon: LayoutGrid,
     tooltip: "Classic kanban board with status columns (default)",
-  },
-  {
-    id: "mindmap" as ViewType,
-    label: "Mindmap",
-    icon: Network,
-    tooltip:
-      "AI-generated visualization of task relationships and dependencies",
   },
   {
     id: "canvas" as ViewType,

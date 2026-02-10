@@ -76,13 +76,11 @@ export function DocItem({
       label: "Rename",
       icon: Pencil,
       onClick: onRename,
-      shortcut: "F2",
     },
     {
       label: "Duplicate",
       icon: Copy,
       onClick: onDuplicate,
-      shortcut: "⌘D",
     },
     { type: "divider" },
     {
@@ -90,7 +88,6 @@ export function DocItem({
       icon: Trash2,
       onClick: onDelete,
       variant: "danger",
-      shortcut: "⌫",
     },
   ];
 

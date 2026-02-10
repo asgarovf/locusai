@@ -1,1248 +1,1501 @@
 {
   "symbols": {
-    "EmailService": ["apps/api/src/common/services/email.service.ts"],
-    "emailBaseTemplate": [
-      "apps/api/src/common/templates/email-base.template.ts"
+    "UserRole": [
+      "packages/shared/src/enums.ts"
     ],
-    "invitationEmailTemplate": [
-      "apps/api/src/common/templates/invitation-email.template.ts"
+    "MembershipRole": [
+      "packages/shared/src/enums.ts"
     ],
-    "otpEmailTemplate": ["apps/api/src/common/templates/otp-email.template.ts"],
-    "welcomeEmailTemplate": [
-      "apps/api/src/common/templates/welcome-email.template.ts"
+    "TaskStatus": [
+      "packages/shared/src/enums.ts"
     ],
-    "PropertyItem": ["apps/web/src/components/PropertyItem.tsx"],
-    "TaskProperties": ["apps/web/src/components/task-panel/TaskProperties.tsx"],
-    "Modal": ["apps/web/src/components/ui/Modal.tsx"],
-    "ModalProps": ["apps/web/src/components/ui/Modal.tsx"],
-    "UI_CONSTANTS": ["apps/web/src/components/ui/constants.ts"],
-    "COLORS": ["apps/web/src/components/ui/constants.ts"],
-    "SPACING": ["apps/web/src/components/ui/constants.ts"],
-    "BREAKPOINTS": ["apps/web/src/components/ui/constants.ts"],
-    "Z_INDEX": ["apps/web/src/components/ui/constants.ts"],
-    "BoardEmptyState": ["apps/web/src/components/board/BoardEmptyState.tsx"],
-    "BoardContent": ["apps/web/src/components/board/BoardContent.tsx"],
-    "TaskCard": ["apps/web/src/components/TaskCard.tsx"],
-    "TaskCardProps": ["apps/web/src/components/TaskCard.tsx"],
-    "useLocalStorage": ["apps/web/src/hooks/useLocalStorage.ts"],
-    "config": ["apps/web/src/lib/config.ts"],
-    "taskTemplates": ["apps/web/src/lib/task-templates.ts"],
-    "TASK_TEMPLATES": ["apps/web/src/lib/task-templates.ts"],
-    "SprintMindmap": ["apps/web/src/components/board/SprintMindmap.tsx"],
-    "BoardPage": ["apps/web/src/app/(dashboard)/board/page.tsx"],
-    "ChatInput": ["apps/web/src/components/chat/ChatInput.tsx"],
-    "BulkActionsBar": ["apps/web/src/components/backlog/BulkActionsBar.tsx"],
-    "ChatSidebar": ["apps/web/src/components/chat/ChatSidebar.tsx"],
-    "Drawer": ["apps/web/src/components/ui/Drawer.tsx"],
-    "BoardFilter": ["apps/web/src/components/BoardFilter.tsx"],
-    "BottomNav": ["apps/web/src/components/BottomNav.tsx"],
-    "PageLayout": ["apps/web/src/components/PageLayout.tsx"],
-    "TaskCreateModal": ["apps/web/src/components/TaskCreateModal.tsx"],
-    "AuthContext": ["apps/web/src/context/AuthContext.tsx"],
-    "useBacklog": ["apps/web/src/hooks/useBacklog.ts"],
-    "useGlobalKeydowns": ["apps/web/src/hooks/useGlobalKeydowns.ts"],
-    "useTaskPanel": ["apps/web/src/hooks/useTaskPanel.ts"],
-    "api-client": ["apps/web/src/lib/api-client.ts"],
-    "local-storage": ["apps/web/src/lib/local-storage.ts"],
-    "Dashboard": ["apps/web/src/views/Dashboard.tsx"],
-    "CreateModal": ["apps/web/src/components/CreateModal/CreateModal.tsx"],
-    "BacklogList": ["apps/web/src/components/backlog/BacklogList.tsx"],
-    "BacklogSection": ["apps/web/src/components/backlog/BacklogSection.tsx"],
-    "CompletedSprintsSection": [
-      "apps/web/src/components/backlog/CompletedSprintsSection.tsx"
+    "TaskPriority": [
+      "packages/shared/src/enums.ts"
     ],
-    "SprintSection": ["apps/web/src/components/backlog/SprintSection.tsx"],
-    "BoardHeader": ["apps/web/src/components/board/BoardHeader.tsx"],
-    "OnboardingTour": ["apps/web/src/components/onboarding/OnboardingTour.tsx"],
-    "TaskActivity": ["apps/web/src/components/task-panel/TaskActivity.tsx"],
-    "TaskChecklist": ["apps/web/src/components/task-panel/TaskChecklist.tsx"],
-    "Tooltip": ["apps/web/src/components/ui/Tooltip.tsx"],
-    "useBacklogActions": ["apps/web/src/hooks/backlog/useBacklogActions.ts"],
-    "CallbackPage": ["apps/web/src/app/(auth)/callback/page.tsx"],
-    "BacklogPage": ["apps/web/src/app/(dashboard)/backlog/page.tsx"],
-    "useTaskDescription": ["apps/web/src/hooks/useTaskDescription.ts"],
+    "AssigneeRole": [
+      "packages/shared/src/enums.ts"
+    ],
+    "SprintStatus": [
+      "packages/shared/src/enums.ts"
+    ],
+    "EventType": [
+      "packages/shared/src/enums.ts"
+    ],
+    "BaseEntitySchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "BaseEntity": [
+      "packages/shared/src/common.ts"
+    ],
+    "PaginationMetaSchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "PaginationMeta": [
+      "packages/shared/src/common.ts"
+    ],
+    "PaginationRequestSchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "PaginationRequest": [
+      "packages/shared/src/common.ts"
+    ],
+    "$FixMe": [
+      "packages/shared/src/common.ts"
+    ],
+    "ApiResponseSchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "ApiResponse": [
+      "packages/shared/src/common.ts"
+    ],
+    "SuccessResponseSchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "ErrorResponseSchema": [
+      "packages/shared/src/common.ts"
+    ],
+    "SuccessResponse": [
+      "packages/shared/src/common.ts"
+    ],
+    "ErrorResponse": [
+      "packages/shared/src/common.ts"
+    ],
+    "generateUUID": [
+      "packages/shared/src/common.ts"
+    ],
+    "STALE_AGENT_TIMEOUT_MS": [
+      "packages/shared/src/constants.ts"
+    ],
+    "TaskSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "Task": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "CreateTaskSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "CreateTask": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "UpdateTaskSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "UpdateTask": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "AcceptanceItemSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "AcceptanceItem": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "AddCommentSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "AddComment": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "DispatchTaskSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "DispatchTask": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "TaskIdParamSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "TaskResponseSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "TasksResponseSchema": [
+      "packages/shared/src/models/task.ts"
+    ],
+    "SprintSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "Sprint": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "CreateSprintSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "CreateSprint": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "UpdateSprintSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "UpdateSprint": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "SprintIdParamSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "SprintResponseSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "SprintsResponseSchema": [
+      "packages/shared/src/models/sprint.ts"
+    ],
+    "WorkspaceSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "Workspace": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "CreateWorkspaceSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "UpdateWorkspaceSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "ChecklistItemSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "ChecklistItem": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "AddWorkspaceMemberSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "WorkspaceIdParamSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "WorkspaceStatsSchema": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "WorkspaceStats": [
+      "packages/shared/src/models/workspace.ts"
+    ],
+    "UserSchema": [
+      "packages/shared/src/models/user.ts"
+    ],
+    "User": [
+      "packages/shared/src/models/user.ts"
+    ],
+    "CreateUserSchema": [
+      "packages/shared/src/models/user.ts"
+    ],
+    "UpdateUserSchema": [
+      "packages/shared/src/models/user.ts"
+    ],
+    "JwtAuthUserSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "JwtAuthUser": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "ApiKeyAuthUserSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "ApiKeyAuthUser": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthenticatedUserSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthenticatedUser": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "isJwtUser": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "isApiKeyUser": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "getAuthUserId": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthResponseSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthResponse": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "LoginResponse": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "OtpRequestSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "VerifyOtpSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "CompleteRegistrationSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "JWTPayloadSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "JWTPayload": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthContextSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "AuthContext": [
+      "packages/shared/src/models/auth.ts",
+      "apps/web/src/context/AuthContext.tsx"
+    ],
+    "APIKeySchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "APIKey": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "APIKeyCreateResponseSchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "CreateApiKeySchema": [
+      "packages/shared/src/models/auth.ts"
+    ],
+    "DocType": [
+      "packages/shared/src/models/doc.ts"
+    ],
+    "DocSchema": [
+      "packages/shared/src/models/doc.ts"
+    ],
+    "Doc": [
+      "packages/shared/src/models/doc.ts"
+    ],
+    "CreateDocSchema": [
+      "packages/shared/src/models/doc.ts"
+    ],
+    "UpdateDocSchema": [
+      "packages/shared/src/models/doc.ts"
+    ],
+    "DocGroupSchema": [
+      "packages/shared/src/models/doc-group.ts"
+    ],
+    "DocGroup": [
+      "packages/shared/src/models/doc-group.ts"
+    ],
+    "CreateDocGroupSchema": [
+      "packages/shared/src/models/doc-group.ts"
+    ],
+    "UpdateDocGroupSchema": [
+      "packages/shared/src/models/doc-group.ts"
+    ],
+    "OrganizationSchema": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "Organization": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "CreateOrganizationSchema": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "AddMemberSchema": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "MembershipWithUserSchema": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "MembershipWithUser": [
+      "packages/shared/src/models/organization.ts"
+    ],
+    "InvitationSchema": [
+      "packages/shared/src/models/invitation.ts"
+    ],
+    "Invitation": [
+      "packages/shared/src/models/invitation.ts"
+    ],
+    "CreateInvitationSchema": [
+      "packages/shared/src/models/invitation.ts"
+    ],
+    "AcceptInvitationSchema": [
+      "packages/shared/src/models/invitation.ts"
+    ],
+    "LockSchema": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "UnlockSchema": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "AgentHeartbeatSchema": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "AgentHeartbeat": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "AgentRegistrationResponse": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "AgentsListResponse": [
+      "packages/shared/src/models/agent.ts"
+    ],
+    "CommentSchema": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "Comment": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "ArtifactSchema": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "Artifact": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "EventSchema": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "Event": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "EventPayloadSchema": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "ReportCiResultSchema": [
+      "packages/shared/src/models/activity.ts"
+    ],
+    "RecordCiSchema": [
+      "packages/shared/src/models/ci.ts"
+    ],
+    "RecordCi": [
+      "packages/shared/src/models/ci.ts"
+    ],
+    "LocusClient": [
+      "packages/sdk/src/index.ts"
+    ],
+    "LocusEvent": [
+      "packages/sdk/src/events.ts"
+    ],
+    "LocusConfig": [
+      "packages/sdk/src/events.ts"
+    ],
+    "LocusEmitter": [
+      "packages/sdk/src/events.ts"
+    ],
+    "BaseModule": [
+      "packages/sdk/src/modules/base.ts"
+    ],
+    "AuthModule": [
+      "packages/sdk/src/modules/auth.ts"
+    ],
+    "TasksModule": [
+      "packages/sdk/src/modules/tasks.ts"
+    ],
+    "SprintsModule": [
+      "packages/sdk/src/modules/sprints.ts"
+    ],
+    "WorkspacesModule": [
+      "packages/sdk/src/modules/workspaces.ts"
+    ],
+    "OrganizationsModule": [
+      "packages/sdk/src/modules/organizations.ts"
+    ],
+    "InvitationsModule": [
+      "packages/sdk/src/modules/invitations.ts"
+    ],
+    "DocsModule": [
+      "packages/sdk/src/modules/docs.ts"
+    ],
+    "CiModule": [
+      "packages/sdk/src/modules/ci.ts"
+    ],
     "AgentOrchestrator": [
-      "packages/sdk/src/index-node.ts",
+      "packages/sdk/src/orchestrator.ts"
+    ],
+    "AgentConfig": [
+      "packages/sdk/src/orchestrator.ts"
+    ],
+    "AgentState": [
       "packages/sdk/src/orchestrator.ts"
     ],
     "OrchestratorConfig": [
-      "packages/sdk/src/index-node.ts",
       "packages/sdk/src/orchestrator.ts"
     ],
-    "PromptBuilder": ["packages/sdk/src/index-node.ts"],
-    "c": ["packages/sdk/src/index-node.ts"],
-    "AiRunner": ["packages/sdk/src/ai/runner.ts"],
-    "AiProvider": ["packages/sdk/src/ai/runner.ts"],
-    "ExecutionStats": ["packages/cli/src/display/execution-stats.ts"],
-    "EventEmitter": ["packages/sdk/src/exec/event-emitter.ts"],
-    "ExecEventType": ["packages/sdk/src/exec/events.ts"],
-    "ExecEventBase": ["packages/sdk/src/exec/events.ts"],
-    "SessionStartedEvent": ["packages/sdk/src/exec/events.ts"],
-    "PromptSubmittedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ThinkingStartedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ThinkingStoppedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ToolStartedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ToolCompletedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ToolFailedEvent": ["packages/sdk/src/exec/events.ts"],
-    "TextDeltaEvent": ["packages/sdk/src/exec/events.ts"],
-    "ResponseCompletedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ErrorOccurredEvent": ["packages/sdk/src/exec/events.ts"],
-    "SessionEndedEvent": ["packages/sdk/src/exec/events.ts"],
-    "ExecEvent": ["packages/sdk/src/exec/events.ts"],
-    "ExecEventListener": ["packages/sdk/src/exec/events.ts"],
-    "ExecEventMap": ["packages/sdk/src/exec/events.ts"],
-    "TextDeltaChunk": ["packages/sdk/src/exec/types.ts"],
-    "ReadToolParams": ["packages/sdk/src/exec/types.ts"],
-    "WriteToolParams": ["packages/sdk/src/exec/types.ts"],
-    "EditToolParams": ["packages/sdk/src/exec/types.ts"],
-    "BashToolParams": ["packages/sdk/src/exec/types.ts"],
-    "GrepToolParams": ["packages/sdk/src/exec/types.ts"],
-    "GlobToolParams": ["packages/sdk/src/exec/types.ts"],
-    "WebFetchToolParams": ["packages/sdk/src/exec/types.ts"],
-    "TaskToolParams": ["packages/sdk/src/exec/types.ts"],
-    "ToolParams": ["packages/sdk/src/exec/types.ts"],
-    "ToolUseChunk": ["packages/sdk/src/exec/types.ts"],
-    "GrepResultData": ["packages/sdk/src/exec/types.ts"],
-    "GlobResultData": ["packages/sdk/src/exec/types.ts"],
-    "ReadResultData": ["packages/sdk/src/exec/types.ts"],
-    "BashResultData": ["packages/sdk/src/exec/types.ts"],
-    "ToolResultData": ["packages/sdk/src/exec/types.ts"],
-    "ToolResultChunk": ["packages/sdk/src/exec/types.ts"],
-    "ThinkingChunk": ["packages/sdk/src/exec/types.ts"],
-    "ResultChunk": ["packages/sdk/src/exec/types.ts"],
-    "ErrorChunk": ["packages/sdk/src/exec/types.ts"],
-    "ToolParametersChunk": ["packages/sdk/src/exec/types.ts"],
-    "StreamChunk": ["packages/sdk/src/exec/types.ts"],
-    "execCommand": [
-      "packages/cli/src/commands/exec.ts",
-      "packages/cli/src/commands/index.ts"
+    "PROVIDER": [
+      "packages/sdk/src/core/config.ts"
     ],
-    "SessionCommands": [
-      "packages/cli/src/commands/exec-sessions.ts",
-      "packages/cli/src/commands/index.ts"
+    "Provider": [
+      "packages/sdk/src/core/config.ts"
     ],
-    "showSessionsHelp": [
-      "packages/cli/src/commands/exec-sessions.ts",
-      "packages/cli/src/commands/index.ts"
+    "DEFAULT_MODEL": [
+      "packages/sdk/src/core/config.ts"
     ],
-    "showHelp": [
-      "packages/cli/src/commands/help.ts",
-      "packages/cli/src/commands/index.ts"
+    "LOCUS_CONFIG": [
+      "packages/sdk/src/core/config.ts"
     ],
-    "indexCommand": [
-      "packages/cli/src/commands/index-codebase.ts",
-      "packages/cli/src/commands/index.ts"
+    "LOCUS_GITIGNORE_PATTERNS": [
+      "packages/sdk/src/core/config.ts"
     ],
-    "initCommand": [
-      "packages/cli/src/commands/init.ts",
-      "packages/cli/src/commands/index.ts"
+    "getLocusPath": [
+      "packages/sdk/src/core/config.ts"
+    ],
+    "getAgentArtifactsPath": [
+      "packages/sdk/src/core/config.ts"
+    ],
+    "CodebaseIndex": [
+      "packages/sdk/src/core/indexer.ts"
+    ],
+    "CodebaseIndexer": [
+      "packages/sdk/src/core/indexer.ts"
+    ],
+    "PromptBuilder": [
+      "packages/sdk/src/core/prompt-builder.ts"
+    ],
+    "AgentWorker": [
+      "packages/sdk/src/agent/worker.ts"
+    ],
+    "WorkerConfig": [
+      "packages/sdk/src/agent/worker.ts"
+    ],
+    "TaskExecutor": [
+      "packages/sdk/src/agent/task-executor.ts"
+    ],
+    "TaskExecutorDeps": [
+      "packages/sdk/src/agent/task-executor.ts"
+    ],
+    "ReviewService": [
+      "packages/sdk/src/agent/review-service.ts"
+    ],
+    "ReviewServiceDeps": [
+      "packages/sdk/src/agent/review-service.ts"
+    ],
+    "CodebaseIndexerService": [
+      "packages/sdk/src/agent/codebase-indexer-service.ts"
+    ],
+    "DocumentFetcher": [
+      "packages/sdk/src/agent/document-fetcher.ts"
+    ],
+    "AiRunner": [
+      "packages/sdk/src/ai/runner.ts"
+    ],
+    "AiProvider": [
+      "packages/sdk/src/ai/runner.ts"
+    ],
+    "ClaudeRunner": [
+      "packages/sdk/src/ai/claude-runner.ts"
+    ],
+    "CodexRunner": [
+      "packages/sdk/src/ai/codex-runner.ts"
+    ],
+    "createAiRunner": [
+      "packages/sdk/src/ai/factory.ts"
+    ],
+    "LogFn": [
+      "packages/sdk/src/ai/factory.ts"
+    ],
+    "AiRunnerConfig": [
+      "packages/sdk/src/ai/factory.ts"
+    ],
+    "PlanManager": [
+      "packages/sdk/src/planning/plan-manager.ts"
+    ],
+    "SprintPlan": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "PlannedTask": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "SprintPlanRisk": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "sprintPlanToMarkdown": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "plannedTasksToCreatePayloads": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "parseSprintPlanFromAI": [
+      "packages/sdk/src/planning/sprint-plan.ts"
+    ],
+    "PlanningMeeting": [
+      "packages/sdk/src/planning/planning-meeting.ts"
+    ],
+    "PlanningMeetingConfig": [
+      "packages/sdk/src/planning/planning-meeting.ts"
+    ],
+    "PlanningMeetingResult": [
+      "packages/sdk/src/planning/planning-meeting.ts"
+    ],
+    "PlanningPhase": [
+      "packages/sdk/src/planning/planning-meeting.ts"
+    ],
+    "buildTechLeadPrompt": [
+      "packages/sdk/src/planning/agents/tech-lead.ts"
+    ],
+    "TechLeadInput": [
+      "packages/sdk/src/planning/agents/tech-lead.ts"
+    ],
+    "buildArchitectPrompt": [
+      "packages/sdk/src/planning/agents/architect.ts"
+    ],
+    "ArchitectInput": [
+      "packages/sdk/src/planning/agents/architect.ts"
+    ],
+    "buildSprintOrganizerPrompt": [
+      "packages/sdk/src/planning/agents/sprint-organizer.ts"
+    ],
+    "SprintOrganizerInput": [
+      "packages/sdk/src/planning/agents/sprint-organizer.ts"
+    ],
+    "WorktreeManager": [
+      "packages/sdk/src/worktree/worktree-manager.ts"
+    ],
+    "WorktreeConfig": [
+      "packages/sdk/src/worktree/worktree-config.ts"
+    ],
+    "WorktreeInfo": [
+      "packages/sdk/src/worktree/worktree-config.ts"
+    ],
+    "CreateWorktreeOptions": [
+      "packages/sdk/src/worktree/worktree-config.ts"
+    ],
+    "CreateWorktreeResult": [
+      "packages/sdk/src/worktree/worktree-config.ts"
+    ],
+    "ExecSession": [
+      "packages/sdk/src/exec/exec-session.ts"
+    ],
+    "ExecSessionConfig": [
+      "packages/sdk/src/exec/exec-session.ts"
+    ],
+    "ExecResult": [
+      "packages/sdk/src/exec/exec-session.ts"
+    ],
+    "ExecEventEmitter": [
+      "packages/sdk/src/exec/event-emitter.ts"
+    ],
+    "ExecEventType": [
+      "packages/sdk/src/exec/events.ts"
+    ],
+    "HistoryManager": [
+      "packages/sdk/src/exec/history-manager.ts"
+    ],
+    "ConversationSession": [
+      "packages/sdk/src/exec/history-manager.ts"
+    ],
+    "ConversationMessage": [
+      "packages/sdk/src/exec/history-manager.ts"
+    ],
+    "ContextTracker": [
+      "packages/sdk/src/exec/context-tracker.ts"
+    ],
+    "StreamChunk": [
+      "packages/sdk/src/exec/types.ts"
+    ],
+    "KnowledgeBase": [
+      "packages/sdk/src/project/knowledge-base.ts"
     ],
     "runCommand": [
-      "packages/cli/src/commands/run.ts",
-      "packages/cli/src/commands/index.ts"
+      "packages/cli/src/commands/run.ts"
     ],
-    "AgentConfig": ["packages/sdk/src/orchestrator.ts"],
-    "AgentState": ["packages/sdk/src/orchestrator.ts"],
-    "PROVIDER": ["packages/sdk/src/core/config.ts"],
-    "Provider": ["packages/sdk/src/core/config.ts"],
-    "DEFAULT_MODEL": ["packages/sdk/src/core/config.ts"],
-    "LOCUS_CONFIG": ["packages/sdk/src/core/config.ts"],
-    "LOCUS_GITIGNORE_PATTERNS": ["packages/sdk/src/core/config.ts"],
-    "getLocusPath": ["packages/sdk/src/core/config.ts"],
-    "getAgentArtifactsPath": ["packages/sdk/src/core/config.ts"],
-    "WorkerConfig": ["packages/sdk/src/agent/worker.ts"],
-    "AgentWorker": ["packages/sdk/src/agent/worker.ts"],
-    "ExecSessionConfig": ["packages/sdk/src/exec/exec-session.ts"],
-    "ExecResult": ["packages/sdk/src/exec/exec-session.ts"],
-    "ExecSession": ["packages/sdk/src/exec/exec-session.ts"],
-    "ConfigManager": ["packages/cli/src/config-manager.ts"],
-    "LocusProjectConfig": ["packages/cli/src/config-manager.ts"],
-    "useDocs": ["apps/web/src/hooks/useDocs.ts"],
-    "DOC_TEMPLATES": ["apps/web/src/hooks/useDocs.ts"],
-    "Docs": ["apps/web/src/views/Docs.tsx"],
-    "TasksController": ["apps/api/src/tasks/tasks.controller.ts"],
-    "list": [
-      "apps/api/src/tasks/tasks.controller.ts",
-      "apps/api/src/workspaces/workspaces.controller.ts"
+    "execCommand": [
+      "packages/cli/src/commands/exec.ts"
     ],
-    "getBacklog": ["apps/api/src/tasks/tasks.controller.ts"],
-    "getById": [
-      "apps/api/src/tasks/tasks.controller.ts",
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts"
+    "planCommand": [
+      "packages/cli/src/commands/plan.ts"
     ],
-    "create": [
-      "apps/api/src/tasks/tasks.controller.ts",
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "initCommand": [
+      "packages/cli/src/commands/init.ts"
     ],
-    "update": [
-      "apps/api/src/tasks/tasks.controller.ts",
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "reviewCommand": [
+      "packages/cli/src/commands/review.ts"
     ],
-    "batchUpdate": ["apps/api/src/tasks/tasks.controller.ts"],
-    "delete": [
-      "apps/api/src/tasks/tasks.controller.ts",
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "indexCommand": [
+      "packages/cli/src/commands/index-codebase.ts"
     ],
-    "addComment": ["apps/api/src/tasks/tasks.controller.ts"],
-    "getTaskContext": ["apps/api/src/tasks/tasks.controller.ts"],
-    "taskToTaskResponse": ["apps/api/src/tasks/tasks.controller.ts"],
-    "ProjectPhaseSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectPhase": ["packages/shared/src/models/manifest.ts"],
-    "SprintStatusSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectSprintSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectSprint": ["packages/shared/src/models/manifest.ts"],
-    "MilestoneStatusSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectMilestoneSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectMilestone": ["packages/shared/src/models/manifest.ts"],
-    "ProjectTimelineSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectTimeline": ["packages/shared/src/models/manifest.ts"],
-    "RepositoryContextSchema": ["packages/shared/src/models/manifest.ts"],
-    "RepositoryContext": ["packages/shared/src/models/manifest.ts"],
-    "ProjectManifestSchema": ["packages/shared/src/models/manifest.ts"],
-    "ProjectManifestType": ["packages/shared/src/models/manifest.ts"],
-    "PartialProjectManifestSchema": ["packages/shared/src/models/manifest.ts"],
-    "PartialProjectManifest": ["packages/shared/src/models/manifest.ts"],
-    "DEFAULT_MANIFEST_VALUES": ["packages/shared/src/models/manifest.ts"],
-    "REQUIRED_MANIFEST_FIELDS": [
-      "packages/shared/src/models/manifest.ts",
-      "packages/ai-sdk/src/constants.ts"
+    "agentsCommand": [
+      "packages/cli/src/commands/agents.ts"
     ],
-    "ManifestValidationResult": ["packages/shared/src/models/manifest.ts"],
-    "ManifestCompletionResult": ["packages/shared/src/models/manifest.ts"],
-    "MANIFEST_COMPLETION_THRESHOLD": ["packages/ai-sdk/src/constants.ts"],
-    "ConfigSchema": ["apps/api/src/config/configuration.ts"],
-    "Config": ["apps/api/src/config/configuration.ts"],
-    "ManifestValidatorService": [
-      "apps/api/src/workspaces/manifest-validator.service.ts"
+    "showHelp": [
+      "packages/cli/src/commands/help.ts"
     ],
-    "validateAndRepair": [
-      "apps/api/src/workspaces/manifest-validator.service.ts"
+    "ConfigManager": [
+      "packages/cli/src/config-manager.ts"
     ],
-    "validate": ["apps/api/src/workspaces/manifest-validator.service.ts"],
-    "isFieldFilled": ["apps/api/src/workspaces/manifest-validator.service.ts"],
-    "calculateCompletion": [
-      "apps/api/src/workspaces/manifest-validator.service.ts"
+    "WorkspaceResolver": [
+      "packages/cli/src/workspace-resolver.ts"
     ],
-    "InterviewBypassSettings": [
-      "apps/web/src/components/settings/InterviewBypassSettings.tsx"
+    "TreeSummarizer": [
+      "packages/cli/src/tree-summarizer.ts"
     ],
-    "Workspace": [
-      "apps/api/src/entities/workspace.entity.ts",
-      "packages/shared/src/models/workspace.ts"
+    "InteractiveSession": [
+      "packages/cli/src/repl/interactive-session.ts"
     ],
-    "SettingsPage": ["apps/web/src/app/(dashboard)/settings/page.tsx"],
-    "SettingsContent": ["apps/web/src/app/(dashboard)/settings/page.tsx"],
-    "useManifestCompletion": ["apps/web/src/hooks/useManifestCompletion.ts"],
-    "WorkspacesController": [
-      "apps/api/src/workspaces/workspaces.controller.ts"
+    "StreamRenderer": [
+      "packages/cli/src/display/stream-renderer.ts"
     ],
-    "listAll": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts"
+    "StatusBar": [
+      "packages/cli/src/display/status-bar.ts"
     ],
-    "createWithAutoOrg": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "ProgressRenderer": [
+      "packages/cli/src/display/progress-renderer.ts"
     ],
-    "getStats": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "ToolDisplay": [
+      "packages/cli/src/display/tool-display.ts"
     ],
-    "getManifestStatus": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "ExecutionStatsTracker": [
+      "packages/cli/src/display/execution-stats.ts"
     ],
-    "getActivity": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "LLMFactory": [
+      "packages/ai-sdk/src/core/llm-factory.ts"
     ],
-    "dispatch": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts"
+    "LLMConfig": [
+      "packages/ai-sdk/src/core/llm-factory.ts"
     ],
-    "bypassInterview": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "AIProvider": [
+      "packages/ai-sdk/src/core/llm-factory.ts"
     ],
-    "revertBypassInterview": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "registerTools": [
+      "apps/mcp/src/tools/definitions.ts"
     ],
-    "listApiKeys": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "SessionWorkflow": [
+      "apps/mcp/src/workflows/session.workflow.ts"
     ],
-    "createApiKey": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "LocusService": [
+      "apps/mcp/src/services/locus.service.ts"
     ],
-    "deleteApiKey": [
-      "apps/api/src/workspaces/workspaces.controller.ts",
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.service.ts"
+    "locusClient": [
+      "apps/web/src/lib/api-client.ts"
     ],
-    "queryKeys": ["apps/web/src/lib/query-keys.ts"],
-    "WorkspacesModule": [
-      "packages/sdk/src/modules/workspaces.ts",
-      "apps/api/src/workspaces/workspaces.module.ts"
+    "setClientToken": [
+      "apps/web/src/lib/api-client.ts"
     ],
-    "WorkspaceApiKey": ["packages/sdk/src/modules/workspaces.ts"],
-    "FieldMetadata": [
-      "apps/web/src/components/settings/FieldChecklist.tsx",
-      "apps/web/src/lib/field-metadata.ts"
+    "AuthProvider": [
+      "apps/web/src/context/AuthContext.tsx"
     ],
-    "FIELD_METADATA": [
-      "apps/web/src/components/settings/FieldChecklist.tsx",
-      "apps/web/src/lib/field-metadata.ts"
+    "useAuth": [
+      "apps/web/src/context/AuthContext.tsx"
     ],
-    "FieldStatus": ["apps/web/src/components/settings/FieldChecklist.tsx"],
-    "FieldChecklistProps": [
-      "apps/web/src/components/settings/FieldChecklist.tsx"
-    ],
-    "FieldChecklist": ["apps/web/src/components/settings/FieldChecklist.tsx"],
-    "InterviewGateConfig": ["apps/web/src/lib/interview-gate-config.ts"],
-    "interviewGateConfig": ["apps/web/src/lib/interview-gate-config.ts"],
-    "Sidebar": ["apps/web/src/components/Sidebar.tsx"],
-    "SidebarProps": ["apps/web/src/components/Sidebar.tsx"],
-    "DashboardLayout": ["apps/web/src/app/(dashboard)/layout.tsx"],
-    "DashboardLayoutProps": ["apps/web/src/app/(dashboard)/layout.tsx"],
-    "useInterviewAutoStart": ["apps/web/src/hooks/useInterviewAutoStart.ts"],
-    "UseInterviewAutoStartOptions": [
-      "apps/web/src/hooks/useInterviewAutoStart.ts"
-    ],
-    "useWorkspaceCreateForm": ["apps/web/src/hooks/useWorkspaceCreateForm.ts"],
-    "UseWorkspaceCreateFormReturn": [
-      "apps/web/src/hooks/useWorkspaceCreateForm.ts"
-    ],
-    "dashboardTour": ["apps/web/src/lib/tour-steps.ts"],
-    "boardTour": ["apps/web/src/lib/tour-steps.ts"],
-    "chatTour": ["apps/web/src/lib/tour-steps.ts"],
-    "backlogTour": ["apps/web/src/lib/tour-steps.ts"],
-    "interviewTour": ["apps/web/src/lib/tour-steps.ts"],
-    "keyboardShortcutsTour": ["apps/web/src/lib/tour-steps.ts"],
-    "hasSeenTour": ["apps/web/src/lib/tour-steps.ts"],
-    "resetAllTours": ["apps/web/src/lib/tour-steps.ts"],
-    "driverConfig": ["apps/web/src/lib/tour-steps.ts"],
-    "useInterviewPersistence": [
-      "apps/web/src/hooks/useInterviewPersistence.ts"
-    ],
-    "InterviewChatBackup": ["apps/web/src/hooks/useInterviewPersistence.ts"],
-    "serializeMessages": ["apps/web/src/hooks/useInterviewPersistence.ts"],
-    "deserializeMessages": ["apps/web/src/hooks/useInterviewPersistence.ts"],
-    "UseInterviewPersistenceOptions": [
-      "apps/web/src/hooks/useInterviewPersistence.ts"
-    ],
-    "UseInterviewPersistenceReturn": [
-      "apps/web/src/hooks/useInterviewPersistence.ts"
-    ],
-    "useInterviewResumption": ["apps/web/src/hooks/useInterviewResumption.ts"],
-    "UseInterviewResumptionReturn": [
-      "apps/web/src/hooks/useInterviewResumption.ts"
-    ],
-    "useChat": ["apps/web/src/hooks/useChat.ts"],
-    "STORAGE_KEYS": ["apps/web/src/lib/local-storage-keys.ts"],
-    "getChatSessionKey": ["apps/web/src/lib/local-storage-keys.ts"],
-    "getInterviewBackupKey": ["apps/web/src/lib/local-storage-keys.ts"],
-    "STORAGE_KEY_MIGRATIONS": ["apps/web/src/lib/local-storage-keys.ts"],
-    "InterviewAbandonmentJob": [
-      "apps/api/src/workspaces/interview-abandonment.job.ts"
-    ],
-    "detectAbandonedInterviews": [
-      "apps/api/src/workspaces/interview-abandonment.job.ts"
-    ],
-    "InterviewAnalyticsService": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "ManifestChangeResult": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "detectManifestChanges": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "trackManifestProgress": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "emitInterviewStarted": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "emitFieldCompleted": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "emitInterviewCompleted": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "emitInterviewAbandoned": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "findStaleInterviews": [
-      "apps/api/src/workspaces/interview-analytics.service.ts"
-    ],
-    "useInterviewCompletion": ["apps/web/src/hooks/useInterviewCompletion.ts"],
-    "UseInterviewCompletionOptions": [
-      "apps/web/src/hooks/useInterviewCompletion.ts"
-    ],
-    "UseInterviewCompletionReturn": [
-      "apps/web/src/hooks/useInterviewCompletion.ts"
-    ],
-    "getFieldMetadata": ["apps/web/src/lib/field-metadata.ts"],
-    "TOTAL_FIELDS": ["apps/web/src/lib/field-metadata.ts"],
-    "InterviewProgress": ["apps/web/src/components/chat/InterviewProgress.tsx"],
-    "InterviewProgressProps": [
-      "apps/web/src/components/chat/InterviewProgress.tsx"
-    ],
-    "Confetti": ["apps/web/src/components/ui/Confetti.tsx"],
-    "ConfettiProps": ["apps/web/src/components/ui/Confetti.tsx"],
-    "AppModule": ["apps/api/src/app.module.ts"],
-    "UserRole": ["packages/shared/src/enums.ts"],
-    "MembershipRole": ["packages/shared/src/enums.ts"],
-    "TaskStatus": ["packages/shared/src/enums.ts"],
-    "TaskPriority": ["packages/shared/src/enums.ts"],
-    "AssigneeRole": ["packages/shared/src/enums.ts"],
-    "SprintStatus": ["packages/shared/src/enums.ts"],
-    "EventType": ["packages/shared/src/enums.ts"],
-    "AiService": ["apps/api/src/ai/ai.service.ts"],
-    "detectIntent": ["apps/api/src/ai/ai.service.ts"],
-    "executeIntent": ["apps/api/src/ai/ai.service.ts"],
-    "chat": ["apps/api/src/ai/ai.service.ts"],
-    "persistState": ["apps/api/src/ai/ai.service.ts"],
-    "getSession": ["apps/api/src/ai/ai.service.ts"],
-    "findSessionsByUser": ["apps/api/src/ai/ai.service.ts"],
-    "deleteSession": ["apps/api/src/ai/ai.service.ts"],
-    "shareSession": ["apps/api/src/ai/ai.service.ts"],
-    "getSharedSession": ["apps/api/src/ai/ai.service.ts"],
-    "getAgent": ["apps/api/src/ai/ai.service.ts"],
-    "CommentSchema": ["packages/shared/src/models/activity.ts"],
-    "Comment": ["packages/shared/src/models/activity.ts"],
-    "ArtifactSchema": ["packages/shared/src/models/activity.ts"],
-    "Artifact": ["packages/shared/src/models/activity.ts"],
-    "TaskCreatedPayloadSchema": ["packages/shared/src/models/activity.ts"],
-    "StatusChangedPayloadSchema": ["packages/shared/src/models/activity.ts"],
-    "InterviewStartedPayloadSchema": ["packages/shared/src/models/activity.ts"],
-    "InterviewFieldCompletedPayloadSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "InterviewCompletedPayloadSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "InterviewAbandonedPayloadSchema": [
-      "packages/shared/src/models/activity.ts"
-    ],
-    "EventPayloadSchema": ["packages/shared/src/models/activity.ts"],
-    "EventSchema": ["packages/shared/src/models/activity.ts"],
-    "Event": ["packages/shared/src/models/activity.ts"],
-    "ChatHeader": ["apps/web/src/components/chat/ChatHeader.tsx"],
-    "ChatHeaderProps": ["apps/web/src/components/chat/ChatHeader.tsx"],
-    "InterviewGate": ["apps/web/src/components/interview/InterviewGate.tsx"],
-    "ChatPage": ["apps/web/src/app/(dashboard)/chat/page.tsx"],
-    "ChatPageContent": ["apps/web/src/app/(dashboard)/chat/page.tsx"],
-    "WorkspacesService": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "enrichWithManifestInfo": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "enrichMultipleWithManifestInfo": [
-      "apps/api/src/workspaces/workspaces.service.ts"
-    ],
-    "findByIdRaw": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "findById": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "findByUser": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "findByOrg": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "findByIdWithManifest": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "validateWorkspaceManifest": [
-      "apps/api/src/workspaces/workspaces.service.ts"
-    ],
-    "generateApiKey": ["apps/api/src/workspaces/workspaces.service.ts"],
-    "ChecklistItemSchema": ["packages/shared/src/models/workspace.ts"],
-    "ChecklistItem": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
-    "CreateWorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
-    "CreateWorkspace": ["packages/shared/src/models/workspace.ts"],
-    "UpdateWorkspaceSchema": ["packages/shared/src/models/workspace.ts"],
-    "UpdateWorkspace": ["packages/shared/src/models/workspace.ts"],
-    "AddWorkspaceMemberSchema": ["packages/shared/src/models/workspace.ts"],
-    "AddWorkspaceMember": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceIdParamSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceIdParam": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceAndUserParamSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceAndUserParam": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceWithManifestInfoSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "WorkspaceWithManifestInfo": ["packages/shared/src/models/workspace.ts"],
-    "BypassInterviewResponseSchema": [
-      "packages/shared/src/models/workspace.ts"
-    ],
-    "BypassInterviewResponse": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceResponseSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceResponse": ["packages/shared/src/models/workspace.ts"],
-    "WorkspacesResponseSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspacesResponse": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceStatsSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceStats": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceStatsResponseSchema": ["packages/shared/src/models/workspace.ts"],
-    "WorkspaceStatsResponse": ["packages/shared/src/models/workspace.ts"],
-    "ManifestStatusResponseSchema": ["packages/shared/src/models/workspace.ts"],
-    "ManifestStatusResponse": ["packages/shared/src/models/workspace.ts"]
+    "useSafeAuth": [
+      "apps/web/src/context/AuthContext.tsx"
+    ]
   },
   "responsibilities": {
-    "CLAUDE.md": "Project context and workflow instructions for Claude AI assistant",
-    "CONTRIBUTING.md": "Contribution guidelines for the project",
-    "LICENSE": "Project license information",
-    "README.md": "Main project documentation and overview",
-    "biome.json": "Biome linter and formatter configuration",
-    "tsconfig.base.json": "Base TypeScript configuration for the monorepo",
-    "tsconfig.json": "Root TypeScript configuration",
-    "turbo.json": "Turborepo build system configuration",
-    "apps/api": "NestJS backend API server handling workspaces, AI chat, tasks, and authentication",
-    "apps/api/src/main.ts": "API application entry point",
-    "apps/api/src/auth": "Authentication and authorization module (JWT, Google OAuth, OTP)",
-    "apps/api/src/ai": "AI service integration (provider factory, controllers, services)",
-    "apps/api/src/ci": "Continuous Integration module",
-    "apps/api/src/common": "Shared utilities (filters, interceptors, pipes, logger, email service, templates)",
-    "apps/api/src/common/templates": "Email templates (invitation, OTP, welcome)",
-    "apps/api/src/config": "Application configuration management",
-    "apps/api/src/docs": "Documentation management (docs and doc groups)",
-    "apps/api/src/entities": "TypeORM database entities",
-    "apps/api/src/events": "Event handling module",
-    "apps/api/src/health": "Health check endpoints",
-    "apps/api/src/invitations": "Team invitation management",
-    "apps/api/src/organizations": "Organization management",
-    "apps/api/src/sprints": "Sprint planning and management",
-    "apps/api/src/tasks": "Task management and processing",
-    "apps/api/src/users": "User management",
-    "apps/api/src/workspaces": "Workspace management",
-    "apps/mcp": "MCP (Model Context Protocol) server application",
-    "apps/mcp/src/lib": "MCP library utilities (config, logger, types)",
-    "apps/mcp/src/services/locus.service.ts": "Locus service integration for MCP",
-    "apps/mcp/src/tools/definitions.ts": "MCP tool definitions",
-    "apps/mcp/src/workflows/session.workflow.ts": "MCP session workflow management",
-    "apps/www": "Marketing website and documentation site",
-    "apps/www/src/app": "Next.js app router pages and layouts",
-    "apps/www/src/lib": "Website utilities and documentation helpers",
-    "apps/www/src/components": "Website UI components (docs, landing, layout)",
-    "apps/www/content/docs": "Markdown documentation content files",
-    "apps/web": "Next.js web application frontend",
-    "apps/web/src/app": "Next.js app router with auth and dashboard routes",
-    "apps/web/src/components": "UI components - board filters, navigation, editors, modals, and layout components",
-    "apps/web/src/context": "React context providers for global state",
-    "apps/web/src/hooks": "Custom React hooks for shared logic",
-    "apps/web/src/lib": "Utility libraries and configuration",
-    "apps/web/src/services": "Frontend services (notifications)",
-    "apps/web/src/stores": "State management stores (Zustand chat store)",
-    "apps/web/src/views": "Main view/page components",
-    "packages/ai-sdk": "AI SDK for agent implementation and provider abstraction",
-    "packages/ai-sdk/src/chains": "AI chains (intent, interview, manifest updater)",
-    "packages/ai-sdk/src/core": "Core AI SDK (agent, compiler, context, engine, workflow)",
-    "packages/ai-sdk/src/interfaces": "TypeScript interfaces for AI SDK",
-    "packages/ai-sdk/src/tools": "AI tools (compiler, docs, sprints, tasks)",
-    "packages/ai-sdk/src/workflows": "Predefined AI workflows (compiling, documenting, idea, interview, query, task creation)",
-    "packages/sdk": "Core SDK for AI agent orchestration and execution",
-    "packages/sdk/src/agent": "Agent implementation (artifact syncer, codebase indexer, task executor, worker)",
-    "packages/sdk/src/ai": "AI provider runners (Claude, Codex)",
-    "packages/sdk/src/core": "SDK core (config, indexer, prompt builder)",
-    "packages/sdk/src/modules": "API client modules (ai, auth, ci, docs, invitations, organizations, sprints, tasks, workspaces)",
-    "packages/sdk/src/utils": "SDK utilities (colors, retry)",
-    "packages/cli": "Command-line interface for Locus",
-    "packages/cli/src/tree-summarizer.ts": "File tree summarization utility",
-    "packages/cli/src/workspace-resolver.ts": "Workspace path resolution",
-    "packages/cli/src/templates/skills.ts": "CLI skill templates",
-    "packages/cli/public/dashboard": "Static dashboard HTML templates",
-    "packages/shared": "Shared types, models, and utilities across packages",
-    "packages/shared/src/models": "Zod schemas and TypeScript types for domain models",
-    "packages/shared/src/common.ts": "Common shared utilities",
-    "apps/api/src/common/services/email.service.ts": "Email service handling email sending operations",
-    "apps/api/src/common/templates/email-base.template.ts": "Base email template providing common structure for all emails",
-    "apps/api/src/common/templates/invitation-email.template.ts": "Template for user invitation emails",
-    "apps/api/src/common/templates/otp-email.template.ts": "Template for one-time password verification emails",
-    "apps/api/src/common/templates/welcome-email.template.ts": "Template for new user welcome emails",
-    "apps/web/src/components/task-panel": "Task panel UI components",
-    "apps/web/src/components/PropertyItem.tsx": "Individual property field component for displaying/editing task properties",
-    "apps/web/src/components/task-panel/TaskProperties.tsx": "Panel displaying all properties for a task in the task detail view",
-    "apps/web/src/components/ui": "Reusable UI components (ContextMenu, etc.)",
-    "apps/web/src/components/ui/Modal.tsx": "Modal/dialog component for overlaying content on the main interface",
-    "apps/web/src/components/ui/constants.ts": "Design system constants including colors, spacing, breakpoints, and z-index values",
-    "package.json": "Project dependencies and configuration including driver.js",
-    "apps/web/src/components/board/BoardEmptyState.tsx": "Empty state UI component displayed when board has no tasks",
-    "apps/web/src/components/board/BoardContent.tsx": "Main content area component for the board view",
-    "apps/web/src/components/TaskCard.tsx": "Component for rendering individual task cards with properties like title, status, priority, and assignee. Handles task display in board and list views.",
-    "apps/web/src/hooks/useLocalStorage.ts": "Local storage state management hook",
-    "apps/web/src/lib/config.ts": "Application configuration constants",
-    "apps/web/src/lib/task-templates.ts": "Predefined task templates",
-    "apps/web/src/components/board/SprintMindmap.tsx": "Visual mindmap for sprint tasks",
-    "apps/web/src/components/board": "Board view components",
-    "apps/web/src/app/(dashboard)/board/page.tsx": "Main board page route component that orchestrates the kanban board view",
-    "apps/web/src/components/chat/ChatInput.tsx": "Text input component for composing and sending chat messages",
-    "apps/web/src/components/backlog": "Backlog view components",
-    "apps/web/src/components/backlog/BulkActionsBar.tsx": "Component for performing bulk actions on multiple selected items",
-    "apps/web/src/components/chat/ChatSidebar.tsx": "Chat sidebar component for displaying and managing chat conversations in the dashboard",
-    "apps/web/src/components/ui/Drawer.tsx": "Reusable drawer/slide-out panel UI component for overlaying content",
-    "apps/web/src/hooks/useIsMobile.ts": "Hook for detecting mobile viewport breakpoints",
-    "apps/web/src/hooks/useMediaQuery.ts": "Hook for responsive media query matching",
-    "apps/api/src/sprints/sprints.service.ts": "Service layer for sprint CRUD operations and business logic",
-    "apps/web/src/components/board/BoardColumn.tsx": "Kanban board column component for task display and drag-and-drop",
-    "apps/web/src/components/BoardFilter.tsx": "Filter controls for board view",
-    "apps/web/src/components/BottomNav.tsx": "Bottom navigation bar component",
-    "apps/web/src/components/PageLayout.tsx": "Main page layout wrapper",
-    "apps/web/src/components/TaskCreateModal.tsx": "Modal for creating new tasks",
-    "apps/web/src/context/AuthContext.tsx": "Authentication state and user context",
-    "apps/web/src/hooks/useBacklog.ts": "Backlog data management hook",
-    "apps/web/src/hooks/useGlobalKeydowns.ts": "Global keyboard shortcut handler",
-    "apps/web/src/hooks/useTaskPanel.ts": "Task panel state and controls",
-    "apps/web/src/lib/api-client.ts": "API client for backend communication",
-    "apps/web/src/lib/local-storage.ts": "localStorage utility functions",
-    "apps/web/src/styles/driver-theme.css": "CSS theme for onboarding driver/tour",
-    "apps/web/src/views/Dashboard.tsx": "Main dashboard view",
-    "apps/web/src/components/CreateModal": "Modal components for creating entities",
-    "apps/web/src/components/CreateModal/CreateModal.tsx": "Generic create modal component",
-    "apps/web/src/components/backlog/BacklogList.tsx": "List of backlog items",
-    "apps/web/src/components/backlog/BacklogSection.tsx": "Backlog section container",
-    "apps/web/src/components/backlog/CompletedSprintsSection.tsx": "Display completed sprints",
-    "apps/web/src/components/backlog/SprintSection.tsx": "Individual sprint section",
-    "apps/web/src/components/board/BoardHeader.tsx": "Header for board view",
-    "apps/web/src/components/onboarding": "User onboarding components",
-    "apps/web/src/components/onboarding/OnboardingTour.tsx": "Interactive product tour",
-    "apps/web/src/components/onboarding/index.ts": "Onboarding exports barrel file",
-    "apps/web/src/components/task-panel/TaskActivity.tsx": "Task activity/history feed",
-    "apps/web/src/components/task-panel/TaskChecklist.tsx": "Task checklist items",
-    "apps/web/src/components/ui/Tooltip.tsx": "Tooltip component",
-    "apps/web/src/hooks/backlog": "Backlog-specific hooks",
-    "apps/web/src/hooks/backlog/useBacklogActions.ts": "Actions for backlog manipulation",
-    "apps/web/src/app/(auth)/callback/page.tsx": "OAuth callback handler page",
-    "apps/web/src/app/(dashboard)/backlog/page.tsx": "Backlog page route",
-    "apps/web/src/hooks/useTaskDescription.ts": "Custom React hook for managing task description state and logic",
-    "packages/sdk/src/index-node.ts": "Node.js-specific SDK entry point. Exports agent system, AI clients, orchestrator, and utilities",
-    "packages/sdk/src/ai/runner.ts": "Defines the AiRunner interface contract for AI provider implementations with run, stream, and event emitter methods",
-    "packages/sdk/src/exec/index.ts": "Barrel export file re-exporting all exec module components including context-tracker, event-emitter, events, exec-session, history-manager, and types",
-    "packages/cli/src/display": "CLI output rendering (progress, status bar, streaming)",
-    "packages/cli/src/display/execution-stats.ts": "Tracks and displays execution metrics like duration, token usage, and costs",
-    "packages/sdk/src/exec": "Execution engine for running AI-powered tasks with event-driven architecture",
-    "packages/sdk/src/exec/event-emitter.ts": "Pub/sub event system for execution lifecycle notifications",
-    "packages/cli/src/repl": "Interactive REPL session management",
-    "packages/sdk/src/exec/events.ts": "Defines typed execution event system with event types enum, event payload interfaces for session lifecycle, thinking, tools, text, and errors",
-    "packages/sdk/src/exec/types.ts": "Defines stream chunk types and tool parameter interfaces for real-time AI output streaming including tool use, results, thinking, and errors",
-    "apps/web/src/views/Docs.tsx": "Documentation page view component with sidebar and editor",
-    "apps/web/src/hooks/useDocs.ts": "React hook for document management state and operations",
-    "apps/web/src/hooks/useDocsQuery.ts": "React Query hooks for document API operations",
-    "apps/web/src/components/docs": "Documentation UI components (editor, sidebar, forms)",
-    "packages/cli/src/cli.ts": "CLI entry point and command dispatcher",
-    "packages/cli/src/config-manager.ts": "Manages .locus directory, config files, and project initialization",
-    "packages/cli/src/commands": "CLI command implementations (exec, init, run, index, help)",
-    "packages/cli/src/utils": "CLI utilities (banner, version, helpers)",
-    "packages/sdk/src/orchestrator.ts": "Multi-agent orchestrator spawning and managing worker processes",
-    "packages/sdk/src/agent/worker.ts": "Agent worker process for task execution",
-    "packages/sdk/src/agent/document-fetcher.ts": "Fetches documents from server for agent context",
-    "packages/sdk/src/core/config.ts": "SDK configuration constants and path utilities",
-    "packages/sdk/src/core/prompt-builder.ts": "Builds prompts for AI model interactions",
-    "packages/sdk/src/exec/exec-session.ts": "Manages AI execution sessions with history persistence",
-    "packages/sdk/src/exec/context-tracker.ts": "Tracks artifacts and tasks within sessions",
-    "packages/sdk/src/exec/history-manager.ts": "Persists conversation history to disk",
-    "packages/shared/src/models/index.ts": "Re-exports all shared models",
-    "apps/api/src/workspaces/manifest-validator.service.jest.ts": "Jest unit tests for ManifestValidatorService covering isFieldFilled, calculateCompletion, and REQUIRED_MANIFEST_FIELDS integration",
-    "apps/api/src/tasks/tasks.controller.ts": "NestJS REST controller for task CRUD operations including list, create, update, delete, batch update, comments, and task context retrieval",
-    "packages/shared/src/models/manifest.ts": "Shared Zod schemas and TypeScript types for project manifests including phases, sprints, milestones, timeline, repository context, and validation/completion result interfaces",
-    "packages/ai-sdk/src/constants.ts": "Defines shared constants for manifest validation including required fields list and completion threshold",
-    "apps/api/src/config/configuration.ts": "Zod-based environment configuration schema with validation for API settings (database, JWT, OAuth, CORS)",
-    "apps/api/src/workspaces/manifest-validator.service.ts": "NestJS service for validating, repairing, and calculating completion of project manifests",
-    "apps/web/src/components/settings/InterviewBypassSettings.tsx": "React component for toggling interview bypass feature in workspace admin settings",
-    "apps/web/src/app/(dashboard)/settings/page.tsx": "Next.js settings page rendering workspace, checklist, admin, and danger zone sections",
-    "apps/web/src/hooks/useManifestCompletion.ts": "React hook for managing manifest completion state with React Query caching and invalidation",
-    "apps/api/src/workspaces/workspaces.controller.ts": "NestJS REST controller handling workspace CRUD, manifest status, dispatch, interview bypass, and API key management endpoints",
-    "apps/web/src/lib/query-keys.ts": "Centralized React Query key factory for consistent caching and invalidation across workspaces, tasks, sprints, docs, organizations, invitations, and AI sessions",
-    "packages/sdk/src/modules/workspaces.ts": "SDK client module providing typed methods for workspace API operations including CRUD, stats, manifest status, dispatch, API keys, and interview bypass",
-    "apps/web/src/components/settings/FieldChecklist.tsx": "React component displaying a checklist of project manifest fields with completion status, progress tracking, and navigation callbacks",
-    "apps/web/src/components/settings/index.ts": "Barrel file exporting all settings-related components including API key management, field checklist, interview bypass, project setup guide, and workspace settings",
-    "apps/web/src/components/interview/index.ts": "Barrel export file for interview components",
-    "apps/web/src/components/index.ts": "Central barrel export for all dashboard components including AuthLayoutUI, BoardFilter, BottomNav, Header, interview, onboarding, PageLayout, PropertyItem, Sidebar, SprintCreateModal, TaskCard, TaskCreateModal, TaskPanel, typography, and WorkspaceProtected",
-    "apps/web/src/lib/interview-gate-config.ts": "Configuration for interview gate feature, defining rules and settings for when/how interview gates are displayed",
-    "apps/web/src/components/Sidebar.tsx": "Main sidebar navigation component for the dashboard, handles navigation links and workspace switching",
-    "apps/web/src/app/(dashboard)/layout.tsx": "Root layout component for dashboard routes, wraps dashboard pages with common UI elements like sidebar and header",
-    "apps/web/src/hooks/useInterviewAutoStart.ts": "Custom hook that automatically starts the interview onboarding flow when a new workspace redirects to /chat with interview query param",
-    "apps/web/src/hooks/useWorkspaceCreateForm.ts": "Custom hook for workspace creation form management with optional auto-organization creation",
-    "apps/web/src/lib/tour-steps.ts": "Onboarding tour definitions using driver.js for dashboard, board, chat, backlog, and interview flows",
-    "apps/web/src/hooks/useInterviewPersistence.ts": "Manages interview chat backup to localStorage, auto-saves messages on changes and page unload, restores unsent messages",
-    "apps/web/src/hooks/useInterviewResumption.ts": "Detects and manages interview resumption state, checks manifest completion, local backups, and saved sessions",
-    "apps/web/src/hooks/useChat.ts": "Core chat functionality hook managing sessions, messages, mutations for AI intent detection and execution, backup restoration",
-    "apps/web/src/lib/local-storage-keys.ts": "Centralized localStorage keys registry with prefixed keys and helper functions for dynamic keys",
-    "apps/api/src/workspaces/interview-abandonment.job.ts": "Scheduled cron job that detects and emits events for abandoned interviews after 7 days of inactivity",
-    "apps/api/src/workspaces/interview-analytics.service.ts": "Tracks and emits analytics events for interview lifecycle (started, field completed, completed, abandoned)",
-    "apps/web/src/hooks/useInterviewCompletion.ts": "React hook for managing interview completion state, celebration triggers, and automatic redirect",
-    "apps/web/src/lib/field-metadata.ts": "Defines metadata (labels, icons, descriptions) for project manifest fields used in interview UI",
-    "apps/web/src/components/chat/InterviewProgress.tsx": "Progress bar component showing interview completion status with field indicators",
-    "apps/web/src/components/ui/Confetti.tsx": "Celebration confetti animation component using canvas-confetti library",
-    "apps/api/src/app.module.ts": "Root NestJS module configuring all application modules, guards, interceptors, and filters",
-    "packages/ai-sdk/src/index.ts": "Exports AI SDK modules including chains, agent, context, and LLM factory",
-    "packages/shared/src/enums.ts": "Shared enums for user roles, membership roles, task status, priority, sprint status, and event types",
-    "apps/api/src/ai/ai.service.ts": "AI service handling chat, intent detection, session management, and state persistence with interview analytics",
-    "apps/api/src/entities/workspace.entity.ts": "TypeORM entity for workspaces with project manifest, agent state, and interview tracking columns",
-    "apps/api/src/workspaces/workspaces.module.ts": "NestJS module for workspaces, providing CRUD, manifest validation, and interview analytics services",
-    "apps/web/src/hooks/index.ts": "Barrel export for all React hooks including interview, auth, workspace, and form hooks",
-    "packages/shared/src/models/activity.ts": "Zod schemas for comments, artifacts, and event payloads including interview events",
-    "apps/web/src/components/chat/ChatHeader.tsx": "Chat header component with sidebar toggle, share modal, and interview progress bar",
-    "apps/web/src/components/chat/index.ts": "Barrel export for all chat-related components",
-    "apps/web/src/components/interview/InterviewGate.tsx": "Full-screen modal blocking access until interview is complete, showing progress and missing fields",
-    "apps/web/src/components/ui/index.ts": "Barrel export for reusable UI components (Button, Modal, Input, etc.)",
-    "apps/web/src/app/(dashboard)/chat/page.tsx": "Main chat page with interview auto-start, completion tracking, persistence, and celebration",
-    "apps/api/src/workspaces/workspaces.service.ts": "NestJS injectable service handling workspace CRUD operations, manifest validation/repair, interview bypass functionality, API key management, and workspace statistics/activity retrieval",
-    "packages/shared/src/models/workspace.ts": "Zod schemas and TypeScript types for workspace entities including ChecklistItem, Workspace, WorkspaceWithManifestInfo, request/response DTOs, and manifest status types"
+    "package.json": "Root monorepo configuration with Turborepo",
+    "turbo.json": "Turborepo pipeline configuration for build/dev/lint tasks",
+    "tsconfig.base.json": "Shared TypeScript compiler base options",
+    "biome.json": "Biome formatter and linter configuration",
+    "CLAUDE.md": "Agent coding instructions and project conventions",
+    "packages/shared": "Shared Zod schemas, TypeScript types, enums, and constants used across all packages",
+    "packages/shared/src/enums.ts": "Domain enums: UserRole, MembershipRole, TaskStatus, TaskPriority, AssigneeRole, SprintStatus, EventType",
+    "packages/shared/src/common.ts": "Base entity schema, pagination schemas, API response types, generateUUID utility",
+    "packages/shared/src/constants.ts": "Shared constants (e.g. STALE_AGENT_TIMEOUT_MS)",
+    "packages/shared/src/models/task.ts": "Task model: Zod schemas and types for Task, CreateTask, UpdateTask, AcceptanceItem, DispatchTask",
+    "packages/shared/src/models/sprint.ts": "Sprint model: Zod schemas and types for Sprint, CreateSprint, UpdateSprint",
+    "packages/shared/src/models/workspace.ts": "Workspace model: Zod schemas and types for Workspace, ChecklistItem, WorkspaceStats",
+    "packages/shared/src/models/user.ts": "User model: Zod schemas and types for User, CreateUser, UpdateUser",
+    "packages/shared/src/models/auth.ts": "Authentication models: JWT/API-key auth user types, OTP schemas, API key management schemas",
+    "packages/shared/src/models/doc.ts": "Document model: Zod schemas for Doc, CreateDoc, UpdateDoc with DocType enum",
+    "packages/shared/src/models/doc-group.ts": "Document group model: Zod schemas for DocGroup, CreateDocGroup, UpdateDocGroup",
+    "packages/shared/src/models/organization.ts": "Organization model: Zod schemas for Organization, membership management",
+    "packages/shared/src/models/invitation.ts": "Invitation model: Zod schemas for Invitation, CreateInvitation, AcceptInvitation",
+    "packages/shared/src/models/agent.ts": "Agent model: Lock/Unlock schemas, AgentHeartbeat, agent registration types",
+    "packages/shared/src/models/activity.ts": "Activity model: Comment, Artifact, Event schemas with typed event payloads",
+    "packages/shared/src/models/ci.ts": "CI model: RecordCi schema for CI/CD result recording",
+    "packages/sdk": "Core SDK: API client, orchestrator, AI runners, planning, worktree management, exec sessions",
+    "packages/sdk/src/index.ts": "SDK entry point: exports LocusClient class with modular API (auth, tasks, sprints, workspaces, etc.)",
+    "packages/sdk/src/events.ts": "SDK event system: LocusEvent enum, LocusConfig interface, LocusEmitter typed event emitter",
+    "packages/sdk/src/orchestrator.ts": "AgentOrchestrator: spawns and manages multiple agent worker processes, handles task assignment and heartbeats",
+    "packages/sdk/src/core/config.ts": "SDK configuration: Provider constants, default models, .locus directory paths, gitignore patterns",
+    "packages/sdk/src/core/indexer.ts": "CodebaseIndexer: generates and maintains codebase index (symbols + responsibilities) with incremental updates",
+    "packages/sdk/src/core/prompt-builder.ts": "PromptBuilder: constructs AI prompts from task data, project context, CLAUDE.md, skills, and codebase index",
+    "packages/sdk/src/agent/worker.ts": "AgentWorker: main agent loop - claims tasks, executes via AI, reports results, manages per-task worktrees",
+    "packages/sdk/src/agent/task-executor.ts": "TaskExecutor: single-pass task execution via AI runner with prompt building",
+    "packages/sdk/src/agent/review-service.ts": "ReviewService: AI-powered code review on staged git changes",
+    "packages/sdk/src/agent/codebase-indexer-service.ts": "CodebaseIndexerService: wraps CodebaseIndexer with AI-powered tree summarization",
+    "packages/sdk/src/agent/document-fetcher.ts": "DocumentFetcher: fetches workspace documents from API and saves to local .locus/documents",
+    "packages/sdk/src/ai/runner.ts": "AiRunner interface: defines run(), runStream(), abort() contract for AI providers",
+    "packages/sdk/src/ai/claude-runner.ts": "ClaudeRunner: AiRunner implementation using Claude CLI subprocess",
+    "packages/sdk/src/ai/codex-runner.ts": "CodexRunner: AiRunner implementation using OpenAI Codex CLI subprocess",
+    "packages/sdk/src/ai/factory.ts": "createAiRunner factory: creates ClaudeRunner or CodexRunner based on provider config",
+    "packages/sdk/src/planning/plan-manager.ts": "PlanManager: save, load, list, approve, reject, cancel sprint plans on disk and via API",
+    "packages/sdk/src/planning/sprint-plan.ts": "Sprint plan types and utilities: SprintPlan, PlannedTask, markdown rendering, API payload conversion, AI output parsing",
+    "packages/sdk/src/planning/planning-meeting.ts": "PlanningMeeting: multi-phase AI planning pipeline (Tech Lead → Architect → Sprint Organizer)",
+    "packages/sdk/src/planning/agents/tech-lead.ts": "Tech Lead persona: Phase 1 prompt builder for initial task breakdown from CEO directive",
+    "packages/sdk/src/planning/agents/architect.ts": "Architect persona: Phase 2 prompt builder for task refinement, dependency analysis, risk assessment",
+    "packages/sdk/src/planning/agents/sprint-organizer.ts": "Sprint Organizer persona: Phase 3 prompt builder for final sprint plan with ordering and estimates",
+    "packages/sdk/src/worktree/worktree-manager.ts": "WorktreeManager: git worktree lifecycle (create, list, remove, prune) for parallel agent isolation",
+    "packages/sdk/src/worktree/worktree-config.ts": "Worktree configuration types and defaults: WorktreeConfig, CreateWorktreeOptions, WorktreeInfo",
+    "packages/sdk/src/exec/exec-session.ts": "ExecSession: manages AI execution with conversation history persistence, streaming, and context tracking",
+    "packages/sdk/src/exec/event-emitter.ts": "ExecEventEmitter: typed event emitter for execution progress events",
+    "packages/sdk/src/exec/events.ts": "ExecEventType enum: defines all execution event types",
+    "packages/sdk/src/exec/history-manager.ts": "HistoryManager: persists conversation sessions to disk with pruning",
+    "packages/sdk/src/exec/context-tracker.ts": "ContextTracker: tracks artifacts and tasks within a session for reference resolution",
+    "packages/sdk/src/exec/types.ts": "Exec stream types: StreamChunk union for text_delta, tool_use, tool_result, thinking, error, result",
+    "packages/sdk/src/modules/base.ts": "BaseModule: abstract base class for SDK API modules with shared axios instance and emitter",
+    "packages/sdk/src/modules/tasks.ts": "TasksModule: API client methods for task CRUD, comments, dispatch, and availability queries",
+    "packages/sdk/src/modules/sprints.ts": "SprintsModule: API client methods for sprint CRUD, start, complete, AI planning trigger",
+    "packages/sdk/src/modules/auth.ts": "AuthModule: API client methods for OTP auth, profile, API key management",
+    "packages/sdk/src/modules/workspaces.ts": "WorkspacesModule: API client methods for workspace CRUD, members, dispatch, heartbeat, stats",
+    "packages/sdk/src/modules/organizations.ts": "OrganizationsModule: API client methods for org CRUD and membership management",
+    "packages/sdk/src/modules/invitations.ts": "InvitationsModule: API client methods for invitation CRUD and acceptance",
+    "packages/sdk/src/modules/docs.ts": "DocsModule: API client methods for document and doc group CRUD",
+    "packages/sdk/src/modules/ci.ts": "CiModule: API client methods for CI/CD result recording",
+    "packages/sdk/src/project/knowledge-base.ts": "KnowledgeBase: manages .locus/project/context.md and progress.md for project-level context",
+    "packages/sdk/src/utils/colors.ts": "Terminal color utilities for CLI output formatting",
+    "packages/sdk/src/utils/retry.ts": "RetryOptions type for configurable retry behavior",
+    "packages/cli": "CLI application: locus command-line tool with run, exec, plan, init, index, review, agents commands",
+    "packages/cli/src/cli.ts": "CLI entry point: parses commands and dispatches to handlers",
+    "packages/cli/src/commands/run.ts": "run command: starts AgentOrchestrator with N agents for automated task execution",
+    "packages/cli/src/commands/exec.ts": "exec command: single prompt execution or interactive REPL with streaming output",
+    "packages/cli/src/commands/plan.ts": "plan command: triggers AI planning meeting, list/show/approve/reject/cancel plans",
+    "packages/cli/src/commands/init.ts": "init command: initializes .locus directory, CLAUDE.md, and gitignore patterns",
+    "packages/cli/src/commands/review.ts": "review command: AI-powered code review of staged changes",
+    "packages/cli/src/commands/index-codebase.ts": "index command: generates/updates codebase index via AI analysis",
+    "packages/cli/src/commands/agents.ts": "agents command: lists active agents registered in the workspace",
+    "packages/cli/src/commands/exec-sessions.ts": "Session management subcommands for exec: list, show, delete, clear sessions",
+    "packages/cli/src/config-manager.ts": "ConfigManager: reads/writes .locus/config.json for project settings",
+    "packages/cli/src/workspace-resolver.ts": "WorkspaceResolver: resolves workspace ID from config, API key, or user prompt",
+    "packages/cli/src/tree-summarizer.ts": "TreeSummarizer: uses AI to analyze file trees and produce codebase index",
+    "packages/cli/src/repl/interactive-session.ts": "InteractiveSession: REPL-based interactive AI execution with session persistence",
+    "packages/cli/src/repl/commands.ts": "REPL command definitions: /help, /clear, /session, /new, etc.",
+    "packages/cli/src/display/stream-renderer.ts": "StreamRenderer: renders streaming AI output in the terminal",
+    "packages/cli/src/display/status-bar.ts": "StatusBar: terminal status bar for long-running operations",
+    "packages/cli/src/display/progress-renderer.ts": "ProgressRenderer: renders tool execution progress with thinking indicators",
+    "packages/cli/src/display/tool-display.ts": "ToolDisplay: formats tool usage information for terminal display",
+    "packages/cli/src/display/execution-stats.ts": "ExecutionStatsTracker: tracks and displays execution duration, tools used, and errors",
+    "packages/cli/src/utils/banner.ts": "printBanner: displays CLI banner with version info",
+    "packages/cli/src/utils/helpers.ts": "CLI utility helpers: requireInitialization, resolveProvider",
+    "packages/cli/src/utils/version.ts": "VERSION constant from package.json",
+    "packages/cli/src/templates/skills.ts": "Default agent skill templates for initialization",
+    "packages/ai-sdk": "AI SDK package: LangChain-based LLM factory for higher-level AI integrations",
+    "packages/ai-sdk/src/index.ts": "AI SDK entry point: re-exports LLMFactory and interfaces",
+    "packages/ai-sdk/src/core/llm-factory.ts": "LLMFactory: creates LangChain chat models (Gemini supported, Claude/OpenAI planned)",
+    "packages/ai-sdk/src/tools/interfaces.ts": "AI SDK tool interfaces for structured tool definitions",
+    "packages/ai-sdk/src/interfaces/context.ts": "AI SDK context interfaces for conversation and execution context",
+    "apps/api": "NestJS backend API: REST endpoints for tasks, sprints, workspaces, auth, docs, CI, organizations",
+    "apps/api/src/main.ts": "API server entry point: bootstraps NestJS application",
+    "apps/api/src/app.module.ts": "Root NestJS module: imports all feature modules, configures TypeORM, JWT, and middleware",
+    "apps/api/src/entities/task.entity.ts": "Task TypeORM entity with columns, relations, and database schema",
+    "apps/api/src/entities/sprint.entity.ts": "Sprint TypeORM entity with workspace relation and date fields",
+    "apps/api/src/entities/user.entity.ts": "User TypeORM entity with auth fields and org/workspace relations",
+    "apps/api/src/entities/workspace.entity.ts": "Workspace TypeORM entity with org relation and checklist config",
+    "apps/api/src/entities/organization.entity.ts": "Organization TypeORM entity",
+    "apps/api/src/entities/doc.entity.ts": "Doc TypeORM entity with workspace and group relations",
+    "apps/api/src/entities/doc-group.entity.ts": "DocGroup TypeORM entity for document organization",
+    "apps/api/src/entities/invitation.entity.ts": "Invitation TypeORM entity for org member invitations",
+    "apps/api/src/entities/agent-registration.entity.ts": "AgentRegistration TypeORM entity for tracking active agents",
+    "apps/api/src/entities/event.entity.ts": "Event TypeORM entity for activity logging",
+    "apps/api/src/entities/api-key.entity.ts": "ApiKey TypeORM entity for API key management",
+    "apps/api/src/entities/membership.entity.ts": "Membership TypeORM entity for org-user relationships",
+    "apps/api/src/entities/comment.entity.ts": "Comment TypeORM entity for task comments",
+    "apps/api/src/entities/otp-verification.entity.ts": "OtpVerification TypeORM entity for email OTP codes",
+    "apps/api/src/tasks/tasks.service.ts": "Tasks service: CRUD, dispatch, status transitions, comment management",
+    "apps/api/src/tasks/tasks.controller.ts": "Tasks REST controller: endpoints for task operations",
+    "apps/api/src/tasks/task.processor.ts": "Task processor: background job processing for task-related operations",
+    "apps/api/src/sprints/sprints.service.ts": "Sprints service: CRUD, start/complete lifecycle, AI planning trigger",
+    "apps/api/src/sprints/sprints.controller.ts": "Sprints REST controller: endpoints for sprint operations",
+    "apps/api/src/auth/auth.service.ts": "Auth service: OTP-based authentication, JWT token generation, Google OAuth",
+    "apps/api/src/auth/auth.controller.ts": "Auth REST controller: login, register, OTP, Google OAuth, API key endpoints",
+    "apps/api/src/auth/otp.service.ts": "OTP service: generates and verifies one-time passwords for email auth",
+    "apps/api/src/auth/guards/jwt-or-api-key.guard.ts": "Dual auth guard: authenticates requests via JWT token or API key",
+    "apps/api/src/auth/guards/membership-roles.guard.ts": "Role-based guard: enforces org membership role requirements",
+    "apps/api/src/auth/strategies/jwt.strategy.ts": "JWT Passport strategy for token validation",
+    "apps/api/src/auth/strategies/google.strategy.ts": "Google OAuth Passport strategy",
+    "apps/api/src/auth/decorators/user.decorator.ts": "User decorator: extracts authenticated user from request",
+    "apps/api/src/auth/decorators/public.decorator.ts": "Public decorator: marks endpoints as unauthenticated",
+    "apps/api/src/auth/decorators/membership-roles.decorator.ts": "MembershipRoles decorator: specifies required org roles for endpoints",
+    "apps/api/src/workspaces/workspaces.service.ts": "Workspaces service: CRUD, member management, task dispatch, agent heartbeat, stats",
+    "apps/api/src/workspaces/workspaces.controller.ts": "Workspaces REST controller: endpoints for workspace operations",
+    "apps/api/src/organizations/organizations.service.ts": "Organizations service: CRUD, membership management",
+    "apps/api/src/organizations/organizations.controller.ts": "Organizations REST controller: endpoints for org operations",
+    "apps/api/src/docs/docs.service.ts": "Docs service: CRUD for documents within workspaces",
+    "apps/api/src/docs/docs.controller.ts": "Docs REST controller: endpoints for document operations",
+    "apps/api/src/docs/doc-groups.service.ts": "DocGroups service: CRUD for document groups",
+    "apps/api/src/docs/doc-groups.controller.ts": "DocGroups REST controller: endpoints for document group operations",
+    "apps/api/src/users/users.service.ts": "Users service: user CRUD and profile management",
+    "apps/api/src/ci/ci.service.ts": "CI service: records and queries CI/CD run results",
+    "apps/api/src/ci/ci.controller.ts": "CI REST controller: endpoints for CI result recording",
+    "apps/api/src/invitations/invitations.service.ts": "Invitations service: create, accept, list, and verify invitations",
+    "apps/api/src/invitations/invitations.controller.ts": "Invitations REST controller: endpoints for invitation management",
+    "apps/api/src/events/events.service.ts": "Events service: records and queries workspace activity events",
+    "apps/api/src/config/config.service.ts": "Config service: centralized application configuration (DB, JWT, email, Google OAuth)",
+    "apps/api/src/config/configuration.ts": "Configuration factory: loads and validates environment variables",
+    "apps/api/src/common/services/email.service.ts": "Email service: sends OTP, welcome, and invitation emails via SMTP",
+    "apps/api/src/common/filters/all-exceptions.filter.ts": "Global exception filter: catches and formats all API errors",
+    "apps/api/src/common/interceptors/logging.interceptor.ts": "Logging interceptor: logs request method, URL, and duration",
+    "apps/api/src/common/interceptors/transform.interceptor.ts": "Transform interceptor: wraps responses in standard API response format",
+    "apps/api/src/common/pipes/zod-validation.pipe.ts": "Zod validation pipe: validates request data using Zod schemas",
+    "apps/api/src/common/logger/logger.service.ts": "Logger service: structured logging for the API",
+    "apps/api/src/common/templates/email-base.template.ts": "Base HTML email template",
+    "apps/api/src/common/templates/otp-email.template.ts": "OTP verification email template",
+    "apps/api/src/common/templates/welcome-email.template.ts": "Welcome email template",
+    "apps/api/src/common/templates/invitation-email.template.ts": "Invitation email template",
+    "apps/api/src/health/health.controller.ts": "Health check endpoint for uptime monitoring",
+    "apps/mcp": "MCP server: Model Context Protocol integration for AI agent tool calling",
+    "apps/mcp/src/index.ts": "MCP server entry point: supports both STDIO and HTTP/SSE transports",
+    "apps/mcp/src/tools/definitions.ts": "MCP tool registration: start_agent_session and complete_and_next tools",
+    "apps/mcp/src/services/locus.service.ts": "LocusService: MCP-specific wrapper around LocusClient for task dispatch and completion",
+    "apps/mcp/src/workflows/session.workflow.ts": "SessionWorkflow: orchestrates MCP agent session lifecycle (start, complete, next)",
+    "apps/mcp/src/lib/config.ts": "MCP server configuration loading",
+    "apps/mcp/src/lib/logger.ts": "MCP server logger",
+    "apps/mcp/src/lib/types.ts": "MCP types: ClientConfig interface, AGENT_INSTRUCTIONS constant",
+    "apps/web": "Next.js web dashboard: task board, backlog, docs editor, settings, auth",
+    "apps/web/src/app/layout.tsx": "Root layout with providers and global styles",
+    "apps/web/src/app/providers.tsx": "React Query and auth provider composition",
+    "apps/web/src/app/globals.css": "Global CSS styles and Tailwind imports",
+    "apps/web/src/context/AuthContext.tsx": "AuthProvider: React context for user auth state, login, logout, workspace switching",
+    "apps/web/src/lib/api-client.ts": "Web API client: LocusClient singleton with token persistence and event listeners",
+    "apps/web/src/lib/config.ts": "Web app configuration: environment variables",
+    "apps/web/src/lib/query-keys.ts": "React Query key constants for cache management",
+    "apps/web/src/lib/utils.ts": "Web utility functions (cn, date formatting, etc.)",
+    "apps/web/src/lib/validation.ts": "Client-side form validation utilities",
+    "apps/web/src/lib/options.ts": "Select option constants for forms (status, priority, roles)",
+    "apps/web/src/lib/constants.ts": "Web app constants",
+    "apps/web/src/lib/local-storage.ts": "LocalStorage get/set/remove helpers with SSR safety",
+    "apps/web/src/lib/local-storage-keys.ts": "LocalStorage key constants (AUTH_TOKEN, LAST_WORKSPACE_ID, etc.)",
+    "apps/web/src/lib/task-templates.ts": "Predefined task templates for quick creation",
+    "apps/web/src/lib/tour-steps.ts": "Onboarding tour step definitions",
+    "apps/web/src/lib/typography.ts": "Typography scale configuration",
+    "apps/web/src/hooks/useBoard.ts": "useBoard hook: manages board view state, filtering, and task status transitions",
+    "apps/web/src/hooks/useBacklog.ts": "useBacklog hook: manages backlog and sprint task grouping",
+    "apps/web/src/hooks/useTasksQuery.ts": "useTasksQuery hook: React Query wrapper for task list fetching",
+    "apps/web/src/hooks/useSprintsQuery.ts": "useSprintsQuery hook: React Query wrapper for sprint list fetching",
+    "apps/web/src/hooks/useDocsQuery.ts": "useDocsQuery hook: React Query wrapper for docs fetching",
+    "apps/web/src/hooks/useTaskPanel.ts": "useTaskPanel hook: manages task detail side panel state",
+    "apps/web/src/hooks/useWorkspaceQuery.ts": "useWorkspaceQuery hook: React Query wrapper for workspace data",
+    "apps/web/src/hooks/useOrganizationQuery.ts": "useOrganizationQuery hook: React Query wrapper for org data",
+    "apps/web/src/hooks/useAuthenticatedUser.ts": "useAuthenticatedUser hook: returns current user with workspace context",
+    "apps/web/src/hooks/useDocs.ts": "useDocs hook: manages docs editor state and CRUD operations",
+    "apps/web/src/hooks/useMediaQuery.ts": "useMediaQuery hook: responsive breakpoint detection",
+    "apps/web/src/hooks/useIsMobile.ts": "useIsMobile hook: mobile viewport detection",
+    "apps/web/src/hooks/useLocalStorage.ts": "useLocalStorage hook: localStorage state with React sync",
+    "apps/web/src/hooks/useGlobalKeydowns.ts": "useGlobalKeydowns hook: global keyboard shortcut handler",
+    "apps/web/src/hooks/useSpeechRecognition.ts": "useSpeechRecognition hook: browser speech-to-text for task input",
+    "apps/web/src/hooks/backlog/useBacklogUI.ts": "Backlog UI state management (selection, expansion)",
+    "apps/web/src/hooks/backlog/useBacklogActions.ts": "Backlog action handlers (move, bulk update)",
+    "apps/web/src/hooks/backlog/useBacklogData.ts": "Backlog data fetching and grouping logic",
+    "apps/web/src/hooks/backlog/useBacklogDragDrop.ts": "Backlog drag-and-drop reordering logic",
+    "apps/web/src/hooks/task-panel/useTaskData.ts": "Task panel data fetching",
+    "apps/web/src/hooks/task-panel/useTaskUIState.ts": "Task panel UI state (tabs, expanded sections)",
+    "apps/web/src/hooks/task-panel/useTaskActions.ts": "Task panel action handlers (update, delete, comment)",
+    "apps/web/src/hooks/task-panel/useTaskComputedValues.ts": "Task panel computed/derived values",
+    "apps/web/src/components/board/BoardContent.tsx": "Board main content: renders Kanban columns or matrix/flowchart views",
+    "apps/web/src/components/board/BoardColumn.tsx": "Kanban board column with task cards and drag-drop",
+    "apps/web/src/components/board/BoardHeader.tsx": "Board header with view toggles, filters, and sprint info",
+    "apps/web/src/components/board/MatrixView.tsx": "Priority x Status matrix board view",
+    "apps/web/src/components/board/FlowchartView.tsx": "Mermaid-based flowchart board visualization",
+    "apps/web/src/components/board/SortableTaskNode.tsx": "Draggable task card for Kanban board",
+    "apps/web/src/components/board/BoardEmptyState.tsx": "Empty state for board with no tasks",
+    "apps/web/src/components/board/constants.ts": "Board view constants and column configuration",
+    "apps/web/src/components/TaskCard.tsx": "Task card component showing title, status, priority, labels",
+    "apps/web/src/components/TaskPanel.tsx": "Task detail side panel: properties, description, checklist, activity",
+    "apps/web/src/components/TaskCreateModal.tsx": "Modal for creating new tasks with form fields",
+    "apps/web/src/components/SprintCreateModal.tsx": "Modal for creating new sprints",
+    "apps/web/src/components/Header.tsx": "App header with workspace selector and user menu",
+    "apps/web/src/components/Sidebar.tsx": "Navigation sidebar with links to board, backlog, docs, settings",
+    "apps/web/src/components/BottomNav.tsx": "Mobile bottom navigation bar",
+    "apps/web/src/components/PageLayout.tsx": "Page layout wrapper with sidebar and content area",
+    "apps/web/src/components/Markdown.tsx": "Markdown renderer component",
+    "apps/web/src/components/Editor.tsx": "Rich text editor (TipTap-based) for docs",
+    "apps/web/src/components/BoardFilter.tsx": "Board filter controls (status, priority, assignee)",
+    "apps/web/src/components/PropertyItem.tsx": "Reusable property display item component",
+    "apps/web/src/components/WorkspaceProtected.tsx": "Route guard: ensures user has a workspace selected",
+    "apps/web/src/components/WorkspaceCreateModal.tsx": "Modal for creating new workspaces",
+    "apps/web/src/components/AuthLayoutUI.tsx": "Auth pages layout with branding",
+    "apps/web/src/components/ui/Button.tsx": "Button UI component with variants",
+    "apps/web/src/components/ui/Modal.tsx": "Modal dialog UI component",
+    "apps/web/src/components/ui/Input.tsx": "Input field UI component",
+    "apps/web/src/components/ui/Textarea.tsx": "Textarea UI component",
+    "apps/web/src/components/ui/Dropdown.tsx": "Dropdown menu UI component",
+    "apps/web/src/components/ui/ContextMenu.tsx": "Right-click context menu UI component",
+    "apps/web/src/components/ui/Badge.tsx": "Badge/tag UI component",
+    "apps/web/src/components/ui/Tooltip.tsx": "Tooltip UI component",
+    "apps/web/src/components/ui/Drawer.tsx": "Slide-out drawer UI component",
+    "apps/web/src/components/ui/Avatar.tsx": "User avatar UI component",
+    "apps/web/src/components/ui/Toggle.tsx": "Toggle switch UI component",
+    "apps/web/src/components/ui/Toast.tsx": "Toast notification UI component",
+    "apps/web/src/components/ui/Checkbox.tsx": "Checkbox UI component",
+    "apps/web/src/components/ui/Spinner.tsx": "Loading spinner UI component",
+    "apps/web/src/components/ui/Skeleton.tsx": "Loading skeleton placeholder UI component",
+    "apps/web/src/components/ui/EmptyState.tsx": "Empty state placeholder UI component",
+    "apps/web/src/components/ui/OtpInput.tsx": "OTP code input UI component",
+    "apps/web/src/components/settings/ApiKeysSettings.tsx": "API key management settings page",
+    "apps/web/src/components/settings/TeamMembersList.tsx": "Team members list with role management",
+    "apps/web/src/components/settings/TeamInvitationsList.tsx": "Pending invitations list",
+    "apps/web/src/components/settings/InviteMemberModal.tsx": "Modal for inviting team members",
+    "apps/web/src/components/settings/WorkspaceChecklistSettings.tsx": "Default checklist configuration",
+    "apps/web/src/components/settings/ProjectSetupGuide.tsx": "Project setup guide with CLI instructions",
+    "apps/web/src/components/settings/SettingItem.tsx": "Individual setting item component",
+    "apps/web/src/components/settings/SettingSection.tsx": "Settings section grouping component",
+    "apps/web/src/components/backlog/BacklogSection.tsx": "Backlog section with unassigned tasks",
+    "apps/web/src/components/backlog/SprintSection.tsx": "Sprint section in backlog view with tasks",
+    "apps/web/src/components/backlog/BacklogList.tsx": "Scrollable backlog task list",
+    "apps/web/src/components/backlog/BulkActionsBar.tsx": "Bulk action toolbar for selected tasks",
+    "apps/web/src/components/backlog/CompletedSprintsSection.tsx": "Collapsible completed sprints section",
+    "apps/web/src/components/backlog/CompletedSprintItem.tsx": "Individual completed sprint item",
+    "apps/web/src/components/docs/DocsSidebar.tsx": "Docs navigation sidebar with groups and search",
+    "apps/web/src/components/docs/DocsEditorArea.tsx": "Main docs editing area with TipTap editor",
+    "apps/web/src/components/docs/DocsHeaderActions.tsx": "Docs header with title and action buttons",
+    "apps/web/src/components/docs/DocsEmptyState.tsx": "Empty state when no docs exist",
+    "apps/web/src/components/docs/TableOfContents.tsx": "Table of contents for docs",
+    "apps/web/src/components/docs/sidebar/DocItem.tsx": "Individual doc item in sidebar",
+    "apps/web/src/components/docs/sidebar/GroupTree.tsx": "Doc group tree with drag-drop",
+    "apps/web/src/components/docs/sidebar/CreateDocForm.tsx": "Inline form for creating new docs",
+    "apps/web/src/components/docs/sidebar/CreateGroupForm.tsx": "Inline form for creating doc groups",
+    "apps/web/src/components/docs/sidebar/SearchInput.tsx": "Docs search input",
+    "apps/web/src/components/docs/sidebar/RecentDocs.tsx": "Recently viewed docs list",
+    "apps/web/src/components/docs/editor/FloatingToolbar.tsx": "TipTap floating formatting toolbar",
+    "apps/web/src/components/docs/editor/SlashCommands.tsx": "TipTap slash command menu",
+    "apps/web/src/components/editor/MermaidRenderer.tsx": "Mermaid diagram renderer component",
+    "apps/web/src/components/task-panel/TaskHeader.tsx": "Task panel header with title and status",
+    "apps/web/src/components/task-panel/TaskProperties.tsx": "Task properties editor (priority, assignee, labels)",
+    "apps/web/src/components/task-panel/TaskDescription.tsx": "Task description editor",
+    "apps/web/src/components/task-panel/TaskChecklist.tsx": "Task acceptance checklist with toggle",
+    "apps/web/src/components/task-panel/TaskDocs.tsx": "Linked documents section in task panel",
+    "apps/web/src/components/task-panel/TaskActivity.tsx": "Task activity log and comments",
+    "apps/web/src/components/dashboard/WorkspaceSetup.tsx": "Workspace setup wizard component",
+    "apps/web/src/components/dashboard/ActivityFeed.tsx": "Dashboard activity feed component",
+    "apps/web/src/components/dashboard/ActivityItem.tsx": "Individual activity item in feed",
+    "apps/web/src/components/dashboard/StatCard.tsx": "Dashboard statistics card",
+    "apps/web/src/components/dashboard/QuickActions.tsx": "Dashboard quick action buttons",
+    "apps/web/src/components/dashboard/ConnectionModal.tsx": "CLI/MCP connection setup modal",
+    "apps/web/src/components/auth/LoginSteps.tsx": "Multi-step login flow (email → OTP)",
+    "apps/web/src/components/auth/RegisterSteps.tsx": "Multi-step registration flow",
+    "apps/web/src/components/auth/InviteSteps.tsx": "Invitation acceptance flow",
+    "apps/web/src/components/dnd/index.tsx": "Drag-and-drop context and utilities",
+    "apps/web/src/components/onboarding/OnboardingTour.tsx": "Interactive onboarding tour",
+    "apps/web/src/components/onboarding/StepProgress.tsx": "Onboarding step progress indicator",
+    "apps/web/src/components/common/LoadingState.tsx": "Full-page loading state component",
+    "apps/web/src/components/common/ErrorState.tsx": "Error state display component",
+    "apps/web/src/components/CreateModal/CreateModal.tsx": "Generic creation modal component",
+    "apps/web/src/views/Dashboard.tsx": "Dashboard view: stats, activity feed, quick actions",
+    "apps/web/src/views/ActivityView.tsx": "Activity timeline view",
+    "apps/web/src/views/Docs.tsx": "Docs view: sidebar + editor layout",
+    "apps/web/src/app/(auth)/login/page.tsx": "Login page",
+    "apps/web/src/app/(auth)/register/page.tsx": "Registration page",
+    "apps/web/src/app/(auth)/invite/page.tsx": "Invitation acceptance page",
+    "apps/web/src/app/(auth)/callback/page.tsx": "OAuth callback page",
+    "apps/web/src/app/(auth)/onboarding/workspace/page.tsx": "Workspace creation onboarding page",
+    "apps/web/src/app/(dashboard)/page.tsx": "Dashboard home page",
+    "apps/web/src/app/(dashboard)/board/page.tsx": "Task board page (Kanban/Matrix/Flowchart)",
+    "apps/web/src/app/(dashboard)/backlog/page.tsx": "Backlog management page",
+    "apps/web/src/app/(dashboard)/docs/page.tsx": "Documentation editor page",
+    "apps/web/src/app/(dashboard)/activity/page.tsx": "Activity timeline page",
+    "apps/web/src/app/(dashboard)/settings/page.tsx": "Settings page root",
+    "apps/web/src/app/(dashboard)/settings/team/page.tsx": "Team management settings",
+    "apps/web/src/app/(dashboard)/settings/api-keys/page.tsx": "API keys management settings",
+    "apps/web/src/app/(dashboard)/settings/profile/page.tsx": "Profile settings",
+    "apps/web/src/app/(dashboard)/settings/danger/page.tsx": "Danger zone settings (workspace deletion)",
+    "apps/www": "Marketing/docs website built with Next.js",
+    "apps/www/src/app/page.tsx": "Landing page",
+    "apps/www/src/app/docs/page.tsx": "Documentation index page",
+    "apps/www/src/app/docs/[slug]/page.tsx": "Individual documentation article page",
+    "apps/www/src/components/landing/Hero.tsx": "Landing page hero section",
+    "apps/www/src/components/landing/FeatureGrid.tsx": "Feature grid section",
+    "apps/www/src/components/landing/TerminalDemo.tsx": "Terminal demo animation",
+    "apps/www/src/components/landing/WorkflowSteps.tsx": "Workflow steps visualization",
+    "apps/www/src/components/landing/SupportedTools.tsx": "Supported tools/integrations section",
+    "apps/www/src/components/landing/CopyCommand.tsx": "Copy-to-clipboard install command",
+    "apps/www/src/components/landing/DemoVideo.tsx": "Product demo video player",
+    "apps/www/src/components/layout/Navbar.tsx": "Site navigation bar",
+    "apps/www/src/components/layout/Footer.tsx": "Site footer",
+    "apps/www/src/components/layout/MobileNav.tsx": "Mobile navigation menu",
+    "apps/www/src/components/docs/Sidebar.tsx": "Documentation sidebar navigation",
+    "apps/www/src/components/docs/CodeBlock.tsx": "Syntax-highlighted code block",
+    "apps/www/src/components/docs/Mermaid.tsx": "Mermaid diagram renderer for docs",
+    "apps/www/src/components/docs/Search.tsx": "Documentation search",
+    "apps/www/src/lib/docs.ts": "Markdown documentation loader from content/docs/",
+    "apps/www/content/docs/getting-started.md": "Getting started guide",
+    "apps/www/content/docs/cli-reference.md": "CLI command reference",
+    "apps/www/content/docs/architecture.md": "Architecture documentation",
+    "apps/www/content/docs/mcp-integration.md": "MCP integration guide",
+    "apps/www/content/docs/workflows.md": "Workflow documentation",
+    "apps/www/content/docs/workspace-setup.md": "Workspace setup guide"
   },
-  "lastIndexed": "2026-02-02T08:56:47.594Z",
-  "treeHash": "59156d191a764c0aade0e88fbcf460b90af6fa87be9d9813b44e95541355e49e",
+  "lastIndexed": "2026-02-10T02:25:49.468Z",
+  "treeHash": "00fc23bf6b3362e4c46e8ccd7e65fd26252a9849089b0731cce0b8b52b0b25da",
   "fileHashes": {
-    "CLAUDE.md": "9fed0aafc13d9ede",
-    "CONTRIBUTING.md": "c2d7b778722e89b0",
     "LICENSE": "13932d8bec86b32d",
-    "README.md": "19a7d2da6a4379f1",
-    "biome.json": "4ac146c5a8705160",
-    "package.json": "8c012b60c1d38105",
     "tsconfig.base.json": "4eb37e8240a049a3",
-    "tsconfig.json": "3a1ec59990a92c84",
     "turbo.json": "4de9b30558e00282",
-    "apps/mcp/CHANGELOG.md": "79864d0256da626b",
-    "apps/mcp/package.json": "9d9caf8bb2689940",
-    "apps/mcp/tsconfig.build.json": "3a016b4ee9713cd1",
-    "apps/mcp/tsconfig.json": "5f6e1cbe11e09ea2",
-    "apps/api/CHANGELOG.md": "7d3db5e261bbb597",
-    "apps/api/README.md": "d1cdb67c875b1de3",
-    "apps/api/index.ts": "12caf81781b09892",
-    "apps/api/jest.config.js": "bbd4bc8efb93e5f9",
-    "apps/api/nest-cli.json": "052bcaf362dd7132",
-    "apps/api/package.json": "d9a338d4992fc3e1",
-    "apps/api/tsconfig.build.json": "3a016b4ee9713cd1",
-    "apps/api/tsconfig.json": "e3d8ad2c4e4a66f8",
-    "apps/www/CHANGELOG.md": "22bf32e11c9cf61c",
-    "apps/www/next.config.ts": "37546c8cd0c6ff7d",
-    "apps/www/package.json": "1ec814c17f5d53f8",
-    "apps/www/postcss.config.mjs": "5b0bc4c78be977cd",
-    "apps/www/tsconfig.json": "7ef93f6e33bd76ae",
-    "apps/web/CHANGELOG.md": "36cff82f27569735",
-    "apps/web/LICENSE": "13932d8bec86b32d",
-    "apps/web/README.md": "efa6c5126d0ebdc2",
-    "apps/web/next.config.js": "58a23bc0c99c4e4a",
-    "apps/web/package.json": "44515d354d63d5a7",
-    "apps/web/postcss.config.mjs": "5b0bc4c78be977cd",
-    "apps/web/tsconfig.json": "c4ecc657981b0b4e",
-    "packages/ai-sdk/ARCHITECTURE.md": "dce121f33cba5ffd",
-    "packages/ai-sdk/CHANGELOG.md": "bbdc8aa2c998f66e",
-    "packages/ai-sdk/package.json": "48807aa5670ae4a3",
-    "packages/ai-sdk/tsconfig.build.json": "f64b65c07a194198",
-    "packages/ai-sdk/tsconfig.json": "1c2905a788b1dc69",
-    "packages/cli/CHANGELOG.md": "34cc678ccd7a913b",
+    "README.md": "19a7d2da6a4379f1",
+    "package.json": "8c012b60c1d38105",
+    "CONTRIBUTING.md": "c2d7b778722e89b0",
+    "tsconfig.json": "2bd8c755989cd6cb",
+    "biome.json": "4ac146c5a8705160",
+    "CLAUDE.md": "eadb89d4d7683e26",
+    "packages/shared/LICENSE": "13932d8bec86b32d",
+    "packages/shared/CHANGELOG.md": "70146d01fc44aa1f",
+    "packages/shared/README.md": "95793ba77cc6efea",
+    "packages/shared/package.json": "6a67f833b78a0a2a",
+    "packages/shared/tsconfig.build.json": "fe8ce32cc7e18254",
+    "packages/shared/tsconfig.json": "1c2905a788b1dc69",
     "packages/cli/LICENSE": "13932d8bec86b32d",
-    "packages/cli/README.md": "e3b0c44298fc1c14",
+    "packages/cli/CHANGELOG.md": "b0136ada230f62dd",
+    "packages/cli/README.md": "084921861e771ce6",
+    "packages/cli/package.json": "cfc26897dc49d9dc",
+    "packages/cli/tsconfig.json": "1c2905a788b1dc69",
     "packages/cli/index.ts": "9747dc75c867d071",
-    "packages/cli/package.json": "d3d7a7910b1767f9",
-    "packages/cli/tsconfig.json": "31cab973eb8d540e",
-    "packages/sdk/CHANGELOG.md": "b2a61c0ab6ca00b3",
-    "packages/sdk/package.json": "a189f1b4c478549a",
+    "packages/sdk/CHANGELOG.md": "cd19ec413b21615e",
+    "packages/sdk/package.json": "30ec0130f04a0a52",
     "packages/sdk/tsconfig.build.json": "f64b65c07a194198",
     "packages/sdk/tsconfig.json": "1c2905a788b1dc69",
-    "packages/shared/CHANGELOG.md": "eeaaa5e23d65afa2",
-    "packages/shared/LICENSE": "13932d8bec86b32d",
-    "packages/shared/README.md": "95793ba77cc6efea",
-    "packages/shared/package.json": "69218f956c8bc8a0",
-    "packages/shared/tsconfig.build.json": "fe8ce32cc7e18254",
-    "packages/shared/tsconfig.json": "69df1821272c824c",
+    "packages/ai-sdk/ARCHITECTURE.md": "dce121f33cba5ffd",
+    "packages/ai-sdk/CHANGELOG.md": "1dd4bdb07e7876b5",
+    "packages/ai-sdk/package.json": "267c54de61c687dd",
+    "packages/ai-sdk/tsconfig.build.json": "f64b65c07a194198",
+    "packages/ai-sdk/tsconfig.json": "1c2905a788b1dc69",
+    "apps/web/LICENSE": "13932d8bec86b32d",
+    "apps/web/CHANGELOG.md": "9583c1eebf4b96c7",
+    "apps/web/postcss.config.mjs": "5b0bc4c78be977cd",
+    "apps/web/next.config.js": "58a23bc0c99c4e4a",
+    "apps/web/README.md": "efa6c5126d0ebdc2",
+    "apps/web/package.json": "955b32c0134fae65",
+    "apps/web/tsconfig.json": "c4ecc657981b0b4e",
+    "apps/mcp/CHANGELOG.md": "397f9299f17cc4b9",
+    "apps/mcp/package.json": "f079321751ab300e",
+    "apps/mcp/tsconfig.build.json": "3a016b4ee9713cd1",
+    "apps/mcp/tsconfig.json": "5f6e1cbe11e09ea2",
+    "apps/www/CHANGELOG.md": "378bbfb478929888",
+    "apps/www/postcss.config.mjs": "5b0bc4c78be977cd",
+    "apps/www/package.json": "ca34a807b19d9952",
+    "apps/www/tsconfig.json": "7ef93f6e33bd76ae",
+    "apps/www/next.config.ts": "37546c8cd0c6ff7d",
+    "apps/api/CHANGELOG.md": "f5da2090a8b7b594",
+    "apps/api/nest-cli.json": "052bcaf362dd7132",
+    "apps/api/jest.config.js": "bbd4bc8efb93e5f9",
+    "apps/api/webpack.config.js": "be20b11dec3b0504",
+    "apps/api/README.md": "d1cdb67c875b1de3",
+    "apps/api/package.json": "f2d6f54d15d02a89",
+    "apps/api/tsconfig.build.json": "3a016b4ee9713cd1",
+    "apps/api/tsconfig.json": "b0e1d90201efb308",
+    "apps/api/index.ts": "12caf81781b09892",
+    "packages/shared/src/common.ts": "ab2082602e44499d",
+    "packages/shared/src/constants.ts": "1fb84d5e9879b037",
+    "packages/shared/src/index.ts": "21c1438dd34fc8dd",
+    "packages/shared/src/enums.ts": "edf9400431064f71",
+    "packages/cli/src/cli.ts": "16b79ad9eea35486",
+    "packages/cli/src/workspace-resolver.ts": "d490712085d77117",
+    "packages/cli/src/config-manager.ts": "9725410a92f45447",
+    "packages/cli/src/tree-summarizer.ts": "423b3cb7e98789ee",
+    "packages/sdk/src/index-node.ts": "4ef69453958202cf",
+    "packages/sdk/src/orchestrator.ts": "dcdff2d68f761e27",
+    "packages/sdk/src/events.ts": "3aa82e64d1eb176e",
+    "packages/sdk/src/index.ts": "e0a64d0bbc2ce518",
+    "packages/ai-sdk/src/index.ts": "8b240d7b5f8f1cd0",
     "apps/mcp/src/index.ts": "ad5e8776f5513c61",
-    "apps/api/src/app.module.ts": "f113eec33b634309",
     "apps/api/src/main.ts": "e60d8af49222c528",
     "apps/api/src/test-setup.ts": "d89f4e0cedd4f715",
-    "packages/ai-sdk/src/constants.ts": "36d2279e3a4ac1af",
-    "packages/ai-sdk/src/index.ts": "ac7a8d2aea198d69",
-    "packages/cli/src/cli.ts": "6fd56797bd3141b1",
-    "packages/cli/src/config-manager.ts": "88548c4c10785a1d",
-    "packages/cli/src/tree-summarizer.ts": "4d7cf1bdb96ab83d",
-    "packages/cli/src/workspace-resolver.ts": "d490712085d77117",
-    "packages/sdk/src/events.ts": "3aa82e64d1eb176e",
-    "packages/sdk/src/index-node.ts": "07fb96f72556780f",
-    "packages/sdk/src/index.ts": "ad6a63c18c7f8380",
-    "packages/sdk/src/orchestrator.ts": "943fe7d264ea2663",
-    "packages/shared/src/common.ts": "ab2082602e44499d",
-    "packages/shared/src/enums.ts": "e0ef0f5fb5a813a7",
-    "packages/shared/src/index.ts": "ba16730a9c88a99d",
-    "apps/mcp/src/lib/config.ts": "8699f402f2066041",
-    "apps/mcp/src/lib/logger.ts": "165294909392aa73",
-    "apps/mcp/src/lib/types.ts": "8e1a0344687d505c",
-    "apps/mcp/src/services/locus.service.ts": "37ed7ad611e52604",
-    "apps/mcp/src/tools/definitions.ts": "a8797f6f0822b7a4",
-    "apps/mcp/src/workflows/session.workflow.ts": "8579c923472dc40a",
-    "apps/api/src/ai/ai-provider.factory.ts": "2dae3e9319a3acb2",
-    "apps/api/src/ai/ai.controller.ts": "e743c6b73325b6f3",
-    "apps/api/src/ai/ai.module.ts": "4d0ab275949f04f7",
-    "apps/api/src/ai/ai.service.ts": "cee2b612663e7dda",
-    "apps/api/src/auth/auth.controller.ts": "30c752ecc7b27a9d",
-    "apps/api/src/auth/auth.module.ts": "2e98243c4dbe5e4c",
-    "apps/api/src/auth/auth.service.ts": "c677b1cffecc3f6c",
-    "apps/api/src/auth/constants.ts": "a57db9fa74e4815b",
-    "apps/api/src/auth/otp.service.ts": "185992bb45b9a0c0",
-    "apps/api/src/ci/ci.controller.ts": "a574da12d1f60ad1",
-    "apps/api/src/ci/ci.module.ts": "bdffb1535f8687f3",
-    "apps/api/src/ci/ci.service.ts": "f2d92a329fca0eed",
-    "apps/api/src/common/common.module.ts": "e256ac73cc56cba9",
-    "apps/api/src/config/config.module.ts": "4cb076991af59a98",
-    "apps/api/src/config/config.service.ts": "e09d67785728db90",
-    "apps/api/src/config/configuration.ts": "32a1b72d350e4790",
-    "apps/api/src/docs/doc-groups.controller.ts": "3f98f81e7e87deef",
-    "apps/api/src/docs/doc-groups.service.ts": "57b444454d02cddc",
-    "apps/api/src/docs/docs.controller.ts": "e3bc16985b2dea1d",
-    "apps/api/src/docs/docs.module.ts": "a6a45d1fd36ec824",
-    "apps/api/src/docs/docs.service.ts": "d5701d86b04ba867",
-    "apps/api/src/entities/ai-session.entity.ts": "7c83126bf289027c",
-    "apps/api/src/entities/api-key.entity.ts": "44b595e6e1befa7b",
-    "apps/api/src/entities/comment.entity.ts": "40650503059e7138",
-    "apps/api/src/entities/doc-group.entity.ts": "df495fcb5e83da68",
-    "apps/api/src/entities/doc.entity.ts": "6d123fe543272bcd",
-    "apps/api/src/entities/event.entity.ts": "b94935c1b6bb25d0",
-    "apps/api/src/entities/index.ts": "4eff8b788e02aa56",
-    "apps/api/src/entities/invitation.entity.ts": "f05285bc2a7fc629",
-    "apps/api/src/entities/membership.entity.ts": "a805e7b3ad745ce5",
-    "apps/api/src/entities/organization.entity.ts": "a4f9edbe865f1e05",
-    "apps/api/src/entities/otp-verification.entity.ts": "4b8a65e112ae57a2",
-    "apps/api/src/entities/sprint.entity.ts": "d1c50a73fcf6a224",
-    "apps/api/src/entities/task.entity.ts": "1427e9075e393c63",
-    "apps/api/src/entities/user.entity.ts": "c388be483d71d5c2",
-    "apps/api/src/entities/workspace.entity.ts": "3401b1aa9831b3f1",
-    "apps/api/src/events/events.module.ts": "199ba7f0949de7ba",
-    "apps/api/src/events/events.service.ts": "ee80676e2fb92521",
-    "apps/api/src/health/health.controller.ts": "4f2328c708f0ae57",
-    "apps/api/src/health/health.module.ts": "f9b18d2921e4ab09",
-    "apps/api/src/invitations/invitations.controller.ts": "dd3789486ac3dde1",
-    "apps/api/src/invitations/invitations.module.ts": "2e7ad323faacaa31",
-    "apps/api/src/invitations/invitations.service.ts": "42ff296db5498fe9",
-    "apps/api/src/organizations/organizations.controller.ts": "b4d6ad2015b67bdd",
-    "apps/api/src/organizations/organizations.module.ts": "85886423f8ded5c6",
-    "apps/api/src/organizations/organizations.service.ts": "1185385c3d65e009",
-    "apps/api/src/sprints/sprints.constants.ts": "bbb4cd3e0ee95f22",
-    "apps/api/src/sprints/sprints.controller.ts": "ebbcff8558475893",
-    "apps/api/src/sprints/sprints.module.ts": "f2ff733f7da5fe22",
-    "apps/api/src/sprints/sprints.service.ts": "47a4118d0f02b829",
-    "apps/api/src/tasks/task.processor.ts": "faada74409edee22",
-    "apps/api/src/tasks/tasks.controller.ts": "a682c4ad2dfafdb8",
-    "apps/api/src/tasks/tasks.module.ts": "9e0502ddb8b560dc",
-    "apps/api/src/tasks/tasks.service.ts": "ceaad6d62b777f5d",
-    "apps/api/src/users/users.module.ts": "b099cdce1e227752",
-    "apps/api/src/users/users.service.ts": "4ec92020bf9068d1",
-    "apps/api/src/workspaces/interview-abandonment.job.ts": "1c1a6e86237cff15",
-    "apps/api/src/workspaces/interview-analytics.service.ts": "736e5c5de348629d",
-    "apps/api/src/workspaces/manifest-validator.service.jest.ts": "39325ae622d1f81b",
-    "apps/api/src/workspaces/manifest-validator.service.ts": "2113fd0856896c2b",
-    "apps/api/src/workspaces/workspaces.controller.ts": "a3e3ae2b7bbf795e",
-    "apps/api/src/workspaces/workspaces.module.ts": "4cae95cb52f54168",
-    "apps/api/src/workspaces/workspaces.service.ts": "6011791373345b30",
-    "apps/www/content/docs/architecture.md": "a3dde205caa530c8",
-    "apps/www/content/docs/best-practices.md": "734f4d26af3db45f",
-    "apps/www/content/docs/claude.md": "6b409f3fce972b00",
-    "apps/www/content/docs/cli-reference.md": "20be6505736e202e",
-    "apps/www/content/docs/codex.md": "735e3dabd4e28055",
-    "apps/www/content/docs/contributing.md": "07358aec1628d4f8",
-    "apps/www/content/docs/dashboard-workflow.md": "07c304d8ab6f1f7f",
-    "apps/www/content/docs/exec-command.md": "d626e22198bf65a3",
-    "apps/www/content/docs/getting-started.md": "3eebf0c9fbc50bf4",
-    "apps/www/content/docs/initialization.md": "0a4d360188b20715",
-    "apps/www/content/docs/mcp-integration.md": "1ad967ce47659970",
-    "apps/www/content/docs/terminal-agent.md": "fbca62521c70c1eb",
-    "apps/www/content/docs/workflows.md": "8a27435bcac1c30a",
-    "apps/www/content/docs/workspace-setup.md": "760946064ae7bc1b",
-    "apps/www/src/app/globals.css": "91dff5e6cdcdcf8b",
-    "apps/www/src/app/layout.tsx": "f9bce0a4cd9eafdd",
-    "apps/www/src/app/page.tsx": "bd77c208d1ad73a4",
-    "apps/www/src/lib/docs.ts": "c3cdd1f8f101ad4a",
-    "apps/www/src/lib/utils.ts": "4acbc7165a8d5473",
-    "apps/web/src/app/globals.css": "0174337e9584f07f",
-    "apps/web/src/app/layout.tsx": "b6b0689296eee4cf",
-    "apps/web/src/app/not-found.tsx": "3564f54ca9b757dc",
-    "apps/web/src/app/providers.tsx": "859f8738d57d550e",
-    "apps/web/src/components/AuthLayoutUI.tsx": "336a009c59d72747",
-    "apps/web/src/components/BoardFilter.tsx": "06612960a274578d",
-    "apps/web/src/components/BottomNav.tsx": "2f49f68d58cb917c",
-    "apps/web/src/components/Editor.tsx": "ee6016bcc9f040bc",
-    "apps/web/src/components/Header.tsx": "1ed2e4aa5bdd43c0",
-    "apps/web/src/components/PageLayout.tsx": "672610709fb2376a",
-    "apps/web/src/components/PropertyItem.tsx": "526d848707828f71",
-    "apps/web/src/components/Sidebar.tsx": "6775a501e246432d",
-    "apps/web/src/components/SprintCreateModal.tsx": "1af4b6d342954944",
-    "apps/web/src/components/TaskCard.tsx": "9411f1af9b9a4d28",
-    "apps/web/src/components/TaskCreateModal.tsx": "98636251c8f3ffe1",
-    "apps/web/src/components/TaskPanel.tsx": "44485099a351f390",
-    "apps/web/src/components/WorkspaceCreateModal.tsx": "b85c046e4933876b",
-    "apps/web/src/components/WorkspaceProtected.tsx": "30dd42e58c0c88a5",
-    "apps/web/src/components/index.ts": "eed3e19595b7c807",
-    "apps/web/src/components/typography-scales.tsx": "522a014f4c135190",
-    "apps/web/src/context/AuthContext.tsx": "ee0de7e888250879",
-    "apps/web/src/context/index.ts": "b26963bf24f3f3e3",
-    "apps/web/src/docs/CHAT_INTERFACE.md": "9b9fcfbe6597dba3",
-    "apps/web/src/hooks/index.ts": "0bd17ea14e438d59",
-    "apps/web/src/hooks/useApiKeysQuery.ts": "ee5d3705879532d6",
-    "apps/web/src/hooks/useAuthLayoutLogic.ts": "540b8e874da2091f",
-    "apps/web/src/hooks/useAuthenticatedUser.ts": "ec4bcdae8c4de1b6",
-    "apps/web/src/hooks/useAuthenticatedUserWithOrg.ts": "0494f1aa371a53a1",
-    "apps/web/src/hooks/useBacklog.ts": "34f4eed5281ea2dd",
-    "apps/web/src/hooks/useBoard.ts": "bf8b78c51e2c4448",
-    "apps/web/src/hooks/useChat.ts": "ea5d3b6c7272f743",
-    "apps/web/src/hooks/useDashboardLayout.ts": "87d29937decef81a",
-    "apps/web/src/hooks/useDocs.ts": "e9e6ead2a1aa3fd3",
-    "apps/web/src/hooks/useDocsQuery.ts": "3442a0e97b7adc34",
-    "apps/web/src/hooks/useDocsSidebarState.ts": "804d65a590af0409",
-    "apps/web/src/hooks/useFormState.ts": "92e4bdf4b27fa324",
-    "apps/web/src/hooks/useGlobalKeydowns.ts": "0cd53b80a99f2be7",
-    "apps/web/src/hooks/useInterviewAutoStart.ts": "33305572c553b489",
-    "apps/web/src/hooks/useInterviewCompletion.ts": "a087be8e120dac59",
-    "apps/web/src/hooks/useInterviewPersistence.ts": "a1842231b8b1ef85",
-    "apps/web/src/hooks/useInterviewResumption.ts": "53418e25361818ae",
-    "apps/web/src/hooks/useInviteForm.ts": "e49ce532910a0c85",
-    "apps/web/src/hooks/useIsMobile.ts": "7f2e11d03468ee6e",
-    "apps/web/src/hooks/useLocalStorage.ts": "6655a07e4edd9b28",
-    "apps/web/src/hooks/useLoginForm.ts": "74513cd01c0baee9",
-    "apps/web/src/hooks/useManifestCompletion.ts": "5ca4047e0d97dd3a",
-    "apps/web/src/hooks/useMediaQuery.ts": "f864524c429de402",
-    "apps/web/src/hooks/useMutationWithToast.ts": "eec793f16b795c74",
-    "apps/web/src/hooks/useOrganizationQuery.ts": "4eb8dae223c9eca5",
-    "apps/web/src/hooks/useRegisterForm.ts": "5dda3cea3ae9978c",
-    "apps/web/src/hooks/useSpeechRecognition.ts": "edbe986e0b7082db",
-    "apps/web/src/hooks/useSprintsQuery.ts": "cb0c60d2089a53e9",
-    "apps/web/src/hooks/useTaskDescription.ts": "d3d7571226f2c935",
-    "apps/web/src/hooks/useTaskPanel.ts": "2ad7592dd449b125",
-    "apps/web/src/hooks/useTasksQuery.ts": "6e4cf77209016be3",
-    "apps/web/src/hooks/useTeamManagement.ts": "ea1a2d49b8d80307",
-    "apps/web/src/hooks/useWorkspaceCreateForm.ts": "295f0203fb9f2d41",
-    "apps/web/src/hooks/useWorkspaceId.ts": "0309c508b9945975",
-    "apps/web/src/hooks/useWorkspaceQuery.ts": "357489e8be225e5f",
-    "apps/web/src/services/index.ts": "6da35cb835410ca0",
-    "apps/web/src/services/notifications.ts": "49653e5ea0520d17",
-    "apps/web/src/lib/api-client.ts": "77c9a692edbfcfa0",
-    "apps/web/src/lib/config.ts": "0de12eaf2ecf3cf5",
-    "apps/web/src/lib/constants.ts": "4878e90bef68dadf",
-    "apps/web/src/lib/field-metadata.ts": "42b7132aa90f5e30",
-    "apps/web/src/lib/interview-gate-config.ts": "5c9a4493e7409cd0",
-    "apps/web/src/lib/local-storage-keys.ts": "7023337079d34ed0",
-    "apps/web/src/lib/local-storage.ts": "88f2adbe44482a5d",
-    "apps/web/src/lib/options.ts": "1ae59c070fd8664d",
-    "apps/web/src/lib/query-keys.ts": "446283e375f7507d",
-    "apps/web/src/lib/task-templates.ts": "79796acb3bf6f9bb",
-    "apps/web/src/lib/tour-steps.ts": "e02dfc25504e302b",
-    "apps/web/src/lib/typography.ts": "2a767537879cb76a",
-    "apps/web/src/lib/utils.ts": "feb749da9d5a5dc6",
-    "apps/web/src/lib/validation.ts": "68ba5c35df965315",
-    "apps/web/src/stores/chat-store.ts": "460cd83f2d403e96",
-    "apps/web/src/styles/driver-theme.css": "133ef7db8ce13de9",
-    "apps/web/src/utils/env.utils.ts": "0d0fbe08c17eca99",
-    "apps/web/src/views/ActivityView.tsx": "cb5a7a3579c255ba",
-    "apps/web/src/views/Dashboard.tsx": "a6a379f83df455f6",
-    "apps/web/src/views/Docs.tsx": "d1c97fba5bcb2e8d",
-    "packages/ai-sdk/src/chains/intent.ts": "63abdf941558b4dd",
-    "packages/ai-sdk/src/chains/interview.ts": "8424274705307fbd",
-    "packages/ai-sdk/src/chains/manifest-updater.ts": "9fb3fd9703150add",
-    "packages/ai-sdk/src/core/agent.ts": "9d0c9988f65c11ab",
-    "packages/ai-sdk/src/core/compiler.ts": "08f2025a0fa59295",
-    "packages/ai-sdk/src/core/context.ts": "3de9b37ebc7c120e",
-    "packages/ai-sdk/src/core/engine.ts": "75ef1ef478de405a",
-    "packages/ai-sdk/src/core/llm-factory.ts": "5d70393ccf54f6e0",
-    "packages/ai-sdk/src/core/tool-handler.ts": "2e81cb96a7b134e8",
-    "packages/ai-sdk/src/core/workflow.ts": "253a193861856368",
-    "packages/ai-sdk/src/interfaces/context.ts": "f44c01474254585b",
-    "packages/ai-sdk/src/interfaces/index.ts": "ba9b8d82b4d4f2e5",
-    "packages/ai-sdk/src/tools/compiler.ts": "2002bfaeeece7662",
-    "packages/ai-sdk/src/tools/docs.ts": "d85b712f05f058e4",
-    "packages/ai-sdk/src/tools/index.ts": "021ff6708b723d0a",
-    "packages/ai-sdk/src/tools/interfaces.ts": "284492dde44aa757",
-    "packages/ai-sdk/src/tools/sprints.ts": "f62fd48a416a5fc5",
-    "packages/ai-sdk/src/tools/tasks.ts": "c8bc09284266bfdc",
-    "packages/ai-sdk/src/workflows/compiling.ts": "8adbd5802167d0f5",
-    "packages/ai-sdk/src/workflows/documenting_product.ts": "2a9c01522d77a287",
-    "packages/ai-sdk/src/workflows/documenting_technical.ts": "e20455f69cdabef7",
-    "packages/ai-sdk/src/workflows/idea.ts": "cc7bc8b0b0ec047a",
-    "packages/ai-sdk/src/workflows/interview.ts": "6d376e43f64b7ffb",
-    "packages/ai-sdk/src/workflows/query.ts": "cab58df954acf710",
-    "packages/ai-sdk/src/workflows/task-creation.ts": "c5ea5fd3031a37b4",
-    "packages/cli/public/dashboard/404.html": "7cd56f5e49ec03df",
-    "packages/cli/public/dashboard/backlog.html": "f29db3b58fa08d28",
-    "packages/cli/public/dashboard/backlog.txt": "01fdbd59277cdc50",
-    "packages/cli/public/dashboard/docs.html": "affd3e25e6447d55",
-    "packages/cli/public/dashboard/docs.txt": "f4915168c099b320",
-    "packages/cli/public/dashboard/index.html": "7f10457b3600ec70",
-    "packages/cli/public/dashboard/index.txt": "8f6a192e359a38c2",
-    "packages/cli/public/dashboard/settings.html": "28e17d9f60724536",
-    "packages/cli/public/dashboard/settings.txt": "daf978dfda7fc803",
-    "packages/cli/src/commands/exec-sessions.ts": "4c6466784ceca851",
-    "packages/cli/src/commands/exec.ts": "614786c60285fef9",
-    "packages/cli/src/commands/help.ts": "e105e26898cb836c",
-    "packages/cli/src/commands/index-codebase.ts": "2fece4f576784ccd",
-    "packages/cli/src/commands/index.ts": "3e7795a3349d0f33",
-    "packages/cli/src/commands/init.ts": "679f8c2101d98473",
-    "packages/cli/src/commands/run.ts": "bec27e49cffa1ce7",
-    "packages/cli/src/display/execution-stats.ts": "3649488ac1df09b0",
-    "packages/cli/src/display/progress-renderer.ts": "07aaaa99eb8744a6",
-    "packages/cli/src/display/status-bar.ts": "1ffe64d6616cac67",
-    "packages/cli/src/display/stream-renderer.ts": "ee85f60c56746926",
-    "packages/cli/src/display/tool-display.ts": "3ab397cc9fd89ea4",
+    "apps/api/src/app.module.ts": "7b4fd61e7856b3b0",
     "packages/cli/src/repl/commands.ts": "b53b46f3d64deb82",
-    "packages/cli/src/repl/interactive-session.ts": "c32801ee6f8d2f7d",
+    "packages/cli/src/repl/interactive-session.ts": "38876ed172846e41",
     "packages/cli/src/templates/skills.ts": "1c41a17008ede60d",
     "packages/cli/src/utils/banner.ts": "0fe2ff3f7ffb0295",
     "packages/cli/src/utils/helpers.ts": "47841cc832b71447",
     "packages/cli/src/utils/index.ts": "8af3a23a0bc126fb",
     "packages/cli/src/utils/version.ts": "c727dd701d486c02",
-    "packages/sdk/src/agent/codebase-indexer-service.ts": "141cc532425138a2",
-    "packages/sdk/src/agent/document-fetcher.ts": "e0d6bca348419f6e",
-    "packages/sdk/src/agent/index.ts": "84828dd16ba697f9",
-    "packages/sdk/src/agent/task-executor.ts": "5cfcf7bbaa4e3748",
-    "packages/sdk/src/agent/worker.ts": "f45d60d14e7194b5",
-    "packages/sdk/src/ai/claude-runner.ts": "fc110e41ec3be010",
-    "packages/sdk/src/ai/codex-runner.ts": "3ca5137a256e9463",
-    "packages/sdk/src/ai/factory.ts": "ffdc6b80d405025b",
-    "packages/sdk/src/ai/index.ts": "1be2b5c3c4943c66",
-    "packages/sdk/src/ai/runner.ts": "ae98f16591f8a750",
-    "packages/sdk/src/core/config.ts": "2e8e0b47cb4d6c93",
-    "packages/sdk/src/core/index.ts": "464b8aa13221d9ae",
+    "packages/cli/src/display/stream-renderer.ts": "ee85f60c56746926",
+    "packages/cli/src/display/status-bar.ts": "1ffe64d6616cac67",
+    "packages/cli/src/display/progress-renderer.ts": "07aaaa99eb8744a6",
+    "packages/cli/src/display/tool-display.ts": "3ab397cc9fd89ea4",
+    "packages/cli/src/display/execution-stats.ts": "3649488ac1df09b0",
+    "packages/shared/src/models/sprint.ts": "32895bcb5f43e971",
+    "packages/shared/src/models/workspace.ts": "18453e231425184d",
+    "packages/shared/src/models/invitation.ts": "106a41ab86f6e6d4",
+    "packages/shared/src/models/agent.ts": "26099d6fa19147ac",
+    "packages/shared/src/models/doc.ts": "696b2f023f067ad5",
+    "packages/shared/src/models/activity.ts": "e7618c60fe17c94b",
+    "packages/shared/src/models/ci.ts": "f192605a5b078393",
+    "packages/shared/src/models/organization.ts": "2f06a131d04b188a",
+    "packages/shared/src/models/index.ts": "fa4fc12b009f9533",
+    "packages/shared/src/models/user.ts": "e056f3c6a1ac3797",
+    "packages/shared/src/models/task.ts": "283181f823ba6efc",
+    "packages/shared/src/models/auth.ts": "ca4168ca9e9606a0",
+    "packages/shared/src/models/doc-group.ts": "3ce5100b3d318d80",
     "packages/sdk/src/core/indexer.ts": "fd345a442dde8e07",
-    "packages/sdk/src/core/prompt-builder.ts": "45e5e94dc2920314",
-    "packages/sdk/src/exec/context-tracker.ts": "7a53f3d0ce6717a7",
-    "packages/sdk/src/exec/event-emitter.ts": "77776c640374c63c",
-    "packages/sdk/src/exec/events.ts": "2307e6b61bcf3aec",
-    "packages/sdk/src/exec/exec-session.ts": "a33b95dfbda138fc",
-    "packages/sdk/src/exec/history-manager.ts": "3dddacb68790c711",
-    "packages/sdk/src/exec/index.ts": "52356f62b7929888",
-    "packages/sdk/src/exec/types.ts": "604b644fc87b1f61",
-    "packages/sdk/src/modules/ai.ts": "93d2cae31d6d89ef",
-    "packages/sdk/src/modules/auth.ts": "4434faf5c16be662",
-    "packages/sdk/src/modules/base.ts": "f17d95d10c37bebf",
-    "packages/sdk/src/modules/ci.ts": "eafb286affd4fe01",
-    "packages/sdk/src/modules/docs.ts": "431993a84670ffaa",
-    "packages/sdk/src/modules/invitations.ts": "a4ed61d139de2e54",
-    "packages/sdk/src/modules/organizations.ts": "a35547eaecacf225",
-    "packages/sdk/src/modules/sprints.ts": "5bdd5dc8829081aa",
-    "packages/sdk/src/modules/tasks.ts": "264ce628f978e5fe",
-    "packages/sdk/src/modules/workspaces.ts": "e71fffca156bc6ea",
+    "packages/sdk/src/core/prompt-builder.ts": "0b15fe3cdaed5e94",
+    "packages/sdk/src/core/index.ts": "464b8aa13221d9ae",
+    "packages/sdk/src/core/config.ts": "1fea0251d8512eda",
+    "packages/cli/src/commands/help.ts": "9d40309001c5e16e",
+    "packages/cli/src/commands/init.ts": "f02660494b2bcf28",
+    "packages/cli/src/commands/exec-sessions.ts": "4c6466784ceca851",
+    "packages/cli/src/commands/review.ts": "d9da3db0846ce087",
+    "packages/cli/src/commands/agents.ts": "0767c83858ddcd33",
+    "packages/cli/src/commands/index-codebase.ts": "2fece4f576784ccd",
+    "packages/cli/src/commands/exec.ts": "614786c60285fef9",
+    "packages/cli/src/commands/index.ts": "c4cdcd7c77743338",
+    "packages/cli/src/commands/plan.ts": "f2ea34fae78ce551",
+    "packages/cli/src/commands/run.ts": "5874b5016de17040",
+    "packages/sdk/src/planning/planning-meeting.ts": "fcf6b21af1d3e9a7",
+    "packages/sdk/src/planning/sprint-plan.ts": "798e5b4c613ed377",
+    "packages/sdk/src/planning/plan-manager.ts": "5df2c715359b2e9d",
+    "packages/sdk/src/planning/index.ts": "b208bae2c30dab9c",
+    "packages/sdk/src/worktree/worktree-manager.ts": "5dc9ec76f5e9d2c1",
+    "packages/sdk/src/worktree/worktree-config.ts": "9d4805794a6caa10",
+    "packages/sdk/src/worktree/index.ts": "574d51d3dcd657c6",
     "packages/sdk/src/utils/colors.ts": "e25452d7e293931e",
     "packages/sdk/src/utils/retry.ts": "e57eed530ca9e97f",
-    "packages/shared/src/models/activity.ts": "336df517debdf12f",
-    "packages/shared/src/models/agent.ts": "d295da11b4f6dfd1",
-    "packages/shared/src/models/ai.ts": "4d20926a4e2646fc",
-    "packages/shared/src/models/auth.ts": "ca4168ca9e9606a0",
-    "packages/shared/src/models/ci.ts": "f192605a5b078393",
-    "packages/shared/src/models/doc-group.ts": "3ce5100b3d318d80",
-    "packages/shared/src/models/doc.ts": "696b2f023f067ad5",
-    "packages/shared/src/models/index.ts": "8f87bd31b6176cfe",
-    "packages/shared/src/models/invitation.ts": "106a41ab86f6e6d4",
-    "packages/shared/src/models/manifest.ts": "2b4d7adbc8436e40",
-    "packages/shared/src/models/organization.ts": "2f06a131d04b188a",
-    "packages/shared/src/models/sprint.ts": "32895bcb5f43e971",
-    "packages/shared/src/models/task.ts": "9c665b9dc8caa52e",
-    "packages/shared/src/models/user.ts": "e056f3c6a1ac3797",
-    "packages/shared/src/models/workspace.ts": "87099e6bc816ac12",
-    "apps/api/src/ai/adapters/doc.adapter.ts": "517f8cdf44fe3067",
-    "apps/api/src/ai/adapters/sprint.adapter.ts": "044b82d4f689cbd7",
-    "apps/api/src/ai/adapters/task.adapter.ts": "4b6d4ddb1cf9c201",
-    "apps/api/src/auth/decorators/index.ts": "92bf4b49a7e1dbe6",
-    "apps/api/src/auth/decorators/membership-roles.decorator.ts": "0e4842b3e4f5c289",
-    "apps/api/src/auth/decorators/public.decorator.ts": "28862ee675f7b2c6",
-    "apps/api/src/auth/decorators/user.decorator.ts": "2050d58a613cbc05",
-    "apps/api/src/auth/guards/google-auth.guard.ts": "9d3df0106be1f46b",
-    "apps/api/src/auth/guards/index.ts": "29e3464870d3c901",
-    "apps/api/src/auth/guards/jwt-or-api-key.guard.ts": "292c32d53d294579",
-    "apps/api/src/auth/guards/membership-roles.guard.ts": "06e6d3628544d2b8",
-    "apps/api/src/auth/interfaces/auth-request.interface.ts": "0de1a4c27c33faf3",
-    "apps/api/src/auth/interfaces/google-user.interface.ts": "82bd78c4e5059e41",
-    "apps/api/src/auth/strategies/google.strategy.ts": "569b6f93c0a205d5",
-    "apps/api/src/auth/strategies/index.ts": "684bb1e57586cc87",
-    "apps/api/src/auth/strategies/jwt.strategy.ts": "b1c4b8b44dbf3e10",
-    "apps/api/src/common/filters/all-exceptions.filter.ts": "33cfd09e07d28450",
-    "apps/api/src/common/filters/index.ts": "bfeea700a9fdebb6",
-    "apps/api/src/common/interceptors/index.ts": "6bd4c3b2f29fa23d",
-    "apps/api/src/common/interceptors/logging.interceptor.ts": "067a9f5e5bb3ef51",
-    "apps/api/src/common/interceptors/transform.interceptor.ts": "d964df6946a872a4",
-    "apps/api/src/common/logger/index.ts": "af9f4142cdcb0158",
-    "apps/api/src/common/logger/logger.service.ts": "14849220e699aa41",
-    "apps/api/src/common/pipes/index.ts": "a9dd336202553791",
-    "apps/api/src/common/pipes/zod-validation.pipe.ts": "0fdcf51eecf67716",
-    "apps/api/src/common/services/email.service.ts": "8d68729b850d33fb",
-    "apps/api/src/common/services/index.ts": "91b755cb134e2e8b",
-    "apps/api/src/common/templates/email-base.template.ts": "a17cc52999c1721a",
-    "apps/api/src/common/templates/index.ts": "0b2c3db97473eb4d",
-    "apps/api/src/common/templates/invitation-email.template.ts": "d5f058aa4e84b525",
-    "apps/api/src/common/templates/otp-email.template.ts": "c817d0d961a5c359",
-    "apps/api/src/common/templates/welcome-email.template.ts": "c1d82188c1afa956",
-    "apps/www/src/app/docs/layout.tsx": "9a8567cc2d249c39",
-    "apps/www/src/app/docs/page.tsx": "1d891de332376007",
-    "apps/www/src/app/docs/template.tsx": "904367addbdbd351",
-    "apps/www/src/components/docs/Alerts.tsx": "93f1be6758946abf",
-    "apps/www/src/components/docs/CodeBlock.tsx": "e16fba3fc6e04764",
-    "apps/www/src/components/docs/Mermaid.tsx": "e117d8cfade4e3cc",
-    "apps/www/src/components/docs/Search.tsx": "1dbb9901abc876ae",
-    "apps/www/src/components/docs/Sidebar.tsx": "0a76dd8c52e4aac4",
-    "apps/www/src/components/docs/index.ts": "c5975c46fd69ee39",
-    "apps/www/src/components/landing/BrandingElements.tsx": "48d819edaa4784e5",
-    "apps/www/src/components/landing/CopyCommand.tsx": "62c90fa898233d86",
-    "apps/www/src/components/landing/DemoVideo.tsx": "be50aade00dc4a59",
-    "apps/www/src/components/landing/FeatureGrid.tsx": "ad9af79391592213",
-    "apps/www/src/components/landing/Hero.tsx": "79a800f8fafeba5e",
-    "apps/www/src/components/landing/SupportedTools.tsx": "7f6e772ef9c14763",
-    "apps/www/src/components/landing/TerminalDemo.tsx": "d216083c4ad370f6",
-    "apps/www/src/components/landing/WorkflowSteps.tsx": "250037321b0c839e",
-    "apps/www/src/components/landing/index.ts": "d553edcd6206be60",
-    "apps/www/src/components/layout/Footer.tsx": "9c011238c5642adb",
-    "apps/www/src/components/layout/MobileNav.tsx": "950f722e673a02df",
-    "apps/www/src/components/layout/Navbar.tsx": "bf1f642ec47cb867",
-    "apps/www/src/components/layout/PageTransition.tsx": "2202af0481737992",
-    "apps/www/src/components/layout/WhelpWidget.tsx": "b2703d7ff38cbde8",
-    "apps/www/src/components/layout/index.ts": "5604702ae79683a9",
-    "apps/www/src/components/ui/button.tsx": "5c0fd68faee68d67",
-    "apps/www/src/components/ui/index.ts": "ba9130d2ead921ef",
+    "packages/sdk/src/agent/document-fetcher.ts": "e0d6bca348419f6e",
+    "packages/sdk/src/agent/codebase-indexer-service.ts": "38d7552018e979e7",
+    "packages/sdk/src/agent/task-executor.ts": "aa76df9e784ec732",
+    "packages/sdk/src/agent/index.ts": "1b2c100d5ff63362",
+    "packages/sdk/src/agent/review-service.ts": "3d0ba0b06a5a0f39",
+    "packages/sdk/src/agent/worker.ts": "e36a6327c4f60f93",
+    "packages/sdk/src/project/knowledge-base.ts": "2ed11e6bf9e91612",
+    "packages/sdk/src/ai/claude-runner.ts": "d8010adcf1cc781d",
+    "packages/sdk/src/ai/factory.ts": "ffdc6b80d405025b",
+    "packages/sdk/src/ai/index.ts": "1be2b5c3c4943c66",
+    "packages/sdk/src/ai/runner.ts": "a4c27e29ae94e010",
+    "packages/sdk/src/ai/codex-runner.ts": "8b406156b35d4aee",
+    "packages/sdk/src/exec/event-emitter.ts": "77776c640374c63c",
+    "packages/sdk/src/exec/history-manager.ts": "3dddacb68790c711",
+    "packages/sdk/src/exec/context-tracker.ts": "7a53f3d0ce6717a7",
+    "packages/sdk/src/exec/types.ts": "604b644fc87b1f61",
+    "packages/sdk/src/exec/events.ts": "2307e6b61bcf3aec",
+    "packages/sdk/src/exec/exec-session.ts": "a33b95dfbda138fc",
+    "packages/sdk/src/exec/index.ts": "52356f62b7929888",
+    "packages/sdk/src/modules/workspaces.ts": "5134032234fca811",
+    "packages/sdk/src/modules/base.ts": "f17d95d10c37bebf",
+    "packages/sdk/src/modules/invitations.ts": "a4ed61d139de2e54",
+    "packages/sdk/src/modules/organizations.ts": "a35547eaecacf225",
+    "packages/sdk/src/modules/docs.ts": "431993a84670ffaa",
+    "packages/sdk/src/modules/ci.ts": "eafb286affd4fe01",
+    "packages/sdk/src/modules/tasks.ts": "56ee09c70aa5fad5",
+    "packages/sdk/src/modules/sprints.ts": "5bdd5dc8829081aa",
+    "packages/sdk/src/modules/auth.ts": "4434faf5c16be662",
+    "packages/cli/public/dashboard/backlog.txt": "01fdbd59277cdc50",
+    "packages/cli/public/dashboard/index.html": "7f10457b3600ec70",
+    "packages/cli/public/dashboard/backlog.html": "f29db3b58fa08d28",
+    "packages/cli/public/dashboard/index.txt": "8f6a192e359a38c2",
+    "packages/cli/public/dashboard/404.html": "7cd56f5e49ec03df",
+    "packages/cli/public/dashboard/settings.txt": "daf978dfda7fc803",
+    "packages/cli/public/dashboard/docs.html": "affd3e25e6447d55",
+    "packages/cli/public/dashboard/settings.html": "28e17d9f60724536",
+    "packages/cli/public/dashboard/docs.txt": "f4915168c099b320",
+    "packages/ai-sdk/src/tools/interfaces.ts": "61f50891289b20fd",
+    "packages/ai-sdk/src/core/llm-factory.ts": "5d70393ccf54f6e0",
+    "packages/ai-sdk/src/interfaces/context.ts": "f44c01474254585b",
+    "packages/ai-sdk/src/interfaces/index.ts": "dca04cad9dac7267",
+    "apps/web/src/context/AuthContext.tsx": "ee0de7e888250879",
+    "apps/web/src/context/index.ts": "b26963bf24f3f3e3",
+    "apps/web/src/app/layout.tsx": "b6b0689296eee4cf",
+    "apps/web/src/app/globals.css": "0174337e9584f07f",
+    "apps/web/src/app/not-found.tsx": "3564f54ca9b757dc",
+    "apps/web/src/app/providers.tsx": "859f8738d57d550e",
+    "apps/web/src/utils/env.utils.ts": "0d0fbe08c17eca99",
+    "apps/web/src/docs/CHAT_INTERFACE.md": "9b9fcfbe6597dba3",
+    "apps/web/src/styles/driver-theme.css": "133ef7db8ce13de9",
+    "apps/web/src/components/TaskCreateModal.tsx": "98636251c8f3ffe1",
+    "apps/web/src/components/TaskCard.tsx": "9411f1af9b9a4d28",
+    "apps/web/src/components/Markdown.tsx": "17d061bfb8069767",
+    "apps/web/src/components/BottomNav.tsx": "7b78c331cd5bfeff",
+    "apps/web/src/components/PageLayout.tsx": "672610709fb2376a",
+    "apps/web/src/components/Editor.tsx": "8815a03294528649",
+    "apps/web/src/components/AuthLayoutUI.tsx": "336a009c59d72747",
+    "apps/web/src/components/WorkspaceCreateModal.tsx": "09a86d4755db686f",
+    "apps/web/src/components/PropertyItem.tsx": "526d848707828f71",
+    "apps/web/src/components/WorkspaceProtected.tsx": "30dd42e58c0c88a5",
+    "apps/web/src/components/BoardFilter.tsx": "06612960a274578d",
+    "apps/web/src/components/Header.tsx": "1ed2e4aa5bdd43c0",
+    "apps/web/src/components/Sidebar.tsx": "3602546ba86c53a3",
+    "apps/web/src/components/TaskPanel.tsx": "44485099a351f390",
+    "apps/web/src/components/index.ts": "5fc91a4b7b001ab5",
+    "apps/web/src/components/SprintCreateModal.tsx": "1af4b6d342954944",
+    "apps/web/src/components/typography-scales.tsx": "522a014f4c135190",
+    "apps/web/src/hooks/useRegisterForm.ts": "5dda3cea3ae9978c",
+    "apps/web/src/hooks/useTasksQuery.ts": "6e4cf77209016be3",
+    "apps/web/src/hooks/useDocsSidebarState.ts": "804d65a590af0409",
+    "apps/web/src/hooks/useFormState.ts": "92e4bdf4b27fa324",
+    "apps/web/src/hooks/useDocsQuery.ts": "3442a0e97b7adc34",
+    "apps/web/src/hooks/useMutationWithToast.ts": "eec793f16b795c74",
+    "apps/web/src/hooks/useApiKeysQuery.ts": "ee5d3705879532d6",
+    "apps/web/src/hooks/useInviteForm.ts": "e49ce532910a0c85",
+    "apps/web/src/hooks/useAuthenticatedUserWithOrg.ts": "0494f1aa371a53a1",
+    "apps/web/src/hooks/useMediaQuery.ts": "f864524c429de402",
+    "apps/web/src/hooks/useTeamManagement.ts": "ea1a2d49b8d80307",
+    "apps/web/src/hooks/useWorkspaceId.ts": "0309c508b9945975",
+    "apps/web/src/hooks/useBacklog.ts": "34f4eed5281ea2dd",
+    "apps/web/src/hooks/useLocalStorage.ts": "6655a07e4edd9b28",
+    "apps/web/src/hooks/useGlobalKeydowns.ts": "0cd53b80a99f2be7",
+    "apps/web/src/hooks/useDashboardLayout.ts": "87d29937decef81a",
+    "apps/web/src/hooks/useWorkspaceCreateForm.ts": "295f0203fb9f2d41",
+    "apps/web/src/hooks/useLoginForm.ts": "74513cd01c0baee9",
+    "apps/web/src/hooks/useTaskDescription.ts": "d3d7571226f2c935",
+    "apps/web/src/hooks/useBoard.ts": "f1fb1eba53d5ee8b",
+    "apps/web/src/hooks/useSpeechRecognition.ts": "edbe986e0b7082db",
+    "apps/web/src/hooks/useAuthenticatedUser.ts": "ec4bcdae8c4de1b6",
+    "apps/web/src/hooks/index.ts": "215ce0d5ce976ffd",
+    "apps/web/src/hooks/useWorkspaceQuery.ts": "357489e8be225e5f",
+    "apps/web/src/hooks/useTaskPanel.ts": "2ad7592dd449b125",
+    "apps/web/src/hooks/useOrganizationQuery.ts": "4eb8dae223c9eca5",
+    "apps/web/src/hooks/useDocs.ts": "e9e6ead2a1aa3fd3",
+    "apps/web/src/hooks/useSprintsQuery.ts": "cb0c60d2089a53e9",
+    "apps/web/src/hooks/useAuthLayoutLogic.ts": "540b8e874da2091f",
+    "apps/web/src/hooks/useIsMobile.ts": "7f2e11d03468ee6e",
+    "apps/web/src/lib/api-client.ts": "77c9a692edbfcfa0",
+    "apps/web/src/lib/validation.ts": "68ba5c35df965315",
+    "apps/web/src/lib/local-storage-keys.ts": "7023337079d34ed0",
+    "apps/web/src/lib/task-templates.ts": "79796acb3bf6f9bb",
+    "apps/web/src/lib/utils.ts": "feb749da9d5a5dc6",
+    "apps/web/src/lib/local-storage.ts": "88f2adbe44482a5d",
+    "apps/web/src/lib/constants.ts": "4878e90bef68dadf",
+    "apps/web/src/lib/query-keys.ts": "feca6f4bca9bbc1e",
+    "apps/web/src/lib/tour-steps.ts": "e02dfc25504e302b",
+    "apps/web/src/lib/config.ts": "0de12eaf2ecf3cf5",
+    "apps/web/src/lib/typography.ts": "2a767537879cb76a",
+    "apps/web/src/lib/options.ts": "1ae59c070fd8664d",
+    "apps/web/src/views/Dashboard.tsx": "a6a379f83df455f6",
+    "apps/web/src/views/ActivityView.tsx": "cb5a7a3579c255ba",
+    "apps/web/src/views/Docs.tsx": "d1c97fba5bcb2e8d",
+    "apps/web/src/services/notifications.ts": "49653e5ea0520d17",
+    "apps/web/src/services/index.ts": "6da35cb835410ca0",
+    "apps/mcp/src/tools/definitions.ts": "a8797f6f0822b7a4",
+    "apps/mcp/src/workflows/session.workflow.ts": "b66c5d4878382115",
+    "apps/mcp/src/lib/types.ts": "8e1a0344687d505c",
+    "apps/mcp/src/lib/logger.ts": "165294909392aa73",
+    "apps/mcp/src/lib/config.ts": "8699f402f2066041",
+    "apps/mcp/src/services/locus.service.ts": "22e068e4f41317ca",
+    "apps/www/content/docs/terminal-agent.md": "fbca62521c70c1eb",
+    "apps/www/content/docs/workflows.md": "8a27435bcac1c30a",
+    "apps/www/content/docs/architecture.md": "a3dde205caa530c8",
+    "apps/www/content/docs/initialization.md": "0a4d360188b20715",
+    "apps/www/content/docs/best-practices.md": "734f4d26af3db45f",
+    "apps/www/content/docs/workspace-setup.md": "760946064ae7bc1b",
+    "apps/www/content/docs/dashboard-workflow.md": "07c304d8ab6f1f7f",
+    "apps/www/content/docs/getting-started.md": "3eebf0c9fbc50bf4",
+    "apps/www/content/docs/codex.md": "735e3dabd4e28055",
+    "apps/www/content/docs/contributing.md": "07358aec1628d4f8",
+    "apps/www/content/docs/mcp-integration.md": "1ad967ce47659970",
+    "apps/www/content/docs/exec-command.md": "d626e22198bf65a3",
+    "apps/www/content/docs/cli-reference.md": "20be6505736e202e",
+    "apps/www/content/docs/claude.md": "6b409f3fce972b00",
+    "apps/www/src/app/layout.tsx": "f9bce0a4cd9eafdd",
+    "apps/www/src/app/page.tsx": "bd77c208d1ad73a4",
+    "apps/www/src/app/globals.css": "91dff5e6cdcdcf8b",
+    "apps/www/src/lib/utils.ts": "4acbc7165a8d5473",
+    "apps/www/src/lib/docs.ts": "c3cdd1f8f101ad4a",
+    "apps/api/src/organizations/organizations.service.ts": "1185385c3d65e009",
+    "apps/api/src/organizations/organizations.controller.ts": "b4d6ad2015b67bdd",
+    "apps/api/src/organizations/organizations.module.ts": "85886423f8ded5c6",
+    "apps/api/src/tasks/tasks.module.ts": "9e0502ddb8b560dc",
+    "apps/api/src/tasks/tasks.service.ts": "822423115ffddafb",
+    "apps/api/src/tasks/task.processor.ts": "faada74409edee22",
+    "apps/api/src/tasks/tasks.controller.ts": "10d6c58ed5cebca2",
+    "apps/api/src/config/config.module.ts": "4cb076991af59a98",
+    "apps/api/src/config/config.service.ts": "e09d67785728db90",
+    "apps/api/src/config/configuration.ts": "4268942cfb06d6fb",
+    "apps/api/src/auth/auth.controller.ts": "30c752ecc7b27a9d",
+    "apps/api/src/auth/auth.service.ts": "c677b1cffecc3f6c",
+    "apps/api/src/auth/otp.service.ts": "185992bb45b9a0c0",
+    "apps/api/src/auth/constants.ts": "a57db9fa74e4815b",
+    "apps/api/src/auth/auth.module.ts": "2e98243c4dbe5e4c",
+    "apps/api/src/ci/ci.module.ts": "bdffb1535f8687f3",
+    "apps/api/src/ci/ci.controller.ts": "a574da12d1f60ad1",
+    "apps/api/src/ci/ci.service.ts": "f2d92a329fca0eed",
+    "apps/api/src/sprints/sprints.controller.ts": "71b24723c7c0f42c",
+    "apps/api/src/sprints/sprints.module.ts": "401fc3bc78ca4249",
+    "apps/api/src/sprints/sprints.service.ts": "98c829f57911e2bf",
+    "apps/api/src/sprints/sprints.constants.ts": "bbb4cd3e0ee95f22",
+    "apps/api/src/health/health.module.ts": "f9b18d2921e4ab09",
+    "apps/api/src/health/health.controller.ts": "4f2328c708f0ae57",
+    "apps/api/src/docs/docs.module.ts": "a6a45d1fd36ec824",
+    "apps/api/src/docs/docs.service.ts": "d5701d86b04ba867",
+    "apps/api/src/docs/doc-groups.controller.ts": "3f98f81e7e87deef",
+    "apps/api/src/docs/docs.controller.ts": "e3bc16985b2dea1d",
+    "apps/api/src/docs/doc-groups.service.ts": "57b444454d02cddc",
+    "apps/api/src/workspaces/workspaces.controller.ts": "230a31e19642f595",
+    "apps/api/src/workspaces/workspaces.service.ts": "c0d7c75fe5e9ee8d",
+    "apps/api/src/workspaces/workspaces.module.ts": "13bd7b884fefe929",
+    "apps/api/src/common/common.module.ts": "e256ac73cc56cba9",
+    "apps/api/src/users/users.service.ts": "4ec92020bf9068d1",
+    "apps/api/src/users/users.module.ts": "b099cdce1e227752",
+    "apps/api/src/events/events.service.ts": "ee80676e2fb92521",
+    "apps/api/src/events/events.module.ts": "199ba7f0949de7ba",
+    "apps/api/src/entities/doc-group.entity.ts": "df495fcb5e83da68",
+    "apps/api/src/entities/event.entity.ts": "b94935c1b6bb25d0",
+    "apps/api/src/entities/agent-registration.entity.ts": "3eb8d1de20d2e21f",
+    "apps/api/src/entities/user.entity.ts": "c388be483d71d5c2",
+    "apps/api/src/entities/sprint.entity.ts": "b608965a3a647bec",
+    "apps/api/src/entities/invitation.entity.ts": "f05285bc2a7fc629",
+    "apps/api/src/entities/api-key.entity.ts": "44b595e6e1befa7b",
+    "apps/api/src/entities/organization.entity.ts": "a4f9edbe865f1e05",
+    "apps/api/src/entities/otp-verification.entity.ts": "4b8a65e112ae57a2",
+    "apps/api/src/entities/task.entity.ts": "a573e4f93f5ddbff",
+    "apps/api/src/entities/doc.entity.ts": "6d123fe543272bcd",
+    "apps/api/src/entities/workspace.entity.ts": "5d61a8373d55171e",
+    "apps/api/src/entities/comment.entity.ts": "40650503059e7138",
+    "apps/api/src/entities/membership.entity.ts": "a805e7b3ad745ce5",
+    "apps/api/src/entities/index.ts": "1fb0de2d24d2bf04",
+    "apps/api/src/invitations/invitations.controller.ts": "dd3789486ac3dde1",
+    "apps/api/src/invitations/invitations.module.ts": "2e7ad323faacaa31",
+    "apps/api/src/invitations/invitations.service.ts": "42ff296db5498fe9",
+    "packages/sdk/src/planning/agents/sprint-organizer.ts": "fa99dc79ef5147ce",
+    "packages/sdk/src/planning/agents/architect.ts": "0362fbc3696b3d70",
+    "packages/sdk/src/planning/agents/tech-lead.ts": "1465bb2c7fbf9c9f",
     "apps/web/src/app/(auth)/layout.tsx": "dae89ef36c8f8844",
-    "apps/web/src/app/(dashboard)/layout.tsx": "c39d97c723a385a5",
+    "apps/web/src/app/(dashboard)/layout.tsx": "9ebc05ea89f8aa6a",
     "apps/web/src/app/(dashboard)/page.tsx": "b3ef720bbf1eadb2",
-    "apps/web/src/components/CreateModal/CreateModal.tsx": "f392a61cef61f3e7",
-    "apps/web/src/components/CreateModal/index.ts": "f31026b0a1bfa7e3",
-    "apps/web/src/components/auth/InviteSteps.tsx": "1284e88ba91d1bbe",
-    "apps/web/src/components/auth/LoginSteps.tsx": "e4991d43b5f718fc",
-    "apps/web/src/components/auth/RegisterSteps.tsx": "aee9c63eb813c43c",
-    "apps/web/src/components/auth/index.ts": "e5bb29f6fe17bacf",
-    "apps/web/src/components/backlog/BacklogList.tsx": "eb24177018c1ebf8",
-    "apps/web/src/components/backlog/BacklogSection.tsx": "534b4974ccf78e72",
-    "apps/web/src/components/backlog/BulkActionsBar.tsx": "c1a45d7b753b9ae5",
-    "apps/web/src/components/backlog/CompletedSprintItem.tsx": "70dc314fbdbe29a7",
-    "apps/web/src/components/backlog/CompletedSprintsSection.tsx": "2afc26368479817b",
-    "apps/web/src/components/backlog/SprintSection.tsx": "a2c85b0e62538372",
-    "apps/web/src/components/backlog/constants.ts": "3535cd86f42acab2",
-    "apps/web/src/components/board/BoardColumn.tsx": "8373366831a7fd50",
-    "apps/web/src/components/board/BoardContent.tsx": "64c8cc0ed7e008de",
-    "apps/web/src/components/board/BoardEmptyState.tsx": "9e0a50ac5047c6f9",
-    "apps/web/src/components/board/BoardHeader.tsx": "85a81a89c59006c7",
-    "apps/web/src/components/board/FlowchartView.tsx": "af7f8d1527c02865",
-    "apps/web/src/components/board/MatrixView.tsx": "a903912cc25ae9f9",
-    "apps/web/src/components/board/SortableTaskNode.tsx": "797432627fbd9de5",
-    "apps/web/src/components/board/SprintMindmap.tsx": "2c0346b20c756375",
-    "apps/web/src/components/board/constants.ts": "adbbada7b29412af",
-    "apps/web/src/components/board/index.ts": "61c6000fd31f2510",
-    "apps/web/src/components/chat/ArtifactPanel.tsx": "1774b5d691f510a1",
-    "apps/web/src/components/chat/ChatEmptyState.tsx": "ca98a4a1d560ca26",
-    "apps/web/src/components/chat/ChatHeader.tsx": "c9c9f664529180e7",
-    "apps/web/src/components/chat/ChatInput.tsx": "1dcd333410ef90cb",
-    "apps/web/src/components/chat/ChatLayout.tsx": "64bad811d825658a",
-    "apps/web/src/components/chat/ChatMessage.tsx": "19ddc87fe48a962b",
-    "apps/web/src/components/chat/ChatSidebar.tsx": "b4b02e34084cb08e",
-    "apps/web/src/components/chat/ChatSuggestions.tsx": "b556c9db794119c2",
-    "apps/web/src/components/chat/InterviewProgress.tsx": "50678070259f22d2",
-    "apps/web/src/components/chat/Markdown.tsx": "a58210028d6d1b39",
-    "apps/web/src/components/chat/SuggestedPrompts.tsx": "8fd90847a0eed63b",
-    "apps/web/src/components/chat/index.ts": "caa38b73a9fe44b4",
-    "apps/web/src/components/chat/types.ts": "3553caf3b79eb7a7",
-    "apps/web/src/components/common/ErrorState.tsx": "36ebcec070ff6153",
-    "apps/web/src/components/common/LoadingState.tsx": "abda25aa2be43ec9",
-    "apps/web/src/components/common/index.ts": "03425e3e430f759d",
-    "apps/web/src/components/dashboard/ActivityFeed.tsx": "8425a40b5d443beb",
-    "apps/web/src/components/dashboard/ActivityItem.tsx": "e1b7976a3ae3726e",
-    "apps/web/src/components/dashboard/ConnectionModal.tsx": "570582a036ad63a7",
-    "apps/web/src/components/dashboard/QuickActions.tsx": "8b0a827b27ebc7a5",
-    "apps/web/src/components/dashboard/StatCard.tsx": "d676ebad37b477e8",
-    "apps/web/src/components/dashboard/WorkspaceSetup.tsx": "839f114acf358a8b",
-    "apps/web/src/components/dashboard/index.ts": "6d2e86d29b7e3f6b",
-    "apps/web/src/components/dnd/index.tsx": "df5adb3ad0dda9c4",
-    "apps/web/src/components/docs/DocsEditorArea.tsx": "cca0efebac1456b6",
-    "apps/web/src/components/docs/DocsEmptyState.tsx": "bd188ac4f4886316",
-    "apps/web/src/components/docs/DocsHeaderActions.tsx": "8e0a06f573a74c2b",
-    "apps/web/src/components/docs/DocsSidebar.tsx": "90f7e2fb1850a2ce",
-    "apps/web/src/components/docs/TableOfContents.tsx": "0a17870a12e7d9e2",
-    "apps/web/src/components/editor/MermaidRenderer.tsx": "d5c4b59edefdcc2b",
-    "apps/web/src/components/editor/index.ts": "94aea4c01f005690",
-    "apps/web/src/components/interview/InterviewGate.tsx": "ddea54718c7b2505",
-    "apps/web/src/components/interview/index.ts": "4858c12e41eb5c3e",
-    "apps/web/src/components/onboarding/OnboardingTour.tsx": "000ec3f16fffc97d",
-    "apps/web/src/components/onboarding/StepProgress.tsx": "f635770a5ffb390b",
-    "apps/web/src/components/onboarding/index.ts": "a44cf443f168e842",
-    "apps/web/src/components/settings/ApiKeyConfirmationModal.tsx": "95a03a487800995e",
+    "apps/web/src/components/settings/InviteMemberModal.tsx": "66e2846d59a767b9",
+    "apps/web/src/components/settings/TeamInvitationsList.tsx": "b51671b732dc8453",
+    "apps/web/src/components/settings/WorkspaceChecklistSettings.tsx": "c01a02925d223f52",
+    "apps/web/src/components/settings/ApiKeysSettings.tsx": "d41309679b781ae4",
+    "apps/web/src/components/settings/TeamMembersList.tsx": "5e82037062fbf5ad",
+    "apps/web/src/components/settings/SettingItem.tsx": "d871eb5cabb2374f",
+    "apps/web/src/components/settings/ProjectSetupGuide.tsx": "d8f96bb9beaabd75",
     "apps/web/src/components/settings/ApiKeyCreatedModal.tsx": "3bfea262b5c2ef1e",
     "apps/web/src/components/settings/ApiKeysList.tsx": "d6632ac77a8ab395",
-    "apps/web/src/components/settings/ApiKeysSettings.tsx": "d41309679b781ae4",
-    "apps/web/src/components/settings/FieldChecklist.tsx": "f25a43b4f3019418",
-    "apps/web/src/components/settings/InterviewBypassSettings.tsx": "8695c61e690dbe19",
-    "apps/web/src/components/settings/InviteMemberModal.tsx": "66e2846d59a767b9",
-    "apps/web/src/components/settings/ProjectSetupGuide.tsx": "d8f96bb9beaabd75",
-    "apps/web/src/components/settings/SettingItem.tsx": "d871eb5cabb2374f",
+    "apps/web/src/components/settings/ApiKeyConfirmationModal.tsx": "95a03a487800995e",
+    "apps/web/src/components/settings/index.ts": "1a14cd28b34460e1",
     "apps/web/src/components/settings/SettingSection.tsx": "64d279dc1eb1c45c",
-    "apps/web/src/components/settings/TeamInvitationsList.tsx": "b51671b732dc8453",
-    "apps/web/src/components/settings/TeamMembersList.tsx": "5e82037062fbf5ad",
-    "apps/web/src/components/settings/WorkspaceChecklistSettings.tsx": "c01a02925d223f52",
-    "apps/web/src/components/settings/index.ts": "5ef4d922f2f9cee0",
-    "apps/web/src/components/task-panel/TaskActivity.tsx": "d9a6bf4375e97348",
+    "apps/web/src/components/ui/Drawer.tsx": "ae1ed2eb359885e8",
+    "apps/web/src/components/ui/Tooltip.tsx": "9dbb927729bf8273",
+    "apps/web/src/components/ui/ContextMenu.tsx": "4acfe39f2e84b4b3",
+    "apps/web/src/components/ui/Dropdown.tsx": "9ed5695d6983d0ac",
+    "apps/web/src/components/ui/constants.ts": "9ba8d6c9f79e82b3",
+    "apps/web/src/components/ui/Avatar.tsx": "517afb5b93c9284b",
+    "apps/web/src/components/ui/Badge.tsx": "8270bb0a1db9f264",
+    "apps/web/src/components/ui/index.ts": "240a37984f4fba29",
+    "apps/web/src/components/ui/Button.tsx": "4761313892cd2c3c",
+    "apps/web/src/components/ui/Toggle.tsx": "7d51848cff3ac9ba",
+    "apps/web/src/components/ui/Modal.tsx": "1db0171667113f9f",
+    "apps/web/src/components/ui/Toast.tsx": "e2c4bdbebbc7dbaa",
+    "apps/web/src/components/ui/Checkbox.tsx": "705f188d8e4acbdb",
+    "apps/web/src/components/ui/EmptyState.tsx": "30fb55f357473da0",
+    "apps/web/src/components/ui/Spinner.tsx": "09643a54735f92f6",
+    "apps/web/src/components/ui/Textarea.tsx": "19ef010910a05e13",
+    "apps/web/src/components/ui/Input.tsx": "2dc6e823efb271d5",
+    "apps/web/src/components/ui/Skeleton.tsx": "663eca4ae9d267e7",
+    "apps/web/src/components/ui/OtpInput.tsx": "7fd0a11ea99d252a",
+    "apps/web/src/components/board/MatrixView.tsx": "a903912cc25ae9f9",
+    "apps/web/src/components/board/FlowchartView.tsx": "af7f8d1527c02865",
+    "apps/web/src/components/board/BoardHeader.tsx": "89e69a671f0bd661",
+    "apps/web/src/components/board/constants.ts": "adbbada7b29412af",
+    "apps/web/src/components/board/BoardEmptyState.tsx": "9e0a50ac5047c6f9",
+    "apps/web/src/components/board/BoardContent.tsx": "64c8cc0ed7e008de",
+    "apps/web/src/components/board/SortableTaskNode.tsx": "797432627fbd9de5",
+    "apps/web/src/components/board/index.ts": "b9659e52840466d7",
+    "apps/web/src/components/board/BoardColumn.tsx": "8373366831a7fd50",
+    "apps/web/src/components/backlog/CompletedSprintItem.tsx": "70dc314fbdbe29a7",
+    "apps/web/src/components/backlog/BacklogList.tsx": "eb24177018c1ebf8",
+    "apps/web/src/components/backlog/BulkActionsBar.tsx": "c1a45d7b753b9ae5",
+    "apps/web/src/components/backlog/constants.ts": "3535cd86f42acab2",
+    "apps/web/src/components/backlog/CompletedSprintsSection.tsx": "2afc26368479817b",
+    "apps/web/src/components/backlog/BacklogSection.tsx": "534b4974ccf78e72",
+    "apps/web/src/components/backlog/SprintSection.tsx": "a2c85b0e62538372",
+    "apps/web/src/components/dnd/index.tsx": "df5adb3ad0dda9c4",
+    "apps/web/src/components/auth/RegisterSteps.tsx": "aee9c63eb813c43c",
+    "apps/web/src/components/auth/InviteSteps.tsx": "1284e88ba91d1bbe",
+    "apps/web/src/components/auth/index.ts": "e5bb29f6fe17bacf",
+    "apps/web/src/components/auth/LoginSteps.tsx": "e4991d43b5f718fc",
+    "apps/web/src/components/docs/DocsEmptyState.tsx": "bd188ac4f4886316",
+    "apps/web/src/components/docs/DocsEditorArea.tsx": "cca0efebac1456b6",
+    "apps/web/src/components/docs/DocsSidebar.tsx": "90f7e2fb1850a2ce",
+    "apps/web/src/components/docs/DocsHeaderActions.tsx": "8e0a06f573a74c2b",
+    "apps/web/src/components/docs/TableOfContents.tsx": "0a17870a12e7d9e2",
+    "apps/web/src/components/dashboard/WorkspaceSetup.tsx": "839f114acf358a8b",
+    "apps/web/src/components/dashboard/ActivityItem.tsx": "e1b7976a3ae3726e",
+    "apps/web/src/components/dashboard/StatCard.tsx": "d676ebad37b477e8",
+    "apps/web/src/components/dashboard/ConnectionModal.tsx": "570582a036ad63a7",
+    "apps/web/src/components/dashboard/QuickActions.tsx": "8b0a827b27ebc7a5",
+    "apps/web/src/components/dashboard/index.ts": "6d2e86d29b7e3f6b",
+    "apps/web/src/components/dashboard/ActivityFeed.tsx": "8425a40b5d443beb",
+    "apps/web/src/components/common/ErrorState.tsx": "36ebcec070ff6153",
+    "apps/web/src/components/common/index.ts": "03425e3e430f759d",
+    "apps/web/src/components/common/LoadingState.tsx": "abda25aa2be43ec9",
+    "apps/web/src/components/task-panel/TaskProperties.tsx": "ff99935f200da7e4",
+    "apps/web/src/components/task-panel/TaskHeader.tsx": "24a9b88a607c7629",
     "apps/web/src/components/task-panel/TaskChecklist.tsx": "5daf41304ac25e0c",
     "apps/web/src/components/task-panel/TaskDescription.tsx": "e279ae22a7e40a8b",
     "apps/web/src/components/task-panel/TaskDocs.tsx": "bac3ffecf3ed6df8",
-    "apps/web/src/components/task-panel/TaskHeader.tsx": "24a9b88a607c7629",
-    "apps/web/src/components/task-panel/TaskProperties.tsx": "ff99935f200da7e4",
     "apps/web/src/components/task-panel/index.ts": "f4682fb9086c8506",
-    "apps/web/src/components/typography/EmptyStateText.tsx": "a1621b146fb5ee37",
-    "apps/web/src/components/typography/MetadataText.tsx": "593b5a469187ba71",
+    "apps/web/src/components/task-panel/TaskActivity.tsx": "d9a6bf4375e97348",
+    "apps/web/src/components/CreateModal/index.ts": "f31026b0a1bfa7e3",
+    "apps/web/src/components/CreateModal/CreateModal.tsx": "f392a61cef61f3e7",
     "apps/web/src/components/typography/SecondaryText.tsx": "6301062af0e85010",
+    "apps/web/src/components/typography/EmptyStateText.tsx": "a1621b146fb5ee37",
     "apps/web/src/components/typography/SectionLabel.tsx": "ad1668c87b041042",
+    "apps/web/src/components/typography/MetadataText.tsx": "593b5a469187ba71",
     "apps/web/src/components/typography/index.ts": "bfc2015af44c7594",
-    "apps/web/src/components/ui/Avatar.tsx": "517afb5b93c9284b",
-    "apps/web/src/components/ui/Badge.tsx": "8270bb0a1db9f264",
-    "apps/web/src/components/ui/Button.tsx": "d6c19242c248496e",
-    "apps/web/src/components/ui/Checkbox.tsx": "705f188d8e4acbdb",
-    "apps/web/src/components/ui/Confetti.tsx": "244f8414267d0bb3",
-    "apps/web/src/components/ui/ContextMenu.tsx": "06ad938d68903e98",
-    "apps/web/src/components/ui/Drawer.tsx": "ae1ed2eb359885e8",
-    "apps/web/src/components/ui/Dropdown.tsx": "9ed5695d6983d0ac",
-    "apps/web/src/components/ui/EmptyState.tsx": "30fb55f357473da0",
-    "apps/web/src/components/ui/Input.tsx": "2dc6e823efb271d5",
-    "apps/web/src/components/ui/Modal.tsx": "1db0171667113f9f",
-    "apps/web/src/components/ui/OtpInput.tsx": "7fd0a11ea99d252a",
-    "apps/web/src/components/ui/Skeleton.tsx": "663eca4ae9d267e7",
-    "apps/web/src/components/ui/Spinner.tsx": "09643a54735f92f6",
-    "apps/web/src/components/ui/Textarea.tsx": "19ef010910a05e13",
-    "apps/web/src/components/ui/Toast.tsx": "e2c4bdbebbc7dbaa",
-    "apps/web/src/components/ui/Toggle.tsx": "7d51848cff3ac9ba",
-    "apps/web/src/components/ui/Tooltip.tsx": "9dbb927729bf8273",
-    "apps/web/src/components/ui/constants.ts": "9ba8d6c9f79e82b3",
-    "apps/web/src/components/ui/index.ts": "2fabf718cc3ab4f3",
-    "apps/web/src/hooks/backlog/index.ts": "9cf6716f990c949e",
+    "apps/web/src/components/editor/MermaidRenderer.tsx": "d5c4b59edefdcc2b",
+    "apps/web/src/components/editor/index.ts": "94aea4c01f005690",
+    "apps/web/src/components/onboarding/OnboardingTour.tsx": "000ec3f16fffc97d",
+    "apps/web/src/components/onboarding/StepProgress.tsx": "f635770a5ffb390b",
+    "apps/web/src/components/onboarding/index.ts": "a44cf443f168e842",
+    "apps/web/src/hooks/backlog/useBacklogUI.ts": "d40b698d46b9df59",
     "apps/web/src/hooks/backlog/useBacklogActions.ts": "ae549f914ca9af72",
     "apps/web/src/hooks/backlog/useBacklogData.ts": "74939605b4d634cd",
     "apps/web/src/hooks/backlog/useBacklogDragDrop.ts": "ba1200626d0493a6",
-    "apps/web/src/hooks/backlog/useBacklogUI.ts": "d40b698d46b9df59",
-    "apps/web/src/hooks/task-panel/index.ts": "23250b757d4855d4",
-    "apps/web/src/hooks/task-panel/useTaskActions.ts": "834a306f1897cf27",
-    "apps/web/src/hooks/task-panel/useTaskComputedValues.ts": "0c3bd4f8ae8ee380",
+    "apps/web/src/hooks/backlog/index.ts": "9cf6716f990c949e",
     "apps/web/src/hooks/task-panel/useTaskData.ts": "bbdaa68e29bbcde7",
     "apps/web/src/hooks/task-panel/useTaskUIState.ts": "e7622c8e35e94175",
-    "apps/www/src/app/docs/[slug]/page.tsx": "e2cd3ea261592256",
-    "apps/web/src/app/(auth)/callback/page.tsx": "0f01bcb816fb9d9d",
+    "apps/web/src/hooks/task-panel/useTaskActions.ts": "834a306f1897cf27",
+    "apps/web/src/hooks/task-panel/index.ts": "23250b757d4855d4",
+    "apps/web/src/hooks/task-panel/useTaskComputedValues.ts": "0c3bd4f8ae8ee380",
+    "apps/www/src/app/docs/layout.tsx": "9a8567cc2d249c39",
+    "apps/www/src/app/docs/page.tsx": "1d891de332376007",
+    "apps/www/src/app/docs/template.tsx": "904367addbdbd351",
+    "apps/www/src/components/ui/index.ts": "ba9130d2ead921ef",
+    "apps/www/src/components/ui/button.tsx": "5c0fd68faee68d67",
+    "apps/www/src/components/landing/Hero.tsx": "79a800f8fafeba5e",
+    "apps/www/src/components/landing/WorkflowSteps.tsx": "250037321b0c839e",
+    "apps/www/src/components/landing/SupportedTools.tsx": "7f6e772ef9c14763",
+    "apps/www/src/components/landing/CopyCommand.tsx": "62c90fa898233d86",
+    "apps/www/src/components/landing/FeatureGrid.tsx": "ad9af79391592213",
+    "apps/www/src/components/landing/BrandingElements.tsx": "48d819edaa4784e5",
+    "apps/www/src/components/landing/TerminalDemo.tsx": "d216083c4ad370f6",
+    "apps/www/src/components/landing/index.ts": "d553edcd6206be60",
+    "apps/www/src/components/landing/DemoVideo.tsx": "be50aade00dc4a59",
+    "apps/www/src/components/layout/Navbar.tsx": "bf1f642ec47cb867",
+    "apps/www/src/components/layout/WhelpWidget.tsx": "b2703d7ff38cbde8",
+    "apps/www/src/components/layout/PageTransition.tsx": "2202af0481737992",
+    "apps/www/src/components/layout/MobileNav.tsx": "950f722e673a02df",
+    "apps/www/src/components/layout/Footer.tsx": "9c011238c5642adb",
+    "apps/www/src/components/layout/index.ts": "5604702ae79683a9",
+    "apps/www/src/components/docs/Search.tsx": "1dbb9901abc876ae",
+    "apps/www/src/components/docs/Alerts.tsx": "93f1be6758946abf",
+    "apps/www/src/components/docs/Mermaid.tsx": "e117d8cfade4e3cc",
+    "apps/www/src/components/docs/Sidebar.tsx": "0a76dd8c52e4aac4",
+    "apps/www/src/components/docs/index.ts": "c5975c46fd69ee39",
+    "apps/www/src/components/docs/CodeBlock.tsx": "e16fba3fc6e04764",
+    "apps/api/src/auth/decorators/membership-roles.decorator.ts": "0e4842b3e4f5c289",
+    "apps/api/src/auth/decorators/user.decorator.ts": "2050d58a613cbc05",
+    "apps/api/src/auth/decorators/index.ts": "92bf4b49a7e1dbe6",
+    "apps/api/src/auth/decorators/public.decorator.ts": "28862ee675f7b2c6",
+    "apps/api/src/auth/strategies/jwt.strategy.ts": "b1c4b8b44dbf3e10",
+    "apps/api/src/auth/strategies/google.strategy.ts": "569b6f93c0a205d5",
+    "apps/api/src/auth/strategies/index.ts": "684bb1e57586cc87",
+    "apps/api/src/auth/guards/google-auth.guard.ts": "9d3df0106be1f46b",
+    "apps/api/src/auth/guards/jwt-or-api-key.guard.ts": "292c32d53d294579",
+    "apps/api/src/auth/guards/index.ts": "29e3464870d3c901",
+    "apps/api/src/auth/guards/membership-roles.guard.ts": "06e6d3628544d2b8",
+    "apps/api/src/auth/interfaces/auth-request.interface.ts": "0de1a4c27c33faf3",
+    "apps/api/src/auth/interfaces/google-user.interface.ts": "82bd78c4e5059e41",
+    "apps/api/src/common/filters/all-exceptions.filter.ts": "33cfd09e07d28450",
+    "apps/api/src/common/filters/index.ts": "bfeea700a9fdebb6",
+    "apps/api/src/common/interceptors/logging.interceptor.ts": "067a9f5e5bb3ef51",
+    "apps/api/src/common/interceptors/transform.interceptor.ts": "d964df6946a872a4",
+    "apps/api/src/common/interceptors/index.ts": "6bd4c3b2f29fa23d",
+    "apps/api/src/common/logger/logger.service.ts": "14849220e699aa41",
+    "apps/api/src/common/logger/index.ts": "af9f4142cdcb0158",
+    "apps/api/src/common/pipes/zod-validation.pipe.ts": "0fdcf51eecf67716",
+    "apps/api/src/common/pipes/index.ts": "a9dd336202553791",
+    "apps/api/src/common/templates/email-base.template.ts": "a17cc52999c1721a",
+    "apps/api/src/common/templates/welcome-email.template.ts": "c1d82188c1afa956",
+    "apps/api/src/common/templates/otp-email.template.ts": "c817d0d961a5c359",
+    "apps/api/src/common/templates/index.ts": "0b2c3db97473eb4d",
+    "apps/api/src/common/templates/invitation-email.template.ts": "d5f058aa4e84b525",
+    "apps/api/src/common/services/email.service.ts": "8d68729b850d33fb",
+    "apps/api/src/common/services/index.ts": "91b755cb134e2e8b",
     "apps/web/src/app/(auth)/invite/page.tsx": "f977512b86600044",
+    "apps/web/src/app/(auth)/callback/page.tsx": "0f01bcb816fb9d9d",
     "apps/web/src/app/(auth)/login/page.tsx": "f2898fc665817b79",
-    "apps/web/src/app/(dashboard)/activity/page.tsx": "0ae798c653c9926d",
     "apps/web/src/app/(auth)/register/page.tsx": "ecbbf11d3daaa97e",
-    "apps/web/src/app/(dashboard)/board/page.tsx": "094f7d9d9953d7c4",
-    "apps/web/src/app/(dashboard)/chat/page.tsx": "a9753998ed60f2d2",
-    "apps/web/src/app/(dashboard)/docs/page.tsx": "2cd73e69a2c5ef11",
-    "apps/web/src/app/(dashboard)/settings/page.tsx": "2f62c3a815f821b7",
-    "apps/web/src/components/docs/editor/FloatingToolbar.tsx": "fd15687758eff883",
-    "apps/web/src/components/docs/editor/SlashCommands.tsx": "485c511309a67e51",
-    "apps/web/src/components/docs/editor/index.ts": "a05e003af1a5ad72",
-    "apps/web/src/components/docs/sidebar/CreateDocForm.tsx": "9f76bb0306c1ce03",
-    "apps/web/src/components/docs/sidebar/CreateGroupForm.tsx": "104c8cfab9e2003d",
-    "apps/web/src/components/docs/sidebar/DocItem.tsx": "e2a4d352da719309",
-    "apps/web/src/components/docs/sidebar/GroupTree.tsx": "fa8fd9621e23d5bc",
-    "apps/web/src/components/docs/sidebar/RecentDocs.tsx": "62203f2b2508a0ca",
-    "apps/web/src/components/docs/sidebar/SearchInput.tsx": "793e4956d0c04319",
-    "apps/web/src/components/docs/sidebar/index.ts": "70ccd65d81a181e1",
+    "apps/web/src/app/(dashboard)/settings/page.tsx": "58e0c68321d364a4",
+    "apps/web/src/app/(dashboard)/board/page.tsx": "53bc40ccad182909",
+    "apps/web/src/app/(dashboard)/activity/page.tsx": "0ae798c653c9926d",
     "apps/web/src/app/(dashboard)/backlog/page.tsx": "09b6f1026f0fa6db",
+    "apps/web/src/app/(dashboard)/docs/page.tsx": "2cd73e69a2c5ef11",
+    "apps/web/src/components/docs/sidebar/CreateDocForm.tsx": "9f76bb0306c1ce03",
+    "apps/web/src/components/docs/sidebar/RecentDocs.tsx": "62203f2b2508a0ca",
+    "apps/web/src/components/docs/sidebar/DocItem.tsx": "2f554a9952e4a322",
+    "apps/web/src/components/docs/sidebar/GroupTree.tsx": "fa8fd9621e23d5bc",
+    "apps/web/src/components/docs/sidebar/CreateGroupForm.tsx": "104c8cfab9e2003d",
+    "apps/web/src/components/docs/sidebar/index.ts": "70ccd65d81a181e1",
+    "apps/web/src/components/docs/sidebar/SearchInput.tsx": "793e4956d0c04319",
+    "apps/web/src/components/docs/editor/SlashCommands.tsx": "485c511309a67e51",
+    "apps/web/src/components/docs/editor/FloatingToolbar.tsx": "fd15687758eff883",
+    "apps/web/src/components/docs/editor/index.ts": "a05e003af1a5ad72",
+    "apps/www/src/app/docs/[slug]/page.tsx": "e2cd3ea261592256",
+    "apps/web/src/app/(auth)/onboarding/workspace/page.tsx": "214c9f0ead0406fe",
     "apps/web/src/app/(dashboard)/settings/api-keys/page.tsx": "1606c1fe08594d14",
-    "apps/web/src/app/(dashboard)/settings/danger/page.tsx": "c0b43dfc37065a6e",
     "apps/web/src/app/(dashboard)/settings/profile/page.tsx": "bd33101c52f72189",
     "apps/web/src/app/(dashboard)/settings/team/page.tsx": "7c1cc374e4582759",
-    "apps/web/src/app/(public)/share/[id]/page.tsx": "5a1ea7f59efec420",
-    "apps/web/src/app/(auth)/onboarding/workspace/page.tsx": "214c9f0ead0406fe"
+    "apps/web/src/app/(dashboard)/settings/danger/page.tsx": "5db0ef7c0e31c22c"
   }
 }

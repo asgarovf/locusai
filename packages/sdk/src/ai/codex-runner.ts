@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,11 +9,23 @@ import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
 export class CodexRunner implements AiRunner {
+  private activeProcess: ChildProcess | null = null;
+
   constructor(
     private projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDER.CODEX],
     private log?: LogFn
   ) {}
+
+  /**
+   * Abort the currently running Codex CLI process, if any.
+   */
+  abort(): void {
+    if (this.activeProcess && !this.activeProcess.killed) {
+      this.activeProcess.kill("SIGTERM");
+      this.activeProcess = null;
+    }
+  }
 
   async run(prompt: string): Promise<string> {
     const maxRetries = 3;
@@ -48,6 +60,8 @@ export class CodexRunner implements AiRunner {
       env: process.env,
       shell: false,
     });
+
+    this.activeProcess = codex;
 
     let resolveChunk: ((chunk: StreamChunk | null) => void) | null = null;
     const chunkQueue: StreamChunk[] = [];
@@ -108,6 +122,7 @@ export class CodexRunner implements AiRunner {
     });
 
     codex.on("close", (code) => {
+      this.activeProcess = null;
       this.cleanupTempFile(outputPath);
 
       if (code === 0) {
@@ -159,6 +174,8 @@ export class CodexRunner implements AiRunner {
         shell: false,
       });
 
+      this.activeProcess = codex;
+
       let output = "";
       let errorOutput = "";
 
@@ -185,6 +202,7 @@ export class CodexRunner implements AiRunner {
       });
 
       codex.on("close", (code) => {
+        this.activeProcess = null;
         this.cleanupTempFile(outputPath);
 
         if (code === 0) {

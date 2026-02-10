@@ -56,7 +56,7 @@ export function useBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
-  const [view, setView] = useState<"board" | "mindmap" | "canvas">("board");
+  const [view, setView] = useState<"board" | "canvas">("board");
   const [isCompact, setIsCompact] = useState(false);
 
   const sensors = useSensors(

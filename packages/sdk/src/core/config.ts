@@ -9,7 +9,7 @@ export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
 
 export const DEFAULT_MODEL: Record<Provider, string> = {
   [PROVIDER.CLAUDE]: "opus",
-  [PROVIDER.CODEX]: "gpt-5.2-codex",
+  [PROVIDER.CODEX]: "gpt-5.3-codex",
 };
 
 export const LOCUS_CONFIG = {

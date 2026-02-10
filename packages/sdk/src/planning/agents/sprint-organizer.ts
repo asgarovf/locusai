@@ -42,12 +42,13 @@ Produce the final sprint plan:
 
 1. **Sprint Name** — A concise, memorable name for this sprint (e.g., "User Authentication", "Payment Integration")
 2. **Sprint Goal** — One paragraph describing what this sprint delivers
-3. **Task Ordering** — Final ordering considering dependencies and parallelism
+3. **Task Ordering** — Final ordering so that foundational work comes first. The position in the array IS the execution order — task at index 0 runs first, index 1 runs second, etc.
 4. **Duration Estimate** — How many days this sprint will take with 2-3 agents working in parallel
 5. **Final Task List** — Each task with all fields filled in, ordered by execution priority
 
 Guidelines:
-- Tasks that have no dependencies should be listed first (they can start immediately)
+- The order of tasks in the array determines execution order. Tasks are dispatched sequentially from first to last.
+- Foundation tasks (schemas, config, shared code) must appear before tasks that build on them
 - Group related tasks together when possible
 - Ensure acceptance criteria are specific and testable
 - Keep the sprint focused — if it's too large (>12 tasks), consider reducing scope
@@ -68,7 +69,6 @@ Respond with ONLY a JSON object (no markdown code blocks, no explanation):
       "priority": "CRITICAL | HIGH | MEDIUM | LOW",
       "labels": ["string"],
       "acceptanceCriteria": ["string"],
-      "dependencies": [],
       "complexity": 3
     }
   ],

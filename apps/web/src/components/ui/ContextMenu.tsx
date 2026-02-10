@@ -27,7 +27,6 @@ export interface ContextMenuItem {
   label?: string;
   icon?: LucideIcon;
   onClick?: () => void;
-  shortcut?: string;
   variant?: "default" | "danger";
   disabled?: boolean;
 }
@@ -130,11 +129,6 @@ export function ContextMenu({ position, onClose, items }: ContextMenuProps) {
           >
             {Icon && <Icon size={14} className="shrink-0" />}
             <span className="flex-1 text-left font-medium">{item.label}</span>
-            {item.shortcut && (
-              <span className="text-[10px] text-muted-foreground/60 font-mono">
-                {item.shortcut}
-              </span>
-            )}
           </button>
         );
       })}

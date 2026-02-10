@@ -46,6 +46,7 @@ export const CreateTaskSchema = z.object({
   sprintId: z.string().nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
   docIds: z.array(z.string()).optional(),
+  order: z.number().optional(),
 });
 
 export type CreateTask = z.infer<typeof CreateTaskSchema>;

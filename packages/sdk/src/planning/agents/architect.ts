@@ -42,13 +42,12 @@ ${input.techLeadOutput}
 
 Review and refine the Tech Lead's breakdown:
 
-1. **Dependencies** — Identify which tasks must complete before others can start. Use task indices (1-based).
+1. **Ordering** — Order tasks so that foundational work comes first. Tasks that produce outputs consumed by later tasks must appear earlier in the list. Foundation tasks (schemas, config, shared code) must be listed before tasks that build on them. The array index IS the execution order.
 2. **Risk Assessment** — Flag tasks that are risky, underestimated, or have unknowns.
 3. **Task Splitting** — If a task is too large (would take more than a day), split it.
 4. **Task Merging** — If two tasks are trivially small and related, merge them.
 5. **Complexity Scoring** — Rate each task 1-5 (1=trivial, 5=very complex).
 6. **Missing Tasks** — Add any tasks the Tech Lead missed (database migrations, configuration, testing, etc.).
-7. **Ordering** — Suggest an optimal execution order considering dependencies and parallelism.
 
 ## Output Format
 
@@ -63,7 +62,6 @@ Respond with ONLY a JSON object (no markdown code blocks, no explanation):
       "priority": "HIGH | MEDIUM | LOW | CRITICAL",
       "labels": ["string"],
       "acceptanceCriteria": ["string"],
-      "dependencies": [1, 2],
       "complexity": 3
     }
   ],

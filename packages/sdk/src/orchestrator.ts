@@ -72,8 +72,8 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   private get useWorktrees(): boolean {
-    // Default: on when agents > 1
-    return this.config.useWorktrees ?? this.agentCount > 1;
+    // Worktrees are always enabled by default for per-task isolation
+    return this.config.useWorktrees ?? true;
   }
 
   /**
@@ -158,20 +158,26 @@ export class AgentOrchestrator extends EventEmitter {
       return;
     }
 
-    // Initialize worktree manager if needed
+    // Initialize worktree manager for cleanup purposes (workers manage their own per-task worktrees)
     if (this.useWorktrees) {
       this.worktreeManager = new WorktreeManager(this.config.projectPath, {
-        cleanupPolicy: this.config.worktreeCleanupPolicy ?? "retain-on-failure",
+        cleanupPolicy: "auto",
       });
     }
 
     // Start heartbeat monitoring
     this.startHeartbeatMonitor();
 
-    // Spawn agents — up to agentCount or available task count, whichever is smaller
+    // Spawn agents with staggered delays to avoid worktree branch race conditions.
+    // Without staggering, agents that start simultaneously can claim the same task
+    // and collide when creating git branches/worktrees.
     const agentsToSpawn = Math.min(this.agentCount, tasks.length);
+    const SPAWN_DELAY_MS = 5_000;
     const spawnPromises: Promise<void>[] = [];
     for (let i = 0; i < agentsToSpawn; i++) {
+      if (i > 0) {
+        await this.sleep(SPAWN_DELAY_MS);
+      }
       spawnPromises.push(this.spawnAgent(i));
     }
     await Promise.all(spawnPromises);
@@ -189,7 +195,7 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Spawn a single agent process, optionally in its own worktree
+   * Spawn a single agent process. Each agent manages its own per-task worktrees.
    */
   private async spawnAgent(index: number): Promise<void> {
     const agentId = `agent-${index}-${Date.now()}-${Math.random()
@@ -206,32 +212,6 @@ export class AgentOrchestrator extends EventEmitter {
     };
 
     this.agents.set(agentId, agentState);
-
-    // Create worktree if multi-agent mode
-    let workerProjectPath = this.config.projectPath;
-    if (this.useWorktrees && this.worktreeManager) {
-      try {
-        const result = this.worktreeManager.create({
-          taskId: `pool-${index}`,
-          taskSlug: `agent-${index}`,
-          agentId,
-        });
-        agentState.worktreePath = result.worktreePath;
-        agentState.worktreeBranch = result.branch;
-        workerProjectPath = result.worktreePath;
-        console.log(
-          `${c.primary("🌳 Worktree created:")} ${c.dim(result.worktreePath)} (${result.branch})`
-        );
-      } catch (err) {
-        console.log(
-          c.error(
-            `Failed to create worktree for ${agentId}: ${err instanceof Error ? err.message : String(err)}`
-          )
-        );
-        this.agents.delete(agentId);
-        return;
-      }
-    }
 
     console.log(`${c.primary("🚀 Agent started:")} ${c.bold(agentId)}\n`);
 
@@ -253,13 +233,8 @@ export class AgentOrchestrator extends EventEmitter {
       "--api-key",
       this.config.apiKey,
       "--project-path",
-      workerProjectPath,
+      this.config.projectPath,
     ];
-
-    // Pass the main project path so worker can update progress.md there
-    if (this.useWorktrees && workerProjectPath !== this.config.projectPath) {
-      workerArgs.push("--main-project-path", this.config.projectPath);
-    }
 
     // Add model if specified
     if (this.config.model) {
@@ -276,9 +251,17 @@ export class AgentOrchestrator extends EventEmitter {
       workerArgs.push("--sprint-id", this.resolvedSprintId);
     }
 
+    // Tell the worker to use per-task worktrees
+    if (this.useWorktrees) {
+      workerArgs.push("--use-worktrees");
+    }
+
     // Use node to run the worker script
+    // detached: true creates a new process group so we can kill the entire tree
+    // (including Claude/Codex CLI grandchild processes) via kill(-pid)
     const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs], {
       stdio: ["pipe", "pipe", "pipe"],
+      detached: true,
       env: {
         ...process.env,
         FORCE_COLOR: "1",
@@ -314,9 +297,6 @@ export class AgentOrchestrator extends EventEmitter {
       if (agent) {
         agent.status = code === 0 ? "COMPLETED" : "FAILED";
 
-        // Clean up worktree
-        this.cleanupWorktree(agent);
-
         // Ensure CLI gets the absolute latest stats
         this.emit("agent:completed", {
           agentId,
@@ -350,34 +330,6 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Clean up a worktree after agent completion based on cleanup policy
-   */
-  private cleanupWorktree(agent: AgentState): void {
-    if (!this.worktreeManager || !agent.worktreePath) return;
-
-    const policy = this.config.worktreeCleanupPolicy ?? "retain-on-failure";
-
-    if (policy === "manual") return;
-
-    if (policy === "retain-on-failure" && agent.status === "FAILED") {
-      console.log(
-        c.dim(
-          `Retaining worktree for failed agent ${agent.id}: ${agent.worktreePath}`
-        )
-      );
-      return;
-    }
-
-    // Auto-clean or successful with retain-on-failure
-    try {
-      this.worktreeManager.remove(agent.worktreePath, true);
-      console.log(c.dim(`Cleaned up worktree for ${agent.id}`));
-    } catch {
-      console.log(c.dim(`Could not clean up worktree: ${agent.worktreePath}`));
-    }
-  }
-
-  /**
    * Start monitoring agent heartbeats for stale detection
    */
   private startHeartbeatMonitor(): void {
@@ -394,7 +346,7 @@ export class AgentOrchestrator extends EventEmitter {
             )
           );
           if (agent.process && !agent.process.killed) {
-            agent.process.kill();
+            this.killProcessTree(agent.process);
           }
           this.emit("agent:stale", { agentId });
         }
@@ -549,9 +501,31 @@ export class AgentOrchestrator extends EventEmitter {
     if (!agent) return false;
 
     if (agent.process && !agent.process.killed) {
-      agent.process.kill();
+      this.killProcessTree(agent.process);
     }
     return true;
+  }
+
+  /**
+   * Kill a process and all its descendants.
+   * Sends SIGTERM first to allow graceful shutdown, which triggers the worker's
+   * signal handler to abort the active Claude/Codex CLI process.
+   */
+  private killProcessTree(proc: ChildProcess): void {
+    if (!proc.pid || proc.killed) return;
+
+    try {
+      // Send SIGTERM to the process group (negative PID kills the group)
+      // This ensures all child processes (Claude CLI, etc.) are also signaled
+      process.kill(-proc.pid, "SIGTERM");
+    } catch {
+      // If process group kill fails, fall back to direct kill
+      try {
+        proc.kill("SIGTERM");
+      } catch {
+        // Process may have already exited
+      }
+    }
   }
 
   /**
@@ -567,7 +541,19 @@ export class AgentOrchestrator extends EventEmitter {
     for (const [agentId, agent] of this.agents.entries()) {
       if (agent.process && !agent.process.killed) {
         console.log(`Killing agent: ${agentId}`);
-        agent.process.kill();
+        this.killProcessTree(agent.process);
+      }
+    }
+
+    // Force-remove all worktrees on shutdown
+    if (this.worktreeManager) {
+      try {
+        const removed = this.worktreeManager.removeAll();
+        if (removed > 0) {
+          console.log(c.dim(`Cleaned up ${removed} worktree(s)`));
+        }
+      } catch {
+        console.log(c.dim("Could not clean up some worktrees"));
       }
     }
 

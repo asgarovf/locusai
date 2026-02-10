@@ -1,15 +1,13 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
-import { LOCUS_CONFIG, PROVIDER } from "../core/config.js";
+import { PROVIDER } from "../core/config.js";
 import { LocusClient } from "../index.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
+import { WorktreeManager } from "../worktree/worktree-manager.js";
 import { CodebaseIndexerService } from "./codebase-indexer-service.js";
 import { DocumentFetcher } from "./document-fetcher.js";
-import { ReviewService } from "./review-service.js";
 import { TaskExecutor } from "./task-executor.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -37,6 +35,8 @@ export interface WorkerConfig {
   provider?: AiProvider;
   /** When running in a worktree, this is the path to the main repo for progress updates */
   mainProjectPath?: string;
+  /** Whether to use per-task worktrees for isolation */
+  useWorktrees?: boolean;
 }
 
 /**
@@ -51,14 +51,15 @@ export class AgentWorker {
   private indexerService: CodebaseIndexerService;
   private documentFetcher: DocumentFetcher;
   private taskExecutor: TaskExecutor;
-  private reviewService: ReviewService;
   private knowledgeBase: KnowledgeBase;
+  private worktreeManager: WorktreeManager | null = null;
 
   // State
   private maxTasks = 50;
   private tasksCompleted = 0;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private currentTaskId: string | null = null;
+  private currentWorktreePath: string | null = null;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -104,25 +105,22 @@ export class AgentWorker {
       log,
     });
 
-    this.reviewService = new ReviewService({
-      aiRunner: this.aiRunner,
-      projectPath,
-      log,
-    });
+    // Knowledge base always points to the main project for progress updates
+    this.knowledgeBase = new KnowledgeBase(projectPath);
 
-    // Knowledge base points to the main project for progress updates
-    const mainPath = config.mainProjectPath ?? projectPath;
-    this.knowledgeBase = new KnowledgeBase(mainPath);
+    // Initialize worktree manager for per-task isolation
+    if (config.useWorktrees) {
+      this.worktreeManager = new WorktreeManager(projectPath, {
+        cleanupPolicy: "auto",
+      });
+    }
 
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Using ${providerLabel} CLI for all phases`, "info");
 
-    if (config.mainProjectPath) {
-      this.log(
-        `Running in worktree. Progress updates go to: ${config.mainProjectPath}`,
-        "info"
-      );
+    if (config.useWorktrees) {
+      this.log("Per-task worktree isolation enabled", "info");
     }
   }
 
@@ -156,20 +154,114 @@ export class AgentWorker {
   }
 
   private async getNextTask(): Promise<Task | null> {
-    try {
-      const task = await this.client.workspaces.dispatch(
-        this.config.workspaceId,
-        this.config.agentId,
-        this.config.sprintId
-      );
-      return task;
-    } catch (error) {
-      this.log(
-        `No task dispatched: ${error instanceof Error ? error.message : String(error)}`,
-        "info"
-      );
-      return null;
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const task = await this.client.workspaces.dispatch(
+          this.config.workspaceId,
+          this.config.agentId,
+          this.config.sprintId
+        );
+        return task;
+      } catch (error: unknown) {
+        const isAxiosError =
+          error != null &&
+          typeof error === "object" &&
+          "response" in error &&
+          typeof (error as { response?: { status?: number } }).response
+            ?.status === "number";
+        const status = isAxiosError
+          ? (error as { response: { status: number } }).response.status
+          : 0;
+
+        // 404 = genuinely no tasks available — stop immediately
+        if (status === 404) {
+          this.log("No tasks available in the backlog.", "info");
+          return null;
+        }
+
+        // Other errors (500, network, etc) — retry
+        const msg = error instanceof Error ? error.message : String(error);
+        if (attempt < maxRetries) {
+          this.log(
+            `Dispatch error (attempt ${attempt}/${maxRetries}): ${msg}. Retrying in 5s...`,
+            "warn"
+          );
+          await new Promise((r) => setTimeout(r, 5000));
+        } else {
+          this.log(
+            `Dispatch failed after ${maxRetries} attempts: ${msg}`,
+            "error"
+          );
+          return null;
+        }
+      }
     }
+    return null;
+  }
+
+  /**
+   * Create a task-specific worktree and return an executor configured for it.
+   * Falls back to the main project path if worktrees are disabled.
+   */
+  private createTaskWorktree(task: Task): {
+    worktreePath: string | null;
+    executor: TaskExecutor;
+  } {
+    if (!this.worktreeManager) {
+      return { worktreePath: null, executor: this.taskExecutor };
+    }
+
+    const slug = task.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 40);
+
+    const result = this.worktreeManager.create({
+      taskId: task.id,
+      taskSlug: slug,
+      agentId: this.config.agentId,
+    });
+
+    this.log(
+      `Worktree created: ${result.worktreePath} (${result.branch})`,
+      "info"
+    );
+
+    const log = this.log.bind(this);
+    const provider = this.config.provider ?? PROVIDER.CLAUDE;
+
+    // Create a task-specific AI runner and executor targeting the worktree
+    const taskAiRunner = createAiRunner(provider, {
+      projectPath: result.worktreePath,
+      model: this.config.model,
+      log,
+    });
+
+    const taskExecutor = new TaskExecutor({
+      aiRunner: taskAiRunner,
+      projectPath: result.worktreePath,
+      log,
+    });
+
+    return { worktreePath: result.worktreePath, executor: taskExecutor };
+  }
+
+  /**
+   * Clean up a task-specific worktree.
+   */
+  private cleanupTaskWorktree(worktreePath: string | null): void {
+    if (!this.worktreeManager || !worktreePath) return;
+
+    try {
+      this.worktreeManager.remove(worktreePath, true);
+      this.log("Worktree cleaned up", "info");
+    } catch {
+      this.log(`Could not clean up worktree: ${worktreePath}`, "warn");
+    }
+
+    this.currentWorktreePath = null;
   }
 
   private async executeTask(
@@ -181,49 +273,21 @@ export class AgentWorker {
       this.config.workspaceId
     );
 
-    // Execute the task (context is read from local .locus/project/ files)
-    const result = await this.taskExecutor.execute(fullTask);
+    // Create per-task worktree for isolation
+    const { worktreePath, executor } = this.createTaskWorktree(fullTask);
+    this.currentWorktreePath = worktreePath;
 
-    // Reindex codebase after execution to ensure fresh context
-    await this.indexerService.reindex();
-
-    return result;
-  }
-
-  private async runStagedChangesReview(sprint: Sprint | null): Promise<void> {
     try {
-      const report = await this.reviewService.reviewStagedChanges(sprint);
-      if (report) {
-        // Save review report to .locus/reviews/
-        const reviewsDir = join(
-          this.config.projectPath,
-          LOCUS_CONFIG.dir,
-          "reviews"
-        );
-        if (!existsSync(reviewsDir)) {
-          mkdirSync(reviewsDir, { recursive: true });
-        }
+      // Execute the task in the worktree (or main project if worktrees disabled)
+      const result = await executor.execute(fullTask);
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const sprintSlug = sprint?.name
-          ? sprint.name.toLowerCase().replace(/\s+/g, "-").slice(0, 40)
-          : "no-sprint";
-        const fileName = `review-${sprintSlug}-${timestamp}.md`;
-        const filePath = join(reviewsDir, fileName);
+      // Reindex codebase after execution to ensure fresh context
+      await this.indexerService.reindex();
 
-        writeFileSync(filePath, report);
-        this.log(
-          `Review report saved to .locus/reviews/${fileName}`,
-          "success"
-        );
-      } else {
-        this.log("No staged changes to review.", "info");
-      }
-    } catch (err) {
-      this.log(
-        `Review failed: ${err instanceof Error ? err.message : String(err)}`,
-        "error"
-      );
+      return result;
+    } finally {
+      // Always clean up the task worktree after execution
+      this.cleanupTaskWorktree(worktreePath);
     }
   }
 
@@ -291,6 +355,19 @@ export class AgentWorker {
       "success"
     );
 
+    // Handle graceful shutdown - abort AI runner to kill Claude/Codex CLI processes
+    const handleShutdown = () => {
+      this.log("Received shutdown signal. Aborting...", "warn");
+      this.aiRunner.abort();
+      this.stopHeartbeat();
+      // Clean up current worktree if any
+      this.cleanupTaskWorktree(this.currentWorktreePath);
+      process.exit(1);
+    };
+
+    process.on("SIGTERM", handleShutdown);
+    process.on("SIGINT", handleShutdown);
+
     // Start periodic heartbeat reporting
     this.startHeartbeat();
 
@@ -306,12 +383,7 @@ export class AgentWorker {
       const task = await this.getNextTask();
 
       if (!task) {
-        // No tasks dispatched — run a review on staged changes and exit
-        this.log(
-          "No tasks remaining. Running review on staged changes...",
-          "info"
-        );
-        await this.runStagedChangesReview(sprint);
+        this.log("No more tasks to process. Exiting.", "info");
         break;
       }
 
@@ -395,6 +467,7 @@ if (
     else if (arg === "--project-path") config.projectPath = args[++i];
     else if (arg === "--main-project-path") config.mainProjectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
+    else if (arg === "--use-worktrees") config.useWorktrees = true;
     else if (arg === "--provider") {
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;

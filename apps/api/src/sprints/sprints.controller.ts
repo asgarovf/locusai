@@ -94,7 +94,6 @@ export class SprintsController {
       ...body,
       startDate: this._toDate(body.startDate),
       endDate: this._toDate(body.endDate),
-      mindmapUpdatedAt: this._toDate(body.mindmapUpdatedAt),
     });
     return { sprint: updatedSprint };
   }

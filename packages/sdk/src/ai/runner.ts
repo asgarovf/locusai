@@ -9,6 +9,11 @@ export interface AiRunner {
    * Set an event emitter to receive execution events.
    */
   setEventEmitter?(emitter: ExecEventEmitter): void;
+  /**
+   * Abort the currently running CLI process, if any.
+   * Used during graceful shutdown to prevent orphaned processes.
+   */
+  abort(): void;
 }
 
 export type AiProvider = Provider;

@@ -12,8 +12,6 @@ export interface PlannedTask {
   description: string;
   assigneeRole: AssigneeRole;
   priority: TaskPriority;
-  /** Indices of tasks this depends on */
-  dependencies: number[];
   /** Relative complexity: 1 (trivial) to 5 (very complex) */
   complexity: number;
   acceptanceCriteria: string[];
@@ -69,11 +67,7 @@ export function sprintPlanToMarkdown(plan: SprintPlan): string {
   lines.push("");
 
   for (const task of plan.tasks) {
-    const deps =
-      task.dependencies.length > 0
-        ? ` (depends on: ${task.dependencies.map((d) => `#${d}`).join(", ")})`
-        : "";
-    lines.push(`### ${task.index}. ${task.title}${deps}`);
+    lines.push(`### ${task.index}. ${task.title}`);
     lines.push(`- **Role:** ${task.assigneeRole}`);
     lines.push(`- **Priority:** ${task.priority}`);
     lines.push(
@@ -106,28 +100,6 @@ export function sprintPlanToMarkdown(plan: SprintPlan): string {
     lines.push("");
   }
 
-  // Dependency graph as text
-  const tasksWithDeps = plan.tasks.filter((t) => t.dependencies.length > 0);
-  if (tasksWithDeps.length > 0) {
-    lines.push(`## Dependency Graph`);
-    lines.push("```");
-    for (const task of plan.tasks) {
-      if (task.dependencies.length > 0) {
-        const depNames = task.dependencies
-          .map((d) => {
-            const dep = plan.tasks.find((t) => t.index === d);
-            return dep ? `${d}. ${dep.title}` : `#${d}`;
-          })
-          .join(", ");
-        lines.push(`${task.index}. ${task.title} ← [${depNames}]`);
-      } else {
-        lines.push(`${task.index}. ${task.title} (no dependencies)`);
-      }
-    }
-    lines.push("```");
-    lines.push("");
-  }
-
   lines.push(`---`);
   lines.push(`*Plan ID: ${plan.id}*`);
 
@@ -136,6 +108,7 @@ export function sprintPlanToMarkdown(plan: SprintPlan): string {
 
 /**
  * Convert planned tasks to API-ready CreateTask payloads.
+ * Sets the `order` field based on plan index so dispatch respects the planned ordering.
  */
 export function plannedTasksToCreatePayloads(
   plan: SprintPlan,
@@ -149,6 +122,7 @@ export function plannedTasksToCreatePayloads(
     priority: task.priority,
     labels: task.labels,
     sprintId,
+    order: task.index * 10,
     acceptanceChecklist: task.acceptanceCriteria.map((text, i) => ({
       id: `ac-${i + 1}`,
       text,
@@ -159,7 +133,8 @@ export function plannedTasksToCreatePayloads(
 
 /**
  * Parse a sprint plan from a JSON string (as returned by AI).
- * Validates required fields and assigns defaults.
+ * Validates required fields, assigns defaults, and ensures tasks
+ * are topologically sorted by their dependencies.
  */
 export function parseSprintPlanFromAI(
   raw: string,
@@ -177,24 +152,25 @@ export function parseSprintPlanFromAI(
   const now = new Date().toISOString();
   const id = `plan-${Date.now()}`;
 
+  const tasks: PlannedTask[] = (parsed.tasks || []).map(
+    (t: Record<string, unknown>, i: number) => ({
+      index: i + 1,
+      title: (t.title as string) || `Task ${i + 1}`,
+      description: (t.description as string) || "",
+      assigneeRole: (t.assigneeRole as AssigneeRole) || "BACKEND",
+      priority: (t.priority as TaskPriority) || "MEDIUM",
+      complexity: (t.complexity as number) || 3,
+      acceptanceCriteria: (t.acceptanceCriteria as string[]) || [],
+      labels: (t.labels as string[]) || [],
+    })
+  );
+
   return {
     id,
     name: parsed.name || "Unnamed Sprint",
     goal: parsed.goal || directive,
     directive,
-    tasks: (parsed.tasks || []).map(
-      (t: Record<string, unknown>, i: number) => ({
-        index: i + 1,
-        title: (t.title as string) || `Task ${i + 1}`,
-        description: (t.description as string) || "",
-        assigneeRole: (t.assigneeRole as AssigneeRole) || "BACKEND",
-        priority: (t.priority as TaskPriority) || "MEDIUM",
-        dependencies: (t.dependencies as number[]) || [],
-        complexity: (t.complexity as number) || 3,
-        acceptanceCriteria: (t.acceptanceCriteria as string[]) || [],
-        labels: (t.labels as string[]) || [],
-      })
-    ),
+    tasks,
     risks: (parsed.risks || []).map((r: Record<string, unknown>) => ({
       description: (r.description as string) || "",
       mitigation: (r.mitigation as string) || "",
@@ -206,3 +182,4 @@ export function parseSprintPlanFromAI(
     updatedAt: now,
   };
 }
+
