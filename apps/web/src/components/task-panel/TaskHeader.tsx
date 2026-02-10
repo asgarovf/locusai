@@ -32,9 +32,9 @@ interface TaskHeaderProps {
   onClose: () => void;
   /** Callback to delete task */
   onDelete: () => void;
-  /** Callback to approve task (if in verification) */
+  /** Callback to approve task (if in review) */
   onApprove: () => void;
-  /** Callback to reject task (if in verification) */
+  /** Callback to reject task (if in review) */
   onReject: () => void;
 }
 
@@ -44,7 +44,7 @@ interface TaskHeaderProps {
  * Features:
  * - Task ID reference
  * - Status and priority badges
- * - Approve/reject buttons (if in verification status)
+ * - Approve/reject buttons (if in review status)
  * - Delete button
  * - Close button
  *
@@ -59,7 +59,8 @@ export function TaskHeader({
   onApprove,
   onReject,
 }: TaskHeaderProps) {
-  const canApproveReject = task.status === TaskStatus.VERIFICATION;
+  const canApproveReject =
+    task.status === TaskStatus.PR_OPEN || task.status === TaskStatus.IN_REVIEW;
 
   return (
     <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">

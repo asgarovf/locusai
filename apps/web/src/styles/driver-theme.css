@@ -114,17 +114,19 @@
   background: var(--primary) !important;
   color: var(--primary-foreground) !important;
   border: none !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1) !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
 }
 
 .driver-popover-next-btn:hover {
   background: var(--primary) !important;
   color: var(--primary-foreground) !important;
   transform: translateY(-1px) !important;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.2),
-    0 2px 4px -2px rgb(0 0 0 / 0.2) !important;
 }
 
 /* Previous button - IMPROVED to match BUTTON_VARIANTS.outline exactly */
@@ -133,6 +135,12 @@
   border: 1px solid var(--border) !important;
   color: var(--foreground) !important;
   font-weight: 500 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
 }
 
 .driver-popover-prev-btn:hover {
@@ -199,23 +207,23 @@
 
 /* Arrow pointing to highlighted element */
 .driver-popover-arrow {
-  border-color: rgba(12, 13, 18, 0.95) !important;
+  border-color: transparent;
 }
 
 .driver-popover-arrow-side-left.driver-popover-arrow {
-  border-left-color: rgba(12, 13, 18, 0.95) !important;
+  border-left-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .driver-popover-arrow-side-right.driver-popover-arrow {
-  border-right-color: rgba(12, 13, 18, 0.95) !important;
+  border-right-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .driver-popover-arrow-side-top.driver-popover-arrow {
-  border-top-color: rgba(12, 13, 18, 0.95) !important;
+  border-top-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .driver-popover-arrow-side-bottom.driver-popover-arrow {
-  border-bottom-color: rgba(12, 13, 18, 0.95) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Disable button state */

@@ -244,9 +244,7 @@ export class InteractiveSession {
 
       if (responseContent) {
         // Filter out completion marker before storing (handle potential edge cases)
-        const cleanedContent = responseContent
-          .replace(/<promise>COMPLETE<\/promise>/g, "")
-          .trim();
+        const cleanedContent = responseContent.trim();
         if (cleanedContent) {
           this.conversationHistory.push({
             role: "assistant",
@@ -336,6 +334,7 @@ export class InteractiveSession {
       this.inputDebounceTimer = null;
     }
     this.renderer.stopThinkingAnimation();
+    this.aiRunner.abort();
     console.log(c.dim("\nGoodbye!"));
     this.readline?.close();
     process.exit(0);

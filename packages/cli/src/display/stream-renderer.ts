@@ -8,7 +8,6 @@ export class StreamRenderer {
   private isThinking = false;
   // Buffer to handle completion marker that may span multiple chunks
   private textBuffer = "";
-  private readonly COMPLETION_MARKER = "<promise>COMPLETE</promise>";
 
   /**
    * Render a stream chunk to the terminal.
@@ -46,22 +45,8 @@ export class StreamRenderer {
     // Add content to buffer
     this.textBuffer += content;
 
-    // Remove any complete markers from the buffer
-    this.textBuffer = this.textBuffer.replace(
-      /<promise>COMPLETE<\/promise>/g,
-      ""
-    );
-
-    // Calculate safe output length (keep potential partial marker in buffer)
-    const markerLength = this.COMPLETION_MARKER.length;
-    let safeLength = this.textBuffer.length;
-    for (let i = 1; i < markerLength && i < this.textBuffer.length; i++) {
-      const suffix = this.textBuffer.slice(-i);
-      if (this.COMPLETION_MARKER.startsWith(suffix)) {
-        safeLength = this.textBuffer.length - i;
-        break;
-      }
-    }
+    // Calculate safe output length
+    const safeLength = this.textBuffer.length;
 
     // Output the safe portion
     const safeContent = this.textBuffer.slice(0, safeLength);
@@ -131,10 +116,7 @@ export class StreamRenderer {
 
     // Flush any remaining buffered text (filtering out completion marker)
     if (this.textBuffer) {
-      const remaining = this.textBuffer.replace(
-        /<promise>COMPLETE<\/promise>/g,
-        ""
-      );
+      const remaining = this.textBuffer;
       if (remaining) {
         process.stdout.write(remaining);
         this.currentLine += remaining;

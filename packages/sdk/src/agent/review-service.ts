@@ -81,8 +81,7 @@ You are reviewing the staged changes at the end of a sprint. Produce a thorough 
 5. **Recommendations** — Actionable suggestions for improvement.
 6. **Overall Assessment** — A short verdict (e.g., "Looks good", "Needs attention", "Critical issues found").
 
-Keep the review concise but thorough. Focus on substance over style.
-Do NOT output <promise>COMPLETE</promise> — just output the review report as markdown.`;
+Keep the review concise but thorough. Focus on substance over style.`;
 
     log("Running AI review on staged changes...", "info");
     const report = await this.deps.aiRunner.run(reviewPrompt);

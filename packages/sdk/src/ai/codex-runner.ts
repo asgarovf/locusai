@@ -220,7 +220,8 @@ export class CodexRunner implements AiRunner {
   private buildArgs(outputPath: string): string[] {
     const args = [
       "exec",
-      "--full-auto",
+      "--sandbox",
+      "workspace-write",
       "--skip-git-repo-check",
       "--output-last-message",
       outputPath,

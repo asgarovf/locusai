@@ -99,7 +99,7 @@ describe("SprintsService", () => {
   });
 
   describe("completeSprint", () => {
-    it("should complete a sprint and move VERIFICATION tasks to DONE", async () => {
+    it("should complete a sprint and move review tasks to DONE", async () => {
       const sprintId = "sprint-1";
       const workspaceId = "ws-1";
       const sprint = {
@@ -114,7 +114,7 @@ describe("SprintsService", () => {
           id: "task-1",
           sprintId,
           title: "Task 1",
-          status: TaskStatus.VERIFICATION,
+          status: TaskStatus.IN_REVIEW,
           workspaceId,
         },
         {
@@ -153,7 +153,7 @@ describe("SprintsService", () => {
           type: "STATUS_CHANGED",
           taskId: "task-1",
           payload: expect.objectContaining({
-            oldStatus: TaskStatus.VERIFICATION,
+            oldStatus: TaskStatus.IN_REVIEW,
             newStatus: TaskStatus.DONE,
           }),
         })
@@ -269,7 +269,7 @@ describe("SprintsService", () => {
           id: "task-1",
           sprintId,
           title: "Task 1",
-          status: TaskStatus.VERIFICATION,
+          status: TaskStatus.PR_OPEN,
           workspaceId,
         },
         {

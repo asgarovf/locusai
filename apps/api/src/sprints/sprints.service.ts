@@ -150,8 +150,11 @@ export class SprintsService {
       const oldTaskStatus = task.status;
       let taskUpdated = false;
 
-      if (task.status === TaskStatus.VERIFICATION) {
-        // Auto-approve tasks in verification
+      if (
+        task.status === TaskStatus.IN_REVIEW ||
+        task.status === TaskStatus.PR_OPEN
+      ) {
+        // Auto-approve tasks waiting for review
         task.status = TaskStatus.DONE;
         taskUpdated = true;
       } else if (task.status === TaskStatus.IN_PROGRESS) {

@@ -83,8 +83,9 @@ export function SprintSection({
         .length,
       inProgress: sprintTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS)
         .length,
-      verification: sprintTasks.filter(
-        (t) => t.status === TaskStatus.VERIFICATION
+      inReview: sprintTasks.filter(
+        (t) =>
+          t.status === TaskStatus.PR_OPEN || t.status === TaskStatus.IN_REVIEW
       ).length,
       done: sprintTasks.filter((t) => t.status === TaskStatus.DONE).length,
     };
@@ -171,7 +172,7 @@ export function SprintSection({
                 In Progress: {progress.byStatus.inProgress}
               </span>
               <span className="whitespace-nowrap">
-                Verification: {progress.byStatus.verification}
+                In Review: {progress.byStatus.inReview}
               </span>
               <span className="whitespace-nowrap">
                 Done: {progress.byStatus.done}

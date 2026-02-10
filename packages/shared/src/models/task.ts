@@ -25,10 +25,13 @@ export const TaskSchema = BaseEntitySchema.extend({
   sprintId: z.uuid().nullable().optional(),
   parentId: z.uuid().nullable().optional(),
   dueDate: z.union([z.string(), z.number()]).nullable().optional(),
+  /** URL of the pull request created by an agent */
+  prUrl: z.string().nullable().optional(),
   acceptanceChecklist: z.array(AcceptanceItemSchema),
   comments: z.array(CommentSchema).optional(),
   activityLog: z.array(EventSchema).optional(),
   docs: z.array(DocSchema),
+  order: z.number().optional(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -65,6 +68,7 @@ export const UpdateTaskSchema = TaskSchema.partial()
   .extend({
     title: z.string().min(1).max(200).optional(),
     dueDate: z.union([z.string(), z.number()]).optional().nullable(),
+    prUrl: z.string().nullable().optional(),
     acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
     docIds: z.array(z.string()).optional(),
   });

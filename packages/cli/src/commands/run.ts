@@ -14,7 +14,9 @@ export async function runCommand(args: string[]): Promise<void> {
       model: { type: "string" },
       provider: { type: "string" },
       agents: { type: "string" },
+      reviewer: { type: "boolean" },
       worktree: { type: "boolean" },
+      "auto-push": { type: "boolean" },
       "skip-planning": { type: "boolean" },
       "api-url": { type: "string" },
       dir: { type: "string" },
@@ -28,6 +30,15 @@ export async function runCommand(args: string[]): Promise<void> {
   configManager.updateVersion(VERSION);
 
   const apiKey = values["api-key"] as string;
+
+  if (!apiKey) {
+    console.error(c.error("Error: --api-key is required"));
+    console.error(
+      c.dim("You can create an API key in Workspace Settings > API Keys")
+    );
+    process.exit(1);
+  }
+
   let workspaceId = values.workspace as string | undefined;
 
   const provider = resolveProvider(values.provider as string);
@@ -40,16 +51,11 @@ export async function runCommand(args: string[]): Promise<void> {
     Math.max(Number.parseInt(values.agents as string, 10) || 1, 1),
     5
   );
+  // Enable reviewer agent (boolean flag)
+  const enableReviewer = (values.reviewer as boolean | undefined) ?? true;
   // Worktrees are always enabled by default for per-task isolation
   const useWorktrees = (values.worktree as boolean | undefined) ?? true;
-
-  if (!apiKey) {
-    console.error(c.error("Error: --api-key is required"));
-    console.error(
-      c.dim("You can create an API key in Workspace Settings > API Keys")
-    );
-    process.exit(1);
-  }
+  const autoPush = (values["auto-push"] as boolean | undefined) ?? true;
 
   // Resolve workspace ID
   try {
@@ -76,7 +82,9 @@ export async function runCommand(args: string[]): Promise<void> {
     projectPath,
     apiKey: apiKey as string,
     agentCount,
+    enableReviewer,
     useWorktrees,
+    autoPush,
   });
 
   orchestrator.on("agent:spawned", (data) =>
@@ -107,7 +115,9 @@ export async function runCommand(args: string[]): Promise<void> {
     if (isShuttingDown) return;
     isShuttingDown = true;
 
-    console.log(`\n${c.info(`Received ${signal}. Stopping agents and cleaning up worktrees...`)}`);
+    console.log(
+      `\n${c.info(`Received ${signal}. Stopping agents and cleaning up worktrees...`)}`
+    );
     await orchestrator.stop();
     process.exit(0);
   };
@@ -116,11 +126,21 @@ export async function runCommand(args: string[]): Promise<void> {
   process.on("SIGTERM", () => handleSignal("SIGTERM"));
 
   const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
+  const reviewerLabel = enableReviewer ? " + 1 reviewer" : "";
   console.log(
-    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel} in`)} ${c.primary(projectPath)}...`
+    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel}${reviewerLabel} in`)} ${c.primary(projectPath)}...`
   );
   if (useWorktrees) {
     console.log(`  ${c.dim("Each task will run in an isolated worktree")}`);
+    if (autoPush) {
+      console.log(
+        `  ${c.dim("Branches will be committed and pushed to remote")}`
+      );
+    } else {
+      console.log(
+        `  ${c.dim("Changes will be committed locally before cleanup")}`
+      );
+    }
   }
   await orchestrator.start();
 }

@@ -43,6 +43,8 @@
   --color-status-verification: #06b6d4;
   --color-status-done: #10b981;
   --color-status-blocked: #f43f5e;
+  --color-status-pr-open: #3b82f6;
+  --color-status-in-review: #f97316;
 
   /* Priority Colors */
   --color-priority-low: #94a3b8;

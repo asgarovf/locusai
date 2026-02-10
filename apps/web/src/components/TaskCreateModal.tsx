@@ -71,8 +71,6 @@ export function TaskCreateModal({
   const applyTemplate = (templateKey: TaskTemplate) => {
     const templateData = TASK_TEMPLATES[templateKey];
     setDescription(templateData.description);
-    setPriority(templateData.priority as TaskPriority);
-    setStatus(templateData.status as TaskStatus);
     setSelectedTemplate(templateKey);
   };
 

@@ -9,7 +9,14 @@ export interface ProjectInfo {
 }
 
 export interface ProgressEvent {
-  type: "task_completed" | "sprint_started" | "sprint_completed" | "blocker";
+  type:
+    | "task_completed"
+    | "sprint_started"
+    | "sprint_completed"
+    | "blocker"
+    | "pr_opened"
+    | "pr_reviewed"
+    | "pr_merged";
   title: string;
   details?: string;
   timestamp?: Date;
@@ -61,6 +68,15 @@ export class KnowledgeBase {
         break;
       case "blocker":
         entry = `- BLOCKER: ${event.title}`;
+        break;
+      case "pr_opened":
+        entry = `- [ ] ${event.title} — PR opened ${timestamp}`;
+        break;
+      case "pr_reviewed":
+        entry = `- ${event.title} — reviewed ${timestamp}`;
+        break;
+      case "pr_merged":
+        entry = `- [x] ${event.title} — PR merged ${timestamp}`;
         break;
     }
 

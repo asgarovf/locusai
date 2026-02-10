@@ -87,7 +87,6 @@ export class ProgressRenderer {
   private isInTextBlock = false; // Track if we're currently outputting text
   // Buffer to handle completion marker that may span multiple chunks
   private textBuffer = "";
-  private readonly COMPLETION_MARKER = "<promise>COMPLETE</promise>";
 
   constructor(options: ProgressRendererOptions = {}) {
     this.animated = options.animated ?? false;
@@ -352,26 +351,8 @@ export class ProgressRenderer {
     // Add content to buffer
     this.textBuffer += content;
 
-    // Check if buffer might contain a partial completion marker
-    // The marker is "<promise>COMPLETE</promise>" (27 chars)
-    // We keep back enough chars to handle partial matches
-    const markerLength = this.COMPLETION_MARKER.length;
-
-    // Remove any complete markers from the buffer
-    this.textBuffer = this.textBuffer.replace(
-      /<promise>COMPLETE<\/promise>/g,
-      ""
-    );
-
-    // Calculate safe output length (keep potential partial marker in buffer)
-    let safeLength = this.textBuffer.length;
-    for (let i = 1; i < markerLength && i < this.textBuffer.length; i++) {
-      const suffix = this.textBuffer.slice(-i);
-      if (this.COMPLETION_MARKER.startsWith(suffix)) {
-        safeLength = this.textBuffer.length - i;
-        break;
-      }
-    }
+    // Calculate safe output length
+    const safeLength = this.textBuffer.length;
 
     // Output the safe portion
     const safeContent = this.textBuffer.slice(0, safeLength);
@@ -504,10 +485,7 @@ export class ProgressRenderer {
 
     // Flush any remaining buffered text (filtering out completion marker)
     if (this.textBuffer) {
-      const remaining = this.textBuffer.replace(
-        /<promise>COMPLETE<\/promise>/g,
-        ""
-      );
+      const remaining = this.textBuffer;
       if (remaining) {
         if (!this.isInTextBlock) {
           process.stdout.write("\n");

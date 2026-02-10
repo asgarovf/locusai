@@ -25,6 +25,11 @@ const driverConfig: Partial<Config> = {
   allowKeyboardControl: true,
   disableActiveInteraction: false,
   popoverClass: "locus-tour-popover",
+  overlayColor: "rgba(0, 0, 0, 0.5)",
+  overlayOpacity: 0.4,
+  overlayClickBehavior: "nextStep",
+  stagePadding: 10,
+  stageRadius: 10,
 };
 
 /**
@@ -119,7 +124,7 @@ export const boardTour = () => {
       popover: {
         title: "Status Columns",
         description:
-          "Each column represents a task status. Drag tasks to move them through your workflow: Backlog → To Do → In Progress → Review → Done.",
+          "Each column represents a task status. Drag tasks through your workflow: Backlog → In Progress → PR Open → In Review → Done.",
         side: "top",
         align: "start",
       },

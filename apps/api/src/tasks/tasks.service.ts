@@ -155,13 +155,16 @@ export class TasksService {
     const oldStatus = task.status;
 
     if (
-      oldStatus === TaskStatus.VERIFICATION &&
+      [TaskStatus.IN_REVIEW, TaskStatus.PR_OPEN].includes(oldStatus) &&
       updates.status === TaskStatus.IN_PROGRESS
     ) {
       task.assignedTo = null;
     }
 
-    if (updates.status === TaskStatus.BACKLOG && oldStatus !== TaskStatus.BACKLOG) {
+    if (
+      updates.status === TaskStatus.BACKLOG &&
+      oldStatus !== TaskStatus.BACKLOG
+    ) {
       task.assignedTo = null;
     }
 

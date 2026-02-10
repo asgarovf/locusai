@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
@@ -291,6 +291,73 @@ export class WorktreeManager {
   }
 
   /**
+   * Check if a worktree has uncommitted changes.
+   */
+  hasChanges(worktreePath: string): boolean {
+    const status = this.git("status --porcelain", worktreePath).trim();
+    return status.length > 0;
+  }
+
+  /**
+   * Stage all changes and commit in a worktree.
+   * Returns the commit hash, or null if there were no changes to commit.
+   */
+  commitChanges(worktreePath: string, message: string): string | null {
+    if (!this.hasChanges(worktreePath)) {
+      this.log("No changes to commit", "info");
+      return null;
+    }
+
+    this.git("add -A", worktreePath);
+    this.gitExec(["commit", "-m", message], worktreePath);
+
+    const hash = this.git("rev-parse HEAD", worktreePath).trim();
+    this.log(`Committed: ${hash.slice(0, 8)}`, "success");
+    return hash;
+  }
+
+  /**
+   * Push a worktree's branch to a remote.
+   * Returns the branch name on success, or throws on failure.
+   */
+  pushBranch(worktreePath: string, remote = "origin"): string {
+    const branch = this.git("rev-parse --abbrev-ref HEAD", worktreePath).trim();
+    this.log(`Pushing branch ${branch} to ${remote}`, "info");
+
+    try {
+      this.gitExec(["push", "-u", remote, branch], worktreePath);
+      this.log(`Pushed ${branch} to ${remote}`, "success");
+      return branch;
+    } catch (error) {
+      if (!this.isNonFastForwardPushError(error)) {
+        throw error;
+      }
+
+      this.log(
+        `Push rejected for ${branch} (non-fast-forward). Retrying with --force-with-lease.`,
+        "warn"
+      );
+
+      try {
+        this.gitExec(["fetch", remote, branch], worktreePath);
+      } catch {
+        // Best effort fetch for lease state; continue to retry push.
+      }
+
+      this.gitExec(
+        ["push", "--force-with-lease", "-u", remote, branch],
+        worktreePath
+      );
+      this.log(
+        `Pushed ${branch} to ${remote} with --force-with-lease`,
+        "success"
+      );
+    }
+
+    return branch;
+  }
+
+  /**
    * Check if a worktree exists for a given task ID.
    */
   hasWorktreeForTask(taskId: string): boolean {
@@ -375,11 +442,31 @@ export class WorktreeManager {
     }
   }
 
+  private isNonFastForwardPushError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes("non-fast-forward") ||
+      message.includes("[rejected]") ||
+      message.includes("fetch first")
+    );
+  }
+
   /**
-   * Execute a git command and return stdout.
+   * Execute a git command (string form) and return stdout.
    */
   private git(args: string, cwd: string): string {
     return execSync(`git ${args}`, {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+  }
+
+  /**
+   * Execute a git command with array args (safe from shell injection).
+   */
+  private gitExec(args: string[], cwd: string): string {
+    return execFileSync("git", args, {
       cwd,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],

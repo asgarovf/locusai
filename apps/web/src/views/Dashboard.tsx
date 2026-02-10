@@ -73,7 +73,8 @@ export function Dashboard() {
   );
   const doneTasks = stats?.taskCounts?.DONE || 0;
   const inProgressTasks = stats?.taskCounts?.IN_PROGRESS || 0;
-  const verificationTasks = stats?.taskCounts?.VERIFICATION || 0;
+  const reviewTasks =
+    (stats?.taskCounts?.PR_OPEN || 0) + (stats?.taskCounts?.IN_REVIEW || 0);
   const backlogTasks = stats?.taskCounts?.BACKLOG || 0;
 
   const welcomeTitle = `Welcome back, ${user?.name.split(" ")[0]}!`;
@@ -117,13 +118,11 @@ export function Dashboard() {
             color="warning"
           />
           <StatCard
-            title="Verification"
-            value={verificationTasks}
+            title="Review Queue"
+            value={reviewTasks}
             icon={CheckCircle2}
             trend={
-              verificationTasks > 0
-                ? `${verificationTasks} needs review`
-                : "All clear"
+              reviewTasks > 0 ? `${reviewTasks} needs review` : "All clear"
             }
             color="purple"
           />

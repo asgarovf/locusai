@@ -37,6 +37,14 @@ interface ActiveToolExecution {
   startTime: number;
 }
 
+const SANDBOX_SETTINGS = JSON.stringify({
+  sandbox: {
+    enabled: true,
+    autoAllow: true,
+    allowUnsandboxedCommands: false,
+  },
+});
+
 export class ClaudeRunner implements AiRunner {
   private projectPath: string;
   private eventEmitter?: ExecEventEmitter;
@@ -104,6 +112,8 @@ export class ClaudeRunner implements AiRunner {
       "--include-partial-messages",
       "--model",
       this.model,
+      "--settings",
+      SANDBOX_SETTINGS,
     ];
 
     const env = {
@@ -405,6 +415,8 @@ export class ClaudeRunner implements AiRunner {
         "--include-partial-messages",
         "--model",
         this.model,
+        "--settings",
+        SANDBOX_SETTINGS,
       ];
 
       const env = {

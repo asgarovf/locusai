@@ -91,7 +91,9 @@ export function TaskCard({
         {/* Priority Indicator Line */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[3px] opacity-80 group-hover:opacity-100 transition-opacity"
-          style={{ backgroundColor: PRIORITY_COLORS[priority] }}
+          style={{
+            backgroundColor: `${PRIORITY_COLORS[priority]}`,
+          }}
         />
 
         {/* Selection Checkbox */}
@@ -142,66 +144,6 @@ export function TaskCard({
           <h4 className="text-[13px] font-medium text-foreground/90 truncate tracking-tight group-hover:text-foreground transition-colors">
             {task.title}
           </h4>
-        </div>
-
-        {/* Labels - Compact display */}
-        {task.labels && task.labels.length > 0 && (
-          <div className="hidden md:flex items-center gap-1 shrink-0">
-            {task.labels.slice(0, 2).map((label, i) => (
-              <span
-                key={i}
-                className="text-[9px] bg-secondary/70 text-secondary-foreground/70 px-1.5 py-0.5 rounded-[3px] border border-border/20"
-              >
-                {label}
-              </span>
-            ))}
-            {task.labels.length > 2 && (
-              <span className="text-[9px] text-muted-foreground/50">
-                +{task.labels.length - 2}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Metadata section - Right Aligned */}
-        <div className="flex items-center gap-3 text-muted-foreground/70 shrink-0">
-          {/* Stats / Checklist */}
-          {task.acceptanceChecklist?.length > 0 && (
-            <div
-              className={cn(
-                "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/30",
-                task.acceptanceChecklist.every((i) => i.done) &&
-                  "bg-emerald-500/10 text-emerald-600"
-              )}
-            >
-              <div className="relative w-3.5 h-3.5 flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-full h-full stroke-current stroke-3 fill-none opacity-40"
-                >
-                  <title>Progress</title>
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                <span className="absolute text-[8px] font-bold">
-                  {Math.round(
-                    (task.acceptanceChecklist.filter((i) => i.done).length /
-                      task.acceptanceChecklist.length) *
-                      100
-                  )}
-                </span>
-              </div>
-              <span className="text-[10px] font-medium">Progress</span>
-            </div>
-          )}
-
-          {/* Assignee */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {task.assigneeRole && (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-primary/80">
-                {task.assigneeRole}
-              </span>
-            )}
-          </div>
         </div>
       </div>
     );

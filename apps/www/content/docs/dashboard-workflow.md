@@ -21,13 +21,13 @@ Once a workflow is active, you can monitor it in real-time:
 
 - **Active Tasks**: See which tasks are currently being worked on by agents.
 - **Agent Status**: View the status of each agent
-- **Task Updates**: Watch as tasks move from *Backlog* to *In Progress* to *Verification*.
+- **Task Updates**: Watch as tasks move from *Backlog* to *In Progress* to *PR Open* and *In Review*.
 
 ## Reviewing Work
 
-When an agent completes a task, it moves to the **Verification** stage.
+When an agent completes a task, it moves to **PR Open** (if PR creation succeeds) or **In Review**.
 
-1. Click on a task in the **Verification** column.
+1. Click on a task in the **PR Open** or **In Review** column.
 2. Review the changes made by the agent (diffs, screenshots, or comments).
 3. If satisfied, mark the task as **Done**.
 4. If issues are found, reject the task from Task Details, with additional comments. The agents are capable of reading your feedbacks.

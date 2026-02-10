@@ -2,12 +2,16 @@ import { Sprint, Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
+import {
+  getGhUsername,
+  isGhAvailable,
+  isGitAvailable,
+} from "../git/git-utils.js";
+import { PrService } from "../git/pr-service.js";
 import { LocusClient } from "../index.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
 import { WorktreeManager } from "../worktree/worktree-manager.js";
-import { CodebaseIndexerService } from "./codebase-indexer-service.js";
-import { DocumentFetcher } from "./document-fetcher.js";
 import { TaskExecutor } from "./task-executor.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -37,6 +41,16 @@ export interface WorkerConfig {
   mainProjectPath?: string;
   /** Whether to use per-task worktrees for isolation */
   useWorktrees?: boolean;
+  /** Whether to push branches to remote after committing */
+  autoPush?: boolean;
+}
+
+interface CommitPushResult {
+  branch: string | null;
+  pushFailed: boolean;
+  pushError?: string;
+  skipReason?: string;
+  noChanges?: boolean;
 }
 
 /**
@@ -48,11 +62,10 @@ export class AgentWorker {
   private aiRunner: AiRunner;
 
   // Services
-  private indexerService: CodebaseIndexerService;
-  private documentFetcher: DocumentFetcher;
   private taskExecutor: TaskExecutor;
   private knowledgeBase: KnowledgeBase;
   private worktreeManager: WorktreeManager | null = null;
+  private prService: PrService | null = null;
 
   // State
   private maxTasks = 50;
@@ -60,6 +73,9 @@ export class AgentWorker {
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private currentTaskId: string | null = null;
   private currentWorktreePath: string | null = null;
+  private postCleanupDelayMs = 5_000;
+  /** Cached GitHub username for co-authorship in commits */
+  private ghUsername: string | null = null;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -78,24 +94,35 @@ export class AgentWorker {
 
     const log = this.log.bind(this);
 
+    // Prerequisite checks
+    if (config.useWorktrees && !isGitAvailable()) {
+      this.log(
+        "git is not installed — worktree isolation will not work",
+        "error"
+      );
+      config.useWorktrees = false;
+    }
+
+    if (config.autoPush && !isGhAvailable(projectPath)) {
+      this.log(
+        "GitHub CLI (gh) not available or not authenticated. Branch push can continue, but automatic PR creation may fail until gh is configured. Install from https://cli.github.com/",
+        "warn"
+      );
+    }
+
+    // Resolve GitHub username for co-authorship
+    if (config.autoPush) {
+      this.ghUsername = getGhUsername();
+      if (this.ghUsername) {
+        this.log(`GitHub user: ${this.ghUsername}`, "info");
+      }
+    }
+
     // Initialize AI clients
     const provider = config.provider ?? PROVIDER.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
-      log,
-    });
-
-    this.indexerService = new CodebaseIndexerService({
-      aiRunner: this.aiRunner,
-      projectPath,
-      log,
-    });
-
-    this.documentFetcher = new DocumentFetcher({
-      client: this.client,
-      workspaceId: config.workspaceId,
-      projectPath,
       log,
     });
 
@@ -115,12 +142,23 @@ export class AgentWorker {
       });
     }
 
+    // Initialize PR service when auto-push is enabled
+    if (config.autoPush) {
+      this.prService = new PrService(projectPath, log);
+    }
+
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Using ${providerLabel} CLI for all phases`, "info");
 
     if (config.useWorktrees) {
       this.log("Per-task worktree isolation enabled", "info");
+      if (config.autoPush) {
+        this.log(
+          "Auto-push enabled: branches will be pushed to remote",
+          "info"
+        );
+      }
     }
   }
 
@@ -154,7 +192,7 @@ export class AgentWorker {
   }
 
   private async getNextTask(): Promise<Task | null> {
-    const maxRetries = 3;
+    const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const task = await this.client.workspaces.dispatch(
@@ -184,7 +222,7 @@ export class AgentWorker {
         const msg = error instanceof Error ? error.message : String(error);
         if (attempt < maxRetries) {
           this.log(
-            `Dispatch error (attempt ${attempt}/${maxRetries}): ${msg}. Retrying in 5s...`,
+            `Nothing dispatched (attempt ${attempt}/${maxRetries}): ${msg}. Retrying in 5s...`,
             "warn"
           );
           await new Promise((r) => setTimeout(r, 5000));
@@ -249,14 +287,127 @@ export class AgentWorker {
   }
 
   /**
-   * Clean up a task-specific worktree.
+   * Commit changes in a task worktree and optionally push to remote.
+   * Distinguishes "no commit", "push failed", and "branch pushed" outcomes.
    */
-  private cleanupTaskWorktree(worktreePath: string | null): void {
+  private commitAndPushWorktree(
+    worktreePath: string,
+    task: Task
+  ): CommitPushResult {
+    if (!this.worktreeManager) {
+      return { branch: null, pushFailed: false };
+    }
+
+    try {
+      const trailers: string[] = [
+        `Task-ID: ${task.id}`,
+        `Agent: ${this.config.agentId}`,
+        "Co-authored-by: LocusAI <noreply@locusai.dev>",
+      ];
+      if (this.ghUsername) {
+        trailers.push(
+          `Co-authored-by: ${this.ghUsername} <${this.ghUsername}@users.noreply.github.com>`
+        );
+      }
+      const commitMessage = `feat(agent): ${task.title}\n\n${trailers.join("\n")}`;
+      const hash = this.worktreeManager.commitChanges(
+        worktreePath,
+        commitMessage
+      );
+
+      if (!hash) {
+        this.log("No changes to commit for this task", "info");
+        return {
+          branch: null,
+          pushFailed: false,
+          noChanges: true,
+          skipReason: "No changes were committed, so no branch was pushed.",
+        };
+      }
+
+      if (this.config.autoPush) {
+        try {
+          return {
+            branch: this.worktreeManager.pushBranch(worktreePath),
+            pushFailed: false,
+          };
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          this.log(`Git push failed: ${errorMessage}`, "error");
+          return {
+            branch: null,
+            pushFailed: true,
+            pushError: errorMessage,
+          };
+        }
+      }
+
+      this.log("Auto-push disabled; skipping branch push", "info");
+      return {
+        branch: null,
+        pushFailed: false,
+        skipReason: "Auto-push is disabled, so PR creation was skipped.",
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.log(`Git commit failed: ${errorMessage}`, "error");
+      return { branch: null, pushFailed: false };
+    }
+  }
+
+  /**
+   * Create a pull request for a completed task.
+   * Returns the PR URL if successful, null otherwise.
+   */
+  private createPullRequest(
+    task: Task,
+    branch: string,
+    summary?: string
+  ): { url: string | null; error?: string } {
+    if (!this.prService) {
+      const errorMessage =
+        "PR service is not initialized. Enable auto-push to allow PR creation.";
+      this.log(`PR creation skipped: ${errorMessage}`, "warn");
+      return { url: null, error: errorMessage };
+    }
+
+    this.log(`Attempting PR creation from branch: ${branch}`, "info");
+
+    try {
+      const result = this.prService.createPr({
+        task,
+        branch,
+        agentId: this.config.agentId,
+        summary,
+      });
+
+      return { url: result.url };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.log(`PR creation failed: ${errorMessage}`, "error");
+      return { url: null, error: errorMessage };
+    }
+  }
+
+  /**
+   * Clean up a task-specific worktree.
+   * If the branch was pushed to remote, keep the branch (don't delete it).
+   */
+  private cleanupTaskWorktree(
+    worktreePath: string | null,
+    branchPushed: boolean
+  ): void {
     if (!this.worktreeManager || !worktreePath) return;
 
     try {
-      this.worktreeManager.remove(worktreePath, true);
-      this.log("Worktree cleaned up", "info");
+      // If branch was pushed, keep it for review/merge; only remove the worktree dir
+      this.worktreeManager.remove(worktreePath, !branchPushed);
+      this.log(
+        branchPushed
+          ? "Worktree cleaned up (branch preserved on remote)"
+          : "Worktree cleaned up",
+        "info"
+      );
     } catch {
       this.log(`Could not clean up worktree: ${worktreePath}`, "warn");
     }
@@ -264,9 +415,14 @@ export class AgentWorker {
     this.currentWorktreePath = null;
   }
 
-  private async executeTask(
-    task: Task
-  ): Promise<{ success: boolean; summary: string }> {
+  private async executeTask(task: Task): Promise<{
+    success: boolean;
+    summary: string;
+    branch?: string;
+    prUrl?: string;
+    prError?: string;
+    noChanges?: boolean;
+  }> {
     // Fetch full task details to get comments/feedback
     const fullTask = await this.client.tasks.getById(
       task.id,
@@ -276,18 +432,76 @@ export class AgentWorker {
     // Create per-task worktree for isolation
     const { worktreePath, executor } = this.createTaskWorktree(fullTask);
     this.currentWorktreePath = worktreePath;
+    let branchPushed = false;
+    let preserveWorktree = false;
 
     try {
       // Execute the task in the worktree (or main project if worktrees disabled)
       const result = await executor.execute(fullTask);
 
-      // Reindex codebase after execution to ensure fresh context
-      await this.indexerService.reindex();
+      // Commit and optionally push changes before cleanup
+      let pushedBranch: string | null = null;
+      let prUrl: string | null = null;
+      let prError: string | null = null;
+      let noChanges = false;
+      if (result.success && worktreePath) {
+        const commitResult = this.commitAndPushWorktree(worktreePath, fullTask);
+        pushedBranch = commitResult.branch;
+        branchPushed = pushedBranch !== null;
+        noChanges = Boolean(commitResult.noChanges);
 
-      return result;
+        if (commitResult.pushFailed) {
+          preserveWorktree = true;
+          prError =
+            commitResult.pushError ??
+            "Git push failed before PR creation. Please retry manually.";
+          this.log(
+            `Preserving worktree after push failure: ${worktreePath}`,
+            "warn"
+          );
+        }
+
+        // Create PR if branch was pushed
+        if (pushedBranch) {
+          const prResult = this.createPullRequest(
+            fullTask,
+            pushedBranch,
+            result.summary
+          );
+          prUrl = prResult.url;
+          prError = prResult.error ?? null;
+
+          if (!prUrl) {
+            preserveWorktree = true;
+            this.log(
+              `Preserving worktree for manual follow-up: ${worktreePath}`,
+              "warn"
+            );
+          }
+        } else if (commitResult.skipReason) {
+          this.log(`Skipping PR creation: ${commitResult.skipReason}`, "info");
+        }
+      } else if (result.success && !worktreePath) {
+        this.log(
+          "Skipping commit/push/PR flow because no task worktree is active.",
+          "warn"
+        );
+      }
+
+      return {
+        ...result,
+        branch: pushedBranch ?? undefined,
+        prUrl: prUrl ?? undefined,
+        prError: prError ?? undefined,
+        noChanges: noChanges || undefined,
+      };
     } finally {
-      // Always clean up the task worktree after execution
-      this.cleanupTaskWorktree(worktreePath);
+      if (preserveWorktree) {
+        this.currentWorktreePath = null;
+      } else {
+        // Clean up the task worktree after execution
+        this.cleanupTaskWorktree(worktreePath, branchPushed);
+      }
     }
   }
 
@@ -349,6 +563,18 @@ export class AgentWorker {
       });
   }
 
+  private async delayAfterCleanup(): Promise<void> {
+    if (!this.config.useWorktrees || this.postCleanupDelayMs <= 0) return;
+
+    this.log(
+      `Waiting ${Math.floor(this.postCleanupDelayMs / 1000)}s after worktree cleanup before next dispatch`,
+      "info"
+    );
+    await new Promise((resolve) =>
+      setTimeout(resolve, this.postCleanupDelayMs)
+    );
+  }
+
   async run(): Promise<void> {
     this.log(
       `Agent started in ${this.config.projectPath || process.cwd()}`,
@@ -360,8 +586,8 @@ export class AgentWorker {
       this.log("Received shutdown signal. Aborting...", "warn");
       this.aiRunner.abort();
       this.stopHeartbeat();
-      // Clean up current worktree if any
-      this.cleanupTaskWorktree(this.currentWorktreePath);
+      // Clean up current worktree if any (don't preserve branch on forced shutdown)
+      this.cleanupTaskWorktree(this.currentWorktreePath, false);
       process.exit(1);
     };
 
@@ -393,30 +619,69 @@ export class AgentWorker {
 
       const result = await this.executeTask(task);
 
-      // Fetch documents from server after task execution
-      try {
-        await this.documentFetcher.fetch();
-      } catch (err) {
-        this.log(`Document fetch failed: ${err}`, "error");
-      }
-
       if (result.success) {
-        this.log(`Completed: ${task.title}`, "success");
-        await this.client.tasks.update(task.id, this.config.workspaceId, {
-          status: "VERIFICATION" as TaskStatus,
-        });
-        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-          author: this.config.agentId,
-          text: `✅ ${result.summary}`,
-        });
-        this.tasksCompleted++;
+        if (result.noChanges) {
+          this.log(
+            `Blocked: ${task.title} - execution produced no file changes`,
+            "warn"
+          );
+          await this.client.tasks.update(task.id, this.config.workspaceId, {
+            status: TaskStatus.BLOCKED,
+            assignedTo: null,
+          });
+          await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+            author: this.config.agentId,
+            text: `⚠️ Agent execution finished with no file changes, so no commit/branch/PR was created.\n\n${result.summary}`,
+          });
+        } else {
+          this.log(`Completed: ${task.title}`, "success");
 
-        // Update progress.md in main project
-        this.updateProgress(task, true);
+          // Determine task status: PR_OPEN if a PR was created, DONE otherwise
+          const newStatus = result.prUrl ? TaskStatus.PR_OPEN : TaskStatus.DONE;
+          const updatePayload: Record<string, unknown> = { status: newStatus };
+          if (result.prUrl) {
+            updatePayload.prUrl = result.prUrl;
+          }
+
+          await this.client.tasks.update(
+            task.id,
+            this.config.workspaceId,
+            updatePayload
+          );
+
+          const branchInfo = result.branch
+            ? `\n\nBranch: \`${result.branch}\``
+            : "";
+          const prInfo = result.prUrl ? `\nPR: ${result.prUrl}` : "";
+          const prErrorInfo = result.prError
+            ? `\nPR automation error: ${result.prError}`
+            : "";
+          await this.client.tasks.addComment(task.id, this.config.workspaceId, {
+            author: this.config.agentId,
+            text: `✅ ${result.summary}${branchInfo}${prInfo}${prErrorInfo}`,
+          });
+          this.tasksCompleted++;
+
+          // Update progress.md in main project
+          this.updateProgress(task, true);
+
+          // Track PR in progress.md if created
+          if (result.prUrl) {
+            try {
+              this.knowledgeBase.updateProgress({
+                type: "pr_opened",
+                title: task.title,
+                details: `PR: ${result.prUrl}`,
+              });
+            } catch {
+              // Non-critical — don't fail the task
+            }
+          }
+        }
       } else {
         this.log(`Failed: ${task.title} - ${result.summary}`, "error");
         await this.client.tasks.update(task.id, this.config.workspaceId, {
-          status: "BACKLOG" as TaskStatus,
+          status: TaskStatus.BACKLOG,
           assignedTo: null,
         });
         await this.client.tasks.addComment(task.id, this.config.workspaceId, {
@@ -426,6 +691,8 @@ export class AgentWorker {
       }
 
       this.currentTaskId = null;
+      this.sendHeartbeat();
+      await this.delayAfterCleanup();
     }
 
     // Send final heartbeat with COMPLETED status and stop
@@ -447,10 +714,8 @@ export class AgentWorker {
 }
 
 // CLI entry point
-if (
-  process.argv[1]?.includes("agent-worker") ||
-  process.argv[1]?.includes("worker")
-) {
+const workerEntrypoint = process.argv[1]?.split(/[\\/]/).pop();
+if (workerEntrypoint === "worker.js" || workerEntrypoint === "worker.ts") {
   // Set process title for easy identification in Activity Monitor / ps
   // Find with: ps aux | grep "locus-worker" or pgrep -f "locus-worker"
   process.title = "locus-worker";
@@ -468,6 +733,7 @@ if (
     else if (arg === "--main-project-path") config.mainProjectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
     else if (arg === "--use-worktrees") config.useWorktrees = true;
+    else if (arg === "--auto-push") config.autoPush = true;
     else if (arg === "--provider") {
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;

@@ -94,6 +94,7 @@ export function BoardHeader({
           </div>
         </Tooltip>
         <Button
+          data-tour="add-task-btn"
           onClick={onNewTask}
           size="md"
           className="shadow-lg shadow-primary/20 shrink-0 px-2 sm:px-4"

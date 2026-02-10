@@ -87,10 +87,10 @@ describe("TasksService", () => {
     expect(eventsService.logEvent).toHaveBeenCalled();
   });
 
-  it("should allow moving to DONE from VERIFICATION", async () => {
+  it("should allow moving to DONE from IN_REVIEW", async () => {
     const task = {
       id: "task-1",
-      status: TaskStatus.VERIFICATION,
+      status: TaskStatus.IN_REVIEW,
       title: "Test",
     };
     taskRepo.findOne.mockResolvedValue(task as any);

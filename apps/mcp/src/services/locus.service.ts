@@ -81,11 +81,11 @@ export class LocusService {
   async completeTask(taskId: string, summary: string): Promise<void> {
     logger.info(
       "LocusService",
-      `Completing task ${taskId} with status VERIFICATION...`
+      `Completing task ${taskId} with status IN_REVIEW...`
     );
     try {
       await this.client.tasks.update(taskId, this.workspaceId, {
-        status: TaskStatus.VERIFICATION,
+        status: TaskStatus.IN_REVIEW,
       });
       logger.info("LocusService", `Task ${taskId} updated successfully.`);
     } catch (error) {

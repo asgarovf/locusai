@@ -13,10 +13,10 @@ export interface OptionItem<T extends string = string> {
 const STATUS_COLOR_MAP: Record<TaskStatus, string> = {
   [TaskStatus.BACKLOG]: "#64748b",
   [TaskStatus.IN_PROGRESS]: "#f59e0b",
-  [TaskStatus.REVIEW]: "#a855f7",
-  [TaskStatus.VERIFICATION]: "#38bdf8",
-  [TaskStatus.DONE]: "#10b981",
+  [TaskStatus.PR_OPEN]: "#3b82f6",
+  [TaskStatus.IN_REVIEW]: "#f97316",
   [TaskStatus.BLOCKED]: "#ef4444",
+  [TaskStatus.DONE]: "#10b981",
 };
 
 /**
@@ -33,7 +33,16 @@ const PRIORITY_COLOR_MAP: Record<TaskPriority, string> = {
  * Get all available task status options.
  */
 export function getStatusOptions(): OptionItem<TaskStatus>[] {
-  return Object.values(TaskStatus).map((status) => ({
+  const statusOrder: TaskStatus[] = [
+    TaskStatus.BACKLOG,
+    TaskStatus.IN_PROGRESS,
+    TaskStatus.PR_OPEN,
+    TaskStatus.IN_REVIEW,
+    TaskStatus.BLOCKED,
+    TaskStatus.DONE,
+  ];
+
+  return statusOrder.map((status) => ({
     value: status,
     label: status.replace(/_/g, " "),
     color: STATUS_COLOR_MAP[status],

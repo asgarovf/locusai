@@ -58,7 +58,11 @@ export function BoardContent({
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-x-auto">
-          <div id="task-columns" className="flex gap-4 h-full min-w-max pb-4">
+          <div
+            id="task-columns"
+            data-tour="board-columns"
+            className="flex gap-4 h-full min-w-max pb-4"
+          >
             {BOARD_STATUSES.map((status) => (
               <BoardColumn
                 key={status.key}

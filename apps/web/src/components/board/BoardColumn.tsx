@@ -88,14 +88,16 @@ export function BoardColumn({
           ) : (
             <div className="space-y-3 pb-4">
               {tasks.map((task) => (
-                <DraggableTask key={task.id} task={task}>
-                  <TaskCard
-                    task={task}
-                    onClick={() => onTaskClick(task.id)}
-                    onDelete={onTaskDelete}
-                    variant={isCompact ? "list" : "card"}
-                  />
-                </DraggableTask>
+                <div key={task.id} data-tour="task-card">
+                  <DraggableTask task={task}>
+                    <TaskCard
+                      task={task}
+                      onClick={() => onTaskClick(task.id)}
+                      onDelete={onTaskDelete}
+                      variant={isCompact ? "list" : "card"}
+                    />
+                  </DraggableTask>
+                </div>
               ))}
             </div>
           )}

@@ -3,6 +3,7 @@
 import { c } from "@locusai/sdk/node";
 import {
   agentsCommand,
+  docsCommand,
   execCommand,
   indexCommand,
   initCommand,
@@ -43,6 +44,9 @@ async function main() {
       break;
     case "agents":
       await agentsCommand(args);
+      break;
+    case "docs":
+      await docsCommand(args);
       break;
     default:
       showHelp();

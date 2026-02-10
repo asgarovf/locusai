@@ -81,6 +81,7 @@ export class DocumentFetcher {
       }
     } catch (error) {
       this.deps.log(`Failed to fetch documents: ${error}`, "error");
+      throw error;
     }
   }
 }

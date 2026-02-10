@@ -10,6 +10,7 @@ import {
 } from "@locusai/shared";
 import { EventEmitter } from "events";
 import type { AiProvider } from "./ai/runner.js";
+import { isGhAvailable, isGitAvailable } from "./git/git-utils.js";
 import { LocusClient } from "./index.js";
 import { c } from "./utils/colors.js";
 import type { WorktreeCleanupPolicy } from "./worktree/worktree-config.js";
@@ -33,17 +34,32 @@ export interface AgentState {
 }
 
 export interface OrchestratorConfig {
+  // Workspace ID
   workspaceId: string;
+  // Sprint ID
   sprintId: string;
+  // API base URL
   apiBase: string;
+  // Maximum number of iterations to run
   maxIterations: number;
+  // Path to the project
   projectPath: string;
+  // API key
   apiKey: string;
+  // AI model (e.g. opus, sonnet, gpt-5.3-codex.)
   model?: string;
+  // AI provider (e.g. codex, claude, etc.)
   provider?: AiProvider;
+  // Number of agents to spawn
   agentCount?: number;
+  // Whether to use worktrees for each agent
   useWorktrees?: boolean;
+  // Worktree management
   worktreeCleanupPolicy?: WorktreeCleanupPolicy;
+  /** Whether to spawn a single reviewer agent alongside builders */
+  enableReviewer?: boolean;
+  /** Whether to push agent branches to remote after committing */
+  autoPush?: boolean;
 }
 
 const MAX_AGENTS = 5;
@@ -69,6 +85,10 @@ export class AgentOrchestrator extends EventEmitter {
 
   private get agentCount(): number {
     return Math.min(Math.max(this.config.agentCount ?? 1, 1), MAX_AGENTS);
+  }
+
+  private get enableReviewer(): boolean {
+    return this.config.enableReviewer ?? true;
   }
 
   private get useWorktrees(): boolean {
@@ -145,8 +165,16 @@ export class AgentOrchestrator extends EventEmitter {
     }
     console.log(`${c.bold("Agents:")} ${this.agentCount}`);
     console.log(
+      `${c.bold("Reviewer:")} ${this.enableReviewer ? "enabled" : "disabled"}`
+    );
+    console.log(
       `${c.bold("Worktrees:")} ${this.useWorktrees ? "enabled" : "disabled"}`
     );
+    if (this.useWorktrees) {
+      console.log(
+        `${c.bold("Auto-push:")} ${this.config.autoPush ? "enabled" : "disabled"}`
+      );
+    }
     console.log(`${c.bold("API Base:")} ${this.config.apiBase}`);
     console.log(c.dim("----------------------------------------------\n"));
 
@@ -156,6 +184,24 @@ export class AgentOrchestrator extends EventEmitter {
     if (tasks.length === 0) {
       console.log(c.dim("ℹ  No available tasks found in the backlog."));
       return;
+    }
+
+    // Prerequisite checks
+    if (this.useWorktrees && !isGitAvailable()) {
+      console.log(
+        c.error(
+          "git is not installed. Worktree isolation requires git. Install from https://git-scm.com/"
+        )
+      );
+      return;
+    }
+
+    if (this.config.autoPush && !isGhAvailable(this.config.projectPath)) {
+      console.log(
+        c.warning(
+          "GitHub CLI (gh) not available or not authenticated. Branch push can continue, but automatic PR creation may fail until gh is configured. Install from https://cli.github.com/"
+        )
+      );
     }
 
     // Initialize worktree manager for cleanup purposes (workers manage their own per-task worktrees)
@@ -181,6 +227,11 @@ export class AgentOrchestrator extends EventEmitter {
       spawnPromises.push(this.spawnAgent(i));
     }
     await Promise.all(spawnPromises);
+
+    // Spawn a single reviewer agent if enabled (polls for PR_OPEN tasks)
+    if (this.enableReviewer) {
+      await this.spawnReviewer();
+    }
 
     // Wait for all agents to complete
     while (this.agents.size > 0 && this.isRunning) {
@@ -256,6 +307,11 @@ export class AgentOrchestrator extends EventEmitter {
       workerArgs.push("--use-worktrees");
     }
 
+    // Tell the worker to push branches to remote after committing
+    if (this.config.autoPush) {
+      workerArgs.push("--auto-push");
+    }
+
     // Use node to run the worker script
     // detached: true creates a new process group so we can kill the entire tree
     // (including Claude/Codex CLI grandchild processes) via kill(-pid)
@@ -314,6 +370,106 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
+   * Spawn a reviewer agent process that polls for PR_OPEN tasks.
+   */
+  private async spawnReviewer(): Promise<void> {
+    const agentId = `reviewer-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 9)}`;
+
+    const agentState: AgentState = {
+      id: agentId,
+      status: "IDLE",
+      currentTaskId: null,
+      tasksCompleted: 0,
+      tasksFailed: 0,
+      lastHeartbeat: new Date(),
+    };
+
+    this.agents.set(agentId, agentState);
+
+    console.log(`${c.primary("🔍 Reviewer started:")} ${c.bold(agentId)}\n`);
+
+    const reviewerPath = this.resolveReviewerPath();
+
+    if (!reviewerPath) {
+      console.log(
+        c.error(
+          "Reviewer worker file not found. Make sure the SDK is properly built."
+        )
+      );
+      this.agents.delete(agentId);
+      return;
+    }
+
+    const reviewerArgs = [
+      "--agent-id",
+      agentId,
+      "--workspace-id",
+      this.config.workspaceId,
+      "--api-url",
+      this.config.apiBase,
+      "--api-key",
+      this.config.apiKey,
+      "--project-path",
+      this.config.projectPath,
+    ];
+
+    if (this.config.model) {
+      reviewerArgs.push("--model", this.config.model);
+    }
+    if (this.config.provider) {
+      reviewerArgs.push("--provider", this.config.provider);
+    }
+    if (this.resolvedSprintId) {
+      reviewerArgs.push("--sprint-id", this.resolvedSprintId);
+    }
+
+    const reviewerProcess = spawn(
+      process.execPath,
+      [reviewerPath, ...reviewerArgs],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        detached: true,
+        env: {
+          ...process.env,
+          FORCE_COLOR: "1",
+          TERM: "xterm-256color",
+          LOCUS_WORKER: agentId,
+          LOCUS_WORKSPACE: this.config.workspaceId,
+        },
+      }
+    );
+
+    agentState.process = reviewerProcess;
+
+    reviewerProcess.stdout?.on("data", (data) => {
+      process.stdout.write(data.toString());
+    });
+
+    reviewerProcess.stderr?.on("data", (data) => {
+      process.stderr.write(data.toString());
+    });
+
+    reviewerProcess.on("exit", (code) => {
+      console.log(`\n${agentId} finished (exit code: ${code})`);
+      const agent = this.agents.get(agentId);
+      if (agent) {
+        agent.status = code === 0 ? "COMPLETED" : "FAILED";
+        this.emit("agent:completed", {
+          agentId,
+          status: agent.status,
+          tasksCompleted: agent.tasksCompleted,
+          tasksFailed: agent.tasksFailed,
+        });
+        this.agents.delete(agentId);
+      }
+    });
+
+    this.emit("agent:spawned", { agentId, role: "reviewer" });
+  }
+
+  /**
    * Resolve the worker script path from the SDK module location
    */
   private resolveWorkerPath(): string | undefined {
@@ -324,6 +480,22 @@ export class AgentOrchestrator extends EventEmitter {
       join(currentModuleDir, "agent", "worker.js"),
       join(currentModuleDir, "worker.js"),
       join(currentModuleDir, "agent", "worker.ts"),
+    ];
+
+    return potentialPaths.find((p) => existsSync(p));
+  }
+
+  /**
+   * Resolve the reviewer worker script path from the SDK module location
+   */
+  private resolveReviewerPath(): string | undefined {
+    const currentModulePath = fileURLToPath(import.meta.url);
+    const currentModuleDir = dirname(currentModulePath);
+
+    const potentialPaths = [
+      join(currentModuleDir, "agent", "reviewer-worker.js"),
+      join(currentModuleDir, "reviewer-worker.js"),
+      join(currentModuleDir, "agent", "reviewer-worker.ts"),
     ];
 
     return potentialPaths.find((p) => existsSync(p));
@@ -427,7 +599,7 @@ export class AgentOrchestrator extends EventEmitter {
   ): Promise<void> {
     try {
       await this.client.tasks.update(taskId, this.config.workspaceId, {
-        status: TaskStatus.VERIFICATION,
+        status: TaskStatus.IN_REVIEW,
       });
 
       if (summary) {

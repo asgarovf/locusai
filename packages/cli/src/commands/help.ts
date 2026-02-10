@@ -15,6 +15,8 @@ export function showHelp(): void {
     ${c.success("agents")}    Manage agent worktrees
               ${c.dim("list          List active agent worktrees")}
               ${c.dim("clean         Prune stale worktrees (--all to remove all)")}
+    ${c.success("docs")}      Manage workspace docs
+              ${c.dim("sync          Sync docs from API to .locus/documents")}
     ${c.success("review")}    Review staged changes with AI
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
@@ -36,6 +38,7 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus run --api-key YOUR_KEY")}
     ${c.dim("$")} ${c.primary("locus run --agents 3 --api-key YOUR_KEY")}
     ${c.dim("$")} ${c.primary("locus agents list")}
+    ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY")}
     ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 

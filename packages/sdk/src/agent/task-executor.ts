@@ -27,16 +27,11 @@ export class TaskExecutor {
     try {
       this.deps.log("Starting Execution...", "info");
 
-      const executionPrompt = `${basePrompt}\n\nWhen finished, output: <promise>COMPLETE</promise>`;
-      const output = await this.deps.aiRunner.run(executionPrompt);
-
-      const success = output.includes("<promise>COMPLETE</promise>");
+      await this.deps.aiRunner.run(basePrompt);
 
       return {
-        success,
-        summary: success
-          ? "Task completed by the agent"
-          : "The agent did not signal completion",
+        success: true,
+        summary: "Task completed by the agent",
       };
     } catch (error) {
       return { success: false, summary: `Error: ${error}` };

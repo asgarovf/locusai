@@ -29,8 +29,8 @@ locus run --provider codex --api-key <YOUR_KEY>
 
 ### Custom Model Selection
 
-By default, Locus uses `gpt-5.1-codex-mini`. You can specify a different Codex model if needed:
+By default, Locus uses `gpt-5.3-codex-mini`. You can specify a different Codex model if needed:
 
 ```bash
-locus run --provider codex --model gpt-5.1-codex
+locus run --provider codex --model gpt-5.2-codex
 ```

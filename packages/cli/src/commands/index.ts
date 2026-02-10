@@ -1,4 +1,5 @@
 export { agentsCommand } from "./agents";
+export { docsCommand } from "./docs";
 export { execCommand } from "./exec";
 export { SessionCommands, showSessionsHelp } from "./exec-sessions";
 export { showHelp } from "./help";

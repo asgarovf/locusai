@@ -110,6 +110,9 @@ export class Task {
   })
   docs: Doc[];
 
+  @Column({ name: "pr_url", type: "varchar", nullable: true })
+  prUrl: string | null;
+
   @Column({ name: "acceptance_checklist", type: "jsonb", default: [] })
   acceptanceChecklist: Array<{ id: string; text: string; done: boolean }>;
 

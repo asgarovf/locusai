@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { BoardFilter, PageLayout, TaskCreateModal } from "@/components";
 import { BoardContent, BoardHeader, FlowchartView } from "@/components/board";
 import { Spinner } from "@/components/ui";
 import { useBoard } from "@/hooks";
+import { getStorageItem } from "@/lib/local-storage";
+import { STORAGE_KEYS } from "@/lib/local-storage-keys";
+import { boardTour } from "@/lib/tour-steps";
 
 function BoardPageContent() {
   const {
@@ -34,6 +37,19 @@ function BoardPageContent() {
     refetch,
   } = useBoard();
 
+  useEffect(() => {
+    if (isLoading || view !== "board") return;
+
+    const hasSeenTour = getStorageItem(STORAGE_KEYS.TOUR_BOARD_SEEN);
+    if (hasSeenTour) return;
+
+    const timeout = window.setTimeout(() => {
+      boardTour();
+    }, 500);
+
+    return () => window.clearTimeout(timeout);
+  }, [isLoading, view]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -57,11 +73,19 @@ function BoardPageContent() {
       <PageLayout
         title={title}
         description={description}
-        actions={<div id="board-header">{actions}</div>}
+        actions={
+          <div id="board-header" data-tour="board-header">
+            {actions}
+          </div>
+        }
         contentClassName="flex flex-col"
       >
         {activeSprint != null && (
-          <div id="board-filters" className="w-full mb-4 sm:mb-6">
+          <div
+            id="board-filters"
+            data-tour="board-filters"
+            className="w-full mb-4 sm:mb-6"
+          >
             <BoardFilter
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
