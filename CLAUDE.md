@@ -1,6 +1,6 @@
 ## Planning First
 
-Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Update the plan if the approach changes. Mark complete when done.
+Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Delete the planning .md files after the execution.
 
 ## Code
 
