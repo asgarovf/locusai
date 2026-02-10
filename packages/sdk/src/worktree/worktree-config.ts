@@ -57,6 +57,8 @@ export interface CreateWorktreeResult {
   worktreePath: string;
   /** Branch name created */
   branch: string;
+  /** Base branch used to create the task branch */
+  baseBranch: string;
 }
 
 /** Default worktree configuration */

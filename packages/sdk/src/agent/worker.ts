@@ -47,6 +47,7 @@ export interface WorkerConfig {
 
 interface CommitPushResult {
   branch: string | null;
+  pushed: boolean;
   pushFailed: boolean;
   pushError?: string;
   skipReason?: string;
@@ -222,14 +223,14 @@ export class AgentWorker {
         const msg = error instanceof Error ? error.message : String(error);
         if (attempt < maxRetries) {
           this.log(
-            `Nothing dispatched (attempt ${attempt}/${maxRetries}): ${msg}. Retrying in 5s...`,
+            `Nothing dispatched (attempt ${attempt}/${maxRetries}): ${msg}. Retrying in 30s...`,
             "warn"
           );
-          await new Promise((r) => setTimeout(r, 5000));
+          await new Promise((r) => setTimeout(r, 30_000));
         } else {
           this.log(
-            `Dispatch failed after ${maxRetries} attempts: ${msg}`,
-            "error"
+            `Nothing dispatched after ${maxRetries} attempts: ${msg}`,
+            "warn"
           );
           return null;
         }
@@ -244,10 +245,15 @@ export class AgentWorker {
    */
   private createTaskWorktree(task: Task): {
     worktreePath: string | null;
+    baseBranch: string | null;
     executor: TaskExecutor;
   } {
     if (!this.worktreeManager) {
-      return { worktreePath: null, executor: this.taskExecutor };
+      return {
+        worktreePath: null,
+        baseBranch: null,
+        executor: this.taskExecutor,
+      };
     }
 
     const slug = task.title
@@ -283,7 +289,11 @@ export class AgentWorker {
       log,
     });
 
-    return { worktreePath: result.worktreePath, executor: taskExecutor };
+    return {
+      worktreePath: result.worktreePath,
+      baseBranch: result.baseBranch,
+      executor: taskExecutor,
+    };
   }
 
   /**
@@ -295,7 +305,7 @@ export class AgentWorker {
     task: Task
   ): CommitPushResult {
     if (!this.worktreeManager) {
-      return { branch: null, pushFailed: false };
+      return { branch: null, pushed: false, pushFailed: false };
     }
 
     try {
@@ -319,23 +329,28 @@ export class AgentWorker {
         this.log("No changes to commit for this task", "info");
         return {
           branch: null,
+          pushed: false,
           pushFailed: false,
           noChanges: true,
           skipReason: "No changes were committed, so no branch was pushed.",
         };
       }
 
+      const localBranch = this.worktreeManager.getBranch(worktreePath);
+
       if (this.config.autoPush) {
         try {
           return {
             branch: this.worktreeManager.pushBranch(worktreePath),
+            pushed: true,
             pushFailed: false,
           };
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
           this.log(`Git push failed: ${errorMessage}`, "error");
           return {
-            branch: null,
+            branch: localBranch,
+            pushed: false,
             pushFailed: true,
             pushError: errorMessage,
           };
@@ -344,14 +359,15 @@ export class AgentWorker {
 
       this.log("Auto-push disabled; skipping branch push", "info");
       return {
-        branch: null,
+        branch: localBranch,
+        pushed: false,
         pushFailed: false,
         skipReason: "Auto-push is disabled, so PR creation was skipped.",
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this.log(`Git commit failed: ${errorMessage}`, "error");
-      return { branch: null, pushFailed: false };
+      return { branch: null, pushed: false, pushFailed: false };
     }
   }
 
@@ -362,7 +378,8 @@ export class AgentWorker {
   private createPullRequest(
     task: Task,
     branch: string,
-    summary?: string
+    summary?: string,
+    baseBranch?: string
   ): { url: string | null; error?: string } {
     if (!this.prService) {
       const errorMessage =
@@ -377,6 +394,7 @@ export class AgentWorker {
       const result = this.prService.createPr({
         task,
         branch,
+        baseBranch,
         agentId: this.config.agentId,
         summary,
       });
@@ -391,20 +409,20 @@ export class AgentWorker {
 
   /**
    * Clean up a task-specific worktree.
-   * If the branch was pushed to remote, keep the branch (don't delete it).
+   * Keep the branch if a commit was created so follow-up is possible.
    */
   private cleanupTaskWorktree(
     worktreePath: string | null,
-    branchPushed: boolean
+    keepBranch: boolean
   ): void {
     if (!this.worktreeManager || !worktreePath) return;
 
     try {
-      // If branch was pushed, keep it for review/merge; only remove the worktree dir
-      this.worktreeManager.remove(worktreePath, !branchPushed);
+      // If the task produced a commit, keep the branch for follow-up.
+      this.worktreeManager.remove(worktreePath, !keepBranch);
       this.log(
-        branchPushed
-          ? "Worktree cleaned up (branch preserved on remote)"
+        keepBranch
+          ? "Worktree cleaned up (branch preserved)"
           : "Worktree cleaned up",
         "info"
       );
@@ -430,9 +448,11 @@ export class AgentWorker {
     );
 
     // Create per-task worktree for isolation
-    const { worktreePath, executor } = this.createTaskWorktree(fullTask);
+    const { worktreePath, baseBranch, executor } =
+      this.createTaskWorktree(fullTask);
     this.currentWorktreePath = worktreePath;
     let branchPushed = false;
+    let keepBranch = false;
     let preserveWorktree = false;
 
     try {
@@ -440,14 +460,15 @@ export class AgentWorker {
       const result = await executor.execute(fullTask);
 
       // Commit and optionally push changes before cleanup
-      let pushedBranch: string | null = null;
+      let taskBranch: string | null = null;
       let prUrl: string | null = null;
       let prError: string | null = null;
       let noChanges = false;
       if (result.success && worktreePath) {
         const commitResult = this.commitAndPushWorktree(worktreePath, fullTask);
-        pushedBranch = commitResult.branch;
-        branchPushed = pushedBranch !== null;
+        taskBranch = commitResult.branch;
+        branchPushed = commitResult.pushed;
+        keepBranch = taskBranch !== null;
         noChanges = Boolean(commitResult.noChanges);
 
         if (commitResult.pushFailed) {
@@ -462,11 +483,12 @@ export class AgentWorker {
         }
 
         // Create PR if branch was pushed
-        if (pushedBranch) {
+        if (branchPushed && taskBranch) {
           const prResult = this.createPullRequest(
             fullTask,
-            pushedBranch,
-            result.summary
+            taskBranch,
+            result.summary,
+            baseBranch ?? undefined
           );
           prUrl = prResult.url;
           prError = prResult.error ?? null;
@@ -490,7 +512,7 @@ export class AgentWorker {
 
       return {
         ...result,
-        branch: pushedBranch ?? undefined,
+        branch: taskBranch ?? undefined,
         prUrl: prUrl ?? undefined,
         prError: prError ?? undefined,
         noChanges: noChanges || undefined,
@@ -500,7 +522,7 @@ export class AgentWorker {
         this.currentWorktreePath = null;
       } else {
         // Clean up the task worktree after execution
-        this.cleanupTaskWorktree(worktreePath, branchPushed);
+        this.cleanupTaskWorktree(worktreePath, keepBranch);
       }
     }
   }
@@ -636,9 +658,7 @@ export class AgentWorker {
         } else {
           this.log(`Completed: ${task.title}`, "success");
 
-          // Determine task status: PR_OPEN if a PR was created, DONE otherwise
-          const newStatus = result.prUrl ? TaskStatus.PR_OPEN : TaskStatus.DONE;
-          const updatePayload: Record<string, unknown> = { status: newStatus };
+          const updatePayload: Record<string, unknown> = { status: TaskStatus.IN_REVIEW };
           if (result.prUrl) {
             updatePayload.prUrl = result.prUrl;
           }

@@ -50,4 +50,4 @@ graph TD
 2. **Dispatch**: You run `locus run` on your terminal. The CLI connects to the API and asks for work.
 3. **Execution**: The CLI receives the task assignment. It reads your code, plans a solution, and executes changes.
 4. **Verification**: The agent runs local tests to verify the fix.
-5. **Completion**: The agent commits changes, opens a PR when possible, and updates the task status to `PR_OPEN` or `IN_REVIEW`.
+5. **Completion**: The agent commits changes, opens a PR when possible, and updates the task status to `IN_REVIEW`.

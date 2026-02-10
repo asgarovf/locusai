@@ -120,7 +120,6 @@ const STATUS_CONFIG: Record<
 > = {
   BACKLOG: { label: "Backlog", variant: "default" },
   IN_PROGRESS: { label: "In Progress", variant: "warning" },
-  PR_OPEN: { label: "PR Open", variant: "info" },
   IN_REVIEW: { label: "In Review", variant: "warning" },
   BLOCKED: { label: "Blocked", variant: "error" },
   DONE: { label: "Done", variant: "success" },

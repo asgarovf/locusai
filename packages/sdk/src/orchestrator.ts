@@ -11,6 +11,7 @@ import {
 import { EventEmitter } from "events";
 import type { AiProvider } from "./ai/runner.js";
 import { isGhAvailable, isGitAvailable } from "./git/git-utils.js";
+import { PrService } from "./git/pr-service.js";
 import { LocusClient } from "./index.js";
 import { c } from "./utils/colors.js";
 import type { WorktreeCleanupPolicy } from "./worktree/worktree-config.js";
@@ -96,6 +97,10 @@ export class AgentOrchestrator extends EventEmitter {
     return this.config.useWorktrees ?? true;
   }
 
+  private get worktreeCleanupPolicy(): WorktreeCleanupPolicy {
+    return this.config.worktreeCleanupPolicy ?? "retain-on-failure";
+  }
+
   /**
    * Resolve the sprint ID - use provided or find active sprint
    */
@@ -171,6 +176,7 @@ export class AgentOrchestrator extends EventEmitter {
       `${c.bold("Worktrees:")} ${this.useWorktrees ? "enabled" : "disabled"}`
     );
     if (this.useWorktrees) {
+      console.log(`${c.bold("Cleanup policy:")} ${this.worktreeCleanupPolicy}`);
       console.log(
         `${c.bold("Auto-push:")} ${this.config.autoPush ? "enabled" : "disabled"}`
       );
@@ -180,14 +186,33 @@ export class AgentOrchestrator extends EventEmitter {
 
     // Check if there are tasks to work on before spawning
     const tasks = await this.getAvailableTasks();
+    const unreviewedPrs =
+      tasks.length === 0 ? this.getUnreviewedPrs() : [];
 
-    if (tasks.length === 0) {
+    if (tasks.length === 0 && unreviewedPrs.length === 0) {
       console.log(c.dim("ℹ  No available tasks found in the backlog."));
       return;
     }
 
+    if (tasks.length === 0 && unreviewedPrs.length > 0) {
+      if (this.enableReviewer) {
+        console.log(
+          c.dim(
+            `ℹ  No available tasks found in the backlog. Found ${unreviewedPrs.length} PR(s) waiting for review; starting reviewer-only mode.`
+          )
+        );
+      } else {
+        console.log(
+          c.dim(
+            `ℹ  No available tasks found in the backlog, but ${unreviewedPrs.length} PR(s) are waiting for review. Run with --reviewer to start the reviewer agent.`
+          )
+        );
+        return;
+      }
+    }
+
     // Prerequisite checks
-    if (this.useWorktrees && !isGitAvailable()) {
+    if (tasks.length > 0 && this.useWorktrees && !isGitAvailable()) {
       console.log(
         c.error(
           "git is not installed. Worktree isolation requires git. Install from https://git-scm.com/"
@@ -196,7 +221,11 @@ export class AgentOrchestrator extends EventEmitter {
       return;
     }
 
-    if (this.config.autoPush && !isGhAvailable(this.config.projectPath)) {
+    if (
+      tasks.length > 0 &&
+      this.config.autoPush &&
+      !isGhAvailable(this.config.projectPath)
+    ) {
       console.log(
         c.warning(
           "GitHub CLI (gh) not available or not authenticated. Branch push can continue, but automatic PR creation may fail until gh is configured. Install from https://cli.github.com/"
@@ -205,9 +234,9 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Initialize worktree manager for cleanup purposes (workers manage their own per-task worktrees)
-    if (this.useWorktrees) {
+    if (tasks.length > 0 && this.useWorktrees) {
       this.worktreeManager = new WorktreeManager(this.config.projectPath, {
-        cleanupPolicy: "auto",
+        cleanupPolicy: this.worktreeCleanupPolicy,
       });
     }
 
@@ -228,8 +257,8 @@ export class AgentOrchestrator extends EventEmitter {
     }
     await Promise.all(spawnPromises);
 
-    // Spawn a single reviewer agent if enabled (polls for PR_OPEN tasks)
-    if (this.enableReviewer) {
+    // Spawn a single reviewer agent if enabled (discovers unreviewed PRs from GitHub)
+    if (this.enableReviewer && (tasks.length > 0 || unreviewedPrs.length > 0)) {
       await this.spawnReviewer();
     }
 
@@ -370,7 +399,7 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Spawn a reviewer agent process that polls for PR_OPEN tasks.
+   * Spawn a reviewer agent process that discovers unreviewed PRs from GitHub.
    */
   private async spawnReviewer(): Promise<void> {
     const agentId = `reviewer-${Date.now()}-${Math.random()
@@ -539,6 +568,26 @@ export class AgentOrchestrator extends EventEmitter {
       return tasks.filter((task) => !this.processedTasks.has(task.id));
     } catch (error) {
       this.emit("error", error);
+      return [];
+    }
+  }
+
+  /**
+   * Discover open Locus PRs on GitHub that haven't been reviewed yet.
+   */
+  private getUnreviewedPrs(): Array<{
+    number: number;
+    title: string;
+    url: string;
+    branch: string;
+  }> {
+    if (!isGhAvailable(this.config.projectPath)) {
+      return [];
+    }
+    try {
+      const prService = new PrService(this.config.projectPath, () => {});
+      return prService.listUnreviewedLocusPrs();
+    } catch {
       return [];
     }
   }
@@ -717,12 +766,25 @@ export class AgentOrchestrator extends EventEmitter {
       }
     }
 
-    // Force-remove all worktrees on shutdown
+    // Worktree cleanup depends on policy.
     if (this.worktreeManager) {
       try {
-        const removed = this.worktreeManager.removeAll();
-        if (removed > 0) {
-          console.log(c.dim(`Cleaned up ${removed} worktree(s)`));
+        if (this.worktreeCleanupPolicy === "auto") {
+          const removed = this.worktreeManager.removeAll();
+          if (removed > 0) {
+            console.log(c.dim(`Cleaned up ${removed} worktree(s)`));
+          }
+        } else if (this.worktreeCleanupPolicy === "retain-on-failure") {
+          this.worktreeManager.prune();
+          console.log(
+            c.dim(
+              "Retaining worktrees for failure analysis (cleanup policy: retain-on-failure)"
+            )
+          );
+        } else {
+          console.log(
+            c.dim("Skipping worktree cleanup (cleanup policy: manual)")
+          );
         }
       } catch {
         console.log(c.dim("Could not clean up some worktrees"));

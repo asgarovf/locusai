@@ -17,7 +17,8 @@ export function showHelp(): void {
               ${c.dim("clean         Prune stale worktrees (--all to remove all)")}
     ${c.success("docs")}      Manage workspace docs
               ${c.dim("sync          Sync docs from API to .locus/documents")}
-    ${c.success("review")}    Review staged changes with AI
+    ${c.success("review")}    Review open Locus PRs on GitHub with AI
+              ${c.dim("local         Review staged changes locally (no GitHub)")}
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
               ${c.dim("--session, -s <id> Resume a previous session")}
@@ -39,7 +40,8 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus run --agents 3 --api-key YOUR_KEY")}
     ${c.dim("$")} ${c.primary("locus agents list")}
     ${c.dim("$")} ${c.primary("locus docs sync --api-key YOUR_KEY")}
-    ${c.dim("$")} ${c.primary("locus review")}
+    ${c.dim("$")} ${c.primary("locus review --api-key YOUR_KEY")}
+    ${c.dim("$")} ${c.primary("locus review local")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 
   For more information, visit: ${c.underline("https://locusai.dev/docs")}

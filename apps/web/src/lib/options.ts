@@ -13,7 +13,6 @@ export interface OptionItem<T extends string = string> {
 const STATUS_COLOR_MAP: Record<TaskStatus, string> = {
   [TaskStatus.BACKLOG]: "#64748b",
   [TaskStatus.IN_PROGRESS]: "#f59e0b",
-  [TaskStatus.PR_OPEN]: "#3b82f6",
   [TaskStatus.IN_REVIEW]: "#f97316",
   [TaskStatus.BLOCKED]: "#ef4444",
   [TaskStatus.DONE]: "#10b981",
@@ -36,7 +35,6 @@ export function getStatusOptions(): OptionItem<TaskStatus>[] {
   const statusOrder: TaskStatus[] = [
     TaskStatus.BACKLOG,
     TaskStatus.IN_PROGRESS,
-    TaskStatus.PR_OPEN,
     TaskStatus.IN_REVIEW,
     TaskStatus.BLOCKED,
     TaskStatus.DONE,

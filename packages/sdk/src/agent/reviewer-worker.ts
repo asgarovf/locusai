@@ -1,4 +1,3 @@
-import { Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
@@ -26,8 +25,9 @@ export interface ReviewerConfig {
 }
 
 /**
- * Reviewer agent that polls for tasks in PR_OPEN status,
+ * Reviewer agent that discovers open Locus PRs directly from GitHub,
  * reviews the PR diff via AI, and posts review comments.
+ * Skips PRs that already have a Locus review.
  */
 export class ReviewerWorker {
   private client: LocusClient;
@@ -84,49 +84,30 @@ export class ReviewerWorker {
   }
 
   /**
-   * Find the next task in PR_OPEN status that needs review.
+   * Discover the next unreviewed Locus PR from GitHub.
    */
-  private async getNextReviewTask(): Promise<Task | null> {
-    try {
-      const tasks = await this.client.tasks.list(this.config.workspaceId, {
-        sprintId: this.config.sprintId,
-        status: TaskStatus.PR_OPEN,
-      });
-
-      if (tasks.length === 0) return null;
-
-      // Pick the first PR_OPEN task
-      return tasks[0];
-    } catch (err) {
-      this.log(
-        `Failed to fetch review tasks: ${err instanceof Error ? err.message : String(err)}`,
-        "error"
-      );
-      return null;
-    }
+  private getNextUnreviewedPr(): {
+    number: number;
+    title: string;
+    url: string;
+    branch: string;
+  } | null {
+    const prs = this.prService.listUnreviewedLocusPrs();
+    return prs.length > 0 ? prs[0] : null;
   }
 
   /**
-   * Review a PR for a task using AI.
+   * Review a PR using AI and post the review on GitHub.
    */
-  private async reviewTask(
-    task: Task
-  ): Promise<{ reviewed: boolean; approved: boolean; summary: string }> {
-    if (!task.prUrl) {
-      return { reviewed: false, approved: false, summary: "No PR URL on task" };
-    }
+  private async reviewPr(pr: {
+    number: number;
+    title: string;
+    url: string;
+    branch: string;
+  }): Promise<{ reviewed: boolean; approved: boolean; summary: string }> {
+    const prNumber = String(pr.number);
 
-    // Extract PR branch from the PR URL or use gh to get the diff
-    const prNumber = task.prUrl.match(/\/pull\/(\d+)/)?.[1];
-    if (!prNumber) {
-      return {
-        reviewed: false,
-        approved: false,
-        summary: "Could not extract PR number",
-      };
-    }
-
-    this.log(`Reviewing PR #${prNumber}: ${task.title}`, "info");
+    this.log(`Reviewing PR #${prNumber}: ${pr.title}`, "info");
 
     let diff: string;
     try {
@@ -147,18 +128,9 @@ export class ReviewerWorker {
       };
     }
 
-    // Build review prompt
-    const checklistSection =
-      task.acceptanceChecklist?.length > 0
-        ? `## Acceptance Criteria\n${task.acceptanceChecklist.map((c) => `- ${c.text}`).join("\n")}`
-        : "";
-
     const reviewPrompt = `# Code Review Request
 
-## Task: ${task.title}
-${task.description || "No description provided."}
-
-${checklistSection}
+## PR: ${pr.title}
 
 ## PR Diff
 \`\`\`diff
@@ -168,10 +140,9 @@ ${diff.slice(0, 100_000)}
 ## Instructions
 You are a code reviewer. Review the PR diff above for:
 
-1. **Correctness** — Does the code do what the task requires?
+1. **Correctness** — Does the code do what the PR title suggests?
 2. **Code Quality** — Naming, structure, complexity, readability.
 3. **Potential Issues** — Bugs, security issues, edge cases, regressions.
-4. **Acceptance Criteria** — Are the acceptance criteria met?
 
 Output your review in this exact format:
 
@@ -263,41 +234,30 @@ Then provide a concise review with specific findings. Keep it actionable and foc
 
     this.startHeartbeat();
 
-    // Main review loop — poll for PR_OPEN tasks
+    // Main review loop — discover unreviewed PRs from GitHub
     while (this.reviewsCompleted < this.maxReviews) {
-      const task = await this.getNextReviewTask();
+      const pr = this.getNextUnreviewedPr();
 
-      if (!task) {
-        // No tasks to review — wait and retry
-        this.log("No PRs to review. Waiting 30s...", "info");
+      if (!pr) {
+        // No PRs to review — wait and retry
+        this.log("No unreviewed PRs found. Waiting 30s...", "info");
         await new Promise((r) => setTimeout(r, 30_000));
         continue;
       }
 
-      this.log(`Claimed for review: ${task.title}`, "success");
-      this.currentTaskId = task.id;
+      this.log(`Reviewing: ${pr.title} (PR #${pr.number})`, "success");
       this.sendHeartbeat();
 
-      // Mark task as IN_REVIEW
-      await this.client.tasks.update(task.id, this.config.workspaceId, {
-        status: TaskStatus.IN_REVIEW,
-        assignedTo: this.config.agentId,
-      });
-
-      const result = await this.reviewTask(task);
+      const result = await this.reviewPr(pr);
 
       if (result.reviewed) {
         const status = result.approved ? "APPROVED" : "CHANGES REQUESTED";
-        await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-          author: this.config.agentId,
-          text: `🔍 Review: ${status}\n\n${result.summary.slice(0, 1000)}`,
-        });
 
         // Update progress.md
         try {
           this.knowledgeBase.updateProgress({
             type: "pr_reviewed",
-            title: task.title,
+            title: pr.title,
             details: `Review: ${status}`,
           });
         } catch {
@@ -307,11 +267,6 @@ Then provide a concise review with specific findings. Keep it actionable and foc
         this.reviewsCompleted++;
       } else {
         this.log(`Review skipped: ${result.summary}`, "warn");
-        // Return task to PR_OPEN so it can be picked up again
-        await this.client.tasks.update(task.id, this.config.workspaceId, {
-          status: TaskStatus.PR_OPEN,
-          assignedTo: null,
-        });
       }
 
       this.currentTaskId = null;

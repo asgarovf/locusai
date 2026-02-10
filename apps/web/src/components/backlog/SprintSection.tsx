@@ -84,8 +84,7 @@ export function SprintSection({
       inProgress: sprintTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS)
         .length,
       inReview: sprintTasks.filter(
-        (t) =>
-          t.status === TaskStatus.PR_OPEN || t.status === TaskStatus.IN_REVIEW
+        (t) => t.status === TaskStatus.IN_REVIEW
       ).length,
       done: sprintTasks.filter((t) => t.status === TaskStatus.DONE).length,
     };

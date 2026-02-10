@@ -4,6 +4,7 @@ import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { AgentRegistration } from "@/entities/agent-registration.entity";
 import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
@@ -48,6 +49,14 @@ const MockApiKeyRepository = () => ({
   delete: jest.fn(),
 });
 
+const MockAgentRegistrationRepository = () => ({
+  create: jest.fn(),
+  save: jest.fn(),
+  findOne: jest.fn(),
+  find: jest.fn(),
+  delete: jest.fn(),
+});
+
 describe("WorkspacesService", () => {
   let service: WorkspacesService;
   let workspaceRepo: jest.Mocked<Repository<Workspace>>;
@@ -76,6 +85,10 @@ describe("WorkspacesService", () => {
         {
           provide: getRepositoryToken(ApiKey),
           useFactory: MockApiKeyRepository,
+        },
+        {
+          provide: getRepositoryToken(AgentRegistration),
+          useFactory: MockAgentRegistrationRepository,
         },
         {
           provide: EventsService,

@@ -155,7 +155,7 @@ export class TasksService {
     const oldStatus = task.status;
 
     if (
-      [TaskStatus.IN_REVIEW, TaskStatus.PR_OPEN].includes(oldStatus) &&
+      oldStatus === TaskStatus.IN_REVIEW &&
       updates.status === TaskStatus.IN_PROGRESS
     ) {
       task.assignedTo = null;

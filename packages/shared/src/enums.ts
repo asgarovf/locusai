@@ -13,7 +13,6 @@ export enum MembershipRole {
 export enum TaskStatus {
   BACKLOG = "BACKLOG",
   IN_PROGRESS = "IN_PROGRESS",
-  PR_OPEN = "PR_OPEN",
   IN_REVIEW = "IN_REVIEW",
   BLOCKED = "BLOCKED",
   DONE = "DONE",

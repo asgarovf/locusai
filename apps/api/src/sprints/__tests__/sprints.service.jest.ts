@@ -269,7 +269,7 @@ describe("SprintsService", () => {
           id: "task-1",
           sprintId,
           title: "Task 1",
-          status: TaskStatus.PR_OPEN,
+          status: TaskStatus.IN_REVIEW,
           workspaceId,
         },
         {

@@ -14,12 +14,6 @@ export const BOARD_STATUSES = [
     className: "bg-[var(--color-status-todo)]",
   },
   {
-    key: TaskStatus.PR_OPEN,
-    label: "PR Open",
-    colorVar: "var(--color-status-pr-open)",
-    className: "bg-[var(--color-status-pr-open)]",
-  },
-  {
     key: TaskStatus.IN_REVIEW,
     label: "In Review",
     colorVar: "var(--color-status-in-review)",

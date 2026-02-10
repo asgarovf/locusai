@@ -73,8 +73,7 @@ export function Dashboard() {
   );
   const doneTasks = stats?.taskCounts?.DONE || 0;
   const inProgressTasks = stats?.taskCounts?.IN_PROGRESS || 0;
-  const reviewTasks =
-    (stats?.taskCounts?.PR_OPEN || 0) + (stats?.taskCounts?.IN_REVIEW || 0);
+  const reviewTasks = stats?.taskCounts?.IN_REVIEW || 0;
   const backlogTasks = stats?.taskCounts?.BACKLOG || 0;
 
   const welcomeTitle = `Welcome back, ${user?.name.split(" ")[0]}!`;

@@ -59,8 +59,7 @@ export function TaskHeader({
   onApprove,
   onReject,
 }: TaskHeaderProps) {
-  const canApproveReject =
-    task.status === TaskStatus.PR_OPEN || task.status === TaskStatus.IN_REVIEW;
+  const canApproveReject = task.status === TaskStatus.IN_REVIEW;
 
   return (
     <header className="flex items-center gap-6 px-10 border-b border-border bg-card/50 backdrop-blur-md h-[84px] shrink-0">

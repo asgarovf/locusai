@@ -41,7 +41,7 @@ The `AgentWorker` is the autonomous entity that actually performs the work. Each
     *   **Execute**: Uses the `TaskExecutor` service to analyze the codebase, plan changes, and write code.
     *   **Verify**: Runs tests or verification steps.
     *   **Sync**: Syncs artifacts (logs, plans) back to the server.
-    *   **Report**: Updates the task status to `PR_OPEN` (if a PR is created), `IN_REVIEW` (if no PR), or `BACKLOG` (on failure) with a summary comment.
+    *   **Report**: Updates the task status to `IN_REVIEW` (on success) or `BACKLOG` (on failure) with a summary comment.
 
 ### Worker Capabilities
 
@@ -55,6 +55,5 @@ Tasks move through specific states during a workflow:
 
 *   **BACKLOG**: Waiting to be picked up.
 *   **IN_PROGRESS**: Currently assigned to an agent (`WORKING` status).
-*   **PR_OPEN**: Agent opened a pull request and task is awaiting review.
-*   **IN_REVIEW**: Task is in active review (manual or reviewer agent).
+*   **IN_REVIEW**: Agent completed the task and it's awaiting review (manual or reviewer agent).
 *   **DONE**: approved by the user.

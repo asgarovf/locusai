@@ -10,6 +10,7 @@ import {
 export interface CreatePrOptions {
   task: Task;
   branch: string;
+  baseBranch?: string;
   agentId: string;
   summary?: string;
 }
@@ -34,7 +35,13 @@ export class PrService {
    * Returns the PR URL and number.
    */
   createPr(options: CreatePrOptions): PrResult {
-    const { task, branch, agentId, summary } = options;
+    const {
+      task,
+      branch,
+      baseBranch: requestedBaseBranch,
+      agentId,
+      summary,
+    } = options;
 
     const provider = detectRemoteProvider(this.projectPath);
     if (provider !== "github") {
@@ -51,7 +58,8 @@ export class PrService {
 
     const title = `[Locus] ${task.title}`;
     const body = this.buildPrBody(task, agentId, summary);
-    const baseBranch = getDefaultBranch(this.projectPath);
+    const baseBranch =
+      requestedBaseBranch ?? getDefaultBranch(this.projectPath);
     this.validateCreatePrInputs(baseBranch, branch);
 
     this.log(`Creating PR: ${title} (${branch} → ${baseBranch})`, "info");
@@ -213,22 +221,47 @@ export class PrService {
     body: string,
     event: "APPROVE" | "REQUEST_CHANGES" | "COMMENT"
   ): void {
-    execFileSync(
-      "gh",
-      [
-        "pr",
-        "review",
-        prIdentifier,
-        "--body",
-        body,
-        `--${event.toLowerCase().replace("_", "-")}`,
-      ],
-      {
-        cwd: this.projectPath,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
+    try {
+      execFileSync(
+        "gh",
+        [
+          "pr",
+          "review",
+          prIdentifier,
+          "--body",
+          body,
+          `--${event.toLowerCase().replace("_", "-")}`,
+        ],
+        {
+          cwd: this.projectPath,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        }
+      );
+    } catch (err) {
+      // GitHub doesn't allow REQUEST_CHANGES on your own PR — fall back to COMMENT
+      const msg = err instanceof Error ? err.message : String(err);
+      if (event === "REQUEST_CHANGES" && msg.includes("own pull request")) {
+        execFileSync(
+          "gh",
+          [
+            "pr",
+            "review",
+            prIdentifier,
+            "--body",
+            body,
+            "--comment",
+          ],
+          {
+            cwd: this.projectPath,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          }
+        );
+        return;
       }
-    );
+      throw err;
+    }
   }
 
   /**
@@ -277,6 +310,47 @@ export class PrService {
       this.log("Failed to list Locus PRs", "warn");
       return [];
     }
+  }
+
+  /**
+   * Check if a PR already has a Locus agent review comment.
+   */
+  hasLocusReview(prNumber: string): boolean {
+    try {
+      const output = execFileSync(
+        "gh",
+        ["pr", "view", prNumber, "--json", "reviews"],
+        {
+          cwd: this.projectPath,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        }
+      ).trim();
+
+      const data = JSON.parse(output || "{}") as {
+        reviews?: Array<{ body?: string }>;
+      };
+
+      return (
+        data.reviews?.some((r) => r.body?.includes("## Locus Agent Review")) ??
+        false
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * List open Locus PRs that have not yet been reviewed by a Locus agent.
+   */
+  listUnreviewedLocusPrs(): Array<{
+    number: number;
+    title: string;
+    url: string;
+    branch: string;
+  }> {
+    const allPrs = this.listLocusPrs();
+    return allPrs.filter((pr) => !this.hasLocusReview(String(pr.number)));
   }
 
   private buildPrBody(task: Task, agentId: string, summary?: string): string {

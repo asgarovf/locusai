@@ -137,7 +137,7 @@ export class WorktreeManager {
 
     this.log(`Worktree created at ${worktreePath}`, "success");
 
-    return { worktreePath, branch };
+    return { worktreePath, branch, baseBranch };
   }
 
   /**
@@ -321,7 +321,7 @@ export class WorktreeManager {
    * Returns the branch name on success, or throws on failure.
    */
   pushBranch(worktreePath: string, remote = "origin"): string {
-    const branch = this.git("rev-parse --abbrev-ref HEAD", worktreePath).trim();
+    const branch = this.getBranch(worktreePath);
     this.log(`Pushing branch ${branch} to ${remote}`, "info");
 
     try {
@@ -355,6 +355,13 @@ export class WorktreeManager {
     }
 
     return branch;
+  }
+
+  /**
+   * Get the current branch checked out in a worktree.
+   */
+  getBranch(worktreePath: string): string {
+    return this.git("rev-parse --abbrev-ref HEAD", worktreePath).trim();
   }
 
   /**
