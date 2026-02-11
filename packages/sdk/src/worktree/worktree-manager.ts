@@ -348,10 +348,7 @@ export class WorktreeManager {
 
     // Unstage progress.md to avoid merge conflicts when multiple agents run concurrently
     try {
-      this.git(
-        "reset HEAD -- .locus/project/progress.md",
-        worktreePath
-      );
+      this.git("reset HEAD -- .locus/project/progress.md", worktreePath);
     } catch {
       // File may not exist or not be staged — safe to ignore
     }
@@ -373,6 +370,7 @@ export class WorktreeManager {
   /**
    * Push a worktree's branch to a remote.
    * Returns the branch name on success, or throws on failure.
+   * Expects the remote to be an HTTPS URL with `gh auth setup-git` configured.
    */
   pushBranch(worktreePath: string, remote = "origin"): string {
     const branch = this.getBranch(worktreePath);
@@ -406,9 +404,8 @@ export class WorktreeManager {
         `Pushed ${branch} to ${remote} with --force-with-lease`,
         "success"
       );
+      return branch;
     }
-
-    return branch;
   }
 
   /**

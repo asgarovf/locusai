@@ -12,7 +12,7 @@
       irm https://locusai.dev/install.ps1 | iex
       # Or run directly with flags:
       .\setup-windows.ps1 `
-        -Repo "git@github.com:user/project.git" `
+        -Repo "https://github.com/user/project.git" `
         -ApiKey "locus-api-key" `
         -TelegramToken "bot123:ABC" `
         -TelegramChatId "12345" `
@@ -88,7 +88,7 @@ if (-not $Repo) {
     Write-Host "  Paste your values below. Press Enter to skip optional fields." -ForegroundColor DarkGray
     Write-Host ""
 
-    $Repo           = Read-Prompt -Label "Repository SSH URL (e.g. git@github.com:user/repo.git)" -Required $true
+    $Repo           = Read-Prompt -Label "Repository HTTPS URL (e.g. https://github.com/user/repo.git)" -Required $true
     $Branch         = Read-Prompt -Label "Branch" -Default "main"
     $ApiKey         = Read-Prompt -Label "Locus API Key"
     $GhToken        = Read-Prompt -Label "GitHub Token"
@@ -96,6 +96,15 @@ if (-not $Repo) {
     $TelegramChatId = Read-Prompt -Label "Telegram Chat ID"
 
     Write-Host ""
+}
+
+# ─── Validate Repository URL ─────────────────────────────────────────────────
+# Only HTTPS URLs are supported (SSH requires key setup which is not handled).
+
+if ($Repo -match "^git@" -or $Repo -match "^ssh://") {
+    Write-Err "SSH repository URLs are not supported. Please use an HTTPS URL."
+    Write-Err "Example: https://github.com/user/repo.git"
+    exit 1
 }
 
 # ─── Banner ───────────────────────────────────────────────────────────────────
@@ -177,6 +186,9 @@ if ($GhToken -and (Test-Command "gh")) {
     $ghStatus = gh auth status --hostname github.com 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Success "GitHub CLI authenticated"
+        # Configure git credential helper so git clone/push use the gh token
+        gh auth setup-git
+        Write-Success "Git credential helper configured (via gh)"
     } else {
         Write-Warn "GitHub CLI authentication failed -- verify your token is valid"
     }
@@ -306,8 +318,19 @@ if (Test-Path (Join-Path $Dir ".git")) {
     Write-Success "Repository updated"
 } else {
     Write-Info "Cloning $Repo (branch: $Branch)..."
+
     git clone --branch $Branch $Repo $Dir
-    Write-Success "Repository cloned to $Dir"
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "Repository cloned to $Dir"
+    } else {
+        Write-Err "Failed to clone repository."
+        if ($GhToken) {
+            Write-Err "gh auth is configured but clone failed -- verify the token has repo access."
+        } else {
+            Write-Err "Provide -GhToken for HTTPS authentication."
+        }
+        exit 1
+    }
 }
 
 # ─── Step 9: Install Dependencies ───────────────────────────────────────────

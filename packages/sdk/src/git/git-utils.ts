@@ -92,6 +92,7 @@ export function getCurrentBranch(projectPath: string): string {
   }).trim();
 }
 
+
 /**
  * Get the default branch of the remote (e.g. main, master).
  */

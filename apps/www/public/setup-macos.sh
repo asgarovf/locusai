@@ -8,7 +8,7 @@
 #
 # Usage (non-interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-#     --repo "git@github.com:user/project.git" \
+#     --repo "https://github.com/user/project.git" \
 #     --api-key "locus-api-key" \
 #     --telegram-token "bot123:ABC" \
 #     --telegram-chat-id "12345" \
@@ -85,7 +85,7 @@ while [[ $# -gt 0 ]]; do
       echo "  Usage: ./setup-macos.sh [options]"
       echo ""
       echo "  Options:"
-      echo "    --repo <url>             Git repository SSH URL to clone (required)"
+      echo "    --repo <url>             Git repository HTTPS URL to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
       echo "    --api-key <key>          Locus API key"
@@ -159,7 +159,7 @@ if [[ -z "$REPO_URL" ]]; then
     done
   }
 
-  prompt REPO_URL          "Repository SSH URL (e.g. git@github.com:user/repo.git)" true
+  prompt REPO_URL          "Repository HTTPS URL (e.g. https://github.com/user/repo.git)" true
   prompt BRANCH            "Branch"               false  "main"
   prompt API_KEY           "Locus API Key"        false
   prompt GH_TOKEN          "GitHub Token"         false
@@ -171,6 +171,15 @@ if [[ -z "$REPO_URL" ]]; then
   fi
 
   echo ""
+fi
+
+# ─── Validate Repository URL ─────────────────────────────────────────────────
+# Only HTTPS URLs are supported (SSH requires key setup which is not handled).
+
+if [[ "$REPO_URL" == git@* ]] || [[ "$REPO_URL" == ssh://* ]]; then
+  error "SSH repository URLs are not supported. Please use an HTTPS URL."
+  error "Example: https://github.com/user/repo.git"
+  exit 1
 fi
 
 # ─── Banner ───────────────────────────────────────────────────────────────────
@@ -257,9 +266,12 @@ fi
 # Authenticate gh if token provided
 if [[ -n "$GH_TOKEN" ]]; then
   info "Authenticating GitHub CLI..."
-  echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com --git-protocol ssh
+  echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com --git-protocol https
   if gh auth status --hostname github.com &>/dev/null; then
     success "GitHub CLI authenticated"
+    # Configure git credential helper so git clone/push use the gh token
+    gh auth setup-git
+    success "Git credential helper configured (via gh)"
   else
     warn "GitHub CLI authentication failed — verify your token is valid"
   fi
@@ -418,8 +430,18 @@ if [[ -d "$PROJECT_DIR/.git" ]]; then
   success "Repository updated"
 else
   info "Cloning ${REPO_URL} (branch: ${BRANCH})..."
-  git clone --branch "$BRANCH" "$REPO_URL" "$PROJECT_DIR"
-  success "Repository cloned to ${PROJECT_DIR}"
+
+  if git clone --branch "$BRANCH" "$REPO_URL" "$PROJECT_DIR"; then
+    success "Repository cloned to ${PROJECT_DIR}"
+  else
+    error "Failed to clone repository."
+    if [[ -n "$GH_TOKEN" ]]; then
+      error "gh auth is configured but clone failed — verify the token has repo access."
+    else
+      error "Provide --gh-token for HTTPS authentication."
+    fi
+    exit 1
+  fi
 fi
 
 # ─── Step 10: Install Dependencies ───────────────────────────────────────────
