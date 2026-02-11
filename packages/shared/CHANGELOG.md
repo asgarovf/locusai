@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.7
+
+### Patch Changes
+
+- Run npm cache clean --force before upgrade
+
 ## 0.9.6
 
 ### Patch Changes

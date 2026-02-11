@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.9.7
+
+### Patch Changes
+
+- Run npm cache clean --force before upgrade
+- Updated dependencies
+  - @locusai/sdk@0.9.7
+  - @locusai/shared@0.9.7
+
 ## 0.9.6
 
 ### Patch Changes
