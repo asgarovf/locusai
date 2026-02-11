@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.9.9
+
+### Patch Changes
+
+- Bun execution on server
+- Updated dependencies
+  - @locusai/shared@0.9.9
+
 ## 0.9.8
 
 ### Patch Changes

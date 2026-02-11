@@ -1,5 +1,14 @@
 # @locusai/ai-sdk
 
+## 0.9.9
+
+### Patch Changes
+
+- Bun execution on server
+- Updated dependencies
+  - @locusai/sdk@0.9.9
+  - @locusai/shared@0.9.9
+
 ## 0.9.8
 
 ### Patch Changes
