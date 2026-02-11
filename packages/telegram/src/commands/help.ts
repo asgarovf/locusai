@@ -22,6 +22,11 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /git &lt;command&gt; — Run whitelisted git/gh commands
 /dev &lt;command&gt; — Run lint, typecheck, build, test
 
+<b>Worktrees:</b>
+/worktrees — List agent worktrees
+/worktree &lt;number&gt; — View worktree details
+/rmworktree &lt;number|all&gt; — Remove a worktree
+
 <b>Status:</b>
 /status — Show running processes
 /agents — List agent worktrees

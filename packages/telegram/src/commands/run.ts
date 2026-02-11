@@ -99,37 +99,60 @@ export async function runCommand(
 
   activeRunKill = kill;
 
-  const result = await done;
-  activeRunKill = null;
-  clearInterval(sendInterval);
+  // Fire-and-forget: don't await `done` so the handler returns immediately.
+  // This unblocks Telegraf's update queue, allowing /status and other commands
+  // to be processed while the run is still in progress.
+  done.then(
+    async (result) => {
+      activeRunKill = null;
+      clearInterval(sendInterval);
 
-  // Send any remaining output
-  if (outputBuffer.length > lastSentLength) {
-    const remaining = stripAnsi(outputBuffer.slice(lastSentLength));
-    const messages = splitMessage(`<pre>${escapeHtml(remaining)}</pre>`, 4000);
-    for (const msg of messages) {
+      // Send any remaining output
+      if (outputBuffer.length > lastSentLength) {
+        const remaining = stripAnsi(outputBuffer.slice(lastSentLength));
+        const messages = splitMessage(
+          `<pre>${escapeHtml(remaining)}</pre>`,
+          4000
+        );
+        for (const msg of messages) {
+          try {
+            await ctx.reply(msg, { parse_mode: "HTML" });
+          } catch {
+            // Skip on error
+          }
+        }
+      }
+
+      if (result.exitCode === 0) {
+        await ctx.reply(formatSuccess("Agents finished successfully."), {
+          parse_mode: "HTML",
+        });
+      } else if (result.killed) {
+        await ctx.reply(formatInfo("Agents were stopped."), {
+          parse_mode: "HTML",
+        });
+      } else {
+        await ctx.reply(
+          formatError(`Agents exited with code ${result.exitCode}.`),
+          { parse_mode: "HTML" }
+        );
+      }
+    },
+    async (err) => {
+      activeRunKill = null;
+      clearInterval(sendInterval);
       try {
-        await ctx.reply(msg, { parse_mode: "HTML" });
+        await ctx.reply(
+          formatError(
+            `Run failed: ${err instanceof Error ? err.message : String(err)}`
+          ),
+          { parse_mode: "HTML" }
+        );
       } catch {
         // Skip on error
       }
     }
-  }
-
-  if (result.exitCode === 0) {
-    await ctx.reply(formatSuccess("Agents finished successfully."), {
-      parse_mode: "HTML",
-    });
-  } else if (result.killed) {
-    await ctx.reply(formatInfo("Agents were stopped."), {
-      parse_mode: "HTML",
-    });
-  } else {
-    await ctx.reply(
-      formatError(`Agents exited with code ${result.exitCode}.`),
-      { parse_mode: "HTML" }
-    );
-  }
+  );
 }
 
 export async function stopCommand(

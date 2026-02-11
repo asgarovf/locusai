@@ -299,16 +299,70 @@ export class WorktreeManager {
   }
 
   /**
+   * Check if a worktree has commits ahead of the base branch.
+   * This detects changes that the AI agent committed during execution.
+   */
+  hasCommitsAhead(worktreePath: string, baseBranch: string): boolean {
+    try {
+      const count = this.git(
+        `rev-list --count "${baseBranch}..HEAD"`,
+        worktreePath
+      ).trim();
+      return Number.parseInt(count, 10) > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Stage all changes and commit in a worktree.
    * Returns the commit hash, or null if there were no changes to commit.
+   *
+   * When `baseBranch` is provided, also checks for commits already made by
+   * the AI agent during execution. If there are no uncommitted changes but
+   * the branch has diverged from the base, returns the current HEAD hash
+   * without creating a new commit.
    */
-  commitChanges(worktreePath: string, message: string): string | null {
-    if (!this.hasChanges(worktreePath)) {
+  commitChanges(
+    worktreePath: string,
+    message: string,
+    baseBranch?: string
+  ): string | null {
+    const hasUncommittedChanges = this.hasChanges(worktreePath);
+
+    if (!hasUncommittedChanges) {
+      // Check if the AI agent already committed changes during execution
+      if (baseBranch && this.hasCommitsAhead(worktreePath, baseBranch)) {
+        const hash = this.git("rev-parse HEAD", worktreePath).trim();
+        this.log(
+          `Agent already committed changes (${hash.slice(0, 8)}); skipping additional commit`,
+          "info"
+        );
+        return hash;
+      }
       this.log("No changes to commit", "info");
       return null;
     }
 
     this.git("add -A", worktreePath);
+
+    // Unstage progress.md to avoid merge conflicts when multiple agents run concurrently
+    try {
+      this.git(
+        "reset HEAD -- .locus/project/progress.md",
+        worktreePath
+      );
+    } catch {
+      // File may not exist or not be staged — safe to ignore
+    }
+
+    // Check if there are still staged changes after excluding progress.md
+    const staged = this.git("diff --cached --name-only", worktreePath).trim();
+    if (!staged) {
+      this.log("No changes to commit (only progress.md was modified)", "info");
+      return null;
+    }
+
     this.gitExec(["commit", "-m", message], worktreePath);
 
     const hash = this.git("rev-parse HEAD", worktreePath).trim();

@@ -130,7 +130,9 @@ export class PromptBuilder {
     prompt += `## Instructions
 1. Complete this task.
 2. **Artifact Management**: If you create any high-level documentation (PRDs, technical drafts, architecture docs), you MUST save them in \`.locus/artifacts/\`. Do NOT create them in the root directory.
-3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).`;
+3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
+4. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.
+5. **Progress**: Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically.`;
     return prompt;
   }
 
@@ -187,7 +189,9 @@ export class PromptBuilder {
 
     prompt += `## Instructions
 1. Execute the prompt based on the provided project context.
-2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).`;
+2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
+3. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.
+4. **Progress**: Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically.`;
 
     return prompt;
   }

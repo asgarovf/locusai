@@ -12,3 +12,8 @@ export {
 export { runCommand, stopCommand } from "./run.js";
 export { agentsCommand, statusCommand } from "./status.js";
 export { rejectTaskCommand, tasksCommand } from "./tasks.js";
+export {
+  rmworktreeCommand,
+  worktreeCommand,
+  worktreesCommand,
+} from "./worktree.js";

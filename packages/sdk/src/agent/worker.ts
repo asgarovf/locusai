@@ -302,7 +302,8 @@ export class AgentWorker {
    */
   private commitAndPushWorktree(
     worktreePath: string,
-    task: Task
+    task: Task,
+    baseBranch?: string
   ): CommitPushResult {
     if (!this.worktreeManager) {
       return { branch: null, pushed: false, pushFailed: false };
@@ -322,7 +323,8 @@ export class AgentWorker {
       const commitMessage = `feat(agent): ${task.title}\n\n${trailers.join("\n")}`;
       const hash = this.worktreeManager.commitChanges(
         worktreePath,
-        commitMessage
+        commitMessage,
+        baseBranch
       );
 
       if (!hash) {
@@ -465,7 +467,11 @@ export class AgentWorker {
       let prError: string | null = null;
       let noChanges = false;
       if (result.success && worktreePath) {
-        const commitResult = this.commitAndPushWorktree(worktreePath, fullTask);
+        const commitResult = this.commitAndPushWorktree(
+          worktreePath,
+          fullTask,
+          baseBranch ?? undefined
+        );
         taskBranch = commitResult.branch;
         branchPushed = commitResult.pushed;
         keepBranch = taskBranch !== null;

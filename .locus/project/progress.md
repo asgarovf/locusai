@@ -87,3 +87,21 @@ No sprints started yet.
   Mode: interactive | Session: session-mlijpz3t-8me1aa4
 - [x] Okay we need to show guide about locus install command that user should enter a ... — exec 2026-02-11T21:58:26.136Z
   Mode: interactive | Session: session-mlijpz3t-8me1aa4
+- [x] I just run /run command on telegram. Now I run /status but it does not reach to ... — exec 2026-02-11T22:10:23.148Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] YEAH — exec 2026-02-11T22:11:12.688Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] I saw bunch of tasks executed but pr not opened. Why it can happen? Here is the ... — exec 2026-02-11T22:14:46.720Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] But there should be some change. Is it possible that the changes are not detecte... — exec 2026-02-11T22:16:43.342Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] I saw that there are changes — exec 2026-02-11T22:17:54.994Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] No I mean there were changes on the worktree but they were not detected — exec 2026-02-11T22:21:43.587Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] Yes, add all of these. However, don't forget to add it to LOCUS.md instructions ... — exec 2026-02-11T22:28:13.397Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] Maybe we can also ignore progress file since it is going to get conflicts every ... — exec 2026-02-11T22:29:51.312Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc
+- [x] We should also add worktree related commands to the telegram package. We should ... — exec 2026-02-11T22:33:37.685Z
+  Mode: interactive | Session: session-mlikxvyi-f65q5xc

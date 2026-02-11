@@ -43,6 +43,13 @@ Complex tasks must be planned before writing code. Create \`.locus/plans/<task-n
 - No new dependencies without explicit approval.
 - Never put raw secrets or credentials in the codebase.
 
+## Git
+
+- Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches.
+- The Locus system handles all git operations (commit, push, PR creation) automatically after your execution completes.
+- Focus only on making file changes — the orchestrator takes care of version control.
+- Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically. Changes to this file are excluded from commits to prevent merge conflicts across concurrent agents.
+
 ## Avoiding Hallucinated / Slop Code
 
 - Ask before assuming. If requirements are ambiguous, incomplete, or could be interpreted multiple ways, stop and ask clarifying questions rather than guessing.
@@ -258,9 +265,10 @@ export class ConfigManager {
       }
     }
 
-    // 2. Ensure LOCUS.md exists
-    if (!existsSync(locusMdPath)) {
-      writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
+    // 2. Update LOCUS.md with the latest template on every reinit
+    const locusMdExisted = existsSync(locusMdPath);
+    writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
+    if (!locusMdExisted) {
       result.directoriesCreated.push(".locus/LOCUS.md");
     }
 
