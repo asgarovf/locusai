@@ -100,13 +100,26 @@ Locus provides automated setup scripts for:
 
 * **[Linux](linux-setup.md)** — Ubuntu/Debian with systemd services
 * **[macOS](macos-setup.md)** — macOS with LaunchAgent services
+* **[Windows](windows-setup.md)** — Windows with Scheduled Tasks
+
+{% hint style="danger" %}
+**Important:** Claude Code cannot run as root or the built-in Administrator user. You must create a dedicated non-root user (e.g., `ubuntu` or `locus-agent`) and run all installation and Locus commands as that user. See the platform-specific guides for user setup instructions.
+{% endhint %}
 
 ### Quick Install
 
 The installer is interactive — just run the command and follow the prompts:
 
+**Linux / macOS:**
+
 ```bash
 curl -fsSL https://locusai.dev/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://locusai.dev/install.ps1 | iex
 ```
 
 You'll be guided through entering your repository URL, API key, GitHub token, and optional Telegram configuration. The installer auto-detects your OS (Linux or macOS) and runs the appropriate setup script.

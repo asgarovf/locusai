@@ -40,6 +40,7 @@
 * [Why Self-Host?](self-hosting/overview.md)
 * [Linux Setup](self-hosting/linux-setup.md)
 * [macOS Setup](self-hosting/macos-setup.md)
+* [Windows Setup](self-hosting/windows-setup.md)
 
 ## Skills
 

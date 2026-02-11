@@ -6,6 +6,23 @@ description: Deploy Locus agents on a Linux server with systemd.
 
 This guide covers deploying Locus agents on Ubuntu/Debian with systemd services for automatic startup and background execution.
 
+{% hint style="warning" %}
+**Do not run Locus as root.** Claude Code does not support running as root. You must use a dedicated non-root user (e.g., `ubuntu` or `locus-agent`) for all installation and runtime commands. If you only have root access, create a user first:
+
+```bash
+# Run as root to create a dedicated user
+useradd -m -s /bin/bash locus-agent
+echo "locus-agent ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/locus-agent
+su - locus-agent
+```
+
+Or use the `--server` flag with the installer to automate user creation:
+
+```bash
+curl -fsSL https://locusai.dev/install.sh | bash -s -- --server
+```
+{% endhint %}
+
 ---
 
 ## Requirements

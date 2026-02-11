@@ -67,3 +67,7 @@ No sprints started yet.
   Mode: interactive | Session: session-mlig5f3k-fmdurb2
 - [x] Yes let's go — exec 2026-02-11T20:01:15.437Z
   Mode: interactive | Session: session-mlig5f3k-fmdurb2
+- [x] We can add docs about self hosting on windows environment. Also make sure to men... — exec 2026-02-11T20:14:16.807Z
+  Mode: interactive | Session: session-mligs1nz-e8q1jij
+- [x] The error happened on telegram bot while planning Farhad, [11 Feb 2026 at 23:09:... — exec 2026-02-11T20:16:34.011Z
+  Mode: interactive | Session: session-mligs1nz-e8q1jij
