@@ -18,16 +18,30 @@ This guide covers deploying Locus agents on macOS with LaunchAgent services for 
 
 ## Automated Setup
 
-Run the setup script:
+Run the installer and follow the interactive prompts:
 
 ```bash
-curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-  --repo "owner/repo" \
-  --api-key "your-api-key" \
-  --gh-token "your-github-token"
+curl -fsSL https://locusai.dev/install.sh | bash
 ```
 
-With Telegram:
+The script will guide you through configuring:
+
+| Setting | Description | Required |
+|---------|-------------|----------|
+| Repository URL | GitHub repository to clone | Yes |
+| Branch | Branch to checkout (default: main) | No |
+| Locus API Key | Your Locus API key | No |
+| GitHub Token | GitHub personal access token | No |
+| Telegram Bot Token | Token from @BotFather | No |
+| Telegram Chat ID | Chat ID for authorization | No |
+
+Press Enter to skip any optional field.
+
+<details>
+
+<summary>Non-interactive usage (for scripted/automated deployments)</summary>
+
+You can pass all parameters as flags to skip the interactive prompts:
 
 ```bash
 curl -fsSL https://locusai.dev/install.sh | bash -s -- \
@@ -38,14 +52,7 @@ curl -fsSL https://locusai.dev/install.sh | bash -s -- \
   --telegram-chat-id "your-chat-id"
 ```
 
-| Argument | Description | Required |
-|----------|-------------|----------|
-| `--repo` | GitHub repository (owner/repo) | Yes |
-| `--api-key` | Locus API key | Yes |
-| `--gh-token` | GitHub personal access token | Yes |
-| `--branch` | Branch to clone (default: main) | No |
-| `--telegram-token` | Telegram bot token | No |
-| `--telegram-chat-id` | Telegram chat ID | No |
+</details>
 
 ---
 

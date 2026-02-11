@@ -97,16 +97,13 @@ npx @locusai/cli run
 
 ## Automated Server Setup
 
-For deploying Locus on a server (Linux or macOS), use the automated installer:
+For deploying Locus on a server (Linux or macOS), use the interactive installer:
 
 ```bash
-curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-  --repo "owner/repo" \
-  --api-key "your-api-key" \
-  --gh-token "your-github-token"
+curl -fsSL https://locusai.dev/install.sh | bash
 ```
 
-This installs all dependencies, configures services, and sets up automatic agent execution. See [Self-Hosting](../self-hosting/overview.md) for full details.
+The script will prompt you for your repository URL, API key, GitHub token, and optional Telegram configuration. It installs all dependencies, configures services, and sets up automatic agent execution. See [Self-Hosting](../self-hosting/overview.md) for full details.
 
 ---
 

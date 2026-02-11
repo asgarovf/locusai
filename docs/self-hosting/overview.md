@@ -85,25 +85,24 @@ Locus provides automated setup scripts for:
 
 ### Quick Install
 
+The installer is interactive — just run the command and follow the prompts:
+
+```bash
+curl -fsSL https://locusai.dev/install.sh | bash
+```
+
+You'll be guided through entering your repository URL, API key, GitHub token, and optional Telegram configuration. The installer auto-detects your OS (Linux or macOS) and runs the appropriate setup script.
+
+{% hint style="info" %}
+You can also pass all parameters as flags for non-interactive (scripted) usage:
+
 ```bash
 curl -fsSL https://locusai.dev/install.sh | bash -s -- \
   --repo "owner/repo" \
   --api-key "your-api-key" \
   --gh-token "your-github-token"
 ```
-
-Optional Telegram integration:
-
-```bash
-curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-  --repo "owner/repo" \
-  --api-key "your-api-key" \
-  --gh-token "your-github-token" \
-  --telegram-token "your-bot-token" \
-  --telegram-chat-id "your-chat-id"
-```
-
-The installer auto-detects your OS (Linux or macOS) and runs the appropriate setup script.
+{% endhint %}
 
 ---
 
@@ -111,7 +110,7 @@ The installer auto-detects your OS (Linux or macOS) and runs the appropriate set
 
 | Component | Description |
 |-----------|-------------|
-| Node.js (via nvm) | JavaScript runtime |
+| Node.js 22+ | JavaScript runtime |
 | Bun | Fast JavaScript bundler/runtime |
 | GitHub CLI (`gh`) | GitHub operations |
 | Claude CLI | Anthropic's AI agent |

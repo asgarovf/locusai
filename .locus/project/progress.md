@@ -13,3 +13,5 @@ No sprints started yet.
   PR: https://github.com/asgarovf/locusai/pull/4
 - [Locus] Run lint commands and create a lint.md on repo root with some dummy content — reviewed 2026-02-10T13:46:23.017Z
   Review: CHANGES REQUESTED
+- [x] Let's update installation guides on self host docs. Currently it passes the para... — exec 2026-02-11T09:24:54.103Z
+  Mode: interactive | Session: session-mlhtmxce-786upn1
