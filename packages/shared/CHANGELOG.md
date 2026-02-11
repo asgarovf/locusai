@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.5
+
+### Patch Changes
+
+- Fix AI runners
+
 ## 0.9.4
 
 ### Patch Changes

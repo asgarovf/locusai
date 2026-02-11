@@ -1,5 +1,14 @@
 # @locusai/ai-sdk
 
+## 0.9.5
+
+### Patch Changes
+
+- Fix AI runners
+- Updated dependencies
+  - @locusai/sdk@0.9.5
+  - @locusai/shared@0.9.5
+
 ## 0.9.4
 
 ### Patch Changes
