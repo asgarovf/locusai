@@ -54,8 +54,7 @@ TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
 PROJECT_DIR=""
 AGENT_COUNT="2"
-SETUP_USER="${SUDO_USER:-$(whoami)}"
-USER_HOME=$(eval echo "~${SETUP_USER}")
+EXPLICIT_USER=""
 
 # ─── Privilege Helper ────────────────────────────────────────────────────────
 # Use sudo for system commands when not running as root.
@@ -75,6 +74,7 @@ while [[ $# -gt 0 ]]; do
     --telegram-token) TELEGRAM_TOKEN="$2";   shift 2 ;;
     --telegram-chat-id) TELEGRAM_CHAT_ID="$2"; shift 2 ;;
     --gh-token)      GH_TOKEN="$2";          shift 2 ;;
+    --user)          EXPLICIT_USER="$2";     shift 2 ;;
     --dir)           PROJECT_DIR="$2";       shift 2 ;;
     --help|-h)
       echo ""
@@ -85,6 +85,7 @@ while [[ $# -gt 0 ]]; do
       echo "  Options:"
       echo "    --repo <url>             Git repository to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
+      echo "    --user <username>        Run setup as this user (passed from install.sh)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
       echo "    --api-key <key>          Locus API key"
       echo "    --gh-token <token>       GitHub personal access token for gh CLI"
@@ -171,6 +172,19 @@ if [[ -z "$REPO_URL" ]]; then
   echo ""
 fi
 
+# ─── Resolve Setup User ──────────────────────────────────────────────────────
+# Priority: --user flag > SUDO_USER > current user
+
+if [[ -n "$EXPLICIT_USER" ]]; then
+  SETUP_USER="$EXPLICIT_USER"
+elif [[ -n "${SUDO_USER:-}" ]]; then
+  SETUP_USER="$SUDO_USER"
+else
+  SETUP_USER="$(whoami)"
+fi
+
+USER_HOME=$(eval echo "~${SETUP_USER}")
+
 # ─── Banner ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -192,9 +206,14 @@ echo ""
 # ─── Helper: Run as setup user (not root) ─────────────────────────────────────
 
 run_as_user() {
-  if [[ "$(id -u)" -eq 0 && -n "${SUDO_USER:-}" ]]; then
+  if [[ "$(whoami)" == "$SETUP_USER" ]]; then
+    # Already running as the target user
+    bash -c "$1"
+  elif [[ "$(id -u)" -eq 0 ]]; then
+    # Running as root — switch to the setup user
     sudo -u "$SETUP_USER" bash -c "$1"
   else
+    # Running as some other user — just run directly
     bash -c "$1"
   fi
 }
@@ -363,7 +382,7 @@ header "Repository"
 # Derive project directory from repo URL if not specified
 if [[ -z "$PROJECT_DIR" ]]; then
   REPO_NAME=$(basename "$REPO_URL" .git)
-  PROJECT_DIR="$(pwd)/${REPO_NAME}"
+  PROJECT_DIR="${USER_HOME}/${REPO_NAME}"
 fi
 
 if [[ -d "$PROJECT_DIR/.git" ]]; then
@@ -504,6 +523,7 @@ echo -e "${RESET}"
 
 info "Project:    ${BOLD}${PROJECT_DIR}${RESET}"
 info "Branch:     ${BOLD}${BRANCH}${RESET}"
+info "User:       ${BOLD}${SETUP_USER}${RESET}"
 
 if [[ "$FAILS" -eq 0 ]]; then
   success "All checks passed"
@@ -512,6 +532,11 @@ else
 fi
 
 echo ""
+if [[ "$SETUP_USER" != "$(whoami)" && "$SETUP_USER" != "root" ]]; then
+  echo -e "  ${BOLD}SSH Login:${RESET}"
+  echo -e "    ${DIM}\$${RESET} ssh ${SETUP_USER}@<your-server-ip>"
+  echo ""
+fi
 echo -e "  ${BOLD}Quick Start:${RESET}"
 echo -e "    ${DIM}\$${RESET} cd ${PROJECT_DIR}"
 echo -e "    ${DIM}\$${RESET} locus run                    ${DIM}# Start AI agents${RESET}"

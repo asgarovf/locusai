@@ -80,6 +80,8 @@ API_KEY=""
 TELEGRAM_TOKEN=""
 TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
+SETUP_USER=""
+SKIP_USER_SETUP=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -89,6 +91,8 @@ while [[ $# -gt 0 ]]; do
     --telegram-token)   TELEGRAM_TOKEN="$2";    shift 2 ;;
     --telegram-chat-id) TELEGRAM_CHAT_ID="$2";  shift 2 ;;
     --gh-token)         GH_TOKEN="$2";          shift 2 ;;
+    --user)             SETUP_USER="$2";        shift 2 ;;
+    --skip-user-setup)  SKIP_USER_SETUP=true;   shift ;;
     --help|-h)
       echo ""
       echo "  Locus Universal Installer"
@@ -104,6 +108,8 @@ while [[ $# -gt 0 ]]; do
       echo "    --gh-token <token>       GitHub personal access token"
       echo "    --telegram-token <token> Telegram bot token from @BotFather"
       echo "    --telegram-chat-id <id>  Telegram chat ID for authorization"
+      echo "    --user <username>        Run setup as this user (default: locus-agent)"
+      echo "    --skip-user-setup        Skip user creation and run as current user"
       echo ""
       exit 0
       ;;
@@ -189,11 +195,142 @@ if [[ -z "$REPO_URL" ]]; then
   echo ""
 fi
 
+# ─── User Setup (Linux only, when running as root) ──────────────────────────
+# When the installer is run as root on Linux, we create a dedicated non-root
+# user to own the project and run all tools. This avoids permission issues
+# with Claude Code (which blocks --dangerously-skip-permissions as root).
+
+if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; then
+  DEFAULT_USER="${SETUP_USER:-locus-agent}"
+
+  echo -e "  ${BOLD}User Setup${RESET}"
+  echo -e "  ${DIM}Running as root. A dedicated non-root user is required to run Locus.${RESET}"
+  echo ""
+
+  # Ensure we can read from terminal even when piped
+  if [[ -t 0 ]]; then
+    USER_INPUT_FD=0
+  elif [[ -e /dev/tty ]]; then
+    USER_INPUT_FD=4
+    exec 4</dev/tty
+  else
+    # Non-interactive: use the provided --user or default
+    info "Non-interactive mode: using user '${DEFAULT_USER}'"
+    SETUP_USER="$DEFAULT_USER"
+    USER_INPUT_FD=""
+  fi
+
+  if [[ -n "${USER_INPUT_FD:-}" ]]; then
+    # Ask permission to create user
+    echo -en "  ${BOLD}Create user '${DEFAULT_USER}' for Locus?${RESET} ${DIM}[Y/n]:${RESET} "
+    REPLY=""
+    if [[ "$USER_INPUT_FD" -eq 0 ]]; then
+      read -r REPLY
+    else
+      read -r REPLY <&4
+    fi
+    REPLY="$(trim "${REPLY:-Y}")"
+
+    if [[ "$REPLY" =~ ^[Nn] ]]; then
+      # Let user specify a different username
+      echo -en "  ${BOLD}Enter username to use instead${RESET} ${DIM}(or press Enter to run as root — not recommended):${RESET} "
+      CUSTOM_USER=""
+      if [[ "$USER_INPUT_FD" -eq 0 ]]; then
+        read -r CUSTOM_USER
+      else
+        read -r CUSTOM_USER <&4
+      fi
+      CUSTOM_USER="$(trim "$CUSTOM_USER")"
+
+      if [[ -z "$CUSTOM_USER" ]]; then
+        warn "Continuing as root. Some tools may not work correctly."
+        SKIP_USER_SETUP=true
+      else
+        DEFAULT_USER="$CUSTOM_USER"
+      fi
+    fi
+
+    # Ask about passwordless sudo
+    if [[ "$SKIP_USER_SETUP" != "true" ]]; then
+      echo -en "  ${BOLD}Grant '${DEFAULT_USER}' passwordless sudo access?${RESET} ${DIM}(required for installing packages) [Y/n]:${RESET} "
+      REPLY=""
+      if [[ "$USER_INPUT_FD" -eq 0 ]]; then
+        read -r REPLY
+      else
+        read -r REPLY <&4
+      fi
+      REPLY="$(trim "${REPLY:-Y}")"
+
+      GRANT_SUDO=true
+      if [[ "$REPLY" =~ ^[Nn] ]]; then
+        GRANT_SUDO=false
+        warn "Skipping sudo setup. The user may not be able to install system packages."
+      fi
+    fi
+
+    # Close extra FD if we opened one
+    if [[ "${USER_INPUT_FD:-0}" -eq 4 ]]; then
+      exec 4<&-
+    fi
+  fi
+
+  if [[ "$SKIP_USER_SETUP" != "true" ]]; then
+    SETUP_USER="$DEFAULT_USER"
+
+    # Create user if it doesn't exist
+    if id "$SETUP_USER" &>/dev/null; then
+      info "User '${SETUP_USER}' already exists"
+    else
+      info "Creating user '${SETUP_USER}'..."
+      useradd -m -s /bin/bash "$SETUP_USER"
+      success "User '${SETUP_USER}' created"
+    fi
+
+    # Grant passwordless sudo
+    if [[ "${GRANT_SUDO:-true}" == "true" ]]; then
+      info "Granting passwordless sudo to '${SETUP_USER}'..."
+      echo "${SETUP_USER} ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/${SETUP_USER}"
+      chmod 440 "/etc/sudoers.d/${SETUP_USER}"
+      success "Passwordless sudo configured"
+    fi
+
+    # Add to docker group if it exists
+    if getent group docker &>/dev/null; then
+      usermod -aG docker "$SETUP_USER"
+      success "Added '${SETUP_USER}' to docker group"
+    fi
+
+    # Copy SSH authorized_keys from root so the user can SSH in
+    ROOT_AUTH_KEYS="/root/.ssh/authorized_keys"
+    USER_HOME="$(eval echo "~${SETUP_USER}")"
+    USER_SSH_DIR="${USER_HOME}/.ssh"
+
+    if [[ -f "$ROOT_AUTH_KEYS" ]]; then
+      info "Copying SSH authorized keys to '${SETUP_USER}'..."
+      mkdir -p "$USER_SSH_DIR"
+      cp "$ROOT_AUTH_KEYS" "${USER_SSH_DIR}/authorized_keys"
+      chown -R "${SETUP_USER}:${SETUP_USER}" "$USER_SSH_DIR"
+      chmod 700 "$USER_SSH_DIR"
+      chmod 600 "${USER_SSH_DIR}/authorized_keys"
+      success "SSH keys copied — you can now SSH as '${SETUP_USER}'"
+    else
+      warn "No SSH keys found at ${ROOT_AUTH_KEYS} — skipping SSH key copy"
+    fi
+
+    echo ""
+    info "Switching to user '${SETUP_USER}' for installation..."
+    echo ""
+  fi
+fi
+
 # ─── Confirm Configuration ───────────────────────────────────────────────────
 
 echo -e "  ${BOLD}Configuration:${RESET}"
 info "Repository:     ${BOLD}${REPO_URL}${RESET}"
 info "Branch:         ${BOLD}${BRANCH:-main}${RESET}"
+if [[ -n "${SETUP_USER:-}" ]]; then
+  info "Setup User:     ${BOLD}${SETUP_USER}${RESET}"
+fi
 info "API Key:        ${BOLD}${API_KEY:+configured}${API_KEY:-not set}${RESET}"
 info "GH Token:       ${BOLD}${GH_TOKEN:+configured}${GH_TOKEN:-not set}${RESET}"
 info "Telegram Token: ${BOLD}${TELEGRAM_TOKEN:+configured}${TELEGRAM_TOKEN:-not set}${RESET}"
@@ -220,10 +357,23 @@ fi
 if [[ -n "$TELEGRAM_CHAT_ID" ]]; then
   ARGS+=(--telegram-chat-id "$TELEGRAM_CHAT_ID")
 fi
+if [[ -n "${SETUP_USER:-}" ]]; then
+  ARGS+=(--user "$SETUP_USER")
+fi
 
 # ─── Download & Execute ──────────────────────────────────────────────────────
 
 info "Fetching setup script for your platform..."
 echo ""
 
-curl -fsSL "$SCRIPT_URL" | bash -s -- "${ARGS[@]}"
+if [[ -n "${SETUP_USER:-}" && "$(id -u)" -eq 0 && "$SETUP_USER" != "root" ]]; then
+  # Re-invoke setup.sh as the dedicated user via sudo
+  # Download the script to a temp file so we can run it as another user
+  SETUP_SCRIPT=$(mktemp)
+  curl -fsSL "$SCRIPT_URL" -o "$SETUP_SCRIPT"
+  chmod +x "$SETUP_SCRIPT"
+  sudo -u "$SETUP_USER" bash "$SETUP_SCRIPT" "${ARGS[@]}"
+  rm -f "$SETUP_SCRIPT"
+else
+  curl -fsSL "$SCRIPT_URL" | bash -s -- "${ARGS[@]}"
+fi

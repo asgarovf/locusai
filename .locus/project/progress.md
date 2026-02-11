@@ -39,3 +39,7 @@ No sprints started yet.
   Mode: interactive | Session: session-mli70l9n-m1iphvg
 - [x] I have the full passwordless sudo but still the install.sh does not work there — exec 2026-02-11T15:55:12.069Z
   Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] We need to add these to install ssh. First is should ask permission from the use... — exec 2026-02-11T16:33:03.534Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] Yes — exec 2026-02-11T16:43:45.526Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
