@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.9.6
+
+### Patch Changes
+
+- Telegram timout increased for plan command
+- Updated dependencies
+  - @locusai/shared@0.9.6
+
 ## 0.9.5
 
 ### Patch Changes
