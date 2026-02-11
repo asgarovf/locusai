@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.9.8
+
+### Patch Changes
+
+- Agent count property setup
+- Updated dependencies
+  - @locusai/sdk@0.9.8
+  - @locusai/shared@0.9.8
+
 ## 0.9.7
 
 ### Patch Changes

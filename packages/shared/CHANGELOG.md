@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.8
+
+### Patch Changes
+
+- Agent count property setup
+
 ## 0.9.7
 
 ### Patch Changes
