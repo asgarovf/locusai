@@ -30,6 +30,16 @@ function getLatestVersion(pkg: string): string | null {
 export async function upgradeCommand(): Promise<void> {
   console.log(`\n  ${c.header(" UPGRADE ")}\n`);
 
+  try {
+    console.log(`  ${c.dim("◌")} Cleaning npm cache...`);
+    execSync("npm cache clean --force", {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    console.log(`  ${c.success("✔")} npm cache cleaned\n`);
+  } catch {
+    console.log(`  ${c.dim("⚠")} Could not clean npm cache, continuing...\n`);
+  }
+
   for (const pkg of PACKAGES) {
     const current = getInstalledVersion(pkg);
     const latest = getLatestVersion(pkg);

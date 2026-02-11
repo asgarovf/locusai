@@ -71,3 +71,7 @@ No sprints started yet.
   Mode: interactive | Session: session-mligs1nz-e8q1jij
 - [x] The error happened on telegram bot while planning Farhad, [11 Feb 2026 at 23:09:... — exec 2026-02-11T20:16:34.011Z
   Mode: interactive | Session: session-mligs1nz-e8q1jij
+- [x] Can you run npm cache clean --force before running the locus upgrade commands? — exec 2026-02-11T20:18:51.667Z
+  Mode: interactive | Session: session-mlih2p10-dn0tiqb
+- [x] No I mean, on locus cli package there is a upgrade command. This should run npm ... — exec 2026-02-11T20:19:54.622Z
+  Mode: interactive | Session: session-mlih2p10-dn0tiqb
