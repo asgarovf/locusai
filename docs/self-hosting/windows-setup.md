@@ -73,14 +73,14 @@ irm https://locusai.dev/install.ps1 | iex
 ```
 
 {% hint style="warning" %}
-**Use an SSH URL for your repository** (e.g. `git@github.com:user/repo.git`). HTTPS URLs require interactive credential prompts that won't work in non-interactive server environments, causing `git push` to fail with "could not read Username" errors. Make sure your server has SSH keys configured for GitHub access.
+**Use an HTTPS URL for your repository** (e.g. `https://github.com/user/repo.git`). The installer configures `gh auth setup-git` so that git operations (clone, push) are automatically authenticated via your GitHub token.
 {% endhint %}
 
 The script will guide you through configuring:
 
 | Setting | Description | Required |
 |---------|-------------|----------|
-| Repository SSH URL | GitHub repository SSH URL to clone | Yes |
+| Repository HTTPS URL | GitHub repository HTTPS URL to clone | Yes |
 | Branch | Branch to checkout (default: main) | No |
 | Locus API Key | Your Locus API key | No |
 | GitHub Token | GitHub personal access token | No |
@@ -97,7 +97,7 @@ You can pass all parameters as flags to skip the interactive prompts:
 
 ```powershell
 .\install.ps1 `
-  -Repo "git@github.com:owner/repo.git" `
+  -Repo "https://github.com/owner/repo.git" `
   -ApiKey "your-api-key" `
   -GhToken "your-github-token" `
   -TelegramToken "your-bot-token" `
@@ -222,7 +222,7 @@ npm install -g @locusai/cli
 npm install -g @locusai/telegram  # optional
 
 # 7. Clone and initialize
-git clone git@github.com:owner/repo.git C:\locus-workspace\repo
+git clone https://github.com/owner/repo.git C:\locus-workspace\repo
 cd C:\locus-workspace\repo
 locus init
 locus config setup --api-key "your-key"

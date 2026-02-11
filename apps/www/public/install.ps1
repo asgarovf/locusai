@@ -10,7 +10,7 @@
 
     Usage (non-interactive):
       .\install.ps1 `
-        -Repo "git@github.com:user/project.git" `
+        -Repo "https://github.com/user/project.git" `
         -ApiKey "locus-api-key" `
         -TelegramToken "bot123:ABC" `
         -TelegramChatId "12345" `
@@ -48,7 +48,7 @@ if ($Help) {
     Write-Host "    Non-interactive: .\install.ps1 [options]"
     Write-Host ""
     Write-Host "  Options:"
-    Write-Host "    -Repo <url>             Git repository SSH URL to clone (required)"
+    Write-Host "    -Repo <url>             Git repository HTTPS URL to clone (required)"
     Write-Host "    -Branch <name>          Branch to checkout (default: main)"
     Write-Host "    -ApiKey <key>           Locus API key"
     Write-Host "    -GhToken <token>        GitHub personal access token"
