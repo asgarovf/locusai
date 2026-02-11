@@ -1,5 +1,15 @@
 # @locusai/ai-sdk
 
+## 0.9.11
+
+### Patch Changes
+
+- Fix change detection worktrees
+  Add worktree commands to telegram
+- Updated dependencies
+  - @locusai/sdk@0.9.11
+  - @locusai/shared@0.9.11
+
 ## 0.9.10
 
 ### Patch Changes

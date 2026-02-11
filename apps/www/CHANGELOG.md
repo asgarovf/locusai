@@ -1,5 +1,14 @@
 # @locusai/www
 
+## 0.9.11
+
+### Patch Changes
+
+- Fix change detection worktrees
+  Add worktree commands to telegram
+- Updated dependencies
+  - @locusai/shared@0.9.11
+
 ## 0.9.10
 
 ### Patch Changes
