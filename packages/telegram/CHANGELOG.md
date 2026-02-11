@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.9.10
+
+### Patch Changes
+
+- Increase timeouts
+- Updated dependencies
+  - @locusai/sdk@0.9.10
+
 ## 0.9.9
 
 ### Patch Changes

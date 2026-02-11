@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.10
+
+### Patch Changes
+
+- Increase timeouts
+
 ## 0.9.9
 
 ### Patch Changes
