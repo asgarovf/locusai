@@ -32,6 +32,9 @@ export async function gitCommand(
   const input = text.replace(/^\/git\s*/, "").trim();
 
   console.log(`[git] Received: ${input || "(empty)"}`);
+  console.log(
+    `[git] Codepoints: ${[...input].map((c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}`).join(" ")}`
+  );
 
   if (!input) {
     await ctx.reply(formatInfo(USAGE), { parse_mode: "HTML" });
@@ -48,7 +51,7 @@ export async function gitCommand(
   }
 
   const { binary, args } = validation.command;
-  const display = `${binary} ${args.join(" ")}`;
+  const display = `${binary} ${args.map((a) => (a.includes(" ") ? `"${a}"` : a)).join(" ")}`;
 
   await ctx.reply(formatInfo(`Running: <code>${display}</code>`), {
     parse_mode: "HTML",

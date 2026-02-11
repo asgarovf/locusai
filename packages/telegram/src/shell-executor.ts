@@ -25,7 +25,7 @@ export function executeShellCommand(
   options: { cwd: string; timeout: number }
 ): Promise<ShellResult> {
   const id = `sh-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const display = `${command.binary} ${command.args.join(" ")}`;
+  const display = `${command.binary} ${command.args.map((a) => (a.includes(" ") ? `"${a}"` : a)).join(" ")}`;
   const startTime = Date.now();
   log(id, `Shell command started: ${display}`);
 

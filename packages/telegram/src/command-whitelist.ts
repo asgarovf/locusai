@@ -380,6 +380,9 @@ function validateGhPrCreate(args: string[]): ValidationResult {
       return { ok: false, error: "PR body must be under 2000 characters" };
     }
     ghArgs.push("--body", body);
+  } else {
+    // Pass empty body to prevent gh from entering interactive mode
+    ghArgs.push("--body", "");
   }
 
   return { ok: true, command: { binary: "gh", args: ghArgs } };
@@ -428,8 +431,8 @@ function normalizeInput(input: string): string {
   return input
     .replace(/\u2014/g, "--") // em dash → two hyphens
     .replace(/\u2013/g, "-") // en dash → hyphen
-    .replace(/[\u201C\u201D]/g, '"') // smart double quotes → straight
-    .replace(/[\u2018\u2019]/g, "'"); // smart single quotes → straight
+    .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB\uFF02]/g, '"') // all Unicode double quotes → straight
+    .replace(/[\u2018\u2019\u201A\u201B\u2039\u203A\uFF07]/g, "'"); // all Unicode single quotes → straight
 }
 
 /**
