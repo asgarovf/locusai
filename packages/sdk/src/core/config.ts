@@ -55,6 +55,9 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "",
   "# Locus AI - Settings (contains API key, telegram config, etc.)",
   ".locus/settings.json",
+  "",
+  "# Locus AI - Configuration (contains project context, progress, etc.)",
+  ".locus/config.json",
 ] as const;
 
 export function getLocusPath(
