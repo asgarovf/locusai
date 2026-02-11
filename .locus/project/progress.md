@@ -49,3 +49,15 @@ No sprints started yet.
   Mode: interactive | Session: session-mlicbiwb-l2zp2bo
 - [x] Please adjust the landing page so that the installation on hero is tabbed and sh... — exec 2026-02-11T18:21:35.885Z
   Mode: interactive | Session: session-mlicbiwb-l2zp2bo
+- [x] Do you think we can offer an option to set up also on railway? — exec 2026-02-11T18:35:21.825Z
+  Mode: interactive | Session: session-mlicbiwb-l2zp2bo
+- [x] Please add minimum ssytem requirements for the self hosting docs. It should fit ... — exec 2026-02-11T19:11:42.749Z
+  Mode: interactive | Session: session-mlicbiwb-l2zp2bo
+- [x] How can I run the telegram agent with continious way with pm2? — exec 2026-02-11T19:15:33.934Z
+  Mode: interactive | Session: session-mlies0qy-pp14dbh
+- [x] I got this for my bot but I don't where it is running elsewhere 0|locus-telegram... — exec 2026-02-11T19:16:43.335Z
+  Mode: interactive | Session: session-mlies0qy-pp14dbh
+- [x] This force deletion does not work I think it works on some digital ocean but I c... — exec 2026-02-11T19:19:18.285Z
+  Mode: interactive | Session: session-mlies0qy-pp14dbh
+- [x] I think we need to ignore the .locus/config.json from the git so that changes on... — exec 2026-02-11T19:24:14.923Z
+  Mode: interactive | Session: session-mlies0qy-pp14dbh

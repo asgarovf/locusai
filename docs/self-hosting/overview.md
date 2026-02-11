@@ -76,6 +76,24 @@ Since AI agents run in **dangerous mode** (no permission prompts) on servers, fo
 
 ---
 
+## Minimum System Requirements
+
+Since Locus runs AI coding agents (Claude CLI, Codex CLI) alongside background services, the host machine needs sufficient resources.
+
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| **RAM** | 4 GB | 8 GB |
+| **CPU** | 2 cores | 2+ cores |
+| **Disk** | 2 GB free | 5 GB+ free |
+| **Network** | Stable internet connection | Stable internet connection |
+| **Node.js** | 18+ | 22+ |
+
+{% hint style="info" %}
+These requirements are based on the official system requirements for [Claude Code](https://code.claude.com/docs/en/setup) (4 GB+ RAM) and [Codex CLI](https://github.com/openai/codex/blob/main/docs/install.md) (4 GB min, 8 GB recommended). The recommended specs account for running the AI agent, Telegram bot, and system services concurrently.
+{% endhint %}
+
+---
+
 ## Getting Started
 
 Locus provides automated setup scripts for:

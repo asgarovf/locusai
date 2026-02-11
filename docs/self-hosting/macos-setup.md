@@ -11,6 +11,8 @@ This guide covers deploying Locus agents on macOS with LaunchAgent services for 
 ## Requirements
 
 * macOS 12 (Monterey) or later
+* 4 GB RAM minimum (8 GB recommended)
+* 2 CPU cores minimum
 * 2 GB+ disk space
 * Internet access for package installation
 

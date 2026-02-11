@@ -12,6 +12,8 @@ This guide covers deploying Locus agents on Ubuntu/Debian with systemd services 
 
 * Ubuntu 20.04+ or Debian 11+
 * `sudo` access
+* 4 GB RAM minimum (8 GB recommended)
+* 2 CPU cores minimum
 * 2 GB+ disk space
 * Internet access for package installation
 
