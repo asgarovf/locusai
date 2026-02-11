@@ -1,30 +1,14 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { c } from "@locusai/sdk/node";
 import { VERSION } from "../utils";
 
 function getTelegramVersion(): string | null {
-  // Check monorepo first
-  const monorepoPath = join(process.cwd(), "packages/telegram/package.json");
-  if (existsSync(monorepoPath)) {
-    try {
-      const pkg = JSON.parse(readFileSync(monorepoPath, "utf-8"));
-      if (pkg.name === "@locusai/telegram") {
-        return pkg.version || null;
-      }
-    } catch {
-      // fall through
-    }
-  }
-
-  // Check globally installed package
   try {
-    const version = execSync("npm list -g @locusai/telegram --depth=0 --json", {
+    const output = execSync("npm list -g @locusai/telegram --depth=0 --json", {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
-    const parsed = JSON.parse(version);
+    const parsed = JSON.parse(output);
     return parsed.dependencies?.["@locusai/telegram"]?.version || null;
   } catch {
     // not installed globally
