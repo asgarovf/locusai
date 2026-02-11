@@ -1,6 +1,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { join } from "node:path";
 import type { TelegramConfig } from "./config.js";
+import { buildSpawnEnv } from "./env.js";
 import {
   EXECUTE_DEFAULT_TIMEOUT,
   STREAMING_DEFAULT_TIMEOUT,
@@ -70,11 +71,7 @@ export class CliExecutor {
     return new Promise<ExecutionResult>((resolve) => {
       const proc = spawn(cmd, cmdArgs, {
         cwd: this.config.projectPath,
-        env: {
-          ...process.env,
-          FORCE_COLOR: "0", // Disable ANSI colors for clean output
-          NO_COLOR: "1",
-        },
+        env: buildSpawnEnv(),
         stdio: ["pipe", "pipe", "pipe"],
       });
 
@@ -145,11 +142,7 @@ export class CliExecutor {
 
     const proc = spawn(cmd, cmdArgs, {
       cwd: this.config.projectPath,
-      env: {
-        ...process.env,
-        FORCE_COLOR: "0",
-        NO_COLOR: "1",
-      },
+      env: buildSpawnEnv(),
       stdio: ["pipe", "pipe", "pipe"],
     });
 

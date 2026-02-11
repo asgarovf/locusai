@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import type { ValidatedCommand } from "./command-whitelist.js";
+import { buildSpawnEnv } from "./env.js";
 
 function timestamp(): string {
   return new Date().toLocaleTimeString("en-GB", { hour12: false });
@@ -32,11 +33,7 @@ export function executeShellCommand(
   return new Promise<ShellResult>((resolve) => {
     const proc = spawn(command.binary, command.args, {
       cwd: options.cwd,
-      env: {
-        ...process.env,
-        FORCE_COLOR: "0",
-        NO_COLOR: "1",
-      },
+      env: buildSpawnEnv(),
       stdio: ["pipe", "pipe", "pipe"],
     });
 

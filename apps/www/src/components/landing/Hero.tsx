@@ -44,8 +44,7 @@ const installTabs: {
     command: "curl -fsSL https://locusai.dev/install.sh | bash",
     hint: (
       <>
-        Auto-detects your distro. Sets up Node.js, agents, and systemd
-        services.
+        Auto-detects your distro. Sets up Node.js, agents, and systemd services.
       </>
     ),
     variant: "violet",
@@ -56,9 +55,7 @@ const installTabs: {
     icon: Monitor,
     command: "irm https://locusai.dev/install.ps1 | iex",
     hint: (
-      <>
-        Run in PowerShell. Installs via winget and sets up scheduled tasks.
-      </>
+      <>Run in PowerShell. Installs via winget and sets up scheduled tasks.</>
     ),
     variant: "cyan",
   },
@@ -66,8 +63,7 @@ const installTabs: {
     id: "server",
     label: "Server",
     icon: Server,
-    command:
-      "curl -fsSL https://locusai.dev/install.sh | bash -s -- --server",
+    command: "curl -fsSL https://locusai.dev/install.sh | bash -s -- --server",
     hint: (
       <>
         Creates a dedicated user and installs as a background service. Requires

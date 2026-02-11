@@ -79,3 +79,5 @@ No sprints started yet.
   Mode: interactive | Session: session-mlii30y8-v8u58hy
 - [x] I did not mean locus telegram run --agents 3 like commands. I meant that telegra... — exec 2026-02-11T20:59:40.327Z
   Mode: interactive | Session: session-mlii30y8-v8u58hy
+- [x] The bun commands for telegram does not work on ubuntu server. It says spawn bun ... — exec 2026-02-11T21:08:09.101Z
+  Mode: interactive | Session: session-mliiphxv-gz912rt

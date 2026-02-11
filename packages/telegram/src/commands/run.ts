@@ -28,10 +28,9 @@ export async function runCommand(
   if (agentsMatch) {
     parsedAgentCount = Number.parseInt(agentsMatch[1], 10);
     if (parsedAgentCount < 1 || parsedAgentCount > 5) {
-      await ctx.reply(
-        formatError("Agent count must be between 1 and 5."),
-        { parse_mode: "HTML" }
-      );
+      await ctx.reply(formatError("Agent count must be between 1 and 5."), {
+        parse_mode: "HTML",
+      });
       return;
     }
   }

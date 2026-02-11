@@ -124,7 +124,7 @@ export const boardTour = () => {
       popover: {
         title: "Status Columns",
         description:
-          "Each column represents a task status. Drag tasks through your workflow: Backlog → In Progress → PR Open → In Review → Done.",
+          "Each column represents a task status. Drag tasks through your workflow: Backlog → In Progress → In Review → Done.",
         side: "top",
         align: "start",
       },
