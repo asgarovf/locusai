@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.12
+
+### Patch Changes
+
+- Workflow improvements
+
 ## 0.9.11
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.9.12
+
+### Patch Changes
+
+- Workflow improvements
+- Updated dependencies
+  - @locusai/sdk@0.9.12
+
 ## 0.9.11
 
 ### Patch Changes
