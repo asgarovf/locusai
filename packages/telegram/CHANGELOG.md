@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.9.13
+
+### Patch Changes
+
+- LocusAgent user.name config
+- Updated dependencies
+  - @locusai/sdk@0.9.13
+
 ## 0.9.12
 
 ### Patch Changes

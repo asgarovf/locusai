@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.9.13
+
+### Patch Changes
+
+- LocusAgent user.name config
+- Updated dependencies
+  - @locusai/shared@0.9.13
+
 ## 0.9.12
 
 ### Patch Changes
