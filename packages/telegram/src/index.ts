@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import "dotenv/config";
 import { createBot } from "./bot.js";
 import { resolveConfig } from "./config.js";

@@ -3,7 +3,6 @@
   "version": "0.9.0",
   "description": "Telegram bot for Locus - remote control your AI agents from Telegram",
   "type": "module",
-  "main": "./src/index.ts",
   "bin": {
     "locus-telegram": "./bin/telegram.js"
   },
@@ -13,6 +12,8 @@
     "dev": "bun run --watch src/index.ts",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
+    "test:local": "bun run build && node ./bin/telegram.js",
+    "pack:test": "npm pack && tar -xzf locusai-telegram-*.tgz && cd package && npm link",
     "clean": "rm -rf node_modules"
   },
   "files": [

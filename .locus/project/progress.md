@@ -15,3 +15,5 @@ No sprints started yet.
   Review: CHANGES REQUESTED
 - [x] Let's update installation guides on self host docs. Currently it passes the para... — exec 2026-02-11T09:24:54.103Z
   Mode: interactive | Session: session-mlhtmxce-786upn1
+- [x] I published the locus telegram package but it does not work when I install globa... — exec 2026-02-11T09:32:14.615Z
+  Mode: interactive | Session: session-mlhtwhas-8a81ngd
