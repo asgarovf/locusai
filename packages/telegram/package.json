@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test:local": "bun run build && node ./bin/telegram.js",
     "pack:test": "npm pack && tar -xzf locusai-telegram-*.tgz && cd package && npm link",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "prepublishOnly": "bun run build"
   },
   "files": [
     "bin",

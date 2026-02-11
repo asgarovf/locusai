@@ -17,3 +17,5 @@ No sprints started yet.
   Mode: interactive | Session: session-mlhtmxce-786upn1
 - [x] I published the locus telegram package but it does not work when I install globa... — exec 2026-02-11T09:32:14.615Z
   Mode: interactive | Session: session-mlhtwhas-8a81ngd
+- [x] I published the locus telegram package with shebang added to the top of bin but ... — exec 2026-02-11T15:08:30.940Z
+  Mode: interactive | Session: session-mli5uzgo-c80c2kl
