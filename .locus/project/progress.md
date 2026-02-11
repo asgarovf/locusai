@@ -25,3 +25,17 @@ No sprints started yet.
   Mode: interactive | Session: session-mli6ckc8-5k5glk1
 - [x] Can you also add version and upgrade commands to the cli? Upgrade will basically... — exec 2026-02-11T15:20:43.270Z
   Mode: interactive | Session: session-mli5uzgo-c80c2kl
+- [x] How should I run the locus telegram run in detached — exec 2026-02-11T15:28:05.169Z
+  Mode: interactive | Session: session-mli5uzgo-c80c2kl
+- [x] Got this on server Directive: Add security features to api app ● Phase 1/3: Tech... — exec 2026-02-11T15:37:08.332Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] Can I ssh directly to user? — exec 2026-02-11T15:40:35.408Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] The problem is that when I do this some permissions are missing to execute the s... — exec 2026-02-11T15:45:59.473Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] So do you think installing the locus as root and then running on locus-agent use... — exec 2026-02-11T15:47:24.978Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] ℹ  Fetching setup script for your platform... ╔═════════════════════════════════... — exec 2026-02-11T15:50:29.202Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg
+- [x] I have the full passwordless sudo but still the install.sh does not work there — exec 2026-02-11T15:55:12.069Z
+  Mode: interactive | Session: session-mli70l9n-m1iphvg

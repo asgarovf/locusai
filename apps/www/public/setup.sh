@@ -57,6 +57,16 @@ AGENT_COUNT="2"
 SETUP_USER="${SUDO_USER:-$(whoami)}"
 USER_HOME=$(eval echo "~${SETUP_USER}")
 
+# ─── Privilege Helper ────────────────────────────────────────────────────────
+# Use sudo for system commands when not running as root.
+# If the user has passwordless sudo, this works seamlessly.
+
+if [[ "$(id -u)" -eq 0 ]]; then
+  SUDO=""
+else
+  SUDO="sudo"
+fi
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)          REPO_URL="$2";          shift 2 ;;
@@ -182,7 +192,7 @@ echo ""
 # ─── Helper: Run as setup user (not root) ─────────────────────────────────────
 
 run_as_user() {
-  if [[ "$(whoami)" == "root" && -n "$SUDO_USER" ]]; then
+  if [[ "$(id -u)" -eq 0 && -n "${SUDO_USER:-}" ]]; then
     sudo -u "$SETUP_USER" bash -c "$1"
   else
     bash -c "$1"
@@ -197,10 +207,10 @@ export DEBIAN_FRONTEND=noninteractive
 
 if command -v apt-get &>/dev/null; then
   info "Updating package lists..."
-  apt-get update -qq
+  $SUDO apt-get update -qq
 
   info "Installing base packages..."
-  apt-get install -y -qq \
+  $SUDO apt-get install -y -qq \
     curl wget git unzip build-essential \
     ca-certificates gnupg lsb-release \
     jq htop tmux > /dev/null 2>&1
@@ -217,7 +227,7 @@ header "Git"
 if command -v git &>/dev/null; then
   success "Git already installed: $(git --version)"
 else
-  apt-get install -y -qq git > /dev/null 2>&1
+  $SUDO apt-get install -y -qq git > /dev/null 2>&1
   success "Git installed: $(git --version)"
 fi
 
@@ -229,16 +239,16 @@ if command -v gh &>/dev/null; then
   success "GitHub CLI already installed: $(gh --version | head -1)"
 else
   info "Installing GitHub CLI..."
-  (type -p wget >/dev/null || apt-get install wget -y -qq > /dev/null 2>&1) \
-    && mkdir -p -m 755 /etc/apt/keyrings \
+  (type -p wget >/dev/null || $SUDO apt-get install wget -y -qq > /dev/null 2>&1) \
+    && $SUDO mkdir -p -m 755 /etc/apt/keyrings \
     && out=$(mktemp) \
     && wget -nv -O "$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    && cat "$out" | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && cat "$out" | $SUDO tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && $SUDO chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-      | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update -qq \
-    && apt-get install gh -y -qq > /dev/null 2>&1
+      | $SUDO tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && $SUDO apt-get update -qq \
+    && $SUDO apt-get install gh -y -qq > /dev/null 2>&1
   success "GitHub CLI installed: $(gh --version | head -1)"
 fi
 
@@ -272,8 +282,8 @@ fi
 
 if [[ "$INSTALL_NODE" == "true" ]]; then
   info "Installing Node.js ${REQUIRED_NODE_MAJOR} via NodeSource..."
-  curl -fsSL https://deb.nodesource.com/setup_${REQUIRED_NODE_MAJOR}.x | bash - > /dev/null 2>&1
-  apt-get install -y -qq nodejs > /dev/null 2>&1
+  curl -fsSL https://deb.nodesource.com/setup_${REQUIRED_NODE_MAJOR}.x | $SUDO bash - > /dev/null 2>&1
+  $SUDO apt-get install -y -qq nodejs > /dev/null 2>&1
   success "Node.js installed: $(node -v)"
 fi
 
@@ -330,7 +340,7 @@ if command -v locus &>/dev/null; then
   success "Locus CLI already installed: $(locus --version 2>/dev/null || echo 'installed')"
 else
   info "Installing Locus CLI from npm..."
-  npm install -g @locusai/cli > /dev/null 2>&1
+  $SUDO npm install -g @locusai/cli > /dev/null 2>&1
   success "Locus CLI installed"
 fi
 
@@ -342,7 +352,7 @@ if command -v locus-telegram &>/dev/null; then
   success "Locus Telegram Bot already installed"
 else
   info "Installing Locus Telegram Bot from npm..."
-  npm install -g @locusai/telegram > /dev/null 2>&1
+  $SUDO npm install -g @locusai/telegram > /dev/null 2>&1
   success "Locus Telegram Bot installed"
 fi
 
@@ -414,7 +424,7 @@ if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
   TELEGRAM_BIN="$(which locus-telegram)"
   SERVICE_FILE="/etc/systemd/system/locus-telegram.service"
 
-  cat > "$SERVICE_FILE" <<UNIT
+  $SUDO tee "$SERVICE_FILE" > /dev/null <<UNIT
 [Unit]
 Description=Locus Telegram Bot
 After=network.target
@@ -438,9 +448,9 @@ Environment=LOCUS_PROJECT_PATH=${PROJECT_DIR}
 WantedBy=multi-user.target
 UNIT
 
-  systemctl daemon-reload
-  systemctl enable locus-telegram > /dev/null 2>&1
-  systemctl start locus-telegram
+  $SUDO systemctl daemon-reload
+  $SUDO systemctl enable locus-telegram > /dev/null 2>&1
+  $SUDO systemctl start locus-telegram
 
   success "Telegram bot service created and started"
   info "Manage with: systemctl {start|stop|restart|status} locus-telegram"
