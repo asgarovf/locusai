@@ -36,6 +36,8 @@ export function showHelp(): void {
               ${c.dim("sessions show <id> Show session messages")}
               ${c.dim("sessions delete <id> Delete a session")}
               ${c.dim("sessions clear     Clear all sessions")}
+    ${c.success("version")}   Show installed package versions
+    ${c.success("upgrade")}   Update CLI and Telegram to the latest version
 
   ${c.header(" OPTIONS ")}
     ${c.secondary("--help")}           Show this help message

@@ -315,7 +315,9 @@ function runBotCommand(projectPath: string): void {
           `  Install it with: ${c.primary("npm install -g @locusai/telegram")}\n`
       );
     } else {
-      console.error(`\n  ${c.error("✖")} Failed to start bot: ${err.message}\n`);
+      console.error(
+        `\n  ${c.error("✖")} Failed to start bot: ${err.message}\n`
+      );
     }
     process.exit(1);
   });

@@ -21,3 +21,7 @@ No sprints started yet.
   Mode: interactive | Session: session-mli5uzgo-c80c2kl
 - [x] Let's also add a shortcut to locus cli telegram command. It already has a telegr... — exec 2026-02-11T15:15:24.719Z
   Mode: interactive | Session: session-mli5uzgo-c80c2kl
+- [x] Let's add a short message after install.sh script that if you haven't setup your... — exec 2026-02-11T15:20:07.377Z
+  Mode: interactive | Session: session-mli6ckc8-5k5glk1
+- [x] Can you also add version and upgrade commands to the cli? Upgrade will basically... — exec 2026-02-11T15:20:43.270Z
+  Mode: interactive | Session: session-mli5uzgo-c80c2kl

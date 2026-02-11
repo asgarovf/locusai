@@ -13,6 +13,8 @@ import {
   runCommand,
   showHelp,
   telegramCommand,
+  upgradeCommand,
+  versionCommand,
 } from "./commands";
 import { printBanner } from "./utils";
 
@@ -55,6 +57,14 @@ async function main() {
       break;
     case "telegram":
       await telegramCommand(args);
+      break;
+    case "version":
+    case "--version":
+    case "-v":
+      versionCommand();
+      break;
+    case "upgrade":
+      await upgradeCommand();
       break;
     default:
       showHelp();

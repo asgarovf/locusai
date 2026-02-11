@@ -603,3 +603,10 @@ echo -e "    ${DIM}\$${RESET} locus telegram config          ${DIM}# View Telegr
 echo -e "    ${DIM}\$${RESET} locus index                    ${DIM}# Index codebase for AI${RESET}"
 echo -e "    ${DIM}\$${RESET} locus plan                     ${DIM}# AI planning session${RESET}"
 echo ""
+
+echo -e "  ${BOLD}Agent CLI Setup:${RESET}"
+echo -e "  ${DIM}Locus requires an AI agent CLI to run tasks. If you haven't set one up yet:${RESET}"
+echo ""
+echo -e "    ${CYAN}Claude Code${RESET}  https://code.claude.com/docs"
+echo -e "    ${CYAN}OpenAI Codex${RESET} https://developers.openai.com/codex/cli/"
+echo ""
