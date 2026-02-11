@@ -18,6 +18,10 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /stop — Stop all running processes
 /exec &lt;prompt&gt; — One-shot AI execution
 
+<b>Git &amp; Dev:</b>
+/git &lt;command&gt; — Run whitelisted git/gh commands
+/dev &lt;command&gt; — Run lint, typecheck, build, test
+
 <b>Status:</b>
 /status — Show running processes
 /agents — List agent worktrees

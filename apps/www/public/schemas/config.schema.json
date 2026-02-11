@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://locusai.dev/schemas/config.schema.json",
+  "title": "Locus Project Configuration",
+  "description": "Configuration file for a Locus AI project (.locus/config.json)",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation and autocomplete"
+    },
+    "version": {
+      "type": "string",
+      "description": "The Locus CLI version that initialized or last updated this project",
+      "examples": ["0.8.1"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the project was initialized"
+    },
+    "projectPath": {
+      "type": "string",
+      "description": "Relative path to the project root (typically \".\")",
+      "default": "."
+    },
+    "workspaceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The Locus workspace ID this project is linked to"
+    }
+  },
+  "required": ["version", "createdAt", "projectPath"],
+  "additionalProperties": false
+}

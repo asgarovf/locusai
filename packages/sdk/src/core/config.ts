@@ -12,6 +12,13 @@ export const DEFAULT_MODEL: Record<Provider, string> = {
   [PROVIDER.CODEX]: "gpt-5.3-codex",
 };
 
+export const LOCUS_SCHEMA_BASE_URL = "https://locusai.dev/schemas";
+
+export const LOCUS_SCHEMAS = {
+  config: `${LOCUS_SCHEMA_BASE_URL}/config.schema.json`,
+  settings: `${LOCUS_SCHEMA_BASE_URL}/settings.schema.json`,
+} as const;
+
 export const LOCUS_CONFIG = {
   dir: ".locus",
   configFile: "config.json",

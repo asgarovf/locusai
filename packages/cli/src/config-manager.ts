@@ -4,6 +4,7 @@ import {
   getLocusPath,
   LOCUS_CONFIG,
   LOCUS_GITIGNORE_PATTERNS,
+  LOCUS_SCHEMAS,
 } from "@locusai/sdk/node";
 import { DEFAULT_SKILLS } from "./templates/skills";
 
@@ -115,6 +116,7 @@ function updateGitignore(projectPath: string): void {
 }
 
 export interface LocusProjectConfig {
+  $schema?: string;
   version: string;
   createdAt: string;
   projectPath: string;
@@ -175,6 +177,7 @@ export class ConfigManager {
 
     if (!existsSync(locusConfigPath)) {
       const config: LocusProjectConfig = {
+        $schema: LOCUS_SCHEMAS.config,
         version,
         createdAt: new Date().toISOString(),
         projectPath: ".",
@@ -255,14 +258,33 @@ export class ConfigManager {
     const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
     const claudeMdPath = getLocusPath(this.projectPath, "contextFile");
 
-    // 1. Update version in config
+    // 1. Update version and ensure $schema in config
     const config = this.loadConfig();
     if (config) {
       result.previousVersion = config.version;
+      const needsSchemaUpdate = config.$schema !== LOCUS_SCHEMAS.config;
       if (config.version !== version) {
         config.version = version;
-        this.saveConfig(config);
         result.versionUpdated = true;
+      }
+      if (result.versionUpdated || needsSchemaUpdate) {
+        this.saveConfig(config);
+      }
+    }
+
+    // 1b. Ensure $schema in settings.json if it exists
+    const settingsPath = join(
+      this.projectPath,
+      LOCUS_CONFIG.dir,
+      LOCUS_CONFIG.settingsFile
+    );
+    if (existsSync(settingsPath)) {
+      const raw = readFileSync(settingsPath, "utf-8");
+      const settings = JSON.parse(raw);
+      if (settings.$schema !== LOCUS_SCHEMAS.settings) {
+        const { $schema: _, ...rest } = settings;
+        const ordered = { $schema: LOCUS_SCHEMAS.settings, ...rest };
+        writeFileSync(settingsPath, JSON.stringify(ordered, null, 2), "utf-8");
       }
     }
 
@@ -365,7 +387,9 @@ export class ConfigManager {
   }
 
   private saveConfig(config: LocusProjectConfig): void {
+    const { $schema: _, ...rest } = config;
+    const ordered = { $schema: LOCUS_SCHEMAS.config, ...rest };
     const path = getLocusPath(this.projectPath, "configFile");
-    writeFileSync(path, JSON.stringify(config, null, 2));
+    writeFileSync(path, JSON.stringify(ordered, null, 2));
   }
 }

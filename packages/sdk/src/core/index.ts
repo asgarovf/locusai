@@ -4,6 +4,8 @@ export {
   getLocusPath,
   LOCUS_CONFIG,
   LOCUS_GITIGNORE_PATTERNS,
+  LOCUS_SCHEMA_BASE_URL,
+  LOCUS_SCHEMAS,
   PROVIDER,
   type Provider,
 } from "./config.js";

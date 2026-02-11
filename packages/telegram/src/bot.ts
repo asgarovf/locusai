@@ -3,7 +3,9 @@ import {
   agentsCommand,
   approveCommand,
   cancelCommand,
+  devCommand,
   execCommand,
+  gitCommand,
   helpCommand,
   planCommand,
   plansCommand,
@@ -72,6 +74,10 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Task management commands
   bot.command("tasks", (ctx) => tasksCommand(ctx, config));
   bot.command("rejecttask", (ctx) => rejectTaskCommand(ctx, config));
+
+  // Git & Dev commands
+  bot.command("git", (ctx) => gitCommand(ctx, config));
+  bot.command("dev", (ctx) => devCommand(ctx, config));
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));

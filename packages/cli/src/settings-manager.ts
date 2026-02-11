@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { LOCUS_CONFIG } from "@locusai/sdk/node";
+import { LOCUS_CONFIG, LOCUS_SCHEMAS } from "@locusai/sdk/node";
 
 export interface TelegramSettings {
   botToken?: string;
@@ -10,6 +10,7 @@ export interface TelegramSettings {
 }
 
 export interface LocusSettings {
+  $schema?: string;
   apiKey?: string;
   apiUrl?: string;
   provider?: string;
@@ -34,8 +35,10 @@ export class SettingsManager {
   }
 
   save(settings: LocusSettings): void {
+    const { $schema: _, ...rest } = settings;
+    const ordered = { $schema: LOCUS_SCHEMAS.settings, ...rest };
     const settingsPath = getSettingsPath(this.projectPath);
-    writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf-8");
+    writeFileSync(settingsPath, JSON.stringify(ordered, null, 2), "utf-8");
   }
 
   get<K extends keyof LocusSettings>(key: K): LocusSettings[K] {
