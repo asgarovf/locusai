@@ -32,9 +32,6 @@ export async function gitCommand(
   const input = text.replace(/^\/git\s*/, "").trim();
 
   console.log(`[git] Received: ${input || "(empty)"}`);
-  console.log(
-    `[git] Codepoints: ${[...input].map((c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}`).join(" ")}`
-  );
 
   if (!input) {
     await ctx.reply(formatInfo(USAGE), { parse_mode: "HTML" });
