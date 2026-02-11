@@ -58,9 +58,10 @@ export async function runCommand(args: string[]): Promise<void> {
     settings.apiUrl ||
     "https://api.locusai.dev/api";
 
-  // Parse agent count
+  // Parse agent count: CLI flag > settings > default (1)
+  const parsedAgents = Number.parseInt(values.agents as string, 10);
   const agentCount = Math.min(
-    Math.max(Number.parseInt(values.agents as string, 10) || 1, 1),
+    Math.max(parsedAgents || settings.agentCount || 1, 1),
     5
   );
   // Worktrees are always enabled by default for per-task isolation

@@ -4,13 +4,13 @@
  */
 
 /** Telegraf handler timeout — must exceed the longest command timeout. */
-export const HANDLER_TIMEOUT = 600_000; // 10 minutes
+export const HANDLER_TIMEOUT = 3_600_000; // 1 hour
 
 /** Default timeout for `execute()` — used by most commands (plans, exec, status, etc.). */
-export const EXECUTE_DEFAULT_TIMEOUT = 600_000; // 10 minutes
+export const EXECUTE_DEFAULT_TIMEOUT = 3_600_000; // 1 hour
 
 /** Timeout for the /plan command (3 sequential LLM phases). */
-export const PLAN_TIMEOUT = 600_000; // 10 minutes
+export const PLAN_TIMEOUT = 3_600_000; // 1 hour
 
 /** Default timeout for `executeStreaming()` — used by long-running commands like /run. */
 export const STREAMING_DEFAULT_TIMEOUT = 3_600_000; // 1 hour

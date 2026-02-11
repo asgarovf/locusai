@@ -124,12 +124,16 @@ irm https://locusai.dev/install.ps1 | iex
 
 You'll be guided through entering your repository URL, API key, GitHub token, and optional Telegram configuration. The installer auto-detects your OS (Linux or macOS) and runs the appropriate setup script.
 
+{% hint style="warning" %}
+**Use an SSH URL for your repository** (e.g. `git@github.com:user/repo.git`). HTTPS URLs require interactive credential prompts that won't work in non-interactive server environments, causing `git push` to fail with "could not read Username" errors. Make sure your server has SSH keys configured for GitHub access.
+{% endhint %}
+
 {% hint style="info" %}
 You can also pass all parameters as flags for non-interactive (scripted) usage:
 
 ```bash
 curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-  --repo "owner/repo" \
+  --repo "git@github.com:owner/repo.git" \
   --api-key "your-api-key" \
   --gh-token "your-github-token"
 ```

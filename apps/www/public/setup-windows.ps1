@@ -12,7 +12,7 @@
       irm https://locusai.dev/install.ps1 | iex
       # Or run directly with flags:
       .\setup-windows.ps1 `
-        -Repo "https://github.com/user/project" `
+        -Repo "git@github.com:user/project.git" `
         -ApiKey "locus-api-key" `
         -TelegramToken "bot123:ABC" `
         -TelegramChatId "12345" `
@@ -88,7 +88,7 @@ if (-not $Repo) {
     Write-Host "  Paste your values below. Press Enter to skip optional fields." -ForegroundColor DarkGray
     Write-Host ""
 
-    $Repo           = Read-Prompt -Label "Repository URL" -Required $true
+    $Repo           = Read-Prompt -Label "Repository SSH URL (e.g. git@github.com:user/repo.git)" -Required $true
     $Branch         = Read-Prompt -Label "Branch" -Default "main"
     $ApiKey         = Read-Prompt -Label "Locus API Key"
     $GhToken        = Read-Prompt -Label "GitHub Token"

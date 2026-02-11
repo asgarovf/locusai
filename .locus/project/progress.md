@@ -81,3 +81,9 @@ No sprints started yet.
   Mode: interactive | Session: session-mlii30y8-v8u58hy
 - [x] The bun commands for telegram does not work on ubuntu server. It says spawn bun ... — exec 2026-02-11T21:08:09.101Z
   Mode: interactive | Session: session-mliiphxv-gz912rt
+- [x] The agent count is set as 2 on settings but when I run just /run on telegram cli... — exec 2026-02-11T21:35:41.340Z
+  Mode: interactive | Session: session-mlijpz3t-8me1aa4
+- [x] Got this error on telegram when it tried to push to github: [21:41:14] [-hdapq6x... — exec 2026-02-11T21:48:01.867Z
+  Mode: interactive | Session: session-mlijpz3t-8me1aa4
+- [x] Okay we need to show guide about locus install command that user should enter a ... — exec 2026-02-11T21:58:26.136Z
+  Mode: interactive | Session: session-mlijpz3t-8me1aa4

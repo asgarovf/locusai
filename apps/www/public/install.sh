@@ -8,7 +8,7 @@
 #
 # Usage (non-interactive, personal machine):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-#     --repo "https://github.com/user/project" \
+#     --repo "git@github.com:user/project.git" \
 #     --api-key "locus-api-key" \
 #     --telegram-token "bot123:ABC" \
 #     --telegram-chat-id "12345" \
@@ -17,7 +17,7 @@
 #
 # Usage (server setup — creates a dedicated user):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- --server \
-#     --repo "https://github.com/user/project" \
+#     --repo "git@github.com:user/project.git" \
 #     --api-key "locus-api-key"
 #
 
@@ -80,7 +80,7 @@ case "$OS" in
     echo -e "    ${DIM}>${RESET} irm https://locusai.dev/install.ps1 | iex"
     echo ""
     echo -e "  ${BOLD}Non-interactive:${RESET}"
-    echo -e "    ${DIM}>${RESET} .\\install.ps1 -Repo \"https://github.com/user/project\" -Branch \"main\""
+    echo -e "    ${DIM}>${RESET} .\\install.ps1 -Repo \"git@github.com:user/project.git\" -Branch \"main\""
     echo ""
     exit 1
     ;;
@@ -121,7 +121,7 @@ while [[ $# -gt 0 ]]; do
       echo "    Non-interactive: curl -fsSL https://locusai.dev/install.sh | bash -s -- [options]"
       echo ""
       echo "  Options:"
-      echo "    --repo <url>             Git repository to clone (required)"
+      echo "    --repo <url>             Git repository SSH URL to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
       echo "    --api-key <key>          Locus API key"
       echo "    --gh-token <token>       GitHub personal access token"
@@ -199,7 +199,7 @@ if [[ -z "$REPO_URL" ]]; then
     done
   }
 
-  prompt REPO_URL          "Repository URL"       true
+  prompt REPO_URL          "Repository SSH URL (e.g. git@github.com:user/repo.git)" true
   prompt BRANCH            "Branch"               false  "main"
   prompt API_KEY           "Locus API Key"        false
   prompt GH_TOKEN          "GitHub Token"         false

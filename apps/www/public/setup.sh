@@ -8,7 +8,7 @@
 #
 # Usage (non-interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
-#     --repo "https://github.com/user/project" \
+#     --repo "git@github.com:user/project.git" \
 #     --api-key "locus-api-key" \
 #     --telegram-token "bot123:ABC" \
 #     --telegram-chat-id "12345" \
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
       echo "  Usage: ./setup.sh [options]"
       echo ""
       echo "  Options:"
-      echo "    --repo <url>             Git repository to clone (required)"
+      echo "    --repo <url>             Git repository SSH URL to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
       echo "    --user <username>        Run setup as this user (passed from install.sh)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
@@ -157,7 +157,7 @@ if [[ -z "$REPO_URL" ]]; then
     done
   }
 
-  prompt REPO_URL          "Repository URL"       true
+  prompt REPO_URL          "Repository SSH URL (e.g. git@github.com:user/repo.git)" true
   prompt BRANCH            "Branch"               false  "main"
   prompt API_KEY           "Locus API Key"        false
   prompt GH_TOKEN          "GitHub Token"         false
