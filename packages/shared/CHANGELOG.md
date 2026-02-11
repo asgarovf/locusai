@@ -1,5 +1,12 @@
 # @locusai/shared
 
+## 0.9.2
+
+### Patch Changes
+
+- New CLI commands
+  Fix telegram command execution
+
 ## 0.9.1
 
 ### Patch Changes

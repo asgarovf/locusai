@@ -1,5 +1,14 @@
 # @locusai/sdk
 
+## 0.9.2
+
+### Patch Changes
+
+- New CLI commands
+  Fix telegram command execution
+- Updated dependencies
+  - @locusai/shared@0.9.2
+
 ## 0.9.1
 
 ### Patch Changes
