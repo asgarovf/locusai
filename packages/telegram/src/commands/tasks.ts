@@ -11,15 +11,35 @@ function createClient(config: TelegramConfig): LocusClient {
   });
 }
 
+async function resolveWorkspaceId(
+  client: LocusClient,
+  config: TelegramConfig
+): Promise<string> {
+  if (config.workspaceId) {
+    return config.workspaceId;
+  }
+
+  console.log("[workspace] Resolving workspace from API key...");
+  const info = await client.auth.getApiKeyInfo();
+  if (info.workspaceId) {
+    console.log(`[workspace] Resolved workspace: ${info.workspaceId}`);
+    return info.workspaceId;
+  }
+
+  throw new Error(
+    "Could not resolve workspace from API key. Please set workspaceId in settings."
+  );
+}
+
 export async function tasksCommand(
   ctx: Context,
   config: TelegramConfig
 ): Promise<void> {
   console.log("[tasks] Listing active tasks");
 
-  if (!config.apiKey || !config.workspaceId) {
+  if (!config.apiKey) {
     await ctx.reply(
-      formatError("API key and workspace ID are required for /tasks."),
+      formatError("API key is required for /tasks. Run: locus config setup --api-key <KEY>"),
       { parse_mode: "HTML" }
     );
     return;
@@ -27,7 +47,8 @@ export async function tasksCommand(
 
   try {
     const client = createClient(config);
-    const tasks = await client.tasks.list(config.workspaceId, {
+    const workspaceId = await resolveWorkspaceId(client, config);
+    const tasks = await client.tasks.list(workspaceId, {
       status: [
         TaskStatus.IN_PROGRESS,
         TaskStatus.IN_REVIEW,
@@ -104,9 +125,9 @@ export async function rejectTaskCommand(
     return;
   }
 
-  if (!config.apiKey || !config.workspaceId) {
+  if (!config.apiKey) {
     await ctx.reply(
-      formatError("API key and workspace ID are required for /rejecttask."),
+      formatError("API key is required for /rejecttask. Run: locus config setup --api-key <KEY>"),
       { parse_mode: "HTML" }
     );
     return;
@@ -114,9 +135,10 @@ export async function rejectTaskCommand(
 
   try {
     const client = createClient(config);
+    const workspaceId = await resolveWorkspaceId(client, config);
 
     // Verify task exists and is in IN_REVIEW status
-    const task = await client.tasks.getById(taskId, config.workspaceId);
+    const task = await client.tasks.getById(taskId, workspaceId);
     if (task.status !== TaskStatus.IN_REVIEW) {
       await ctx.reply(
         formatError(
@@ -128,12 +150,12 @@ export async function rejectTaskCommand(
     }
 
     // Move task back to BACKLOG so agents can re-execute
-    await client.tasks.update(taskId, config.workspaceId, {
+    await client.tasks.update(taskId, workspaceId, {
       status: TaskStatus.BACKLOG,
     });
 
     // Add rejection comment with feedback
-    await client.tasks.addComment(taskId, config.workspaceId, {
+    await client.tasks.addComment(taskId, workspaceId, {
       author: "Telegram",
       text: `❌ **Rejected**: ${feedback}`,
     });

@@ -5,7 +5,6 @@ import { LOCUS_CONFIG, LOCUS_SCHEMAS } from "@locusai/sdk/node";
 export interface TelegramSettings {
   botToken?: string;
   chatId?: number;
-  agentCount?: number;
   testMode?: boolean;
 }
 

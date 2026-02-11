@@ -4,18 +4,17 @@
 # Provisions a fresh Ubuntu/Debian machine with everything needed to run Locus.
 #
 # Usage:
-#   curl -fsSL <raw-url>/scripts/setup.sh | bash -s -- \
+#   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
 #     --repo "https://github.com/user/project" \
 #     --api-key "locus-api-key" \
 #     --telegram-token "bot123:ABC" \
 #     --telegram-chat-id "12345" \
-#     --anthropic-key "sk-ant-..." \
 #     --gh-token "ghp_..." \
 #     --branch "main"
 #
-# Or download and run:
-#   chmod +x setup.sh
-#   ./setup.sh --repo "https://github.com/user/project" ...
+# Or run the Linux script directly:
+#   curl -fsSL https://locusai.dev/setup.sh | bash -s -- \
+#     --repo "https://github.com/user/project" ...
 #
 
 set -euo pipefail
@@ -44,7 +43,6 @@ BRANCH="main"
 API_KEY=""
 TELEGRAM_TOKEN=""
 TELEGRAM_CHAT_ID=""
-ANTHROPIC_KEY=""
 GH_TOKEN=""
 PROJECT_DIR=""
 AGENT_COUNT="2"
@@ -58,10 +56,8 @@ while [[ $# -gt 0 ]]; do
     --api-key)       API_KEY="$2";           shift 2 ;;
     --telegram-token) TELEGRAM_TOKEN="$2";   shift 2 ;;
     --telegram-chat-id) TELEGRAM_CHAT_ID="$2"; shift 2 ;;
-    --anthropic-key) ANTHROPIC_KEY="$2";     shift 2 ;;
     --gh-token)      GH_TOKEN="$2";          shift 2 ;;
     --dir)           PROJECT_DIR="$2";       shift 2 ;;
-    --agent-count)   AGENT_COUNT="$2";       shift 2 ;;
     --help|-h)
       echo ""
       echo "  Locus Development Environment Setup"
@@ -73,11 +69,9 @@ while [[ $# -gt 0 ]]; do
       echo "    --branch <name>          Branch to checkout (default: main)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
       echo "    --api-key <key>          Locus API key"
-      echo "    --anthropic-key <key>    Anthropic API key for Claude Code"
       echo "    --gh-token <token>       GitHub personal access token for gh CLI"
       echo "    --telegram-token <token> Telegram bot token from @BotFather"
       echo "    --telegram-chat-id <id>  Telegram chat ID for authorization"
-      echo "    --agent-count <n>        Number of Locus agents (default: 2)"
       echo ""
       exit 0
       ;;
@@ -111,7 +105,6 @@ info "Repository:     ${BOLD}${REPO_URL}${RESET}"
 info "Branch:         ${BOLD}${BRANCH}${RESET}"
 info "User:           ${BOLD}${SETUP_USER}${RESET}"
 info "API Key:        ${BOLD}${API_KEY:+configured}${API_KEY:-not set}${RESET}"
-info "Anthropic Key:  ${BOLD}${ANTHROPIC_KEY:+configured}${ANTHROPIC_KEY:-not set}${RESET}"
 info "GH Token:       ${BOLD}${GH_TOKEN:+configured}${GH_TOKEN:-not set}${RESET}"
 info "Telegram:       ${BOLD}${TELEGRAM_TOKEN:+configured}${TELEGRAM_TOKEN:-not set}${RESET}"
 echo ""
@@ -182,8 +175,12 @@ fi
 # Authenticate gh if token provided
 if [[ -n "$GH_TOKEN" ]]; then
   info "Authenticating GitHub CLI..."
-  run_as_user "echo '${GH_TOKEN}' | gh auth login --with-token 2>/dev/null"
-  success "GitHub CLI authenticated"
+  run_as_user "echo '${GH_TOKEN}' | gh auth login --with-token --hostname github.com --git-protocol ssh"
+  if run_as_user "gh auth status --hostname github.com" &>/dev/null; then
+    success "GitHub CLI authenticated"
+  else
+    warn "GitHub CLI authentication failed — verify your token is valid"
+  fi
 fi
 
 # ─── Step 4: Node.js 22+ ─────────────────────────────────────────────────────
@@ -238,19 +235,22 @@ header "Claude Code"
 if run_as_user "command -v claude" &>/dev/null; then
   success "Claude Code already installed"
 else
-  info "Installing Claude Code CLI..."
-  npm install -g @anthropic-ai/claude-code > /dev/null 2>&1
+  info "Installing Claude Code via native installer..."
+  run_as_user "curl -fsSL https://claude.ai/install.sh | bash" > /dev/null 2>&1
+
+  # Ensure claude is on PATH for subsequent commands
+  CLAUDE_PATH="${USER_HOME}/.local/bin"
+  if [[ -d "$CLAUDE_PATH" ]]; then
+    export PATH="$CLAUDE_PATH:$PATH"
+    run_as_user "grep -q '.local/bin' ~/.bashrc 2>/dev/null || echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+  fi
+
   success "Claude Code installed"
 fi
 
-# Set Anthropic API key if provided
-if [[ -n "$ANTHROPIC_KEY" ]]; then
-  info "Configuring Anthropic API key..."
-  # Write to user's environment
-  run_as_user "grep -q 'ANTHROPIC_API_KEY' ~/.bashrc 2>/dev/null || echo 'export ANTHROPIC_API_KEY=\"${ANTHROPIC_KEY}\"' >> ~/.bashrc"
-  export ANTHROPIC_API_KEY="$ANTHROPIC_KEY"
-  success "Anthropic API key configured in ~/.bashrc"
-fi
+info "Configure Claude Code / Codex authentication separately after setup"
+info "  Claude: claude login"
+info "  Codex:  Follow OpenAI Codex setup instructions"
 
 # ─── Step 7: Locus CLI ───────────────────────────────────────────────────────
 
@@ -264,14 +264,26 @@ else
   success "Locus CLI installed"
 fi
 
-# ─── Step 8: Clone Repository ────────────────────────────────────────────────
+# ─── Step 8: Locus Telegram Bot ─────────────────────────────────────────
+
+header "Locus Telegram Bot"
+
+if command -v locus-telegram &>/dev/null; then
+  success "Locus Telegram Bot already installed"
+else
+  info "Installing Locus Telegram Bot from npm..."
+  npm install -g @locusai/telegram > /dev/null 2>&1
+  success "Locus Telegram Bot installed"
+fi
+
+# ─── Step 9: Clone Repository ────────────────────────────────────────────────
 
 header "Repository"
 
 # Derive project directory from repo URL if not specified
 if [[ -z "$PROJECT_DIR" ]]; then
   REPO_NAME=$(basename "$REPO_URL" .git)
-  PROJECT_DIR="${USER_HOME}/${REPO_NAME}"
+  PROJECT_DIR="$(pwd)/${REPO_NAME}"
 fi
 
 if [[ -d "$PROJECT_DIR/.git" ]]; then
@@ -285,7 +297,7 @@ else
   success "Repository cloned to ${PROJECT_DIR}"
 fi
 
-# ─── Step 9: Install Dependencies ────────────────────────────────────────────
+# ─── Step 10: Install Dependencies ───────────────────────────────────────────
 
 header "Dependencies"
 
@@ -293,7 +305,7 @@ info "Installing project dependencies with Bun..."
 run_as_user "cd '${PROJECT_DIR}' && export PATH=\"\$HOME/.bun/bin:\$PATH\" && bun install"
 success "Dependencies installed"
 
-# ─── Step 10: Build Packages ─────────────────────────────────────────────────
+# ─── Step 11: Build Packages ─────────────────────────────────────────────────
 
 header "Build"
 
@@ -301,7 +313,7 @@ info "Building packages (shared → sdk → cli → telegram)..."
 run_as_user "cd '${PROJECT_DIR}' && export PATH=\"\$HOME/.bun/bin:\$PATH\" && bun run build"
 success "Packages built"
 
-# ─── Step 11: Initialize Locus ────────────────────────────────────────────────
+# ─── Step 12: Initialize Locus ───────────────────────────────────────────────
 
 header "Locus Init"
 
@@ -316,7 +328,7 @@ if [[ -n "$API_KEY" ]]; then
   success "Locus API key configured"
 fi
 
-# ─── Step 12: Telegram Bot Setup ─────────────────────────────────────────────
+# ─── Step 13: Telegram Bot Setup ─────────────────────────────────────────────
 
 header "Telegram Bot"
 
@@ -324,16 +336,12 @@ if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
   info "Configuring Telegram bot..."
   run_as_user "cd '${PROJECT_DIR}' && locus telegram setup --token '${TELEGRAM_TOKEN}' --chat-id '${TELEGRAM_CHAT_ID}'"
 
-  if [[ -n "$AGENT_COUNT" ]]; then
-    run_as_user "cd '${PROJECT_DIR}' && locus telegram set agentCount '${AGENT_COUNT}'"
-  fi
-
   success "Telegram bot configured"
 
   # Create systemd service for Telegram bot
   info "Creating systemd service for Telegram bot..."
 
-  TELEGRAM_BIN="${PROJECT_DIR}/packages/telegram/bin/telegram.js"
+  TELEGRAM_BIN="$(which locus-telegram)"
   SERVICE_FILE="/etc/systemd/system/locus-telegram.service"
 
   cat > "$SERVICE_FILE" <<UNIT
@@ -345,7 +353,7 @@ After=network.target
 Type=simple
 User=${SETUP_USER}
 WorkingDirectory=${PROJECT_DIR}
-ExecStart=$(which node) ${TELEGRAM_BIN}
+ExecStart=${TELEGRAM_BIN}
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -355,7 +363,6 @@ SyslogIdentifier=locus-telegram
 # Environment
 Environment=NODE_ENV=production
 Environment=LOCUS_PROJECT_PATH=${PROJECT_DIR}
-${ANTHROPIC_KEY:+Environment=ANTHROPIC_API_KEY=${ANTHROPIC_KEY}}
 
 [Install]
 WantedBy=multi-user.target
@@ -373,7 +380,7 @@ else
   info "Configure later with: locus telegram setup"
 fi
 
-# ─── Step 13: Verify Installation ─────────────────────────────────────────────
+# ─── Step 14: Verify Installation ────────────────────────────────────────────
 
 header "Verification"
 
@@ -398,6 +405,7 @@ check "Node.js 22+" "node -v | grep -qE 'v(2[2-9]|[3-9][0-9])'"
 check "Bun"         "run_as_user 'command -v bun'"
 check "Claude Code"  "command -v claude"
 check "Locus CLI"   "command -v locus"
+check "Locus Telegram" "command -v locus-telegram"
 check "Repository"  "test -d '${PROJECT_DIR}/.git'"
 check "Locus Init"  "test -f '${PROJECT_DIR}/.locus/config.json'"
 

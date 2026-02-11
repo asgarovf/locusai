@@ -30,7 +30,6 @@ const TOP_LEVEL_KEYS = [
 const TELEGRAM_KEYS = [
   "telegram.botToken",
   "telegram.chatId",
-  "telegram.agentCount",
   "telegram.testMode",
 ] as const;
 
@@ -203,9 +202,6 @@ function showCommand(projectPath: string): void {
     if (tg.chatId) {
       console.log(`    ${c.primary("chatId:")}       ${tg.chatId}`);
     }
-    if (tg.agentCount !== undefined) {
-      console.log(`    ${c.primary("agentCount:")}   ${tg.agentCount}`);
-    }
     if (tg.testMode !== undefined) {
       console.log(`    ${c.primary("testMode:")}     ${tg.testMode}`);
     }
@@ -244,7 +240,7 @@ function setCommand(args: string[], projectPath: string): void {
       settings.telegram = {};
     }
 
-    if (telegramKey === "chatId" || telegramKey === "agentCount") {
+    if (telegramKey === "chatId") {
       const num = Number(value);
       if (Number.isNaN(num)) {
         console.error(

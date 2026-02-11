@@ -47,12 +47,6 @@
           "type": "number",
           "description": "Telegram chat ID where the bot will send notifications"
         },
-        "agentCount": {
-          "type": "integer",
-          "description": "Number of parallel agents to run",
-          "minimum": 1,
-          "default": 1
-        },
         "testMode": {
           "type": "boolean",
           "description": "Enable test mode (dry run without executing tasks)",

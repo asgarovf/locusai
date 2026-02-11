@@ -128,8 +128,8 @@ export function validateGitCommand(input: string): ValidationResult {
     return validateGitPush(args);
   }
 
-  if (sub === "pull" && args.length === 1) {
-    return { ok: true, command: { binary: "git", args: ["pull"] } };
+  if (sub === "pull") {
+    return validateGitPull(args);
   }
 
   // --- Stash ---
@@ -289,6 +289,25 @@ function validateGitPush(args: string[]): ValidationResult {
   };
 }
 
+function validateGitPull(args: string[]): ValidationResult {
+  if (args.length === 1) {
+    return { ok: true, command: { binary: "git", args: ["pull"] } };
+  }
+
+  // git pull origin <branch>
+  if (args.length === 3 && args[1] === "origin" && validateBranch(args[2])) {
+    return {
+      ok: true,
+      command: { binary: "git", args: ["pull", "origin", args[2]] },
+    };
+  }
+
+  return {
+    ok: false,
+    error: "Usage: git pull | git pull origin <branch>",
+  };
+}
+
 function validateGitStash(args: string[]): ValidationResult {
   if (args.length === 1) {
     return { ok: true, command: { binary: "git", args: ["stash"] } };
@@ -394,9 +413,9 @@ export type DevSubcommand = "lint" | "typecheck" | "build" | "test";
 
 const DEV_COMMANDS: Record<DevSubcommand, ValidatedCommand> = {
   lint: { binary: "bun", args: ["run", "biome", "lint", "."] },
-  typecheck: { binary: "bun", args: ["run", "tsc", "--noEmit"] },
+  typecheck: { binary: "bun", args: ["run", "typecheck"] },
   build: { binary: "bun", args: ["run", "build"] },
-  test: { binary: "bun", args: ["test"] },
+  test: { binary: "bun", args: ["run", "test"] },
 };
 
 export function validateDevCommand(input: string): ValidationResult {

@@ -9,9 +9,9 @@ const USAGE = `<b>Usage:</b> /dev &lt;command&gt;
 
 <b>Available commands:</b>
   lint — Run biome lint
-  typecheck — Run tsc --noEmit
+  typecheck — Run bun run typecheck
   build — Run bun run build
-  test — Run bun test`;
+  test — Run bun run test`;
 
 export async function devCommand(
   ctx: Context,

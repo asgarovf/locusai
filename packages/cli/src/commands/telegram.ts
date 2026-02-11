@@ -15,12 +15,7 @@ function ask(question: string): Promise<string> {
   });
 }
 
-const CONFIGURABLE_KEYS = [
-  "botToken",
-  "chatId",
-  "agentCount",
-  "testMode",
-] as const;
+const CONFIGURABLE_KEYS = ["botToken", "chatId", "testMode"] as const;
 
 function maskToken(token: string): string {
   if (token.length <= 8) return "****";
@@ -45,7 +40,6 @@ function showTelegramHelp(): void {
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary('locus telegram setup --token "123:ABC" --chat-id 987654')}
     ${c.dim("$")} ${c.primary("locus telegram config")}
-    ${c.dim("$")} ${c.primary("locus telegram set agentCount 3")}
     ${c.dim("$")} ${c.primary("locus telegram remove")}
 
   ${c.header(" NOTE ")}
@@ -174,9 +168,6 @@ function configCommand(projectPath: string): void {
   if (tg.chatId) {
     entries.push(["chatId", String(tg.chatId)]);
   }
-  if (tg.agentCount !== undefined) {
-    entries.push(["agentCount", String(tg.agentCount)]);
-  }
   if (tg.testMode !== undefined) {
     entries.push(["testMode", String(tg.testMode)]);
   }
@@ -233,7 +224,7 @@ function setCommand(args: string[], projectPath: string): void {
     settings.telegram = {};
   }
 
-  if (key === "chatId" || key === "agentCount") {
+  if (key === "chatId") {
     const num = Number(value);
     if (Number.isNaN(num)) {
       console.error(
