@@ -50,6 +50,29 @@ export default function LoginPage() {
         />
       )}
 
+      {/* Terms */}
+      <p className="text-center text-xs text-muted-foreground/40 leading-relaxed">
+        By continuing, you agree to our{" "}
+        <a
+          href="https://locusai.dev/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-muted-foreground/60 transition-colors"
+        >
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a
+          href="https://locusai.dev/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-muted-foreground/60 transition-colors"
+        >
+          Privacy Policy
+        </a>
+        .
+      </p>
+
       {/* Footer */}
       <div className="text-center text-sm text-muted-foreground/50">
         Don&apos;t have an account?{" "}

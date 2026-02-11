@@ -77,8 +77,8 @@ export function WorkspaceSetup({ workspaceId }: WorkspaceSetupProps) {
               <h3 className="font-semibold text-lg">Connect</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-6">
-              Connect your local environment via CLI or setup MCP integration
-              for your AI editor.
+              Connect your local environment via the Locus CLI to start running
+              agents.
             </p>
           </div>
           <Button

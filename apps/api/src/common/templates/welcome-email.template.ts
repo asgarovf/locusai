@@ -93,13 +93,10 @@ export function createWelcomeEmail(data: WelcomeEmailData): {
           </p>
           <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 13px; line-height: 1.6;">
             <li style="margin-bottom: 4px;">
-              <a href="https://locusai.dev/docs" style="color: #6b7280; text-decoration: underline;">Documentation</a>
+              <a href="https://docs.locusai.dev" style="color: #6b7280; text-decoration: underline;">Documentation</a>
             </li>
             <li style="margin-bottom: 4px;">
               <a href="https://github.com/asgarovf/locusai" style="color: #6b7280; text-decoration: underline;">GitHub</a>
-            </li>
-            <li>
-              <a href="https://locusai.dev/docs/mcp" style="color: #6b7280; text-decoration: underline;">MCP Integration</a>
             </li>
           </ul>
         </td>
@@ -140,9 +137,8 @@ Quick Start Guide:
 Get Started: https://app.locusai.dev/board
 
 Helpful Resources:
-- Documentation: https://locusai.dev/docs
+- Documentation: https://docs.locusai.dev
 - GitHub: https://github.com/asgarovf/locusai
-- MCP Integration: https://locusai.dev/docs/mcp
 
 ---
 Locus - Mission Control for AI Engineering Teams

@@ -12,6 +12,7 @@ import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
 import { Task } from "@/entities/task.entity";
+import { User } from "@/entities/user.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
 
@@ -30,6 +31,8 @@ export class WorkspacesService {
     private readonly apiKeyRepository: Repository<ApiKey>,
     @InjectRepository(AgentRegistration)
     private readonly agentRegistrationRepository: Repository<AgentRegistration>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly eventsService: EventsService
   ) {}
 
@@ -103,6 +106,10 @@ export class WorkspacesService {
     }
 
     return this.create(org.id, name);
+  }
+
+  async markOnboardingCompleted(userId: string): Promise<void> {
+    await this.userRepository.update(userId, { onboardingCompleted: true });
   }
 
   async update(

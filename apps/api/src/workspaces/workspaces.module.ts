@@ -8,6 +8,7 @@ import {
   Task,
   Workspace,
 } from "@/entities";
+import { User } from "@/entities/user.entity";
 import { EventsModule } from "@/events/events.module";
 import { TasksModule } from "@/tasks/tasks.module";
 import { WorkspacesController } from "./workspaces.controller";
@@ -23,6 +24,7 @@ import { WorkspacesService } from "./workspaces.service";
       Task,
       Membership,
       ApiKey,
+      User,
     ]),
     EventsModule,
     forwardRef(() => TasksModule),

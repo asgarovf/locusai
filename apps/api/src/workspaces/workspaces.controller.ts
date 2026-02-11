@@ -65,12 +65,16 @@ export class WorkspacesController {
       user.id,
       body.name
     );
+    if (!user.onboardingCompleted) {
+      await this.workspacesService.markOnboardingCompleted(user.id);
+    }
     return { workspace };
   }
 
   @Post("org/:orgId")
   @MemberAdmin()
   async create(
+    @CurrentUser() user: User,
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(CreateWorkspaceSchema)) body: CreateWorkspace
   ) {
@@ -78,6 +82,9 @@ export class WorkspacesController {
       params.orgId,
       body.name
     );
+    if (!user.onboardingCompleted) {
+      await this.workspacesService.markOnboardingCompleted(user.id);
+    }
     return { workspace };
   }
 

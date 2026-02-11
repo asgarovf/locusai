@@ -11,14 +11,14 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@locusai/cli"><img src="https://img.shields.io/npm/v/@locusai/cli?label=%40locusai%2Fcli&color=blue" alt="@locusai/cli" /></a>
   <a href="https://www.npmjs.com/package/@locusai/shared"><img src="https://img.shields.io/npm/v/@locusai/shared?label=%40locusai%2Fshared&color=blue" alt="@locusai/shared" /></a>
-  <a href="https://locusai.dev/docs"><img src="https://img.shields.io/badge/docs-locusai.dev-blue" alt="Documentation" /></a>
+  <a href="https://docs.locusai.dev"><img src="https://img.shields.io/badge/docs-locusai.dev-blue" alt="Documentation" /></a>
 </p>
 
 **Locus is an AI-native project management platform for engineering teams.**
 
 Plan sprints, manage tasks, and coordinate documentation in the cloud—while AI agents run securely on your machine to build, test, and document your software.
 
-Read the [full documentation](https://locusai.dev/docs) to learn more.
+Read the [full documentation](https://docs.locusai.dev) to learn more.
 
 > [!WARNING]
 > **Active Development**: Locus is currently in an early alpha stage and is under active development. Expect breaking changes, bugs, and evolving APIs. Use with caution in production environments.

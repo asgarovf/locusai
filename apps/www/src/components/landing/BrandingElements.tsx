@@ -1,60 +1,38 @@
 "use client";
 
-import { motion } from "framer-motion";
-
-function WireframeCube({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="0.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-labelledby="wireframe-cube-title"
-    >
-      <title id="wireframe-cube-title">Wireframe Cube</title>
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-      <path d="M3.27 6.96 12 12.01l8.73-5.05" />
-      <path d="M12 22.08V12" />
-    </svg>
-  );
-}
-
 export function BrandingElements() {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-      {/* Large Floating Cube - Left */}
-      <motion.div
-        className="absolute -left-10 top-10 md:-left-20 md:top-20 text-foreground/5"
-        initial={{ opacity: 0, x: -100 }}
-        animate={{ opacity: 1, x: 0, rotate: 360 }}
-        transition={{
-          duration: 1,
-          ease: "easeOut",
-          rotate: { duration: 120, repeat: Infinity, ease: "linear" },
-        }}
-      >
-        <WireframeCube className="w-48 h-48 md:w-96 md:h-96" />
-      </motion.div>
+      {/* Main mesh gradient */}
+      <div className="mesh-gradient-hero absolute inset-0" />
 
-      {/* Large Floating Cube - Right */}
-      <motion.div
-        className="absolute -right-10 bottom-10 md:-right-20 md:bottom-20 text-foreground/5"
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 1, x: 0, rotate: -360 }}
-        transition={{
-          duration: 1,
-          ease: "easeOut",
-          rotate: { duration: 150, repeat: Infinity, ease: "linear" },
-        }}
-      >
-        <WireframeCube className="w-64 h-64 md:w-[500px] md:h-[500px]" />
-      </motion.div>
+      {/* Floating orbs */}
+      <div className="orb orb-violet w-[500px] h-[500px] -top-40 left-1/2 -translate-x-1/2 opacity-15" />
+      <div className="orb orb-cyan w-[400px] h-[400px] -top-20 right-[10%] opacity-10" />
+      <div className="orb orb-amber w-[300px] h-[300px] top-20 left-[15%] opacity-[0.06]" />
 
-      {/* subtle grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size[4rem_4rem]mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      {/* Dot grid pattern */}
+      <div
+        className="absolute inset-0 dot-grid opacity-20"
+        style={{
+          maskImage:
+            "radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 100%)",
+        }}
+      />
+
+      {/* Subtle diagonal lines */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, rgba(167, 139, 250, 0.3), rgba(167, 139, 250, 0.3) 1px, transparent 1px, transparent 60px)",
+        }}
+      />
+
+      {/* Glow line separator at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 glow-line-multi" />
     </div>
   );
 }

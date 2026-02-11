@@ -146,7 +146,7 @@ locus run --api-key YOUR_KEY --provider claude
 
 ## Links
 
-- [Documentation](https://locusai.dev/docs)
+- [Documentation](https://docs.locusai.dev)
 - [Website](https://locusai.dev)
 
 ## License

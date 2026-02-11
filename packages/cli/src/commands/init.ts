@@ -49,7 +49,7 @@ export async function initCommand(): Promise<void> {
     2. Run '${c.primary("locus index")}' to index your codebase
     3. Run '${c.primary("locus run")}' to start an agent
 
-  For more information, visit: ${c.underline("https://locusai.dev/docs")}
+  For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);
     return;
   }
@@ -70,6 +70,6 @@ export async function initCommand(): Promise<void> {
     2. Run '${c.primary("locus index")}' to index your codebase
     3. Run '${c.primary("locus run")}' to start an agent
 
-  For more information, visit: ${c.underline("https://locusai.dev/docs")}
+  For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);
 }

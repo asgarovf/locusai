@@ -48,8 +48,8 @@ export function useWorkspaceCreateForm(): UseWorkspaceCreateFormReturn {
       // Refresh user data to get the new workspaceId
       await refreshUser();
       showToast.success("Workspace created!");
-      // Redirect to chat with interview query param to trigger onboarding
-      router.push("/chat?interview=true");
+      // Redirect to dashboard
+      router.push("/");
     },
     onError: (error: Error) => {
       showToast.error(error.message || "Failed to create workspace");

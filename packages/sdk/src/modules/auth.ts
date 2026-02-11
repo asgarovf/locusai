@@ -55,4 +55,11 @@ export class AuthModule extends BaseModule {
     );
     return data;
   }
+
+  async deleteAccount(): Promise<{ success: boolean }> {
+    const { data } = await this.api.delete<{ success: boolean }>(
+      "/auth/account"
+    );
+    return data;
+  }
 }

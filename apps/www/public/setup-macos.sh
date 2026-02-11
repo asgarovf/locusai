@@ -3,7 +3,10 @@
 # Locus Development Environment Setup (macOS)
 # Provisions a fresh macOS machine with everything needed to run Locus.
 #
-# Usage:
+# Usage (interactive):
+#   curl -fsSL https://locusai.dev/setup-macos.sh | bash
+#
+# Usage (non-interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
 #     --repo "https://github.com/user/project" \
 #     --api-key "locus-api-key" \
@@ -11,10 +14,6 @@
 #     --telegram-chat-id "12345" \
 #     --gh-token "ghp_..." \
 #     --branch "main"
-#
-# Or run the macOS script directly:
-#   curl -fsSL https://locusai.dev/setup-macos.sh | bash -s -- \
-#     --repo "https://github.com/user/project" ...
 #
 
 set -euo pipefail
@@ -35,6 +34,15 @@ success() { echo -e "  ${GREEN}✔${RESET}  $1"; }
 warn()    { echo -e "  ${YELLOW}⚠${RESET}  $1"; }
 error()   { echo -e "  ${RED}✖${RESET}  $1"; }
 header()  { echo -e "\n${BOLD}${CYAN}  ── $1 ──${RESET}\n"; }
+
+# ─── Trim Function ───────────────────────────────────────────────────────────
+
+trim() {
+  local var="$*"
+  var="${var#"${var%%[![:space:]]*}"}"
+  var="${var%"${var##*[![:space:]]}"}"
+  printf '%s' "$var"
+}
 
 # ─── Platform Check ──────────────────────────────────────────────────────────
 
@@ -96,12 +104,74 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# ─── Validation ───────────────────────────────────────────────────────────────
+# ─── Interactive Mode ────────────────────────────────────────────────────────
+# If no --repo was provided via flags, prompt the user interactively.
 
 if [[ -z "$REPO_URL" ]]; then
-  error "Missing required flag: --repo <url>"
-  echo "  Example: ./setup-macos.sh --repo https://github.com/user/project"
-  exit 1
+  echo ""
+  echo -e "  ${BOLD}Interactive Setup${RESET}"
+  echo -e "  ${DIM}Paste your values below. Press Enter to skip optional fields.${RESET}"
+  echo ""
+
+  if [[ -t 0 ]]; then
+    INPUT_FD=0
+  elif [[ -e /dev/tty ]]; then
+    INPUT_FD=3
+    exec 3</dev/tty
+  else
+    error "Cannot read interactive input. Please provide flags instead:"
+    echo "  curl -fsSL https://locusai.dev/setup-macos.sh | bash -s -- --repo <url>"
+    exit 1
+  fi
+
+  prompt() {
+    local varname="$1" label="$2" required="${3:-false}" default="${4:-}"
+
+    local suffix=""
+    if [[ -n "$default" ]]; then
+      suffix=" ${DIM}(default: ${default})${RESET}"
+    elif [[ "$required" == "true" ]]; then
+      suffix=" ${RED}(required)${RESET}"
+    else
+      suffix=" ${DIM}(optional, press Enter to skip)${RESET}"
+    fi
+
+    while true; do
+      echo -en "  ${BOLD}${label}${RESET}${suffix}: "
+      local value=""
+      if [[ "$INPUT_FD" -eq 0 ]]; then
+        read -r value
+      else
+        read -r value <&3
+      fi
+      value="$(trim "$value")"
+
+      if [[ -z "$value" && -n "$default" ]]; then
+        value="$default"
+      fi
+
+      if [[ "$required" == "true" && -z "$value" ]]; then
+        error "This field is required. Please enter a value."
+        continue
+      fi
+
+      eval "$varname=\"\$value\""
+      break
+    done
+  }
+
+  prompt REPO_URL          "Repository URL"       true
+  prompt BRANCH            "Branch"               false  "main"
+  prompt API_KEY           "Locus API Key"        false
+  prompt GH_TOKEN          "GitHub Token"         false
+  prompt TELEGRAM_TOKEN    "Telegram Bot Token"   false
+  prompt TELEGRAM_CHAT_ID  "Telegram Chat ID"     false
+
+  if [[ "${INPUT_FD:-0}" -eq 3 ]]; then
+    exec 3<&-
+  fi
+
+  echo ""
 fi
 
 # ─── Banner ───────────────────────────────────────────────────────────────────

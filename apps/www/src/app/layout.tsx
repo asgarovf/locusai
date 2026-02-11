@@ -1,10 +1,10 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google"; // Next 15 might use next/font/google or local fonts
+import { DM_Sans, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { WhelpWidget } from "@/components/layout";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
@@ -16,23 +16,36 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Locus | Mission Control for AI Engineering Teams",
+    default: "Locus | AI Agents That Ship Your Code",
     template: "%s | Locus",
   },
   description:
-    "The AI-native project management platform for engineering teams. Plan sprints, manage tasks, and coordinate documentation in the cloud—while agents run securely on your machine.",
+    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal. Agents run securely on your machine with git worktree isolation.",
   keywords: [
     "AI agents",
     "agentic engineering",
     "project management",
-    "MCP",
     "autonomous agents",
     "AI development",
     "developer tools",
     "engineering teams",
     "AI planning",
+    "git worktree",
+    "CLI",
+    "code automation",
+    "sprint planning",
+    "code review",
+    "Telegram bot",
+    "self-hosting",
   ],
   authors: [{ name: "Locus Team" }],
   creator: "Locus",
@@ -42,23 +55,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://locusai.dev",
     siteName: "Locus",
-    title: "Locus | Mission Control for AI Engineering Teams",
+    title: "Locus | AI Agents That Ship Your Code",
     description:
-      "The AI-native project management platform for engineering teams. Plan sprints, manage tasks, and coordinate documentation in the cloud—while agents run securely on your machine.",
+      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal. Agents run securely on your machine with git worktree isolation.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Locus - Mission Control for AI Engineering Teams",
+        alt: "Locus - AI Agents That Ship Your Code",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus | Mission Control for AI Engineering Teams",
+    title: "Locus | AI Agents That Ship Your Code",
     description:
-      "The AI-native project management platform for engineering teams. Agents run securely on your machine.",
+      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -73,10 +86,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${dmSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+    >
       <body
         suppressHydrationWarning
-        className="font-sans antialiased min-h-screen bg-background text-foreground"
+        className="font-sans antialiased min-h-screen bg-background text-foreground grain"
       >
         {children}
         {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (

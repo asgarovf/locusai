@@ -2,145 +2,216 @@
 
 import { motion } from "framer-motion";
 import { Terminal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const steps = [
+interface Line {
+  text: string;
+  color: string;
+  prefix?: string;
+}
+
+const lines: Line[] = [
+  { text: "locus run --agents 3", color: "text-foreground", prefix: "$ " },
+  { text: "", color: "" },
   {
-    text: "locus run --api-key=lk_123_123",
-    color: "text-foreground",
-  },
-  { text: "", color: "text-foreground" },
-  {
-    text: "🚀 Starting agent in /Users/user/dev/my-project...",
-    color: "text-green-400",
-  },
-  { text: "📋 Using active sprint: Sprint 1", color: "text-blue-400" },
-  { text: "", color: "text-foreground" },
-  { text: "🤖 Locus Agent Orchestrator", color: "text-blue-400" },
-  {
-    text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    color: "text-blue-400",
+    text: "🚀 Starting 3 agents in ~/dev/my-saas...",
+    color: "text-cyan",
   },
   {
-    text: "Workspace: 7bbf5573-6c08-4f6a-8e59-db312290e535",
-    color: "text-zinc-400",
+    text: "  Each task will run in an isolated worktree",
+    color: "text-muted-foreground",
   },
   {
-    text: "Sprint: d37aab80-27f9-428c-881f-bc1f95832af8",
-    color: "text-zinc-400",
+    text: "  Branches will be committed and pushed to remote",
+    color: "text-muted-foreground",
   },
-  { text: "API Base: https://api.locusai.dev/api", color: "text-zinc-400" },
+  { text: "", color: "" },
   {
-    text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    color: "text-blue-400",
-  },
-  { text: "", color: "text-foreground" },
-  {
-    text: "🚀 Agent started: agent-1769190120436-fuet063",
-    color: "text-green-400",
-  },
-  { text: "", color: "text-foreground" },
-  {
-    text: "[17:42:00] [-fuet063] ℹ Using Claude CLI for all phases",
-    color: "text-zinc-400",
+    text: "  ● Agent spawned: agent-a1b2c3",
+    color: "text-cyan",
   },
   {
-    text: "[17:42:00] [-fuet063] ✓ Agent started in .../dev/my-project",
-    color: "text-green-400",
+    text: "  ● Claimed: Implement user authentication",
+    color: "text-cyan",
   },
   {
-    text: "[17:42:00] [-fuet063] ℹ Found active sprint: Sprint 1 (d37a...)",
-    color: "text-blue-400",
+    text: "  ● Agent spawned: agent-d4e5f6",
+    color: "text-violet",
   },
   {
-    text: "[17:42:01] [-fuet063] ℹ Sprint tasks found: 1",
-    color: "text-zinc-400",
+    text: "  ● Claimed: Add database migrations",
+    color: "text-violet",
   },
   {
-    text: "[17:42:01] [-fuet063] ℹ Skipping mindmap generation...",
-    color: "text-zinc-400",
+    text: "  ● Agent spawned: agent-g7h8i9",
+    color: "text-amber",
   },
   {
-    text: "[17:42:01] [-fuet063] ✓ Claimed: Add button component",
-    color: "text-green-400",
+    text: "  ● Claimed: Create API documentation",
+    color: "text-amber",
+  },
+  { text: "", color: "" },
+  {
+    text: "📖 Reading auth/service.ts",
+    color: "text-cyan",
   },
   {
-    text: "[17:42:01] [-fuet063] ℹ Executing: Add button component",
-    color: "text-yellow-400",
+    text: "   src/auth/service.ts",
+    color: "text-muted-foreground",
   },
   {
-    text: "[17:42:01] [-fuet063] ℹ Skipping Phase 1: Planning",
-    color: "text-zinc-400",
+    text: "   ✓ Completed (87ms)",
+    color: "text-emerald",
   },
   {
-    text: "[17:42:01] [-fuet063] ℹ Starting Execution...",
-    color: "text-purple-400",
+    text: "⚡ Running npm run typecheck",
+    color: "text-cyan",
   },
   {
-    text: "[17:44:43] [-fuet063] ℹ Reindexing codebase...",
-    color: "text-zinc-400",
+    text: "   $ npm run typecheck",
+    color: "text-muted-foreground",
   },
   {
-    text: "[17:44:43] [-fuet063] ℹ Generating file tree...",
-    color: "text-zinc-400",
+    text: "   ✓ Completed (2340ms)",
+    color: "text-emerald",
   },
   {
-    text: "[17:44:43] [-fuet063] ℹ AI is analyzing codebase...",
-    color: "text-purple-400",
+    text: "✍️  Writing auth.controller.ts",
+    color: "text-cyan",
   },
   {
-    text: "[17:45:35] [-fuet063] ✓ Codebase reindexed successfully",
-    color: "text-green-400",
+    text: "   src/auth/auth.controller.ts (4.2 KB)",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "   ✓ Completed (54ms)",
+    color: "text-emerald",
+  },
+  {
+    text: '🔍 Searching for "endpoint" in src/',
+    color: "text-cyan",
+  },
+  {
+    text: "   Found 12 matches",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "⚡ Running npm test -- auth",
+    color: "text-cyan",
+  },
+  {
+    text: "   ✓ Completed (5120ms) — Exit code: 0",
+    color: "text-emerald",
+  },
+  { text: "", color: "" },
+  {
+    text: "  ✔ Completed: task-a1b2c3",
+    color: "text-emerald",
+  },
+  {
+    text: "  ✔ Completed: task-d4e5f6",
+    color: "text-emerald",
+  },
+  {
+    text: "  ✔ Completed: task-g7h8i9",
+    color: "text-emerald",
+  },
+  { text: "", color: "" },
+  {
+    text: "All tasks completed. 3 PRs created.",
+    color: "text-cyan",
   },
 ];
 
 export function TerminalDemo() {
-  const [activeStep, setActiveStep] = useState(0);
+  const [visibleLines, setVisibleLines] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % (steps.length + 6));
-    }, 800);
-    return () => clearInterval(timer);
+    const startAnimation = () => {
+      setVisibleLines(0);
+      timerRef.current = setInterval(() => {
+        setVisibleLines((prev) => {
+          if (prev >= lines.length) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            timerRef.current = null;
+            setTimeout(startAnimation, 3000);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 400);
+    };
+
+    startAnimation();
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to scroll the terminal to the bottom when the visible lines change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [visibleLines]);
+
   return (
-    <div className="rounded-xl border border-border bg-black/95 shadow-2xl overflow-hidden font-mono text-xs md:text-sm leading-relaxed w-full max-w-[95vw] md:max-w-2xl mx-auto backdrop-blur-sm h-[340px] md:h-[380px] flex flex-col relative translate-z-0">
-      <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 border-b border-border/20 bg-muted/10 shrink-0 z-10 relative">
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="relative rounded-xl sm:rounded-2xl border border-border/50 bg-[#040406] overflow-hidden font-mono text-[11px] sm:text-[12px] md:text-[14px] leading-relaxed w-full mx-auto flex flex-col"
+    >
+      {/* Title bar */}
+      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/20 bg-[#080810] shrink-0 relative z-10">
         <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/50" />
-          <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-500/50" />
-          <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500/50" />
+          <div className="w-2.5 h-2.5 rounded-full bg-rose/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber/60" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald/60" />
         </div>
-        <div className="flex-1 text-center text-[10px] md:text-xs text-muted-foreground flex items-center justify-center gap-2">
+        <div className="flex-1 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-1.5 font-sans">
           <Terminal className="w-3 h-3" />
-          locus-cli — agent-worker
+          locus run &mdash; 3 agents
         </div>
       </div>
-      <div className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-x-0 bottom-0 p-3 md:p-6 flex flex-col justify-end overflow-x-auto">
-          {steps.slice(0, activeStep + 1).map((step, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className={cn("mb-1 whitespace-nowrap", step.color)}
-            >
-              {i === 0 && (
-                <span className="opacity-50 mr-2 select-none">$</span>
-              )}
-              {step.text}
-            </motion.div>
-          ))}
+
+      {/* Terminal content */}
+      <div
+        ref={scrollRef}
+        className="h-[320px] sm:h-[360px] md:h-[440px] overflow-hidden p-3 sm:p-5 md:p-6 relative z-10 bg-[#040406]"
+      >
+        {lines.slice(0, visibleLines).map((line, i) => (
           <motion.div
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ repeat: Infinity, duration: 0.8 }}
-            className="w-1.5 h-3 md:w-2 md:h-4 bg-primary mt-1 shrink-0"
-          />
+            key={`line-${i}`}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.15 }}
+            className={cn(
+              "whitespace-pre leading-[1.7]",
+              line.color,
+              !line.text && "h-3"
+            )}
+          >
+            {line.prefix && (
+              <span className="text-violet/50 select-none">{line.prefix}</span>
+            )}
+            {line.text}
+          </motion.div>
+        ))}
+
+        {/* Blinking cursor */}
+        <div className="flex items-center mt-1">
+          <span className="text-violet/50 mr-1 select-none">
+            {visibleLines >= lines.length ? "$ " : ""}
+          </span>
+          <div className="w-[7px] h-[15px] bg-violet/70 cursor-blink" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,116 +1,142 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
-  Album,
   BrainCircuit,
   Code2,
-  Database,
+  GitBranch,
+  Lock,
+  MessageSquare,
   ShieldCheck,
 } from "lucide-react";
 
-const features = [
+interface Feature {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  color: string;
+  glowColor: string;
+}
+
+const features: Feature[] = [
+  {
+    title: "Git Worktree Isolation",
+    description:
+      "Each agent works in its own isolated git worktree. Parallel tasks never conflict. Changes are committed and pushed automatically.",
+    icon: GitBranch,
+    color: "text-cyan",
+    glowColor: "group-hover:shadow-cyan/10",
+  },
   {
     title: "Secure Local Execution",
     description:
-      "Agents run securely on your machine. Plan and coordinate in the cloud while keeping your codebase private.",
-    icon: Database,
-    className: "md:col-span-2 md:row-span-2",
-  },
-  {
-    title: "AI-Native Kanban",
-    description:
-      "Tasks designed for agents. Detailed acceptance criteria and context-aware assignment.",
-    icon: Album,
-    className: "md:col-span-1",
-  },
-  {
-    title: "Documentation Hub",
-    description:
-      "Markdown docs that live with your code. Agents read them to understand the system.",
-    icon: Code2,
-    className: "md:col-span-1",
-  },
-  {
-    title: "Secure CI Runtime",
-    description:
-      "Agents can run approved commands (test, lint, build) to verify their own code.",
-    icon: ShieldCheck,
-    className: "md:col-span-1",
+      "Your code never leaves your machine. Agents run locally while coordinating tasks through the cloud dashboard.",
+    icon: Lock,
+    color: "text-violet",
+    glowColor: "group-hover:shadow-violet/10",
   },
   {
     title: "Sprint Mindmaps",
     description:
-      "Agents generate high-level technical plans for sprints to ensure cohesive implementation across tasks.",
+      "Agents generate high-level technical plans before coding. Every task in a sprint is architecturally coherent.",
     icon: BrainCircuit,
-    className: "md:col-span-2",
+    color: "text-amber",
+    glowColor: "group-hover:shadow-amber/10",
+  },
+  {
+    title: "Codebase Intelligence",
+    description:
+      "Semantic indexing gives agents deep understanding of your project structure, patterns, and conventions.",
+    icon: Code2,
+    color: "text-emerald",
+    glowColor: "group-hover:shadow-emerald/10",
+  },
+  {
+    title: "Built-in CI Runtime",
+    description:
+      "Agents run tests, linters, and builds to verify their own code before pushing. No broken commits.",
+    icon: ShieldCheck,
+    color: "text-rose",
+    glowColor: "group-hover:shadow-rose/10",
+  },
+  {
+    title: "Telegram Control",
+    description:
+      "Start agents, review PRs, run git commands, and manage your entire workflow remotely from Telegram.",
+    icon: MessageSquare,
+    color: "text-cyan",
+    glowColor: "group-hover:shadow-cyan/10",
   },
 ];
 
-const container = {
+const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+  },
 };
 
 export function FeatureGrid() {
   return (
-    <section className="py-24 bg-secondary/5 relative overflow-hidden">
-      <div className="container px-4 md:px-6 mx-auto">
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-3xl font-bold tracking-tight mb-4"
-          >
-            Built for AI Engineering Teams
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-muted-foreground max-w-2xl mx-auto"
-          >
-            Locus provides the platform for teams to plan, coordinate, and
-            execute with AI agents.
-          </motion.p>
-        </div>
+    <section id="features" className="py-28 relative overflow-hidden">
+      {/* Background mesh */}
+      <div className="mesh-gradient-features absolute inset-0" />
+
+      <div className="max-w-5xl px-6 mx-auto relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
+        >
+          <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-4">
+            Why Locus
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
+            Built for teams that ship with AI agents
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+            Everything you need to plan, dispatch, and verify AI-generated code
+            at production quality.
+          </p>
+        </motion.div>
 
         <motion.div
-          variants={container}
+          variants={containerVariants}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {features.map((feature, i) => (
             <motion.div
               key={i}
-              variants={item}
-              className={`group relative overflow-hidden rounded-2xl border border-border/50 bg-background/50 p-8 hover:bg-background/80 transition-colors ${feature.className}`}
+              variants={itemVariants}
+              className="relative bg-[#060609] rounded-2xl p-7 md:p-8 border border-border/30"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-4 group-hover:scale-110 transition-transform">
-                <feature.icon className="h-6 w-6" />
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.06] ${feature.color} mb-5`}
+              >
+                <feature.icon className="h-5 w-5" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-[15px] font-semibold mb-2 tracking-tight text-white">
+                {feature.title}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
-
-              {/* Decorative gradient blob */}
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
             </motion.div>
           ))}
         </motion.div>

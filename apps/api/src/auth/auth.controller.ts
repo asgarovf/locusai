@@ -12,6 +12,7 @@ import {
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Req,
@@ -94,6 +95,18 @@ export class AuthController {
       orgId: authUser.orgId,
       apiKeyName: authUser.apiKeyName,
     };
+  }
+
+  @Delete("account")
+  async deleteAccount(@CurrentUser() authUser: AuthenticatedUser) {
+    if (!isJwtUser(authUser)) {
+      throw new UnauthorizedException(
+        "This endpoint requires user authentication, not API key"
+      );
+    }
+
+    await this.authService.deleteAccount(authUser.id);
+    return { success: true };
   }
 
   // ============================================================================

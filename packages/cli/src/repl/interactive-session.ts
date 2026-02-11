@@ -6,6 +6,7 @@ import {
   c,
   createAiRunner,
   HistoryManager,
+  KnowledgeBase,
   PromptBuilder,
 } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "../display/execution-stats";
@@ -35,6 +36,7 @@ export class InteractiveSession {
     content: string;
   }> = [];
   private historyManager: HistoryManager;
+  private knowledgeBase: KnowledgeBase;
   private currentSession: ConversationSession;
   private projectPath: string;
   private model: string;
@@ -53,6 +55,7 @@ export class InteractiveSession {
     this.promptBuilder = new PromptBuilder(options.projectPath);
     this.renderer = new ProgressRenderer({ animated: true });
     this.historyManager = new HistoryManager(options.projectPath);
+    this.knowledgeBase = new KnowledgeBase(options.projectPath);
     this.projectPath = options.projectPath;
     this.model = options.model;
     this.provider = options.provider;
@@ -260,6 +263,19 @@ export class InteractiveSession {
 
       // Auto-save session after each exchange
       this.saveSession();
+
+      // Update progress.md
+      try {
+        const progressTitle =
+          prompt.length > 80 ? `${prompt.slice(0, 80)}...` : prompt;
+        this.knowledgeBase.updateProgress({
+          type: "exec_completed",
+          title: progressTitle,
+          details: `Mode: interactive | Session: ${this.currentSession.id}`,
+        });
+      } catch {
+        // Progress update is best-effort
+      }
     } catch (error) {
       console.error(
         c.error(

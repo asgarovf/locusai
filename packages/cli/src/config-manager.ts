@@ -34,7 +34,7 @@ No sprints started yet.
 
 const LOCUS_MD_TEMPLATE = `## Planning First
 
-Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Delete the planning .md files after the execution.
+Complex tasks must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Delete the planning .md files after the execution.
 
 ## Code
 

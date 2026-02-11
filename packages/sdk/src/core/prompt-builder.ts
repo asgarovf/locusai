@@ -130,8 +130,7 @@ export class PromptBuilder {
     prompt += `## Instructions
 1. Complete this task.
 2. **Artifact Management**: If you create any high-level documentation (PRDs, technical drafts, architecture docs), you MUST save them in \`.locus/artifacts/\`. Do NOT create them in the root directory.
-3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-4. When finished successfully, output: <promise>COMPLETE</promise>\n`;
+3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).`;
     return prompt;
   }
 
@@ -188,8 +187,7 @@ export class PromptBuilder {
 
     prompt += `## Instructions
 1. Execute the prompt based on the provided project context.
-2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-3. When finished successfully, output: <promise>COMPLETE</promise>\n`;
+2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).`;
 
     return prompt;
   }

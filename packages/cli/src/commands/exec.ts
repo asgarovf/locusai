@@ -3,6 +3,7 @@ import {
   c,
   createAiRunner,
   DEFAULT_MODEL,
+  KnowledgeBase,
   PromptBuilder,
 } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "../display/execution-stats";
@@ -99,6 +100,9 @@ export async function execCommand(args: string[]): Promise<void> {
 
   const builder = new PromptBuilder(projectPath);
   const fullPrompt = await builder.buildGenericPrompt(promptInput);
+  const knowledgeBase = new KnowledgeBase(projectPath);
+  const progressTitle =
+    promptInput.length > 80 ? `${promptInput.slice(0, 80)}...` : promptInput;
 
   // Add newlines to prevent overlap with banner
   console.log("");
@@ -160,6 +164,15 @@ export async function execCommand(args: string[]): Promise<void> {
             renderer.finalize();
             const errorStats = statsTracker.finalize();
             renderer.showSummary(errorStats);
+            try {
+              knowledgeBase.updateProgress({
+                type: "exec_completed",
+                title: progressTitle,
+                details: `Status: failed`,
+              });
+            } catch {
+              // Progress update is best-effort
+            }
             console.error(
               `\n  ${c.error("✖")} ${c.error("Execution failed!")}\n`
             );
@@ -177,8 +190,27 @@ export async function execCommand(args: string[]): Promise<void> {
       console.log(result);
     }
 
+    try {
+      knowledgeBase.updateProgress({
+        type: "exec_completed",
+        title: progressTitle,
+        details: `Mode: non-interactive`,
+      });
+    } catch {
+      // Progress update is best-effort
+    }
+
     console.log(`\n  ${c.success("✔")} ${c.success("Execution finished!")}\n`);
   } catch (error) {
+    try {
+      knowledgeBase.updateProgress({
+        type: "exec_completed",
+        title: progressTitle,
+        details: `Status: failed`,
+      });
+    } catch {
+      // Progress update is best-effort
+    }
     console.error(
       `\n  ${c.error("✖")} ${c.error("Execution failed:")} ${c.red(error instanceof Error ? error.message : String(error))}\n`
     );

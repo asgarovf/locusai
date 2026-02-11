@@ -108,8 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Fetch workspaces to ensure they're loaded before navigation
     await refreshUser();
 
-    // If user doesn't have a workspace, redirect to create one
-    if (!userData.workspaceId) {
+    // If user hasn't completed onboarding or doesn't have a workspace, redirect to onboarding
+    if (!userData.workspaceId || !userData.onboardingCompleted) {
       router.push("/onboarding/workspace");
     } else {
       router.push("/");

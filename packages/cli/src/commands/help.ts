@@ -58,6 +58,6 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus telegram setup")}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 
-  For more information, visit: ${c.underline("https://locusai.dev/docs")}
+  For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);
 }

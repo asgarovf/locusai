@@ -1,18 +1,52 @@
 "use client";
 
-import { ImageIcon, Mail, User as UserIcon } from "lucide-react";
-import { Suspense } from "react";
+import { ImageIcon, Mail, Trash2, User as UserIcon } from "lucide-react";
+import { Suspense, useState } from "react";
 import { PageLayout } from "@/components/PageLayout";
 import { SettingItem } from "@/components/settings/SettingItem";
 import { SettingSection } from "@/components/settings/SettingSection";
-import { Avatar, Button, Input, Spinner, showToast } from "@/components/ui";
+import {
+  Avatar,
+  Button,
+  Input,
+  Modal,
+  Spinner,
+  showToast,
+} from "@/components/ui";
+import { useAuth } from "@/context";
 import { useSafeAuth } from "@/context/AuthContext";
+import { locusClient } from "@/lib/api-client";
 
 function ProfileContent() {
   const { user } = useSafeAuth();
+  const { logout } = useAuth();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSave = () => {
     showToast.success("Profile updated successfully");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation.toLowerCase() !== "delete my account") {
+      showToast.error('Please type "delete my account" to confirm');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await locusClient.auth.deleteAccount();
+      showToast.success("Account deleted successfully");
+      setIsDeleteModalOpen(false);
+      logout();
+    } catch (error) {
+      showToast.error(
+        error instanceof Error ? error.message : "Failed to delete account"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -75,7 +109,80 @@ function ProfileContent() {
         <div className="flex justify-end pt-4">
           <Button onClick={handleSave}>Save Changes</Button>
         </div>
+
+        {/* Danger Zone */}
+        <SettingSection title="Danger Zone" titleClassName="text-destructive">
+          <div className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="font-medium text-foreground">Delete Account</h4>
+                <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                  Permanently delete your account and all associated data. This
+                  action cannot be undone.
+                </p>
+              </div>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setIsDeleteModalOpen(true)}
+              >
+                <Trash2 size={18} />
+                Delete Account
+              </Button>
+            </div>
+          </div>
+        </SettingSection>
       </div>
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">
+              Delete Account
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              This will permanently delete your account, all workspaces you own,
+              and all associated data. This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Type &quot;delete my account&quot; to confirm
+            </label>
+            <Input
+              placeholder="delete my account"
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              disabled={isDeleting}
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteAccount}
+              disabled={
+                isDeleting ||
+                deleteConfirmation.toLowerCase() !== "delete my account"
+              }
+              isLoading={isDeleting}
+            >
+              Delete Account
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </PageLayout>
   );
 }

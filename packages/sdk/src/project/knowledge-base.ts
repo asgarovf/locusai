@@ -16,7 +16,8 @@ export interface ProgressEvent {
     | "blocker"
     | "pr_opened"
     | "pr_reviewed"
-    | "pr_merged";
+    | "pr_merged"
+    | "exec_completed";
   title: string;
   details?: string;
   timestamp?: Date;
@@ -77,6 +78,9 @@ export class KnowledgeBase {
         break;
       case "pr_merged":
         entry = `- [x] ${event.title} — PR merged ${timestamp}`;
+        break;
+      case "exec_completed":
+        entry = `- [x] ${event.title} — exec ${timestamp}`;
         break;
     }
 

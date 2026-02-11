@@ -93,6 +93,18 @@ export class AuthService {
       orgId = workspaces[0]?.orgId ?? undefined;
     }
 
+    // If no orgId found from workspaces, fetch from memberships directly
+    if (!orgId) {
+      const memberships = await this.dataSource.query(
+        `SELECT org_id as "orgId" FROM memberships
+         WHERE user_id = $1
+         ORDER BY created_at ASC
+         LIMIT 1`,
+        [user.id]
+      );
+      orgId = memberships[0]?.orgId ?? undefined;
+    }
+
     return {
       token: this.jwtService.sign(payload),
       user: {
@@ -248,12 +260,6 @@ export class AuthService {
         });
         await manager.save(org);
 
-        const workspace = manager.create(Workspace, {
-          orgId: org.id,
-          name: "General",
-        });
-        await manager.save(workspace);
-
         const newUser = manager.create(User, {
           email: googleUser.email,
           name: name,
@@ -300,5 +306,61 @@ export class AuthService {
 
   async getUserById(userId: string): Promise<User | null> {
     return this.usersService.findById(userId);
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      // Find all orgs where this user is a member
+      const memberships = await manager.find(Membership, {
+        where: { userId },
+      });
+
+      for (const membership of memberships) {
+        if (membership.role === MembershipRole.OWNER) {
+          const ownerCount = await manager.count(Membership, {
+            where: { orgId: membership.orgId, role: MembershipRole.OWNER },
+          });
+
+          if (ownerCount <= 1) {
+            // Check if there are other members in the org
+            const memberCount = await manager.count(Membership, {
+              where: { orgId: membership.orgId },
+            });
+
+            if (memberCount <= 1) {
+              // Sole member — delete the entire org (cascades workspaces, api keys)
+              await manager.delete(Organization, membership.orgId);
+            } else {
+              // Other members exist — promote the earliest-joined member to owner
+              const earliestMember = await manager.findOne(Membership, {
+                where: { orgId: membership.orgId },
+                order: { createdAt: "ASC" },
+              });
+
+              // earliestMember could be the current user; find the next one
+              if (earliestMember && earliestMember.userId === userId) {
+                const nextMember = await manager
+                  .createQueryBuilder(Membership, "m")
+                  .where("m.org_id = :orgId", { orgId: membership.orgId })
+                  .andWhere("m.user_id != :userId", { userId })
+                  .orderBy("m.created_at", "ASC")
+                  .getOne();
+
+                if (nextMember) {
+                  nextMember.role = MembershipRole.OWNER;
+                  await manager.save(nextMember);
+                }
+              } else if (earliestMember) {
+                earliestMember.role = MembershipRole.OWNER;
+                await manager.save(earliestMember);
+              }
+            }
+          }
+        }
+      }
+
+      // Delete the user (cascades remaining memberships)
+      await manager.delete(User, userId);
+    });
   }
 }
