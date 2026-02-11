@@ -4,6 +4,7 @@ import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
 import type { ExecEventEmitter } from "../exec/event-emitter.js";
 import type { StreamChunk, ToolParams } from "../exec/types.js";
 import { c } from "../utils/colors.js";
+import { getAugmentedEnv } from "../utils/resolve-bin.js";
 import { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
@@ -116,11 +117,10 @@ export class ClaudeRunner implements AiRunner {
       SANDBOX_SETTINGS,
     ];
 
-    const env = {
-      ...process.env,
+    const env = getAugmentedEnv({
       FORCE_COLOR: "1",
       TERM: "xterm-256color",
-    };
+    });
 
     // Emit session started event
     this.eventEmitter?.emitSessionStarted({
@@ -419,11 +419,10 @@ export class ClaudeRunner implements AiRunner {
         SANDBOX_SETTINGS,
       ];
 
-      const env = {
-        ...process.env,
+      const env = getAugmentedEnv({
         FORCE_COLOR: "1",
         TERM: "xterm-256color",
-      };
+      });
 
       const claude = spawn("claude", args, {
         cwd: this.projectPath,

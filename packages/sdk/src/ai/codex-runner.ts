@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
 import type { StreamChunk } from "../exec/types.js";
+import { getAugmentedEnv } from "../utils/resolve-bin.js";
 import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
@@ -57,7 +58,7 @@ export class CodexRunner implements AiRunner {
     const codex = spawn("codex", args, {
       cwd: this.projectPath,
       stdio: ["pipe", "pipe", "pipe"],
-      env: process.env,
+      env: getAugmentedEnv(),
       shell: false,
     });
 
@@ -170,7 +171,7 @@ export class CodexRunner implements AiRunner {
       const codex = spawn("codex", args, {
         cwd: this.projectPath,
         stdio: ["pipe", "pipe", "pipe"],
-        env: process.env,
+        env: getAugmentedEnv(),
         shell: false,
       });
 
