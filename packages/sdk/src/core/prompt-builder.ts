@@ -1,11 +1,15 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
 import { getLocusPath } from "./config.js";
 
 export class PromptBuilder {
   constructor(private projectPath: string) {}
 
-  async build(task: Task): Promise<string> {
+  async build(
+    task: Task,
+    options: { taskContext?: string } = {}
+  ): Promise<string> {
     let prompt = `# Task: ${task.title}\n\n`;
 
     const roleText = this.roleToText(task.assigneeRole);
@@ -23,61 +27,87 @@ export class PromptBuilder {
       prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
     }
 
-    // 1. Agent Instructions (CLAUDE.md)
-    const claudeMdPath = getLocusPath(this.projectPath, "contextFile");
-    if (existsSync(claudeMdPath)) {
+    // Parse Server Context if available
+    let serverContext: Record<string, unknown> | null = null;
+    if (options.taskContext) {
       try {
-        const instructions = readFileSync(claudeMdPath, "utf-8");
-        prompt += `## Agent Instructions\n${instructions}\n\n`;
-      } catch (err) {
-        console.warn(`Warning: Could not read CLAUDE.md: ${err}`);
+        serverContext = JSON.parse(options.taskContext);
+      } catch {
+        serverContext = { context: options.taskContext };
       }
     }
 
-    // 2. Project Context (from .locus/project/context.md)
-    const projectContextPath = getLocusPath(
-      this.projectPath,
-      "projectContextFile"
-    );
-
-    if (existsSync(projectContextPath)) {
+    // 1. Project Context (Smart Merge)
+    const contextPath = getLocusPath(this.projectPath, "contextFile");
+    let hasLocalContext = false;
+    if (existsSync(contextPath)) {
       try {
-        const context = readFileSync(projectContextPath, "utf-8");
-        prompt += `## Project Context\n${context}\n\n`;
-      } catch (err) {
-        console.warn(`Warning: Could not read project context: ${err}`);
-      }
-    }
-
-    // 3. Current Progress (from .locus/project/progress.md)
-    const progressPath = getLocusPath(this.projectPath, "projectProgressFile");
-    if (existsSync(progressPath)) {
-      try {
-        const progress = readFileSync(progressPath, "utf-8");
-        if (progress.trim().length > 20) {
-          prompt += `## Current Progress\n${progress}\n\n`;
+        const context = readFileSync(contextPath, "utf-8");
+        if (context.trim().length > 20) {
+          prompt += `## Project Context (Local)\n${context}\n\n`;
+          hasLocalContext = true;
         }
       } catch (err) {
-        console.warn(`Warning: Could not read project progress: ${err}`);
+        console.warn(`Warning: Could not read context file: ${err}`);
       }
     }
 
-    // 4. Skills
-    prompt += this.getSkillsInfo();
+    // Fallback to README if local context is missing or thin
+    if (!hasLocalContext) {
+      const fallback = this.getFallbackContext();
+      if (fallback) {
+        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
+      }
+    }
 
-    // 5. Project Knowledge Base Docs
+    // Add Server Context (Selective)
+    if (serverContext) {
+      prompt += `## Project Context (Server)\n`;
+      const project = serverContext.project as
+        | { name?: string; techStack?: string[] }
+        | undefined;
+      if (project) {
+        prompt += `- Project: ${project.name || "Unknown"}\n`;
+        if (!hasLocalContext && project.techStack?.length) {
+          prompt += `- Tech Stack: ${project.techStack.join(", ")}\n`;
+        }
+      }
+      if (serverContext.context) {
+        prompt += `\n${serverContext.context}\n`;
+      }
+      prompt += `\n`;
+    }
+
+    // 2. Project Awareness (Structure)
+    prompt += this.getProjectStructure();
+
+    // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Documents: \`.locus/documents/\`\n`;
+    prompt += `- Artifacts: \`.locus/artifacts\`\n`;
+    prompt += `- Documents: \`.locus/documents\`\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
-    // 6. Codebase Index context
+    // 4. Codebase Index context
     const indexPath = getLocusPath(this.projectPath, "indexFile");
     if (existsSync(indexPath)) {
       prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
     }
 
-    // 7. Add Checklist
+    // 5. Add Documents (Optimized)
+    if (task.docs && task.docs.length > 0) {
+      prompt += `## Attached Documents (Summarized)\n`;
+      prompt += `> Full content available on server. Rely on Task Description for specific requirements.\n\n`;
+      for (const doc of task.docs) {
+        const content = doc.content || "";
+        const limit = 800;
+        const preview = content.slice(0, limit);
+        const isTruncated = content.length > limit;
+        prompt += `### Doc: ${doc.title}\n${preview}${isTruncated ? "\n...(truncated)..." : ""}\n\n`;
+      }
+    }
+
+    // 6. Add Checklist
     if (task.acceptanceChecklist && task.acceptanceChecklist.length > 0) {
       prompt += `## Acceptance Criteria\n`;
       for (const item of task.acceptanceChecklist) {
@@ -86,9 +116,9 @@ export class PromptBuilder {
       prompt += "\n";
     }
 
-    // 8. Add Comments & Feedback
+    // 7. Add Comments & Feedback
     if (task.comments && task.comments.length > 0) {
-      const comments = task.comments.slice(0, 3); // Limit to 3 recent comments
+      const comments = task.comments.slice(0, 3);
       prompt += `## Task History & Feedback\n`;
       prompt += `Review the following comments for context or rejection feedback:\n\n`;
       for (const comment of comments) {
@@ -98,9 +128,10 @@ export class PromptBuilder {
     }
 
     prompt += `## Instructions
-1. Complete this task. 
+1. Complete this task.
 2. **Artifact Management**: If you create any high-level documentation (PRDs, technical drafts, architecture docs), you MUST save them in \`.locus/artifacts/\`. Do NOT create them in the root directory.
-3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).\n`;
+3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
+4. When finished successfully, output: <promise>COMPLETE</promise>\n`;
     return prompt;
   }
 
@@ -116,53 +147,40 @@ export class PromptBuilder {
       prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
     }
 
-    // 1. Agent Instructions (CLAUDE.md)
-    const claudeMdPath = getLocusPath(this.projectPath, "contextFile");
-    if (existsSync(claudeMdPath)) {
+    // 1. Project Context (Smart Merge)
+    const contextPath = getLocusPath(this.projectPath, "contextFile");
+    let hasLocalContext = false;
+    if (existsSync(contextPath)) {
       try {
-        const instructions = readFileSync(claudeMdPath, "utf-8");
-        prompt += `## Agent Instructions\n${instructions}\n\n`;
+        const context = readFileSync(contextPath, "utf-8");
+        if (context.trim().length > 20) {
+          prompt += `## Project Context (Local)\n${context}\n\n`;
+          hasLocalContext = true;
+        }
       } catch (err) {
-        console.warn(`Warning: Could not read CLAUDE.md: ${err}`);
+        console.warn(`Warning: Could not read context file: ${err}`);
       }
     }
 
-    // 2. Project Context (from .locus/project/context.md)
-    const projectContextPath = getLocusPath(
-      this.projectPath,
-      "projectContextFile"
-    );
-
-    if (existsSync(projectContextPath)) {
-      try {
-        const context = readFileSync(projectContextPath, "utf-8");
-        prompt += `## Project Context\n${context}\n\n`;
-      } catch (err) {
-        console.warn(`Warning: Could not read project context: ${err}`);
+    // Fallback to README if local context is missing or thin
+    if (!hasLocalContext) {
+      const fallback = this.getFallbackContext();
+      if (fallback) {
+        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
       }
     }
 
-    // 3. Current Progress (from .locus/project/progress.md)
-    const progressPath = getLocusPath(this.projectPath, "projectProgressFile");
-    if (existsSync(progressPath)) {
-      try {
-        const progress = readFileSync(progressPath, "utf-8");
-        prompt += `## Current Progress\n${progress}\n\n`;
-      } catch (err) {
-        console.warn(`Warning: Could not read project progress: ${err}`);
-      }
-    }
+    // 2. Project Awareness (Structure)
+    prompt += this.getProjectStructure();
 
-    // 4. Skills
-    prompt += this.getSkillsInfo();
-
-    // 5. Project Knowledge Base (Docs & Artifacts)
+    // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Documents: \`.locus/documents/\`\n`;
+    prompt += `- Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)\n`;
+    prompt += `- Documents: \`.locus/documents\` (synced from cloud)\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
-    // 6. Codebase Index context
+    // 4. Codebase Index context
     const indexPath = getLocusPath(this.projectPath, "indexFile");
     if (existsSync(indexPath)) {
       prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
@@ -170,7 +188,8 @@ export class PromptBuilder {
 
     prompt += `## Instructions
 1. Execute the prompt based on the provided project context.
-2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...)\n`;
+2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
+3. When finished successfully, output: <promise>COMPLETE</promise>\n`;
 
     return prompt;
   }
@@ -187,8 +206,44 @@ export class PromptBuilder {
     return null;
   }
 
-  private getSkillsInfo(): string {
-    return `## Available Agent Skills are located at .agent/skills, .claude/skills, .cursor/skills, .codex/skills, .gemini/skills directories.\n\n`;
+  private getFallbackContext(): string {
+    const readmePath = join(this.projectPath, "README.md");
+    if (existsSync(readmePath)) {
+      try {
+        const content = readFileSync(readmePath, "utf-8");
+        const limit = 1000;
+        return (
+          content.slice(0, limit) +
+          (content.length > limit ? "\n...(truncated)..." : "")
+        );
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }
+
+  private getProjectStructure(): string {
+    try {
+      const entries = readdirSync(this.projectPath);
+      const folders = entries.filter((e) => {
+        if (e.startsWith(".") || e === "node_modules") return false;
+        try {
+          return statSync(join(this.projectPath, e)).isDirectory();
+        } catch {
+          return false;
+        }
+      });
+      if (folders.length === 0) return "";
+      let structure = `## Project Structure\n`;
+      structure += `Key directories in this project:\n`;
+      for (const folder of folders) {
+        structure += `- \`${folder}/\`\n`;
+      }
+      return `${structure}\n`;
+    } catch {
+      return "";
+    }
   }
 
   roleToText(role: Task["assigneeRole"]): string | null {

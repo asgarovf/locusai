@@ -39,7 +39,9 @@ export async function tasksCommand(
 
   if (!config.apiKey) {
     await ctx.reply(
-      formatError("API key is required for /tasks. Run: locus config setup --api-key <KEY>"),
+      formatError(
+        "API key is required for /tasks. Run: locus config setup --api-key <KEY>"
+      ),
       { parse_mode: "HTML" }
     );
     return;
@@ -127,7 +129,9 @@ export async function rejectTaskCommand(
 
   if (!config.apiKey) {
     await ctx.reply(
-      formatError("API key is required for /rejecttask. Run: locus config setup --api-key <KEY>"),
+      formatError(
+        "API key is required for /rejecttask. Run: locus config setup --api-key <KEY>"
+      ),
       { parse_mode: "HTML" }
     );
     return;

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome lint .",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "@locusai/shared": "workspace:*",

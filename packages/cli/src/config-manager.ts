@@ -6,7 +6,6 @@ import {
   LOCUS_GITIGNORE_PATTERNS,
   LOCUS_SCHEMAS,
 } from "@locusai/sdk/node";
-import { DEFAULT_SKILLS } from "./templates/skills";
 
 const LOCUS_GITIGNORE_MARKER = "# Locus AI";
 
@@ -33,7 +32,7 @@ const DEFAULT_PROGRESS_MD = `# Project Progress
 No sprints started yet.
 `;
 
-const CLAUDE_MD_TEMPLATE = ` ## Planning First
+const LOCUS_MD_TEMPLATE = `## Planning First
 
 Every task must be planned before writing code. Create \`.locus/plans/<task-name>.md\` with: goal, approach, affected files, and acceptance criteria. Delete the planning .md files after the execution.
 
@@ -129,14 +128,7 @@ export class ConfigManager {
   async init(version: string): Promise<void> {
     const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
     const locusConfigPath = getLocusPath(this.projectPath, "configFile");
-    const claudeMdPath = getLocusPath(this.projectPath, "contextFile");
-
-    // 1. Create CLAUDE.md if it doesn't exist
-    if (!existsSync(claudeMdPath)) {
-      writeFileSync(claudeMdPath, CLAUDE_MD_TEMPLATE);
-    }
-
-    // 2. Create .locus directory, subdirectories, and config
+    // 1. Create .locus directory, subdirectories, and config
     if (!existsSync(locusConfigDir)) {
       mkdirSync(locusConfigDir, { recursive: true });
     }
@@ -175,6 +167,12 @@ export class ConfigManager {
       writeFileSync(progressFilePath, DEFAULT_PROGRESS_MD);
     }
 
+    // Create LOCUS.md agent instructions file
+    const locusMdPath = getLocusPath(this.projectPath, "contextFile");
+    if (!existsSync(locusMdPath)) {
+      writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
+    }
+
     if (!existsSync(locusConfigPath)) {
       const config: LocusProjectConfig = {
         $schema: LOCUS_SCHEMAS.config,
@@ -185,32 +183,7 @@ export class ConfigManager {
       writeFileSync(locusConfigPath, JSON.stringify(config, null, 2));
     }
 
-    // 3. Create skills directories and default skills (non-destructive)
-    const skillLocations = [
-      LOCUS_CONFIG.agentSkillsDir, // .agent/skills
-      ".cursor/skills",
-      ".claude/skills",
-      ".codex/skills",
-      ".gemini/skills",
-    ];
-
-    for (const location of skillLocations) {
-      const skillsDir = join(this.projectPath, location);
-      if (!existsSync(skillsDir)) {
-        mkdirSync(skillsDir, { recursive: true });
-      }
-
-      // Initialize default skills from templates if they don't already exist
-      for (const skill of DEFAULT_SKILLS) {
-        const skillPath = join(skillsDir, skill.name);
-        if (!existsSync(skillPath)) {
-          mkdirSync(skillPath, { recursive: true });
-          writeFileSync(join(skillPath, "SKILL.md"), skill.content);
-        }
-      }
-    }
-
-    // 4. Update .gitignore with locus-specific patterns
+    // 3. Update .gitignore with locus-specific patterns
     updateGitignore(this.projectPath);
   }
 
@@ -235,7 +208,6 @@ export class ConfigManager {
    * This is a non-destructive operation that:
    * - Updates the version in config.json
    * - Ensures all required directories exist
-   * - Creates any missing default skills
    * - Updates .gitignore with any missing patterns
    *
    * @returns Object indicating what was updated
@@ -244,19 +216,17 @@ export class ConfigManager {
     versionUpdated: boolean;
     previousVersion: string | null;
     directoriesCreated: string[];
-    skillsCreated: string[];
     gitignoreUpdated: boolean;
   }> {
     const result = {
       versionUpdated: false,
       previousVersion: null as string | null,
       directoriesCreated: [] as string[],
-      skillsCreated: [] as string[],
       gitignoreUpdated: false,
     };
 
     const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
-    const claudeMdPath = getLocusPath(this.projectPath, "contextFile");
+    const locusMdPath = getLocusPath(this.projectPath, "contextFile");
 
     // 1. Update version and ensure $schema in config
     const config = this.loadConfig();
@@ -288,10 +258,10 @@ export class ConfigManager {
       }
     }
 
-    // 2. Ensure CLAUDE.md exists
-    if (!existsSync(claudeMdPath)) {
-      writeFileSync(claudeMdPath, CLAUDE_MD_TEMPLATE);
-      result.directoriesCreated.push("CLAUDE.md");
+    // 2. Ensure LOCUS.md exists
+    if (!existsSync(locusMdPath)) {
+      writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
+      result.directoriesCreated.push(".locus/LOCUS.md");
     }
 
     // 3. Ensure .locus directory and subdirectories exist
@@ -331,34 +301,7 @@ export class ConfigManager {
       result.directoriesCreated.push(".locus/project/progress.md");
     }
 
-    // 4. Ensure skills directories exist and have default skills
-    const skillLocations = [
-      LOCUS_CONFIG.agentSkillsDir,
-      ".cursor/skills",
-      ".claude/skills",
-      ".codex/skills",
-      ".gemini/skills",
-    ];
-
-    for (const location of skillLocations) {
-      const skillsDir = join(this.projectPath, location);
-      if (!existsSync(skillsDir)) {
-        mkdirSync(skillsDir, { recursive: true });
-        result.directoriesCreated.push(location);
-      }
-
-      // Create missing default skills
-      for (const skill of DEFAULT_SKILLS) {
-        const skillPath = join(skillsDir, skill.name);
-        if (!existsSync(skillPath)) {
-          mkdirSync(skillPath, { recursive: true });
-          writeFileSync(join(skillPath, "SKILL.md"), skill.content);
-          result.skillsCreated.push(`${location}/${skill.name}`);
-        }
-      }
-    }
-
-    // 5. Update .gitignore with any missing or outdated patterns
+    // 4. Update .gitignore with any missing or outdated patterns
     const gitignorePath = join(this.projectPath, ".gitignore");
     const gitignoreBefore = existsSync(gitignorePath)
       ? readFileSync(gitignorePath, "utf-8")

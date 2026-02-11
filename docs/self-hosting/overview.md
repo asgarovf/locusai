@@ -1,0 +1,121 @@
+---
+description: Why self-hosting Locus agents is recommended and how to get started.
+---
+
+# Why Self-Host?
+
+## The Problem with Running AI Agents Locally
+
+When you run AI coding agents like Claude or Codex on your development machine, they typically operate in **interactive mode** — you see what they're doing, approve file changes, and maintain control.
+
+But on a server, these agents need to run **autonomously**. This means:
+
+{% hint style="danger" %}
+**Claude CLI and Codex CLI skip permission prompts and run in dangerous mode by default when running non-interactively.** This means they can read, write, and execute anything on the machine without asking for approval.
+{% endhint %}
+
+This is powerful for automation, but it also means you need to control the environment carefully.
+
+---
+
+## Why Self-Host?
+
+Self-hosting gives you:
+
+### Full Control Over Your Code
+
+Your source code stays on **your infrastructure**. Locus only syncs task metadata (titles, descriptions, statuses) with the cloud — never your codebase.
+
+```mermaid
+graph LR
+    subgraph Your Server
+        Code["Source Code"]
+        Agent["AI Agent"]
+        Bot["Telegram Bot"]
+    end
+
+    subgraph Locus Cloud
+        Tasks["Task Metadata"]
+    end
+
+    Agent -->|"Reads/writes"| Code
+    Agent <-->|"Status updates only"| Tasks
+    Bot -->|"Controls"| Agent
+```
+
+### 24/7 Agent Availability
+
+With self-hosted agents, you can:
+
+* Dispatch tasks from the dashboard and have them executed automatically
+* Control everything from Telegram while away from your desk
+* Run agents around the clock without keeping your laptop open
+
+### Isolated Environment
+
+Running on a dedicated server means:
+
+* Agents can't interfere with your local development environment
+* You can limit filesystem access and network permissions
+* Crashes or runaway processes don't affect your workstation
+
+---
+
+## Security Considerations
+
+{% hint style="warning" %}
+Since AI agents run in **dangerous mode** (no permission prompts) on servers, follow these practices:
+{% endhint %}
+
+1. **Dedicated user account** — Run agents under a restricted user, not root
+2. **Repository-scoped access** — Only give agents access to the specific repository they need
+3. **GitHub token scope** — Use fine-grained tokens with minimum required permissions
+4. **Network restrictions** — Consider firewall rules to limit outbound access
+5. **Monitor logs** — Review agent output regularly via Telegram or log files
+6. **Chat ID restriction** — Always configure the Telegram bot's chat ID to restrict access to your account only
+
+---
+
+## Getting Started
+
+Locus provides automated setup scripts for:
+
+* **[Linux](linux-setup.md)** — Ubuntu/Debian with systemd services
+* **[macOS](macos-setup.md)** — macOS with LaunchAgent services
+
+### Quick Install
+
+```bash
+curl -fsSL https://locusai.dev/install.sh | bash -s -- \
+  --repo "owner/repo" \
+  --api-key "your-api-key" \
+  --gh-token "your-github-token"
+```
+
+Optional Telegram integration:
+
+```bash
+curl -fsSL https://locusai.dev/install.sh | bash -s -- \
+  --repo "owner/repo" \
+  --api-key "your-api-key" \
+  --gh-token "your-github-token" \
+  --telegram-token "your-bot-token" \
+  --telegram-chat-id "your-chat-id"
+```
+
+The installer auto-detects your OS (Linux or macOS) and runs the appropriate setup script.
+
+---
+
+## What Gets Installed
+
+| Component | Description |
+|-----------|-------------|
+| Node.js (via nvm) | JavaScript runtime |
+| Bun | Fast JavaScript bundler/runtime |
+| GitHub CLI (`gh`) | GitHub operations |
+| Claude CLI | Anthropic's AI agent |
+| Locus CLI | `@locusai/cli` |
+| Locus Telegram | `@locusai/telegram` (if configured) |
+| Repository clone | Your project code |
+| System services | Background processes for agent and bot |

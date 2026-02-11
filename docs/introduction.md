@@ -1,0 +1,150 @@
+---
+description: AI-native project management that keeps your code local and your planning in the cloud.
+---
+
+# Introduction
+
+## What is Locus?
+
+**Locus** is an AI-native project management platform designed for teams that use AI coding agents. It separates _planning_ (in the cloud) from _execution_ (on your machine), so your source code never leaves your infrastructure.
+
+{% hint style="info" %}
+Locus works with **Claude** (Anthropic) and **Codex** (OpenAI) as AI providers. You choose which agent runs your tasks.
+{% endhint %}
+
+### How it works
+
+```mermaid
+graph LR
+    A[Plan in Dashboard] --> B[Dispatch Tasks]
+    B --> C[Agents Execute Locally]
+    C --> D[Code Stays on Your Machine]
+    D --> E[PRs Created on GitHub]
+```
+
+1. **Plan** — Create sprints and tasks in the [Locus Dashboard](https://app.locusai.dev), or let AI plan them for you with `locus plan`
+2. **Dispatch** — Tasks are dispatched to your local machine where AI agents claim and execute them
+3. **Execute** — Agents work in isolated git worktrees, keeping each task's changes separate
+4. **Review** — Agents create pull requests, and you can review them with `locus review` or via the Telegram bot
+
+---
+
+## Key Features
+
+{% tabs %}
+{% tab title="Local Execution" %}
+AI agents run on **your machine** or **your server**. Source code is never uploaded to any third-party service. Locus only syncs task metadata, status updates, and project context — never your codebase.
+{% endtab %}
+
+{% tab title="Multi-Agent" %}
+Run up to **5 parallel agents**, each working on a separate task in its own git worktree. Locus handles orchestration, task claiming, and conflict prevention automatically.
+{% endtab %}
+
+{% tab title="AI Sprint Planning" %}
+Run `locus plan "build user authentication"` and a team of AI agents (Tech Lead, Architect, Sprint Organizer) collaborates to create a detailed sprint with tasks, priorities, and risk assessments.
+{% endtab %}
+
+{% tab title="Telegram Control" %}
+Manage your entire workflow from Telegram. Start agents, approve plans, review tasks, run git commands — all from your phone. See the [Telegram guide](telegram/overview.md).
+{% endtab %}
+{% endtabs %}
+
+---
+
+## Quick Start
+
+Get up and running in under 2 minutes:
+
+```bash
+# Install the CLI
+npm install -g @locusai/cli
+
+# Initialize in your project
+cd your-project
+locus init
+
+# Configure your API key
+locus config setup
+
+# Start working on tasks
+locus run
+```
+
+{% hint style="success" %}
+That's it. Locus will claim the next available task from your active sprint, execute it with your chosen AI provider, and create a pull request when done.
+{% endhint %}
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph Cloud["☁️ Locus Cloud"]
+        Dashboard["Dashboard<br/>(app.locusai.dev)"]
+        API["API Server"]
+        DB["Database"]
+        Dashboard --> API
+        API --> DB
+    end
+
+    subgraph Local["💻 Your Machine"]
+        CLI["Locus CLI"]
+        Agent1["Agent 1"]
+        Agent2["Agent 2"]
+        WT1["Worktree 1"]
+        WT2["Worktree 2"]
+        CLI --> Agent1
+        CLI --> Agent2
+        Agent1 --> WT1
+        Agent2 --> WT2
+    end
+
+    subgraph Integrations["🔗 Integrations"]
+        TG["Telegram Bot"]
+        GH["GitHub"]
+    end
+
+    API <-->|"Task metadata only"| CLI
+    Agent1 -->|"Push branches"| GH
+    Agent2 -->|"Push branches"| GH
+    TG <-->|"Commands"| CLI
+```
+
+{% hint style="warning" %}
+Locus syncs **task metadata only** with the cloud — titles, descriptions, statuses, and acceptance criteria. Your source code stays entirely on your machine.
+{% endhint %}
+
+---
+
+## What's Next?
+
+<table data-card-size="large" data-view="cards">
+
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><strong>Installation</strong></td>
+<td>Install the Locus CLI and get your environment ready. <a href="getting-started/installation.md">Get started →</a></td>
+</tr>
+<tr>
+<td><strong>Telegram Bot</strong></td>
+<td>Control your agents from Telegram. <a href="telegram/overview.md">Learn more →</a></td>
+</tr>
+<tr>
+<td><strong>CLI Reference</strong></td>
+<td>Explore all commands and options. <a href="cli/overview.md">View commands →</a></td>
+</tr>
+<tr>
+<td><strong>Self-Hosting</strong></td>
+<td>Deploy agents on your own server for 24/7 execution. <a href="self-hosting/overview.md">Setup guide →</a></td>
+</tr>
+</tbody>
+
+</table>

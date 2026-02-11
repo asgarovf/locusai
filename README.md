@@ -30,7 +30,7 @@ Read the [full documentation](https://locusai.dev/docs) to learn more.
 - **AI-Native Planning** - Plan sprints, define tasks, and write documentation designed for AI agents.
 - **Secure Local Execution** - Agents run securely on your machine, keeping your codebase private.
 - **Team Coordination** - Cloud-based dashboard for visibility, collaboration, and task management.
-- **Cognitive Context** - Agents use project-specific `CLAUDE.md` and semantic indexing to understand your codebase.
+- **Cognitive Context** - Agents use project-specific `.locus/LOCUS.md` and semantic indexing to understand your codebase.
 - **Sprint Mindmaps** - Agents generate and follow high-level technical plans for cohesive feature implementation.
 
 ## 🚀 Quick Start

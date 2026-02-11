@@ -24,10 +24,9 @@ export const LOCUS_CONFIG = {
   configFile: "config.json",
   settingsFile: "settings.json",
   indexFile: "codebase-index.json",
-  contextFile: "CLAUDE.md",
+  contextFile: "LOCUS.md",
   artifactsDir: "artifacts",
   documentsDir: "documents",
-  agentSkillsDir: ".agent/skills",
   sessionsDir: "sessions",
   reviewsDir: "reviews",
   plansDir: "plans",
@@ -62,9 +61,6 @@ export function getLocusPath(
   projectPath: string,
   fileName: keyof typeof LOCUS_CONFIG
 ): string {
-  if (fileName === "contextFile") {
-    return join(projectPath, LOCUS_CONFIG.contextFile);
-  }
   // Project knowledge base files live under .locus/project/
   if (fileName === "projectContextFile" || fileName === "projectProgressFile") {
     return join(

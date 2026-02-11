@@ -40,7 +40,7 @@ export function ProjectSetupGuide({ hasApiKeys }: ProjectSetupGuideProps) {
       id: "install",
       title: "2. Initialize your project",
       description:
-        "Run this command in your project root to set up Locus configuration and CLAUDE.md.",
+        "Run this command in your project root to set up Locus configuration.",
       status: "action",
       command: "locus init",
     },

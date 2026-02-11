@@ -28,11 +28,6 @@ export async function initCommand(): Promise<void> {
       );
     }
 
-    if (result.skillsCreated.length > 0) {
-      const skillCount = result.skillsCreated.length;
-      updates.push(`Skills created: ${c.dim(`${skillCount} new skill(s)`)}`);
-    }
-
     if (result.gitignoreUpdated) {
       updates.push(`Gitignore updated with Locus patterns`);
     }
@@ -68,8 +63,7 @@ export async function initCommand(): Promise<void> {
     ${c.primary("📄")} ${c.bold(".locus/config.json")}          ${c.dim("Project settings")}
     ${c.primary("📄")} ${c.bold(".locus/project/context.md")}   ${c.dim("Project context & knowledge")}
     ${c.primary("📄")} ${c.bold(".locus/project/progress.md")}  ${c.dim("Sprint progress tracking")}
-    ${c.primary("📝")} ${c.bold("CLAUDE.md")}                   ${c.dim("AI agent instructions")}
-    ${c.primary("📁")} ${c.bold(".agent/skills/")}              ${c.dim("Domain-specific agent skills")}
+    ${c.primary("📝")} ${c.bold(".locus/LOCUS.md")}             ${c.dim("AI agent instructions")}
 
   ${c.bold("Next steps:")}
     1. Run '${c.primary("locus config setup")}' to configure your API key

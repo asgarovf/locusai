@@ -45,8 +45,7 @@ Initialize Locus in the current directory. Creates the necessary configuration f
 
 - `.locus/` - Configuration directory
 - `.locus/config.json` - Project settings
-- `CLAUDE.md` - AI instructions and context
-- `.agent/skills/` - Domain-specific agent skills
+- `.locus/LOCUS.md` - AI agent instructions
 
 Running `init` on an already initialized project will update the configuration to the latest version.
 
@@ -124,7 +123,7 @@ Locus stores its configuration in the `.locus/` directory within your project:
 - `config.json` - Project settings including workspace ID and version
 - `codebase-index.json` - Indexed codebase structure
 
-The `CLAUDE.md` file in your project root provides AI instructions and context that agents use when working on your codebase.
+The `.locus/LOCUS.md` file provides AI instructions and context that agents use when working on your codebase.
 
 ## AI Providers
 
