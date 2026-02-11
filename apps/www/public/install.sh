@@ -6,7 +6,7 @@
 # Usage (interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash
 #
-# Usage (non-interactive):
+# Usage (non-interactive, personal machine):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
 #     --repo "https://github.com/user/project" \
 #     --api-key "locus-api-key" \
@@ -14,6 +14,11 @@
 #     --telegram-chat-id "12345" \
 #     --gh-token "ghp_..." \
 #     --branch "main"
+#
+# Usage (server setup — creates a dedicated user):
+#   curl -fsSL https://locusai.dev/install.sh | bash -s -- --server \
+#     --repo "https://github.com/user/project" \
+#     --api-key "locus-api-key"
 #
 
 set -euo pipefail
@@ -65,9 +70,23 @@ case "$OS" in
     info "Detected ${BOLD}Linux${RESET}"
     SCRIPT_URL="${BASE_URL}/setup.sh"
     ;;
+  MINGW*|MSYS*|CYGWIN*)
+    info "Detected ${BOLD}Windows${RESET} (via $OS)"
+    echo ""
+    warn "This bash installer is not supported on Windows."
+    info "Please use the PowerShell installer instead:"
+    echo ""
+    echo -e "  ${BOLD}Interactive:${RESET}"
+    echo -e "    ${DIM}>${RESET} irm https://locusai.dev/install.ps1 | iex"
+    echo ""
+    echo -e "  ${BOLD}Non-interactive:${RESET}"
+    echo -e "    ${DIM}>${RESET} .\\install.ps1 -Repo \"https://github.com/user/project\" -Branch \"main\""
+    echo ""
+    exit 1
+    ;;
   *)
     error "Unsupported operating system: ${OS}"
-    error "Locus setup supports macOS and Linux (Ubuntu/Debian)."
+    error "Locus setup supports macOS, Linux (Ubuntu/Debian), and Windows (PowerShell)."
     exit 1
     ;;
 esac
@@ -81,7 +100,7 @@ TELEGRAM_TOKEN=""
 TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
 SETUP_USER=""
-SKIP_USER_SETUP=false
+SERVER_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -92,7 +111,7 @@ while [[ $# -gt 0 ]]; do
     --telegram-chat-id) TELEGRAM_CHAT_ID="$2";  shift 2 ;;
     --gh-token)         GH_TOKEN="$2";          shift 2 ;;
     --user)             SETUP_USER="$2";        shift 2 ;;
-    --skip-user-setup)  SKIP_USER_SETUP=true;   shift ;;
+    --server)           SERVER_MODE=true;       shift ;;
     --help|-h)
       echo ""
       echo "  Locus Universal Installer"
@@ -108,8 +127,8 @@ while [[ $# -gt 0 ]]; do
       echo "    --gh-token <token>       GitHub personal access token"
       echo "    --telegram-token <token> Telegram bot token from @BotFather"
       echo "    --telegram-chat-id <id>  Telegram chat ID for authorization"
-      echo "    --user <username>        Run setup as this user (default: locus-agent)"
-      echo "    --skip-user-setup        Skip user creation and run as current user"
+      echo "    --server                 Server mode: create a dedicated user for Locus"
+      echo "    --user <username>        Username for server mode (default: locus-agent)"
       echo ""
       exit 0
       ;;
@@ -195,16 +214,16 @@ if [[ -z "$REPO_URL" ]]; then
   echo ""
 fi
 
-# ─── User Setup (Linux only, when running as root) ──────────────────────────
-# When the installer is run as root on Linux, we create a dedicated non-root
-# user to own the project and run all tools. This avoids permission issues
-# with Claude Code (which blocks --dangerously-skip-permissions as root).
+# ─── User Setup (server mode only) ──────────────────────────────────────────
+# When --server is passed, we create a dedicated non-root user to own the
+# project and run all tools. This is intended for server/VPS deployments.
+# Without --server, we assume the user is installing on their own machine.
 
-if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; then
+if [[ "$SERVER_MODE" == "true" && "$OS" == "Linux" && "$(id -u)" -eq 0 ]]; then
   DEFAULT_USER="${SETUP_USER:-locus-agent}"
 
-  echo -e "  ${BOLD}User Setup${RESET}"
-  echo -e "  ${DIM}Running as root. A dedicated non-root user is required to run Locus.${RESET}"
+  echo -e "  ${BOLD}Server Mode — User Setup${RESET}"
+  echo -e "  ${DIM}Creating a dedicated non-root user to run Locus.${RESET}"
   echo ""
 
   # Ensure we can read from terminal even when piped
@@ -219,6 +238,8 @@ if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; t
     SETUP_USER="$DEFAULT_USER"
     USER_INPUT_FD=""
   fi
+
+  SKIP_USER_CREATION=false
 
   if [[ -n "${USER_INPUT_FD:-}" ]]; then
     # Ask permission to create user
@@ -244,14 +265,14 @@ if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; t
 
       if [[ -z "$CUSTOM_USER" ]]; then
         warn "Continuing as root. Some tools may not work correctly."
-        SKIP_USER_SETUP=true
+        SKIP_USER_CREATION=true
       else
         DEFAULT_USER="$CUSTOM_USER"
       fi
     fi
 
     # Ask about passwordless sudo
-    if [[ "$SKIP_USER_SETUP" != "true" ]]; then
+    if [[ "$SKIP_USER_CREATION" != "true" ]]; then
       echo -en "  ${BOLD}Grant '${DEFAULT_USER}' passwordless sudo access?${RESET} ${DIM}(required for installing packages) [Y/n]:${RESET} "
       REPLY=""
       if [[ "$USER_INPUT_FD" -eq 0 ]]; then
@@ -274,7 +295,7 @@ if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; t
     fi
   fi
 
-  if [[ "$SKIP_USER_SETUP" != "true" ]]; then
+  if [[ "$SKIP_USER_CREATION" != "true" ]]; then
     SETUP_USER="$DEFAULT_USER"
 
     # Create user if it doesn't exist
@@ -321,6 +342,10 @@ if [[ "$OS" == "Linux" && "$(id -u)" -eq 0 && "$SKIP_USER_SETUP" != "true" ]]; t
     info "Switching to user '${SETUP_USER}' for installation..."
     echo ""
   fi
+elif [[ "$SERVER_MODE" == "true" && "$OS" == "Linux" && "$(id -u)" -ne 0 ]]; then
+  warn "Server mode requires running as root to create users."
+  warn "Re-run with: sudo bash -s -- --server ..."
+  exit 1
 fi
 
 # ─── Confirm Configuration ───────────────────────────────────────────────────
