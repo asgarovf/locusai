@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.9.3
+
+### Patch Changes
+
+- Ignore locus/config.json from git
+- Updated dependencies
+  - @locusai/sdk@0.9.3
+  - @locusai/shared@0.9.3
+
 ## 0.9.2
 
 ### Patch Changes
