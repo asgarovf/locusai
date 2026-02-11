@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.9.1
+
+### Patch Changes
+
+- Add shebang to telegram package
+- Updated dependencies
+  - @locusai/sdk@0.9.1
+
 ## 0.9.0
 
 ### Minor Changes

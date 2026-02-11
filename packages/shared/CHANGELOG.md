@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.1
+
+### Patch Changes
+
+- Add shebang to telegram package
+
 ## 0.9.0
 
 ### Minor Changes
