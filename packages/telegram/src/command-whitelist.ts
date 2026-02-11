@@ -346,35 +346,34 @@ function validateGhCommand(args: string[]): ValidationResult {
 }
 
 function validateGhPrCreate(args: string[]): ValidationResult {
-  const ghArgs = ["pr", "create"];
-  let title: string | null = null;
-  let body: string | null = null;
-
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--title" && i + 1 < args.length) {
-      title = args[++i];
-    } else if (args[i] === "--body" && i + 1 < args.length) {
-      body = args[++i];
-    } else {
-      return {
-        ok: false,
-        error: `Unsupported gh pr create argument: "${args[i]}"`,
-      };
-    }
-  }
-
-  if (!title) {
+  // Positional: gh pr create <title> [body]
+  // With 1 arg: entire arg is the title
+  // With 2 args: first is title, second is body (use quotes for multi-word)
+  // With 3+ args: all args joined as title (no body)
+  if (args.length === 0) {
     return {
       ok: false,
-      error: 'Usage: gh pr create --title "title" --body "body"',
+      error: 'Usage: /git gh pr create "title" "body (optional)"',
     };
+  }
+
+  let title: string;
+  let body: string | null = null;
+
+  if (args.length === 2) {
+    // Two args: title + body (quote multi-word values)
+    title = args[0];
+    body = args[1];
+  } else {
+    // One arg or 3+: join everything as the title
+    title = args.join(" ");
   }
 
   if (title.length > 200) {
     return { ok: false, error: "PR title must be under 200 characters" };
   }
 
-  ghArgs.push("--title", title);
+  const ghArgs = ["pr", "create", "--title", title];
 
   if (body) {
     if (body.length > 2000) {
@@ -418,16 +417,34 @@ export function validateDevCommand(input: string): ValidationResult {
 // --- Argument parsing ---
 
 /**
+ * Normalize Unicode dashes/quotes to their ASCII equivalents.
+ * Telegram (and many mobile keyboards) auto-replace:
+ *   -- → — (em dash U+2014)
+ *   -  → – (en dash U+2013)
+ *   "  → "" (smart quotes U+201C/U+201D)
+ *   '  → '' (smart quotes U+2018/U+2019)
+ */
+function normalizeInput(input: string): string {
+  return input
+    .replace(/\u2014/g, "--") // em dash → two hyphens
+    .replace(/\u2013/g, "-") // en dash → hyphen
+    .replace(/[\u201C\u201D]/g, '"') // smart double quotes → straight
+    .replace(/[\u2018\u2019]/g, "'"); // smart single quotes → straight
+}
+
+/**
  * Parse a command string into arguments, respecting quoted strings.
  * Handles both single and double quotes.
+ * Normalizes Unicode dashes/quotes from mobile keyboards and Telegram.
  */
 export function parseArgs(input: string): string[] {
+  const normalized = normalizeInput(input);
   const args: string[] = [];
   let current = "";
   let inQuote: string | null = null;
 
-  for (let i = 0; i < input.length; i++) {
-    const ch = input[i];
+  for (let i = 0; i < normalized.length; i++) {
+    const ch = normalized[i];
 
     if (inQuote) {
       if (ch === inQuote) {

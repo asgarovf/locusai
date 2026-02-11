@@ -21,7 +21,7 @@ const USAGE = `<b>Usage:</b> /git &lt;command&gt;
 <b>GitHub CLI:</b>
   gh pr list
   gh pr view [number]
-  gh pr create --title "t" --body "b"`;
+  gh pr create "title" "body (optional)"`;
 
 export async function gitCommand(
   ctx: Context,
