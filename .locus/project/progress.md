@@ -47,3 +47,5 @@ No sprints started yet.
   Mode: interactive | Session: session-mlicbiwb-l2zp2bo
 - [x] We need to make sure that new user is created only if user passes specific flag ... — exec 2026-02-11T18:15:58.464Z
   Mode: interactive | Session: session-mlicbiwb-l2zp2bo
+- [x] Please adjust the landing page so that the installation on hero is tabbed and sh... — exec 2026-02-11T18:21:35.885Z
+  Mode: interactive | Session: session-mlicbiwb-l2zp2bo
