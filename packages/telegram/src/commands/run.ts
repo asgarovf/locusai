@@ -18,7 +18,26 @@ export async function runCommand(
   executor: CliExecutor,
   config: TelegramConfig
 ): Promise<void> {
-  console.log(`[run] Starting agents (count: ${config.agentCount ?? 1})`);
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const input = text.replace(/^\/run\s*/, "").trim();
+
+  // Parse --agents <N> or -a <N> from the command text
+  let parsedAgentCount: number | undefined;
+  const agentsMatch = input.match(/(?:--agents|-a)\s+(\d+)/);
+  if (agentsMatch) {
+    parsedAgentCount = Number.parseInt(agentsMatch[1], 10);
+    if (parsedAgentCount < 1 || parsedAgentCount > 5) {
+      await ctx.reply(
+        formatError("Agent count must be between 1 and 5."),
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+  }
+
+  const agentCount = parsedAgentCount ?? config.agentCount ?? 1;
+  console.log(`[run] Starting agents (count: ${agentCount})`);
 
   if (!config.apiKey) {
     await ctx.reply(
@@ -38,7 +57,6 @@ export async function runCommand(
     return;
   }
 
-  const agentCount = config.agentCount ?? 1;
   const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
 
   await ctx.reply(formatInfo(`Starting ${agentLabel}...`), {

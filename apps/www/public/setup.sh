@@ -53,7 +53,6 @@ TELEGRAM_TOKEN=""
 TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
 PROJECT_DIR=""
-AGENT_COUNT="2"
 EXPLICIT_USER=""
 
 # ─── Privilege Helper ────────────────────────────────────────────────────────

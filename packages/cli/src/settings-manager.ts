@@ -15,6 +15,7 @@ export interface LocusSettings {
   provider?: string;
   model?: string;
   workspaceId?: string;
+  agentCount?: number;
   telegram?: TelegramSettings;
 }
 

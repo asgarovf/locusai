@@ -33,10 +33,10 @@ interface SettingsJson {
   provider?: string;
   model?: string;
   workspaceId?: string;
+  agentCount?: number;
   telegram?: {
     botToken?: string;
     chatId?: number;
-    agentCount?: number;
     testMode?: boolean;
   };
 }
@@ -103,7 +103,9 @@ export function resolveConfig(): TelegramConfig {
       process.env.LOCUS_WORKSPACE_ID || settings?.workspaceId || undefined,
     provider: process.env.LOCUS_PROVIDER || settings?.provider || undefined,
     model: process.env.LOCUS_MODEL || settings?.model || undefined,
-    agentCount: tg?.agentCount,
+    agentCount: process.env.LOCUS_AGENT_COUNT
+      ? Number.parseInt(process.env.LOCUS_AGENT_COUNT, 10)
+      : settings?.agentCount,
     testMode: isTestMode,
   };
 }

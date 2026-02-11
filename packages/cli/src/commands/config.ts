@@ -25,6 +25,7 @@ const TOP_LEVEL_KEYS = [
   "provider",
   "model",
   "workspaceId",
+  "agentCount",
 ] as const;
 
 const TELEGRAM_KEYS = [
@@ -51,6 +52,7 @@ function showConfigHelp(): void {
               ${c.dim("--api-url <URL>   API base URL (optional)")}
               ${c.dim("--provider <P>    AI provider (optional)")}
               ${c.dim("--model <M>       AI model (optional)")}
+              ${c.dim("--agents <N>      Number of agents (1-5, optional)")}
     ${c.success("show")}      Show current settings
     ${c.success("set")}       Set a config value
               ${c.dim("locus config set <key> <value>")}
@@ -76,6 +78,7 @@ async function setupCommand(
   let apiUrl: string | undefined;
   let provider: string | undefined;
   let model: string | undefined;
+  let agentCountStr: string | undefined;
 
   // Parse CLI flags for non-interactive use
   for (let i = 0; i < args.length; i++) {
@@ -87,11 +90,13 @@ async function setupCommand(
       provider = args[++i]?.trim();
     } else if (args[i] === "--model" && args[i + 1]) {
       model = args[++i]?.trim();
+    } else if (args[i] === "--agents" && args[i + 1]) {
+      agentCountStr = args[++i]?.trim();
     }
   }
 
   // If no flags provided, run interactive mode
-  if (!apiKey && !apiUrl && !provider && !model) {
+  if (!apiKey && !apiUrl && !provider && !model && !agentCountStr) {
     console.log(`\n  ${c.header(" LOCUS SETUP ")}\n`);
     console.log(
       `  ${c.dim("Configure your Locus settings. Press Enter to skip optional fields.")}\n`
@@ -106,20 +111,20 @@ async function setupCommand(
       }
     }
 
-    apiUrl = await ask(
-      `  ${c.primary("API URL")} ${c.dim("(optional, press Enter to skip)")}: `
-    );
     provider = await ask(
       `  ${c.primary("Provider")} ${c.dim("(optional, e.g. claude, codex)")}: `
     );
     model = await ask(
       `  ${c.primary("Model")} ${c.dim("(optional, e.g. opus, sonnet)")}: `
     );
+    agentCountStr = await ask(
+      `  ${c.primary("Agent Count")} ${c.dim("(optional, 1-5, default: 1)")}: `
+    );
 
     // Convert empty strings to undefined
-    if (!apiUrl) apiUrl = undefined;
     if (!provider) provider = undefined;
     if (!model) model = undefined;
+    if (!agentCountStr) agentCountStr = undefined;
   }
 
   if (!apiKey) {
@@ -128,6 +133,19 @@ async function setupCommand(
         `  Get an API key from ${c.underline("Workspace Settings > API Keys")}\n`
     );
     process.exit(1);
+  }
+
+  // Parse and validate agent count
+  let agentCount: number | undefined;
+  if (agentCountStr) {
+    const parsed = Number.parseInt(agentCountStr, 10);
+    if (Number.isNaN(parsed) || parsed < 1 || parsed > 5) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.bold("Agent count must be a number between 1 and 5.")}\n`
+      );
+      process.exit(1);
+    }
+    agentCount = parsed;
   }
 
   const manager = new SettingsManager(projectPath);
@@ -141,6 +159,7 @@ async function setupCommand(
   if (apiUrl) settings.apiUrl = apiUrl;
   if (provider) settings.provider = provider;
   if (model) settings.model = model;
+  if (agentCount !== undefined) settings.agentCount = agentCount;
 
   manager.save(settings);
 
@@ -150,7 +169,7 @@ async function setupCommand(
   ${c.bold("Saved to:")} ${c.dim(".locus/settings.json")}
 
   ${c.bold("Configuration:")}
-    ${c.primary("API Key:")}   ${maskSecret(apiKey)}${apiUrl ? `\n    ${c.primary("API URL:")}   ${apiUrl}` : ""}${provider ? `\n    ${c.primary("Provider:")}  ${provider}` : ""}${model ? `\n    ${c.primary("Model:")}     ${model}` : ""}
+    ${c.primary("API Key:")}   ${maskSecret(apiKey)}${apiUrl ? `\n    ${c.primary("API URL:")}   ${apiUrl}` : ""}${provider ? `\n    ${c.primary("Provider:")}  ${provider}` : ""}${model ? `\n    ${c.primary("Model:")}     ${model}` : ""}${agentCount !== undefined ? `\n    ${c.primary("Agents:")}    ${agentCount}` : ""}
 
   ${c.bold("Next steps:")}
     Run agents:  ${c.primary("locus run")}
@@ -189,6 +208,9 @@ function showCommand(projectPath: string): void {
   }
   if (settings.workspaceId) {
     console.log(`    ${c.primary("workspaceId:")}  ${settings.workspaceId}`);
+  }
+  if (settings.agentCount !== undefined) {
+    console.log(`    ${c.primary("agentCount:")}   ${settings.agentCount}`);
   }
 
   if (settings.telegram) {
@@ -255,6 +277,15 @@ function setCommand(args: string[], projectPath: string): void {
     } else {
       (settings.telegram as Record<string, unknown>)[telegramKey] = value;
     }
+  } else if (key === "agentCount") {
+    const num = Number.parseInt(value, 10);
+    if (Number.isNaN(num) || num < 1 || num > 5) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.bold("agentCount must be a number between 1 and 5.")}\n`
+      );
+      process.exit(1);
+    }
+    (settings as Record<string, unknown>)[key] = num;
   } else {
     (settings as Record<string, unknown>)[key] = value;
   }

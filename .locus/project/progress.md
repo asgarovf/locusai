@@ -75,3 +75,7 @@ No sprints started yet.
   Mode: interactive | Session: session-mlih2p10-dn0tiqb
 - [x] No I mean, on locus cli package there is a upgrade command. This should run npm ... — exec 2026-02-11T20:19:54.622Z
   Mode: interactive | Session: session-mlih2p10-dn0tiqb
+- [x] Hmm I see the problem. The agentCount is configued inside the telegram config of... — exec 2026-02-11T20:56:20.072Z
+  Mode: interactive | Session: session-mlii30y8-v8u58hy
+- [x] I did not mean locus telegram run --agents 3 like commands. I meant that telegra... — exec 2026-02-11T20:59:40.327Z
+  Mode: interactive | Session: session-mlii30y8-v8u58hy

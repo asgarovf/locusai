@@ -32,6 +32,7 @@ function showTelegramHelp(): void {
 
   ${c.header(" SUBCOMMANDS ")}
     ${c.success("run")}       Start the Telegram bot
+              ${c.dim("--agents <N>      Override agent count (1-5)")}
     ${c.success("setup")}     Interactive Telegram bot setup (or pass flags below)
               ${c.dim("--token <TOKEN>   Bot token from @BotFather (required)")}
               ${c.dim("--chat-id <ID>    Your Telegram chat ID (required)")}
@@ -43,6 +44,7 @@ function showTelegramHelp(): void {
 
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary("locus telegram run")}
+    ${c.dim("$")} ${c.primary("locus telegram run --agents 3")}
     ${c.dim("$")} ${c.primary('locus telegram setup --token "123:ABC" --chat-id 987654')}
     ${c.dim("$")} ${c.primary("locus telegram config")}
     ${c.dim("$")} ${c.primary("locus telegram remove")}
@@ -271,7 +273,25 @@ function removeCommand(projectPath: string): void {
   );
 }
 
-function runBotCommand(projectPath: string): void {
+function runBotCommand(subArgs: string[], projectPath: string): void {
+  // Parse --agents flag
+  let agentCountOverride: string | undefined;
+  for (let i = 0; i < subArgs.length; i++) {
+    if (subArgs[i] === "--agents" && subArgs[i + 1]) {
+      agentCountOverride = subArgs[++i]?.trim();
+    }
+  }
+
+  if (agentCountOverride) {
+    const parsed = Number.parseInt(agentCountOverride, 10);
+    if (Number.isNaN(parsed) || parsed < 1 || parsed > 5) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.bold("Agent count must be a number between 1 and 5.")}\n`
+      );
+      process.exit(1);
+    }
+  }
+
   // Check if telegram is configured
   const manager = new SettingsManager(projectPath);
   const settings = manager.load();
@@ -302,10 +322,16 @@ function runBotCommand(projectPath: string): void {
     args = [];
   }
 
+  // Pass agent count override as environment variable
+  const env = { ...process.env };
+  if (agentCountOverride) {
+    env.LOCUS_AGENT_COUNT = agentCountOverride;
+  }
+
   const child = spawn(cmd, args, {
     cwd: projectPath,
     stdio: "inherit",
-    env: process.env,
+    env,
   });
 
   child.on("error", (err) => {
@@ -334,7 +360,7 @@ export async function telegramCommand(args: string[]): Promise<void> {
 
   switch (subcommand) {
     case "run":
-      runBotCommand(projectPath);
+      runBotCommand(subArgs, projectPath);
       break;
     case "setup":
       await setupCommand(subArgs, projectPath);
