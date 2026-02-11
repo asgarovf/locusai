@@ -1,5 +1,13 @@
 # @locusai/shared
 
+## 0.9.0
+
+### Minor Changes
+
+- New CLI commands
+  Telegram integration
+  Workflow updates
+
 ## 0.8.1
 
 ### Patch Changes
