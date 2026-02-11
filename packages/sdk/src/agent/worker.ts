@@ -174,7 +174,9 @@ export class AgentWorker {
     const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
 
     console.log(
-      `${c.dim(`[${timestamp}]`)} ${c.bold(`[${this.config.agentId.slice(-8)}]`)} ${colorFn(`${prefix} ${message}`)}`
+      `${c.dim(`[${timestamp}]`)} ${c.bold(
+        `[${this.config.agentId.slice(-8)}]`
+      )} ${colorFn(`${prefix} ${message}`)}`
     );
   }
 
@@ -313,14 +315,16 @@ export class AgentWorker {
       const trailers: string[] = [
         `Task-ID: ${task.id}`,
         `Agent: ${this.config.agentId}`,
-        "Co-authored-by: LocusAI <noreply@locusai.dev>",
+        "Co-authored-by: LocusAI <agent@locusai.team>",
       ];
       if (this.ghUsername) {
         trailers.push(
           `Co-authored-by: ${this.ghUsername} <${this.ghUsername}@users.noreply.github.com>`
         );
       }
-      const commitMessage = `feat(agent): ${task.title}\n\n${trailers.join("\n")}`;
+      const commitMessage = `feat(agent): ${task.title}\n\n${trailers.join(
+        "\n"
+      )}`;
       const hash = this.worktreeManager.commitChanges(
         worktreePath,
         commitMessage,
@@ -550,7 +554,9 @@ export class AgentWorker {
       }
     } catch (err) {
       this.log(
-        `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,
+        `Failed to update progress: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
         "warn"
       );
     }
@@ -587,7 +593,9 @@ export class AgentWorker {
       )
       .catch((err) => {
         this.log(
-          `Heartbeat failed: ${err instanceof Error ? err.message : String(err)}`,
+          `Heartbeat failed: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
           "warn"
         );
       });
@@ -597,7 +605,9 @@ export class AgentWorker {
     if (!this.config.useWorktrees || this.postCleanupDelayMs <= 0) return;
 
     this.log(
-      `Waiting ${Math.floor(this.postCleanupDelayMs / 1000)}s after worktree cleanup before next dispatch`,
+      `Waiting ${Math.floor(
+        this.postCleanupDelayMs / 1000
+      )}s after worktree cleanup before next dispatch`,
       "info"
     );
     await new Promise((resolve) =>
