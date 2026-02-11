@@ -72,7 +72,6 @@ bun run typecheck
 3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
 4. Push to the branch (`git push origin feat/amazing-feature`).
 5. Open a Pull Request.
-6. Once merged to `master`, the automated release workflow will handle the NPM publication.
 
 ## 📦 Versioning and Releasing
 
