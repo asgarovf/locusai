@@ -1,3 +1,6 @@
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { c } from "@locusai/sdk/node";
 import { SettingsManager } from "../settings-manager";
@@ -28,6 +31,7 @@ function showTelegramHelp(): void {
     ${c.primary("locus telegram")} ${c.dim("<subcommand> [options]")}
 
   ${c.header(" SUBCOMMANDS ")}
+    ${c.success("run")}       Start the Telegram bot
     ${c.success("setup")}     Interactive Telegram bot setup (or pass flags below)
               ${c.dim("--token <TOKEN>   Bot token from @BotFather (required)")}
               ${c.dim("--chat-id <ID>    Your Telegram chat ID (required)")}
@@ -38,6 +42,7 @@ function showTelegramHelp(): void {
     ${c.success("remove")}    Remove Telegram configuration
 
   ${c.header(" EXAMPLES ")}
+    ${c.dim("$")} ${c.primary("locus telegram run")}
     ${c.dim("$")} ${c.primary('locus telegram setup --token "123:ABC" --chat-id 987654')}
     ${c.dim("$")} ${c.primary("locus telegram config")}
     ${c.dim("$")} ${c.primary("locus telegram remove")}
@@ -140,7 +145,7 @@ async function setupCommand(
     ${c.primary("Chat ID:")}  ${parsedChatId}
 
   ${c.bold("Next steps:")}
-    Start the bot with: ${c.primary("bun run packages/telegram/src/index.ts")}
+    Start the bot with: ${c.primary("locus telegram run")}
 `);
 }
 
@@ -266,12 +271,69 @@ function removeCommand(projectPath: string): void {
   );
 }
 
+function runBotCommand(projectPath: string): void {
+  // Check if telegram is configured
+  const manager = new SettingsManager(projectPath);
+  const settings = manager.load();
+
+  if (!settings.telegram?.botToken || !settings.telegram?.chatId) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold("Telegram is not configured.")}\n` +
+        `  Run ${c.primary("locus telegram setup")} first.\n`
+    );
+    process.exit(1);
+  }
+
+  // Determine how to launch the telegram bot
+  const monorepoTelegramEntry = join(
+    projectPath,
+    "packages/telegram/src/index.ts"
+  );
+  const isMonorepo = existsSync(monorepoTelegramEntry);
+
+  let cmd: string;
+  let args: string[];
+
+  if (isMonorepo) {
+    cmd = "bun";
+    args = ["run", monorepoTelegramEntry];
+  } else {
+    cmd = "locus-telegram";
+    args = [];
+  }
+
+  const child = spawn(cmd, args, {
+    cwd: projectPath,
+    stdio: "inherit",
+    env: process.env,
+  });
+
+  child.on("error", (err) => {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT" && !isMonorepo) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.bold("locus-telegram not found.")}\n` +
+          `  Install it with: ${c.primary("npm install -g @locusai/telegram")}\n`
+      );
+    } else {
+      console.error(`\n  ${c.error("✖")} Failed to start bot: ${err.message}\n`);
+    }
+    process.exit(1);
+  });
+
+  child.on("close", (code) => {
+    process.exit(code ?? 0);
+  });
+}
+
 export async function telegramCommand(args: string[]): Promise<void> {
   const projectPath = process.cwd();
   const subcommand = args[0];
   const subArgs = args.slice(1);
 
   switch (subcommand) {
+    case "run":
+      runBotCommand(projectPath);
+      break;
     case "setup":
       await setupCommand(subArgs, projectPath);
       break;

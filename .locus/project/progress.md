@@ -19,3 +19,5 @@ No sprints started yet.
   Mode: interactive | Session: session-mlhtwhas-8a81ngd
 - [x] I published the locus telegram package with shebang added to the top of bin but ... — exec 2026-02-11T15:08:30.940Z
   Mode: interactive | Session: session-mli5uzgo-c80c2kl
+- [x] Let's also add a shortcut to locus cli telegram command. It already has a telegr... — exec 2026-02-11T15:15:24.719Z
+  Mode: interactive | Session: session-mli5uzgo-c80c2kl
