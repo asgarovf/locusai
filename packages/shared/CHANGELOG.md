@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.16
+
+### Patch Changes
+
+- Sprints commands on telegram
+
 ## 0.9.15
 
 ### Patch Changes
