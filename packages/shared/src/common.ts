@@ -54,6 +54,7 @@ export const ApiResponseSchema = z.object({
       pagination: PaginationMetaSchema.optional(),
       timestamp: z.string(),
       path: z.string(),
+      requestId: z.string().optional(),
     })
     .optional(),
 });
@@ -70,6 +71,7 @@ export type ApiResponse<T = unknown> = {
     pagination?: PaginationMeta;
     timestamp: string;
     path: string;
+    requestId?: string;
   };
 };
 
