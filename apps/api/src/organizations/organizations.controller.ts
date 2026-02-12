@@ -1,14 +1,26 @@
 import {
   AddMember,
   AddMemberSchema,
+  AuthenticatedUser,
+  getAuthUserId,
   MembershipResponse,
   MembersResponse,
   OrganizationResponse,
   OrganizationsResponse,
   OrgIdParam,
   OrgIdParamSchema,
+  SecurityAuditEventType,
 } from "@locusai/shared";
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Req,
+} from "@nestjs/common";
+import { Request } from "express";
 import { z } from "zod";
 import {
   CurrentUser,
@@ -17,12 +29,16 @@ import {
   MemberOwner,
 } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { User } from "@/entities";
 import { OrganizationsService } from "./organizations.service";
 
 @Controller("organizations")
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(
+    private readonly organizationsService: OrganizationsService,
+    private readonly securityAuditService: SecurityAuditService
+  ) {}
 
   @Get()
   async list(@CurrentUser() user: User): Promise<OrganizationsResponse> {
@@ -104,6 +120,8 @@ export class OrganizationsController {
   @Post(":orgId/api-keys")
   @MemberAdmin()
   async createApiKey(
+    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
     body: { name: string }
@@ -112,6 +130,19 @@ export class OrganizationsController {
       params.orgId,
       body.name
     );
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.API_KEY_CREATED,
+      userId: getAuthUserId(user) ?? undefined,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      requestId: req.requestId,
+      metadata: {
+        keyName: body.name,
+        keyId: apiKey.id,
+        orgId: params.orgId,
+      },
+    });
 
     const { keyHash: _, ...rest } = apiKey;
 
@@ -127,10 +158,25 @@ export class OrganizationsController {
   @Delete(":orgId/api-keys/:keyId")
   @MemberAdmin()
   async deleteApiKey(
+    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("orgId") orgId: string,
     @Param("keyId") keyId: string
   ) {
     await this.organizationsService.deleteApiKey(orgId, keyId);
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.API_KEY_DELETED,
+      userId: getAuthUserId(user) ?? undefined,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      requestId: req.requestId,
+      metadata: {
+        keyId,
+        orgId,
+      },
+    });
+
     return { success: true };
   }
 }

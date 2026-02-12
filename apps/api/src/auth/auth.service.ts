@@ -4,6 +4,7 @@ import {
   CompleteRegistration,
   LoginResponse,
   MembershipRole,
+  SecurityAuditEventType,
   UserRole,
 } from "@locusai/shared";
 import {
@@ -15,6 +16,7 @@ import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { EmailService } from "@/common/services/email.service";
+import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
@@ -24,6 +26,12 @@ import { UsersService } from "@/users/users.service";
 import { GoogleUser } from "./interfaces/google-user.interface";
 import { OtpService } from "./otp.service";
 
+export interface RequestContext {
+  ip?: string;
+  userAgent?: string;
+  requestId?: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -32,6 +40,7 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
+    private readonly securityAuditService: SecurityAuditService,
 
     @InjectRepository(ApiKey)
     private readonly apiKeyRepository: Repository<ApiKey>
@@ -130,7 +139,10 @@ export class AuthService {
   // OTP-Based Authentication (Cloud Mode)
   // ============================================================================
 
-  async requestLoginOtp(email: string): Promise<{ success: boolean }> {
+  async requestLoginOtp(
+    email: string,
+    reqCtx?: RequestContext
+  ): Promise<{ success: boolean }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException("User not found. Please register first.");
@@ -146,10 +158,21 @@ export class AuthService {
       expiryMinutes,
     });
 
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.OTP_REQUEST,
+      email,
+      userId: user.id,
+      metadata: { purpose: "login" },
+      ...reqCtx,
+    });
+
     return { success: true };
   }
 
-  async requestRegisterOtp(email: string): Promise<{ success: boolean }> {
+  async requestRegisterOtp(
+    email: string,
+    reqCtx?: RequestContext
+  ): Promise<{ success: boolean }> {
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
       throw new ConflictException("User with this email already exists");
@@ -165,12 +188,29 @@ export class AuthService {
       expiryMinutes,
     });
 
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.OTP_REQUEST,
+      email,
+      metadata: { purpose: "registration" },
+      ...reqCtx,
+    });
+
     return { success: true };
   }
 
-  async verifyOtpAndLogin(email: string, code: string): Promise<LoginResponse> {
+  async verifyOtpAndLogin(
+    email: string,
+    code: string,
+    reqCtx?: RequestContext
+  ): Promise<LoginResponse> {
     const verification = await this.otpService.verifyOtp(email, code);
     if (!verification.valid) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.LOGIN_FAILURE,
+        email,
+        metadata: { reason: verification.message },
+        ...reqCtx,
+      });
       throw new UnauthorizedException(verification.message);
     }
 
@@ -180,14 +220,31 @@ export class AuthService {
     }
 
     await this.otpService.invalidateOtp(email);
-    return this.login(user);
+    const result = await this.login(user);
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.LOGIN_SUCCESS,
+      email,
+      userId: user.id,
+      metadata: { method: "otp" },
+      ...reqCtx,
+    });
+
+    return result;
   }
 
   async completeRegistration(
-    data: CompleteRegistration
+    data: CompleteRegistration,
+    reqCtx?: RequestContext
   ): Promise<LoginResponse> {
     const verification = await this.otpService.verifyOtp(data.email, data.otp);
     if (!verification.valid) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.LOGIN_FAILURE,
+        email: data.email,
+        metadata: { reason: verification.message, method: "registration" },
+        ...reqCtx,
+      });
       throw new UnauthorizedException(verification.message);
     }
 
@@ -196,7 +253,7 @@ export class AuthService {
       throw new ConflictException("User with this email already exists");
     }
 
-    return await this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const orgName = data.companyName || `${data.name}'s Organization`;
 
       const org = manager.create(Organization, {
@@ -244,10 +301,24 @@ export class AuthService {
         orgId: org.id,
       });
     });
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.LOGIN_SUCCESS,
+      email: data.email,
+      userId: result.user.id,
+      metadata: { method: "registration" },
+      ...reqCtx,
+    });
+
+    return result;
   }
 
-  async loginWithGoogle(googleUser: GoogleUser): Promise<LoginResponse> {
+  async loginWithGoogle(
+    googleUser: GoogleUser,
+    reqCtx?: RequestContext
+  ): Promise<LoginResponse> {
     let user = await this.usersService.findByEmail(googleUser.email);
+    const isNewUser = !user;
 
     if (!user) {
       // Create new user for first-time Google login
@@ -281,7 +352,17 @@ export class AuthService {
       });
     }
 
-    return this.login(user);
+    const result = await this.login(user);
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.LOGIN_SUCCESS,
+      email: googleUser.email,
+      userId: user.id,
+      metadata: { method: "google", isNewUser },
+      ...reqCtx,
+    });
+
+    return result;
   }
 
   async getUserWorkspaces(userId: string): Promise<Array<{ id: string }>> {

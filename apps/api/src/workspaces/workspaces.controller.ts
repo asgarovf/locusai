@@ -1,12 +1,15 @@
 import {
   AgentHeartbeat,
   AgentHeartbeatSchema,
+  AuthenticatedUser,
   CreateWorkspace,
   CreateWorkspaceSchema,
   DispatchTask,
   DispatchTaskSchema,
+  getAuthUserId,
   OrgIdParam,
   OrgIdParamSchema,
+  SecurityAuditEventType,
   TaskResponse,
   UpdateWorkspace,
   UpdateWorkspaceSchema,
@@ -24,10 +27,13 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from "@nestjs/common";
+import { Request } from "express";
 import { z } from "zod";
 import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { Task } from "@/entities";
 import { User } from "@/entities/user.entity";
 import { TasksService } from "@/tasks/tasks.service";
@@ -38,7 +44,8 @@ export class WorkspacesController {
   constructor(
     private readonly workspacesService: WorkspacesService,
     @Inject(forwardRef(() => TasksService))
-    private readonly tasksService: TasksService
+    private readonly tasksService: TasksService,
+    private readonly securityAuditService: SecurityAuditService
   ) {}
 
   @Get()
@@ -239,6 +246,8 @@ export class WorkspacesController {
   @Post(":workspaceId/api-keys")
   @MemberAdmin()
   async createApiKey(
+    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam,
     @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
@@ -248,6 +257,19 @@ export class WorkspacesController {
       params.workspaceId,
       body.name
     );
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.API_KEY_CREATED,
+      userId: getAuthUserId(user) ?? undefined,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      requestId: req.requestId,
+      metadata: {
+        keyName: body.name,
+        keyId: apiKey.id,
+        workspaceId: params.workspaceId,
+      },
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { keyHash: _, ...rest } = apiKey;
@@ -264,10 +286,25 @@ export class WorkspacesController {
   @Delete(":workspaceId/api-keys/:keyId")
   @MemberAdmin()
   async deleteApiKey(
+    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("workspaceId") workspaceId: string,
     @Param("keyId") keyId: string
   ) {
     await this.workspacesService.deleteApiKey(workspaceId, keyId);
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.API_KEY_DELETED,
+      userId: getAuthUserId(user) ?? undefined,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      requestId: req.requestId,
+      metadata: {
+        keyId,
+        workspaceId,
+      },
+    });
+
     return { success: true };
   }
 

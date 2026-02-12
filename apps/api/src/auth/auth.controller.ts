@@ -21,10 +21,10 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
 import { TypedConfigService } from "@/config/config.service";
-import { AuthService } from "./auth.service";
+import { AuthService, RequestContext } from "./auth.service";
 import { CurrentUser, Public } from "./decorators";
 import { GoogleAuthGuard } from "./guards";
 import { GoogleUser } from "./interfaces/google-user.interface";
@@ -35,6 +35,14 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: TypedConfigService
   ) {}
+
+  private extractRequestContext(req: Request): RequestContext {
+    return {
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      requestId: req.requestId,
+    };
+  }
 
   @Get("me")
   async getProfile(@CurrentUser() authUser: AuthenticatedUser) {
@@ -116,31 +124,48 @@ export class AuthController {
   @Public()
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
   @Post("register-otp")
-  async registerOtp(@Body() data: OtpRequest) {
-    return this.authService.requestRegisterOtp(data.email);
+  async registerOtp(@Req() req: Request, @Body() data: OtpRequest) {
+    return this.authService.requestRegisterOtp(
+      data.email,
+      this.extractRequestContext(req)
+    );
   }
 
   @Public()
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
   @Post("login-otp")
-  async loginOtp(@Body() data: OtpRequest) {
-    return this.authService.requestLoginOtp(data.email);
+  async loginOtp(@Req() req: Request, @Body() data: OtpRequest) {
+    return this.authService.requestLoginOtp(
+      data.email,
+      this.extractRequestContext(req)
+    );
   }
 
   @Public()
   @UsePipes(new ZodValidationPipe(VerifyOtpSchema))
   @Post("verify-login")
-  async verifyLogin(@Body() data: VerifyOtp): Promise<LoginResponse> {
-    return this.authService.verifyOtpAndLogin(data.email, data.otp);
+  async verifyLogin(
+    @Req() req: Request,
+    @Body() data: VerifyOtp
+  ): Promise<LoginResponse> {
+    return this.authService.verifyOtpAndLogin(
+      data.email,
+      data.otp,
+      this.extractRequestContext(req)
+    );
   }
 
   @Public()
   @UsePipes(new ZodValidationPipe(CompleteRegistrationSchema))
   @Post("complete-registration")
   async completeRegistration(
+    @Req() req: Request,
     @Body() data: CompleteRegistration
   ): Promise<LoginResponse> {
-    return this.authService.completeRegistration(data);
+    return this.authService.completeRegistration(
+      data,
+      this.extractRequestContext(req)
+    );
   }
 
   // ============================================================================
@@ -159,10 +184,13 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(
-    @Req() req: { user: GoogleUser },
+    @Req() req: Request & { user: GoogleUser },
     @Res() res: Response
   ) {
-    const { token } = await this.authService.loginWithGoogle(req.user);
+    const { token } = await this.authService.loginWithGoogle(
+      req.user,
+      this.extractRequestContext(req)
+    );
     const frontendUrl = this.configService.get("FRONTEND_URL");
     return res.redirect(`${frontendUrl}/callback?token=${token}`);
   }

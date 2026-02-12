@@ -1,16 +1,21 @@
 import { randomInt } from "node:crypto";
+import { SecurityAuditEventType } from "@locusai/shared";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { TypedConfigService } from "@/config/config.service";
 import { OtpVerification } from "@/entities/otp-verification.entity";
+
+const MAX_OTP_ATTEMPTS = 5;
 
 @Injectable()
 export class OtpService {
   constructor(
     @InjectRepository(OtpVerification)
     private readonly otpRepository: Repository<OtpVerification>,
-    private readonly configService: TypedConfigService
+    private readonly configService: TypedConfigService,
+    private readonly securityAuditService: SecurityAuditService
   ) {}
 
   async generateOtp(email: string): Promise<{ code: string; expiresAt: Date }> {
@@ -37,19 +42,70 @@ export class OtpService {
     code: string
   ): Promise<{ valid: boolean; message?: string }> {
     const otp = await this.otpRepository.findOne({
-      where: { email, code, verified: false },
+      where: { email, verified: false },
     });
 
     if (!otp) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.OTP_VERIFY_FAILURE,
+        email,
+        metadata: { reason: "No OTP found" },
+      });
       return { valid: false, message: "Invalid or expired code" };
     }
 
+    if (otp.attempts >= MAX_OTP_ATTEMPTS) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.OTP_BRUTE_FORCE_LOCKOUT,
+        email,
+        metadata: { attempts: otp.attempts },
+      });
+      return {
+        valid: false,
+        message: "Too many attempts. Please request a new code.",
+      };
+    }
+
     if (otp.expiresAt < new Date()) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.OTP_VERIFY_FAILURE,
+        email,
+        metadata: { reason: "Code expired" },
+      });
       return { valid: false, message: "Code has expired" };
+    }
+
+    if (otp.code !== code) {
+      otp.attempts += 1;
+      await this.otpRepository.save(otp);
+
+      if (otp.attempts >= MAX_OTP_ATTEMPTS) {
+        await this.securityAuditService.log({
+          eventType: SecurityAuditEventType.OTP_BRUTE_FORCE_LOCKOUT,
+          email,
+          metadata: { attempts: otp.attempts },
+        });
+        return {
+          valid: false,
+          message: "Too many attempts. Please request a new code.",
+        };
+      }
+
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.OTP_VERIFY_FAILURE,
+        email,
+        metadata: { reason: "Invalid code", attempts: otp.attempts },
+      });
+      return { valid: false, message: "Invalid or expired code" };
     }
 
     otp.verified = true;
     await this.otpRepository.save(otp);
+
+    await this.securityAuditService.log({
+      eventType: SecurityAuditEventType.OTP_VERIFY_SUCCESS,
+      email,
+    });
 
     return { valid: true };
   }

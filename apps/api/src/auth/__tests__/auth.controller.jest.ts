@@ -82,12 +82,21 @@ describe("AuthController", () => {
   describe("registerOtp", () => {
     it("should call authService.requestRegisterOtp", async () => {
       const dto = { email: "test@example.com" };
+      const mockReq = {
+        ip: "127.0.0.1",
+        headers: { "user-agent": "test-agent" },
+        requestId: "req-123",
+      } as any;
       authService.requestRegisterOtp.mockResolvedValue({ success: true });
 
-      const result = await controller.registerOtp(dto);
+      const result = await controller.registerOtp(mockReq, dto);
 
       expect(result).toEqual({ success: true });
-      expect(authService.requestRegisterOtp).toHaveBeenCalledWith(dto.email);
+      expect(authService.requestRegisterOtp).toHaveBeenCalledWith(dto.email, {
+        ip: "127.0.0.1",
+        userAgent: "test-agent",
+        requestId: "req-123",
+      });
     });
   });
 });

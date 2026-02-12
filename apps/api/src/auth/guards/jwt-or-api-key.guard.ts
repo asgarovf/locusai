@@ -1,3 +1,4 @@
+import { SecurityAuditEventType } from "@locusai/shared";
 import {
   CanActivate,
   ExecutionContext,
@@ -6,6 +7,8 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
+import { Request } from "express";
+import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { AuthService } from "../auth.service";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 
@@ -21,7 +24,8 @@ import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private authService: AuthService
+    private authService: AuthService,
+    private securityAuditService: SecurityAuditService
   ) {
     super();
   }
@@ -36,7 +40,7 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
 
     // First, try JWT authentication
     try {
@@ -53,25 +57,52 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
     const apiKey = this.extractApiKey(request);
 
     if (!apiKey) {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.AUTH_FAILURE,
+        ip: request.ip,
+        userAgent: request.headers["user-agent"],
+        requestId: request.requestId,
+        metadata: {
+          reason: "No valid JWT or API key provided",
+          url: request.url,
+          method: request.method,
+        },
+      });
       throw new UnauthorizedException(
         "Authentication required (JWT or API key)"
       );
     }
 
-    const apiKeyUser = await this.authService.validateApiKey(apiKey);
-    request.user = apiKeyUser;
-
-    return true;
+    try {
+      const apiKeyUser = await this.authService.validateApiKey(apiKey);
+      request.user = apiKeyUser;
+      return true;
+    } catch {
+      await this.securityAuditService.log({
+        eventType: SecurityAuditEventType.AUTH_FAILURE,
+        ip: request.ip,
+        userAgent: request.headers["user-agent"],
+        requestId: request.requestId,
+        metadata: {
+          reason: "Invalid API key",
+          url: request.url,
+          method: request.method,
+        },
+      });
+      throw new UnauthorizedException(
+        "Authentication required (JWT or API key)"
+      );
+    }
   }
 
-  private extractApiKey(request: Record<string, unknown>): string | undefined {
-    const headers = request.headers as Record<string, string> | undefined;
+  private extractApiKey(request: Request): string | undefined {
+    const headers = request.headers;
     if (!headers) return undefined;
 
     // Check X-API-Key header first (explicit API key)
     const apiKeyHeader = headers["x-api-key"];
     if (apiKeyHeader) {
-      return apiKeyHeader;
+      return apiKeyHeader as string;
     }
 
     // Check Authorization header for "ApiKey <key>" format

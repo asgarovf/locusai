@@ -8,6 +8,7 @@ export * from "./invitation.entity";
 export * from "./membership.entity";
 export * from "./organization.entity";
 export * from "./otp-verification.entity";
+export * from "./security-audit-log.entity";
 export * from "./sprint.entity";
 export * from "./task.entity";
 export * from "./user.entity";
