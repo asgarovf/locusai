@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.9.14
+
+### Patch Changes
+
+- Git configuration
+- Updated dependencies
+  - @locusai/shared@0.9.14
+
 ## 0.9.13
 
 ### Patch Changes
