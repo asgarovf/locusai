@@ -9,6 +9,7 @@ import { CommonModule } from "./common/common.module";
 import { AllExceptionsFilter } from "./common/filters";
 import {
   LoggingInterceptor,
+  SanitizeInterceptor,
   TransformInterceptor,
 } from "./common/interceptors";
 import { ConfigModule } from "./config/config.module";
@@ -68,6 +69,10 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     {
       provide: APP_GUARD,
       useClass: MembershipRolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SanitizeInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
