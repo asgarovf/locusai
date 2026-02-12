@@ -1,4 +1,5 @@
 import type { Context } from "telegraf";
+import { normalizeInput } from "../command-whitelist.js";
 import type { TelegramConfig } from "../config.js";
 import type { CliExecutor } from "../executor.js";
 import {
@@ -20,11 +21,11 @@ export async function runCommand(
 ): Promise<void> {
   const text =
     (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
-  const input = text.replace(/^\/run\s*/, "").trim();
+  const input = normalizeInput(text.replace(/^\/run\s*/, "").trim());
 
   // Parse --agents <N> or -a <N> from the command text
   let parsedAgentCount: number | undefined;
-  const agentsMatch = input.match(/(?:--agents|-a)\s+(\d+)/);
+  const agentsMatch = input.match(/(?:--agents|-agents|-a)\s+(\d+)/);
   if (agentsMatch) {
     parsedAgentCount = Number.parseInt(agentsMatch[1], 10);
     if (parsedAgentCount < 1 || parsedAgentCount > 5) {
