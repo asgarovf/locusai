@@ -3,6 +3,7 @@ import { json, urlencoded } from "express";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AppLogger } from "./common/logger";
+import { requestIdMiddleware } from "./common/middleware/request-id.middleware";
 import { TypedConfigService } from "./config/config.service";
 
 async function bootstrap() {
@@ -15,6 +16,9 @@ async function bootstrap() {
 
   const configService = app.get(TypedConfigService);
   const isProduction = configService.get("NODE_ENV") === "production";
+
+  // Assign a request ID to every incoming request
+  app.use(requestIdMiddleware);
 
   // Trust Railway's reverse proxy for correct X-Forwarded-For IP extraction
   const expressApp = app.getHttpAdapter().getInstance();
