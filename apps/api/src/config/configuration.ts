@@ -19,10 +19,9 @@ export const ConfigSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().optional(),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
-
   // Rate limiting
   THROTTLE_TTL: z.coerce.number().default(60),
-  THROTTLE_LIMIT: z.coerce.number().default(10),
+  THROTTLE_LIMIT: z.coerce.number().default(100),
 
   // Account lockout
   LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
