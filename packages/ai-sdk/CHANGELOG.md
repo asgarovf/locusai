@@ -1,5 +1,14 @@
 # @locusai/ai-sdk
 
+## 0.9.15
+
+### Patch Changes
+
+- Default pull rebase logic
+- Updated dependencies
+  - @locusai/sdk@0.9.15
+  - @locusai/shared@0.9.15
+
 ## 0.9.14
 
 ### Patch Changes

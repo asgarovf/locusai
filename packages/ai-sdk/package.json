@@ -1,6 +1,6 @@
 {
   "name": "@locusai/ai-sdk",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

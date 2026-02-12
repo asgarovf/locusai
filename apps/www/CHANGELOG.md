@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.9.15
+
+### Patch Changes
+
+- Default pull rebase logic
+- Updated dependencies
+  - @locusai/shared@0.9.15
+
 ## 0.9.14
 
 ### Patch Changes

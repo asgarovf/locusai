@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.9.15
+
+### Patch Changes
+
+- Default pull rebase logic
+
 ## 0.9.14
 
 ### Patch Changes
