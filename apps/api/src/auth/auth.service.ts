@@ -21,6 +21,7 @@ import { Organization } from "@/entities/organization.entity";
 import { User } from "@/entities/user.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { UsersService } from "@/users/users.service";
+import { AccountLockoutService } from "./account-lockout.service";
 import { GoogleUser } from "./interfaces/google-user.interface";
 import { OtpService } from "./otp.service";
 
@@ -32,6 +33,7 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
     private readonly dataSource: DataSource,
+    private readonly accountLockoutService: AccountLockoutService,
 
     @InjectRepository(ApiKey)
     private readonly apiKeyRepository: Repository<ApiKey>
@@ -169,8 +171,11 @@ export class AuthService {
   }
 
   async verifyOtpAndLogin(email: string, code: string): Promise<LoginResponse> {
+    this.accountLockoutService.assertNotLocked(email);
+
     const verification = await this.otpService.verifyOtp(email, code);
     if (!verification.valid) {
+      this.accountLockoutService.recordFailure(email);
       throw new UnauthorizedException(verification.message);
     }
 
@@ -179,6 +184,7 @@ export class AuthService {
       throw new UnauthorizedException("User not found. Please register first.");
     }
 
+    this.accountLockoutService.resetFailures(email);
     await this.otpService.invalidateOtp(email);
     return this.login(user);
   }
@@ -186,10 +192,15 @@ export class AuthService {
   async completeRegistration(
     data: CompleteRegistration
   ): Promise<LoginResponse> {
+    this.accountLockoutService.assertNotLocked(data.email);
+
     const verification = await this.otpService.verifyOtp(data.email, data.otp);
     if (!verification.valid) {
+      this.accountLockoutService.recordFailure(data.email);
       throw new UnauthorizedException(verification.message);
     }
+
+    this.accountLockoutService.resetFailures(data.email);
 
     const existing = await this.usersService.findByEmail(data.email);
     if (existing) {

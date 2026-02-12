@@ -17,6 +17,9 @@ export const ConfigSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().optional(),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
+  LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(10),
+  LOCKOUT_WINDOW_MINUTES: z.coerce.number().default(30),
+  LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

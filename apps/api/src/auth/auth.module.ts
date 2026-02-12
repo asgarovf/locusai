@@ -12,6 +12,7 @@ import {
   Workspace,
 } from "@/entities";
 import { UsersModule } from "@/users/users.module";
+import { AccountLockoutService } from "./account-lockout.service";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { OtpService } from "./otp.service";
@@ -40,7 +41,13 @@ import { GoogleStrategy, JwtStrategy } from "./strategies";
       }),
     }),
   ],
-  providers: [AuthService, OtpService, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    OtpService,
+    AccountLockoutService,
+    JwtStrategy,
+    GoogleStrategy,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })
