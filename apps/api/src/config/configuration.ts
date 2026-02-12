@@ -11,6 +11,7 @@ export const ConfigSchema = z.object({
   JWT_EXPIRES_IN: z.union([z.string(), z.number()]).default("7d"),
   RESEND_API_KEY: z.string().optional(),
   OTP_EXPIRES_IN_MINUTES: z.coerce.number().default(10),
+  OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
   CORS_ORIGIN: z.string().default("*"),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
