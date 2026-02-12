@@ -168,6 +168,11 @@ function ensureGitIdentity(projectPath: string): void {
       stdio: "ignore",
     });
   }
+
+  execSync("git config --global pull.rebase true", {
+    cwd: projectPath,
+    stdio: "ignore",
+  });
 }
 
 export interface LocusProjectConfig {
