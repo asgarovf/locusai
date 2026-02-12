@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "Self-Hosting",
   description:
     "Deploy Locus agents on your own servers for 24/7 availability. One-command setup for Ubuntu, Debian, and macOS.",
+  alternates: {
+    canonical: "https://locusai.dev/products/self-hosting",
+  },
+  openGraph: {
+    url: "https://locusai.dev/products/self-hosting",
+  },
 };
 
 const installs = [

@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "CLI Reference",
   description:
     "Complete command-line reference for Locus. Install, configure, and run AI agents from your terminal.",
+  alternates: {
+    canonical: "https://locusai.dev/cli",
+  },
+  openGraph: {
+    url: "https://locusai.dev/cli",
+  },
 };
 
 const commands = [

@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "How Locus AI handles your data, what we collect, and how we protect your privacy.",
+  alternates: {
+    canonical: "https://locusai.dev/privacy",
+  },
+  openGraph: {
+    url: "https://locusai.dev/privacy",
+  },
 };
 
 export default function PrivacyPolicyPage() {

@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: "Pricing",
   description:
     "Locus is free and open source. Run AI agents locally with no usage limits, no hidden costs.",
+  alternates: {
+    canonical: "https://locusai.dev/pricing",
+  },
+  openGraph: {
+    url: "https://locusai.dev/pricing",
+  },
 };
 
 const features = [

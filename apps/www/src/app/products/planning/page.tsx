@@ -16,6 +16,25 @@ export const metadata: Metadata = {
   title: "Sprint Planning",
   description:
     "AI-powered sprint planning that breaks down directives into architecturally coherent tasks with complexity estimates and risk assessments.",
+  alternates: {
+    canonical: "https://locusai.dev/products/planning",
+  },
+  openGraph: {
+    url: "https://locusai.dev/products/planning",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Locus Sprint Planning",
+  applicationCategory: "DeveloperApplication",
+  url: "https://locusai.dev/products/planning",
+  description:
+    "AI-powered sprint planning that breaks down directives into architecturally coherent tasks with complexity estimates and risk assessments.",
+  author: {
+    "@id": "https://locusai.dev/#organization",
+  },
 };
 
 const steps = [
@@ -108,6 +127,10 @@ const flags = [
 export default function PlanningPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <main className="flex-1">
         {/* Hero */}
