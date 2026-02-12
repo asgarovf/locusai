@@ -446,7 +446,7 @@ export function validateDevCommand(input: string): ValidationResult {
  *   "  → "" (smart quotes U+201C/U+201D)
  *   '  → '' (smart quotes U+2018/U+2019)
  */
-function normalizeInput(input: string): string {
+export function normalizeInput(input: string): string {
   return input
     .replace(/\u2014/g, "--") // em dash → two hyphens
     .replace(/\u2013/g, "-") // en dash → hyphen

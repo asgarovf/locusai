@@ -18,10 +18,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    // Handle HttpException, raw Express errors (e.g. body-parser 413), and unknown errors
+    const hasStatusProperty =
+      typeof exception === "object" &&
+      exception !== null &&
+      "status" in exception &&
+      typeof (exception as { status: unknown }).status === "number";
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+        : hasStatusProperty
+          ? (exception as { status: number }).status
+          : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
@@ -29,7 +38,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const message =
       exception instanceof HttpException
         ? exception.message
-        : "Internal server error";
+        : exception instanceof Error
+          ? exception.message
+          : "Internal server error";
 
     const apiResponse: ApiResponse = {
       success: false,
@@ -97,6 +108,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return "NOT_FOUND";
       case HttpStatus.CONFLICT:
         return "CONFLICT";
+      case HttpStatus.PAYLOAD_TOO_LARGE:
+        return "PAYLOAD_TOO_LARGE";
       case HttpStatus.UNPROCESSABLE_ENTITY:
         return "VALIDATION_ERROR";
       default:

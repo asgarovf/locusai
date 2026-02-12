@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   title: "Telegram Bot",
   description:
     "Remote control your Locus agents, plan sprints, run tasks, and execute git commands — all from Telegram.",
+  alternates: {
+    canonical: "https://locusai.dev/products/telegram",
+  },
+  openGraph: {
+    url: "https://locusai.dev/products/telegram",
+  },
 };
 
 const commandGroups = [

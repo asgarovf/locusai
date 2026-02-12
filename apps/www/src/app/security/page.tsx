@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "Security",
   description:
     "How Locus keeps your code safe. Local execution, git worktree isolation, no cloud dependency, and full transparency.",
+  alternates: {
+    canonical: "https://locusai.dev/security",
+  },
+  openGraph: {
+    url: "https://locusai.dev/security",
+  },
 };
 
 const principles = [

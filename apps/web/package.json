@@ -1,6 +1,6 @@
 {
   "name": "@locusai/web",
-  "version": "0.9.13",
+  "version": "0.9.16",
   "private": true,
   "type": "module",
   "scripts": {

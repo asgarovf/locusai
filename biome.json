@@ -158,6 +158,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["apps/www/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
     }
   ]
 }
