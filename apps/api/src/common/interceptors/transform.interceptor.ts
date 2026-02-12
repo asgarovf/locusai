@@ -17,6 +17,7 @@ export class TransformInterceptor<T>
     next: CallHandler
   ): Observable<ApiResponse<T>> {
     const request = context.switchToHttp().getRequest<Request>();
+    const requestId: string | undefined = request.requestId;
 
     return next.handle().pipe(
       map((data) => ({
@@ -25,6 +26,7 @@ export class TransformInterceptor<T>
         meta: {
           timestamp: new Date().toISOString(),
           path: request.url,
+          requestId,
         },
       }))
     );
