@@ -16,6 +16,25 @@ export const metadata: Metadata = {
   title: "Code Review",
   description:
     "Automated AI code review for GitHub pull requests and local staged changes. Catches bugs, security issues, and style violations.",
+  alternates: {
+    canonical: "https://locusai.dev/products/review",
+  },
+  openGraph: {
+    url: "https://locusai.dev/products/review",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Locus Code Review",
+  applicationCategory: "DeveloperApplication",
+  url: "https://locusai.dev/products/review",
+  description:
+    "Automated AI code review for GitHub pull requests and local staged changes. Catches bugs, security issues, and style violations.",
+  author: {
+    "@id": "https://locusai.dev/#organization",
+  },
 };
 
 const modes = [
@@ -112,6 +131,10 @@ const flags = [
 export default function ReviewPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <main className="flex-1">
         {/* Hero */}

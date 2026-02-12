@@ -19,12 +19,14 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method, url } = request;
     const now = Date.now();
 
+    const requestId: string | undefined = request.requestId;
+
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - now;
         const statusCode = response.statusCode;
         this.logger.log(
-          `${method} ${url} ${statusCode} - ${duration}ms`,
+          `[${requestId}] ${method} ${url} ${statusCode} - ${duration}ms`,
           "HTTP"
         );
       })

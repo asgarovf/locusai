@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -121,6 +122,59 @@ function updateGitignore(projectPath: string): void {
   writeFileSync(gitignorePath, content);
 }
 
+/**
+ * Ensures a git identity (user.name / user.email) is configured locally for
+ * the project so commits don't fall back to the hostname-based default
+ * (e.g. Ubuntu <ubuntu@ip-...>).  Only sets values when the current local
+ * config is empty — it will never overwrite an existing identity.
+ */
+function ensureGitIdentity(projectPath: string): void {
+  const hasName = (() => {
+    try {
+      return execSync("git config --get user.name", {
+        cwd: projectPath,
+        stdio: ["pipe", "pipe", "pipe"],
+      })
+        .toString()
+        .trim();
+    } catch {
+      return "";
+    }
+  })();
+
+  const hasEmail = (() => {
+    try {
+      return execSync("git config --get user.email", {
+        cwd: projectPath,
+        stdio: ["pipe", "pipe", "pipe"],
+      })
+        .toString()
+        .trim();
+    } catch {
+      return "";
+    }
+  })();
+
+  if (!hasName) {
+    execSync('git config user.name "LocusAgent"', {
+      cwd: projectPath,
+      stdio: "ignore",
+    });
+  }
+
+  if (!hasEmail) {
+    execSync('git config user.email "agent@locusai.team"', {
+      cwd: projectPath,
+      stdio: "ignore",
+    });
+  }
+
+  execSync("git config --global pull.rebase true", {
+    cwd: projectPath,
+    stdio: "ignore",
+  });
+}
+
 export interface LocusProjectConfig {
   $schema?: string;
   version: string;
@@ -192,6 +246,9 @@ export class ConfigManager {
 
     // 3. Update .gitignore with locus-specific patterns
     updateGitignore(this.projectPath);
+
+    // 4. Ensure git identity is configured for commits
+    ensureGitIdentity(this.projectPath);
   }
 
   loadConfig(): LocusProjectConfig | null {
@@ -321,6 +378,9 @@ export class ConfigManager {
     if (gitignoreBefore !== gitignoreAfter) {
       result.gitignoreUpdated = true;
     }
+
+    // 5. Ensure git identity is configured for commits
+    ensureGitIdentity(this.projectPath);
 
     return result;
   }

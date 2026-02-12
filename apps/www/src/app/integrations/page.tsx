@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "Integrations",
   description:
     "Locus works with Claude, Codex, GitHub, Telegram, and more. Bring your own AI provider and tools.",
+  alternates: {
+    canonical: "https://locusai.dev/integrations",
+  },
+  openGraph: {
+    url: "https://locusai.dev/integrations",
+  },
 };
 
 const integrations = [

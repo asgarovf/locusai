@@ -15,6 +15,25 @@ export const metadata: Metadata = {
   title: "AI Agents",
   description:
     "Dispatch up to 5 autonomous AI agents that claim tasks, write code, run tests, and create pull requests — each in an isolated git worktree.",
+  alternates: {
+    canonical: "https://locusai.dev/products/agents",
+  },
+  openGraph: {
+    url: "https://locusai.dev/products/agents",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Locus AI Agents",
+  applicationCategory: "DeveloperApplication",
+  url: "https://locusai.dev/products/agents",
+  description:
+    "Dispatch up to 5 autonomous AI agents that claim tasks, write code, run tests, and create pull requests — each in an isolated git worktree.",
+  author: {
+    "@id": "https://locusai.dev/#organization",
+  },
 };
 
 const capabilities = [
@@ -85,6 +104,10 @@ const flags = [
 export default function AgentsPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <main className="flex-1">
         {/* Hero */}

@@ -21,10 +21,12 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
 import { TypedConfigService } from "@/config/config.service";
 import { AuthService } from "./auth.service";
+import { GOOGLE_THROTTLE_TTL, THROTTLE_TTL } from "./constants";
 import { CurrentUser, Public } from "./decorators";
 import { extractIp, GoogleAuthGuard } from "./guards";
 import { GoogleUser } from "./interfaces/google-user.interface";
@@ -116,6 +118,7 @@ export class AuthController {
   // ============================================================================
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
   @Post("register-otp")
   async registerOtp(@Body() data: OtpRequest) {
@@ -123,6 +126,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
   @Post("login-otp")
   async loginOtp(@Req() req: Request, @Body() data: OtpRequest) {
@@ -132,6 +136,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(VerifyOtpSchema))
   @Post("verify-login")
   async verifyLogin(
@@ -151,6 +156,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(CompleteRegistrationSchema))
   @Post("complete-registration")
   async completeRegistration(
@@ -174,6 +180,7 @@ export class AuthController {
   // ============================================================================
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: GOOGLE_THROTTLE_TTL } })
   @Get("google")
   @UseGuards(GoogleAuthGuard)
   async googleAuth() {

@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "./auth/auth.module";
 import { JwtOrApiKeyGuard, MembershipRolesGuard } from "./auth/guards";
@@ -9,6 +10,7 @@ import { CommonModule } from "./common/common.module";
 import { AllExceptionsFilter } from "./common/filters";
 import {
   LoggingInterceptor,
+  SanitizeInterceptor,
   TransformInterceptor,
 } from "./common/interceptors";
 import { ConfigModule } from "./config/config.module";
@@ -40,6 +42,19 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     // Register entities for global use
     TypeOrmModule.forFeature([ApiKey]),
 
+    // Throttler Module for rate limiting
+    ThrottlerModule.forRootAsync({
+      inject: [TypedConfigService],
+      useFactory: (configService: TypedConfigService) => ({
+        throttlers: [
+          {
+            ttl: configService.get("THROTTLE_TTL") * 1000,
+            limit: configService.get("THROTTLE_LIMIT"),
+          },
+        ],
+      }),
+    }),
+
     // Schedule Module for cron jobs
     ScheduleModule.forRoot(),
 
@@ -63,11 +78,19 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
   providers: [
     {
       provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: JwtOrApiKeyGuard,
     },
     {
       provide: APP_GUARD,
       useClass: MembershipRolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SanitizeInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

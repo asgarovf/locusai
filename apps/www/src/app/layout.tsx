@@ -80,6 +80,34 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://locusai.dev/#organization",
+      name: "Locus AI",
+      url: "https://locusai.dev",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://locusai.dev/logo.png",
+      },
+      sameAs: ["https://github.com/asgarovf/locusai"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://locusai.dev/#website",
+      url: "https://locusai.dev",
+      name: "Locus",
+      publisher: {
+        "@id": "https://locusai.dev/#organization",
+      },
+      description:
+        "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -91,6 +119,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${dmSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className="font-sans antialiased min-h-screen bg-background text-foreground grain"

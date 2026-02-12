@@ -13,6 +13,10 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /tasks — List active tasks
 /rejecttask &lt;id&gt; &lt;feedback&gt; — Reject an IN_REVIEW task
 
+<b>Sprints:</b>
+/sprints — List all sprints
+/completesprint &lt;id&gt; — Complete a sprint
+
 <b>Execution:</b>
 /run — Start agents on sprint tasks
 /stop — Stop all running processes
