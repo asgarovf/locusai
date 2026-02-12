@@ -47,6 +47,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       meta: {
         timestamp: new Date().toISOString(),
         path: request.url,
+        requestId: request.requestId,
       },
     };
 

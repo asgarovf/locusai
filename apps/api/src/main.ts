@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AppLogger } from "./common/logger";
+import { requestIdMiddleware } from "./common/middleware/request-id.middleware";
 import { TypedConfigService } from "./config/config.service";
 
 async function bootstrap() {
@@ -11,6 +12,9 @@ async function bootstrap() {
 
   const logger = app.get(AppLogger);
   app.useLogger(logger);
+
+  // Assign a request ID to every incoming request
+  app.use(requestIdMiddleware);
 
   // Use helmet for security headers
   app.use(helmet());
