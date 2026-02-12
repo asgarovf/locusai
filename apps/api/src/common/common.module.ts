@@ -2,7 +2,11 @@ import { Global, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { SecurityAuditLog } from "@/entities/security-audit-log.entity";
 import { AllExceptionsFilter } from "./filters";
-import { LoggingInterceptor, TransformInterceptor } from "./interceptors";
+import {
+  LoggingInterceptor,
+  SanitizeInterceptor,
+  TransformInterceptor,
+} from "./interceptors";
 import { AppLogger } from "./logger";
 import { RequestIdMiddleware } from "./middleware/request-id.middleware";
 import { EmailService, SecurityAuditService } from "./services";
@@ -16,6 +20,7 @@ import { EmailService, SecurityAuditService } from "./services";
     SecurityAuditService,
     AllExceptionsFilter,
     LoggingInterceptor,
+    SanitizeInterceptor,
     TransformInterceptor,
   ],
   exports: [AppLogger, EmailService, SecurityAuditService],
