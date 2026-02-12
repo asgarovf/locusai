@@ -7,8 +7,6 @@ import { SecurityAuditService } from "@/common/services/security-audit.service";
 import { TypedConfigService } from "@/config/config.service";
 import { OtpVerification } from "@/entities/otp-verification.entity";
 
-const MAX_OTP_ATTEMPTS = 5;
-
 @Injectable()
 export class OtpService {
   constructor(
@@ -54,7 +52,9 @@ export class OtpService {
       return { valid: false, message: "Invalid or expired code" };
     }
 
-    if (otp.attempts >= MAX_OTP_ATTEMPTS) {
+    const maxAttempts = this.configService.get("OTP_MAX_ATTEMPTS");
+
+    if (otp.attempts >= maxAttempts) {
       await this.securityAuditService.log({
         eventType: SecurityAuditEventType.OTP_BRUTE_FORCE_LOCKOUT,
         email,
@@ -79,7 +79,7 @@ export class OtpService {
       otp.attempts += 1;
       await this.otpRepository.save(otp);
 
-      if (otp.attempts >= MAX_OTP_ATTEMPTS) {
+      if (otp.attempts >= maxAttempts) {
         await this.securityAuditService.log({
           eventType: SecurityAuditEventType.OTP_BRUTE_FORCE_LOCKOUT,
           email,
