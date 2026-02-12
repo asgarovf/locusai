@@ -1,5 +1,29 @@
 # @locusai/www
 
+## 0.9.16
+
+### Patch Changes
+
+- Sprints commands on telegram
+- Updated dependencies
+  - @locusai/shared@0.9.16
+
+## 0.9.15
+
+### Patch Changes
+
+- Default pull rebase logic
+- Updated dependencies
+  - @locusai/shared@0.9.15
+
+## 0.9.14
+
+### Patch Changes
+
+- Git configuration
+- Updated dependencies
+  - @locusai/shared@0.9.14
+
 ## 0.9.13
 
 ### Patch Changes

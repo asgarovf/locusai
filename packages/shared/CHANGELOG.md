@@ -1,5 +1,23 @@
 # @locusai/shared
 
+## 0.9.16
+
+### Patch Changes
+
+- Sprints commands on telegram
+
+## 0.9.15
+
+### Patch Changes
+
+- Default pull rebase logic
+
+## 0.9.14
+
+### Patch Changes
+
+- Git configuration
+
 ## 0.9.13
 
 ### Patch Changes

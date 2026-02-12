@@ -344,11 +344,6 @@ export class WorktreeManager {
       return null;
     }
 
-    // Configure commit identity so the server doesn't fall back to the
-    // hostname-based default (e.g. Ubuntu <ubuntu@ip-...>).
-    this.gitExec(["config", "user.name", "LocusAgent"], worktreePath);
-    this.gitExec(["config", "user.email", "agent@locusai.team"], worktreePath);
-
     this.git("add -A", worktreePath);
 
     const staged = this.git("diff --cached --name-only", worktreePath).trim();

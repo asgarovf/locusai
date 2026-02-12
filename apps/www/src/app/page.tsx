@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   CallToAction,
   FeatureGrid,
@@ -7,6 +8,31 @@ import {
   TerminalDemo,
 } from "@/components/landing";
 import { Footer, Navbar } from "@/components/layout";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://locusai.dev",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Locus",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Linux, macOS",
+  url: "https://locusai.dev",
+  description:
+    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code from your terminal.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  author: {
+    "@id": "https://locusai.dev/#organization",
+  },
+};
 
 async function getNpmVersion(): Promise<string> {
   try {
@@ -26,6 +52,10 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <main className="flex-1">
         {/* Hero with install tabs */}

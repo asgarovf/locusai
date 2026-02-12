@@ -41,14 +41,18 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     // Register entities for global use
     TypeOrmModule.forFeature([ApiKey]),
 
-    // Rate limiting
-    ThrottlerModule.forRoot([
-      {
-        name: "default",
-        ttl: 60_000,
-        limit: 60,
-      },
-    ]),
+    // Throttler Module for rate limiting
+    ThrottlerModule.forRootAsync({
+      inject: [TypedConfigService],
+      useFactory: (configService: TypedConfigService) => ({
+        throttlers: [
+          {
+            ttl: configService.get("THROTTLE_TTL") * 1000,
+            limit: configService.get("THROTTLE_LIMIT"),
+          },
+        ],
+      }),
+    }),
 
     // Schedule Module for cron jobs
     ScheduleModule.forRoot(),
@@ -73,15 +77,15 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
   providers: [
     {
       provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: JwtOrApiKeyGuard,
     },
     {
       provide: APP_GUARD,
       useClass: MembershipRolesGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,
