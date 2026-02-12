@@ -6,8 +6,10 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
+import { Request } from "express";
 import { AuthService } from "../auth.service";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
+import { IpReputationService } from "../services";
 
 /**
  * Combined Auth Guard - Accepts either JWT or API Key
@@ -16,12 +18,15 @@ import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
  * it falls back to API key authentication. This allows both:
  * - Web dashboard users (JWT) -> sets JwtAuthUser on request.user
  * - CLI/Agent users (API Key) -> sets ApiKeyAuthUser on request.user
+ *
+ * Blocked IPs (from IpReputationService) are rejected before auth is attempted.
  */
 @Injectable()
 export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private authService: AuthService
+    private authService: AuthService,
+    private ipReputationService: IpReputationService
   ) {
     super();
   }
@@ -36,7 +41,11 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
+
+    // Check if IP is blocked before attempting authentication
+    const ip = extractIp(request);
+    this.ipReputationService.assertNotBlocked(ip);
 
     // First, try JWT authentication
     try {
@@ -58,19 +67,25 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
       );
     }
 
-    const apiKeyUser = await this.authService.validateApiKey(apiKey);
-    request.user = apiKeyUser;
-
-    return true;
+    try {
+      const apiKeyUser = await this.authService.validateApiKey(apiKey);
+      request.user = apiKeyUser;
+      return true;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        this.ipReputationService.recordFailedAttempt(ip, "api-key-auth");
+      }
+      throw error;
+    }
   }
 
-  private extractApiKey(request: Record<string, unknown>): string | undefined {
-    const headers = request.headers as Record<string, string> | undefined;
+  private extractApiKey(request: Request): string | undefined {
+    const headers = request.headers;
     if (!headers) return undefined;
 
     // Check X-API-Key header first (explicit API key)
     const apiKeyHeader = headers["x-api-key"];
-    if (apiKeyHeader) {
+    if (typeof apiKeyHeader === "string") {
       return apiKeyHeader;
     }
 
@@ -89,4 +104,12 @@ export class JwtOrApiKeyGuard extends AuthGuard("jwt") implements CanActivate {
 
     return undefined;
   }
+}
+
+export function extractIp(request: Request): string {
+  const forwarded = request.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") {
+    return forwarded.split(",")[0].trim();
+  }
+  return request.ip ?? request.socket?.remoteAddress ?? "unknown";
 }

@@ -21,19 +21,21 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
 import { TypedConfigService } from "@/config/config.service";
 import { AuthService } from "./auth.service";
 import { CurrentUser, Public } from "./decorators";
-import { GoogleAuthGuard } from "./guards";
+import { extractIp, GoogleAuthGuard } from "./guards";
 import { GoogleUser } from "./interfaces/google-user.interface";
+import { IpReputationService } from "./services";
 
 @Controller("auth")
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: TypedConfigService
+    private readonly configService: TypedConfigService,
+    private readonly ipReputationService: IpReputationService
   ) {}
 
   @Get("me")
@@ -123,24 +125,48 @@ export class AuthController {
   @Public()
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
   @Post("login-otp")
-  async loginOtp(@Body() data: OtpRequest) {
+  async loginOtp(@Req() req: Request, @Body() data: OtpRequest) {
+    const ip = extractIp(req);
+    this.ipReputationService.assertNotBlocked(ip);
     return this.authService.requestLoginOtp(data.email);
   }
 
   @Public()
   @UsePipes(new ZodValidationPipe(VerifyOtpSchema))
   @Post("verify-login")
-  async verifyLogin(@Body() data: VerifyOtp): Promise<LoginResponse> {
-    return this.authService.verifyOtpAndLogin(data.email, data.otp);
+  async verifyLogin(
+    @Req() req: Request,
+    @Body() data: VerifyOtp
+  ): Promise<LoginResponse> {
+    const ip = extractIp(req);
+    this.ipReputationService.assertNotBlocked(ip);
+    try {
+      return await this.authService.verifyOtpAndLogin(data.email, data.otp);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        this.ipReputationService.recordFailedAttempt(ip, data.email);
+      }
+      throw error;
+    }
   }
 
   @Public()
   @UsePipes(new ZodValidationPipe(CompleteRegistrationSchema))
   @Post("complete-registration")
   async completeRegistration(
+    @Req() req: Request,
     @Body() data: CompleteRegistration
   ): Promise<LoginResponse> {
-    return this.authService.completeRegistration(data);
+    const ip = extractIp(req);
+    this.ipReputationService.assertNotBlocked(ip);
+    try {
+      return await this.authService.completeRegistration(data);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        this.ipReputationService.recordFailedAttempt(ip, data.email);
+      }
+      throw error;
+    }
   }
 
   // ============================================================================
