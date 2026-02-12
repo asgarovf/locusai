@@ -1,6 +1,8 @@
 import {
   AddMember,
   AddMemberSchema,
+  CreateApiKey,
+  CreateApiKeySchema,
   MembershipResponse,
   MembersResponse,
   OrganizationResponse,
@@ -9,7 +11,6 @@ import {
   OrgIdParamSchema,
 } from "@locusai/shared";
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
-import { z } from "zod";
 import {
   CurrentUser,
   Member,
@@ -105,12 +106,13 @@ export class OrganizationsController {
   @MemberAdmin()
   async createApiKey(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
-    @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
-    body: { name: string }
+    @Body(new ZodValidationPipe(CreateApiKeySchema))
+    body: CreateApiKey
   ) {
     const { apiKey, key } = await this.organizationsService.createApiKey(
       params.orgId,
-      body.name
+      body.name,
+      body.expiresInDays
     );
 
     const { keyHash: _, ...rest } = apiKey;
@@ -120,6 +122,29 @@ export class OrganizationsController {
       apiKey: {
         ...rest,
         key, // Full key returned only once
+      },
+    };
+  }
+
+  @Post(":orgId/api-keys/:keyId/rotate")
+  @MemberAdmin()
+  async rotateApiKey(
+    @Param("orgId") orgId: string,
+    @Param("keyId") keyId: string,
+    @Body() body: { expiresInDays?: number }
+  ) {
+    const { apiKey, key } = await this.organizationsService.rotateApiKey(
+      orgId,
+      keyId,
+      body.expiresInDays
+    );
+
+    const { keyHash: _, ...rest } = apiKey;
+
+    return {
+      apiKey: {
+        ...rest,
+        key,
       },
     };
   }

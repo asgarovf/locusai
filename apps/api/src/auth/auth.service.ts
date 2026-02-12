@@ -49,6 +49,10 @@ export class AuthService {
       throw new UnauthorizedException("Invalid API key");
     }
 
+    if (keyRecord.expiresAt && keyRecord.expiresAt < new Date()) {
+      throw new UnauthorizedException("API key expired");
+    }
+
     // Update last used time (throttle to once per minute to save DB writes)
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
     if (!keyRecord.lastUsedAt || keyRecord.lastUsedAt < oneMinuteAgo) {

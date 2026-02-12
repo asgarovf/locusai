@@ -149,6 +149,7 @@ export const APIKeySchema = z.object({
   keyPrefix: z.string(),
   workspaceId: z.string(),
   lastUsedAt: z.number().nullable(),
+  expiresAt: z.number().nullable(),
   createdAt: z.number(),
 });
 
@@ -159,6 +160,7 @@ export const APIKeyCreateResponseSchema = z.object({
   name: z.string(),
   keyPrefix: z.string(),
   key: z.string(),
+  expiresAt: z.number().nullable(),
   createdAt: z.number(),
 });
 

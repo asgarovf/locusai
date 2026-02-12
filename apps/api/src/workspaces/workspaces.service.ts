@@ -6,7 +6,7 @@ import {
 } from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { LessThan, Repository } from "typeorm";
+import { DataSource, LessThan, Repository } from "typeorm";
 import { AgentRegistration } from "@/entities/agent-registration.entity";
 import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
@@ -33,7 +33,8 @@ export class WorkspacesService {
     private readonly agentRegistrationRepository: Repository<AgentRegistration>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly eventsService: EventsService
+    private readonly eventsService: EventsService,
+    private readonly dataSource: DataSource
   ) {}
 
   /**
@@ -191,7 +192,11 @@ export class WorkspacesService {
   /**
    * Create a new API key for a workspace
    */
-  async createApiKey(workspaceId: string, name: string) {
+  async createApiKey(
+    workspaceId: string,
+    name: string,
+    expiresInDays?: number
+  ) {
     const workspace = await this.findByIdRaw(workspaceId);
 
     const { key, hash, prefix } = this.generateApiKey();
@@ -202,6 +207,9 @@ export class WorkspacesService {
       keyHash: hash,
       keyPrefix: prefix,
       active: true,
+      expiresAt: expiresInDays
+        ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+        : null,
     });
 
     if (workspace.orgId) {
@@ -226,6 +234,45 @@ export class WorkspacesService {
     }
 
     await this.apiKeyRepository.remove(apiKey);
+  }
+
+  /**
+   * Rotate an API key: deactivate the old key and create a new one in a single transaction
+   */
+  async rotateApiKey(
+    workspaceId: string,
+    keyId: string,
+    expiresInDays?: number
+  ): Promise<{ apiKey: ApiKey; key: string }> {
+    const oldKey = await this.apiKeyRepository.findOne({
+      where: { id: keyId, workspaceId },
+    });
+
+    if (!oldKey) {
+      throw new NotFoundException("API key not found");
+    }
+
+    const { key, hash, prefix } = this.generateApiKey();
+
+    return this.dataSource.transaction(async (manager) => {
+      oldKey.active = false;
+      await manager.save(oldKey);
+
+      const newApiKey = manager.create(ApiKey, {
+        workspaceId,
+        organizationId: oldKey.organizationId,
+        name: oldKey.name,
+        keyHash: hash,
+        keyPrefix: prefix,
+        active: true,
+        expiresAt: expiresInDays
+          ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+          : oldKey.expiresAt,
+      });
+
+      const saved = await manager.save(newApiKey);
+      return { apiKey: saved, key };
+    });
   }
 
   // ============================================================================

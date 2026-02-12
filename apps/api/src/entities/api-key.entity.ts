@@ -44,6 +44,9 @@ export class ApiKey {
   @Column({ default: true })
   active: boolean;
 
+  @Column({ name: "expires_at", type: "timestamptz", nullable: true })
+  expiresAt: Date | null;
+
   @Column({ name: "last_used_at", type: "timestamptz", nullable: true })
   lastUsedAt: Date | null;
 

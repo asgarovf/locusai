@@ -1,6 +1,8 @@
 import {
   AgentHeartbeat,
   AgentHeartbeatSchema,
+  CreateApiKey,
+  CreateApiKeySchema,
   CreateWorkspace,
   CreateWorkspaceSchema,
   DispatchTask,
@@ -25,7 +27,6 @@ import {
   Put,
   Query,
 } from "@nestjs/common";
-import { z } from "zod";
 import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { Task } from "@/entities";
@@ -241,12 +242,13 @@ export class WorkspacesController {
   async createApiKey(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam,
-    @Body(new ZodValidationPipe(z.object({ name: z.string().min(1).max(100) })))
-    body: { name: string }
+    @Body(new ZodValidationPipe(CreateApiKeySchema))
+    body: CreateApiKey
   ) {
     const { apiKey, key } = await this.workspacesService.createApiKey(
       params.workspaceId,
-      body.name
+      body.name,
+      body.expiresInDays
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -257,6 +259,30 @@ export class WorkspacesController {
       apiKey: {
         ...rest,
         key, // Full key returned only once
+      },
+    };
+  }
+
+  @Post(":workspaceId/api-keys/:keyId/rotate")
+  @MemberAdmin()
+  async rotateApiKey(
+    @Param("workspaceId") workspaceId: string,
+    @Param("keyId") keyId: string,
+    @Body() body: { expiresInDays?: number }
+  ) {
+    const { apiKey, key } = await this.workspacesService.rotateApiKey(
+      workspaceId,
+      keyId,
+      body.expiresInDays
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { keyHash: _, ...rest } = apiKey;
+
+    return {
+      apiKey: {
+        ...rest,
+        key,
       },
     };
   }
