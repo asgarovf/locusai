@@ -1,7 +1,12 @@
 import { WorktreeManager } from "@locusai/sdk/node";
 import type { Context } from "telegraf";
 import type { TelegramConfig } from "../config.js";
-import { escapeHtml, formatError, formatInfo, formatSuccess } from "../formatter.js";
+import {
+  escapeHtml,
+  formatError,
+  formatInfo,
+  formatSuccess,
+} from "../formatter.js";
 
 function createWorktreeManager(config: TelegramConfig): WorktreeManager {
   return new WorktreeManager(config.projectPath);
@@ -60,7 +65,9 @@ export async function worktreeCommand(
 
   if (!arg) {
     await ctx.reply(
-      formatError("Usage: /worktree &lt;number&gt;\nRun /worktrees to see the list."),
+      formatError(
+        "Usage: /worktree &lt;number&gt;\nRun /worktrees to see the list."
+      ),
       { parse_mode: "HTML" }
     );
     return;
@@ -134,10 +141,9 @@ export async function rmworktreeCommand(
 
     if (arg === "all") {
       const count = manager.removeAll();
-      await ctx.reply(
-        formatSuccess(`Removed ${count} worktree(s).`),
-        { parse_mode: "HTML" }
-      );
+      await ctx.reply(formatSuccess(`Removed ${count} worktree(s).`), {
+        parse_mode: "HTML",
+      });
       return;
     }
 
