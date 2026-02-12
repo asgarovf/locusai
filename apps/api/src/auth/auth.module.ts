@@ -15,6 +15,7 @@ import { UsersModule } from "@/users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { OtpService } from "./otp.service";
+import { IpReputationService, SecurityAuditService } from "./services";
 import { GoogleStrategy, JwtStrategy } from "./strategies";
 
 @Global()
@@ -40,8 +41,15 @@ import { GoogleStrategy, JwtStrategy } from "./strategies";
       }),
     }),
   ],
-  providers: [AuthService, OtpService, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    OtpService,
+    JwtStrategy,
+    GoogleStrategy,
+    SecurityAuditService,
+    IpReputationService,
+  ],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, IpReputationService],
 })
 export class AuthModule {}
