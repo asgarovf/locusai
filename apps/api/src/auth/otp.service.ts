@@ -37,15 +37,30 @@ export class OtpService {
     code: string
   ): Promise<{ valid: boolean; message?: string }> {
     const otp = await this.otpRepository.findOne({
-      where: { email, code, verified: false },
+      where: { email, verified: false },
     });
 
     if (!otp) {
       return { valid: false, message: "Invalid or expired code" };
     }
 
+    const maxAttempts = this.configService.get("OTP_MAX_ATTEMPTS");
+
+    if (otp.attempts >= maxAttempts) {
+      return {
+        valid: false,
+        message: "Too many attempts, please request a new code",
+      };
+    }
+
     if (otp.expiresAt < new Date()) {
       return { valid: false, message: "Code has expired" };
+    }
+
+    if (otp.code !== code) {
+      otp.attempts += 1;
+      await this.otpRepository.save(otp);
+      return { valid: false, message: "Invalid code" };
     }
 
     otp.verified = true;
