@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "./auth/auth.module";
 import { JwtOrApiKeyGuard, MembershipRolesGuard } from "./auth/guards";
@@ -40,6 +41,15 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     // Register entities for global use
     TypeOrmModule.forFeature([ApiKey]),
 
+    // Rate limiting
+    ThrottlerModule.forRoot([
+      {
+        name: "default",
+        ttl: 60_000,
+        limit: 60,
+      },
+    ]),
+
     // Schedule Module for cron jobs
     ScheduleModule.forRoot(),
 
@@ -68,6 +78,10 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     {
       provide: APP_GUARD,
       useClass: MembershipRolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,
