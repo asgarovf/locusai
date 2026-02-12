@@ -3,6 +3,7 @@ import type { AiRunner } from "../ai/runner.js";
 import { getLocusPath } from "../core/config.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { buildArchitectPrompt } from "./agents/architect.js";
+import { buildCrossTaskReviewerPrompt } from "./agents/cross-task-reviewer.js";
 import { buildSprintOrganizerPrompt } from "./agents/sprint-organizer.js";
 import { buildTechLeadPrompt } from "./agents/tech-lead.js";
 import { parseSprintPlanFromAI, type SprintPlan } from "./sprint-plan.js";
@@ -11,6 +12,7 @@ export type PlanningPhase =
   | "tech-lead"
   | "architect"
   | "sprint-organizer"
+  | "cross-task-review"
   | "complete";
 
 export interface PlanningMeetingConfig {
@@ -29,6 +31,7 @@ export interface PlanningMeetingResult {
     techLead: string;
     architect: string;
     sprintOrganizer: string;
+    crossTaskReview: string;
   };
 }
 
@@ -36,7 +39,7 @@ export interface PlanningMeetingResult {
  * Orchestrates a multi-phase planning meeting where AI agent personas
  * collaborate to produce a sprint plan.
  *
- * Flow: CEO Directive → Tech Lead → Architect → Sprint Organizer → Sprint Plan
+ * Flow: CEO Directive → Tech Lead → Architect → Sprint Organizer → Cross-Task Review → Sprint Plan
  */
 export class PlanningMeeting {
   private projectPath: string;
@@ -63,7 +66,7 @@ export class PlanningMeeting {
     const codebaseIndex = this.getCodebaseIndex();
 
     // Phase 1: Tech Lead
-    this.log("Phase 1/3: Tech Lead analyzing directive...", "info");
+    this.log("Phase 1/4: Tech Lead analyzing directive...", "info");
     const techLeadPrompt = buildTechLeadPrompt({
       directive,
       projectContext,
@@ -74,7 +77,7 @@ export class PlanningMeeting {
     this.log("Tech Lead phase complete.", "success");
 
     // Phase 2: Architect
-    this.log("Phase 2/3: Architect refining task breakdown...", "info");
+    this.log("Phase 2/4: Architect refining task breakdown...", "info");
     const architectPrompt = buildArchitectPrompt({
       directive,
       projectContext,
@@ -85,7 +88,7 @@ export class PlanningMeeting {
     this.log("Architect phase complete.", "success");
 
     // Phase 3: Sprint Organizer
-    this.log("Phase 3/3: Sprint Organizer finalizing plan...", "info");
+    this.log("Phase 3/4: Sprint Organizer finalizing plan...", "info");
     const sprintOrganizerPrompt = buildSprintOrganizerPrompt({
       directive,
       architectOutput,
@@ -96,8 +99,25 @@ export class PlanningMeeting {
     );
     this.log("Sprint Organizer phase complete.", "success");
 
+    // Phase 4: Cross-Task Review
+    this.log(
+      "Phase 4/4: Cross-Task Review checking for conflicts and overlaps...",
+      "info"
+    );
+    const crossTaskReviewerPrompt = buildCrossTaskReviewerPrompt({
+      directive,
+      projectContext,
+      sprintOrganizerOutput,
+      feedback,
+    });
+    const crossTaskReviewOutput = await this.aiRunner.run(
+      crossTaskReviewerPrompt
+    );
+    this.log("Cross-Task Review phase complete.", "success");
+
     // Parse the final output into a SprintPlan
-    const plan = parseSprintPlanFromAI(sprintOrganizerOutput, directive);
+    // Use the cross-task reviewer's output as it contains the revised plan
+    const plan = parseSprintPlanFromAI(crossTaskReviewOutput, directive);
 
     if (feedback) {
       plan.feedback = feedback;
@@ -109,6 +129,7 @@ export class PlanningMeeting {
         techLead: techLeadOutput,
         architect: architectOutput,
         sprintOrganizer: sprintOrganizerOutput,
+        crossTaskReview: crossTaskReviewOutput,
       },
     };
   }

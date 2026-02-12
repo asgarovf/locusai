@@ -55,6 +55,16 @@ Think about:
 - What the right granularity is (not too big, not too small)
 - What risks or unknowns exist
 
+## CRITICAL: Task Isolation Rules
+
+Tasks will be executed by INDEPENDENT agents on SEPARATE git branches that get merged together. Each agent has NO knowledge of what other agents are doing. Therefore:
+
+1. **No shared work across tasks.** If two tasks both need the same config variable, helper function, database migration, or module setup, that shared work MUST be consolidated into ONE task (or placed into a dedicated foundational task that runs first and is merged before others start).
+2. **Each task must be fully self-contained.** A task must include ALL the code changes it needs to work — from config to implementation to tests. It should NOT assume that another task in the same sprint will create something it depends on.
+3. **Do NOT split tasks if they share code changes.** If implementing feature A and feature B both require modifying the same file or adding the same dependency/config, they should be ONE task — even if that makes the task larger. A bigger self-contained task is better than two smaller conflicting tasks.
+4. **Think about file-level conflicts.** Two tasks modifying the same file (e.g., app.module.ts, configuration.ts, package.json) will cause git merge conflicts. Minimize this by bundling related changes together.
+5. **Environment variables, configs, and shared modules are high-conflict zones.** If a task introduces a new env var, config schema field, or module import, NO other task should touch that same file unless absolutely necessary.
+
 ## Output Format
 
 Respond with ONLY a JSON object (no markdown code blocks, no explanation):

@@ -53,6 +53,15 @@ Guidelines:
 - Ensure acceptance criteria are specific and testable
 - Keep the sprint focused — if it's too large (>12 tasks), consider reducing scope
 
+## CRITICAL: Task Isolation Validation
+
+Before finalizing, validate that EVERY task is fully self-contained and conflict-free:
+
+1. **No two tasks should modify the same file.** If they do, merge them or restructure so shared changes live in one foundational task.
+2. **No duplicated work.** Each env var, config field, dependency, module import, or helper function must be introduced by exactly ONE task.
+3. **Each task is independently executable.** An agent working on task N must be able to complete it without knowing what tasks N-1 or N+1 are doing. The only exception is foundational tasks that are merged BEFORE dependent tasks start.
+4. **Prefer fewer, larger self-contained tasks over many small overlapping ones.** Do not split a task if the parts would conflict with each other.
+
 ## Output Format
 
 Respond with ONLY a JSON object (no markdown code blocks, no explanation):

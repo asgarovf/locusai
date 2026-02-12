@@ -147,7 +147,12 @@ export function parseSprintPlanFromAI(
     jsonStr = jsonMatch[1]?.trim() || "";
   }
 
-  const parsed = JSON.parse(jsonStr);
+  let parsed = JSON.parse(jsonStr);
+
+  // Support cross-task reviewer output format which nests the plan under revisedPlan
+  if (parsed.revisedPlan) {
+    parsed = parsed.revisedPlan;
+  }
 
   const now = new Date().toISOString();
   const id = `plan-${Date.now()}`;
