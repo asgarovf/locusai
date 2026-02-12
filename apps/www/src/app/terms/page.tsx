@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     "Terms and conditions for using the Locus AI platform and related services.",
+  alternates: {
+    canonical: "https://locusai.dev/terms",
+  },
+  openGraph: {
+    url: "https://locusai.dev/terms",
+  },
 };
 
 export default function TermsOfServicePage() {
