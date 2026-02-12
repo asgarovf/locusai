@@ -1,6 +1,10 @@
 import { Global, Module } from "@nestjs/common";
 import { AllExceptionsFilter } from "./filters";
-import { LoggingInterceptor, TransformInterceptor } from "./interceptors";
+import {
+  LoggingInterceptor,
+  SanitizeInterceptor,
+  TransformInterceptor,
+} from "./interceptors";
 import { AppLogger } from "./logger";
 import { EmailService } from "./services";
 
@@ -11,6 +15,7 @@ import { EmailService } from "./services";
     EmailService,
     AllExceptionsFilter,
     LoggingInterceptor,
+    SanitizeInterceptor,
     TransformInterceptor,
   ],
   exports: [AppLogger, EmailService],
