@@ -1,5 +1,14 @@
 # @locusai/ai-sdk
 
+## 0.10.3
+
+### Patch Changes
+
+- Workflow improvements
+- Updated dependencies
+  - @locusai/sdk@0.10.3
+  - @locusai/shared@0.10.3
+
 ## 0.10.2
 
 ### Patch Changes
