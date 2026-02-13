@@ -1,5 +1,16 @@
 # @locusai/telegram
 
+## 0.11.0
+
+### Minor Changes
+
+- Revert to single worktree execution
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.11.0
+
 ## 0.10.6
 
 ### Patch Changes

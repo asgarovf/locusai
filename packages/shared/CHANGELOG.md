@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.11.0
+
+### Minor Changes
+
+- Revert to single worktree execution
+
 ## 0.10.6
 
 ### Patch Changes
