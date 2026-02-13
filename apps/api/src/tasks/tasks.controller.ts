@@ -20,12 +20,19 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CurrentUserId, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { Task } from "@/entities";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
+@ApiTags("Tasks")
 @Controller("workspaces/:workspaceId/tasks")
 export class TasksController {
   constructor(
@@ -36,6 +43,8 @@ export class TasksController {
 
   @Get()
   @Member()
+  @ApiOperation({ summary: "List tasks in a workspace" })
+  @ApiOkResponse({ description: "Tasks returned successfully." })
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<TasksResponse> {
@@ -60,6 +69,8 @@ export class TasksController {
 
   @Get(":taskId")
   @Member()
+  @ApiOperation({ summary: "Get task by ID" })
+  @ApiOkResponse({ description: "Task returned successfully." })
   async getById(@Param("taskId") taskId: string): Promise<TaskResponse> {
     const task = await this.tasksService.findById(taskId);
     return { task: this.taskToTaskResponse(task) };
@@ -67,6 +78,8 @@ export class TasksController {
 
   @Post()
   @Member()
+  @ApiOperation({ summary: "Create task in a workspace" })
+  @ApiCreatedResponse({ description: "Task created successfully." })
   async create(
     @CurrentUserId() userId: string | null,
     @Param("workspaceId") workspaceId: string,

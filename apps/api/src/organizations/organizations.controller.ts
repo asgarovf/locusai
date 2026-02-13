@@ -9,6 +9,7 @@ import {
   OrgIdParamSchema,
 } from "@locusai/shared";
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { z } from "zod";
 import {
   CurrentUser,
@@ -20,11 +21,14 @@ import { ZodValidationPipe } from "@/common/pipes";
 import { User } from "@/entities";
 import { OrganizationsService } from "./organizations.service";
 
+@ApiTags("Organizations")
 @Controller("organizations")
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Get()
+  @ApiOperation({ summary: "List organizations for current user" })
+  @ApiOkResponse({ description: "Organizations returned successfully." })
   async list(@CurrentUser() user: User): Promise<OrganizationsResponse> {
     const organizations = await this.organizationsService.findByUser(user.id);
     return { organizations };
@@ -32,6 +36,8 @@ export class OrganizationsController {
 
   @Get(":orgId")
   @Member()
+  @ApiOperation({ summary: "Get organization by ID" })
+  @ApiOkResponse({ description: "Organization returned successfully." })
   async getById(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<OrganizationResponse> {

@@ -21,6 +21,7 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
@@ -32,6 +33,7 @@ import { extractIp, GoogleAuthGuard } from "./guards";
 import { GoogleUser } from "./interfaces/google-user.interface";
 import { IpReputationService } from "./services";
 
+@ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -41,6 +43,8 @@ export class AuthController {
   ) {}
 
   @Get("me")
+  @ApiOperation({ summary: "Get current authenticated user profile" })
+  @ApiOkResponse({ description: "Current authenticated user profile." })
   async getProfile(@CurrentUser() authUser: AuthenticatedUser) {
     // This endpoint only works for JWT-authenticated users
     if (!isJwtUser(authUser)) {
@@ -85,6 +89,8 @@ export class AuthController {
   }
 
   @Get("api-key")
+  @ApiOperation({ summary: "Get current API key authentication context" })
+  @ApiOkResponse({ description: "Current API key context." })
   async getApiKeyInfo(@CurrentUser() authUser: AuthenticatedUser) {
     // This endpoint only works for API Key authenticated users
     if (isJwtUser(authUser)) {

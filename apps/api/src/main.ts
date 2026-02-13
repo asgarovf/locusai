@@ -5,6 +5,7 @@ import { AppModule } from "./app.module";
 import { AppLogger } from "./common/logger";
 import { requestIdMiddleware } from "./common/middleware/request-id.middleware";
 import { TypedConfigService } from "./config/config.service";
+import { setupSwaggerDocs } from "./swagger/swagger-docs";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -71,6 +72,12 @@ async function bootstrap() {
       "X-Request-ID",
     ],
     maxAge: 86400,
+  });
+
+  setupSwaggerDocs(app, {
+    enabled: configService.get("SWAGGER_DOCS_ENABLED") === "true",
+    username: configService.get("SWAGGER_DOCS_USERNAME") ?? "",
+    password: configService.get("SWAGGER_DOCS_PASSWORD") ?? "",
   });
 
   const port = configService.get("PORT");

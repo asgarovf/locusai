@@ -15,10 +15,12 @@ import {
   Post,
   Put,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AnyMember, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocsService } from "./docs.service";
 
+@ApiTags("Docs")
 @Controller("workspaces/:workspaceId/docs")
 export class DocsController {
   constructor(private readonly docsService: DocsService) {}
@@ -38,6 +40,8 @@ export class DocsController {
 
   @Get()
   @AnyMember()
+  @ApiOperation({ summary: "List docs by workspace" })
+  @ApiOkResponse({ description: "Docs returned successfully." })
   async list(@Param("workspaceId") workspaceId: string): Promise<DocsResponse> {
     const docs = await this.docsService.findByWorkspace(workspaceId);
     return { docs } as unknown as DocsResponse;

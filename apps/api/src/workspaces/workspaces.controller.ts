@@ -25,6 +25,7 @@ import {
   Put,
   Query,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { z } from "zod";
 import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
@@ -33,6 +34,7 @@ import { User } from "@/entities/user.entity";
 import { TasksService } from "@/tasks/tasks.service";
 import { WorkspacesService } from "./workspaces.service";
 
+@ApiTags("Workspaces")
 @Controller("workspaces")
 export class WorkspacesController {
   constructor(
@@ -42,6 +44,8 @@ export class WorkspacesController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: "List workspaces for current user" })
+  @ApiOkResponse({ description: "Workspaces returned successfully." })
   async listAll(@CurrentUser() user: User) {
     const workspaces = await this.workspacesService.findByUser(user.id);
     return { workspaces };
@@ -90,6 +94,8 @@ export class WorkspacesController {
 
   @Get(":workspaceId")
   @Member()
+  @ApiOperation({ summary: "Get workspace by ID" })
+  @ApiOkResponse({ description: "Workspace returned successfully." })
   async getById(
     @Param(new ZodValidationPipe(WorkspaceIdParamSchema))
     params: WorkspaceIdParam

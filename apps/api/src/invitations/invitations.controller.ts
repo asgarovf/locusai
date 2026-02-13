@@ -11,6 +11,7 @@ import {
   OrgIdParamSchema,
 } from "@locusai/shared";
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { MemberAdmin } from "@/auth/decorators/membership-roles.decorator";
 import { Public } from "@/auth/decorators/public.decorator";
 import { CurrentUser } from "@/auth/decorators/user.decorator";
@@ -18,12 +19,15 @@ import { ZodValidationPipe } from "@/common/pipes/zod-validation.pipe";
 import { User } from "@/entities";
 import { InvitationsService } from "./invitations.service";
 
+@ApiTags("Invitations")
 @Controller()
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Post("org/:orgId/invitations")
   @MemberAdmin()
+  @ApiOperation({ summary: "Create an organization invitation" })
+  @ApiOkResponse({ description: "Invitation created successfully." })
   async create(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam,
     @CurrentUser() user: User,
@@ -40,6 +44,8 @@ export class InvitationsController {
 
   @Get("org/:orgId/invitations")
   @MemberAdmin()
+  @ApiOperation({ summary: "List organization invitations" })
+  @ApiOkResponse({ description: "Invitations returned successfully." })
   async list(
     @Param(new ZodValidationPipe(OrgIdParamSchema)) params: OrgIdParam
   ): Promise<InvitationsResponse> {
@@ -49,6 +55,8 @@ export class InvitationsController {
 
   @Public()
   @Get("invitations/verify/:token")
+  @ApiOperation({ summary: "Verify invitation token" })
+  @ApiOkResponse({ description: "Invitation returned successfully." })
   async verify(
     @Param(new ZodValidationPipe(InvitationVerifyParamSchema))
     params: InvitationVerifyParam

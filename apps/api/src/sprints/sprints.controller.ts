@@ -15,11 +15,13 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CurrentUserId, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { SprintsService } from "./sprints.service";
 
+@ApiTags("Sprints")
 @Controller("workspaces/:workspaceId/sprints")
 export class SprintsController {
   constructor(
@@ -38,6 +40,8 @@ export class SprintsController {
 
   @Get()
   @Member()
+  @ApiOperation({ summary: "List workspace sprints" })
+  @ApiOkResponse({ description: "Sprints returned successfully." })
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<SprintsResponse> {
@@ -48,6 +52,8 @@ export class SprintsController {
 
   @Get("active")
   @Member()
+  @ApiOperation({ summary: "Get active workspace sprint" })
+  @ApiOkResponse({ description: "Active sprint returned successfully." })
   async getActive(
     @Param("workspaceId") workspaceId: string
   ): Promise<SprintResponse> {

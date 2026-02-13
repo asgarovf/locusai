@@ -15,16 +15,20 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AnyMember, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
 import { DocGroupsService } from "./doc-groups.service";
 
+@ApiTags("Doc Groups")
 @Controller("workspaces/:workspaceId/doc-groups")
 export class DocGroupsController {
   constructor(private readonly docGroupsService: DocGroupsService) {}
 
   @Get()
   @AnyMember()
+  @ApiOperation({ summary: "List doc groups by workspace" })
+  @ApiOkResponse({ description: "Doc groups returned successfully." })
   async list(
     @Param("workspaceId") workspaceId: string
   ): Promise<DocGroupsResponse> {
