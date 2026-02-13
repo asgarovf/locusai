@@ -25,8 +25,6 @@ export class TaskExecutor {
     const basePrompt = await this.promptBuilder.build(task);
 
     try {
-      this.deps.log("Starting Execution...", "info");
-
       const output = await this.deps.aiRunner.run(basePrompt);
       const summary = this.extractSummary(output);
 
