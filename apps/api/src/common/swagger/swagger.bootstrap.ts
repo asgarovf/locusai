@@ -21,8 +21,9 @@ export function bootstrapSwagger(
     );
   }
 
-  const swaggerApplication =
-    app as Parameters<typeof SwaggerModule.createDocument>[0];
+  const swaggerApplication = app as Parameters<
+    typeof SwaggerModule.createDocument
+  >[0];
 
   const basicAuthMiddleware = createBasicAuthMiddleware({
     username: config.username,
