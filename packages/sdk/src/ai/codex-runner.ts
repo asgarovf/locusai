@@ -197,6 +197,12 @@ export class CodexRunner implements AiRunner {
       if (code === 0) {
         const result = this.readOutput(outputPath, finalOutput);
         this.cleanupTempFile(outputPath);
+        // Codex commonly writes the assistant response only to --output-last-message.
+        // Emit it as text_delta when no incremental text was streamed so interactive
+        // mode still displays assistant output.
+        if (result && finalContent.trim().length === 0) {
+          enqueueChunk({ type: "text_delta", content: result });
+        }
         enqueueChunk({ type: "result", content: result });
       } else {
         this.cleanupTempFile(outputPath);
@@ -338,7 +344,6 @@ export class CodexRunner implements AiRunner {
 
   private buildArgs(outputPath: string): string[] {
     const args = [
-      "--quiet",
       "exec",
       "--full-auto",
       "--skip-git-repo-check",
