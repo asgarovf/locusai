@@ -7,12 +7,42 @@ import {
   formatError,
   formatInfo,
   formatSuccess,
-  splitMessage,
   stripAnsi,
 } from "../formatter.js";
 
 // Track the active run process so /stop can kill it
 let activeRunKill: (() => void) | null = null;
+
+/**
+ * Status line patterns from CLI/worker output that are worth sending to Telegram.
+ * Everything else (model streaming, tool traces, thinking blocks, etc.) is filtered out.
+ */
+const STATUS_PATTERNS = [
+  /Agent spawned:/,
+  /Claimed:/,
+  /Completed:/,
+  /Failed:/,
+  /Blocked:/,
+  /Stale agent killed:/,
+  /Starting \d+ agents? in/,
+  /No more tasks to process/,
+  /No tasks available/,
+  /Active sprint found:/,
+  /No active sprint found/,
+  /Received SIG/,
+  /worktree isolation enabled/,
+  /branches will be pushed/,
+  /PR created:/,
+];
+
+/**
+ * Check if a line from CLI output is a meaningful status update.
+ */
+function isStatusLine(line: string): boolean {
+  const clean = stripAnsi(line).trim();
+  if (!clean) return false;
+  return STATUS_PATTERNS.some((pattern) => pattern.test(clean));
+}
 
 export async function runCommand(
   ctx: Context,
@@ -70,32 +100,36 @@ export async function runCommand(
 
   const args = executor.buildArgs(baseArgs, { needsApiKey: true });
 
-  // Use streaming execution for long-running run command
-  let outputBuffer = "";
-  let lastSentLength = 0;
+  // Buffer for incomplete lines from stdout/stderr chunks
+  let lineBuffer = "";
+  // Accumulate only status lines to send to Telegram
+  const pendingStatusLines: string[] = [];
   const SEND_INTERVAL_MS = 10_000;
 
   const sendInterval = setInterval(async () => {
-    if (outputBuffer.length > lastSentLength) {
-      const newOutput = stripAnsi(outputBuffer.slice(lastSentLength));
-      lastSentLength = outputBuffer.length;
-
-      const messages = splitMessage(
-        `<pre>${escapeHtml(newOutput)}</pre>`,
-        4000
-      );
-      for (const msg of messages) {
-        try {
-          await ctx.reply(msg, { parse_mode: "HTML" });
-        } catch {
-          // Telegram rate limit or message too long, skip
-        }
+    if (pendingStatusLines.length > 0) {
+      const batch = pendingStatusLines.splice(0);
+      const text = batch.map((l) => escapeHtml(l)).join("\n");
+      try {
+        await ctx.reply(`<pre>${text}</pre>`, { parse_mode: "HTML" });
+      } catch {
+        // Telegram rate limit or message too long, skip
       }
     }
   }, SEND_INTERVAL_MS);
 
   const { kill, done } = executor.executeStreaming(args, (chunk) => {
-    outputBuffer += chunk;
+    lineBuffer += chunk;
+    const lines = lineBuffer.split("\n");
+    // Last element is an incomplete line (or empty if chunk ended with \n)
+    lineBuffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const clean = stripAnsi(line).trim();
+      if (clean && isStatusLine(line)) {
+        pendingStatusLines.push(clean);
+      }
+    }
   });
 
   activeRunKill = kill;
@@ -108,19 +142,19 @@ export async function runCommand(
       activeRunKill = null;
       clearInterval(sendInterval);
 
-      // Send any remaining output
-      if (outputBuffer.length > lastSentLength) {
-        const remaining = stripAnsi(outputBuffer.slice(lastSentLength));
-        const messages = splitMessage(
-          `<pre>${escapeHtml(remaining)}</pre>`,
-          4000
-        );
-        for (const msg of messages) {
-          try {
-            await ctx.reply(msg, { parse_mode: "HTML" });
-          } catch {
-            // Skip on error
-          }
+      // Process any remaining buffered line
+      if (lineBuffer.trim() && isStatusLine(lineBuffer)) {
+        pendingStatusLines.push(stripAnsi(lineBuffer).trim());
+      }
+
+      // Send any remaining status lines
+      if (pendingStatusLines.length > 0) {
+        const batch = pendingStatusLines.splice(0);
+        const text = batch.map((l) => escapeHtml(l)).join("\n");
+        try {
+          await ctx.reply(`<pre>${text}</pre>`, { parse_mode: "HTML" });
+        } catch {
+          // Skip on error
         }
       }
 

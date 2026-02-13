@@ -1,5 +1,4 @@
 import { c, LocusClient } from "@locusai/sdk/node";
-import { ConfigManager } from "./config-manager";
 
 export interface ResolverOptions {
   apiKey: string;
@@ -8,10 +7,7 @@ export interface ResolverOptions {
 }
 
 export class WorkspaceResolver {
-  constructor(
-    private configManager: ConfigManager,
-    private options: ResolverOptions
-  ) {}
+  constructor(private options: ResolverOptions) {}
 
   async resolve(): Promise<string> {
     // 1. If workspace ID is provided in CLI, use it and don't save
@@ -19,13 +15,9 @@ export class WorkspaceResolver {
       return this.options.workspaceId;
     }
 
-    // 2. Try to get from config
-    const persistedId = this.configManager.getWorkspaceId();
-    if (persistedId) {
-      return persistedId;
-    }
+    // TODO: Add cache to apiKey -> workspaceId
 
-    // 3. Resolve from API
+    // 2. Resolve from API
     try {
       console.log(c.dim("ℹ  Resolving workspace from API key..."));
       const client = new LocusClient({
@@ -36,8 +28,6 @@ export class WorkspaceResolver {
       const info = await client.auth.getApiKeyInfo();
 
       if (info.workspaceId) {
-        // Save for future use
-        this.configManager.setWorkspaceId(info.workspaceId);
         console.log(c.success(`✓  Resolved workspace: ${info.workspaceId}`));
         return info.workspaceId;
       }

@@ -1,3 +1,4 @@
+export { configCommand } from "./config.js";
 export { devCommand } from "./dev.js";
 export { execCommand } from "./exec.js";
 export { gitCommand } from "./git.js";

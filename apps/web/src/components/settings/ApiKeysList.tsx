@@ -3,7 +3,7 @@
  * Displays organization API keys with copy, view, and delete actions
  */
 
-import { Copy, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Badge, Button, showToast } from "@/components/ui";
 
@@ -44,11 +44,6 @@ export function ApiKeysList({
   onDelete,
 }: ApiKeysListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const copyToClipboard = (key: string) => {
-    navigator.clipboard.writeText(key);
-    showToast.success("API key copied to clipboard");
-  };
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -105,16 +100,6 @@ export function ApiKeysList({
                   <code className="text-xs bg-secondary/50 px-2 py-1 rounded font-mono whitespace-nowrap">
                     {maskApiKey(apiKey.key)}
                   </code>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => copyToClipboard(apiKey.key)}
-                    title="Copy"
-                  >
-                    <Copy size={14} />
-                  </Button>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground whitespace-nowrap">

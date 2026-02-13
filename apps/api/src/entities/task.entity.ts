@@ -122,6 +122,9 @@ export class Task {
   @Column({ name: "order", type: "float", default: 1000 })
   order: number;
 
+  @Column({ name: "tier", type: "int", nullable: true })
+  tier: number | null;
+
   @UpdateDateColumn({ name: "updated_at", type: "timestamptz" })
   updatedAt: Date;
 }

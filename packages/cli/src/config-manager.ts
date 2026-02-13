@@ -180,7 +180,6 @@ export interface LocusProjectConfig {
   version: string;
   createdAt: string;
   projectPath: string;
-  workspaceId?: string;
 }
 
 export class ConfigManager {
@@ -383,18 +382,6 @@ export class ConfigManager {
     ensureGitIdentity(this.projectPath);
 
     return result;
-  }
-
-  getWorkspaceId(): string | undefined {
-    return this.loadConfig()?.workspaceId;
-  }
-
-  setWorkspaceId(workspaceId: string): void {
-    const config = this.loadConfig();
-    if (config) {
-      config.workspaceId = workspaceId;
-      this.saveConfig(config);
-    }
   }
 
   private saveConfig(config: LocusProjectConfig): void {

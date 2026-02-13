@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, mock } from "bun:test";
-import { AgentOrchestrator } from "../../orchestrator.js";
+import { AgentOrchestrator } from "../../orchestrator/index.js";
 
 const baseConfig = {
   workspaceId: "workspace-1",

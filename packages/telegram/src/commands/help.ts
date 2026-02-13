@@ -35,6 +35,11 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /status — Show running processes
 /agents — List agent worktrees
 
+<b>Config:</b>
+/config — Show current settings
+/config set &lt;key&gt; &lt;value&gt; — Update a setting
+/config unset &lt;key&gt; — Remove a setting
+
 <b>System:</b>
 /help — Show this message`;
 

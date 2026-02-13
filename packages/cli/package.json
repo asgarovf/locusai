@@ -11,6 +11,7 @@
     "build": "bun build ./index.ts --target=node --outfile=./bin/locus.js && bun build ../sdk/src/agent/worker.ts --target=node --outfile=./bin/agent/worker.js",
     "lint": "biome lint .",
     "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
     "test:local": "bun run build && node ./bin/locus.js",
     "pack:test": "npm pack && tar -xzf locusai-cli-*.tgz && cd package && npm link",
     "clean": "rm -rf node_modules"

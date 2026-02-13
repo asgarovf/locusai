@@ -32,6 +32,8 @@ export const TaskSchema = BaseEntitySchema.extend({
   activityLog: z.array(EventSchema).optional(),
   docs: z.array(DocSchema),
   order: z.number().optional(),
+  /** Execution tier for parallel task scheduling (0 = foundational, higher = depends on lower tiers) */
+  tier: z.number().int().min(0).optional(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -50,6 +52,7 @@ export const CreateTaskSchema = z.object({
   acceptanceChecklist: z.array(AcceptanceItemSchema).optional(),
   docIds: z.array(z.string()).optional(),
   order: z.number().optional(),
+  tier: z.number().int().min(0).optional(),
 });
 
 export type CreateTask = z.infer<typeof CreateTaskSchema>;

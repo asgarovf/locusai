@@ -1,72 +1,38 @@
-import { Sprint, Task, TaskStatus } from "@locusai/shared";
+import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
-import type { AiProvider, AiRunner } from "../ai/runner.js";
+import type { AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
 import {
   getGhUsername,
   isGhAvailable,
   isGitAvailable,
 } from "../git/git-utils.js";
-import { PrService } from "../git/pr-service.js";
 import { LocusClient } from "../index.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
-import { WorktreeManager } from "../worktree/worktree-manager.js";
+import { GitWorkflow } from "./git-workflow.js";
 import { TaskExecutor } from "./task-executor.js";
+import type { TaskResult, WorkerConfig } from "./worker-types.js";
 
-function resolveProvider(value: string | undefined): AiProvider {
-  if (!value || value.startsWith("--")) {
-    console.warn(
-      "Warning: --provider requires a value. Falling back to 'claude'."
-    );
-    return PROVIDER.CLAUDE;
-  }
-  if (value === PROVIDER.CLAUDE || value === PROVIDER.CODEX) return value;
-  console.warn(
-    `Warning: invalid --provider value '${value}'. Falling back to 'claude'.`
-  );
-  return PROVIDER.CLAUDE;
-}
-
-export interface WorkerConfig {
-  agentId: string;
-  workspaceId: string;
-  sprintId?: string;
-  apiBase: string;
-  projectPath: string;
-  apiKey: string;
-  model?: string;
-  provider?: AiProvider;
-  /** When running in a worktree, this is the path to the main repo for progress updates */
-  mainProjectPath?: string;
-  /** Whether to use per-task worktrees for isolation */
-  useWorktrees?: boolean;
-  /** Whether to push branches to remote after committing */
-  autoPush?: boolean;
-}
-
-interface CommitPushResult {
-  branch: string | null;
-  pushed: boolean;
-  pushFailed: boolean;
-  pushError?: string;
-  skipReason?: string;
-  noChanges?: boolean;
-}
+// Re-export for backwards compatibility
+export type { WorkerConfig } from "./worker-types.js";
 
 /**
- * Main agent worker that orchestrates task execution
- * Delegates responsibilities to specialized services
+ * Main agent worker that claims and executes tasks.
+ *
+ * Responsibilities:
+ * - Claiming tasks from the API via dispatch
+ * - Executing tasks using the AI runner
+ * - Delegating git operations (worktree, commit, push, PR) to `GitWorkflow`
+ * - Reporting task status back to the API
+ * - Heartbeat reporting to the orchestrator
  */
 export class AgentWorker {
   private client: LocusClient;
   private aiRunner: AiRunner;
-
-  // Services
   private taskExecutor: TaskExecutor;
   private knowledgeBase: KnowledgeBase;
-  private worktreeManager: WorktreeManager | null = null;
-  private prService: PrService | null = null;
+  private gitWorkflow: GitWorkflow;
 
   // State
   private maxTasks = 50;
@@ -75,13 +41,10 @@ export class AgentWorker {
   private currentTaskId: string | null = null;
   private currentWorktreePath: string | null = null;
   private postCleanupDelayMs = 5_000;
-  /** Cached GitHub username for co-authorship in commits */
-  private ghUsername: string | null = null;
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
 
-    // Initialize API client
     this.client = new LocusClient({
       baseUrl: config.apiBase,
       token: config.apiKey,
@@ -112,21 +75,18 @@ export class AgentWorker {
     }
 
     // Resolve GitHub username for co-authorship
-    if (config.autoPush) {
-      this.ghUsername = getGhUsername();
-      if (this.ghUsername) {
-        this.log(`GitHub user: ${this.ghUsername}`, "info");
-      }
+    const ghUsername = config.autoPush ? getGhUsername() : null;
+    if (ghUsername) {
+      this.log(`GitHub user: ${ghUsername}`, "info");
     }
 
-    // Initialize AI clients
+    // Initialize AI runner and task executor
     const provider = config.provider ?? PROVIDER.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
       log,
     });
-
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,
       projectPath,
@@ -136,17 +96,8 @@ export class AgentWorker {
     // Knowledge base always points to the main project for progress updates
     this.knowledgeBase = new KnowledgeBase(projectPath);
 
-    // Initialize worktree manager for per-task isolation
-    if (config.useWorktrees) {
-      this.worktreeManager = new WorktreeManager(projectPath, {
-        cleanupPolicy: "auto",
-      });
-    }
-
-    // Initialize PR service when auto-push is enabled
-    if (config.autoPush) {
-      this.prService = new PrService(projectPath, log);
-    }
+    // Git workflow handles worktree, commit, push, and PR creation
+    this.gitWorkflow = new GitWorkflow(config, log, ghUsername);
 
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
@@ -154,6 +105,9 @@ export class AgentWorker {
 
     if (config.useWorktrees) {
       this.log("Per-task worktree isolation enabled", "info");
+      if (config.baseBranch) {
+        this.log(`Base branch for worktrees: ${config.baseBranch}`, "info");
+      }
       if (config.autoPush) {
         this.log(
           "Auto-push enabled: branches will be pushed to remote",
@@ -174,11 +128,13 @@ export class AgentWorker {
     const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
 
     console.log(
-      `${c.dim(`[${timestamp}]`)} ${c.bold(
-        `[${this.config.agentId.slice(-8)}]`
-      )} ${colorFn(`${prefix} ${message}`)}`
+      `${c.dim(`[${timestamp}]`)} ${c.bold(`[${this.config.agentId.slice(-8)}]`)} ${colorFn(`${prefix} ${message}`)}`
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Task dispatch
+  // ---------------------------------------------------------------------------
 
   private async getActiveSprint(): Promise<Sprint | null> {
     try {
@@ -198,12 +154,11 @@ export class AgentWorker {
     const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const task = await this.client.workspaces.dispatch(
+        return await this.client.workspaces.dispatch(
           this.config.workspaceId,
           this.config.agentId,
           this.config.sprintId
         );
-        return task;
       } catch (error: unknown) {
         const isAxiosError =
           error != null &&
@@ -215,13 +170,11 @@ export class AgentWorker {
           ? (error as { response: { status: number } }).response.status
           : 0;
 
-        // 404 = genuinely no tasks available — stop immediately
         if (status === 404) {
           this.log("No tasks available in the backlog.", "info");
           return null;
         }
 
-        // Other errors (500, network, etc) — retry
         const msg = error instanceof Error ? error.message : String(error);
         if (attempt < maxRetries) {
           this.log(
@@ -241,237 +194,36 @@ export class AgentWorker {
     return null;
   }
 
-  /**
-   * Create a task-specific worktree and return an executor configured for it.
-   * Falls back to the main project path if worktrees are disabled.
-   */
-  private createTaskWorktree(task: Task): {
-    worktreePath: string | null;
-    baseBranch: string | null;
-    executor: TaskExecutor;
-  } {
-    if (!this.worktreeManager) {
-      return {
-        worktreePath: null,
-        baseBranch: null,
-        executor: this.taskExecutor,
-      };
-    }
-
-    const slug = task.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 40);
-
-    const result = this.worktreeManager.create({
-      taskId: task.id,
-      taskSlug: slug,
-      agentId: this.config.agentId,
-    });
-
-    this.log(
-      `Worktree created: ${result.worktreePath} (${result.branch})`,
-      "info"
-    );
-
-    const log = this.log.bind(this);
-    const provider = this.config.provider ?? PROVIDER.CLAUDE;
-
-    // Create a task-specific AI runner and executor targeting the worktree
-    const taskAiRunner = createAiRunner(provider, {
-      projectPath: result.worktreePath,
-      model: this.config.model,
-      log,
-    });
-
-    const taskExecutor = new TaskExecutor({
-      aiRunner: taskAiRunner,
-      projectPath: result.worktreePath,
-      log,
-    });
-
-    return {
-      worktreePath: result.worktreePath,
-      baseBranch: result.baseBranch,
-      executor: taskExecutor,
-    };
-  }
+  // ---------------------------------------------------------------------------
+  // Task execution
+  // ---------------------------------------------------------------------------
 
   /**
-   * Commit changes in a task worktree and optionally push to remote.
-   * Distinguishes "no commit", "push failed", and "branch pushed" outcomes.
+   * Execute a single task: create worktree -> run AI -> commit -> push -> PR.
    */
-  private commitAndPushWorktree(
-    worktreePath: string,
-    task: Task,
-    baseBranch?: string
-  ): CommitPushResult {
-    if (!this.worktreeManager) {
-      return { branch: null, pushed: false, pushFailed: false };
-    }
-
-    try {
-      const trailers: string[] = [
-        `Task-ID: ${task.id}`,
-        `Agent: ${this.config.agentId}`,
-        "Co-authored-by: LocusAI <agent@locusai.team>",
-      ];
-      if (this.ghUsername) {
-        trailers.push(
-          `Co-authored-by: ${this.ghUsername} <${this.ghUsername}@users.noreply.github.com>`
-        );
-      }
-      const commitMessage = `feat(agent): ${task.title}\n\n${trailers.join(
-        "\n"
-      )}`;
-      const hash = this.worktreeManager.commitChanges(
-        worktreePath,
-        commitMessage,
-        baseBranch
-      );
-
-      if (!hash) {
-        this.log("No changes to commit for this task", "info");
-        return {
-          branch: null,
-          pushed: false,
-          pushFailed: false,
-          noChanges: true,
-          skipReason: "No changes were committed, so no branch was pushed.",
-        };
-      }
-
-      const localBranch = this.worktreeManager.getBranch(worktreePath);
-
-      if (this.config.autoPush) {
-        try {
-          return {
-            branch: this.worktreeManager.pushBranch(worktreePath),
-            pushed: true,
-            pushFailed: false,
-          };
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          this.log(`Git push failed: ${errorMessage}`, "error");
-          return {
-            branch: localBranch,
-            pushed: false,
-            pushFailed: true,
-            pushError: errorMessage,
-          };
-        }
-      }
-
-      this.log("Auto-push disabled; skipping branch push", "info");
-      return {
-        branch: localBranch,
-        pushed: false,
-        pushFailed: false,
-        skipReason: "Auto-push is disabled, so PR creation was skipped.",
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this.log(`Git commit failed: ${errorMessage}`, "error");
-      return { branch: null, pushed: false, pushFailed: false };
-    }
-  }
-
-  /**
-   * Create a pull request for a completed task.
-   * Returns the PR URL if successful, null otherwise.
-   */
-  private createPullRequest(
-    task: Task,
-    branch: string,
-    summary?: string,
-    baseBranch?: string
-  ): { url: string | null; error?: string } {
-    if (!this.prService) {
-      const errorMessage =
-        "PR service is not initialized. Enable auto-push to allow PR creation.";
-      this.log(`PR creation skipped: ${errorMessage}`, "warn");
-      return { url: null, error: errorMessage };
-    }
-
-    this.log(`Attempting PR creation from branch: ${branch}`, "info");
-
-    try {
-      const result = this.prService.createPr({
-        task,
-        branch,
-        baseBranch,
-        agentId: this.config.agentId,
-        summary,
-      });
-
-      return { url: result.url };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this.log(`PR creation failed: ${errorMessage}`, "error");
-      return { url: null, error: errorMessage };
-    }
-  }
-
-  /**
-   * Clean up a task-specific worktree.
-   * Keep the branch if a commit was created so follow-up is possible.
-   */
-  private cleanupTaskWorktree(
-    worktreePath: string | null,
-    keepBranch: boolean
-  ): void {
-    if (!this.worktreeManager || !worktreePath) return;
-
-    try {
-      // If the task produced a commit, keep the branch for follow-up.
-      this.worktreeManager.remove(worktreePath, !keepBranch);
-      this.log(
-        keepBranch
-          ? "Worktree cleaned up (branch preserved)"
-          : "Worktree cleaned up",
-        "info"
-      );
-    } catch {
-      this.log(`Could not clean up worktree: ${worktreePath}`, "warn");
-    }
-
-    this.currentWorktreePath = null;
-  }
-
-  private async executeTask(task: Task): Promise<{
-    success: boolean;
-    summary: string;
-    branch?: string;
-    prUrl?: string;
-    prError?: string;
-    noChanges?: boolean;
-  }> {
-    // Fetch full task details to get comments/feedback
+  private async executeTask(task: Task): Promise<TaskResult> {
     const fullTask = await this.client.tasks.getById(
       task.id,
       this.config.workspaceId
     );
 
-    // Create per-task worktree for isolation
     const { worktreePath, baseBranch, executor } =
-      this.createTaskWorktree(fullTask);
+      this.gitWorkflow.createTaskWorktree(fullTask, this.taskExecutor);
     this.currentWorktreePath = worktreePath;
     let branchPushed = false;
     let keepBranch = false;
     let preserveWorktree = false;
 
     try {
-      // Execute the task in the worktree (or main project if worktrees disabled)
       const result = await executor.execute(fullTask);
 
-      // Commit and optionally push changes before cleanup
       let taskBranch: string | null = null;
       let prUrl: string | null = null;
       let prError: string | null = null;
       let noChanges = false;
+
       if (result.success && worktreePath) {
-        const commitResult = this.commitAndPushWorktree(
+        const commitResult = this.gitWorkflow.commitAndPush(
           worktreePath,
           fullTask,
           baseBranch ?? undefined
@@ -492,9 +244,8 @@ export class AgentWorker {
           );
         }
 
-        // Create PR if branch was pushed
         if (branchPushed && taskBranch) {
-          const prResult = this.createPullRequest(
+          const prResult = this.gitWorkflow.createPullRequest(
             fullTask,
             taskBranch,
             result.summary,
@@ -529,19 +280,18 @@ export class AgentWorker {
       };
     } finally {
       if (preserveWorktree || keepBranch) {
-        // Preserve worktree when there are commits to keep —
-        // orchestrator-level cleanup will handle removal later.
         this.currentWorktreePath = null;
       } else {
-        // Clean up the task worktree after execution (no commits to preserve)
-        this.cleanupTaskWorktree(worktreePath, keepBranch);
+        this.gitWorkflow.cleanupWorktree(worktreePath, keepBranch);
+        this.currentWorktreePath = null;
       }
     }
   }
 
-  /**
-   * Update progress.md in the main project after task completion
-   */
+  // ---------------------------------------------------------------------------
+  // Progress & heartbeat
+  // ---------------------------------------------------------------------------
+
   private updateProgress(task: Task, success: boolean): void {
     try {
       if (success) {
@@ -554,26 +304,15 @@ export class AgentWorker {
       }
     } catch (err) {
       this.log(
-        `Failed to update progress: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,
         "warn"
       );
     }
   }
 
-  /**
-   * Start sending periodic heartbeats to the API so the server
-   * knows this agent is alive and which task it's working on.
-   */
   private startHeartbeat(): void {
-    // Send initial heartbeat immediately
     this.sendHeartbeat();
-
-    // Then send every 60 seconds
-    this.heartbeatInterval = setInterval(() => {
-      this.sendHeartbeat();
-    }, 60_000);
+    this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 60_000);
   }
 
   private stopHeartbeat(): void {
@@ -593,9 +332,7 @@ export class AgentWorker {
       )
       .catch((err) => {
         this.log(
-          `Heartbeat failed: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
+          `Heartbeat failed: ${err instanceof Error ? err.message : String(err)}`,
           "warn"
         );
       });
@@ -603,11 +340,8 @@ export class AgentWorker {
 
   private async delayAfterCleanup(): Promise<void> {
     if (!this.config.useWorktrees || this.postCleanupDelayMs <= 0) return;
-
     this.log(
-      `Waiting ${Math.floor(
-        this.postCleanupDelayMs / 1000
-      )}s after worktree cleanup before next dispatch`,
+      `Waiting ${Math.floor(this.postCleanupDelayMs / 1000)}s after worktree cleanup before next dispatch`,
       "info"
     );
     await new Promise((resolve) =>
@@ -615,26 +349,27 @@ export class AgentWorker {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Main run loop
+  // ---------------------------------------------------------------------------
+
   async run(): Promise<void> {
     this.log(
       `Agent started in ${this.config.projectPath || process.cwd()}`,
       "success"
     );
 
-    // Handle graceful shutdown - abort AI runner to kill Claude/Codex CLI processes
     const handleShutdown = () => {
       this.log("Received shutdown signal. Aborting...", "warn");
       this.aiRunner.abort();
       this.stopHeartbeat();
-      // Clean up current worktree if any (don't preserve branch on forced shutdown)
-      this.cleanupTaskWorktree(this.currentWorktreePath, false);
+      this.gitWorkflow.cleanupWorktree(this.currentWorktreePath, false);
       process.exit(1);
     };
 
     process.on("SIGTERM", handleShutdown);
     process.on("SIGINT", handleShutdown);
 
-    // Start periodic heartbeat reporting
     this.startHeartbeat();
 
     const sprint = await this.getActiveSprint();
@@ -644,10 +379,8 @@ export class AgentWorker {
       this.log("No active sprint found.", "warn");
     }
 
-    // Main task execution loop
     while (this.tasksCompleted < this.maxTasks) {
       const task = await this.getNextTask();
-
       if (!task) {
         this.log("No more tasks to process. Exiting.", "info");
         break;
@@ -702,10 +435,8 @@ export class AgentWorker {
           });
           this.tasksCompleted++;
 
-          // Update progress.md in main project
           this.updateProgress(task, true);
 
-          // Track PR in progress.md if created
           if (result.prUrl) {
             try {
               this.knowledgeBase.updateProgress({
@@ -714,7 +445,7 @@ export class AgentWorker {
                 details: `PR: ${result.prUrl}`,
               });
             } catch {
-              // Non-critical — don't fail the task
+              // Non-critical
             }
           }
         }
@@ -735,7 +466,6 @@ export class AgentWorker {
       await this.delayAfterCleanup();
     }
 
-    // Send final heartbeat with COMPLETED status and stop
     this.currentTaskId = null;
     this.stopHeartbeat();
     this.client.workspaces
@@ -746,7 +476,7 @@ export class AgentWorker {
         "COMPLETED"
       )
       .catch(() => {
-        // Best-effort final heartbeat — ignore errors on shutdown
+        // Best-effort final heartbeat
       });
 
     process.exit(0);
@@ -756,45 +486,14 @@ export class AgentWorker {
 // CLI entry point
 const workerEntrypoint = process.argv[1]?.split(/[\\/]/).pop();
 if (workerEntrypoint === "worker.js" || workerEntrypoint === "worker.ts") {
-  // Set process title for easy identification in Activity Monitor / ps
-  // Find with: ps aux | grep "locus-worker" or pgrep -f "locus-worker"
   process.title = "locus-worker";
 
-  const args = process.argv.slice(2);
-  const config: Partial<WorkerConfig> = {};
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === "--agent-id") config.agentId = args[++i];
-    else if (arg === "--workspace-id") config.workspaceId = args[++i];
-    else if (arg === "--sprint-id") config.sprintId = args[++i];
-    else if (arg === "--api-url") config.apiBase = args[++i];
-    else if (arg === "--api-key") config.apiKey = args[++i];
-    else if (arg === "--project-path") config.projectPath = args[++i];
-    else if (arg === "--main-project-path") config.mainProjectPath = args[++i];
-    else if (arg === "--model") config.model = args[++i];
-    else if (arg === "--use-worktrees") config.useWorktrees = true;
-    else if (arg === "--auto-push") config.autoPush = true;
-    else if (arg === "--provider") {
-      const value = args[i + 1];
-      if (value && !value.startsWith("--")) i++;
-      config.provider = resolveProvider(value);
-    }
-  }
-
-  if (
-    !config.agentId ||
-    !config.workspaceId ||
-    !config.apiBase ||
-    !config.apiKey ||
-    !config.projectPath
-  ) {
-    console.error("Missing required arguments");
-    process.exit(1);
-  }
-
-  const worker = new AgentWorker(config as WorkerConfig);
-  worker.run().catch((err) => {
-    console.error("Fatal worker error:", err);
-    process.exit(1);
+  import("./worker-cli.js").then(({ parseWorkerArgs }) => {
+    const config = parseWorkerArgs(process.argv);
+    const worker = new AgentWorker(config);
+    worker.run().catch((err) => {
+      console.error("Fatal worker error:", err);
+      process.exit(1);
+    });
   });
 }

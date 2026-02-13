@@ -141,11 +141,13 @@ export class ClaudeRunner implements AiRunner {
 
     let buffer = "";
     let stderrBuffer = "";
+    let stderrFull = "";
     let resolveChunk: ((chunk: StreamChunk | null) => void) | null = null;
     const chunkQueue: StreamChunk[] = [];
     let processEnded = false;
     let errorMessage = "";
     let finalContent = "";
+    let lastResultContent = "";
     let isThinking = false;
 
     const enqueueChunk = (chunk: StreamChunk) => {
@@ -192,6 +194,10 @@ export class ClaudeRunner implements AiRunner {
       for (const line of lines) {
         const chunk = this.parseStreamLineToChunk(line);
         if (chunk) {
+          // Track result content so we can use it for error reporting
+          if (chunk.type === "result") {
+            lastResultContent = chunk.content;
+          }
           enqueueChunk(chunk);
         }
       }
@@ -200,6 +206,7 @@ export class ClaudeRunner implements AiRunner {
     claude.stderr.on("data", (data: Buffer) => {
       const chunk = data.toString();
       stderrBuffer += chunk;
+      stderrFull += chunk;
 
       const lines = stderrBuffer.split("\n");
       stderrBuffer = lines.pop() || "";
@@ -225,7 +232,11 @@ export class ClaudeRunner implements AiRunner {
       }
 
       if (code !== 0 && !errorMessage) {
-        errorMessage = this.createExecutionError(code, stderrBuffer).message;
+        // Use stderr if available, otherwise fall back to the last result
+        // content from the JSON stream (Claude CLI reports errors there
+        // when using --output-format stream-json)
+        const detail = stderrFull.trim() || lastResultContent.trim();
+        errorMessage = this.createExecutionError(code, detail).message;
         this.eventEmitter?.emitErrorOccurred(errorMessage, `EXIT_${code}`);
       }
       signalEnd();
@@ -482,7 +493,10 @@ export class ClaudeRunner implements AiRunner {
         if (code === 0) {
           resolve(finalResult);
         } else {
-          reject(this.createExecutionError(code, errorOutput));
+          // Use stderr if available, otherwise fall back to result content
+          // from the JSON stream
+          const detail = errorOutput.trim() || finalResult.trim();
+          reject(this.createExecutionError(code, detail));
         }
       });
 

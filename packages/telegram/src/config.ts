@@ -99,8 +99,6 @@ export function resolveConfig(): TelegramConfig {
     projectPath,
     apiKey: apiKey || undefined,
     apiBase: isTestMode ? "http://localhost:8000/api" : apiBase,
-    workspaceId:
-      process.env.LOCUS_WORKSPACE_ID || settings?.workspaceId || undefined,
     provider: process.env.LOCUS_PROVIDER || settings?.provider || undefined,
     model: process.env.LOCUS_MODEL || settings?.model || undefined,
     agentCount: process.env.LOCUS_AGENT_COUNT

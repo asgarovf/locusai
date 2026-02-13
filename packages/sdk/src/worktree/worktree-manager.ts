@@ -69,6 +69,28 @@ export class WorktreeManager {
     const baseBranch =
       options.baseBranch ?? this.config.baseBranch ?? this.getCurrentBranch();
 
+    // If the base branch doesn't exist locally, fetch from remote.
+    // This handles tier merge branches that were created and pushed by the orchestrator.
+    if (!this.branchExists(baseBranch)) {
+      this.log(
+        `Base branch "${baseBranch}" not found locally, fetching from origin`,
+        "info"
+      );
+      try {
+        this.gitExec(["fetch", "origin", baseBranch], this.projectPath);
+        // Create a local tracking branch
+        this.gitExec(
+          ["branch", baseBranch, `origin/${baseBranch}`],
+          this.projectPath
+        );
+      } catch {
+        this.log(
+          `Could not fetch/create local branch for "${baseBranch}", falling back to current branch`,
+          "warn"
+        );
+      }
+    }
+
     this.log(
       `Creating worktree: ${worktreeDir} (branch: ${branch}, base: ${baseBranch})`,
       "info"

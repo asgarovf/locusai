@@ -70,7 +70,7 @@ export async function runCommand(args: string[]): Promise<void> {
 
   // Resolve workspace ID
   try {
-    const resolver = new WorkspaceResolver(configManager, {
+    const resolver = new WorkspaceResolver({
       apiKey,
       apiBase,
       workspaceId: values.workspace as string | undefined,

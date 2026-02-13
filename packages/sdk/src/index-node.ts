@@ -25,7 +25,7 @@ export {
   AgentOrchestrator,
   type AgentState,
   type OrchestratorConfig,
-} from "./orchestrator.js";
+} from "./orchestrator/index.js";
 // Node.js-only: Planning meeting pipeline
 export * from "./planning/index.js";
 // Node.js-only: Project knowledge base
