@@ -118,7 +118,6 @@ locus-dev/                       ← The platform (Open Source)
     ├── cli/                     ← Local Agent Runtime & CLI
     ├── sdk/                     ← Core Logic & API Client
     ├── shared/                  ← Shared Types & Schemas
-    ├── ai-sdk/                  ← AI Provider Abstraction (LangChain)
     └── telegram/                ← Telegram Bot for Remote Control
 ```
 

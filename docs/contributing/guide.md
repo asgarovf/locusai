@@ -18,8 +18,7 @@ locus/
 │   ├── cli/           # @locusai/cli — Command-line interface
 │   ├── sdk/           # @locusai/sdk — TypeScript SDK
 │   ├── telegram/      # @locusai/telegram — Telegram bot
-│   ├── shared/        # Shared types and utilities
-│   └── ai-sdk/        # AI provider abstraction layer
+│   └── shared/        # Shared types and utilities
 └── scripts/           # Setup and deployment scripts
 ```
 
