@@ -67,7 +67,7 @@ Tasks will be executed by INDEPENDENT agents on SEPARATE git branches that get m
 
 ## Output Format
 
-Respond with ONLY a JSON object (no markdown code blocks, no explanation):
+Your entire response must be a single JSON object — no text before it, no text after it, no markdown code blocks, no explanation. Start your response with the "{" character:
 
 {
   "tasks": [

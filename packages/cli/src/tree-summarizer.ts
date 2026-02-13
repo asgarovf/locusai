@@ -1,5 +1,5 @@
 import type { AiRunner } from "@locusai/sdk/node";
-import { CodebaseIndex } from "@locusai/sdk/node";
+import { CodebaseIndex, extractJsonFromLLMOutput } from "@locusai/sdk/node";
 
 export class TreeSummarizer {
   constructor(private aiRunner: AiRunner) {}
@@ -17,8 +17,7 @@ ${tree}`;
 
     const output = await this.aiRunner.run(prompt);
 
-    const jsonMatch = output.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    throw new Error("Could not find JSON in AI output");
+    const jsonStr = extractJsonFromLLMOutput(output);
+    return JSON.parse(jsonStr);
   }
 }

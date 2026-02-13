@@ -4,6 +4,7 @@ import {
   type TaskPriority,
   TaskStatus,
 } from "@locusai/shared";
+import { extractJsonFromLLMOutput } from "../utils/json-extractor.js";
 
 export interface PlannedTask {
   /** Sequential index within the plan (1-based) */
@@ -140,12 +141,7 @@ export function parseSprintPlanFromAI(
   raw: string,
   directive: string
 ): SprintPlan {
-  // Extract JSON from potential markdown code block
-  let jsonStr = raw.trim();
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (jsonMatch) {
-    jsonStr = jsonMatch[1]?.trim() || "";
-  }
+  const jsonStr = extractJsonFromLLMOutput(raw);
 
   let parsed = JSON.parse(jsonStr);
 

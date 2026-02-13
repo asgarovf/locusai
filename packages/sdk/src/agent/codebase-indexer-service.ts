@@ -1,6 +1,7 @@
 import { LogFn } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { CodebaseIndexer } from "../core/indexer.js";
+import { extractJsonFromLLMOutput } from "../utils/json-extractor.js";
 
 export interface CodebaseIndexerServiceDeps {
   aiRunner: AiRunner;
@@ -39,12 +40,12 @@ Return ONLY valid JSON, no markdown formatting.`;
 
           const response = await this.deps.aiRunner.run(prompt);
 
-          // Extract JSON from response (handle markdown code blocks)
-          const jsonMatch = response.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+          const jsonStr = extractJsonFromLLMOutput(response);
+          try {
+            return JSON.parse(jsonStr);
+          } catch {
+            return { symbols: {}, responsibilities: {}, lastIndexed: "" };
           }
-          return { symbols: {}, responsibilities: {}, lastIndexed: "" };
         },
         force
       );

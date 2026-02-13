@@ -84,7 +84,7 @@ Identify the highest-risk files (files that multiple tasks might touch) and ensu
 
 ## Output Format
 
-Respond with ONLY a JSON object (no markdown code blocks, no explanation):
+Your entire response must be a single JSON object — no text before it, no text after it, no markdown code blocks, no explanation. Start your response with the "{" character:
 
 {
   "hasIssues": true | false,
