@@ -350,7 +350,7 @@ export class CodexRunner implements AiRunner {
       "-c",
       "sandbox_workspace_write.network_access=true",
       "-c",
-      'sandbox.excludedCommands=["git", "gh"]',
+      'sandbox.excludedCommands=["git", "gh", "bun", "npm", "locus"]',
     ];
 
     if (this.model) {
