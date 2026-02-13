@@ -338,10 +338,10 @@ export class CodexRunner implements AiRunner {
 
   private buildArgs(outputPath: string): string[] {
     const args = [
+      "--quiet",
       "exec",
       "--full-auto",
       "--skip-git-repo-check",
-      "--quiet",
       "--output-last-message",
       outputPath,
     ];
