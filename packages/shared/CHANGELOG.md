@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.10.4
+
+### Patch Changes
+
+- Codex CLI error fixes
+
 ## 0.10.3
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.10.4
+
+### Patch Changes
+
+- Codex CLI error fixes
+- Updated dependencies
+  - @locusai/sdk@0.10.4
+
 ## 0.10.3
 
 ### Patch Changes
