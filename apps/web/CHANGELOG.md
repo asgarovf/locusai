@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.11.1
+
+### Patch Changes
+
+- Codex logs
+- Updated dependencies
+  - @locusai/sdk@0.11.1
+  - @locusai/shared@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes
