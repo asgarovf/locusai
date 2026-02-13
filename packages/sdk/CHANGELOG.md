@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.11.2
+
+### Patch Changes
+
+- Codex error
+- Updated dependencies
+  - @locusai/shared@0.11.2
+
 ## 0.11.1
 
 ### Patch Changes
