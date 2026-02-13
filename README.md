@@ -35,9 +35,9 @@ Read the [full documentation](https://docs.locusai.dev) to learn more.
 - **Cognitive Context** — Agents receive rich context including project instructions (`.locus/LOCUS.md`), semantic codebase index, workspace documents, sprint progress, and task details.
 - **AI Code Review** — Review pull requests or local changes with AI-powered analysis directly from the CLI.
 - **Skills System** — Extend agent capabilities with markdown instruction files for specialized domain knowledge.
-- **VSCode Extension** — Chat with agents, manage tasks, and start work directly from your editor.
 - **Telegram Bot** — Control agents, plan sprints, approve plans, and monitor execution remotely from your phone.
 - **Self-Hosting** — Deploy Locus on your own server for 24/7 agent availability with remote Telegram control.
+- **VSCode Extension** (SOON) — Chat with agents, manage tasks, and start work directly from your editor.
 
 ## Quick Start
 
@@ -119,8 +119,7 @@ locus-dev/                       ← The platform (Open Source)
     ├── sdk/                     ← Core Logic & API Client
     ├── shared/                  ← Shared Types & Schemas
     ├── ai-sdk/                  ← AI Provider Abstraction (LangChain)
-    ├── telegram/                ← Telegram Bot for Remote Control
-    └── vscode/                  ← VS Code Extension
+    └── telegram/                ← Telegram Bot for Remote Control
 ```
 
 ### The Workflow
@@ -153,18 +152,6 @@ your-project/
 ├── .claude/skills/              # Claude-specific skills
 └── .codex/skills/               # Codex-specific skills
 ```
-
----
-
-## VSCode Extension
-
-The Locus VS Code extension brings agent interaction into your editor:
-
-- **Chat Sidebar** — Converse with AI agents directly from VS Code.
-- **Task Tree View** — Browse, start, and manage tasks from the sidebar.
-- **Provider Selection** — Switch between Claude and Codex.
-- **Status Bar** — See agent status at a glance.
-- **Quick Actions** — Start tasks, view details, reset context, and abort agents with `Ctrl+Shift+Escape`.
 
 ---
 
