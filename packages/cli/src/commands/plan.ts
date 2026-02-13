@@ -12,9 +12,48 @@ import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider, VERSION } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
 
+/**
+ * Normalise plan-ID arguments so `--approve plan -1771009897498` is
+ * treated the same as `--approve plan-1771009897498`.
+ *
+ * Node's `parseArgs` splits `plan -<digits>` into separate tokens,
+ * breaking the ID. This pre-processes the args array to merge them.
+ */
+function normalizePlanIdArgs(args: string[]): string[] {
+  const planIdFlags = new Set([
+    "--approve",
+    "--reject",
+    "--cancel",
+    "--show",
+  ]);
+
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < args.length) {
+    if (
+      planIdFlags.has(args[i]) &&
+      i + 2 < args.length &&
+      args[i + 1] === "plan" &&
+      /^-\d+$/.test(args[i + 2])
+    ) {
+      // Merge: --approve plan -1234 → --approve plan-1234
+      result.push(args[i]);
+      result.push(`plan${args[i + 2]}`);
+      i += 3;
+    } else {
+      result.push(args[i]);
+      i++;
+    }
+  }
+
+  return result;
+}
+
 export async function planCommand(args: string[]): Promise<void> {
+  const normalizedArgs = normalizePlanIdArgs(args);
   const { values, positionals } = parseArgs({
-    args,
+    args: normalizedArgs,
     options: {
       approve: { type: "string" },
       reject: { type: "string" },
