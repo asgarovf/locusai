@@ -86,6 +86,8 @@ export class TasksController {
       sprintId: body.sprintId ?? undefined,
       acceptanceChecklist: body.acceptanceChecklist,
       userId: userId ?? undefined,
+      order: body.order ?? undefined,
+      tier: body.tier ?? undefined,
     });
     return { task: this.taskToTaskResponse(task) };
   }
