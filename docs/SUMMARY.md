@@ -11,10 +11,16 @@
 ## Core Concepts
 
 * [Architecture](concepts/architecture.md)
+* [Swagger Docs Access Policy](concepts/swagger-docs-access.md)
 * [Workspaces](concepts/workspaces.md)
 * [Tasks](concepts/tasks.md)
 * [Sprints](concepts/sprints.md)
 * [Agents](concepts/agents.md)
+
+## API
+
+* [API Docs](api/index.md)
+* [OpenAPI Metadata Deferred Endpoints](api/openapi-deferred-endpoints.md)
 
 ## CLI Reference
 
