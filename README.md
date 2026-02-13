@@ -28,7 +28,6 @@ Read the [full documentation](https://docs.locusai.dev) to learn more.
 ## Key Features
 
 - **AI-Native Planning** — Plan sprints, define tasks, and write documentation designed for AI agents. Use AI-powered sprint planning with a multi-agent meeting (Tech Lead, Architect, Sprint Organizer) to break down goals into structured, prioritized tasks.
-- **Multi-Agent Execution** — Run up to 5 parallel agents, each isolated in its own git worktree, to execute tasks concurrently across your codebase.
 - **Secure Local Execution** — Agents run on your machine (or your server). Source code never leaves your infrastructure—only task metadata is synced to the cloud.
 - **Multiple AI Providers** — Choose between Claude (Anthropic) and Codex (OpenAI) as your agent backend. Switch providers per-command or set a default.
 - **Team Coordination** — Cloud-based dashboard for visibility, collaboration, sprint boards, document editing, and task management.
@@ -96,7 +95,6 @@ npx @locusai/cli run --provider codex
 | `locus exec` | Execute a prompt with repo context (supports interactive REPL) |
 | `locus review` | AI code review for PRs and local changes |
 | `locus index` | Create a semantic codebase index |
-| `locus agents` | Manage agent git worktrees |
 | `locus docs` | Sync workspace documents |
 | `locus telegram` | Configure and start the Telegram bot |
 | `locus upgrade` | Upgrade CLI to the latest version |
@@ -125,7 +123,7 @@ locus-dev/                       ← The platform (Open Source)
 
 1. **Plan** — Define tasks manually in the dashboard, or use `locus plan "your goal"` to have AI agents break down your objective into a structured sprint.
 2. **Dispatch** — Start agents with `locus run`. The API dispatches tasks with server-side locking to prevent conflicts.
-3. **Execute** — Each agent claims a task, creates an isolated git worktree, builds rich context, and executes using your chosen AI provider.
+3. **Execute** — Each agent claims a task, creates an isolated git branch, builds rich context, and executes using your chosen AI provider.
 4. **Review** — Agents commit changes, push branches, and create pull requests. Review with `locus review` or in GitHub. Reject tasks with feedback to send them back for rework.
 
 ### Project Structure
@@ -147,7 +145,6 @@ your-project/
 │   └── project/
 │       ├── context.md           # Project knowledge base
 │       └── progress.md          # Sprint progress (auto-updated)
-├── .locus-worktrees/            # Isolated agent workspaces
 ├── .claude/skills/              # Claude-specific skills
 └── .codex/skills/               # Codex-specific skills
 ```

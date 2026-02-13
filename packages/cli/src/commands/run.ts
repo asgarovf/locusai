@@ -14,9 +14,6 @@ export async function runCommand(args: string[]): Promise<void> {
       sprint: { type: "string" },
       model: { type: "string" },
       provider: { type: "string" },
-      agents: { type: "string" },
-      worktree: { type: "boolean" },
-      "auto-push": { type: "boolean" },
       "skip-planning": { type: "boolean" },
       "api-url": { type: "string" },
       dir: { type: "string" },
@@ -58,16 +55,6 @@ export async function runCommand(args: string[]): Promise<void> {
     settings.apiUrl ||
     "https://api.locusai.dev/api";
 
-  // Parse agent count: CLI flag > settings > default (1)
-  const parsedAgents = Number.parseInt(values.agents as string, 10);
-  const agentCount = Math.min(
-    Math.max(parsedAgents || settings.agentCount || 1, 1),
-    5
-  );
-  // Worktrees are always enabled by default for per-task isolation
-  const useWorktrees = (values.worktree as boolean | undefined) ?? true;
-  const autoPush = (values["auto-push"] as boolean | undefined) ?? true;
-
   // Resolve workspace ID
   try {
     const resolver = new WorkspaceResolver({
@@ -92,9 +79,6 @@ export async function runCommand(args: string[]): Promise<void> {
     maxIterations: 100,
     projectPath,
     apiKey: apiKey as string,
-    agentCount,
-    useWorktrees,
-    autoPush,
   });
 
   orchestrator.on("agent:spawned", (data) =>
@@ -126,7 +110,7 @@ export async function runCommand(args: string[]): Promise<void> {
     isShuttingDown = true;
 
     console.log(
-      `\n${c.info(`Received ${signal}. Stopping agents and cleaning up worktrees...`)}`
+      `\n${c.info(`Received ${signal}. Stopping agent and cleaning up...`)}`
     );
     await orchestrator.stop();
     process.exit(0);
@@ -135,21 +119,17 @@ export async function runCommand(args: string[]): Promise<void> {
   process.on("SIGINT", () => handleSignal("SIGINT"));
   process.on("SIGTERM", () => handleSignal("SIGTERM"));
 
-  const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
   console.log(
-    `\n  ${c.primary("🚀")} ${c.bold(`Starting ${agentLabel} in`)} ${c.primary(projectPath)}...`
+    `\n  ${c.primary("🚀")} ${c.bold("Starting agent in")} ${c.primary(projectPath)}...`
   );
-  if (useWorktrees) {
-    console.log(`  ${c.dim("Each task will run in an isolated worktree")}`);
-    if (autoPush) {
-      console.log(
-        `  ${c.dim("Branches will be committed and pushed to remote")}`
-      );
-    } else {
-      console.log(
-        `  ${c.dim("Changes will be committed locally before cleanup")}`
-      );
-    }
-  }
+  console.log(
+    `  ${c.dim("Tasks will be executed sequentially on a single branch")}`
+  );
+  console.log(
+    `  ${c.dim("Changes will be committed and pushed after each task")}`
+  );
+  console.log(
+    `  ${c.dim("A PR will be opened when all tasks are done")}`
+  );
   await orchestrator.start();
 }

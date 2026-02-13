@@ -115,8 +115,7 @@ export function Hero({ version }: HeroProps) {
           className="text-base md:text-lg text-muted-foreground max-w-xl mb-10 leading-relaxed"
         >
           Plan sprints in the cloud, dispatch tasks to AI agents, and watch them
-          build, test, and push code &mdash; all from your terminal with
-          isolated git worktrees.
+          build, test, and push code &mdash; all from your terminal.
         </motion.p>
 
         {/* Installation tabs */}

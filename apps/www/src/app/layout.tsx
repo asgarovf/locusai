@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | Locus",
   },
   description:
-    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal. Agents run securely on your machine with git worktree isolation.",
+    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
   keywords: [
     "AI agents",
     "agentic engineering",
@@ -39,7 +39,6 @@ export const metadata: Metadata = {
     "developer tools",
     "engineering teams",
     "AI planning",
-    "git worktree",
     "CLI",
     "code automation",
     "sprint planning",
@@ -57,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "Locus",
     title: "Locus | AI Agents That Ship Your Code",
     description:
-      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal. Agents run securely on your machine with git worktree isolation.",
+      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
     images: [
       {
         url: "/og-image.png",

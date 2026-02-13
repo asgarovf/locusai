@@ -12,18 +12,22 @@ interface Line {
 }
 
 const lines: Line[] = [
-  { text: "locus run --agents 3", color: "text-foreground", prefix: "$ " },
+  { text: "locus run", color: "text-foreground", prefix: "$ " },
   { text: "", color: "" },
   {
-    text: "🚀 Starting 3 agents in ~/dev/my-saas...",
+    text: "🚀 Starting agent in ~/dev/my-saas...",
     color: "text-cyan",
   },
   {
-    text: "  Each task will run in an isolated worktree",
+    text: "  Tasks will be executed sequentially on a single branch",
     color: "text-muted-foreground",
   },
   {
-    text: "  Branches will be committed and pushed to remote",
+    text: "  Changes will be committed and pushed after each task",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  A PR will be opened when all tasks are done",
     color: "text-muted-foreground",
   },
   { text: "", color: "" },
@@ -34,22 +38,6 @@ const lines: Line[] = [
   {
     text: "  ● Claimed: Implement user authentication",
     color: "text-cyan",
-  },
-  {
-    text: "  ● Agent spawned: agent-d4e5f6",
-    color: "text-violet",
-  },
-  {
-    text: "  ● Claimed: Add database migrations",
-    color: "text-violet",
-  },
-  {
-    text: "  ● Agent spawned: agent-g7h8i9",
-    color: "text-amber",
-  },
-  {
-    text: "  ● Claimed: Create API documentation",
-    color: "text-amber",
   },
   { text: "", color: "" },
   {
@@ -65,18 +53,6 @@ const lines: Line[] = [
     color: "text-emerald",
   },
   {
-    text: "⚡ Running npm run typecheck",
-    color: "text-cyan",
-  },
-  {
-    text: "   $ npm run typecheck",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "   ✓ Completed (2340ms)",
-    color: "text-emerald",
-  },
-  {
     text: "✍️  Writing auth.controller.ts",
     color: "text-cyan",
   },
@@ -89,14 +65,6 @@ const lines: Line[] = [
     color: "text-emerald",
   },
   {
-    text: '🔍 Searching for "endpoint" in src/',
-    color: "text-cyan",
-  },
-  {
-    text: "   Found 12 matches",
-    color: "text-muted-foreground",
-  },
-  {
     text: "⚡ Running npm test -- auth",
     color: "text-cyan",
   },
@@ -106,20 +74,28 @@ const lines: Line[] = [
   },
   { text: "", color: "" },
   {
-    text: "  ✔ Completed: task-a1b2c3",
+    text: "  ✔ Completed: Implement user authentication",
     color: "text-emerald",
   },
   {
-    text: "  ✔ Completed: task-d4e5f6",
+    text: "  ● Claimed: Add database migrations",
+    color: "text-cyan",
+  },
+  {
+    text: "  ✔ Completed: Add database migrations",
     color: "text-emerald",
   },
   {
-    text: "  ✔ Completed: task-g7h8i9",
+    text: "  ● Claimed: Create API documentation",
+    color: "text-cyan",
+  },
+  {
+    text: "  ✔ Completed: Create API documentation",
     color: "text-emerald",
   },
   { text: "", color: "" },
   {
-    text: "All tasks completed. 3 PRs created.",
+    text: "All tasks done. PR created.",
     color: "text-cyan",
   },
 ];
@@ -176,7 +152,7 @@ export function TerminalDemo() {
         </div>
         <div className="flex-1 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-1.5 font-sans">
           <Terminal className="w-3 h-3" />
-          locus run &mdash; 3 agents
+          locus run
         </div>
       </div>
 

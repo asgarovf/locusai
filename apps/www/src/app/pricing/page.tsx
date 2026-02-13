@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  { icon: <Bot className="h-4 w-4" />, text: "Up to 5 parallel AI agents" },
+  { icon: <Bot className="h-4 w-4" />, text: "Autonomous AI agent" },
   {
     icon: <BrainCircuit className="h-4 w-4" />,
     text: "AI-powered sprint planning",
@@ -42,7 +42,7 @@ const features = [
   { icon: <Terminal className="h-4 w-4" />, text: "Interactive exec & REPL" },
   {
     icon: <GitBranch className="h-4 w-4" />,
-    text: "Git worktree isolation",
+    text: "Single-branch git workflow",
   },
   { icon: <Code2 className="h-4 w-4" />, text: "Claude & Codex providers" },
   { icon: <Zap className="h-4 w-4" />, text: "Session management" },

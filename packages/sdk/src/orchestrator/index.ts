@@ -1,40 +1,33 @@
-import { type Task, TaskPriority, TaskStatus } from "@locusai/shared";
+import { type ChildProcess, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { STALE_AGENT_TIMEOUT_MS, type Task } from "@locusai/shared";
 import { EventEmitter } from "events";
 import { isGhAvailable, isGitAvailable } from "../git/git-utils.js";
 import { LocusClient } from "../index.js";
 import { c } from "../utils/colors.js";
-import type { WorktreeCleanupPolicy } from "../worktree/worktree-config.js";
-import { WorktreeManager } from "../worktree/worktree-manager.js";
-import { AgentPool } from "./agent-pool.js";
-import { ExecutionStrategy } from "./execution.js";
-import { TierMergeService } from "./tier-merge.js";
-import type { AgentConfig, AgentState, OrchestratorConfig } from "./types.js";
+import { getAugmentedEnv } from "../utils/resolve-bin.js";
+import type { AgentState, OrchestratorConfig } from "./types.js";
 
 // Re-export types so consumers can import from the same path
-export type { AgentConfig, AgentState, OrchestratorConfig };
+export type { AgentConfig, AgentState, OrchestratorConfig } from "./types.js";
 
 /**
- * Top-level orchestrator that coordinates task execution across agents.
+ * Top-level orchestrator that coordinates task execution with a single agent.
  *
- * Delegates to:
- * - `AgentPool` — spawning and managing agent worker processes
- * - `TierMergeService` — creating stacked merge branches between tiers
- * - `ExecutionStrategy` — choosing and running the tier-based or legacy execution flow
- *
- * The orchestrator itself handles:
- * - Sprint resolution
- * - Task fetching and assignment
- * - Worktree cleanup on shutdown
- * - Event emission for CLI consumers
+ * Spawns one worker process that sequentially claims and executes tasks.
+ * The worker creates a single branch, pushes after each task, and opens
+ * a PR when all tasks are done.
  */
 export class AgentOrchestrator extends EventEmitter {
   private client: LocusClient;
   private config: OrchestratorConfig;
-  private pool: AgentPool;
   private isRunning = false;
   private processedTasks: Set<string> = new Set();
   private resolvedSprintId: string | null = null;
-  private worktreeManager: WorktreeManager | null = null;
+  private agentState: AgentState | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: OrchestratorConfig) {
     super();
@@ -43,22 +36,6 @@ export class AgentOrchestrator extends EventEmitter {
       baseUrl: config.apiBase,
       token: config.apiKey,
     });
-    this.pool = new AgentPool(config);
-
-    // Forward pool events to orchestrator consumers
-    this.pool.on("agent:spawned", (data) => this.emit("agent:spawned", data));
-    this.pool.on("agent:completed", (data) =>
-      this.emit("agent:completed", data)
-    );
-    this.pool.on("agent:stale", (data) => this.emit("agent:stale", data));
-  }
-
-  private get useWorktrees(): boolean {
-    return this.config.useWorktrees ?? true;
-  }
-
-  private get worktreeCleanupPolicy(): WorktreeCleanupPolicy {
-    return this.config.worktreeCleanupPolicy ?? "retain-on-failure";
   }
 
   /**
@@ -88,7 +65,7 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Start the orchestrator with N agents.
+   * Start the orchestrator with a single agent.
    */
   async start(): Promise<void> {
     if (this.isRunning) {
@@ -112,7 +89,7 @@ export class AgentOrchestrator extends EventEmitter {
    * Main orchestration loop.
    *
    * 1. Resolves sprint, fetches tasks, runs pre-flight checks
-   * 2. Delegates to `ExecutionStrategy` for the actual dispatch
+   * 2. Spawns a single agent worker process
    */
   private async orchestrationLoop(): Promise<void> {
     this.resolvedSprintId = await this.resolveSprintId();
@@ -134,34 +111,16 @@ export class AgentOrchestrator extends EventEmitter {
     }
 
     // Pre-flight checks
-    if (!this.preflightChecks(tasks)) return;
-
-    // Initialize worktree manager for cleanup
-    if (this.useWorktrees) {
-      this.worktreeManager = new WorktreeManager(this.config.projectPath, {
-        cleanupPolicy: this.worktreeCleanupPolicy,
-      });
-    }
+    if (!this.preflightChecks()) return;
 
     // Start heartbeat monitoring
-    this.pool.startHeartbeatMonitor();
+    this.startHeartbeatMonitor();
 
-    // Create tier merge service and register tasks
-    const tierMerge = new TierMergeService(
-      this.config.projectPath,
-      this.resolvedSprintId
-    );
-    tierMerge.registerTierTasks(tasks);
+    // Spawn a single agent worker
+    await this.spawnAgent();
 
-    // Run the appropriate execution strategy
-    const execution = new ExecutionStrategy(
-      this.config,
-      this.pool,
-      tierMerge,
-      this.resolvedSprintId,
-      () => this.isRunning
-    );
-    await execution.execute(tasks);
+    // Wait for the agent to finish
+    await this.waitForAgent();
 
     console.log(`\n${c.success("✅ Orchestrator finished")}`);
   }
@@ -173,31 +132,19 @@ export class AgentOrchestrator extends EventEmitter {
     if (this.resolvedSprintId) {
       console.log(`${c.bold("Sprint:")} ${this.resolvedSprintId}`);
     }
-    console.log(`${c.bold("Agents:")} ${this.pool.effectiveAgentCount}`);
-    console.log(
-      `${c.bold("Worktrees:")} ${this.useWorktrees ? "enabled" : "disabled"}`
-    );
-    if (this.useWorktrees) {
-      console.log(`${c.bold("Cleanup policy:")} ${this.worktreeCleanupPolicy}`);
-      console.log(
-        `${c.bold("Auto-push:")} ${this.config.autoPush ? "enabled" : "disabled"}`
-      );
-    }
     console.log(`${c.bold("API Base:")} ${this.config.apiBase}`);
     console.log(c.dim("----------------------------------------------\n"));
   }
 
-  private preflightChecks(_tasks: Task[]): boolean {
-    if (this.useWorktrees && !isGitAvailable()) {
+  private preflightChecks(): boolean {
+    if (!isGitAvailable()) {
       console.log(
-        c.error(
-          "git is not installed. Worktree isolation requires git. Install from https://git-scm.com/"
-        )
+        c.error("git is not installed. Install from https://git-scm.com/")
       );
       return false;
     }
 
-    if (this.config.autoPush && !isGhAvailable(this.config.projectPath)) {
+    if (!isGhAvailable(this.config.projectPath)) {
       console.log(
         c.warning(
           "GitHub CLI (gh) not available or not authenticated. Branch push can continue, but automatic PR creation may fail until gh is configured. Install from https://cli.github.com/"
@@ -225,114 +172,80 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Assign task to agent.
+   * Spawn a single agent worker process.
    */
-  async assignTaskToAgent(agentId: string): Promise<Task | null> {
-    const agent = this.pool.get(agentId);
-    if (!agent) return null;
+  private async spawnAgent(): Promise<void> {
+    const agentId = `agent-0-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 9)}`;
 
-    try {
-      const tasks = await this.getAvailableTasks();
+    this.agentState = {
+      id: agentId,
+      status: "IDLE",
+      currentTaskId: null,
+      tasksCompleted: 0,
+      tasksFailed: 0,
+      lastHeartbeat: new Date(),
+    };
 
-      const priorityOrder = [
-        TaskPriority.CRITICAL,
-        TaskPriority.HIGH,
-        TaskPriority.MEDIUM,
-        TaskPriority.LOW,
-      ];
+    console.log(`${c.primary("🚀 Agent started:")} ${c.bold(agentId)}\n`);
 
-      let task = tasks.sort(
-        (a, b) =>
-          priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority)
-      )[0];
+    const workerPath = this.resolveWorkerPath();
+    if (!workerPath) {
+      throw new Error(
+        "Worker file not found. Make sure the SDK is properly built and installed."
+      );
+    }
 
-      if (!task && tasks.length > 0) {
-        task = tasks[0];
-      }
+    const workerArgs = this.buildWorkerArgs(agentId);
 
-      if (!task) return null;
+    const agentProcess = spawn(process.execPath, [workerPath, ...workerArgs], {
+      stdio: ["pipe", "pipe", "pipe"],
+      detached: true,
+      env: getAugmentedEnv({
+        FORCE_COLOR: "1",
+        TERM: "xterm-256color",
+        LOCUS_WORKER: agentId,
+        LOCUS_WORKSPACE: this.config.workspaceId,
+      }),
+    });
 
-      agent.currentTaskId = task.id;
-      agent.status = "WORKING";
+    this.agentState.process = agentProcess;
+    this.attachProcessHandlers(agentId, this.agentState, agentProcess);
+    this.emit("agent:spawned", { agentId });
+  }
 
-      this.emit("task:assigned", {
-        agentId,
-        taskId: task.id,
-        title: task.title,
-      });
-
-      return task;
-    } catch (error) {
-      this.emit("error", error);
-      return null;
+  /**
+   * Wait for the agent process to finish.
+   */
+  private async waitForAgent(): Promise<void> {
+    while (this.agentState && this.isRunning) {
+      await sleep(2000);
     }
   }
 
   /**
-   * Mark task as completed by agent.
+   * Start monitoring agent heartbeats for stale detection.
    */
-  async completeTask(
-    taskId: string,
-    agentId: string,
-    summary?: string
-  ): Promise<void> {
-    try {
-      await this.client.tasks.update(taskId, this.config.workspaceId, {
-        status: TaskStatus.IN_REVIEW,
-      });
-
-      if (summary) {
-        await this.client.tasks.addComment(taskId, this.config.workspaceId, {
-          author: agentId,
-          text: `✅ Task completed\n\n${summary}`,
-        });
+  private startHeartbeatMonitor(): void {
+    this.heartbeatInterval = setInterval(() => {
+      if (!this.agentState) return;
+      const now = Date.now();
+      if (
+        this.agentState.status === "WORKING" &&
+        now - this.agentState.lastHeartbeat.getTime() > STALE_AGENT_TIMEOUT_MS
+      ) {
+        console.log(
+          c.error(
+            `Agent ${this.agentState.id} is stale (no heartbeat for 10 minutes). Killing.`
+          )
+        );
+        if (this.agentState.process && !this.agentState.process.killed) {
+          killProcessTree(this.agentState.process);
+        }
+        this.emit("agent:stale", { agentId: this.agentState.id });
       }
-
-      this.processedTasks.add(taskId);
-
-      const agent = this.pool.get(agentId);
-      if (agent) {
-        agent.tasksCompleted += 1;
-        agent.currentTaskId = null;
-        agent.status = "IDLE";
-      }
-
-      this.emit("task:completed", { agentId, taskId });
-    } catch (error) {
-      this.emit("error", error);
-    }
-  }
-
-  /**
-   * Mark task as failed.
-   */
-  async failTask(
-    taskId: string,
-    agentId: string,
-    error: string
-  ): Promise<void> {
-    try {
-      await this.client.tasks.update(taskId, this.config.workspaceId, {
-        status: TaskStatus.BACKLOG,
-        assignedTo: null,
-      });
-
-      await this.client.tasks.addComment(taskId, this.config.workspaceId, {
-        author: agentId,
-        text: `❌ Agent failed: ${error}`,
-      });
-
-      const agent = this.pool.get(agentId);
-      if (agent) {
-        agent.tasksFailed += 1;
-        agent.currentTaskId = null;
-        agent.status = "IDLE";
-      }
-
-      this.emit("task:failed", { agentId, taskId, error });
-    } catch (error) {
-      this.emit("error", error);
-    }
+    }, 60_000);
   }
 
   /**
@@ -345,40 +258,28 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   /**
-   * Stop a specific agent by ID.
+   * Stop the agent.
    */
   stopAgent(agentId: string): boolean {
-    return this.pool.stopAgent(agentId);
+    if (!this.agentState || this.agentState.id !== agentId) return false;
+    if (this.agentState.process && !this.agentState.process.killed) {
+      killProcessTree(this.agentState.process);
+    }
+    return true;
   }
 
   /**
-   * Cleanup — kill all agent processes and worktrees.
+   * Cleanup — kill agent process.
    */
   private async cleanup(): Promise<void> {
-    this.pool.shutdown();
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
 
-    if (this.worktreeManager) {
-      try {
-        if (this.worktreeCleanupPolicy === "auto") {
-          const removed = this.worktreeManager.removeAll();
-          if (removed > 0) {
-            console.log(c.dim(`Cleaned up ${removed} worktree(s)`));
-          }
-        } else if (this.worktreeCleanupPolicy === "retain-on-failure") {
-          this.worktreeManager.prune();
-          console.log(
-            c.dim(
-              "Retaining worktrees for failure analysis (cleanup policy: retain-on-failure)"
-            )
-          );
-        } else {
-          console.log(
-            c.dim("Skipping worktree cleanup (cleanup policy: manual)")
-          );
-        }
-      } catch {
-        console.log(c.dim("Could not clean up some worktrees"));
-      }
+    if (this.agentState?.process && !this.agentState.process.killed) {
+      console.log(`Killing agent: ${this.agentState.id}`);
+      killProcessTree(this.agentState.process);
     }
   }
 
@@ -386,10 +287,10 @@ export class AgentOrchestrator extends EventEmitter {
    * Get orchestrator stats.
    */
   getStats() {
-    const poolStats = this.pool.getStats();
     return {
-      ...poolStats,
-      useWorktrees: this.useWorktrees,
+      activeAgents: this.agentState ? 1 : 0,
+      totalTasksCompleted: this.agentState?.tasksCompleted ?? 0,
+      totalTasksFailed: this.agentState?.tasksFailed ?? 0,
       processedTasks: this.processedTasks.size,
     };
   }
@@ -398,6 +299,111 @@ export class AgentOrchestrator extends EventEmitter {
    * Get all agent states for status display.
    */
   getAgentStates(): AgentState[] {
-    return this.pool.getAll();
+    return this.agentState ? [this.agentState] : [];
   }
+
+  private buildWorkerArgs(agentId: string): string[] {
+    const args = [
+      "--agent-id",
+      agentId,
+      "--workspace-id",
+      this.config.workspaceId,
+      "--api-url",
+      this.config.apiBase,
+      "--api-key",
+      this.config.apiKey,
+      "--project-path",
+      this.config.projectPath,
+    ];
+
+    if (this.config.model) {
+      args.push("--model", this.config.model);
+    }
+    if (this.config.provider) {
+      args.push("--provider", this.config.provider);
+    }
+    if (this.resolvedSprintId) {
+      args.push("--sprint-id", this.resolvedSprintId);
+    }
+
+    return args;
+  }
+
+  private attachProcessHandlers(
+    agentId: string,
+    agentState: AgentState,
+    proc: ChildProcess
+  ): void {
+    proc.on("message", (msg: Record<string, unknown>) => {
+      if (msg.type === "stats") {
+        agentState.tasksCompleted = (msg.tasksCompleted as number) || 0;
+        agentState.tasksFailed = (msg.tasksFailed as number) || 0;
+      }
+      if (msg.type === "heartbeat") {
+        agentState.lastHeartbeat = new Date();
+      }
+    });
+
+    proc.stdout?.on("data", (data) => {
+      process.stdout.write(data.toString());
+    });
+
+    proc.stderr?.on("data", (data) => {
+      process.stderr.write(data.toString());
+    });
+
+    proc.on("exit", (code) => {
+      console.log(`\n${agentId} finished (exit code: ${code})`);
+      if (this.agentState) {
+        this.agentState.status = code === 0 ? "COMPLETED" : "FAILED";
+
+        this.emit("agent:completed", {
+          agentId,
+          status: this.agentState.status,
+          tasksCompleted: this.agentState.tasksCompleted,
+          tasksFailed: this.agentState.tasksFailed,
+        });
+
+        this.agentState = null;
+      }
+    });
+  }
+
+  /**
+   * Resolve the worker script path from the SDK module location.
+   */
+  private resolveWorkerPath(): string | undefined {
+    const currentModulePath = fileURLToPath(import.meta.url);
+    const currentModuleDir = dirname(currentModulePath);
+
+    const potentialPaths = [
+      join(currentModuleDir, "..", "agent", "worker.js"),
+      join(currentModuleDir, "agent", "worker.js"),
+      join(currentModuleDir, "worker.js"),
+      join(currentModuleDir, "..", "agent", "worker.ts"),
+    ];
+
+    return potentialPaths.find((p) => existsSync(p));
+  }
+}
+
+/**
+ * Kill a process and all its descendants.
+ */
+function killProcessTree(proc: ChildProcess): void {
+  if (!proc.pid || proc.killed) return;
+
+  try {
+    process.kill(-proc.pid, "SIGTERM");
+  } catch {
+    try {
+      proc.kill("SIGTERM");
+    } catch {
+      // Process may have already exited
+    }
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

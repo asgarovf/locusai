@@ -78,8 +78,8 @@ export async function tasksCommand(
         ? ` — <a href="${escapeHtml(task.prUrl)}">PR</a>`
         : "";
       msg += `${icon} <b>${escapeHtml(task.title)}</b>\n`;
-      msg += `   Status: <code>${task.status}</code>${pr}\n`;
-      msg += `   ID: <code>${task.id}</code>\n\n`;
+      msg += `   Status: \`${task.status}\`${pr}\n`;
+      msg += `   ID: \`${task.id}\`\n\n`;
     }
 
     await ctx.reply(msg.trim(), {

@@ -90,43 +90,38 @@ flowchart TD
     C --> D{Task available?}
     D -->|Yes| E[Claim task]
     D -->|No| F[Wait and retry]
-    E --> G[Create git worktree]
-    G --> H[Build agent context]
-    H --> I[Execute with AI provider]
-    I --> J[Commit changes]
-    J --> K[Push branch]
-    K --> L[Create PR on GitHub]
-    L --> M[Update task → IN_REVIEW]
-    M --> C
+    E --> G[Build agent context]
+    G --> H[Execute with AI provider]
+    H --> I[Commit and push changes]
+    I --> J[Update task → IN_REVIEW]
+    J --> C
     F --> C
 ```
 
+When all tasks are completed, the agent creates a single pull request and checks out the base branch.
+
 ---
 
-## Multi-Agent Execution
+## Sequential Execution
 
-When running multiple agents (`locus run --agents 3`), each agent:
+The agent executes tasks one at a time on a **single branch**:
 
-1. Gets its own **git worktree** — an isolated copy of the repository
-2. Claims a **separate task** — server-side locking prevents conflicts
-3. Works **independently** — no shared state between agents
-4. Creates its own **branch and PR** — named `agent/<taskId>-<slug>`
+1. Creates a branch (e.g. `locus/<sprintId>`) at the start
+2. Claims tasks one by one via server-side dispatch
+3. Commits and pushes after each completed task
+4. Creates a **single PR** when all tasks are done
+5. Checks out the base branch
 
 ```mermaid
 graph LR
-    CLI[Locus CLI] --> A1[Agent 1]
-    CLI --> A2[Agent 2]
-    CLI --> A3[Agent 3]
-
-    A1 --> W1[Worktree 1<br/>Task: Add auth]
-    A2 --> W2[Worktree 2<br/>Task: Fix pagination]
-    A3 --> W3[Worktree 3<br/>Task: Update tests]
-
-    W1 --> PR1[PR #1]
-    W2 --> PR2[PR #2]
-    W3 --> PR3[PR #3]
+    CLI[Locus CLI] --> Agent[AI Agent]
+    Agent --> Branch["Single Branch<br/>locus/sprint-123"]
+    Branch --> Task1["Task 1: Add auth"]
+    Task1 --> Task2["Task 2: Fix pagination"]
+    Task2 --> Task3["Task 3: Update tests"]
+    Task3 --> PR["Pull Request"]
 ```
 
-{% hint style="warning" %}
-Maximum of **5 parallel agents** per CLI instance. Each agent requires its own worktree, so ensure you have sufficient disk space.
+{% hint style="info" %}
+All tasks are committed to the same branch sequentially. This keeps the workflow simple and avoids merge conflicts.
 {% endhint %}

@@ -83,8 +83,8 @@ export async function sprintsCommand(
       msg += `<b>${label}</b>\n`;
       for (const sprint of items) {
         msg += `${icon} <b>${escapeHtml(sprint.name)}</b>\n`;
-        msg += `   Status: <code>${sprint.status}</code>\n`;
-        msg += `   ID: <code>${sprint.id}</code>\n\n`;
+        msg += `   Status: \`${sprint.status}\`\n`;
+        msg += `   ID: \`${sprint.id}\`\n\n`;
       }
     };
 

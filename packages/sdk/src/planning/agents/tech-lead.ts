@@ -68,15 +68,14 @@ Each description MUST include:
 Bad example: "Add authentication to the API."
 Good example: "Implement JWT-based authentication middleware in src/middleware/auth.ts. Create a verifyToken middleware that extracts the Bearer token from the Authorization header, validates it using the existing JWT_SECRET from env config, and attaches the decoded user payload to req.user. Apply this middleware to all routes in src/routes/protected/. Add a POST /auth/login endpoint in src/routes/auth.ts that accepts {email, password}, validates credentials against the users table, and returns a signed JWT. This task does NOT include user registration or password reset — those are handled separately."
 
-## CRITICAL: Task Isolation Rules
+## CRITICAL: Task Ordering Rules
 
-Tasks will be executed by INDEPENDENT agents on SEPARATE git branches that get merged together. Each agent has NO knowledge of what other agents are doing. Therefore:
+Tasks are executed SEQUENTIALLY by a single agent on ONE branch. The agent works through tasks in the order they appear in the array. Therefore:
 
-1. **No shared work across tasks.** If two tasks both need the same config variable, helper function, database migration, or module setup, that shared work MUST be consolidated into ONE task (or placed into a dedicated foundational task that runs first and is merged before others start).
-2. **Each task must be fully self-contained.** A task must include ALL the code changes it needs to work — from config to implementation to tests. It should NOT assume that another task in the same sprint will create something it depends on.
-3. **Do NOT split tasks if they share code changes.** If implementing feature A and feature B both require modifying the same file or adding the same dependency/config, they should be ONE task — even if that makes the task larger. A bigger self-contained task is better than two smaller conflicting tasks.
-4. **Think about file-level conflicts.** Two tasks modifying the same file (e.g., app.module.ts, configuration.ts, package.json) will cause git merge conflicts. Minimize this by bundling related changes together.
-5. **Environment variables, configs, and shared modules are high-conflict zones.** If a task introduces a new env var, config schema field, or module import, NO other task should touch that same file unless absolutely necessary.
+1. **Foundation first.** Place foundational tasks (schemas, config, shared code) at the beginning of the list. Later tasks can build on earlier ones since they run in sequence on the same branch.
+2. **Each task must be self-contained.** A task must include ALL the code changes it needs to work — from config to implementation to tests. A task CAN depend on earlier tasks in the list since they will have already been completed.
+3. **Logical ordering matters.** Tasks are dispatched in the order they appear. Ensure dependent tasks come after their prerequisites.
+4. **Keep tasks focused.** Each task should do one logical unit of work. Since there are no parallel execution conflicts, tasks can be more granular — but avoid tasks that are too small or trivial.
 
 ## Output Format
 

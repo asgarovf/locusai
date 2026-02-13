@@ -34,7 +34,6 @@ LOCUS_PROJECT_PATH="/path/to/your/project"
 ```json
 {
   "apiKey": "your-locus-api-key",
-  "agentCount": 2,
   "telegram": {
     "botToken": "your-bot-token",
     "chatId": 123456789,
@@ -76,7 +75,7 @@ bun run dev
 
 | Command | Description |
 |---------|-------------|
-| `/run` | Start agents on sprint tasks |
+| `/run` | Start agent on sprint tasks |
 | `/stop` | Stop all running processes |
 | `/exec <prompt>` | One-shot AI execution |
 
@@ -85,7 +84,6 @@ bun run dev
 | Command | Description |
 |---------|-------------|
 | `/status` | Show running processes |
-| `/agents` | List agent worktrees |
 
 ### System
 
@@ -105,7 +103,6 @@ bun run dev
 | API Base URL | — | `apiUrl` | Custom API URL |
 | Provider | — | `provider` | AI provider (`claude` or `codex`) |
 | Model | — | `model` | AI model override |
-| Agent Count | `LOCUS_AGENT_COUNT` | `agentCount` | Number of agents to spawn with `/run` (1-5) |
 | Test Mode | `LOCUS_TEST_MODE` | `telegram.testMode` | Use local CLI source instead of published binary |
 
 ## Security

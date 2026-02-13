@@ -1,10 +1,10 @@
 ---
-description: Start AI agents to execute sprint tasks.
+description: Start the AI agent to execute sprint tasks.
 ---
 
 # run
 
-Spawn AI agents that claim and execute tasks from your active sprint.
+Start an AI agent that claims and executes tasks from your active sprint sequentially on a single branch.
 
 ```bash
 locus run [options]
@@ -14,14 +14,16 @@ locus run [options]
 
 ## How It Works
 
-1. Registers agent(s) with the Locus API
-2. Requests a task from the active sprint via dispatch
-3. Creates a git worktree for isolated execution
+1. Spawns an agent and registers it with the Locus API
+2. Creates a single branch for the entire run
+3. Requests a task from the active sprint via dispatch
 4. Builds context (project metadata, instructions, codebase index, documents)
 5. Executes the task using your configured AI provider
-6. Commits changes, pushes the branch, and creates a pull request
+6. Commits changes and pushes the branch
 7. Updates the task status to `IN_REVIEW`
 8. Repeats until no more tasks are available
+9. Creates a pull request with all completed tasks
+10. Checks out the base branch
 
 ---
 
@@ -29,9 +31,6 @@ locus run [options]
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--agents <N>` | Number of parallel agents (1-5) | `1` |
-| `--worktree` | Enable worktree isolation | `true` |
-| `--auto-push` | Push changes to remote automatically | `true` |
 | `--skip-planning` | Skip the planning phase | `false` |
 | `--sprint <ID>` | Target a specific sprint | Active sprint |
 | `--workspace <ID>` | Override workspace ID | Auto-resolved |
@@ -46,11 +45,8 @@ locus run [options]
 ## Examples
 
 ```bash
-# Run a single agent
+# Run the agent
 locus run
-
-# Run 3 agents in parallel
-locus run --agents 3
 
 # Use a specific provider
 locus run --provider codex
@@ -61,21 +57,23 @@ locus run --sprint "sprint-id-123"
 
 ---
 
-## Multi-Agent Mode
+## What Happens
 
-When `--agents` is greater than 1, each agent:
+When you run `locus run`, the agent:
 
-* Gets its own git worktree
-* Claims a separate task via server-side locking
-* Works independently without shared state
-* Creates its own branch and pull request
+* Creates a branch (e.g. `locus/<sprintId>`)
+* Claims tasks one at a time from the sprint backlog
+* Executes each task with the AI provider
+* Commits and pushes after each task
+* Opens a single PR when all tasks are done
+* Checks out the base branch
 
 {% hint style="warning" %}
-Ensure you have an **active sprint** with tasks in `BACKLOG` status before running agents. Otherwise, no tasks will be dispatched.
+Ensure you have an **active sprint** with tasks in `BACKLOG` status before running the agent. Otherwise, no tasks will be dispatched.
 {% endhint %}
 
 ---
 
-## Stopping Agents
+## Stopping the Agent
 
-Press `Ctrl+C` to gracefully stop all agents. Locus will signal running agents to complete their current operation and clean up.
+Press `Ctrl+C` to gracefully stop the agent. Locus will signal the running agent to complete its current operation, checkout the base branch, and clean up.

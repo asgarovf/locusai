@@ -21,42 +21,41 @@ interface Product {
 
 const products: Product[] = [
   {
-    label: "AI Agents",
+    label: "AI Agent",
     labelColor: "text-cyan",
-    title: "Run parallel agents that ship code autonomously",
+    title: "An autonomous agent that ships code sequentially",
     description:
-      "Dispatch up to 5 AI agents that claim tasks from your sprint, write code, run tests, and create pull requests. Each agent operates in an isolated git worktree so parallel work never conflicts.",
+      "An AI agent claims tasks from your sprint one by one, writes code, runs tests, and pushes changes. All work happens on a single branch, and a pull request is created when all tasks are done.",
     terminalTitle: "locus run",
     lines: [
       {
-        text: "locus run --agents 3 --provider claude",
+        text: "locus run --provider claude",
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
       {
-        text: "🚀 Starting 3 agent(s) in ~/dev/my-saas...",
+        text: "🚀 Starting agent in ~/dev/my-saas...",
         color: "text-cyan",
       },
       {
-        text: "  Each task will run in an isolated worktree",
+        text: "  Tasks will be executed sequentially on a single branch",
         color: "text-muted-foreground",
       },
       {
-        text: "  Branches will be committed and pushed to remote",
+        text: "  Changes will be committed and pushed after each task",
         color: "text-muted-foreground",
       },
       { text: "", color: "" },
       { text: "  ● Agent spawned: agent-a1b2c3", color: "text-cyan" },
       { text: "  ● Claimed: Implement user auth", color: "text-cyan" },
-      { text: "  ● Agent spawned: agent-d4e5f6", color: "text-violet" },
-      { text: "  ● Claimed: Add database migrations", color: "text-violet" },
-      { text: "  ● Agent spawned: agent-g7h8i9", color: "text-amber" },
-      { text: "  ● Claimed: Create API docs", color: "text-amber" },
-      { text: "", color: "" },
       { text: "  ✔ Completed: Implement user auth", color: "text-emerald" },
+      { text: "  ● Claimed: Add database migrations", color: "text-cyan" },
       { text: "  ✔ Completed: Add database migrations", color: "text-emerald" },
+      { text: "  ● Claimed: Create API docs", color: "text-cyan" },
       { text: "  ✔ Completed: Create API docs", color: "text-emerald" },
+      { text: "", color: "" },
+      { text: "  All tasks done. PR created.", color: "text-cyan" },
     ],
   },
   {

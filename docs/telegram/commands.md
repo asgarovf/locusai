@@ -96,7 +96,7 @@ The feedback is added as a comment on the task. The next agent run will pick it 
 
 ### `/run`
 
-Start agents to execute sprint tasks.
+Start the agent to execute sprint tasks sequentially.
 
 ```
 /run
@@ -197,14 +197,6 @@ Show running processes with elapsed time.
 ```
 
 ---
-
-### `/agents`
-
-List active agent worktrees with their branches and HEAD commits.
-
-```
-/agents
-```
 
 ---
 

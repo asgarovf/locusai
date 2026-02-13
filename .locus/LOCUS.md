@@ -1,3 +1,18 @@
+## Artifacts
+
+When a task produces knowledge, analysis, or research output rather than (or in addition to) code changes, you **must** save the results as a Markdown file in `.locus/artifacts/`. Examples of artifact-worthy tasks:
+
+- Code quality audits, security reviews, vulnerability assessments
+- Architecture analyses or recommendations
+- Dependency reports, performance profiling summaries
+- Any research, comparison, or investigation the user requests
+
+**Rules:**
+- File path: `.locus/artifacts/<descriptive-name>.md` (e.g., `code-quality-audit.md`, `dependency-report.md`).
+- The artifact should be a well-structured Markdown document with clear headings, findings, and actionable recommendations where applicable.
+- Always create the artifact file — do not only return the results as conversation text.
+- If the task also involves code changes, still produce the artifact alongside the code changes.
+
 ## Planning First
 
 Complex tasks must be planned before writing code. Create `.locus/plans/<task-name>.md` with: goal, approach, affected files, and acceptance criteria. Delete the planning .md files after the execution.

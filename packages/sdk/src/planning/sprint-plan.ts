@@ -17,8 +17,6 @@ export interface PlannedTask {
   complexity: number;
   acceptanceCriteria: string[];
   labels: string[];
-  /** Execution tier (0 = foundational, higher = depends on lower tiers) */
-  tier: number;
 }
 
 export interface SprintPlanRisk {
@@ -68,43 +66,32 @@ export function sprintPlanToMarkdown(plan: SprintPlan): string {
 
   lines.push(`## Tasks (${plan.tasks.length})`);
   lines.push("");
+  lines.push(
+    "_Tasks are executed sequentially in the order listed below._"
+  );
+  lines.push("");
 
-  // Group tasks by tier for display
-  const maxTier = Math.max(0, ...plan.tasks.map((t) => t.tier ?? 0));
-  for (let tier = 0; tier <= maxTier; tier++) {
-    const tierTasks = plan.tasks.filter((t) => (t.tier ?? 0) === tier);
-    if (tierTasks.length === 0) continue;
-
-    lines.push(`### Tier ${tier}${tier === 0 ? " (Foundation)" : ""}`);
+  for (const task of plan.tasks) {
+    lines.push(`### ${task.index}. ${task.title}`);
+    lines.push(`- **Role:** ${task.assigneeRole}`);
+    lines.push(`- **Priority:** ${task.priority}`);
     lines.push(
-      tier === 0
-        ? "_These tasks run first and must complete before higher tiers start._"
-        : `_These tasks run in parallel after Tier ${tier - 1} completes._`
+      `- **Complexity:** ${"█".repeat(task.complexity)}${"░".repeat(
+        5 - task.complexity
+      )} (${task.complexity}/5)`
     );
+    if (task.labels.length > 0) {
+      lines.push(`- **Labels:** ${task.labels.join(", ")}`);
+    }
     lines.push("");
-
-    for (const task of tierTasks) {
-      lines.push(`#### ${task.index}. ${task.title}`);
-      lines.push(`- **Role:** ${task.assigneeRole}`);
-      lines.push(`- **Priority:** ${task.priority}`);
-      lines.push(
-        `- **Complexity:** ${"█".repeat(task.complexity)}${"░".repeat(
-          5 - task.complexity
-        )} (${task.complexity}/5)`
-      );
-      if (task.labels.length > 0) {
-        lines.push(`- **Labels:** ${task.labels.join(", ")}`);
+    lines.push(task.description);
+    lines.push("");
+    if (task.acceptanceCriteria.length > 0) {
+      lines.push(`**Acceptance Criteria:**`);
+      for (const ac of task.acceptanceCriteria) {
+        lines.push(`- [ ] ${ac}`);
       }
       lines.push("");
-      lines.push(task.description);
-      lines.push("");
-      if (task.acceptanceCriteria.length > 0) {
-        lines.push(`**Acceptance Criteria:**`);
-        for (const ac of task.acceptanceCriteria) {
-          lines.push(`- [ ] ${ac}`);
-        }
-        lines.push("");
-      }
     }
   }
 
@@ -141,7 +128,6 @@ export function plannedTasksToCreatePayloads(
     labels: task.labels,
     sprintId,
     order: task.index * 10,
-    tier: task.tier,
     acceptanceChecklist: task.acceptanceCriteria.map((text, i) => ({
       id: `ac-${i + 1}`,
       text,
@@ -181,7 +167,6 @@ export function parseSprintPlanFromAI(
       complexity: (t.complexity as number) || 3,
       acceptanceCriteria: (t.acceptanceCriteria as string[]) || [],
       labels: (t.labels as string[]) || [],
-      tier: typeof t.tier === "number" ? t.tier : 0,
     })
   );
 

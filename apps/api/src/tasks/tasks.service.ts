@@ -125,7 +125,6 @@ export class TasksService {
       sprintId: data.sprintId,
       acceptanceChecklist: mergedChecklist,
       ...(data.order !== undefined ? { order: data.order } : {}),
-      ...(data.tier !== undefined ? { tier: data.tier } : {}),
       docs: data.docIds
         ? await this.docRepository.find({ where: { id: In(data.docIds) } })
         : [],
@@ -280,11 +279,8 @@ export class TasksService {
   }
 
   /**
-   * Dispatch a task to an agent.
-   *
-   * Tier-aware dispatch: only serves tasks from the lowest incomplete tier.
-   * A tier is considered complete when all its tasks are IN_REVIEW or DONE.
-   * Falls back to order-based dispatch for tasks without tier assignments.
+   * Dispatch the next available task to an agent.
+   * Tasks are dispatched in order (by `order` ASC, then `createdAt` ASC).
    */
   async dispatchTask(
     workspaceId: string,
@@ -293,28 +289,20 @@ export class TasksService {
   ): Promise<Task> {
     const sprintFilter = sprintId ? { sprintId } : {};
 
-    // Find the lowest tier that still has dispatchable tasks.
-    // Tasks without a tier (null) are treated as tier 0 for backwards compatibility.
-    const activeTier = await this.findActiveTier(workspaceId, sprintFilter);
-
-    const where: Array<Record<string, unknown>> = [
-      {
-        workspaceId,
-        status: TaskStatus.BACKLOG,
-        ...sprintFilter,
-        ...(activeTier !== null ? { tier: activeTier } : {}),
-      },
-      {
-        workspaceId,
-        status: TaskStatus.IN_PROGRESS,
-        assignedTo: IsNull(),
-        ...sprintFilter,
-        ...(activeTier !== null ? { tier: activeTier } : {}),
-      },
-    ];
-
     const task = await this.taskRepository.findOne({
-      where,
+      where: [
+        {
+          workspaceId,
+          status: TaskStatus.BACKLOG,
+          ...sprintFilter,
+        },
+        {
+          workspaceId,
+          status: TaskStatus.IN_PROGRESS,
+          assignedTo: IsNull(),
+          ...sprintFilter,
+        },
+      ],
       order: { order: "ASC", createdAt: "ASC" },
     });
 
@@ -338,66 +326,10 @@ export class TasksService {
         oldStatus,
         newStatus: TaskStatus.IN_PROGRESS,
         assignedTo: workerId,
-        tier: result.tier,
       },
     });
 
     return result;
-  }
-
-  /**
-   * Find the lowest tier number that still has tasks available to dispatch.
-   * Returns null when there are no tiered tasks (legacy/backwards-compatible mode).
-   */
-  private async findActiveTier(
-    workspaceId: string,
-    sprintFilter: Record<string, unknown>
-  ): Promise<number | null> {
-    // Get all tasks for this sprint/workspace
-    const allTasks = await this.taskRepository.find({
-      where: { workspaceId, ...sprintFilter },
-      order: { tier: "ASC", order: "ASC" },
-    });
-
-    // If no tasks have tiers, fall back to legacy behaviour
-    const tieredTasks = allTasks.filter(
-      (t) => t.tier !== null && t.tier !== undefined
-    );
-    if (tieredTasks.length === 0) return null;
-
-    // Group tasks by tier
-    const tierMap = new Map<number, Task[]>();
-    for (const task of tieredTasks) {
-      const tier = task.tier as number;
-      const existing = tierMap.get(tier);
-      if (existing) {
-        existing.push(task);
-      } else {
-        tierMap.set(tier, [task]);
-      }
-    }
-
-    // Find the lowest tier that has dispatchable tasks,
-    // but only if all lower tiers are complete
-    const tiers = Array.from(tierMap.keys()).sort((a, b) => a - b);
-    for (const tier of tiers) {
-      const tasks = tierMap.get(tier) ?? [];
-      const allComplete = tasks.every(
-        (t) => t.status === TaskStatus.IN_REVIEW || t.status === TaskStatus.DONE
-      );
-      if (!allComplete) {
-        // This tier still has work to do — check if it has dispatchable tasks
-        const hasDispatchable = tasks.some(
-          (t) =>
-            t.status === TaskStatus.BACKLOG ||
-            (t.status === TaskStatus.IN_PROGRESS && !t.assignedTo)
-        );
-        return hasDispatchable ? tier : null;
-      }
-    }
-
-    // All tiers complete — nothing to dispatch
-    return null;
   }
 
   /**

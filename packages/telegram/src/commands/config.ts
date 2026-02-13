@@ -26,15 +26,6 @@ const ALLOWED_KEYS: Record<
   apiUrl: {
     description: "Locus API base URL",
   },
-  agentCount: {
-    description: "Default number of agents for /run (1-5)",
-    validate: (v) => {
-      const n = Number.parseInt(v, 10);
-      if (Number.isNaN(n) || n < 1 || n > 5)
-        return "Must be a number between 1 and 5";
-      return null;
-    },
-  },
 };
 
 const USAGE = `<b>Usage:</b>
@@ -44,7 +35,7 @@ const USAGE = `<b>Usage:</b>
 
 <b>Available keys:</b>
 ${Object.entries(ALLOWED_KEYS)
-  .map(([k, v]) => `  <code>${k}</code> — ${v.description}`)
+  .map(([k, v]) => `  \`${k}\` — ${v.description}`)
   .join("\n")}`;
 
 interface SettingsJson {
@@ -74,7 +65,7 @@ function formatSettingsDisplay(settings: SettingsJson): string {
     const value = settings[key];
     const display =
       value !== undefined && value !== null ? String(value) : "<i>not set</i>";
-    msg += `<code>${escapeHtml(key)}</code>: ${value !== undefined && value !== null ? `<code>${escapeHtml(String(value))}</code>` : display}\n`;
+    msg += `\`${escapeHtml(key)}\`: ${value !== undefined && value !== null ? `\`${escapeHtml(String(value))}\`` : display}\n`;
   }
 
   return msg;
@@ -154,19 +145,12 @@ export async function configCommand(
     try {
       const settings = loadSettings(config) || {};
 
-      // Store numeric values as numbers
-      if (key === "agentCount") {
-        settings[key] = Number.parseInt(value, 10);
-      } else {
-        settings[key] = value;
-      }
+      settings[key] = value;
 
       saveSettings(config, settings);
 
       await ctx.reply(
-        formatSuccess(
-          `Set <code>${escapeHtml(key)}</code> = <code>${escapeHtml(value)}</code>`
-        ),
+        formatSuccess(`Set \`${escapeHtml(key)}\` = \`${escapeHtml(value)}\``),
         { parse_mode: "HTML" }
       );
     } catch (err) {
@@ -213,7 +197,7 @@ export async function configCommand(
       saveSettings(config, settings);
 
       await ctx.reply(
-        formatSuccess(`Removed <code>${escapeHtml(key)}</code> from settings.`),
+        formatSuccess(`Removed \`${escapeHtml(key)}\` from settings.`),
         {
           parse_mode: "HTML",
         }

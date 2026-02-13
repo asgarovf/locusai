@@ -1,4 +1,3 @@
-export { agentsCommand } from "./agents";
 export { configCommand } from "./config";
 export { docsCommand } from "./docs";
 export { execCommand } from "./exec";

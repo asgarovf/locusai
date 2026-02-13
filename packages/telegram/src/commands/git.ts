@@ -50,7 +50,7 @@ export async function gitCommand(
   const { binary, args } = validation.command;
   const display = `${binary} ${args.map((a) => (a.includes(" ") ? `"${a}"` : a)).join(" ")}`;
 
-  await ctx.reply(formatInfo(`Running: <code>${display}</code>`), {
+  await ctx.reply(formatInfo(`Running: \`${display}\``), {
     parse_mode: "HTML",
   });
 

@@ -17,14 +17,6 @@ export interface WorkerConfig {
   model?: string;
   /** AI provider */
   provider?: AiProvider;
-  /** When running in a worktree, this is the path to the main repo for progress updates */
-  mainProjectPath?: string;
-  /** Whether to use per-task worktrees for isolation */
-  useWorktrees?: boolean;
-  /** Whether to push branches to remote after committing */
-  autoPush?: boolean;
-  /** Base branch for worktree creation and PR targeting (set by orchestrator for tier-based execution) */
-  baseBranch?: string;
 }
 
 export interface CommitPushResult {
@@ -40,7 +32,5 @@ export interface TaskResult {
   success: boolean;
   summary: string;
   branch?: string;
-  prUrl?: string;
-  prError?: string;
   noChanges?: boolean;
 }

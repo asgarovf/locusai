@@ -33,5 +33,3 @@ export { KnowledgeBase } from "./project/knowledge-base.js";
 // Utilities
 export { c } from "./utils/colors.js";
 export { extractJsonFromLLMOutput } from "./utils/json-extractor.js";
-// Node.js-only: Worktree management for parallel agents
-export * from "./worktree/index.js";

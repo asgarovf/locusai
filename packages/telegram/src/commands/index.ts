@@ -12,10 +12,5 @@ export {
 } from "./plan.js";
 export { runCommand, stopCommand } from "./run.js";
 export { completeSprintCommand, sprintsCommand } from "./sprints.js";
-export { agentsCommand, statusCommand } from "./status.js";
+export { statusCommand } from "./status.js";
 export { rejectTaskCommand, tasksCommand } from "./tasks.js";
-export {
-  rmworktreeCommand,
-  worktreeCommand,
-  worktreesCommand,
-} from "./worktree.js";

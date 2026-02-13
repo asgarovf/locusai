@@ -32,11 +32,7 @@ export function parseWorkerArgs(argv: string[]): WorkerConfig {
     else if (arg === "--api-url") config.apiBase = args[++i];
     else if (arg === "--api-key") config.apiKey = args[++i];
     else if (arg === "--project-path") config.projectPath = args[++i];
-    else if (arg === "--main-project-path") config.mainProjectPath = args[++i];
     else if (arg === "--model") config.model = args[++i];
-    else if (arg === "--use-worktrees") config.useWorktrees = true;
-    else if (arg === "--auto-push") config.autoPush = true;
-    else if (arg === "--base-branch") config.baseBranch = args[++i];
     else if (arg === "--provider") {
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;

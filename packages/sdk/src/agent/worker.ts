@@ -2,11 +2,7 @@ import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
 import { createAiRunner } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
-import {
-  getGhUsername,
-  isGhAvailable,
-  isGitAvailable,
-} from "../git/git-utils.js";
+import { isGhAvailable, isGitAvailable } from "../git/git-utils.js";
 import { LocusClient } from "../index.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
@@ -18,14 +14,15 @@ import type { TaskResult, WorkerConfig } from "./worker-types.js";
 export type { WorkerConfig } from "./worker-types.js";
 
 /**
- * Main agent worker that claims and executes tasks.
+ * Main agent worker that claims and executes tasks sequentially.
  *
  * Responsibilities:
+ * - Creating a single branch for the run
  * - Claiming tasks from the API via dispatch
  * - Executing tasks using the AI runner
- * - Delegating git operations (worktree, commit, push, PR) to `GitWorkflow`
- * - Reporting task status back to the API
- * - Heartbeat reporting to the orchestrator
+ * - Committing and pushing after each task
+ * - Opening a PR when all tasks are done
+ * - Checking out the base branch after completion
  */
 export class AgentWorker {
   private client: LocusClient;
@@ -39,8 +36,10 @@ export class AgentWorker {
   private tasksCompleted = 0;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private currentTaskId: string | null = null;
-  private currentWorktreePath: string | null = null;
-  private postCleanupDelayMs = 5_000;
+
+  // Track completed tasks for the final PR
+  private completedTaskList: Array<{ title: string; id: string }> = [];
+  private taskSummaries: string[] = [];
 
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
@@ -59,25 +58,18 @@ export class AgentWorker {
     const log = this.log.bind(this);
 
     // Prerequisite checks
-    if (config.useWorktrees && !isGitAvailable()) {
+    if (!isGitAvailable()) {
       this.log(
-        "git is not installed — worktree isolation will not work",
+        "git is not installed — branch management will not work",
         "error"
       );
-      config.useWorktrees = false;
     }
 
-    if (config.autoPush && !isGhAvailable(projectPath)) {
+    if (!isGhAvailable(projectPath)) {
       this.log(
         "GitHub CLI (gh) not available or not authenticated. Branch push can continue, but automatic PR creation may fail until gh is configured. Install from https://cli.github.com/",
         "warn"
       );
-    }
-
-    // Resolve GitHub username for co-authorship
-    const ghUsername = config.autoPush ? getGhUsername() : null;
-    if (ghUsername) {
-      this.log(`GitHub user: ${ghUsername}`, "info");
     }
 
     // Initialize AI runner and task executor
@@ -93,28 +85,15 @@ export class AgentWorker {
       log,
     });
 
-    // Knowledge base always points to the main project for progress updates
+    // Knowledge base for progress updates
     this.knowledgeBase = new KnowledgeBase(projectPath);
 
-    // Git workflow handles worktree, commit, push, and PR creation
-    this.gitWorkflow = new GitWorkflow(config, log, ghUsername);
+    // Git workflow handles branch creation, commit, push, and PR
+    this.gitWorkflow = new GitWorkflow(config, log);
 
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Using ${providerLabel} CLI for all phases`, "info");
-
-    if (config.useWorktrees) {
-      this.log("Per-task worktree isolation enabled", "info");
-      if (config.baseBranch) {
-        this.log(`Base branch for worktrees: ${config.baseBranch}`, "info");
-      }
-      if (config.autoPush) {
-        this.log(
-          "Auto-push enabled: branches will be pushed to remote",
-          "info"
-        );
-      }
-    }
   }
 
   log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
@@ -199,7 +178,7 @@ export class AgentWorker {
   // ---------------------------------------------------------------------------
 
   /**
-   * Execute a single task: create worktree -> run AI -> commit -> push -> PR.
+   * Execute a single task in the current branch.
    */
   private async executeTask(task: Task): Promise<TaskResult> {
     const fullTask = await this.client.tasks.getById(
@@ -207,85 +186,29 @@ export class AgentWorker {
       this.config.workspaceId
     );
 
-    const { worktreePath, baseBranch, baseCommitHash, executor } =
-      this.gitWorkflow.createTaskWorktree(fullTask, this.taskExecutor);
-    this.currentWorktreePath = worktreePath;
-    let branchPushed = false;
-    let keepBranch = false;
-    let preserveWorktree = false;
-
     try {
-      const result = await executor.execute(fullTask);
+      const result = await this.taskExecutor.execute(fullTask);
 
-      let taskBranch: string | null = null;
-      let prUrl: string | null = null;
-      let prError: string | null = null;
       let noChanges = false;
+      let taskBranch: string | null = null;
 
-      if (result.success && worktreePath) {
-        const commitResult = this.gitWorkflow.commitAndPush(
-          worktreePath,
-          fullTask,
-          baseBranch ?? undefined,
-          baseCommitHash ?? undefined
-        );
+      if (result.success) {
+        const commitResult = this.gitWorkflow.commitAndPush(fullTask);
         taskBranch = commitResult.branch;
-        branchPushed = commitResult.pushed;
-        keepBranch = taskBranch !== null;
         noChanges = Boolean(commitResult.noChanges);
-
-        if (commitResult.pushFailed) {
-          preserveWorktree = true;
-          prError =
-            commitResult.pushError ??
-            "Git push failed before PR creation. Please retry manually.";
-          this.log(
-            `Preserving worktree after push failure: ${worktreePath}`,
-            "warn"
-          );
-        }
-
-        if (branchPushed && taskBranch) {
-          const prResult = this.gitWorkflow.createPullRequest(
-            fullTask,
-            taskBranch,
-            result.summary,
-            baseBranch ?? undefined
-          );
-          prUrl = prResult.url;
-          prError = prResult.error ?? null;
-
-          if (!prUrl) {
-            preserveWorktree = true;
-            this.log(
-              `Preserving worktree for manual follow-up: ${worktreePath}`,
-              "warn"
-            );
-          }
-        } else if (commitResult.skipReason) {
-          this.log(`Skipping PR creation: ${commitResult.skipReason}`, "info");
-        }
-      } else if (result.success && !worktreePath) {
-        this.log(
-          "Skipping commit/push/PR flow because no task worktree is active.",
-          "warn"
-        );
       }
 
       return {
         ...result,
         branch: taskBranch ?? undefined,
-        prUrl: prUrl ?? undefined,
-        prError: prError ?? undefined,
         noChanges: noChanges || undefined,
       };
-    } finally {
-      if (preserveWorktree || keepBranch) {
-        this.currentWorktreePath = null;
-      } else {
-        this.gitWorkflow.cleanupWorktree(worktreePath, keepBranch);
-        this.currentWorktreePath = null;
-      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        success: false,
+        summary: `Execution error: ${msg}`,
+      };
     }
   }
 
@@ -340,17 +263,6 @@ export class AgentWorker {
       });
   }
 
-  private async delayAfterCleanup(): Promise<void> {
-    if (!this.config.useWorktrees || this.postCleanupDelayMs <= 0) return;
-    this.log(
-      `Waiting ${Math.floor(this.postCleanupDelayMs / 1000)}s after worktree cleanup before next dispatch`,
-      "info"
-    );
-    await new Promise((resolve) =>
-      setTimeout(resolve, this.postCleanupDelayMs)
-    );
-  }
-
   // ---------------------------------------------------------------------------
   // Main run loop
   // ---------------------------------------------------------------------------
@@ -365,7 +277,7 @@ export class AgentWorker {
       this.log("Received shutdown signal. Aborting...", "warn");
       this.aiRunner.abort();
       this.stopHeartbeat();
-      this.gitWorkflow.cleanupWorktree(this.currentWorktreePath, false);
+      this.gitWorkflow.checkoutBaseBranch();
       process.exit(1);
     };
 
@@ -381,10 +293,14 @@ export class AgentWorker {
       this.log("No active sprint found.", "warn");
     }
 
+    // Create a single branch for the entire run
+    const branchName = this.gitWorkflow.createBranch(this.config.sprintId);
+    this.log(`Working on branch: ${branchName}`, "info");
+
     while (this.tasksCompleted < this.maxTasks) {
       const task = await this.getNextTask();
       if (!task) {
-        this.log("No more tasks to process. Exiting.", "info");
+        this.log("No more tasks to process.", "info");
         break;
       }
 
@@ -406,7 +322,7 @@ export class AgentWorker {
           });
           await this.client.tasks.addComment(task.id, this.config.workspaceId, {
             author: this.config.agentId,
-            text: `⚠️ Agent execution finished with no file changes, so no commit/branch/PR was created.\n\n${result.summary}`,
+            text: `⚠️ Agent execution finished with no file changes, so no commit was created.\n\n${result.summary}`,
           });
         } else {
           this.log(`Completed: ${task.title}`, "success");
@@ -414,9 +330,6 @@ export class AgentWorker {
           const updatePayload: Record<string, unknown> = {
             status: TaskStatus.IN_REVIEW,
           };
-          if (result.prUrl) {
-            updatePayload.prUrl = result.prUrl;
-          }
 
           await this.client.tasks.update(
             task.id,
@@ -427,15 +340,15 @@ export class AgentWorker {
           const branchInfo = result.branch
             ? `\n\nBranch: \`${result.branch}\``
             : "";
-          const prInfo = result.prUrl ? `\nPR: ${result.prUrl}` : "";
-          const prErrorInfo = result.prError
-            ? `\nPR automation error: ${result.prError}`
-            : "";
           await this.client.tasks.addComment(task.id, this.config.workspaceId, {
             author: this.config.agentId,
-            text: `✅ ${result.summary}${branchInfo}${prInfo}${prErrorInfo}`,
+            text: `✅ ${result.summary}${branchInfo}`,
           });
           this.tasksCompleted++;
+
+          // Track for final PR
+          this.completedTaskList.push({ title: task.title, id: task.id });
+          this.taskSummaries.push(result.summary);
 
           this.updateProgress(task, result.summary);
         }
@@ -453,8 +366,35 @@ export class AgentWorker {
 
       this.currentTaskId = null;
       this.sendHeartbeat();
-      await this.delayAfterCleanup();
     }
+
+    // Open PR if any tasks were completed
+    if (this.completedTaskList.length > 0) {
+      this.log("All tasks done. Creating pull request...", "info");
+      const prResult = this.gitWorkflow.createPullRequest(
+        this.completedTaskList,
+        this.taskSummaries
+      );
+      if (prResult.url) {
+        this.log(`PR created: ${prResult.url}`, "success");
+
+        // Update all completed tasks with the PR URL
+        for (const task of this.completedTaskList) {
+          try {
+            await this.client.tasks.update(task.id, this.config.workspaceId, {
+              prUrl: prResult.url,
+            });
+          } catch {
+            // Best effort PR URL update
+          }
+        }
+      } else if (prResult.error) {
+        this.log(`PR creation failed: ${prResult.error}`, "error");
+      }
+    }
+
+    // Checkout base branch
+    this.gitWorkflow.checkoutBaseBranch();
 
     this.currentTaskId = null;
     this.stopHeartbeat();

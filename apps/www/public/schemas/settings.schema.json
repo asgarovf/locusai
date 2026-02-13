@@ -35,13 +35,6 @@
       "format": "uuid",
       "description": "The Locus workspace ID (overrides the value in config.json)"
     },
-    "agentCount": {
-      "type": "integer",
-      "description": "Number of agents to spawn with the run command (1-5)",
-      "minimum": 1,
-      "maximum": 5,
-      "default": 1
-    },
     "telegram": {
       "type": "object",
       "description": "Telegram bot integration settings",

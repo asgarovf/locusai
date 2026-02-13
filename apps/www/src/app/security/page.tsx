@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Eye,
-  GitBranch,
   Globe,
   HardDrive,
   Lock,
@@ -16,7 +15,7 @@ import { Footer, Navbar } from "@/components/layout";
 export const metadata: Metadata = {
   title: "Security",
   description:
-    "How Locus keeps your code safe. Local execution, git worktree isolation, no cloud dependency, and full transparency.",
+    "How Locus keeps your code safe. Local execution, no cloud dependency, and full transparency.",
   alternates: {
     canonical: "https://locusai.dev/security",
   },
@@ -32,13 +31,6 @@ const principles = [
     description:
       "Locus agents execute locally using your own AI provider credentials. Your code, your prompts, and your output never pass through Locus servers. The CLI communicates with the Locus API only for workspace management — task assignments, sprint status, and plan approvals.",
     color: "text-cyan",
-  },
-  {
-    icon: <GitBranch className="h-5 w-5" />,
-    title: "Git worktree isolation",
-    description:
-      "Each agent runs in a separate git worktree under .locus-worktrees/. This means agents can't interfere with each other or with your working directory. If an agent produces bad output, the worktree is simply discarded — your main branch is never touched.",
-    color: "text-violet",
   },
   {
     icon: <Lock className="h-5 w-5" />,

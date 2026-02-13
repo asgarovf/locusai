@@ -23,9 +23,9 @@ graph LR
 ```
 
 1. **Plan** — Create sprints and tasks in the [Locus Dashboard](https://app.locusai.dev), or let AI plan them for you with `locus plan`
-2. **Dispatch** — Tasks are dispatched to your local machine where AI agents claim and execute them
-3. **Execute** — Agents work in isolated git worktrees, keeping each task's changes separate
-4. **Review** — Agents create pull requests, and you can review them with `locus review` or via the Telegram bot
+2. **Dispatch** — Tasks are dispatched to your local machine where the AI agent claims and executes them
+3. **Execute** — The agent works on a single branch, executing tasks sequentially and pushing after each one
+4. **Review** — A pull request is created when all tasks are done, and you can review with `locus review` or via the Telegram bot
 
 ---
 
@@ -36,8 +36,8 @@ graph LR
 AI agents run on **your machine** or **your server**. Source code is never uploaded to any third-party service. Locus only syncs task metadata, status updates, and project context — never your codebase.
 {% endtab %}
 
-{% tab title="Multi-Agent" %}
-Run up to **5 parallel agents**, each working on a separate task in its own git worktree. Locus handles orchestration, task claiming, and conflict prevention automatically.
+{% tab title="Sequential Execution" %}
+An AI agent works through your sprint tasks one by one on a **single branch**. Changes are committed and pushed after each task, and a pull request is created when all tasks are done.
 {% endtab %}
 
 {% tab title="AI Sprint Planning" %}
@@ -90,14 +90,10 @@ graph TB
 
     subgraph Local["💻 Your Machine"]
         CLI["Locus CLI"]
-        Agent1["Agent 1"]
-        Agent2["Agent 2"]
-        WT1["Worktree 1"]
-        WT2["Worktree 2"]
-        CLI --> Agent1
-        CLI --> Agent2
-        Agent1 --> WT1
-        Agent2 --> WT2
+        Agent["AI Agent"]
+        Branch["Single Branch"]
+        CLI --> Agent
+        Agent --> Branch
     end
 
     subgraph Integrations["🔗 Integrations"]
@@ -106,8 +102,7 @@ graph TB
     end
 
     API <-->|"Task metadata only"| CLI
-    Agent1 -->|"Push branches"| GH
-    Agent2 -->|"Push branches"| GH
+    Agent -->|"Push changes"| GH
     TG <-->|"Commands"| CLI
 ```
 

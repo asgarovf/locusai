@@ -46,9 +46,9 @@ export function ProjectSetupGuide({ hasApiKeys }: ProjectSetupGuideProps) {
     },
     {
       id: "run",
-      title: "3. Start your agents",
+      title: "3. Start the agent",
       description:
-        "Run this command to start an agent that will poll for tasks from your dashboard.",
+        "Run this command to start the agent that will sequentially execute tasks from your dashboard.",
       status: "action",
       command: `npx @locusai/cli run --api-key YOUR_API_KEY`,
     },

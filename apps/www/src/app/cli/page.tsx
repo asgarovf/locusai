@@ -29,14 +29,13 @@ const commands = [
   {
     name: "locus run",
     description:
-      "Spawn autonomous AI agents that claim sprint tasks and ship code in isolated worktrees.",
+      "Spawn autonomous AI agents that claim sprint tasks and ship code.",
     icon: <Bot className="h-4 w-4" />,
     color: "text-cyan",
     flags: [
       "--agents <N>",
       "--provider <name>",
       "--sprint <id>",
-      "--worktree",
       "--auto-push",
       "--model <name>",
       "--skip-planning",
@@ -111,15 +110,6 @@ const commands = [
     icon: <Settings className="h-4 w-4" />,
     color: "text-violet",
     flags: ["setup", "show", "set <key> <value>", "remove"],
-    href: null,
-  },
-  {
-    name: "locus agents",
-    description:
-      "Manage agent worktrees — list active agents and clean up stale worktrees.",
-    icon: <Bot className="h-4 w-4" />,
-    color: "text-amber",
-    flags: ["list", "clean", "clean --all"],
     href: null,
   },
   {

@@ -14,7 +14,7 @@ import { Footer, Navbar } from "@/components/layout";
 export const metadata: Metadata = {
   title: "AI Agents",
   description:
-    "Dispatch up to 5 autonomous AI agents that claim tasks, write code, run tests, and create pull requests — each in an isolated git worktree.",
+    "An autonomous AI agent that claims tasks, writes code, runs tests, and creates pull requests — all on a single branch with sequential execution.",
   alternates: {
     canonical: "https://locusai.dev/products/agents",
   },
@@ -30,7 +30,7 @@ const jsonLd = {
   applicationCategory: "DeveloperApplication",
   url: "https://locusai.dev/products/agents",
   description:
-    "Dispatch up to 5 autonomous AI agents that claim tasks, write code, run tests, and create pull requests — each in an isolated git worktree.",
+    "An autonomous AI agent that claims tasks, writes code, runs tests, and creates pull requests — all on a single branch with sequential execution.",
   author: {
     "@id": "https://locusai.dev/#organization",
   },
@@ -39,30 +39,30 @@ const jsonLd = {
 const capabilities = [
   {
     icon: <Layers className="h-4 w-4" />,
-    title: "Parallel execution",
+    title: "Sequential execution",
     description:
-      "Run up to 5 agents simultaneously. Each agent claims a task from your sprint and works on it independently.",
+      "The agent claims tasks from your sprint one at a time, executing them in order on a single branch.",
     color: "text-cyan",
   },
   {
     icon: <GitBranch className="h-4 w-4" />,
-    title: "Worktree isolation",
+    title: "Single branch workflow",
     description:
-      "Every agent operates in its own git worktree. Parallel work never conflicts — each task gets a clean branch.",
+      "All tasks are committed to one branch. After each task, changes are pushed. A PR is opened when all tasks are done.",
     color: "text-violet",
   },
   {
     icon: <Zap className="h-4 w-4" />,
     title: "Auto push & PR",
     description:
-      "Agents automatically commit, push to remote, and create branches. Review the output as pull requests.",
+      "The agent automatically commits and pushes after each task. A single pull request is created at the end.",
     color: "text-amber",
   },
   {
     icon: <Shield className="h-4 w-4" />,
     title: "Runs on your machine",
     description:
-      "Code never leaves your infrastructure. Agents execute locally using your AI provider credentials.",
+      "Code never leaves your infrastructure. The agent executes locally using your AI provider credentials.",
     color: "text-emerald",
   },
   {
@@ -76,26 +76,17 @@ const capabilities = [
     icon: <Terminal className="h-4 w-4" />,
     title: "Graceful lifecycle",
     description:
-      "Agents handle SIGINT/SIGTERM gracefully — worktrees are cleaned up and progress is saved on shutdown.",
+      "The agent handles SIGINT/SIGTERM gracefully — the base branch is checked out and progress is saved on shutdown.",
     color: "text-cyan",
   },
 ];
 
 const flags = [
-  { flag: "--agents <N>", description: "Number of parallel agents (1–5)" },
   {
     flag: "--provider <name>",
     description: 'AI provider: "claude" or "codex"',
   },
   { flag: "--sprint <id>", description: "Target a specific sprint" },
-  {
-    flag: "--worktree",
-    description: "Enable worktree isolation (auto when agents > 1)",
-  },
-  {
-    flag: "--auto-push",
-    description: "Auto-push branches to remote (default: true)",
-  },
   { flag: "--model <name>", description: "Override the AI model" },
   { flag: "--skip-planning", description: "Skip the planning phase" },
   { flag: "--dir <path>", description: "Set the project directory" },
@@ -121,9 +112,9 @@ export default function AgentsPage() {
               Autonomous agents that ship code
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Dispatch parallel AI agents that claim tasks from your sprint,
-              write code, run tests, and push branches — all in isolated git
-              worktrees.
+              An autonomous AI agent that claims tasks from your sprint,
+              writes code, runs tests, and pushes changes — all on a single
+              branch with sequential execution.
             </p>
           </div>
         </section>
@@ -147,43 +138,43 @@ export default function AgentsPage() {
                 <p>
                   <span className="text-violet/50">$ </span>
                   <span className="text-foreground">
-                    locus run --agents 3 --provider claude
+                    locus run --provider claude
                   </span>
                 </p>
                 <p className="h-3" />
                 <p className="text-cyan">
-                  🚀 Starting 3 agent(s) in ~/dev/my-saas...
+                  🚀 Starting agent in ~/dev/my-saas...
                 </p>
                 <p className="text-muted-foreground">
-                  {"  "}Each task will run in an isolated worktree
+                  {"  "}Tasks will be executed sequentially on a single branch
                 </p>
                 <p className="text-muted-foreground">
-                  {"  "}Branches will be committed and pushed to remote
+                  {"  "}Changes will be committed and pushed after each task
+                </p>
+                <p className="text-muted-foreground">
+                  {"  "}A PR will be opened when all tasks are done
                 </p>
                 <p className="h-3" />
                 <p className="text-cyan">{"  "}● Agent spawned: agent-a1b2c3</p>
                 <p className="text-cyan">
                   {"  "}● Claimed: Implement user auth
                 </p>
-                <p className="text-violet">
-                  {"  "}● Agent spawned: agent-d4e5f6
-                </p>
-                <p className="text-violet">
-                  {"  "}● Claimed: Add database migrations
-                </p>
-                <p className="text-amber">
-                  {"  "}● Agent spawned: agent-g7h8i9
-                </p>
-                <p className="text-amber">{"  "}● Claimed: Create API docs</p>
-                <p className="h-3" />
                 <p className="text-emerald">
                   {"  "}✔ Completed: Implement user auth
+                </p>
+                <p className="text-cyan">
+                  {"  "}● Claimed: Add database migrations
                 </p>
                 <p className="text-emerald">
                   {"  "}✔ Completed: Add database migrations
                 </p>
+                <p className="text-cyan">{"  "}● Claimed: Create API docs</p>
                 <p className="text-emerald">
                   {"  "}✔ Completed: Create API docs
+                </p>
+                <p className="h-3" />
+                <p className="text-cyan">
+                  {"  "}✅ All tasks done. PR created.
                 </p>
               </div>
             </div>

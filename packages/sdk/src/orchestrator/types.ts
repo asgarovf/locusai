@@ -1,6 +1,5 @@
 import type { ChildProcess } from "node:child_process";
 import type { AiProvider } from "../ai/runner.js";
-import type { WorktreeCleanupPolicy } from "../worktree/worktree-config.js";
 
 export interface AgentConfig {
   id: string;
@@ -15,8 +14,6 @@ export interface AgentState {
   tasksFailed: number;
   lastHeartbeat: Date;
   process?: ChildProcess;
-  worktreePath?: string;
-  worktreeBranch?: string;
 }
 
 export interface OrchestratorConfig {
@@ -36,12 +33,4 @@ export interface OrchestratorConfig {
   model?: string;
   /** AI provider (e.g. codex, claude, etc.) */
   provider?: AiProvider;
-  /** Number of agents to spawn */
-  agentCount?: number;
-  /** Whether to use worktrees for each agent */
-  useWorktrees?: boolean;
-  /** Worktree management */
-  worktreeCleanupPolicy?: WorktreeCleanupPolicy;
-  /** Whether to push agent branches to remote after committing */
-  autoPush?: boolean;
 }

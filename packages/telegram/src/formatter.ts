@@ -50,7 +50,7 @@ export function formatCommandOutput(
   const cleanOutput = stripAnsi(output);
   const truncated = truncateOutput(cleanOutput, MAX_MESSAGE_LENGTH - 200);
 
-  let msg = `<b>Command:</b> <code>${escapeHtml(command)}</code>\n`;
+  let msg = `<b>Command:</b> \`${escapeHtml(command)}\`\n`;
   msg += `<b>Status:</b> ${exitCode === 0 ? "✅" : "❌"} ${escapeHtml(status)}\n\n`;
 
   if (truncated.trim()) {

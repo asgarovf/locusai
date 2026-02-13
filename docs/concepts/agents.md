@@ -1,12 +1,12 @@
 ---
-description: AI-powered workers that execute your tasks locally.
+description: AI-powered worker that executes your tasks locally.
 ---
 
 # Agents
 
 ## Overview
 
-Agents are AI-powered workers that execute tasks on your machine. Each agent uses either **Claude** (Anthropic) or **Codex** (OpenAI) as its AI provider to read your codebase, make changes, and create pull requests.
+The agent is an AI-powered worker that executes tasks on your machine. It uses either **Claude** (Anthropic) or **Codex** (OpenAI) as its AI provider to read your codebase, make changes, and create a pull request.
 
 ---
 
@@ -14,16 +14,17 @@ Agents are AI-powered workers that execute tasks on your machine. Each agent use
 
 ```mermaid
 flowchart TD
-    A[Register with API] --> B[Claim task from sprint]
-    B --> C[Create git worktree]
+    A[Register with API] --> B[Create branch]
+    B --> C[Claim task from sprint]
     C --> D[Build execution context]
     D --> E[Execute with AI provider]
     E --> F[Commit and push changes]
-    F --> G[Create pull request]
-    G --> H[Update task status]
-    H --> I{More tasks?}
-    I -->|Yes| B
-    I -->|No| J[Done]
+    F --> G[Update task status]
+    G --> H{More tasks?}
+    H -->|Yes| C
+    H -->|No| I[Create pull request]
+    I --> J[Checkout base branch]
+    J --> K[Done]
 ```
 
 ---
@@ -49,39 +50,17 @@ locus run --provider codex
 
 ---
 
-## Worktree Isolation
+## Single-Branch Workflow
 
-When running agents, Locus creates **git worktrees** — isolated copies of your repository where each agent works independently.
+When you run `locus run`, the agent creates a **single branch** (e.g. `locus/<sprintId>`) and executes all tasks sequentially on that branch.
 
-```
-your-project/
-└── .locus-worktrees/
-    ├── agent/task-123-add-auth/       # Agent 1's workspace
-    ├── agent/task-456-fix-pagination/ # Agent 2's workspace
-    └── agent/task-789-update-tests/   # Agent 3's workspace
-```
+After each task:
+* Changes are committed with a descriptive message
+* The branch is pushed to remote
 
-Each worktree:
-* Has its own branch (`agent/<taskId>-<slug>`)
-* Contains a full copy of the repository
-* Is automatically created and cleaned up
-
-{% hint style="info" %}
-Worktree isolation is **automatic** when running multiple agents. For single-agent runs, it's also enabled by default but can be controlled with `--worktree`.
-{% endhint %}
-
-### Managing Worktrees
-
-```bash
-# List active worktrees
-locus agents list
-
-# Clean up stale worktrees
-locus agents clean
-
-# Remove all worktrees
-locus agents clean --all
-```
+When all tasks are done:
+* A pull request is created targeting the base branch
+* The base branch is checked out
 
 ---
 
@@ -102,15 +81,15 @@ Before executing a task, Locus builds a rich context for the agent that includes
 
 ## Health Monitoring
 
-Active agents send a **heartbeat** to the API every 10 minutes. This lets the dashboard and API track which agents are alive and working.
+The active agent sends a **heartbeat** to the API every minute. This lets the dashboard and API track whether the agent is alive and working.
 
 ---
 
 ## Graceful Shutdown
 
-Press `Ctrl+C` during `locus run` to gracefully shut down all agents. Locus will:
+Press `Ctrl+C` during `locus run` to gracefully shut down the agent. Locus will:
 
-1. Signal all running agents to stop
-2. Wait for current operations to complete
-3. Update task statuses appropriately
-4. Clean up resources
+1. Signal the running agent to stop
+2. Wait for the current operation to complete
+3. Checkout the base branch
+4. Update task statuses appropriately

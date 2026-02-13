@@ -18,11 +18,10 @@ locus <command> [options]
 |---------|-------------|
 | [`init`](../getting-started/initialization.md) | Initialize Locus in the current directory |
 | [`config`](config.md) | Manage settings (API key, provider, model) |
-| [`run`](run.md) | Start agents to work on sprint tasks |
+| [`run`](run.md) | Start agent to work on sprint tasks sequentially |
 | [`plan`](plan.md) | Run AI sprint planning meeting |
 | [`exec`](exec.md) | Execute a prompt with repository context |
 | [`review`](review.md) | AI code review for PRs and staged changes |
-| [`agents`](agents.md) | Manage agent worktrees |
 | [`docs`](docs.md) | Sync workspace documents |
 | [`index`](index-codebase.md) | Index the codebase for AI context |
 | [`telegram`](telegram.md) | Configure the Telegram bot |
@@ -59,7 +58,7 @@ locus plan "your goal"
 ### Execute sprint tasks
 
 ```bash
-locus run --agents 3
+locus run
 ```
 
 ### One-off AI execution

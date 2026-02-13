@@ -21,9 +21,9 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Git Worktree Isolation",
+    title: "Single-Branch Workflow",
     description:
-      "Each agent works in its own isolated git worktree. Parallel tasks never conflict. Changes are committed and pushed automatically.",
+      "The agent works on a single branch, committing and pushing after each task. A PR is created when all tasks are done.",
     icon: GitBranch,
     color: "text-cyan",
     glowColor: "group-hover:shadow-cyan/10",

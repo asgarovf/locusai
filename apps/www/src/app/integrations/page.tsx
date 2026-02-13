@@ -57,8 +57,7 @@ const integrations = [
   },
   {
     name: "Git",
-    description:
-      "Git worktree isolation for parallel agents. Each agent gets its own worktree so concurrent tasks never conflict. Auto-commit and push on task completion.",
+    description: "Auto-commit and push on task completion.",
     icon: <GitBranch className="h-5 w-5" />,
     color: "text-amber",
     setup: "git init",

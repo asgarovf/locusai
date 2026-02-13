@@ -87,7 +87,6 @@ export class TasksController {
       acceptanceChecklist: body.acceptanceChecklist,
       userId: userId ?? undefined,
       order: body.order ?? undefined,
-      tier: body.tier ?? undefined,
     });
     return { task: this.taskToTaskResponse(task) };
   }

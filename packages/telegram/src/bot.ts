@@ -1,6 +1,5 @@
 import { Telegraf } from "telegraf";
 import {
-  agentsCommand,
   approveCommand,
   cancelCommand,
   completeSprintCommand,
@@ -13,15 +12,12 @@ import {
   plansCommand,
   rejectCommand,
   rejectTaskCommand,
-  rmworktreeCommand,
   runCommand,
   sprintsCommand,
   startCommand,
   statusCommand,
   stopCommand,
   tasksCommand,
-  worktreeCommand,
-  worktreesCommand,
 } from "./commands/index.js";
 import type { TelegramConfig } from "./config.js";
 import { CliExecutor } from "./executor.js";
@@ -73,7 +69,7 @@ export function createBot(config: TelegramConfig): Telegraf {
   bot.command("cancel", (ctx) => cancelCommand(ctx, executor));
 
   // Execution commands
-  bot.command("run", (ctx) => runCommand(ctx, executor, config));
+  bot.command("run", (ctx) => runCommand(ctx, executor));
   bot.command("stop", (ctx) => stopCommand(ctx, executor));
   bot.command("exec", (ctx) => execCommand(ctx, executor));
 
@@ -94,12 +90,6 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
-  bot.command("agents", (ctx) => agentsCommand(ctx, executor));
-
-  // Worktree commands
-  bot.command("worktrees", (ctx) => worktreesCommand(ctx, config));
-  bot.command("worktree", (ctx) => worktreeCommand(ctx, config));
-  bot.command("rmworktree", (ctx) => rmworktreeCommand(ctx, config));
 
   return bot;
 }

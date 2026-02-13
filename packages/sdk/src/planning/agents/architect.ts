@@ -49,21 +49,14 @@ Review and refine the Tech Lead's breakdown:
 5. **Missing Tasks** — Add any tasks the Tech Lead missed (database migrations, configuration, testing, etc.).
 6. **Description Quality** — Review and improve each task description to be a clear, actionable implementation guide. Each description must tell the executing agent exactly what to do, where to do it (specific files/modules), how to do it (patterns, utilities, data flow), and what is NOT in scope. Vague descriptions like "Add authentication" must be rewritten with specific file paths, implementation approach, and boundaries.
 
-## CRITICAL: Task Isolation & Overlap Detection
+## CRITICAL: Task Ordering & Dependencies
 
-Tasks are executed by INDEPENDENT agents on SEPARATE git branches that get merged together. Each agent has NO knowledge of what other agents are doing. You MUST enforce these rules:
+Tasks are executed SEQUENTIALLY by a single agent on ONE branch. The agent works through tasks in array order. Each completed task's changes are available to subsequent tasks. You MUST enforce these rules:
 
-1. **Detect overlapping file modifications.** For each task, mentally list the files it will touch. If two tasks modify the same file (especially config files like app.module.ts, configuration.ts, package.json, or shared modules), they WILL cause merge conflicts. You must either:
-   - **Merge them** into a single task, OR
-   - **Move the shared file changes** into one foundational task that runs and merges first
-
-2. **Detect duplicated work.** If two tasks both introduce the same environment variable, config field, dependency, helper function, or module registration — that is duplicated work. Consolidate it into ONE task.
-
-3. **Do NOT split tasks that share code changes.** Even if a task is large, do NOT split it if the subtasks would both need to modify the same files. A single larger self-contained task is far better than two smaller conflicting tasks. Only split tasks when the parts are truly independent (touch completely different files and modules).
-
-4. **Validate self-containment.** Each task must include ALL changes it needs to function: config, schema, module registration, implementation, and tests. A task must NOT assume another concurrent task will provide something it needs.
-
-5. **Flag high-conflict zones.** In your risk assessment, specifically call out any remaining cases where tasks might touch the same files, and explain why it's unavoidable and how merge conflicts can be minimized.
+1. **Order tasks by dependency.** Foundation tasks (schemas, config, shared code) must come first. Tasks that build on earlier work must appear later in the list.
+2. **Each task must be self-contained for its scope.** A task can depend on earlier tasks (they run sequentially), but must include all changes needed for its own goal.
+3. **Split tasks at logical boundaries.** Since tasks run sequentially on the same branch, splitting is safe — later tasks see earlier changes. Split when it improves clarity and reviewability.
+4. **Flag risks.** In your risk assessment, call out tasks that are complex or have unknowns.
 
 ## Output Format
 

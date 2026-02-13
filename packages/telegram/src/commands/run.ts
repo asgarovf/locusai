@@ -1,5 +1,4 @@
 import type { Context } from "telegraf";
-import type { TelegramConfig } from "../config.js";
 import type { CliExecutor } from "../executor.js";
 import {
   escapeHtml,
@@ -23,15 +22,14 @@ const STATUS_PATTERNS = [
   /Failed:/,
   /Blocked:/,
   /Stale agent killed:/,
-  /Starting \d+ agents? in/,
+  /Starting agent in/,
   /No more tasks to process/,
   /No tasks available/,
   /Active sprint found:/,
   /No active sprint found/,
   /Received SIG/,
-  /worktree isolation enabled/,
-  /branches will be pushed/,
   /PR created:/,
+  /All tasks done/,
 ];
 
 /**
@@ -45,23 +43,19 @@ function isStatusLine(line: string): boolean {
 
 export async function runCommand(
   ctx: Context,
-  executor: CliExecutor,
-  config: TelegramConfig
+  executor: CliExecutor
 ): Promise<void> {
-  const agentCount = config.agentCount ?? 1;
-  console.log(`[run] Starting agents (count: ${agentCount})`);
+  console.log("[run] Starting agent");
 
   if (activeRunKill) {
     await ctx.reply(
-      formatInfo("Agents are already running. Use /stop to stop them first."),
+      formatInfo("Agent is already running. Use /stop to stop it first."),
       { parse_mode: "HTML" }
     );
     return;
   }
 
-  const agentLabel = agentCount > 1 ? `${agentCount} agents` : "1 agent";
-
-  await ctx.reply(formatInfo(`Starting ${agentLabel}...`), {
+  await ctx.reply(formatInfo("Starting agent..."), {
     parse_mode: "HTML",
   });
 
@@ -128,16 +122,16 @@ export async function runCommand(
       }
 
       if (result.exitCode === 0) {
-        await ctx.reply(formatSuccess("Agents finished successfully."), {
+        await ctx.reply(formatSuccess("Agent finished successfully."), {
           parse_mode: "HTML",
         });
       } else if (result.killed) {
-        await ctx.reply(formatInfo("Agents were stopped."), {
+        await ctx.reply(formatInfo("Agent was stopped."), {
           parse_mode: "HTML",
         });
       } else {
         await ctx.reply(
-          formatError(`Agents exited with code ${result.exitCode}.`),
+          formatError(`Agent exited with code ${result.exitCode}.`),
           { parse_mode: "HTML" }
         );
       }

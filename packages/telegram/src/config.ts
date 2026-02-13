@@ -21,8 +21,6 @@ export interface TelegramConfig {
   provider?: string;
   /** AI model override */
   model?: string;
-  /** Number of agents to spawn with /run */
-  agentCount?: number;
   /** When true, use `bun run packages/cli/src/cli.ts` instead of published `locus` binary */
   testMode?: boolean;
 }
@@ -33,7 +31,6 @@ interface SettingsJson {
   provider?: string;
   model?: string;
   workspaceId?: string;
-  agentCount?: number;
   telegram?: {
     botToken?: string;
     chatId?: number;
@@ -101,7 +98,6 @@ export function resolveConfig(): TelegramConfig {
     apiBase: isTestMode ? "http://localhost:8000/api" : apiBase,
     provider: process.env.LOCUS_PROVIDER || settings?.provider || undefined,
     model: process.env.LOCUS_MODEL || settings?.model || undefined,
-    agentCount: settings?.agentCount ?? 1,
     testMode: isTestMode,
   };
 }

@@ -60,10 +60,7 @@ const commandGroups = [
   {
     title: "Status",
     color: "text-emerald",
-    commands: [
-      { cmd: "/status", desc: "Show running processes" },
-      { cmd: "/agents", desc: "List agent worktrees" },
-    ],
+    commands: [{ cmd: "/status", desc: "Show running processes" }],
   },
 ];
 
