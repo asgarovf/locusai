@@ -226,7 +226,6 @@ export class AgentWorker {
         role: "assistant",
         content: summary,
       });
-      this.log(`Updated progress.md: ${task.title}`, "info");
     } catch (err) {
       this.log(
         `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,

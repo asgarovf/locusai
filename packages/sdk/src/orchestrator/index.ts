@@ -345,11 +345,33 @@ export class AgentOrchestrator extends EventEmitter {
     });
 
     proc.stdout?.on("data", (data) => {
-      process.stdout.write(data.toString());
+      // Filter worker stdout to only show important status lines
+      // Worker logs use format: [timestamp] [agentId] PREFIX message
+      const text = data.toString();
+      for (const line of text.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        // Only forward lines with success/warn/error markers, skip info noise
+        if (
+          /[✓✗⚠]/.test(trimmed) ||
+          /\b(Claimed|Completed|Failed|error|PR created)\b/i.test(trimmed)
+        ) {
+          process.stdout.write(`${line}\n`);
+        }
+      }
     });
 
     proc.stderr?.on("data", (data) => {
-      process.stderr.write(data.toString());
+      // Only forward actual errors, not debug/info noise
+      const text = data.toString();
+      for (const line of text.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        // Skip timestamped debug lines and ANSI-only output
+        if (/^\[\d{2}:\d{2}:\d{2}\]/.test(trimmed)) continue;
+        if (trimmed.length < 20) continue;
+        process.stderr.write(`${line}\n`);
+      }
     });
 
     proc.on("exit", (code) => {

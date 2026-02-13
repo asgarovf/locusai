@@ -175,15 +175,15 @@ export class CodexRunner implements AiRunner {
             tool: line.replace(/^[→•✓]\s*/, ""),
           });
         }
-        // All other content as text delta
-        else {
-          enqueueChunk({ type: "text_delta", content: `${line}\n` });
-        }
+        // Skip noisy intermediate output — final result is read from output file
       }
     };
 
     codex.stdout.on("data", processOutput);
-    codex.stderr.on("data", processOutput);
+    // Only capture stderr for error detection, don't process as stream output
+    codex.stderr.on("data", (data: Buffer) => {
+      finalOutput += data.toString();
+    });
 
     codex.on("error", (err) => {
       errorMessage = `Failed to start Codex CLI: ${err.message}. Ensure 'codex' is installed and available in PATH.`;
@@ -341,6 +341,7 @@ export class CodexRunner implements AiRunner {
       "exec",
       "--full-auto",
       "--skip-git-repo-check",
+      "--quiet",
       "--output-last-message",
       outputPath,
     ];
@@ -355,7 +356,7 @@ export class CodexRunner implements AiRunner {
 
   /**
    * Streams filtered output to console.
-   * Only displays thinking status, descriptions, and plan updates.
+   * Only displays high-level status changes to reduce terminal noise.
    */
   private streamToConsole(chunk: string): void {
     for (const rawLine of chunk.split("\n")) {
@@ -369,12 +370,8 @@ export class CodexRunner implements AiRunner {
   }
 
   private shouldDisplay(line: string): boolean {
-    return [
-      /^thinking\b/, // Thinking status
-      /^\*\*/, // Description headers
-      /^Plan update\b/, // Plan updates
-      /^[→•✓]/, // Plan bullets and checkmarks
-    ].some((pattern) => pattern.test(line));
+    // Only show plan-level updates, not individual tool calls or text output
+    return /^Plan update\b/.test(line);
   }
 
   private readOutput(outputPath: string, fallback: string): string {
