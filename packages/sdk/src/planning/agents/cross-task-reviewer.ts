@@ -93,6 +93,15 @@ Verify tier assignments are correct:
 ### 5. Merge Conflict Risk Zones
 Identify the highest-risk files (files that multiple same-tier tasks might touch) and ensure only ONE task per tier modifies each.
 
+### 6. Description Quality Validation
+For each task, verify the description is a clear, actionable implementation guide. Each description must specify:
+- **What to do** — the specific goal and expected behavior/outcome
+- **Where to do it** — specific files, modules, or directories to modify or create
+- **How to do it** — implementation approach, patterns to follow, existing utilities to use
+- **Boundaries** — what is NOT in scope for this task
+
+If any description is vague (e.g., "Add authentication", "Update the API", "Fix the frontend"), rewrite it with concrete implementation details. The executing agent receives ONLY the task title, description, and acceptance criteria as its instructions.
+
 ## Output Format
 
 Your entire response must be a single JSON object — no text before it, no text after it, no markdown code blocks, no explanation. Start your response with the "{" character:
@@ -101,7 +110,7 @@ Your entire response must be a single JSON object — no text before it, no text
   "hasIssues": true | false,
   "issues": [
     {
-      "type": "file_overlap" | "duplicated_work" | "not_self_contained" | "merge_conflict_risk" | "wrong_tier",
+      "type": "file_overlap" | "duplicated_work" | "not_self_contained" | "merge_conflict_risk" | "wrong_tier" | "vague_description",
       "description": "string describing the specific issue",
       "affectedTasks": ["Task Title 1", "Task Title 2"],
       "resolution": "string describing how to fix it (merge, move to different tier, consolidate)"
@@ -114,7 +123,7 @@ Your entire response must be a single JSON object — no text before it, no text
     "tasks": [
       {
         "title": "string",
-        "description": "string",
+        "description": "string (detailed implementation guide: what to do, where to do it, how to do it, and boundaries)",
         "assigneeRole": "BACKEND | FRONTEND | QA | PM | DESIGN",
         "priority": "CRITICAL | HIGH | MEDIUM | LOW",
         "labels": ["string"],
@@ -138,6 +147,7 @@ IMPORTANT:
 - If hasIssues is false, the revisedPlan should be identical to the input plan (no changes needed)
 - The revisedPlan is ALWAYS required — it becomes the final plan
 - When merging tasks, combine their acceptance criteria and update descriptions to cover all consolidated work
+- Ensure every task description is a detailed implementation guide (what, where, how, boundaries) — rewrite vague descriptions
 - Prefer fewer, larger, self-contained tasks over many small conflicting ones
 - Every task MUST have a "tier" field (integer >= 0)
 - tier 0 = foundational (runs first), tier 1 = depends on tier 0, tier 2 = depends on tier 1, etc.

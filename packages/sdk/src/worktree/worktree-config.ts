@@ -59,6 +59,8 @@ export interface CreateWorktreeResult {
   branch: string;
   /** Base branch used to create the task branch */
   baseBranch: string;
+  /** Commit hash of the base branch at worktree creation time */
+  baseCommitHash: string;
 }
 
 /** Default worktree configuration */

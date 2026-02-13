@@ -26,7 +26,7 @@ export class GitWorkflow {
     const projectPath = config.projectPath || process.cwd();
 
     this.worktreeManager = config.useWorktrees
-      ? new WorktreeManager(projectPath, { cleanupPolicy: "auto" })
+      ? new WorktreeManager(projectPath, { cleanupPolicy: "auto" }, log)
       : null;
 
     this.prService = config.autoPush ? new PrService(projectPath, log) : null;
@@ -42,12 +42,14 @@ export class GitWorkflow {
   ): {
     worktreePath: string | null;
     baseBranch: string | null;
+    baseCommitHash: string | null;
     executor: TaskExecutor;
   } {
     if (!this.worktreeManager) {
       return {
         worktreePath: null,
         baseBranch: null,
+        baseCommitHash: null,
         executor: defaultExecutor,
       };
     }
@@ -86,6 +88,7 @@ export class GitWorkflow {
     return {
       worktreePath: result.worktreePath,
       baseBranch: result.baseBranch,
+      baseCommitHash: result.baseCommitHash,
       executor: taskExecutor,
     };
   }
@@ -96,7 +99,8 @@ export class GitWorkflow {
   commitAndPush(
     worktreePath: string,
     task: Task,
-    baseBranch?: string
+    baseBranch?: string,
+    baseCommitHash?: string
   ): CommitPushResult {
     if (!this.worktreeManager) {
       return { branch: null, pushed: false, pushFailed: false };
@@ -117,7 +121,8 @@ export class GitWorkflow {
       const hash = this.worktreeManager.commitChanges(
         worktreePath,
         commitMessage,
-        baseBranch
+        baseBranch,
+        baseCommitHash
       );
 
       if (!hash) {
@@ -162,7 +167,12 @@ export class GitWorkflow {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this.log(`Git commit failed: ${errorMessage}`, "error");
-      return { branch: null, pushed: false, pushFailed: false };
+      return {
+        branch: null,
+        pushed: false,
+        pushFailed: true,
+        pushError: `Git commit/push failed: ${errorMessage}`,
+      };
     }
   }
 

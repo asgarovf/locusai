@@ -14,6 +14,11 @@ export interface AiRunner {
    * Used during graceful shutdown to prevent orphaned processes.
    */
   abort(): void;
+  /**
+   * Maximum execution time in milliseconds.
+   * When exceeded, the active process is killed and run() rejects.
+   */
+  timeoutMs?: number;
 }
 
 export type AiProvider = Provider;

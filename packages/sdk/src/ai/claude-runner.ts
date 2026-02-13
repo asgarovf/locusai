@@ -39,6 +39,9 @@ interface ActiveToolExecution {
 }
 
 const SANDBOX_SETTINGS = JSON.stringify({
+  permissions: {
+    deny: ["Read(../**)", "Edit(../**)"],
+  },
   sandbox: {
     enabled: true,
     autoAllow: true,
@@ -46,19 +49,25 @@ const SANDBOX_SETTINGS = JSON.stringify({
   },
 });
 
+/** Default timeout: 1 hour */
+const DEFAULT_TIMEOUT_MS = 60 * 60 * 1000;
+
 export class ClaudeRunner implements AiRunner {
   private projectPath: string;
   private eventEmitter?: ExecEventEmitter;
   private currentToolName?: string;
   private activeTools: Map<number, ActiveToolExecution> = new Map();
   private activeProcess: ChildProcess | null = null;
+  timeoutMs: number;
 
   constructor(
     projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDER.CLAUDE],
-    private log?: LogFn
+    private log?: LogFn,
+    timeoutMs?: number
   ) {
     this.projectPath = resolve(projectPath);
+    this.timeoutMs = timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   /**
@@ -84,11 +93,16 @@ export class ClaudeRunner implements AiRunner {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.executeRun(prompt);
+        return await this.withTimeout(this.executeRun(prompt));
       } catch (error) {
         const err = error as Error;
         lastError = err;
         const isLastAttempt = attempt === maxRetries;
+
+        // Don't retry timeouts — they indicate the task is too long, not a transient failure
+        if (err.message.includes("timed out")) {
+          throw err;
+        }
 
         if (!isLastAttempt) {
           const delay = Math.pow(2, attempt) * 1000;
@@ -101,6 +115,32 @@ export class ClaudeRunner implements AiRunner {
     }
 
     throw lastError || new Error("Claude CLI failed after multiple attempts");
+  }
+
+  private withTimeout<T>(promise: Promise<T>): Promise<T> {
+    if (this.timeoutMs <= 0) return promise;
+
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.abort();
+        reject(
+          new Error(
+            `Claude CLI execution timed out after ${Math.round(this.timeoutMs / 60000)} minutes`
+          )
+        );
+      }, this.timeoutMs);
+
+      promise.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (err) => {
+          clearTimeout(timer);
+          reject(err);
+        }
+      );
+    });
   }
 
   async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {

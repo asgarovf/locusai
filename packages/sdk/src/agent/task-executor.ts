@@ -27,14 +27,37 @@ export class TaskExecutor {
     try {
       this.deps.log("Starting Execution...", "info");
 
-      await this.deps.aiRunner.run(basePrompt);
+      const output = await this.deps.aiRunner.run(basePrompt);
+      const summary = this.extractSummary(output);
 
-      return {
-        success: true,
-        summary: "Task completed by the agent",
-      };
+      return { success: true, summary };
     } catch (error) {
       return { success: false, summary: `Error: ${error}` };
     }
+  }
+
+  /**
+   * Extract a concise summary from the agent's raw output.
+   * Takes the last non-empty paragraph, truncated to 500 chars.
+   */
+  private extractSummary(output: string): string {
+    if (!output || !output.trim()) {
+      return "Task completed by the agent";
+    }
+
+    const paragraphs = output
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+
+    if (paragraphs.length === 0) {
+      return "Task completed by the agent";
+    }
+
+    const last = paragraphs[paragraphs.length - 1];
+    if (last.length > 500) {
+      return `${last.slice(0, 497)}...`;
+    }
+    return last;
   }
 }

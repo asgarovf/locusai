@@ -4,19 +4,33 @@ import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
+import type { ExecEventEmitter } from "../exec/event-emitter.js";
 import type { StreamChunk } from "../exec/types.js";
 import { getAugmentedEnv } from "../utils/resolve-bin.js";
 import type { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
 
+/** Default timeout: 1 hour */
+const DEFAULT_TIMEOUT_MS = 60 * 60 * 1000;
+
 export class CodexRunner implements AiRunner {
   private activeProcess: ChildProcess | null = null;
+  private eventEmitter?: ExecEventEmitter;
+  private currentToolName?: string;
+  timeoutMs: number;
 
   constructor(
     private projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDER.CODEX],
-    private log?: LogFn
-  ) {}
+    private log?: LogFn,
+    timeoutMs?: number
+  ) {
+    this.timeoutMs = timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  }
+
+  setEventEmitter(emitter: ExecEventEmitter): void {
+    this.eventEmitter = emitter;
+  }
 
   /**
    * Abort the currently running Codex CLI process, if any.
@@ -34,9 +48,14 @@ export class CodexRunner implements AiRunner {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.executeRun(prompt);
+        return await this.withTimeout(this.executeRun(prompt));
       } catch (error) {
         lastError = error as Error;
+
+        // Don't retry timeouts — they indicate the task is too long, not a transient failure
+        if (lastError.message.includes("timed out")) {
+          throw lastError;
+        }
 
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000;
@@ -51,9 +70,41 @@ export class CodexRunner implements AiRunner {
     throw lastError || new Error("Codex CLI failed after multiple attempts");
   }
 
+  private withTimeout<T>(promise: Promise<T>): Promise<T> {
+    if (this.timeoutMs <= 0) return promise;
+
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.abort();
+        reject(
+          new Error(
+            `Codex CLI execution timed out after ${Math.round(this.timeoutMs / 60000)} minutes`
+          )
+        );
+      }, this.timeoutMs);
+
+      promise.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (err) => {
+          clearTimeout(timer);
+          reject(err);
+        }
+      );
+    });
+  }
+
   async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
     const outputPath = join(tmpdir(), `locus-codex-${randomUUID()}.txt`);
     const args = this.buildArgs(outputPath);
+
+    this.eventEmitter?.emitSessionStarted({
+      model: this.model,
+      provider: "codex",
+    });
+    this.eventEmitter?.emitPromptSubmitted(prompt, prompt.length > 500);
 
     const codex = spawn("codex", args, {
       cwd: this.projectPath,
@@ -69,8 +120,25 @@ export class CodexRunner implements AiRunner {
     let processEnded = false;
     let errorMessage = "";
     let finalOutput = "";
+    let finalContent = "";
+    let isThinking = false;
 
     const enqueueChunk = (chunk: StreamChunk) => {
+      this.emitEventForChunk(chunk, isThinking);
+
+      if (chunk.type === "thinking") {
+        isThinking = true;
+      } else if (chunk.type === "text_delta" || chunk.type === "tool_use") {
+        if (isThinking) {
+          this.eventEmitter?.emitThinkingStoped();
+          isThinking = false;
+        }
+      }
+
+      if (chunk.type === "text_delta") {
+        finalContent += chunk.content;
+      }
+
       if (resolveChunk) {
         const resolve = resolveChunk;
         resolveChunk = null;
@@ -119,18 +187,23 @@ export class CodexRunner implements AiRunner {
 
     codex.on("error", (err) => {
       errorMessage = `Failed to start Codex CLI: ${err.message}. Ensure 'codex' is installed and available in PATH.`;
+      this.eventEmitter?.emitErrorOccurred(errorMessage, "SPAWN_ERROR");
       signalEnd();
     });
 
     codex.on("close", (code) => {
       this.activeProcess = null;
-      this.cleanupTempFile(outputPath);
 
       if (code === 0) {
         const result = this.readOutput(outputPath, finalOutput);
+        this.cleanupTempFile(outputPath);
         enqueueChunk({ type: "result", content: result });
-      } else if (!errorMessage) {
-        errorMessage = this.createErrorFromOutput(code, finalOutput).message;
+      } else {
+        this.cleanupTempFile(outputPath);
+        if (!errorMessage) {
+          errorMessage = this.createErrorFromOutput(code, finalOutput).message;
+          this.eventEmitter?.emitErrorOccurred(errorMessage, `EXIT_${code}`);
+        }
       }
       signalEnd();
     });
@@ -146,6 +219,12 @@ export class CodexRunner implements AiRunner {
       } else if (processEnded) {
         if (errorMessage) {
           yield { type: "error", error: errorMessage };
+          this.eventEmitter?.emitSessionEnded(false);
+        } else {
+          if (finalContent) {
+            this.eventEmitter?.emitResponseCompleted(finalContent);
+          }
+          this.eventEmitter?.emitSessionEnded(true);
         }
         break;
       } else {
@@ -155,11 +234,48 @@ export class CodexRunner implements AiRunner {
         if (chunk === null) {
           if (errorMessage) {
             yield { type: "error", error: errorMessage };
+            this.eventEmitter?.emitSessionEnded(false);
+          } else {
+            if (finalContent) {
+              this.eventEmitter?.emitResponseCompleted(finalContent);
+            }
+            this.eventEmitter?.emitSessionEnded(true);
           }
           break;
         }
         yield chunk;
       }
+    }
+  }
+
+  private emitEventForChunk(chunk: StreamChunk, isThinking: boolean): void {
+    if (!this.eventEmitter) return;
+
+    switch (chunk.type) {
+      case "text_delta":
+        this.eventEmitter.emitTextDelta(chunk.content);
+        break;
+      case "tool_use":
+        if (this.currentToolName) {
+          this.eventEmitter.emitToolCompleted(this.currentToolName);
+        }
+        this.currentToolName = chunk.tool;
+        this.eventEmitter.emitToolStarted(chunk.tool);
+        break;
+      case "thinking":
+        if (!isThinking) {
+          this.eventEmitter.emitThinkingStarted(chunk.content);
+        }
+        break;
+      case "result":
+        if (this.currentToolName) {
+          this.eventEmitter.emitToolCompleted(this.currentToolName);
+          this.currentToolName = undefined;
+        }
+        break;
+      case "error":
+        this.eventEmitter.emitErrorOccurred(chunk.error);
+        break;
     }
   }
 
@@ -204,11 +320,13 @@ export class CodexRunner implements AiRunner {
 
       codex.on("close", (code) => {
         this.activeProcess = null;
-        this.cleanupTempFile(outputPath);
 
         if (code === 0) {
-          resolve(this.readOutput(outputPath, output));
+          const result = this.readOutput(outputPath, output);
+          this.cleanupTempFile(outputPath);
+          resolve(result);
         } else {
+          this.cleanupTempFile(outputPath);
           reject(this.createErrorFromOutput(code, errorOutput));
         }
       });
@@ -223,9 +341,15 @@ export class CodexRunner implements AiRunner {
       "exec",
       "--sandbox",
       "workspace-write",
+      "--ask-for-approval",
+      "never",
       "--skip-git-repo-check",
       "--output-last-message",
       outputPath,
+      "-c",
+      "sandbox_workspace_write.network_access=true",
+      "-c",
+      'sandbox.excludedCommands=["git", "gh"]',
     ];
 
     if (this.model) {

@@ -207,7 +207,7 @@ export class AgentWorker {
       this.config.workspaceId
     );
 
-    const { worktreePath, baseBranch, executor } =
+    const { worktreePath, baseBranch, baseCommitHash, executor } =
       this.gitWorkflow.createTaskWorktree(fullTask, this.taskExecutor);
     this.currentWorktreePath = worktreePath;
     let branchPushed = false;
@@ -226,7 +226,8 @@ export class AgentWorker {
         const commitResult = this.gitWorkflow.commitAndPush(
           worktreePath,
           fullTask,
-          baseBranch ?? undefined
+          baseBranch ?? undefined,
+          baseCommitHash ?? undefined
         );
         taskBranch = commitResult.branch;
         branchPushed = commitResult.pushed;

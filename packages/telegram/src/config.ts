@@ -101,9 +101,7 @@ export function resolveConfig(): TelegramConfig {
     apiBase: isTestMode ? "http://localhost:8000/api" : apiBase,
     provider: process.env.LOCUS_PROVIDER || settings?.provider || undefined,
     model: process.env.LOCUS_MODEL || settings?.model || undefined,
-    agentCount: process.env.LOCUS_AGENT_COUNT
-      ? Number.parseInt(process.env.LOCUS_AGENT_COUNT, 10)
-      : settings?.agentCount,
+    agentCount: settings?.agentCount ?? 1,
     testMode: isTestMode,
   };
 }

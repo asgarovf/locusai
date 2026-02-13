@@ -1,5 +1,4 @@
 import type { Context } from "telegraf";
-import { normalizeInput } from "../command-whitelist.js";
 import type { TelegramConfig } from "../config.js";
 import type { CliExecutor } from "../executor.js";
 import {
@@ -49,35 +48,8 @@ export async function runCommand(
   executor: CliExecutor,
   config: TelegramConfig
 ): Promise<void> {
-  const text =
-    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
-  const input = normalizeInput(text.replace(/^\/run\s*/, "").trim());
-
-  // Parse --agents <N> or -a <N> from the command text
-  let parsedAgentCount: number | undefined;
-  const agentsMatch = input.match(/(?:--agents|-agents|-a)\s+(\d+)/);
-  if (agentsMatch) {
-    parsedAgentCount = Number.parseInt(agentsMatch[1], 10);
-    if (parsedAgentCount < 1 || parsedAgentCount > 5) {
-      await ctx.reply(formatError("Agent count must be between 1 and 5."), {
-        parse_mode: "HTML",
-      });
-      return;
-    }
-  }
-
-  const agentCount = parsedAgentCount ?? config.agentCount ?? 1;
+  const agentCount = config.agentCount ?? 1;
   console.log(`[run] Starting agents (count: ${agentCount})`);
-
-  if (!config.apiKey) {
-    await ctx.reply(
-      formatError(
-        "API key is not configured. Run: locus config setup --api-key <key>"
-      ),
-      { parse_mode: "HTML" }
-    );
-    return;
-  }
 
   if (activeRunKill) {
     await ctx.reply(
@@ -94,9 +66,6 @@ export async function runCommand(
   });
 
   const baseArgs = ["run"];
-  if (agentCount > 1) {
-    baseArgs.push("--agents", String(agentCount));
-  }
 
   const args = executor.buildArgs(baseArgs, { needsApiKey: true });
 

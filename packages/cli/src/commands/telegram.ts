@@ -32,10 +32,7 @@ function showTelegramHelp(): void {
 
   ${c.header(" SUBCOMMANDS ")}
     ${c.success("run")}       Start the Telegram bot
-              ${c.dim("--agents <N>      Override agent count (1-5)")}
     ${c.success("setup")}     Interactive Telegram bot setup (or pass flags below)
-              ${c.dim("--token <TOKEN>   Bot token from @BotFather (required)")}
-              ${c.dim("--chat-id <ID>    Your Telegram chat ID (required)")}
     ${c.success("config")}    Show current Telegram configuration
     ${c.success("set")}       Set a config value
               ${c.dim("locus telegram set <key> <value>")}
@@ -44,7 +41,6 @@ function showTelegramHelp(): void {
 
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary("locus telegram run")}
-    ${c.dim("$")} ${c.primary("locus telegram run --agents 3")}
     ${c.dim("$")} ${c.primary('locus telegram setup --token "123:ABC" --chat-id 987654')}
     ${c.dim("$")} ${c.primary("locus telegram config")}
     ${c.dim("$")} ${c.primary("locus telegram remove")}
@@ -273,25 +269,7 @@ function removeCommand(projectPath: string): void {
   );
 }
 
-function runBotCommand(subArgs: string[], projectPath: string): void {
-  // Parse --agents flag
-  let agentCountOverride: string | undefined;
-  for (let i = 0; i < subArgs.length; i++) {
-    if (subArgs[i] === "--agents" && subArgs[i + 1]) {
-      agentCountOverride = subArgs[++i]?.trim();
-    }
-  }
-
-  if (agentCountOverride) {
-    const parsed = Number.parseInt(agentCountOverride, 10);
-    if (Number.isNaN(parsed) || parsed < 1 || parsed > 5) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.bold("Agent count must be a number between 1 and 5.")}\n`
-      );
-      process.exit(1);
-    }
-  }
-
+function runBotCommand(projectPath: string): void {
   // Check if telegram is configured
   const manager = new SettingsManager(projectPath);
   const settings = manager.load();
@@ -324,9 +302,6 @@ function runBotCommand(subArgs: string[], projectPath: string): void {
 
   // Pass agent count override as environment variable
   const env = { ...process.env };
-  if (agentCountOverride) {
-    env.LOCUS_AGENT_COUNT = agentCountOverride;
-  }
 
   const child = spawn(cmd, args, {
     cwd: projectPath,
@@ -356,20 +331,19 @@ function runBotCommand(subArgs: string[], projectPath: string): void {
 export async function telegramCommand(args: string[]): Promise<void> {
   const projectPath = process.cwd();
   const subcommand = args[0];
-  const subArgs = args.slice(1);
 
   switch (subcommand) {
     case "run":
-      runBotCommand(subArgs, projectPath);
+      runBotCommand(projectPath);
       break;
     case "setup":
-      await setupCommand(subArgs, projectPath);
+      await setupCommand(args, projectPath);
       break;
     case "config":
       configCommand(projectPath);
       break;
     case "set":
-      setCommand(subArgs, projectPath);
+      setCommand(args, projectPath);
       break;
     case "remove":
       removeCommand(projectPath);

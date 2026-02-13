@@ -157,9 +157,14 @@ export class WorktreeManager {
       addWorktree();
     }
 
-    this.log(`Worktree created at ${worktreePath}`, "success");
+    // Capture the commit hash at creation time for reliable change detection.
+    // This hash is used as a fallback when the base branch ref cannot be
+    // resolved (e.g. tier merge branches that exist only on remote).
+    const baseCommitHash = this.git("rev-parse HEAD", worktreePath).trim();
 
-    return { worktreePath, branch, baseBranch };
+    this.log(`Worktree created at ${worktreePath} (base: ${baseCommitHash.slice(0, 8)})`, "success");
+
+    return { worktreePath, branch, baseBranch, baseCommitHash };
   }
 
   /**
@@ -331,6 +336,26 @@ export class WorktreeManager {
         worktreePath
       ).trim();
       return Number.parseInt(count, 10) > 0;
+    } catch (err) {
+      this.log(
+        `Could not compare HEAD against base branch "${baseBranch}": ${err instanceof Error ? err.message : String(err)}`,
+        "warn"
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Check if the worktree HEAD differs from a specific commit hash.
+   * This is a fallback for when the base branch ref cannot be resolved.
+   */
+  private hasCommitsAheadOfHash(
+    worktreePath: string,
+    baseHash: string
+  ): boolean {
+    try {
+      const headHash = this.git("rev-parse HEAD", worktreePath).trim();
+      return headHash !== baseHash;
     } catch {
       return false;
     }
@@ -344,16 +369,33 @@ export class WorktreeManager {
    * the AI agent during execution. If there are no uncommitted changes but
    * the branch has diverged from the base, returns the current HEAD hash
    * without creating a new commit.
+   *
+   * When `baseCommitHash` is provided as a fallback, it is used if the
+   * base branch ref cannot be resolved (common in tier-based execution
+   * where merge branches may not be available locally).
    */
   commitChanges(
     worktreePath: string,
     message: string,
-    baseBranch?: string
+    baseBranch?: string,
+    baseCommitHash?: string
   ): string | null {
     const hasUncommittedChanges = this.hasChanges(worktreePath);
 
+    if (hasUncommittedChanges) {
+      const statusOutput = this.git(
+        "status --porcelain",
+        worktreePath
+      ).trim();
+      this.log(
+        `Detected uncommitted changes:\n${statusOutput.split("\n").slice(0, 10).join("\n")}${statusOutput.split("\n").length > 10 ? `\n... and ${statusOutput.split("\n").length - 10} more` : ""}`,
+        "info"
+      );
+    }
+
     if (!hasUncommittedChanges) {
-      // Check if the AI agent already committed changes during execution
+      // Check if the AI agent already committed changes during execution.
+      // Try the branch ref first, then fall back to comparing commit hashes.
       if (baseBranch && this.hasCommitsAhead(worktreePath, baseBranch)) {
         const hash = this.git("rev-parse HEAD", worktreePath).trim();
         this.log(
@@ -362,7 +404,22 @@ export class WorktreeManager {
         );
         return hash;
       }
-      this.log("No changes to commit", "info");
+
+      if (baseCommitHash && this.hasCommitsAheadOfHash(worktreePath, baseCommitHash)) {
+        const hash = this.git("rev-parse HEAD", worktreePath).trim();
+        this.log(
+          `Agent already committed changes (${hash.slice(0, 8)}, detected via base commit hash); skipping additional commit`,
+          "info"
+        );
+        return hash;
+      }
+
+      // Log diagnostic info when no changes detected
+      const branch = this.getBranch(worktreePath);
+      this.log(
+        `No changes detected in worktree (branch: ${branch}, baseBranch: ${baseBranch ?? "none"}, baseCommitHash: ${baseCommitHash?.slice(0, 8) ?? "none"})`,
+        "warn"
+      );
       return null;
     }
 
@@ -370,9 +427,11 @@ export class WorktreeManager {
 
     const staged = this.git("diff --cached --name-only", worktreePath).trim();
     if (!staged) {
-      this.log("No changes to commit", "info");
+      this.log("All changes were ignored by .gitignore — nothing to commit", "warn");
       return null;
     }
+
+    this.log(`Staging ${staged.split("\n").length} file(s) for commit`, "info");
 
     this.gitExec(["commit", "-m", message], worktreePath);
 

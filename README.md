@@ -182,7 +182,7 @@ curl -fsSL https://locusai.dev/install.sh | bash
 
 The installer sets up Node.js, Bun, GitHub CLI, your chosen AI provider CLI, and configures system services for automatic startup. Supports Linux (systemd), macOS (LaunchAgent), and Windows (Scheduled Tasks).
 
-See the [self-hosting guide](https://docs.locusai.dev) for full details.
+See the [self-hosting guide](https://docs.locusai.dev/self-hosting/overview) for full details.
 
 ---
 

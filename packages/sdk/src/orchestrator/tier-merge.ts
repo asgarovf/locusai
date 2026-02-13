@@ -155,6 +155,9 @@ export class TierMergeService {
    * Matches against registered task IDs by checking branch names.
    */
   private findTierTaskBranches(tier: number): string[] {
+    const tierTaskIds = this.tierTaskIds.get(tier);
+    if (!tierTaskIds || tierTaskIds.length === 0) return [];
+
     try {
       const output = execSync(
         'git branch -r --list "origin/agent/*" --format="%(refname:short)"',
@@ -169,21 +172,26 @@ export class TierMergeService {
 
       return remoteBranches.filter((branch) => {
         // Branch format: agent/<taskId>-<slug>
-        const match = branch.match(/^agent\/([^-]+)/);
-        if (!match) return false;
+        // Extract the part after "agent/" for matching
+        const branchSuffix = branch.replace(/^agent\//, "");
+        if (!branchSuffix) return false;
 
-        const taskIdPrefix = match[1];
-        return (
-          this.tierTaskIds
-            .get(tier)
-            ?.some(
-              (id) =>
-                id.startsWith(taskIdPrefix) ||
-                taskIdPrefix.startsWith(id.slice(0, 8))
-            ) ?? false
+        // Match if the branch suffix starts with any registered task ID.
+        // This handles both full IDs and short IDs since the branch name
+        // is constructed as `<taskId>-<slug>`.
+        return tierTaskIds.some(
+          (id) =>
+            branchSuffix.startsWith(`${id}-`) ||
+            branchSuffix === id ||
+            branchSuffix.startsWith(id)
         );
       });
-    } catch {
+    } catch (err) {
+      console.log(
+        c.dim(
+          `   Could not list remote branches for tier ${tier}: ${err instanceof Error ? err.message : String(err)}`
+        )
+      );
       return [];
     }
   }

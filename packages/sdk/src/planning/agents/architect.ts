@@ -47,6 +47,7 @@ Review and refine the Tech Lead's breakdown:
 3. **Task Merging** — If two tasks are trivially small and related, merge them.
 4. **Complexity Scoring** — Rate each task 1-5 (1=trivial, 5=very complex).
 5. **Missing Tasks** — Add any tasks the Tech Lead missed (database migrations, configuration, testing, etc.).
+6. **Description Quality** — Review and improve each task description to be a clear, actionable implementation guide. Each description must tell the executing agent exactly what to do, where to do it (specific files/modules), how to do it (patterns, utilities, data flow), and what is NOT in scope. Vague descriptions like "Add authentication" must be rewritten with specific file paths, implementation approach, and boundaries.
 
 ## CRITICAL: Task Isolation & Overlap Detection
 
@@ -72,7 +73,7 @@ Your entire response must be a single JSON object — no text before it, no text
   "tasks": [
     {
       "title": "string",
-      "description": "string (2-4 sentences)",
+      "description": "string (detailed implementation guide: what to do, where to do it, how to do it, and boundaries)",
       "assigneeRole": "BACKEND | FRONTEND | QA | PM | DESIGN",
       "priority": "HIGH | MEDIUM | LOW | CRITICAL",
       "labels": ["string"],

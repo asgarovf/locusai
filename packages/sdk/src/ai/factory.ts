@@ -12,6 +12,8 @@ export interface AiRunnerConfig {
   projectPath: string;
   model?: string;
   log?: LogFn;
+  /** Maximum execution time in milliseconds (default: 30 minutes) */
+  timeoutMs?: number;
 }
 
 export function createAiRunner(
@@ -23,8 +25,8 @@ export function createAiRunner(
 
   switch (resolvedProvider) {
     case PROVIDER.CODEX:
-      return new CodexRunner(config.projectPath, model, config.log);
+      return new CodexRunner(config.projectPath, model, config.log, config.timeoutMs);
     default:
-      return new ClaudeRunner(config.projectPath, model, config.log);
+      return new ClaudeRunner(config.projectPath, model, config.log, config.timeoutMs);
   }
 }

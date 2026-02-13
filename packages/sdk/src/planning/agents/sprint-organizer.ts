@@ -46,6 +46,7 @@ Produce the final sprint plan:
 4. **Tier Assignment** — Assign each task an execution tier (integer, starting at 0). Tasks within the same tier run IN PARALLEL on separate git branches. Tasks in tier N+1 only start AFTER all tier N tasks are complete and merged. Tier 0 = foundational tasks (config, schemas, shared code). Higher tiers build on lower tier outputs.
 5. **Duration Estimate** — How many days this sprint will take with 2-3 agents working in parallel
 6. **Final Task List** — Each task with all fields filled in, ordered by execution priority
+7. **Description Quality Check** — Ensure every task description is a clear, actionable implementation guide. Each description must specify: what to do, where to do it (specific files/modules/directories), how to do it (implementation approach, patterns to follow, existing utilities to use), and what is NOT in scope. If any description is vague or generic, rewrite it with specifics. Remember: an independent agent will receive ONLY the task title, description, and acceptance criteria — the description is its primary instruction.
 
 Guidelines:
 - The order of tasks in the array determines execution order. Tasks are dispatched sequentially from first to last.
@@ -55,6 +56,7 @@ Guidelines:
 - Group related independent tasks in the same tier for maximum parallelism
 - Ensure acceptance criteria are specific and testable
 - Keep the sprint focused — if it's too large (>12 tasks), consider reducing scope
+- Ensure every task description reads as a standalone implementation brief — not a summary
 
 ## CRITICAL: Task Isolation Validation
 
@@ -76,7 +78,7 @@ Your entire response must be a single JSON object — no text before it, no text
   "tasks": [
     {
       "title": "string",
-      "description": "string",
+      "description": "string (detailed implementation guide: what to do, where to do it, how to do it, and boundaries)",
       "assigneeRole": "BACKEND | FRONTEND | QA | PM | DESIGN",
       "priority": "CRITICAL | HIGH | MEDIUM | LOW",
       "labels": ["string"],
