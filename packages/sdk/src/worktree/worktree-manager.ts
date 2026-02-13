@@ -162,7 +162,10 @@ export class WorktreeManager {
     // resolved (e.g. tier merge branches that exist only on remote).
     const baseCommitHash = this.git("rev-parse HEAD", worktreePath).trim();
 
-    this.log(`Worktree created at ${worktreePath} (base: ${baseCommitHash.slice(0, 8)})`, "success");
+    this.log(
+      `Worktree created at ${worktreePath} (base: ${baseCommitHash.slice(0, 8)})`,
+      "success"
+    );
 
     return { worktreePath, branch, baseBranch, baseCommitHash };
   }
@@ -383,10 +386,7 @@ export class WorktreeManager {
     const hasUncommittedChanges = this.hasChanges(worktreePath);
 
     if (hasUncommittedChanges) {
-      const statusOutput = this.git(
-        "status --porcelain",
-        worktreePath
-      ).trim();
+      const statusOutput = this.git("status --porcelain", worktreePath).trim();
       this.log(
         `Detected uncommitted changes:\n${statusOutput.split("\n").slice(0, 10).join("\n")}${statusOutput.split("\n").length > 10 ? `\n... and ${statusOutput.split("\n").length - 10} more` : ""}`,
         "info"
@@ -405,7 +405,10 @@ export class WorktreeManager {
         return hash;
       }
 
-      if (baseCommitHash && this.hasCommitsAheadOfHash(worktreePath, baseCommitHash)) {
+      if (
+        baseCommitHash &&
+        this.hasCommitsAheadOfHash(worktreePath, baseCommitHash)
+      ) {
         const hash = this.git("rev-parse HEAD", worktreePath).trim();
         this.log(
           `Agent already committed changes (${hash.slice(0, 8)}, detected via base commit hash); skipping additional commit`,
@@ -427,7 +430,10 @@ export class WorktreeManager {
 
     const staged = this.git("diff --cached --name-only", worktreePath).trim();
     if (!staged) {
-      this.log("All changes were ignored by .gitignore — nothing to commit", "warn");
+      this.log(
+        "All changes were ignored by .gitignore — nothing to commit",
+        "warn"
+      );
       return null;
     }
 

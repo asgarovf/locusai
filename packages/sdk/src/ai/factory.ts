@@ -25,8 +25,18 @@ export function createAiRunner(
 
   switch (resolvedProvider) {
     case PROVIDER.CODEX:
-      return new CodexRunner(config.projectPath, model, config.log, config.timeoutMs);
+      return new CodexRunner(
+        config.projectPath,
+        model,
+        config.log,
+        config.timeoutMs
+      );
     default:
-      return new ClaudeRunner(config.projectPath, model, config.log, config.timeoutMs);
+      return new ClaudeRunner(
+        config.projectPath,
+        model,
+        config.log,
+        config.timeoutMs
+      );
   }
 }
