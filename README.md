@@ -25,65 +25,181 @@ Read the [full documentation](https://docs.locusai.dev) to learn more.
 
 > **Locus is the platform** that manages your projects. Your actual product code lives in separate repositories.
 
-## 🌟 Key Features
+## Key Features
 
-- **AI-Native Planning** - Plan sprints, define tasks, and write documentation designed for AI agents.
-- **Secure Local Execution** - Agents run securely on your machine, keeping your codebase private.
-- **Team Coordination** - Cloud-based dashboard for visibility, collaboration, and task management.
-- **Cognitive Context** - Agents use project-specific `.locus/LOCUS.md` and semantic indexing to understand your codebase.
-- **Sprint Mindmaps** - Agents generate and follow high-level technical plans for cohesive feature implementation.
+- **AI-Native Planning** — Plan sprints, define tasks, and write documentation designed for AI agents. Use AI-powered sprint planning with a multi-agent meeting (Tech Lead, Architect, Sprint Organizer) to break down goals into structured, prioritized tasks.
+- **Multi-Agent Execution** — Run up to 5 parallel agents, each isolated in its own git worktree, to execute tasks concurrently across your codebase.
+- **Secure Local Execution** — Agents run on your machine (or your server). Source code never leaves your infrastructure—only task metadata is synced to the cloud.
+- **Multiple AI Providers** — Choose between Claude (Anthropic) and Codex (OpenAI) as your agent backend. Switch providers per-command or set a default.
+- **Team Coordination** — Cloud-based dashboard for visibility, collaboration, sprint boards, document editing, and task management.
+- **Cognitive Context** — Agents receive rich context including project instructions (`.locus/LOCUS.md`), semantic codebase index, workspace documents, sprint progress, and task details.
+- **AI Code Review** — Review pull requests or local changes with AI-powered analysis directly from the CLI.
+- **Skills System** — Extend agent capabilities with markdown instruction files for specialized domain knowledge.
+- **VSCode Extension** — Chat with agents, manage tasks, and start work directly from your editor.
+- **Telegram Bot** — Control agents, plan sprints, approve plans, and monitor execution remotely from your phone.
+- **Self-Hosting** — Deploy Locus on your own server for 24/7 agent availability with remote Telegram control.
 
-## 🚀 Quick Start
+## Quick Start
 
 The fastest way to use Locus is via `npx`. No installation required.
 
 ### 1. Initialize a new project
-Run this command in the directory where you want to create your project:
+
 ```bash
 npx @locusai/cli init
 ```
 
-### 2. Index Your Codebase
+### 2. Configure your API key
+
+```bash
+npx @locusai/cli config setup --api-key <YOUR_KEY>
+```
+
+### 3. Index your codebase
+
 Create a semantic map for the agent:
+
 ```bash
 npx @locusai/cli index
 ```
 
-### 3. Run the Agent
-Connect to the Locus Cloud and start working:
+### 4. Run the agent
+
+Start agents to pick up and execute tasks from your active sprint:
+
 ```bash
-npx @locusai/cli run --api-key <YOUR_KEY>
+npx @locusai/cli run
 ```
-Optional: add `--provider codex` to use Codex instead of Claude.
+
+Run multiple agents in parallel:
+
+```bash
+npx @locusai/cli run --agents 3
+```
+
+Use a different provider:
+
+```bash
+npx @locusai/cli run --provider codex
+```
 
 ---
 
-## 🛠 How It Works
+## CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `locus init` | Initialize a project with the `.locus/` structure |
+| `locus config` | Manage settings (API key, provider, model) |
+| `locus run` | Start agents to execute sprint tasks |
+| `locus plan` | AI sprint planning with a multi-agent meeting |
+| `locus exec` | Execute a prompt with repo context (supports interactive REPL) |
+| `locus review` | AI code review for PRs and local changes |
+| `locus index` | Create a semantic codebase index |
+| `locus agents` | Manage agent git worktrees |
+| `locus docs` | Sync workspace documents |
+| `locus telegram` | Configure and start the Telegram bot |
+| `locus upgrade` | Upgrade CLI to the latest version |
+| `locus version` | Show current version |
+
+---
+
+## How It Works
 
 ### Architecture
 
 ```
-locus-dev/           ← The platform (Open Source)
+locus-dev/                       ← The platform (Open Source)
 ├── apps/
-│   ├── api/        ← Cloud API & Engine
-│   └── web/        ← Cloud Dashboard 
-│   └── www/        ← Landing Page
+│   ├── api/                     ← Cloud API & Engine (NestJS)
+│   ├── web/                     ← Cloud Dashboard (Next.js)
+│   └── www/                     ← Landing Page (Next.js)
 └── packages/
-    ├── cli/        ← Local Agent Runtime
-    ├── sdk/        ← Core Logic
-    └── shared/     ← Shared Types
+    ├── cli/                     ← Local Agent Runtime & CLI
+    ├── sdk/                     ← Core Logic & API Client
+    ├── shared/                  ← Shared Types & Schemas
+    ├── ai-sdk/                  ← AI Provider Abstraction (LangChain)
+    ├── telegram/                ← Telegram Bot for Remote Control
+    └── vscode/                  ← VS Code Extension
 ```
 
 ### The Workflow
 
-1.  **Plan**: Define tasks and sprints in the cloud dashboard.
-2.  **Dispatch**: Assign tasks to agents via the CLI.
-3.  **Execute**: Agents run securely on your machine, writing code and running tests.
-4.  **Verify**: Review the changes before marking the task as Done.
+1. **Plan** — Define tasks manually in the dashboard, or use `locus plan "your goal"` to have AI agents break down your objective into a structured sprint.
+2. **Dispatch** — Start agents with `locus run`. The API dispatches tasks with server-side locking to prevent conflicts.
+3. **Execute** — Each agent claims a task, creates an isolated git worktree, builds rich context, and executes using your chosen AI provider.
+4. **Review** — Agents commit changes, push branches, and create pull requests. Review with `locus review` or in GitHub. Reject tasks with feedback to send them back for rework.
+
+### Project Structure
+
+After running `locus init`, your project will have:
+
+```
+your-project/
+├── .locus/
+│   ├── config.json              # Project metadata
+│   ├── settings.json            # API key & provider (gitignored)
+│   ├── LOCUS.md                 # Agent instructions
+│   ├── codebase-index.json      # Semantic index
+│   ├── documents/               # Synced workspace documents
+│   ├── artifacts/               # Generated files
+│   ├── sessions/                # Exec session history
+│   ├── reviews/                 # Code review reports
+│   ├── plans/                   # Sprint plans
+│   └── project/
+│       ├── context.md           # Project knowledge base
+│       └── progress.md          # Sprint progress (auto-updated)
+├── .locus-worktrees/            # Isolated agent workspaces
+├── .claude/skills/              # Claude-specific skills
+└── .codex/skills/               # Codex-specific skills
+```
 
 ---
 
-## 🛠 Development
+## VSCode Extension
+
+The Locus VS Code extension brings agent interaction into your editor:
+
+- **Chat Sidebar** — Converse with AI agents directly from VS Code.
+- **Task Tree View** — Browse, start, and manage tasks from the sidebar.
+- **Provider Selection** — Switch between Claude and Codex.
+- **Status Bar** — See agent status at a glance.
+- **Quick Actions** — Start tasks, view details, reset context, and abort agents with `Ctrl+Shift+Escape`.
+
+---
+
+## Telegram Bot
+
+Control your agents remotely with the built-in Telegram bot:
+
+- `/plan` — Start AI sprint planning
+- `/approve` / `/reject` — Approve or reject generated plans
+- `/run` — Start agents remotely
+- `/exec` — Execute a prompt with repo context
+- `/tasks` — List active tasks
+- `/stop` — Stop running processes
+- `/git` — Run whitelisted git commands
+- `/dev` — Run lint, typecheck, build, or test
+
+Set up with `locus telegram` and connect your Telegram chat.
+
+---
+
+## Self-Hosting
+
+Deploy Locus on your own server for 24/7 agent availability:
+
+```bash
+curl -fsSL https://locusai.dev/install.sh | bash
+```
+
+The installer sets up Node.js, Bun, GitHub CLI, your chosen AI provider CLI, and configures system services for automatic startup. Supports Linux (systemd), macOS (LaunchAgent), and Windows (Scheduled Tasks).
+
+See the [self-hosting guide](https://docs.locusai.dev) for full details.
+
+---
+
+## Development
 
 For detailed instructions on how to set up the development environment, run tests, and contribute code, please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -92,6 +208,6 @@ For detailed instructions on how to set up the development environment, run test
 bun run lint && bun run typecheck
 ```
 
-## 📄 License
+## License
 
 [MIT](./LICENSE)
