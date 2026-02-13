@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.10.1
+
+### Patch Changes
+
+- Progress.md updates improvements
+- Updated dependencies
+  - @locusai/shared@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
