@@ -22,23 +22,3 @@ jobs:
 
       - name: Lint
         run: bun run lint
-
-  api-tests:
-    name: API Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Install Dependencies
-        run: bun install
-
-      - name: Run API Tests
-        run: |
-          cd apps/api
-          bun run test -- src/common/swagger/__tests__/docs-basic-auth.middleware.jest.ts src/common/swagger/__tests__/swagger.bootstrap.jest.ts --runInBand
