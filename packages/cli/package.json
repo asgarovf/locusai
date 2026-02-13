@@ -1,6 +1,6 @@
 {
   "name": "@locusai/cli",
-  "version": "0.9.17",
+  "version": "0.9.18",
   "description": "CLI for Locus - AI-native project management platform",
   "type": "module",
   "bin": {
@@ -32,7 +32,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@locusai/sdk": "^0.9.17"
+    "@locusai/sdk": "^0.9.18"
   },
   "devDependencies": {}
 }
