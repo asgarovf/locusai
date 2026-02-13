@@ -1,5 +1,17 @@
 # @locusai/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- Task execution improvements
+  Telegram CLI improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.10.0
+
 ## 0.9.18
 
 ### Patch Changes
