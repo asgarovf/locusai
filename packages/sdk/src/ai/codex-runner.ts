@@ -176,7 +176,7 @@ export class CodexRunner implements AiRunner {
           });
         }
         // All other content as text delta
-        else if (this.shouldDisplay(line)) {
+        else {
           enqueueChunk({ type: "text_delta", content: `${line}\n` });
         }
       }
@@ -338,19 +338,11 @@ export class CodexRunner implements AiRunner {
 
   private buildArgs(outputPath: string): string[] {
     const args = [
-      // Global options must come before the `exec` subcommand
-      "--ask-for-approval",
-      "never",
       "exec",
-      "--sandbox",
-      "workspace-write",
+      "--full-auto",
       "--skip-git-repo-check",
       "--output-last-message",
       outputPath,
-      "-c",
-      "sandbox_workspace_write.network_access=true",
-      "-c",
-      'sandbox.excludedCommands=["git", "gh", "bun", "npm", "locus"]',
     ];
 
     if (this.model) {
