@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.10.2
+
+### Patch Changes
+
+- Task tier generation
+
 ## 0.10.1
 
 ### Patch Changes

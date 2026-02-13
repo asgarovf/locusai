@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.10.2
+
+### Patch Changes
+
+- Task tier generation
+- Updated dependencies
+  - @locusai/sdk@0.10.2
+  - @locusai/shared@0.10.2
+
 ## 0.10.1
 
 ### Patch Changes
