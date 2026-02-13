@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.10.5
+
+### Patch Changes
+
+- Fix plan approval
+
 ## 0.10.4
 
 ### Patch Changes
