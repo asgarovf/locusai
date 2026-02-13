@@ -256,9 +256,12 @@ Then provide a concise review with specific findings. Keep it actionable and foc
         // Update progress.md
         try {
           this.knowledgeBase.updateProgress({
-            type: "pr_reviewed",
-            title: pr.title,
-            details: `Review: ${status}`,
+            role: "user",
+            content: `Review PR #${pr.number}: ${pr.title}`,
+          });
+          this.knowledgeBase.updateProgress({
+            role: "assistant",
+            content: `${status}: ${result.summary}`,
           });
         } catch {
           // Non-critical

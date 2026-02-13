@@ -8,18 +8,9 @@ export interface ProjectInfo {
   techStack: string[];
 }
 
-export interface ProgressEvent {
-  type:
-    | "task_completed"
-    | "sprint_started"
-    | "sprint_completed"
-    | "blocker"
-    | "pr_opened"
-    | "pr_reviewed"
-    | "pr_merged"
-    | "exec_completed";
-  title: string;
-  details?: string;
+export interface ProgressEntry {
+  role: "user" | "assistant";
+  content: string;
   timestamp?: Date;
 }
 
@@ -51,46 +42,16 @@ export class KnowledgeBase {
     writeFileSync(this.contextPath, content);
   }
 
-  updateProgress(event: ProgressEvent): void {
+  updateProgress(entry: ProgressEntry): void {
     this.ensureDir(this.progressPath);
     const existing = this.readProgress();
-    const timestamp = (event.timestamp ?? new Date()).toISOString();
-
-    let entry = "";
-    switch (event.type) {
-      case "task_completed":
-        entry = `- [x] ${event.title} — completed ${timestamp}`;
-        break;
-      case "sprint_started":
-        entry = `\n## Current Sprint: ${event.title}\n**Status:** ACTIVE | Started: ${timestamp}\n`;
-        break;
-      case "sprint_completed":
-        entry = `\n### Sprint Completed: ${event.title} — ${timestamp}\n`;
-        break;
-      case "blocker":
-        entry = `- BLOCKER: ${event.title}`;
-        break;
-      case "pr_opened":
-        entry = `- [ ] ${event.title} — PR opened ${timestamp}`;
-        break;
-      case "pr_reviewed":
-        entry = `- ${event.title} — reviewed ${timestamp}`;
-        break;
-      case "pr_merged":
-        entry = `- [x] ${event.title} — PR merged ${timestamp}`;
-        break;
-      case "exec_completed":
-        entry = `- [x] ${event.title} — exec ${timestamp}`;
-        break;
-    }
-
-    if (event.details) {
-      entry += `\n  ${event.details}`;
-    }
+    const timestamp = (entry.timestamp ?? new Date()).toISOString();
+    const label = entry.role === "user" ? "User" : "Assistant";
+    const line = `**${label}** (${timestamp}):\n${entry.content}`;
 
     const updated = existing
-      ? `${existing}\n${entry}`
-      : `# Project Progress\n\n${entry}`;
+      ? `${existing}\n\n---\n\n${line}`
+      : `# Conversation History\n\n${line}`;
     writeFileSync(this.progressPath, updated);
   }
 
@@ -135,9 +96,7 @@ ${techStackList}
 <!-- List your main feature areas and their status -->
 `;
 
-    const progressContent = `# Project Progress
-
-No sprints started yet.
+    const progressContent = `# Conversation History
 `;
 
     writeFileSync(this.contextPath, contextContent);

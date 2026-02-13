@@ -142,9 +142,12 @@ export class PlanManager {
     // 5. Update progress.md
     const kb = new KnowledgeBase(this.projectPath);
     kb.updateProgress({
-      type: "sprint_started",
-      title: plan.name,
-      details: `${tasks.length} tasks created from planning meeting. Sprint goal: ${plan.goal}`,
+      role: "user",
+      content: `Start sprint: ${plan.name}`,
+    });
+    kb.updateProgress({
+      role: "assistant",
+      content: `Sprint started with ${tasks.length} tasks. Goal: ${plan.goal}`,
     });
 
     return { sprint, tasks };

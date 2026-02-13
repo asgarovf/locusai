@@ -292,16 +292,17 @@ export class AgentWorker {
   // Progress & heartbeat
   // ---------------------------------------------------------------------------
 
-  private updateProgress(task: Task, success: boolean): void {
+  private updateProgress(task: Task, summary: string): void {
     try {
-      if (success) {
-        this.knowledgeBase.updateProgress({
-          type: "task_completed",
-          title: task.title,
-          details: `Agent: ${this.config.agentId.slice(-8)}`,
-        });
-        this.log(`Updated progress.md: ${task.title}`, "info");
-      }
+      this.knowledgeBase.updateProgress({
+        role: "user",
+        content: task.title,
+      });
+      this.knowledgeBase.updateProgress({
+        role: "assistant",
+        content: summary,
+      });
+      this.log(`Updated progress.md: ${task.title}`, "info");
     } catch (err) {
       this.log(
         `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,
@@ -435,19 +436,7 @@ export class AgentWorker {
           });
           this.tasksCompleted++;
 
-          this.updateProgress(task, true);
-
-          if (result.prUrl) {
-            try {
-              this.knowledgeBase.updateProgress({
-                type: "pr_opened",
-                title: task.title,
-                details: `PR: ${result.prUrl}`,
-              });
-            } catch {
-              // Non-critical
-            }
-          }
+          this.updateProgress(task, result.summary);
         }
       } else {
         this.log(`Failed: ${task.title} - ${result.summary}`, "error");

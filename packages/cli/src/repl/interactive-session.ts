@@ -264,15 +264,18 @@ export class InteractiveSession {
       // Auto-save session after each exchange
       this.saveSession();
 
-      // Update progress.md
+      // Update progress.md with conversation history
       try {
-        const progressTitle =
-          prompt.length > 80 ? `${prompt.slice(0, 80)}...` : prompt;
         this.knowledgeBase.updateProgress({
-          type: "exec_completed",
-          title: progressTitle,
-          details: `Mode: interactive | Session: ${this.currentSession.id}`,
+          role: "user",
+          content: prompt,
         });
+        if (responseContent.trim()) {
+          this.knowledgeBase.updateProgress({
+            role: "assistant",
+            content: responseContent.trim(),
+          });
+        }
       } catch {
         // Progress update is best-effort
       }
