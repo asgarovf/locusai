@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.11.3
+
+### Patch Changes
+
+- Codex output
+
 ## 0.11.2
 
 ### Patch Changes
