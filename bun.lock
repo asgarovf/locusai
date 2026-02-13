@@ -29,7 +29,7 @@
     },
     "apps/api": {
       "name": "@locusai/api",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@nestjs/common": "^11.0.1",
@@ -79,7 +79,7 @@
     },
     "apps/web": {
       "name": "@locusai/web",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -141,7 +141,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@next/third-parties": "^16.1.4",
@@ -171,7 +171,7 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "bin": {
         "locus": "./bin/locus.js",
       },
@@ -181,7 +181,7 @@
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "dependencies": {
         "@locusai/shared": "^0.8.1",
         "axios": "^1.13.2",
@@ -195,14 +195,14 @@
     },
     "packages/shared": {
       "name": "@locusai/shared",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "dependencies": {
         "zod": "^4.3.6",
       },
     },
     "packages/telegram": {
       "name": "@locusai/telegram",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "bin": {
         "locus-telegram": "./bin/telegram.js",
       },
