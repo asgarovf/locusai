@@ -1,0 +1,567 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$meta": {
+    "name": "Locus VSCode Chat UI Tokens",
+    "version": "0.11.3",
+    "description": "Semantic design tokens for the Locus VSCode extension webview. Tokens reference VSCode CSS variables where possible and provide fixed Locus brand overrides. See docs/design/vscode-chat-ui-spec.md for usage context.",
+    "date": "2026-02-14"
+  },
+
+  "color": {
+    "surface": {
+      "default": {
+        "value": "var(--vscode-sideBar-background)",
+        "description": "Primary background surface. Inherits from VSCode theme."
+      },
+      "elevated": {
+        "value": "var(--vscode-editorWidget-background)",
+        "description": "Cards and elevated containers."
+      },
+      "input": {
+        "value": "var(--vscode-input-background)",
+        "description": "Textarea and input fields."
+      },
+      "composer": {
+        "value": "var(--vscode-sideBar-background)",
+        "description": "Composer container background."
+      },
+      "codeBlock": {
+        "value": "var(--vscode-textCodeBlock-background)",
+        "description": "Fenced code block background."
+      },
+      "codeInline": {
+        "value": "var(--vscode-textCodeBlock-background)",
+        "description": "Inline code background."
+      },
+      "badge": {
+        "value": "var(--vscode-badge-background)",
+        "description": "Context badges and chips."
+      },
+      "userMessage": {
+        "value": "color-mix(in srgb, var(--vscode-editor-foreground) 5%, var(--vscode-sideBar-background))",
+        "description": "User message card. Slightly warm-tinted elevation above default."
+      },
+      "assistantMessage": {
+        "value": "var(--vscode-editorWidget-background)",
+        "description": "Assistant message card. Standard elevated surface."
+      },
+      "toolCard": {
+        "value": "color-mix(in srgb, var(--vscode-sideBar-background) 95%, var(--vscode-editor-foreground) 5%)",
+        "description": "Tool invocation card. Slightly recessed."
+      },
+      "systemMessage": {
+        "value": "transparent",
+        "description": "System message card. No fill, uses dashed border."
+      },
+      "error": {
+        "value": "color-mix(in srgb, #ef4444 8%, var(--vscode-sideBar-background))",
+        "description": "Error card background. Subtle red tint."
+      }
+    },
+
+    "text": {
+      "primary": {
+        "value": "var(--vscode-editor-foreground)",
+        "description": "Primary content text. 100% opacity."
+      },
+      "secondary": {
+        "value": "var(--vscode-descriptionForeground)",
+        "description": "Secondary text for labels and supporting content."
+      },
+      "tertiary": {
+        "value": "color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent)",
+        "description": "Tertiary text for timestamps, captions, metadata."
+      },
+      "disabled": {
+        "value": "var(--vscode-disabledForeground)",
+        "description": "Disabled input and inactive elements."
+      },
+      "onAccent": {
+        "value": "#030305",
+        "description": "Text rendered on accent-colored backgrounds."
+      },
+      "link": {
+        "value": "var(--vscode-textLink-foreground)",
+        "description": "Hyperlink text."
+      }
+    },
+
+    "border": {
+      "default": {
+        "value": "var(--vscode-panel-border)",
+        "description": "Default border for cards and sections."
+      },
+      "subtle": {
+        "value": "color-mix(in srgb, var(--vscode-panel-border) 50%, transparent)",
+        "description": "Subtle borders for status rail and dividers."
+      },
+      "input": {
+        "value": "var(--vscode-input-border)",
+        "description": "Input field borders."
+      },
+      "inputFocus": {
+        "value": "var(--vscode-inputOption-activeBorder)",
+        "description": "Input border when focused."
+      },
+      "error": {
+        "value": "#ef4444",
+        "description": "Error card border."
+      }
+    },
+
+    "focus": {
+      "ring": {
+        "value": "var(--vscode-focusBorder)",
+        "description": "Focus indicator ring. 2px outline with 2px offset."
+      }
+    },
+
+    "accent": {
+      "user": {
+        "value": "var(--vscode-editor-foreground)",
+        "description": "User avatar background."
+      },
+      "assistant": {
+        "value": "#22d3ee",
+        "description": "Locus brand accent — cyan. Used for assistant avatar, streaming cursor, and primary actions."
+      },
+      "system": {
+        "value": "#a1a1aa",
+        "description": "System message accent. Muted neutral."
+      }
+    },
+
+    "state": {
+      "idle": {
+        "text": "#a1a1aa",
+        "surface": "color-mix(in srgb, #a1a1aa 10%, var(--vscode-sideBar-background))",
+        "description": "No active session. Neutral muted."
+      },
+      "starting": {
+        "text": "#38bdf8",
+        "surface": "color-mix(in srgb, #38bdf8 10%, var(--vscode-sideBar-background))",
+        "description": "CLI process spawning. Blue activity indicator."
+      },
+      "running": {
+        "text": "#38bdf8",
+        "surface": "color-mix(in srgb, #38bdf8 10%, var(--vscode-sideBar-background))",
+        "description": "CLI spawned, awaiting output. Blue activity."
+      },
+      "streaming": {
+        "text": "#22d3ee",
+        "surface": "color-mix(in srgb, #22d3ee 10%, var(--vscode-sideBar-background))",
+        "description": "Active text/tool output. Cyan (Locus brand)."
+      },
+      "completed": {
+        "text": "#10b981",
+        "surface": "color-mix(in srgb, #10b981 10%, var(--vscode-sideBar-background))",
+        "description": "Session finished successfully. Green."
+      },
+      "failed": {
+        "text": "#ef4444",
+        "surface": "color-mix(in srgb, #ef4444 10%, var(--vscode-sideBar-background))",
+        "description": "Session error. Red."
+      },
+      "canceled": {
+        "text": "#f59e0b",
+        "surface": "color-mix(in srgb, #f59e0b 10%, var(--vscode-sideBar-background))",
+        "description": "User stopped session. Amber."
+      },
+      "interrupted": {
+        "text": "#f97316",
+        "surface": "color-mix(in srgb, #f97316 10%, var(--vscode-sideBar-background))",
+        "description": "Process lost (VSCode reload). Orange attention."
+      },
+      "resuming": {
+        "text": "#38bdf8",
+        "surface": "color-mix(in srgb, #38bdf8 10%, var(--vscode-sideBar-background))",
+        "description": "Resuming interrupted session. Blue activity."
+      }
+    },
+
+    "tool": {
+      "Read": "#38bdf8",
+      "Write": "#10b981",
+      "Edit": "#f59e0b",
+      "Bash": "#a1a1aa",
+      "Grep": "#8b5cf6",
+      "Glob": "#8b5cf6",
+      "WebFetch": "#22d3ee",
+      "_description": "Per-tool accent colors for tool card icons. Derived from web dashboard status palette."
+    },
+
+    "messageKind": {
+      "user": {
+        "surface": "color-mix(in srgb, var(--vscode-editor-foreground) 5%, var(--vscode-sideBar-background))",
+        "accent": "var(--vscode-editor-foreground)",
+        "icon": "user"
+      },
+      "assistant": {
+        "surface": "var(--vscode-editorWidget-background)",
+        "accent": "#22d3ee",
+        "icon": "locus"
+      },
+      "system": {
+        "surface": "transparent",
+        "accent": "#a1a1aa",
+        "icon": "info"
+      },
+      "tool": {
+        "surface": "color-mix(in srgb, var(--vscode-sideBar-background) 95%, var(--vscode-editor-foreground) 5%)",
+        "accent": "per-tool",
+        "icon": "per-tool"
+      },
+      "status": {
+        "surface": "transparent",
+        "accent": "#a1a1aa",
+        "icon": "session"
+      }
+    }
+  },
+
+  "typography": {
+    "body": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "var(--vscode-font-size)",
+      "fontWeight": "400",
+      "lineHeight": "1.6",
+      "description": "Standard body text. Inherits VSCode font settings."
+    },
+    "bodyBold": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "var(--vscode-font-size)",
+      "fontWeight": "600",
+      "lineHeight": "1.6",
+      "description": "Bold body text for error titles, emphasis."
+    },
+    "bodySm": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "calc(var(--vscode-font-size) - 1px)",
+      "fontWeight": "400",
+      "lineHeight": "1.5",
+      "description": "Small body text for tool details, secondary content."
+    },
+    "label": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "10px",
+      "fontWeight": "700",
+      "lineHeight": "1.2",
+      "letterSpacing": "0.1em",
+      "textTransform": "uppercase",
+      "description": "Uppercase labels. Matches apps/web label pattern."
+    },
+    "caption": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "11px",
+      "fontWeight": "500",
+      "lineHeight": "1.3",
+      "description": "Captions for timestamps, metadata, status rail."
+    },
+    "code": {
+      "fontFamily": "var(--vscode-editor-font-family)",
+      "fontSize": "var(--vscode-editor-font-size)",
+      "fontWeight": "400",
+      "lineHeight": "1.5",
+      "description": "Code blocks. Uses VSCode editor font for consistency."
+    },
+    "codeInline": {
+      "fontFamily": "var(--vscode-editor-font-family)",
+      "fontSize": "calc(var(--vscode-editor-font-size) - 1px)",
+      "fontWeight": "400",
+      "lineHeight": "1.4",
+      "description": "Inline code snippets within body text."
+    },
+    "h5": {
+      "fontFamily": "var(--vscode-font-family)",
+      "fontSize": "calc(var(--vscode-font-size) + 2px)",
+      "fontWeight": "600",
+      "lineHeight": "1.3",
+      "letterSpacing": "-0.01em",
+      "description": "Card titles and empty state headline."
+    }
+  },
+
+  "spacing": {
+    "headerHeight": "40px",
+    "statusRailHeight": "24px",
+    "composerMinHeight": "44px",
+    "composerMaxHeight": "160px",
+
+    "cardPadding": "12px",
+    "cardPaddingSm": "8px",
+    "cardGap": "8px",
+    "sectionGap": "16px",
+    "componentGap": "6px",
+    "inlineGap": "4px",
+
+    "timelinePaddingX": "12px",
+    "timelinePaddingY": "8px",
+    "composerPaddingX": "12px",
+    "composerPaddingY": "8px",
+    "headerPaddingX": "12px",
+
+    "avatarSize": "24px",
+    "iconSize": "16px",
+    "iconSizeSm": "14px",
+    "badgeHeight": "20px",
+
+    "scrollThumbWidth": "4px",
+
+    "_description": "Spacing values are tighter than apps/web to suit VSCode sidebar density (~300px width)."
+  },
+
+  "radius": {
+    "card": "6px",
+    "md": "6px",
+    "sm": "4px",
+    "full": "9999px",
+    "input": "6px",
+    "badge": "4px",
+    "avatar": "6px",
+    "_description": "Slightly smaller than apps/web (8px) to match sidebar density."
+  },
+
+  "motion": {
+    "expand": {
+      "duration": "150ms",
+      "easing": "ease-out",
+      "reducedMotion": "0ms",
+      "description": "Tool card expand/collapse."
+    },
+    "fade": {
+      "duration": "200ms",
+      "easing": "ease-in-out",
+      "reducedMotion": "0ms",
+      "description": "General fade transitions (FAB, badges)."
+    },
+    "thinkingPulse": {
+      "duration": "1.4s",
+      "easing": "ease-in-out",
+      "iteration": "infinite",
+      "reducedMotion": "none",
+      "description": "Thinking indicator dot animation. Replaced with static text when reduced motion."
+    },
+    "streamingCursor": {
+      "duration": "1s",
+      "easing": "steps(2)",
+      "iteration": "infinite",
+      "reducedMotion": "none",
+      "description": "Blinking cursor at end of streaming text."
+    },
+    "scrollSmooth": {
+      "behavior": "smooth",
+      "reducedMotion": "auto",
+      "description": "Timeline auto-scroll behavior."
+    },
+    "fabEntrance": {
+      "duration": "200ms",
+      "easing": "ease-out",
+      "reducedMotion": "0ms",
+      "description": "Jump-to-latest FAB entrance animation."
+    }
+  },
+
+  "zIndex": {
+    "timeline": "0",
+    "fab": "10",
+    "composer": "20",
+    "header": "20",
+    "dropdown": "30",
+    "tooltip": "40",
+    "_description": "Scoped to webview iframe. Does not conflict with VSCode host z-indexes."
+  },
+
+  "shadows": {
+    "card": "0 1px 2px 0 rgba(0, 0, 0, 0.1)",
+    "elevated": "0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
+    "fab": "0 4px 12px rgba(0, 0, 0, 0.3)",
+    "_description": "Shadows derived from apps/web shadow scale. Light themes may reduce opacity."
+  },
+
+  "stateMapping": {
+    "_description": "Maps session states to composite UI token sets. Each state selects which color, label, and badge variant to use.",
+    "idle": {
+      "colorToken": "color.state.idle",
+      "label": null,
+      "composerEnabled": true,
+      "showStopButton": false,
+      "headerBadge": "hidden",
+      "statusRailVisible": false
+    },
+    "starting": {
+      "colorToken": "color.state.starting",
+      "label": "Starting...",
+      "composerEnabled": false,
+      "showStopButton": false,
+      "headerBadge": "pulsing",
+      "statusRailVisible": true
+    },
+    "running": {
+      "colorToken": "color.state.running",
+      "label": "Running",
+      "composerEnabled": false,
+      "showStopButton": true,
+      "headerBadge": "pulsing",
+      "statusRailVisible": true
+    },
+    "streaming": {
+      "colorToken": "color.state.streaming",
+      "label": "Streaming",
+      "composerEnabled": false,
+      "showStopButton": true,
+      "headerBadge": "active",
+      "statusRailVisible": true
+    },
+    "completed": {
+      "colorToken": "color.state.completed",
+      "label": "Completed",
+      "composerEnabled": true,
+      "showStopButton": false,
+      "headerBadge": "static",
+      "statusRailVisible": true
+    },
+    "failed": {
+      "colorToken": "color.state.failed",
+      "label": "Failed",
+      "composerEnabled": true,
+      "showStopButton": false,
+      "headerBadge": "static",
+      "statusRailVisible": true
+    },
+    "canceled": {
+      "colorToken": "color.state.canceled",
+      "label": "Canceled",
+      "composerEnabled": true,
+      "showStopButton": false,
+      "headerBadge": "static",
+      "statusRailVisible": true
+    },
+    "interrupted": {
+      "colorToken": "color.state.interrupted",
+      "label": "Interrupted",
+      "composerEnabled": true,
+      "showStopButton": false,
+      "headerBadge": "static",
+      "statusRailVisible": true
+    },
+    "resuming": {
+      "colorToken": "color.state.resuming",
+      "label": "Resuming...",
+      "composerEnabled": false,
+      "showStopButton": false,
+      "headerBadge": "pulsing",
+      "statusRailVisible": true
+    }
+  },
+
+  "eventToTimelineEntry": {
+    "_description": "Maps ExecEventType enum values to timeline entry types and rendering instructions. Aligned with packages/sdk/src/exec/events.ts.",
+    "session:started": {
+      "entryType": "status",
+      "text": "Session started",
+      "icon": "session",
+      "stateTransition": "starting → running"
+    },
+    "prompt:submitted": {
+      "entryType": "userMessage",
+      "text": null,
+      "icon": "user",
+      "stateTransition": null
+    },
+    "thinking:started": {
+      "entryType": "thinking",
+      "text": "Thinking...",
+      "icon": null,
+      "stateTransition": null,
+      "ephemeral": true
+    },
+    "thinking:stopped": {
+      "entryType": null,
+      "text": null,
+      "icon": null,
+      "stateTransition": null,
+      "action": "remove thinking indicator"
+    },
+    "tool:started": {
+      "entryType": "toolCard",
+      "text": null,
+      "icon": "per-tool",
+      "stateTransition": null,
+      "toolStatus": "running"
+    },
+    "tool:completed": {
+      "entryType": null,
+      "text": null,
+      "icon": "checkmark",
+      "stateTransition": null,
+      "action": "update existing tool card",
+      "toolStatus": "completed"
+    },
+    "tool:failed": {
+      "entryType": null,
+      "text": null,
+      "icon": "error",
+      "stateTransition": null,
+      "action": "update existing tool card",
+      "toolStatus": "failed"
+    },
+    "text:delta": {
+      "entryType": "assistantMessage",
+      "text": null,
+      "icon": "locus",
+      "stateTransition": "running → streaming",
+      "action": "append to current assistant message or create new"
+    },
+    "response:completed": {
+      "entryType": null,
+      "text": null,
+      "icon": null,
+      "stateTransition": null,
+      "action": "finalize assistant message, remove streaming cursor"
+    },
+    "error:occurred": {
+      "entryType": "errorCard",
+      "text": null,
+      "icon": "alert",
+      "stateTransition": "→ failed"
+    },
+    "session:ended": {
+      "entryType": "status",
+      "text": "Session ended",
+      "icon": "session",
+      "stateTransition": "→ completed or → failed"
+    }
+  },
+
+  "streamChunkToUI": {
+    "_description": "Maps StreamChunk type field values (from packages/sdk/src/exec/types.ts) to webview rendering actions.",
+    "text_delta": {
+      "action": "appendToAssistantMessage",
+      "target": "current or new assistant message card body"
+    },
+    "tool_use": {
+      "action": "createToolCard",
+      "target": "new collapsed tool card with spinner"
+    },
+    "tool_result": {
+      "action": "updateToolCard",
+      "target": "existing tool card matched by id"
+    },
+    "tool_parameters": {
+      "action": "updateToolCard",
+      "target": "existing tool card parameters section"
+    },
+    "thinking": {
+      "action": "showThinkingIndicator",
+      "target": "ephemeral thinking indicator"
+    },
+    "result": {
+      "action": "finalizeAssistantMessage",
+      "target": "current assistant message card"
+    },
+    "error": {
+      "action": "createErrorCard",
+      "target": "new error card in timeline"
+    }
+  }
+}
