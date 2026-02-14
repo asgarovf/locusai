@@ -56,9 +56,9 @@ export class GitWorkflow {
     const suffix = sprintId ? sprintId.slice(0, 8) : Date.now().toString(36);
     this.branchName = `locus/${suffix}`;
 
-    // Delete existing branch if it exists (from a previous run)
+    // Checkout the branch if it exists
     try {
-      this.gitExec(["branch", "-D", this.branchName]);
+      this.gitExec(["checkout", this.branchName]);
     } catch {
       // Branch may not exist
     }
