@@ -1,0 +1,40 @@
+{
+  "name": "locusai-vscode",
+  "displayName": "Locus AI",
+  "description": "Locus AI — AI-native project management for VS Code",
+  "version": "0.11.3",
+  "publisher": "locusai",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "locusai.helloWorld",
+        "title": "Locus: Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package --no-dependencies",
+    "clean": "rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^22.10.7",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3"
+  }
+}

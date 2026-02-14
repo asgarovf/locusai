@@ -17,7 +17,8 @@
       "!**/coverage",
       "!**/*.min.js",
       "!**/*.min.css",
-      "!**/packages/telegram/bin"
+      "!**/packages/telegram/bin",
+      "!**/packages/vscode-extension/dist"
     ]
   },
   "formatter": {
