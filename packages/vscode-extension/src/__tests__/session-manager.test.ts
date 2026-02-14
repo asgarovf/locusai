@@ -1,7 +1,4 @@
-import {
-  SessionStatus,
-  SessionTransitionEvent,
-} from "@locusai/shared";
+import { SessionStatus, SessionTransitionEvent } from "@locusai/shared";
 import { SessionManager } from "../sessions/session-manager";
 import { SessionStore } from "../sessions/session-store";
 import type { PersistedSessionData } from "../sessions/types";
@@ -41,10 +38,7 @@ class MockMemento {
 const WORKSPACE_ID = "test-workspace-001";
 
 function createStore(memento?: MockMemento): SessionStore {
-  return new SessionStore(
-    memento ?? new MockMemento(),
-    WORKSPACE_ID
-  );
+  return new SessionStore(memento ?? new MockMemento(), WORKSPACE_ID);
 }
 
 function createManager(store?: SessionStore): SessionManager {
@@ -186,10 +180,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
+      manager.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
       const updated = manager.transition(
         sid,
         SessionTransitionEvent.RESULT_RECEIVED
@@ -204,20 +195,14 @@ describe("SessionManager", () => {
 
       // STARTING → RESULT_RECEIVED is invalid
       expect(() => {
-        manager.transition(
-          sid,
-          SessionTransitionEvent.RESULT_RECEIVED
-        );
+        manager.transition(sid, SessionTransitionEvent.RESULT_RECEIVED);
       }).toThrow("invalid transition");
     });
 
     it("throws on unknown session", () => {
       const manager = createManager();
       expect(() => {
-        manager.transition(
-          "nonexistent",
-          SessionTransitionEvent.CLI_SPAWNED
-        );
+        manager.transition("nonexistent", SessionTransitionEvent.CLI_SPAWNED);
       }).toThrow("session not found");
     });
 
@@ -226,10 +211,7 @@ describe("SessionManager", () => {
       const record = manager.create({ prompt: "test" });
       const sid = record.data.sessionId;
 
-      const updated = manager.transition(
-        sid,
-        SessionTransitionEvent.ERROR
-      );
+      const updated = manager.transition(sid, SessionTransitionEvent.ERROR);
       expect(updated.data.status).toBe(SessionStatus.FAILED);
     });
 
@@ -239,10 +221,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      const updated = manager.transition(
-        sid,
-        SessionTransitionEvent.USER_STOP
-      );
+      const updated = manager.transition(sid, SessionTransitionEvent.USER_STOP);
       expect(updated.data.status).toBe(SessionStatus.CANCELED);
     });
 
@@ -265,10 +244,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
+      manager.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
       const updated = manager.transition(
         sid,
         SessionTransitionEvent.PROCESS_LOST
@@ -285,10 +261,7 @@ describe("SessionManager", () => {
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
       expect(store.get(sid)!.status).toBe(SessionStatus.RUNNING);
 
-      manager.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
+      manager.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
       expect(store.get(sid)!.status).toBe(SessionStatus.STREAMING);
     });
 
@@ -303,9 +276,7 @@ describe("SessionManager", () => {
         sid,
         SessionTransitionEvent.CLI_SPAWNED
       );
-      expect(updated.data.updatedAt).toBeGreaterThanOrEqual(
-        beforeTs
-      );
+      expect(updated.data.updatedAt).toBeGreaterThanOrEqual(beforeTs);
     });
   });
 
@@ -316,10 +287,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.PROCESS_LOST
-      );
+      manager.transition(sid, SessionTransitionEvent.PROCESS_LOST);
 
       const resumed = manager.resume(sid);
       expect(resumed.data.status).toBe(SessionStatus.RESUMING);
@@ -331,16 +299,12 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       // Session is in STARTING state
-      expect(() => manager.resume(sid)).toThrow(
-        "invalid transition"
-      );
+      expect(() => manager.resume(sid)).toThrow("invalid transition");
     });
 
     it("throws on unknown session", () => {
       const manager = createManager();
-      expect(() => manager.resume("nonexistent")).toThrow(
-        "session not found"
-      );
+      expect(() => manager.resume("nonexistent")).toThrow("session not found");
     });
 
     it("preserves timeline summary from before interruption", () => {
@@ -358,16 +322,11 @@ describe("SessionManager", () => {
       store.save(record.data);
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.PROCESS_LOST
-      );
+      manager.transition(sid, SessionTransitionEvent.PROCESS_LOST);
 
       const resumed = manager.resume(sid);
       expect(resumed.data.timelineSummary.messageCount).toBe(5);
-      expect(resumed.data.timelineSummary.lastText).toBe(
-        "partial response"
-      );
+      expect(resumed.data.timelineSummary.lastText).toBe("partial response");
     });
   });
 
@@ -389,10 +348,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
+      manager.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
 
       const stopped = manager.stop(sid);
       expect(stopped.data.status).toBe(SessionStatus.CANCELED);
@@ -404,14 +360,8 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
-      manager.transition(
-        sid,
-        SessionTransitionEvent.RESULT_RECEIVED
-      );
+      manager.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
+      manager.transition(sid, SessionTransitionEvent.RESULT_RECEIVED);
 
       const stopped = manager.stop(sid);
       expect(stopped.data.status).toBe(SessionStatus.COMPLETED);
@@ -429,9 +379,7 @@ describe("SessionManager", () => {
 
     it("throws on unknown session", () => {
       const manager = createManager();
-      expect(() => manager.stop("nonexistent")).toThrow(
-        "session not found"
-      );
+      expect(() => manager.stop("nonexistent")).toThrow("session not found");
     });
 
     it("cancels the bridge when stopping", () => {
@@ -507,9 +455,7 @@ describe("SessionManager", () => {
 
       const recovered = manager2.get(sid);
       expect(recovered).toBeDefined();
-      expect(recovered!.data.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(recovered!.data.status).toBe(SessionStatus.INTERRUPTED);
       expect(recovered!.bridge).toBeNull();
     });
 
@@ -521,18 +467,13 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager1.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager1.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
+      manager1.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
 
       const store2 = new SessionStore(memento, WORKSPACE_ID);
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.INTERRUPTED);
     });
 
     it("marks STARTING sessions as INTERRUPTED", () => {
@@ -547,9 +488,7 @@ describe("SessionManager", () => {
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.INTERRUPTED);
     });
 
     it("marks RESUMING sessions as INTERRUPTED", () => {
@@ -560,10 +499,7 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager1.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager1.transition(
-        sid,
-        SessionTransitionEvent.PROCESS_LOST
-      );
+      manager1.transition(sid, SessionTransitionEvent.PROCESS_LOST);
       manager1.resume(sid);
       expect(store.get(sid)!.status).toBe(SessionStatus.RESUMING);
 
@@ -571,9 +507,7 @@ describe("SessionManager", () => {
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.INTERRUPTED);
     });
 
     it("preserves COMPLETED sessions as-is", () => {
@@ -584,22 +518,14 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager1.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager1.transition(
-        sid,
-        SessionTransitionEvent.FIRST_TEXT_DELTA
-      );
-      manager1.transition(
-        sid,
-        SessionTransitionEvent.RESULT_RECEIVED
-      );
+      manager1.transition(sid, SessionTransitionEvent.FIRST_TEXT_DELTA);
+      manager1.transition(sid, SessionTransitionEvent.RESULT_RECEIVED);
 
       const store2 = new SessionStore(memento, WORKSPACE_ID);
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.COMPLETED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.COMPLETED);
     });
 
     it("preserves FAILED sessions as-is", () => {
@@ -615,9 +541,7 @@ describe("SessionManager", () => {
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.FAILED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.FAILED);
     });
 
     it("preserves INTERRUPTED sessions as-is", () => {
@@ -628,18 +552,13 @@ describe("SessionManager", () => {
       const sid = record.data.sessionId;
 
       manager1.transition(sid, SessionTransitionEvent.CLI_SPAWNED);
-      manager1.transition(
-        sid,
-        SessionTransitionEvent.PROCESS_LOST
-      );
+      manager1.transition(sid, SessionTransitionEvent.PROCESS_LOST);
 
       const store2 = new SessionStore(memento, WORKSPACE_ID);
       const manager2 = new SessionManager(store2);
       manager2.reconcile();
 
-      expect(manager2.get(sid)!.data.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(manager2.get(sid)!.data.status).toBe(SessionStatus.INTERRUPTED);
     });
 
     it("persists INTERRUPTED status back to store", () => {
@@ -656,9 +575,7 @@ describe("SessionManager", () => {
       manager2.reconcile();
 
       // Verify persisted store was updated
-      expect(store2.get(sid)!.status).toBe(
-        SessionStatus.INTERRUPTED
-      );
+      expect(store2.get(sid)!.status).toBe(SessionStatus.INTERRUPTED);
     });
 
     it("populates registry for all persisted sessions", () => {
@@ -668,10 +585,7 @@ describe("SessionManager", () => {
 
       const a = manager1.create({ prompt: "a" });
       const b = manager1.create({ prompt: "b" });
-      manager1.transition(
-        a.data.sessionId,
-        SessionTransitionEvent.CLI_SPAWNED
-      );
+      manager1.transition(a.data.sessionId, SessionTransitionEvent.CLI_SPAWNED);
       manager1.transition(
         a.data.sessionId,
         SessionTransitionEvent.FIRST_TEXT_DELTA

@@ -128,15 +128,10 @@ export class SessionManager {
    *
    * Throws if the session is not found or the transition is invalid.
    */
-  transition(
-    sessionId: string,
-    event: SessionTransitionEvent
-  ): SessionRecord {
+  transition(sessionId: string, event: SessionTransitionEvent): SessionRecord {
     const record = this.get(sessionId);
     if (!record) {
-      throw new Error(
-        `SessionManager: session not found: ${sessionId}`
-      );
+      throw new Error(`SessionManager: session not found: ${sessionId}`);
     }
 
     const currentStatus = record.data.status;
@@ -174,9 +169,7 @@ export class SessionManager {
   resume(sessionId: string): SessionRecord {
     const record = this.get(sessionId);
     if (!record) {
-      throw new Error(
-        `SessionManager: session not found: ${sessionId}`
-      );
+      throw new Error(`SessionManager: session not found: ${sessionId}`);
     }
 
     if (record.bridge) {
@@ -185,10 +178,7 @@ export class SessionManager {
       );
     }
 
-    return this.transition(
-      sessionId,
-      SessionTransitionEvent.RESUME
-    );
+    return this.transition(sessionId, SessionTransitionEvent.RESUME);
   }
 
   // ── Stop ────────────────────────────────────────────────────────────
@@ -206,9 +196,7 @@ export class SessionManager {
   stop(sessionId: string): SessionRecord {
     const record = this.get(sessionId);
     if (!record) {
-      throw new Error(
-        `SessionManager: session not found: ${sessionId}`
-      );
+      throw new Error(`SessionManager: session not found: ${sessionId}`);
     }
 
     if (isTerminalStatus(record.data.status)) {
@@ -216,40 +204,40 @@ export class SessionManager {
     }
 
     if (
-      isValidTransition(
-        record.data.status,
-        SessionTransitionEvent.USER_STOP
-      )
+      isValidTransition(record.data.status, SessionTransitionEvent.USER_STOP)
     ) {
       if (record.bridge) {
         record.bridge.cancel();
         record.bridge = null;
       }
-      return this.transition(
-        sessionId,
-        SessionTransitionEvent.USER_STOP
-      );
+      return this.transition(sessionId, SessionTransitionEvent.USER_STOP);
     }
 
     // For states where USER_STOP is not valid (e.g. STARTING,
     // RESUMING), mark as FAILED via ERROR event instead.
-    if (
-      isValidTransition(
-        record.data.status,
-        SessionTransitionEvent.ERROR
-      )
-    ) {
+    if (isValidTransition(record.data.status, SessionTransitionEvent.ERROR)) {
       if (record.bridge) {
         record.bridge.cancel();
         record.bridge = null;
       }
-      return this.transition(
-        sessionId,
-        SessionTransitionEvent.ERROR
-      );
+      return this.transition(sessionId, SessionTransitionEvent.ERROR);
     }
 
     return record;
+  }
+
+  // ── Persist ─────────────────────────────────────────────────────────
+
+  /**
+   * Persist the current in-memory session data to the store.
+   * Use when the session record has been mutated in-place (e.g.
+   * updating the timeline summary) without a state transition.
+   */
+  persist(sessionId: string): void {
+    const record = this.registry.get(sessionId);
+    if (record) {
+      this.store.save(record.data);
+    }
   }
 
   // ── Cleanup ─────────────────────────────────────────────────────────

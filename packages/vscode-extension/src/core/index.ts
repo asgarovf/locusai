@@ -1,4 +1,9 @@
 export {
+  ChatController,
+  type ChatControllerConfig,
+  type EventSink,
+} from "./chat-controller";
+export {
   CliBridge,
   type CliBridgeConfig,
   type CliBridgeEvents,

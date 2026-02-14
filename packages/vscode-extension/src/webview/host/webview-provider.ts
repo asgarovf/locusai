@@ -1,6 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
+import {
+  type HostEvent,
+  ProtocolErrorCode,
+  createErrorEvent,
+  parseUIIntent,
+} from "@locusai/shared";
+import type { ChatController } from "../../core/chat-controller";
 import { getNonce } from "./get-nonce";
 
 interface AssetManifest {
@@ -10,13 +17,20 @@ interface AssetManifest {
 export class LocusChatViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "locusai.chatView";
 
-  constructor(private readonly extensionUri: vscode.Uri) {}
+  private webviewView: vscode.WebviewView | null = null;
+
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    private readonly controller: ChatController
+  ) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void {
+    this.webviewView = webviewView;
+
     const webviewDistUri = vscode.Uri.joinPath(
       this.extensionUri,
       "dist",
@@ -33,16 +47,46 @@ export class LocusChatViewProvider implements vscode.WebviewViewProvider {
       webviewDistUri
     );
 
-    webviewView.webview.onDidReceiveMessage((message) => {
-      if (
-        typeof message === "object" &&
-        message !== null &&
-        "type" in message &&
-        message.type === "webview_ready"
-      ) {
-        // Webview confirmed it loaded — future host→webview events can begin
-      }
+    // Bind the controller's event sink to forward HostEvents to webview.
+    const postMessage = (event: HostEvent): void => {
+      webviewView.webview.postMessage(event);
+    };
+    this.controller.setEventSink(postMessage);
+
+    // Route inbound messages through schema validation → controller.
+    webviewView.webview.onDidReceiveMessage((message: unknown) => {
+      this.handleIncomingMessage(message);
     });
+
+    // On webview dispose, clear the sink so events are not sent
+    // to a stale webview. The controller stays alive.
+    webviewView.onDidDispose(() => {
+      this.webviewView = null;
+      this.controller.setEventSink(null);
+    });
+  }
+
+  /**
+   * Validate and route an incoming message from the webview.
+   * Invalid payloads emit a deterministic error event back.
+   */
+  private handleIncomingMessage(message: unknown): void {
+    const result = parseUIIntent(message);
+
+    if (!result.success) {
+      const errorEvent = createErrorEvent(
+        ProtocolErrorCode.MALFORMED_EVENT,
+        "Invalid UIIntent payload",
+        {
+          details: result.error,
+          recoverable: true,
+        }
+      );
+      this.webviewView?.webview.postMessage(errorEvent);
+      return;
+    }
+
+    this.controller.handleIntent(result.data);
   }
 
   private getHtmlForWebview(
