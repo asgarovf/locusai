@@ -17,6 +17,9 @@ describe("ConfigModule", () => {
     process.env.NODE_ENV = "test";
     process.env.DATABASE_URL = "postgres://localhost:5432/db";
     process.env.JWT_SECRET = "a-very-long-secret-that-is-at-least-32-chars";
+    process.env.SWAGGER_DOCS_ENABLED = "false";
+    delete process.env.SWAGGER_DOCS_USERNAME;
+    delete process.env.SWAGGER_DOCS_PASSWORD;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -47,9 +50,17 @@ describe("ConfigModule", () => {
     expect(service.get("DATABASE_URL")).toBe("postgres://localhost:5432/db");
   });
 
+  it("should return swagger docs settings from typed accessor", () => {
+    expect(service.getSwaggerDocsConfig()).toEqual({
+      enabled: false,
+      username: undefined,
+      password: undefined,
+    });
+  });
+
   it("should return default values for security env vars", () => {
     expect(service.get("THROTTLE_TTL")).toBe(60);
-    expect(service.get("THROTTLE_LIMIT")).toBe(10);
+    expect(service.get("THROTTLE_LIMIT")).toBe(100);
     expect(service.get("LOCKOUT_MAX_ATTEMPTS")).toBe(5);
     expect(service.get("LOCKOUT_WINDOW_MINUTES")).toBe(15);
     expect(service.get("LOCKOUT_DURATION_MINUTES")).toBe(30);
@@ -116,11 +127,111 @@ describe("ConfigModule", () => {
 
       const result = ConfigSchema.parse(config);
       expect(result.THROTTLE_TTL).toBe(60);
-      expect(result.THROTTLE_LIMIT).toBe(10);
+      expect(result.THROTTLE_LIMIT).toBe(100);
       expect(result.LOCKOUT_MAX_ATTEMPTS).toBe(5);
       expect(result.LOCKOUT_WINDOW_MINUTES).toBe(15);
       expect(result.LOCKOUT_DURATION_MINUTES).toBe(30);
       expect(result.OTP_MAX_ATTEMPTS).toBe(5);
+    });
+
+    describe("Swagger Docs Validation", () => {
+      const baseConfig = {
+        DATABASE_URL: "postgres://localhost:5432/db",
+        JWT_SECRET: "a-very-long-secret-that-is-at-least-32-chars",
+      };
+
+      it("should parse valid swagger config when docs are enabled", () => {
+        const result = ConfigSchema.parse({
+          ...baseConfig,
+          SWAGGER_DOCS_ENABLED: "true",
+          SWAGGER_DOCS_USERNAME: "  admin-user  ",
+          SWAGGER_DOCS_PASSWORD: "  secure-password  ",
+        });
+
+        expect(result.SWAGGER_DOCS_ENABLED).toBe(true);
+        expect(result.SWAGGER_DOCS_USERNAME).toBe("admin-user");
+        expect(result.SWAGGER_DOCS_PASSWORD).toBe("secure-password");
+      });
+
+      it("should parse valid swagger config when docs are disabled", () => {
+        const result = ConfigSchema.parse({
+          ...baseConfig,
+          SWAGGER_DOCS_ENABLED: "false",
+        });
+
+        expect(result.SWAGGER_DOCS_ENABLED).toBe(false);
+        expect(result.SWAGGER_DOCS_USERNAME).toBeUndefined();
+        expect(result.SWAGGER_DOCS_PASSWORD).toBeUndefined();
+      });
+
+      it("should reject enabled swagger docs without username", () => {
+        const parsed = ConfigSchema.safeParse({
+          ...baseConfig,
+          SWAGGER_DOCS_ENABLED: "true",
+          SWAGGER_DOCS_PASSWORD: "secure-password",
+        });
+
+        expect(parsed.success).toBe(false);
+        if (!parsed.success) {
+          expect(parsed.error.issues).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: ["SWAGGER_DOCS_USERNAME"],
+                message:
+                  "SWAGGER_DOCS_USERNAME is required when SWAGGER_DOCS_ENABLED=true",
+              }),
+            ])
+          );
+        }
+      });
+
+      it("should reject enabled swagger docs without password", () => {
+        const parsed = ConfigSchema.safeParse({
+          ...baseConfig,
+          SWAGGER_DOCS_ENABLED: "true",
+          SWAGGER_DOCS_USERNAME: "admin-user",
+        });
+
+        expect(parsed.success).toBe(false);
+        if (!parsed.success) {
+          expect(parsed.error.issues).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: ["SWAGGER_DOCS_PASSWORD"],
+                message:
+                  "SWAGGER_DOCS_PASSWORD is required when SWAGGER_DOCS_ENABLED=true",
+              }),
+            ])
+          );
+        }
+      });
+
+      it("should reject blank swagger credentials when docs are enabled", () => {
+        const parsed = ConfigSchema.safeParse({
+          ...baseConfig,
+          SWAGGER_DOCS_ENABLED: "true",
+          SWAGGER_DOCS_USERNAME: "   ",
+          SWAGGER_DOCS_PASSWORD: "   ",
+        });
+
+        expect(parsed.success).toBe(false);
+        if (!parsed.success) {
+          expect(parsed.error.issues).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                path: ["SWAGGER_DOCS_USERNAME"],
+                message:
+                  "SWAGGER_DOCS_USERNAME is required when SWAGGER_DOCS_ENABLED=true",
+              }),
+              expect.objectContaining({
+                path: ["SWAGGER_DOCS_PASSWORD"],
+                message:
+                  "SWAGGER_DOCS_PASSWORD is required when SWAGGER_DOCS_ENABLED=true",
+              }),
+            ])
+          );
+        }
+      });
     });
   });
 
@@ -210,6 +321,28 @@ describe("ConfigModule", () => {
         expect.stringContaining("Security Configuration Summary")
       );
 
+      logSpy.mockRestore();
+    });
+
+    it("should not include plaintext swagger password in validation output", () => {
+      const errorSpy = jest.spyOn(console, "error").mockImplementation();
+      const logSpy = jest.spyOn(console, "log").mockImplementation();
+      const plaintextPassword = "never-log-this-swagger-password";
+
+      process.env.DATABASE_URL = "postgres://localhost:5432/db";
+      process.env.JWT_SECRET = "a-very-long-secret-that-is-at-least-32-chars";
+      process.env.SWAGGER_DOCS_ENABLED = "true";
+      delete process.env.SWAGGER_DOCS_USERNAME;
+      process.env.SWAGGER_DOCS_PASSWORD = plaintextPassword;
+
+      expect(() => configuration()).toThrow("Invalid api configuration");
+
+      const consoleOutput = errorSpy.mock.calls
+        .map((call) => JSON.stringify(call))
+        .join(" ");
+      expect(consoleOutput).not.toContain(plaintextPassword);
+
+      errorSpy.mockRestore();
       logSpy.mockRestore();
     });
   });

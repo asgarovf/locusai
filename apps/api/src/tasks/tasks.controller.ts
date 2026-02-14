@@ -20,12 +20,34 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiSecurity,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CurrentUserId, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import {
+  AddCommentRequestDto,
+  BatchUpdateTasksRequestDto,
+  CommentResponseDto,
+  CreateTaskRequestDto,
+  SuccessResponseDto,
+  TaskResponseDto,
+  TasksResponseDto,
+  UpdateTaskRequestDto,
+} from "@/common/swagger/public-api.dto";
 import { Task } from "@/entities";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { TasksService } from "./tasks.service";
 
+@ApiTags("Tasks")
+@ApiBearerAuth("bearer")
+@ApiSecurity("apiKey")
 @Controller("workspaces/:workspaceId/tasks")
 export class TasksController {
   constructor(
@@ -34,6 +56,11 @@ export class TasksController {
     private readonly workspacesService: WorkspacesService
   ) {}
 
+  @ApiOperation({ summary: "List tasks in a workspace" })
+  @ApiOkResponse({
+    description: "Tasks fetched successfully",
+    type: TasksResponseDto,
+  })
   @Get()
   @Member()
   async list(
@@ -46,6 +73,11 @@ export class TasksController {
     return { tasks: tasksResponse };
   }
 
+  @ApiOperation({ summary: "List backlog tasks in a workspace" })
+  @ApiOkResponse({
+    description: "Backlog tasks fetched successfully",
+    type: TasksResponseDto,
+  })
   @Get("backlog")
   @Member()
   async getBacklog(
@@ -58,6 +90,11 @@ export class TasksController {
     return { tasks: tasksResponse };
   }
 
+  @ApiOperation({ summary: "Get a task by ID" })
+  @ApiOkResponse({
+    description: "Task fetched successfully",
+    type: TaskResponseDto,
+  })
   @Get(":taskId")
   @Member()
   async getById(@Param("taskId") taskId: string): Promise<TaskResponse> {
@@ -65,6 +102,12 @@ export class TasksController {
     return { task: this.taskToTaskResponse(task) };
   }
 
+  @ApiOperation({ summary: "Create a new task in a workspace" })
+  @ApiBody({ type: CreateTaskRequestDto })
+  @ApiCreatedResponse({
+    description: "Task created successfully",
+    type: TaskResponseDto,
+  })
   @Post()
   @Member()
   async create(
@@ -91,6 +134,12 @@ export class TasksController {
     return { task: this.taskToTaskResponse(task) };
   }
 
+  @ApiOperation({ summary: "Update a task" })
+  @ApiBody({ type: UpdateTaskRequestDto })
+  @ApiOkResponse({
+    description: "Task updated successfully",
+    type: TaskResponseDto,
+  })
   @Patch(":taskId")
   @Member()
   async update(
@@ -106,6 +155,12 @@ export class TasksController {
     return { task: this.taskToTaskResponse(updated) };
   }
 
+  @ApiOperation({ summary: "Batch update multiple tasks" })
+  @ApiBody({ type: BatchUpdateTasksRequestDto })
+  @ApiOkResponse({
+    description: "Batch update applied successfully",
+    type: SuccessResponseDto,
+  })
   @Patch("batch")
   @Member()
   async batchUpdate(
@@ -116,6 +171,11 @@ export class TasksController {
     return { success: true };
   }
 
+  @ApiOperation({ summary: "Delete a task" })
+  @ApiOkResponse({
+    description: "Task deleted successfully",
+    type: SuccessResponseDto,
+  })
   @Delete(":taskId")
   @MemberAdmin()
   async delete(
@@ -126,6 +186,12 @@ export class TasksController {
     return { success: true };
   }
 
+  @ApiOperation({ summary: "Add a comment to a task" })
+  @ApiBody({ type: AddCommentRequestDto })
+  @ApiCreatedResponse({
+    description: "Comment added successfully",
+    type: CommentResponseDto,
+  })
   @Post(":taskId/comment")
   @Member()
   async addComment(

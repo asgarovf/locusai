@@ -25,14 +25,43 @@ import {
   Put,
   Query,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiSecurity,
+  ApiTags,
+} from "@nestjs/swagger";
 import { z } from "zod";
 import { CurrentUser, Member, MemberAdmin } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import {
+  AgentHeartbeatRequestDto,
+  AgentHeartbeatResponseDto,
+  AgentsListResponseDto,
+  ApiKeyCreateResponseDto,
+  ApiKeyNameRequestDto,
+  ApiKeysResponseDto,
+  CreateWorkspaceRequestDto,
+  DispatchTaskRequestDto,
+  SuccessResponseDto,
+  TaskResponseDto,
+  UpdateWorkspaceRequestDto,
+  WorkspaceActivityResponseDto,
+  WorkspaceResponseDto,
+  WorkspaceStatsDto,
+  WorkspacesResponseDto,
+} from "@/common/swagger/public-api.dto";
 import { Task } from "@/entities";
 import { User } from "@/entities/user.entity";
 import { TasksService } from "@/tasks/tasks.service";
 import { WorkspacesService } from "./workspaces.service";
 
+@ApiTags("Workspaces")
+@ApiBearerAuth("bearer")
+@ApiSecurity("apiKey")
 @Controller("workspaces")
 export class WorkspacesController {
   constructor(
@@ -41,12 +70,22 @@ export class WorkspacesController {
     private readonly tasksService: TasksService
   ) {}
 
+  @ApiOperation({ summary: "List workspaces for the current user" })
+  @ApiOkResponse({
+    description: "Workspaces fetched successfully",
+    type: WorkspacesResponseDto,
+  })
   @Get()
   async listAll(@CurrentUser() user: User) {
     const workspaces = await this.workspacesService.findByUser(user.id);
     return { workspaces };
   }
 
+  @ApiOperation({ summary: "List workspaces in an organization" })
+  @ApiOkResponse({
+    description: "Organization workspaces fetched successfully",
+    type: WorkspacesResponseDto,
+  })
   @Get("org/:orgId")
   @Member()
   async list(
@@ -56,6 +95,14 @@ export class WorkspacesController {
     return { workspaces };
   }
 
+  @ApiOperation({
+    summary: "Create a workspace with automatic organization setup",
+  })
+  @ApiBody({ type: CreateWorkspaceRequestDto })
+  @ApiOkResponse({
+    description: "Workspace created successfully",
+    type: WorkspaceResponseDto,
+  })
   @Post()
   async createWithAutoOrg(
     @CurrentUser() user: User,
@@ -71,6 +118,14 @@ export class WorkspacesController {
     return { workspace };
   }
 
+  @ApiOperation({
+    summary: "Create a workspace within an existing organization",
+  })
+  @ApiBody({ type: CreateWorkspaceRequestDto })
+  @ApiOkResponse({
+    description: "Workspace created successfully",
+    type: WorkspaceResponseDto,
+  })
   @Post("org/:orgId")
   @MemberAdmin()
   async create(
@@ -88,6 +143,11 @@ export class WorkspacesController {
     return { workspace };
   }
 
+  @ApiOperation({ summary: "Get workspace details by ID" })
+  @ApiOkResponse({
+    description: "Workspace fetched successfully",
+    type: WorkspaceResponseDto,
+  })
   @Get(":workspaceId")
   @Member()
   async getById(
@@ -98,6 +158,12 @@ export class WorkspacesController {
     return { workspace };
   }
 
+  @ApiOperation({ summary: "Update workspace settings" })
+  @ApiBody({ type: UpdateWorkspaceRequestDto })
+  @ApiOkResponse({
+    description: "Workspace updated successfully",
+    type: WorkspaceResponseDto,
+  })
   @Put(":workspaceId")
   @MemberAdmin()
   async update(
@@ -112,6 +178,11 @@ export class WorkspacesController {
     return { workspace };
   }
 
+  @ApiOperation({ summary: "Delete a workspace" })
+  @ApiOkResponse({
+    description: "Workspace deleted successfully",
+    type: SuccessResponseDto,
+  })
   @Delete(":workspaceId")
   @MemberAdmin()
   async delete(
@@ -122,6 +193,11 @@ export class WorkspacesController {
     return { success: true };
   }
 
+  @ApiOperation({ summary: "Get workspace task/member statistics" })
+  @ApiOkResponse({
+    description: "Workspace statistics fetched successfully",
+    type: WorkspaceStatsDto,
+  })
   @Get(":workspaceId/stats")
   @Member()
   async getStats(
@@ -131,6 +207,17 @@ export class WorkspacesController {
     return this.workspacesService.getStats(params.workspaceId);
   }
 
+  @ApiOperation({ summary: "Get recent workspace activity events" })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    description: "Maximum number of events to return (default 50)",
+  })
+  @ApiOkResponse({
+    description: "Workspace activity fetched successfully",
+    type: WorkspaceActivityResponseDto,
+  })
   @Get(":workspaceId/activity")
   @Member()
   async getActivity(
@@ -145,6 +232,12 @@ export class WorkspacesController {
     return { activity };
   }
 
+  @ApiOperation({ summary: "Dispatch the next available task to a worker" })
+  @ApiBody({ type: DispatchTaskRequestDto })
+  @ApiOkResponse({
+    description: "Task dispatched successfully",
+    type: TaskResponseDto,
+  })
   @Post(":workspaceId/dispatch")
   @MemberAdmin()
   async dispatch(
@@ -164,6 +257,12 @@ export class WorkspacesController {
   // Agent Heartbeat & Registration
   // ============================================================================
 
+  @ApiOperation({ summary: "Record or update agent heartbeat status" })
+  @ApiBody({ type: AgentHeartbeatRequestDto })
+  @ApiOkResponse({
+    description: "Agent heartbeat recorded successfully",
+    type: AgentHeartbeatResponseDto,
+  })
   @Post(":workspaceId/agents/heartbeat")
   @MemberAdmin()
   async agentHeartbeat(
@@ -187,6 +286,11 @@ export class WorkspacesController {
     };
   }
 
+  @ApiOperation({ summary: "List active agents in a workspace" })
+  @ApiOkResponse({
+    description: "Active agents fetched successfully",
+    type: AgentsListResponseDto,
+  })
   @Get(":workspaceId/agents")
   @Member()
   async listAgents(
@@ -215,6 +319,11 @@ export class WorkspacesController {
   // API Key Management
   // ============================================================================
 
+  @ApiOperation({ summary: "List API keys for a workspace" })
+  @ApiOkResponse({
+    description: "Workspace API keys fetched successfully",
+    type: ApiKeysResponseDto,
+  })
   @Get(":workspaceId/api-keys")
   @MemberAdmin()
   async listApiKeys(
@@ -236,6 +345,12 @@ export class WorkspacesController {
     return { apiKeys: maskedKeys };
   }
 
+  @ApiOperation({ summary: "Create a new API key for a workspace" })
+  @ApiBody({ type: ApiKeyNameRequestDto })
+  @ApiOkResponse({
+    description: "Workspace API key created successfully",
+    type: ApiKeyCreateResponseDto,
+  })
   @Post(":workspaceId/api-keys")
   @MemberAdmin()
   async createApiKey(
@@ -261,6 +376,11 @@ export class WorkspacesController {
     };
   }
 
+  @ApiOperation({ summary: "Delete a workspace API key" })
+  @ApiOkResponse({
+    description: "Workspace API key deleted successfully",
+    type: SuccessResponseDto,
+  })
   @Delete(":workspaceId/api-keys/:keyId")
   @MemberAdmin()
   async deleteApiKey(

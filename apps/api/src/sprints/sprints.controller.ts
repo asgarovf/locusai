@@ -15,11 +15,30 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiSecurity,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CurrentUserId, Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
+import {
+  CreateSprintRequestDto,
+  SprintResponseDto,
+  SprintsResponseDto,
+  SuccessResponseDto,
+  UpdateSprintRequestDto,
+} from "@/common/swagger/public-api.dto";
 import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { SprintsService } from "./sprints.service";
 
+@ApiTags("Sprints")
+@ApiBearerAuth("bearer")
+@ApiSecurity("apiKey")
 @Controller("workspaces/:workspaceId/sprints")
 export class SprintsController {
   constructor(
@@ -36,6 +55,11 @@ export class SprintsController {
     return new Date(val);
   }
 
+  @ApiOperation({ summary: "List sprints in a workspace" })
+  @ApiOkResponse({
+    description: "Sprints fetched successfully",
+    type: SprintsResponseDto,
+  })
   @Get()
   @Member()
   async list(
@@ -46,6 +70,11 @@ export class SprintsController {
     return { sprints };
   }
 
+  @ApiOperation({ summary: "Get the active sprint for a workspace" })
+  @ApiOkResponse({
+    description: "Active sprint fetched successfully",
+    type: SprintResponseDto,
+  })
   @Get("active")
   @Member()
   async getActive(
@@ -61,6 +90,11 @@ export class SprintsController {
     return { sprint };
   }
 
+  @ApiOperation({ summary: "Get a sprint by ID" })
+  @ApiOkResponse({
+    description: "Sprint fetched successfully",
+    type: SprintResponseDto,
+  })
   @Get(":sprintId")
   @Member()
   async getById(@Param("sprintId") sprintId: string): Promise<SprintResponse> {
@@ -68,6 +102,12 @@ export class SprintsController {
     return { sprint };
   }
 
+  @ApiOperation({ summary: "Create a new sprint" })
+  @ApiBody({ type: CreateSprintRequestDto })
+  @ApiCreatedResponse({
+    description: "Sprint created successfully",
+    type: SprintResponseDto,
+  })
   @Post()
   @Member()
   async create(
@@ -84,6 +124,12 @@ export class SprintsController {
     return { sprint };
   }
 
+  @ApiOperation({ summary: "Update a sprint" })
+  @ApiBody({ type: UpdateSprintRequestDto })
+  @ApiOkResponse({
+    description: "Sprint updated successfully",
+    type: SprintResponseDto,
+  })
   @Patch(":sprintId")
   @Member()
   async update(
@@ -98,6 +144,11 @@ export class SprintsController {
     return { sprint: updatedSprint };
   }
 
+  @ApiOperation({ summary: "Start a sprint" })
+  @ApiCreatedResponse({
+    description: "Sprint started successfully",
+    type: SprintResponseDto,
+  })
   @Post(":sprintId/start")
   @Member()
   async start(
@@ -111,6 +162,11 @@ export class SprintsController {
     return { sprint };
   }
 
+  @ApiOperation({ summary: "Complete a sprint" })
+  @ApiCreatedResponse({
+    description: "Sprint completed successfully",
+    type: SprintResponseDto,
+  })
   @Post(":sprintId/complete")
   @Member()
   async complete(
@@ -124,6 +180,11 @@ export class SprintsController {
     return { sprint };
   }
 
+  @ApiOperation({ summary: "Delete a sprint" })
+  @ApiOkResponse({
+    description: "Sprint deleted successfully",
+    type: SuccessResponseDto,
+  })
   @Delete(":sprintId")
   @Member()
   async delete(@Param("sprintId") sprintId: string) {

@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AppLogger } from "./common/logger";
 import { requestIdMiddleware } from "./common/middleware/request-id.middleware";
+import { bootstrapSwagger } from "./common/swagger";
 import { TypedConfigService } from "./config/config.service";
 
 async function bootstrap() {
@@ -44,6 +45,11 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix("api");
+
+  const swaggerDocsConfig = configService.getSwaggerDocsConfig();
+  if (swaggerDocsConfig.enabled) {
+    bootstrapSwagger(app, swaggerDocsConfig);
+  }
 
   // CORS configuration
   const corsOrigin = configService.get("CORS_ORIGIN");

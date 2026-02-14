@@ -1,36 +1,80 @@
 import { z } from "zod";
 
 const INSECURE_JWT_SECRETS = ["secret", "changeme", "jwt_secret"];
+const SWAGGER_ENABLED_VALUES = ["true", "false"] as const;
+const SWAGGER_REQUIRED_MESSAGE = "is required when SWAGGER_DOCS_ENABLED=true";
 
-export const ConfigSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-  PORT: z.coerce.number().default(8000),
-  DATABASE_URL: z.string(),
-  DATABASE_SYNC: z.enum(["true", "false"]).default("false"),
-  JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.union([z.string(), z.number()]).default("7d"),
-  RESEND_API_KEY: z.string().optional(),
-  OTP_EXPIRES_IN_MINUTES: z.coerce.number().default(10),
-  CORS_ORIGIN: z.string().default("*"),
-  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().optional(),
-  FRONTEND_URL: z.string().default("http://localhost:3000"),
-  // Rate limiting
-  THROTTLE_TTL: z.coerce.number().default(60),
-  THROTTLE_LIMIT: z.coerce.number().default(100),
+const SwaggerDocsEnabledSchema = z
+  .enum(SWAGGER_ENABLED_VALUES)
+  .default("false")
+  .transform((value) => value === "true");
 
-  // Account lockout
-  LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
-  LOCKOUT_WINDOW_MINUTES: z.coerce.number().default(15),
-  LOCKOUT_DURATION_MINUTES: z.coerce.number().default(30),
+const OptionalTrimmedSecretSchema = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (value === undefined) {
+      return undefined;
+    }
 
-  // OTP security
-  OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
-});
+    const trimmedValue = value.trim();
+    return trimmedValue.length === 0 ? undefined : trimmedValue;
+  });
+
+export const ConfigSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
+    PORT: z.coerce.number().default(8000),
+    DATABASE_URL: z.string(),
+    DATABASE_SYNC: z.enum(["true", "false"]).default("false"),
+    JWT_SECRET: z.string().min(32),
+    JWT_EXPIRES_IN: z.union([z.string(), z.number()]).default("7d"),
+    RESEND_API_KEY: z.string().optional(),
+    OTP_EXPIRES_IN_MINUTES: z.coerce.number().default(10),
+    CORS_ORIGIN: z.string().default("*"),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CALLBACK_URL: z.string().optional(),
+    FRONTEND_URL: z.string().default("http://localhost:3000"),
+    SWAGGER_DOCS_ENABLED: SwaggerDocsEnabledSchema,
+    SWAGGER_DOCS_USERNAME: OptionalTrimmedSecretSchema,
+    SWAGGER_DOCS_PASSWORD: OptionalTrimmedSecretSchema,
+    // Rate limiting
+    THROTTLE_TTL: z.coerce.number().default(60),
+    THROTTLE_LIMIT: z.coerce.number().default(100),
+
+    // Account lockout
+    LOCKOUT_MAX_ATTEMPTS: z.coerce.number().default(5),
+    LOCKOUT_WINDOW_MINUTES: z.coerce.number().default(15),
+    LOCKOUT_DURATION_MINUTES: z.coerce.number().default(30),
+
+    // OTP security
+    OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
+  })
+  .superRefine((config, context) => {
+    if (!config.SWAGGER_DOCS_ENABLED) {
+      return;
+    }
+
+    if (!config.SWAGGER_DOCS_USERNAME) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `SWAGGER_DOCS_USERNAME ${SWAGGER_REQUIRED_MESSAGE}`,
+        path: ["SWAGGER_DOCS_USERNAME"],
+      });
+    }
+
+    if (!config.SWAGGER_DOCS_PASSWORD) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `SWAGGER_DOCS_PASSWORD ${SWAGGER_REQUIRED_MESSAGE}`,
+        path: ["SWAGGER_DOCS_PASSWORD"],
+      });
+    }
+  });
 
 export type Config = z.infer<typeof ConfigSchema>;
 

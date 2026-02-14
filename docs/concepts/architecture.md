@@ -125,3 +125,11 @@ graph LR
 {% hint style="info" %}
 All tasks are committed to the same branch sequentially. This keeps the workflow simple and avoids merge conflicts.
 {% endhint %}
+
+---
+
+## API Docs Operations
+
+For Swagger/OpenAPI documentation access controls, secret ownership, and incident disable steps, see:
+
+- [Swagger Docs Access Policy](swagger-docs-access.md)

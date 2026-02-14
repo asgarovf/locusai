@@ -21,9 +21,28 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiSecurity,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
+import {
+  AuthApiKeyInfoDto,
+  AuthUserDto,
+  CompleteRegistrationRequestDto,
+  LoginResponseDto,
+  OtpRequestDto,
+  SuccessResponseDto,
+  VerifyOtpRequestDto,
+} from "@/common/swagger/public-api.dto";
 import { TypedConfigService } from "@/config/config.service";
 import { AuthService } from "./auth.service";
 import { GOOGLE_THROTTLE_TTL, THROTTLE_TTL } from "./constants";
@@ -32,6 +51,7 @@ import { extractIp, GoogleAuthGuard } from "./guards";
 import { GoogleUser } from "./interfaces/google-user.interface";
 import { IpReputationService } from "./services";
 
+@ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -40,6 +60,13 @@ export class AuthController {
     private readonly ipReputationService: IpReputationService
   ) {}
 
+  @ApiOperation({ summary: "Get the authenticated user's profile" })
+  @ApiBearerAuth("bearer")
+  @ApiOkResponse({
+    description: "Authenticated user profile",
+    type: AuthUserDto,
+  })
+  @ApiUnauthorizedResponse({ description: "JWT authentication is required" })
   @Get("me")
   async getProfile(@CurrentUser() authUser: AuthenticatedUser) {
     // This endpoint only works for JWT-authenticated users
@@ -84,6 +111,15 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: "Get API key authentication context" })
+  @ApiSecurity("apiKey")
+  @ApiOkResponse({
+    description: "Current API key context information",
+    type: AuthApiKeyInfoDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: "API key authentication is required",
+  })
   @Get("api-key")
   async getApiKeyInfo(@CurrentUser() authUser: AuthenticatedUser) {
     // This endpoint only works for API Key authenticated users
@@ -101,6 +137,13 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: "Delete the current authenticated account" })
+  @ApiBearerAuth("bearer")
+  @ApiOkResponse({
+    description: "Account deleted",
+    type: SuccessResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: "JWT authentication is required" })
   @Delete("account")
   async deleteAccount(@CurrentUser() authUser: AuthenticatedUser) {
     if (!isJwtUser(authUser)) {
@@ -120,6 +163,12 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 5, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
+  @ApiOperation({ summary: "Request OTP for a new account registration" })
+  @ApiBody({ type: OtpRequestDto })
+  @ApiOkResponse({
+    description: "OTP request accepted",
+    type: SuccessResponseDto,
+  })
   @Post("register-otp")
   async registerOtp(@Body() data: OtpRequest) {
     return this.authService.requestRegisterOtp(data.email);
@@ -128,6 +177,12 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 5, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(OtpRequestSchema))
+  @ApiOperation({ summary: "Request OTP to log in to an existing account" })
+  @ApiBody({ type: OtpRequestDto })
+  @ApiOkResponse({
+    description: "OTP request accepted",
+    type: SuccessResponseDto,
+  })
   @Post("login-otp")
   async loginOtp(@Req() req: Request, @Body() data: OtpRequest) {
     const ip = extractIp(req);
@@ -138,6 +193,12 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(VerifyOtpSchema))
+  @ApiOperation({ summary: "Verify OTP and complete login" })
+  @ApiBody({ type: VerifyOtpRequestDto })
+  @ApiOkResponse({
+    description: "Login completed successfully",
+    type: LoginResponseDto,
+  })
   @Post("verify-login")
   async verifyLogin(
     @Req() req: Request,
@@ -158,6 +219,12 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: THROTTLE_TTL } })
   @UsePipes(new ZodValidationPipe(CompleteRegistrationSchema))
+  @ApiOperation({ summary: "Complete registration with OTP verification" })
+  @ApiBody({ type: CompleteRegistrationRequestDto })
+  @ApiOkResponse({
+    description: "Registration completed and authenticated session returned",
+    type: LoginResponseDto,
+  })
   @Post("complete-registration")
   async completeRegistration(
     @Req() req: Request,
@@ -181,6 +248,11 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 10, ttl: GOOGLE_THROTTLE_TTL } })
+  @ApiOperation({ summary: "Start Google OAuth login flow" })
+  @ApiResponse({
+    status: 302,
+    description: "Redirects to Google OAuth authorization",
+  })
   @Get("google")
   @UseGuards(GoogleAuthGuard)
   async googleAuth() {
@@ -189,6 +261,11 @@ export class AuthController {
   }
 
   @Public()
+  @ApiOperation({ summary: "Handle Google OAuth callback" })
+  @ApiResponse({
+    status: 302,
+    description: "Redirects to frontend callback with token",
+  })
   @Get("google/callback")
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(
