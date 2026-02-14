@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.11.5
+
+### Patch Changes
+
+- Git checkout issues
+- Updated dependencies
+  - @locusai/sdk@0.11.5
+  - @locusai/shared@0.11.5
+
 ## 0.11.4
 
 ### Patch Changes
