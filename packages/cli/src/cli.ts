@@ -17,12 +17,15 @@ import {
 } from "./commands";
 import { printBanner } from "./utils";
 
+/** Check if --json-stream flag is present in raw argv. */
+const isJsonStream = process.argv.includes("--json-stream");
+
 async function main() {
   const command = process.argv[2];
   const args = process.argv.slice(3);
 
-  // Skip banner for exec command to prevent output conflicts
-  if (command !== "exec") {
+  // Skip banner for exec command or when in JSON stream mode
+  if (command !== "exec" && !isJsonStream) {
     printBanner();
   }
 
@@ -68,6 +71,15 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (isJsonStream) {
+    // In JSON stream mode, fatal errors are handled inside exec command.
+    // If we reach here, it means the error happened before the renderer
+    // was created. Emit a minimal error to stderr and exit.
+    process.stderr.write(
+      `${JSON.stringify({ fatal: true, error: err.message })}\n`
+    );
+    process.exit(1);
+  }
   console.error(`\n  ${c.error("✖ Fatal Error")} ${c.red(err.message)}`);
   process.exit(1);
 });

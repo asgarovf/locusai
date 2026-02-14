@@ -74,6 +74,7 @@ locus exec sessions clear
 | `--provider <PROVIDER>` | AI provider | From config |
 | `--no-stream` | Disable streaming output | `false` |
 | `--no-status` | Disable status indicators | `false` |
+| `--json-stream` | Emit NDJSON stream events to stdout | `false` |
 | `--dir <PATH>` | Project directory | Current directory |
 
 ---

@@ -1,3 +1,4 @@
+export * from "./cli-stream";
 export * from "./context";
 export * from "./envelope";
 export * from "./errors";
