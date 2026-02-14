@@ -18,15 +18,36 @@
   "contributes": {
     "commands": [
       {
-        "command": "locusai.helloWorld",
-        "title": "Locus: Hello World"
+        "command": "locusai.openChat",
+        "title": "Locus: Open Chat"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "locusai",
+          "title": "Locus AI",
+          "icon": "assets/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "locusai": [
+        {
+          "type": "webview",
+          "id": "locusai.chatView",
+          "name": "Chat"
+        }
+      ]
+    }
   },
   "scripts": {
-    "build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build": "node scripts/build-webview.mjs && esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build:extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build:webview": "node scripts/build-webview.mjs",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
+    "test": "bun test src/__tests__",
     "package": "vsce package --no-dependencies",
     "clean": "rm -rf dist node_modules"
   },
