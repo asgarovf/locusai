@@ -60,15 +60,14 @@ export class GitWorkflow {
     try {
       this.gitExec(["checkout", this.branchName]);
     } catch {
-      // Branch may not exist
+      this.log(`Branch ${this.branchName} does not exist, creating it`, "info");
+      // Create and checkout the new branch
+      this.gitExec(["checkout", "-b", this.branchName]);
+      this.log(
+        `Created branch: ${this.branchName} (from ${defaultBranch})`,
+        "success"
+      );
     }
-
-    // Create and checkout the new branch
-    this.gitExec(["checkout", "-b", this.branchName]);
-    this.log(
-      `Created branch: ${this.branchName} (from ${defaultBranch})`,
-      "success"
-    );
 
     return this.branchName;
   }
