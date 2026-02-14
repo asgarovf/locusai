@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.11.4
+
+### Patch Changes
+
+- Git checkout issues
+- Updated dependencies
+  - @locusai/shared@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

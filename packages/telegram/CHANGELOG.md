@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.11.4
+
+### Patch Changes
+
+- Git checkout issues
+- Updated dependencies
+  - @locusai/sdk@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

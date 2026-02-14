@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.11.4
+
+### Patch Changes
+
+- Git checkout issues
+
 ## 0.11.3
 
 ### Patch Changes
