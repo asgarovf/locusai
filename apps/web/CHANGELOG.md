@@ -1,5 +1,15 @@
 # @locusai/web
 
+## 0.11.8
+
+### Patch Changes
+
+- Fix sandboxing
+  Improve json parsing
+- Updated dependencies
+  - @locusai/sdk@0.11.8
+  - @locusai/shared@0.11.8
+
 ## 0.11.7
 
 ### Patch Changes
