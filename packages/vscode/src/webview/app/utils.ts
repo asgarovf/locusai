@@ -56,8 +56,10 @@ export function el(
 ): HTMLElement {
   const element = document.createElement(tag);
   if (opts?.cls) {
-    const classes = Array.isArray(opts.cls) ? opts.cls : [opts.cls];
-    element.classList.add(...classes);
+    const split = typeof opts.cls === "string" ? opts.cls.split(" ") : opts.cls;
+    for (const cls of split) {
+      element.classList.add(cls);
+    }
   }
   if (opts?.attrs) {
     for (const [key, val] of Object.entries(opts.attrs)) {

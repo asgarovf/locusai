@@ -969,8 +969,8 @@ button:focus-visible,
   align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
-  background: var(--vscode-badge-background);
-  color: var(--vscode-editor-foreground);
+  background: #22d3ee;
+  color: #030305;
   font-family: var(--vscode-font-family);
   font-size: calc(var(--vscode-font-size) - 1px);
   font-weight: 400;

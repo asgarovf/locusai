@@ -1,15 +1,15 @@
 /**
  * Cross-Task Reviewer Agent Persona
  *
- * Phase 4 (final) of the planning meeting. Reviews the Sprint Organizer's
- * finalized plan for task ordering issues, dependency correctness,
+ * Phase 2 (final) of the planning meeting. Reviews the Planner's
+ * sprint plan for task ordering issues, dependency correctness,
  * description quality, and overall plan coherence.
  */
 
 export interface CrossTaskReviewerInput {
   directive: string;
   projectContext: string;
-  sprintOrganizerOutput: string;
+  plannerOutput: string;
   feedback?: string;
 }
 
@@ -51,7 +51,7 @@ IMPORTANT: Ensure the reviewed plan still addresses this feedback.
 ${input.projectContext || "No project context available."}
 
 ## Sprint Plan to Review
-${input.sprintOrganizerOutput}
+${input.plannerOutput}
 
 ## Your Review Checklist
 
