@@ -12,7 +12,7 @@
     { "path": "./apps/api" },
     { "path": "./apps/web" },
     { "path": "./packages/cli" },
-    { "path": "./packages/vscode-extension" }
+    { "path": "./packages/vscode" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }

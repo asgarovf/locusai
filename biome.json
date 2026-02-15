@@ -18,7 +18,7 @@
       "!**/*.min.js",
       "!**/*.min.css",
       "!**/packages/telegram/bin",
-      "!**/packages/vscode-extension/dist"
+      "!**/packages/vscode/dist"
     ]
   },
   "formatter": {
