@@ -29,7 +29,7 @@
     },
     "apps/api": {
       "name": "@locusai/api",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@nestjs/common": "^11.0.1",
@@ -80,7 +80,7 @@
     },
     "apps/web": {
       "name": "@locusai/web",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -142,7 +142,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "dependencies": {
         "@locusai/shared": "workspace:*",
         "@next/third-parties": "^16.1.4",
@@ -172,7 +172,7 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "bin": {
         "locus": "./bin/locus.js",
       },
@@ -182,7 +182,7 @@
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "dependencies": {
         "@locusai/shared": "^0.8.1",
         "axios": "^1.13.2",
@@ -196,14 +196,14 @@
     },
     "packages/shared": {
       "name": "@locusai/shared",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "dependencies": {
         "zod": "^4.3.6",
       },
     },
     "packages/telegram": {
       "name": "@locusai/telegram",
-      "version": "0.11.3",
+      "version": "0.11.7",
       "bin": {
         "locus-telegram": "./bin/telegram.js",
       },
@@ -217,9 +217,9 @@
         "typescript": "^5.8.3",
       },
     },
-    "packages/vscode-extension": {
+    "packages/vscode": {
       "name": "locusai-vscode",
-      "version": "0.11.3",
+      "version": "0.11.4",
       "devDependencies": {
         "@types/node": "^22.10.7",
         "@types/vscode": "^1.85.0",
@@ -2109,7 +2109,7 @@
 
     "locate-path": ["locate-path@5.0.0", "", { "dependencies": { "p-locate": "^4.1.0" } }, "sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g=="],
 
-    "locusai-vscode": ["locusai-vscode@workspace:packages/vscode-extension"],
+    "locusai-vscode": ["locusai-vscode@workspace:packages/vscode"],
 
     "lodash": ["lodash@4.17.21", "", {}, "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="],
 
