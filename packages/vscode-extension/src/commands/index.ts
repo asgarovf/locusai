@@ -7,10 +7,10 @@ import { registerOpenChatCommand } from "./open-chat";
 import { registerResumeLastSessionCommand } from "./resume-last-session";
 import { registerRunExecTaskCommand } from "./run-exec-task";
 
-export { registerOpenChatCommand } from "./open-chat";
-export { registerRunExecTaskCommand } from "./run-exec-task";
 export { registerExplainSelectionCommand } from "./explain-selection";
+export { registerOpenChatCommand } from "./open-chat";
 export { registerResumeLastSessionCommand } from "./resume-last-session";
+export { registerRunExecTaskCommand } from "./run-exec-task";
 
 /**
  * Register all Locus commands on the extension context.

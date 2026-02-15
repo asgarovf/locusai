@@ -1,9 +1,9 @@
 export {
   type ExecutionPreferences,
-  type LocusSettings,
-  type SettingsValidationError,
+  ensureValidSettings,
   getCliBinaryPath,
   getSettings,
+  type LocusSettings,
+  type SettingsValidationError,
   validateSettings,
-  ensureValidSettings,
 } from "./settings";

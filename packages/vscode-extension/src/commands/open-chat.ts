@@ -10,9 +10,7 @@ export function registerOpenChatCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("locusai.openChat", () => {
-      vscode.commands.executeCommand(
-        `${LocusChatViewProvider.viewType}.focus`
-      );
+      vscode.commands.executeCommand(`${LocusChatViewProvider.viewType}.focus`);
     })
   );
 }

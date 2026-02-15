@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
 import type {
   ActiveFileContext,
   ContextPayload,
   SelectionContext,
   WorkspaceContext,
 } from "@locusai/shared";
+import * as vscode from "vscode";
 
 // ============================================================================
 // Individual Collectors

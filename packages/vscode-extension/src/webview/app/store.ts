@@ -1,10 +1,10 @@
 import {
   type HostEvent,
   HostEventType,
+  type ProtocolError,
   type SessionStatus,
   type SessionSummary,
   type TimelineEntry,
-  type ProtocolError,
 } from "@locusai/shared";
 
 // ============================================================================

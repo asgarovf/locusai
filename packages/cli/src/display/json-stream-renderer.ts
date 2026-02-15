@@ -1,11 +1,11 @@
+import type { StreamChunk } from "@locusai/sdk/node";
 import {
   type CliStreamEvent,
   CliStreamEventType,
-  type ProtocolErrorCode,
   createCliStreamEvent,
   createProtocolError,
+  type ProtocolErrorCode,
 } from "@locusai/shared";
-import type { StreamChunk } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "./execution-stats";
 
 /**

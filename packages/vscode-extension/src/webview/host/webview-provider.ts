@@ -1,12 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as vscode from "vscode";
 import {
+  createErrorEvent,
   type HostEvent,
   ProtocolErrorCode,
-  createErrorEvent,
   parseUIIntent,
 } from "@locusai/shared";
+import * as vscode from "vscode";
 import type { ChatController } from "../../core/chat-controller";
 import { getNonce } from "./get-nonce";
 

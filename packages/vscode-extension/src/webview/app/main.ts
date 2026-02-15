@@ -1,11 +1,11 @@
 import {
-  PROTOCOL_VERSION,
   type HostEvent,
-  UIIntentType,
+  PROTOCOL_VERSION,
   parseHostEvent,
+  UIIntentType,
 } from "@locusai/shared";
-import { ChatStore } from "./store";
 import { Renderer } from "./renderer";
+import { ChatStore } from "./store";
 
 declare function acquireVsCodeApi(): {
   postMessage(message: unknown): void;

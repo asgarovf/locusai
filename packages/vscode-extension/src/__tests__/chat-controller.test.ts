@@ -1,12 +1,12 @@
 import {
+  createUIIntent,
   type HostEvent,
   HostEventType,
-  UIIntentType,
+  PROTOCOL_VERSION,
+  ProtocolErrorCode,
   SessionStatus,
   SessionTransitionEvent,
-  ProtocolErrorCode,
-  PROTOCOL_VERSION,
-  createUIIntent,
+  UIIntentType,
 } from "@locusai/shared";
 import { ChatController } from "../core/chat-controller";
 import { SessionManager } from "../sessions/session-manager";

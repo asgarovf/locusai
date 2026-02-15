@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import {
-  SessionStatus,
-  SessionTransitionEvent,
   getNextStatus,
   isTerminalStatus,
   isValidTransition,
+  SessionStatus,
+  SessionTransitionEvent,
 } from "@locusai/shared";
 import type { SessionStore } from "./session-store";
 import type {

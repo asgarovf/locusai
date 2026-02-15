@@ -1,20 +1,20 @@
 import { randomUUID } from "node:crypto";
 import {
+  createErrorEvent,
+  createHostEvent,
   type HostEvent,
   HostEventType,
-  type UIIntent,
-  UIIntentType,
-  SessionTransitionEvent,
-  ProtocolErrorCode,
-  createHostEvent,
-  createErrorEvent,
   isTerminalStatus,
+  ProtocolErrorCode,
+  SessionTransitionEvent,
   type TimelineEntry,
   TimelineEntryKind,
+  type UIIntent,
+  UIIntentType,
 } from "@locusai/shared";
-import { CliBridge } from "./cli-bridge";
 import type { SessionManager } from "../sessions/session-manager";
 import type { SessionRecord } from "../sessions/types";
+import { CliBridge } from "./cli-bridge";
 
 // ============================================================================
 // Types

@@ -1,5 +1,5 @@
-import type { ToolState } from "../store";
 import { getToolColor, getToolIcon, icons } from "../icons";
+import type { ToolState } from "../store";
 import { el, formatDuration, truncate } from "../utils";
 
 function getToolSummary(tool: ToolState): string {

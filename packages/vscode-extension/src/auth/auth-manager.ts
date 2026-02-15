@@ -116,10 +116,7 @@ export class AuthManager {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders || folders.length === 0) return undefined;
 
-    const settingsPath = path.join(
-      folders[0].uri.fsPath,
-      CLI_SETTINGS_PATH
-    );
+    const settingsPath = path.join(folders[0].uri.fsPath, CLI_SETTINGS_PATH);
 
     try {
       if (!fs.existsSync(settingsPath)) return undefined;

@@ -1,20 +1,20 @@
 import {
   PROTOCOL_VERSION,
-  UIIntentType,
   type SessionStatus,
+  UIIntentType,
 } from "@locusai/shared";
-import type { ChatStore, ToolState } from "./store";
-import { SessionHeader } from "./components/session-header";
-import { Timeline } from "./components/timeline";
-import { Composer } from "./components/composer";
-import { StatusRail } from "./components/status-rail";
 import { AssistantMessage } from "./components/assistant-message";
+import { Composer } from "./components/composer";
+import { createEmptyState } from "./components/empty-state";
+import { createErrorCard } from "./components/error-card";
+import { SessionHeader } from "./components/session-header";
+import { createStatusEvent } from "./components/status-event";
+import { StatusRail } from "./components/status-rail";
+import { createThinkingIndicator } from "./components/thinking-indicator";
+import { Timeline } from "./components/timeline";
 import { ToolCard } from "./components/tool-card";
 import { createUserMessage } from "./components/user-message";
-import { createThinkingIndicator } from "./components/thinking-indicator";
-import { createStatusEvent } from "./components/status-event";
-import { createErrorCard } from "./components/error-card";
-import { createEmptyState } from "./components/empty-state";
+import type { ChatStore, ToolState } from "./store";
 
 const TERMINAL_STATES = new Set(["completed", "canceled", "failed"]);
 

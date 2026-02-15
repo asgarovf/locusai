@@ -1,8 +1,5 @@
+import { createUIIntent, UIIntentType } from "@locusai/shared";
 import * as vscode from "vscode";
-import {
-  UIIntentType,
-  createUIIntent,
-} from "@locusai/shared";
 import type { AuthManager } from "../auth";
 import { ensureValidSettings } from "../config";
 import { collectContext } from "../context";

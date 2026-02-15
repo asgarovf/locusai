@@ -107,10 +107,7 @@ export async function ensureValidSettings(): Promise<boolean> {
   );
 
   if (action === "Open Settings") {
-    vscode.commands.executeCommand(
-      "workbench.action.openSettings",
-      "locusai"
-    );
+    vscode.commands.executeCommand("workbench.action.openSettings", "locusai");
   }
 
   return false;
