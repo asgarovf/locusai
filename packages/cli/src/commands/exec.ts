@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 import {
   c,
@@ -7,6 +8,7 @@ import {
   PromptBuilder,
 } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "../display/execution-stats";
+import { JsonStreamRenderer } from "../display/json-stream-renderer";
 import { ProgressRenderer } from "../display/progress-renderer";
 import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider } from "../utils";
@@ -24,11 +26,21 @@ export async function execCommand(args: string[]): Promise<void> {
       "no-status": { type: "boolean" },
       interactive: { type: "boolean", short: "i" },
       session: { type: "string", short: "s" },
+      "json-stream": { type: "boolean" },
     },
     strict: false,
   });
 
+  const jsonStream = values["json-stream"] as boolean;
   const projectPath = (values.dir as string) || process.cwd();
+
+  // In JSON stream mode, wrap the entire execution so that all failure
+  // paths emit structured error + done events.
+  if (jsonStream) {
+    await execJsonStream(values, positionals, projectPath);
+    return;
+  }
+
   requireInitialization(projectPath, "exec");
 
   // Handle sessions subcommand
@@ -203,6 +215,117 @@ export async function execCommand(args: string[]): Promise<void> {
     console.error(
       `\n  ${c.error("✖")} ${c.error("Execution failed:")} ${c.red(error instanceof Error ? error.message : String(error))}\n`
     );
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// JSON Stream Mode
+// ============================================================================
+
+/**
+ * Execute a prompt in JSON stream mode.
+ *
+ * All output goes to stdout as NDJSON lines conforming to
+ * {@link CliStreamEvent} schemas. Human-readable output is suppressed.
+ * Guarantees deterministic terminal behavior: every code path emits
+ * a `done` event (preceded by `error` on failure).
+ */
+async function execJsonStream(
+  values: Record<string, unknown>,
+  positionals: string[],
+  projectPath: string
+): Promise<void> {
+  const sessionId = (values.session as string | undefined) ?? randomUUID();
+
+  const execSettings = new SettingsManager(projectPath).load();
+  const provider = resolveProvider(
+    (values.provider as string) || execSettings.provider
+  );
+  const model =
+    (values.model as string | undefined) ||
+    execSettings.model ||
+    DEFAULT_MODEL[provider];
+
+  const renderer = new JsonStreamRenderer({
+    sessionId,
+    command: "exec",
+    model,
+    provider,
+    cwd: projectPath,
+  });
+
+  // Register signal handlers to guarantee terminal done event
+  const handleSignal = () => {
+    if (!renderer.isDone()) {
+      renderer.emitFatalError(
+        "PROCESS_CRASHED",
+        "Process terminated by signal"
+      );
+    }
+    process.exit(1);
+  };
+  process.on("SIGINT", handleSignal);
+  process.on("SIGTERM", handleSignal);
+
+  try {
+    // Validate initialization
+    try {
+      requireInitialization(projectPath, "exec");
+    } catch (initError) {
+      renderer.emitFatalError(
+        "CLI_NOT_FOUND",
+        initError instanceof Error ? initError.message : String(initError)
+      );
+      process.exit(1);
+    }
+
+    // Validate prompt
+    const promptInput = positionals.join(" ");
+    if (!promptInput) {
+      renderer.emitFatalError(
+        "UNKNOWN",
+        'Prompt is required. Usage: locus exec --json-stream "your prompt"'
+      );
+      process.exit(1);
+    }
+
+    renderer.emitStart();
+    renderer.emitStatus("running", "Building prompt context");
+
+    const aiRunner = createAiRunner(provider, {
+      projectPath,
+      model,
+    });
+
+    const builder = new PromptBuilder(projectPath);
+    const fullPrompt = await builder.buildGenericPrompt(promptInput);
+
+    renderer.emitStatus("streaming", "Streaming AI response");
+
+    const stream = aiRunner.runStream(fullPrompt);
+
+    for await (const chunk of stream) {
+      renderer.handleChunk(chunk);
+    }
+
+    // Best-effort progress update (silent failures)
+    try {
+      const knowledgeBase = new KnowledgeBase(projectPath);
+      knowledgeBase.updateProgress({
+        role: "user",
+        content: promptInput,
+      });
+    } catch {
+      // Progress update is best-effort
+    }
+
+    renderer.emitDone(0);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!renderer.isDone()) {
+      renderer.emitFatalError("UNKNOWN", message);
+    }
     process.exit(1);
   }
 }

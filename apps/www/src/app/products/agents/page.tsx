@@ -112,9 +112,9 @@ export default function AgentsPage() {
               Autonomous agents that ship code
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              An autonomous AI agent that claims tasks from your sprint,
-              writes code, runs tests, and pushes changes — all on a single
-              branch with sequential execution.
+              An autonomous AI agent that claims tasks from your sprint, writes
+              code, runs tests, and pushes changes — all on a single branch with
+              sequential execution.
             </p>
           </div>
         </section>

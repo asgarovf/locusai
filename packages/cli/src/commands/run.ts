@@ -132,8 +132,6 @@ export async function runCommand(args: string[]): Promise<void> {
   console.log(
     `  ${c.dim("Changes will be committed and pushed after each task")}`
   );
-  console.log(
-    `  ${c.dim("A PR will be opened when all tasks are done")}`
-  );
+  console.log(`  ${c.dim("A PR will be opened when all tasks are done")}`);
   await orchestrator.start();
 }

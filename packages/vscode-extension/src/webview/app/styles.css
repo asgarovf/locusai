@@ -1,0 +1,1056 @@
+/* ============================================================================
+ * Locus VSCode Chat UI — Styles
+ * Tokens from: docs/design/vscode-tokens.json
+ * ============================================================================ */
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--vscode-sideBar-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  line-height: 1.6;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Focus ─────────────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+/* ── Session Header ────────────────────────────────────────────────────── */
+
+.lc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  z-index: 20;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.lc-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lc-header-title {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--vscode-editor-foreground);
+}
+
+.lc-header-badge {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.lc-badge-pulsing {
+  animation: lc-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes lc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.lc-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.lc-header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  padding: 0;
+}
+
+.lc-header-btn:hover {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 10%,
+    transparent
+  );
+}
+
+.lc-header-btn--accent {
+  color: #22d3ee;
+}
+
+.lc-header-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.lc-header-picker-btn:hover {
+  color: var(--vscode-editor-foreground);
+}
+
+/* ── Session Picker Dropdown ───────────────────────────────────────────── */
+
+.lc-header-dropdown {
+  display: none;
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  z-index: 30;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.lc-header-dropdown.lc-dropdown-open {
+  display: block;
+}
+
+.lc-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: calc(var(--vscode-font-size) - 1px);
+  color: var(--vscode-editor-foreground);
+}
+
+.lc-dropdown-item:hover {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 8%,
+    transparent
+  );
+}
+
+.lc-dropdown-item--active {
+  background: color-mix(in srgb, #22d3ee 12%, var(--vscode-sideBar-background));
+}
+
+.lc-dropdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.lc-dropdown-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lc-dropdown-status {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--vscode-descriptionForeground);
+  flex-shrink: 0;
+}
+
+.lc-dropdown-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: calc(var(--vscode-font-size) - 1px);
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Timeline ──────────────────────────────────────────────────────────── */
+
+.lc-timeline {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 12px;
+  scroll-behavior: smooth;
+  position: relative;
+  z-index: 0;
+}
+
+.lc-timeline::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lc-timeline::-webkit-scrollbar-thumb {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 20%,
+    transparent
+  );
+  border-radius: 9999px;
+}
+
+.lc-timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Jump-to-Latest FAB ────────────────────────────────────────────────── */
+
+.lc-fab {
+  position: sticky;
+  bottom: 8px;
+  align-self: center;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--vscode-editorWidget-background);
+  color: #22d3ee;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: lc-fab-in 200ms ease-out;
+}
+
+.lc-fab:hover {
+  background: color-mix(
+    in srgb,
+    #22d3ee 15%,
+    var(--vscode-editorWidget-background)
+  );
+}
+
+@keyframes lc-fab-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Card Base ─────────────────────────────────────────────────────────── */
+
+.lc-card {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+/* ── User Message Card ─────────────────────────────────────────────────── */
+
+.lc-card--user {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 5%,
+    var(--vscode-sideBar-background)
+  );
+}
+
+/* ── Assistant Message Card ────────────────────────────────────────────── */
+
+.lc-card--assistant {
+  background: var(--vscode-editorWidget-background);
+}
+
+/* ── Avatar ────────────────────────────────────────────────────────────── */
+
+.lc-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lc-avatar svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-avatar--user {
+  background: var(--vscode-editor-foreground);
+  color: var(--vscode-sideBar-background);
+}
+
+.lc-avatar--assistant {
+  background: #22d3ee;
+  color: #030305;
+}
+
+/* ── Message Content ───────────────────────────────────────────────────── */
+
+.lc-msg-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lc-msg-body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--vscode-editor-foreground);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.lc-msg-body--md {
+  white-space: normal;
+}
+
+.lc-timestamp {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+/* ── Streaming Cursor ──────────────────────────────────────────────────── */
+
+.lc-streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #22d3ee;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: lc-blink 1s steps(2) infinite;
+}
+
+@keyframes lc-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── Markdown Styles ───────────────────────────────────────────────────── */
+
+.lc-paragraph {
+  margin: 0;
+}
+
+.lc-paragraph + .lc-paragraph {
+  margin-top: 6px;
+}
+
+.lc-heading {
+  font-family: var(--vscode-font-family);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.lc-list-item {
+  padding-left: 16px;
+  position: relative;
+}
+
+.lc-list-item::before {
+  content: "•";
+  position: absolute;
+  left: 4px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.lc-code-inline {
+  font-family: var(--vscode-editor-font-family);
+  font-size: calc(var(--vscode-editor-font-size) - 1px);
+  background: var(--vscode-textCodeBlock-background);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.lc-code-block {
+  position: relative;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+  margin: 6px 0;
+  overflow: hidden;
+}
+
+.lc-code-block pre {
+  margin: 0;
+  padding: 8px 12px;
+  overflow-x: auto;
+}
+
+.lc-code-block code {
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.lc-code-lang {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 40%, transparent);
+}
+
+.lc-code-streaming {
+  border-bottom: 2px solid #22d3ee;
+}
+
+.lc-link {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+.lc-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Tool Card ─────────────────────────────────────────────────────────── */
+
+.lc-card--tool {
+  flex-direction: column;
+  padding: 8px;
+  background: color-mix(
+    in srgb,
+    var(--vscode-sideBar-background) 95%,
+    var(--vscode-editor-foreground) 5%
+  );
+  border-left: 2px solid #a1a1aa;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.lc-card--tool:hover {
+  background: color-mix(
+    in srgb,
+    var(--vscode-sideBar-background) 90%,
+    var(--vscode-editor-foreground) 10%
+  );
+}
+
+.lc-card--tool-expanded {
+  cursor: default;
+}
+
+.lc-tool-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.lc-tool-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.lc-tool-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-tool-summary {
+  flex: 1;
+  font-size: calc(var(--vscode-font-size) - 1px);
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lc-tool-duration {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+  flex-shrink: 0;
+}
+
+.lc-tool-status-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--vscode-descriptionForeground);
+}
+
+.lc-tool-status-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-tool-status--completed {
+  color: #10b981;
+}
+
+.lc-tool-status--failed {
+  color: #ef4444;
+}
+
+.lc-tool-details {
+  display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+}
+
+.lc-card--tool-expanded .lc-tool-details {
+  display: block;
+}
+
+.lc-tool-section {
+  margin-bottom: 8px;
+}
+
+.lc-tool-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+}
+
+.lc-tool-code {
+  font-family: var(--vscode-editor-font-family);
+  font-size: calc(var(--vscode-editor-font-size) - 1px);
+  line-height: 1.4;
+  background: var(--vscode-textCodeBlock-background);
+  padding: 6px 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.lc-tool-error {
+  font-size: calc(var(--vscode-font-size) - 1px);
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+/* ── Thinking Indicator ────────────────────────────────────────────────── */
+
+.lc-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+}
+
+.lc-thinking-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.lc-thinking-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: #22d3ee;
+  animation: lc-thinking-pulse 1.4s ease-in-out infinite;
+}
+
+.lc-thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.lc-thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes lc-thinking-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lc-thinking-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+/* ── Status Event ──────────────────────────────────────────────────────── */
+
+.lc-status-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border-top: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+}
+
+.lc-status-icon {
+  display: flex;
+  align-items: center;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+.lc-status-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-status-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+  flex: 1;
+}
+
+.lc-status-time {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+/* ── Error Card ────────────────────────────────────────────────────────── */
+
+.lc-card--error {
+  flex-direction: column;
+  gap: 6px;
+  background: color-mix(in srgb, #ef4444 8%, var(--vscode-sideBar-background));
+  border: 1px solid #ef4444;
+}
+
+.lc-error-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lc-error-icon {
+  display: flex;
+  align-items: center;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.lc-error-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.lc-error-title {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.lc-error-message {
+  font-size: calc(var(--vscode-font-size) - 1px);
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.5;
+}
+
+.lc-error-code {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+.lc-error-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+.lc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: var(--vscode-font-family);
+  font-size: calc(var(--vscode-font-size) - 1px);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  line-height: 1.5;
+}
+
+.lc-btn--primary {
+  background: #22d3ee;
+  color: #030305;
+}
+
+.lc-btn--primary:hover {
+  background: #06b6d4;
+}
+
+.lc-btn--ghost {
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.lc-btn--ghost:hover {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 8%,
+    transparent
+  );
+}
+
+/* ── Status Rail ───────────────────────────────────────────────────────── */
+
+.lc-status-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 12px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.lc-rail-state {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.lc-rail-meta {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+/* ── Composer ──────────────────────────────────────────────────────────── */
+
+.lc-composer {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+  z-index: 20;
+}
+
+.lc-composer--disabled {
+  opacity: 0.6;
+}
+
+.lc-composer-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  background: var(--vscode-badge-background);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vscode-editor-foreground);
+}
+
+.lc-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.lc-composer-input {
+  flex: 1;
+  min-height: 32px;
+  max-height: 160px;
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  line-height: 1.6;
+  resize: none;
+  overflow: hidden;
+}
+
+.lc-composer-input::placeholder {
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+}
+
+.lc-composer-input:focus {
+  outline: none;
+  border-color: var(
+    --vscode-inputOption-activeBorder,
+    var(--vscode-focusBorder)
+  );
+}
+
+.lc-composer-input:disabled {
+  color: var(--vscode-disabledForeground);
+  cursor: not-allowed;
+}
+
+.lc-composer-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: #22d3ee;
+  color: #030305;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.lc-composer-submit:hover {
+  background: #06b6d4;
+}
+
+.lc-composer-submit svg {
+  width: 16px;
+  height: 16px;
+}
+
+.lc-composer-submit--stop {
+  background: color-mix(in srgb, #f59e0b 10%, var(--vscode-sideBar-background));
+  color: #f59e0b;
+}
+
+.lc-composer-submit--stop:hover {
+  background: color-mix(in srgb, #f59e0b 20%, var(--vscode-sideBar-background));
+}
+
+.lc-composer-submit--loading {
+  background: color-mix(in srgb, #38bdf8 10%, var(--vscode-sideBar-background));
+  color: #38bdf8;
+  cursor: default;
+}
+
+/* ── Empty State ───────────────────────────────────────────────────────── */
+
+.lc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 16px;
+  flex: 1;
+  min-height: 200px;
+}
+
+.lc-empty-logo {
+  color: color-mix(in srgb, var(--vscode-editor-foreground) 50%, transparent);
+  margin-bottom: 16px;
+}
+
+.lc-empty-logo svg {
+  width: 48px;
+  height: 48px;
+}
+
+.lc-empty-headline {
+  font-family: var(--vscode-font-family);
+  font-size: calc(var(--vscode-font-size) + 2px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--vscode-editor-foreground);
+  margin-bottom: 8px;
+}
+
+.lc-empty-body {
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 16px;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.lc-empty-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.lc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: calc(var(--vscode-font-size) - 1px);
+  font-weight: 400;
+  border: none;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.lc-chip:hover {
+  background: color-mix(in srgb, #22d3ee 15%, var(--vscode-badge-background));
+}
+
+/* ── Reduced Motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-badge-pulsing {
+    animation: none;
+  }
+
+  .lc-streaming-cursor {
+    animation: none;
+    opacity: 1;
+  }
+
+  .lc-thinking-dots span {
+    animation: none;
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  .lc-fab {
+    animation: none;
+  }
+
+  .lc-card--tool {
+    transition: none;
+  }
+
+  .lc-timeline {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 280px) {
+  .lc-header-picker-btn {
+    display: none;
+  }
+
+  .lc-empty-chips {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 400px) {
+  .lc-card {
+    padding: 14px;
+  }
+
+  .lc-timeline {
+    padding: 10px 16px;
+  }
+
+  .lc-composer {
+    padding: 10px 16px;
+  }
+}
+
+@media (min-width: 600px) {
+  .lc-timeline-content {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .lc-card {
+    padding: 16px;
+  }
+
+  .lc-timeline {
+    padding: 12px 24px;
+  }
+}

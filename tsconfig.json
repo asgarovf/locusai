@@ -11,7 +11,8 @@
     { "path": "./packages/sdk" },
     { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./packages/cli" }
+    { "path": "./packages/cli" },
+    { "path": "./packages/vscode-extension" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }

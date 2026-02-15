@@ -20,12 +20,7 @@ import { WorkspaceResolver } from "../workspace-resolver";
  * breaking the ID. This pre-processes the args array to merge them.
  */
 function normalizePlanIdArgs(args: string[]): string[] {
-  const planIdFlags = new Set([
-    "--approve",
-    "--reject",
-    "--cancel",
-    "--show",
-  ]);
+  const planIdFlags = new Set(["--approve", "--reject", "--cancel", "--show"]);
 
   const result: string[] = [];
   let i = 0;

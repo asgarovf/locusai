@@ -78,6 +78,9 @@ pids
 *.seed
 *.pid.lock
 
+# VS Code extension packaging
+*.vsix
+
 # package builds
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map

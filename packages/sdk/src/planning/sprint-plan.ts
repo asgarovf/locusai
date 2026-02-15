@@ -66,9 +66,7 @@ export function sprintPlanToMarkdown(plan: SprintPlan): string {
 
   lines.push(`## Tasks (${plan.tasks.length})`);
   lines.push("");
-  lines.push(
-    "_Tasks are executed sequentially in the order listed below._"
-  );
+  lines.push("_Tasks are executed sequentially in the order listed below._");
   lines.push("");
 
   for (const task of plan.tasks) {

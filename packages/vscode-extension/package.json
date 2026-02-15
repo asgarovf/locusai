@@ -1,0 +1,113 @@
+{
+  "name": "locusai-vscode",
+  "displayName": "Locus AI",
+  "description": "Locus AI — AI-native project management for VS Code",
+  "version": "0.11.3",
+  "publisher": "locusai",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "locusai.openChat",
+        "title": "Locus: Open Chat"
+      },
+      {
+        "command": "locusai.runExecTask",
+        "title": "Locus: Run Exec Task"
+      },
+      {
+        "command": "locusai.explainSelection",
+        "title": "Locus: Explain Selection"
+      },
+      {
+        "command": "locusai.resumeLastSession",
+        "title": "Locus: Resume Last Session"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "locusai.explainSelection",
+          "when": "editorHasSelection",
+          "group": "locusai@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "locusai.explainSelection",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Locus AI",
+      "properties": {
+        "locusai.apiUrl": {
+          "type": "string",
+          "default": "https://api.locusai.dev",
+          "description": "Base URL for the Locus API."
+        },
+        "locusai.cliBinaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Locus CLI binary. Leave empty to use 'locus' from PATH."
+        },
+        "locusai.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default AI model for new sessions. Leave empty to use the CLI default."
+        },
+        "locusai.execution.confirmBeforeRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require confirmation before running exec tasks."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "locusai",
+          "title": "Locus AI",
+          "icon": "assets/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "locusai": [
+        {
+          "type": "webview",
+          "id": "locusai.chatView",
+          "name": "Chat"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build-webview.mjs && esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build:extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build:webview": "node scripts/build-webview.mjs",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src/__tests__",
+    "package": "vsce package --no-dependencies",
+    "clean": "rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^22.10.7",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3"
+  }
+}
