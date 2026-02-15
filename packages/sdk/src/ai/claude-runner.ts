@@ -38,17 +38,6 @@ interface ActiveToolExecution {
   startTime: number;
 }
 
-const SANDBOX_SETTINGS = JSON.stringify({
-  permissions: {
-    deny: ["Read(../**)", "Edit(../**)"],
-  },
-  sandbox: {
-    enabled: true,
-    autoAllow: true,
-    allowUnsandboxedCommands: false,
-  },
-});
-
 /** Default timeout: 1 hour */
 const DEFAULT_TIMEOUT_MS = 60 * 60 * 1000;
 
@@ -153,8 +142,6 @@ export class ClaudeRunner implements AiRunner {
       "--include-partial-messages",
       "--model",
       this.model,
-      "--settings",
-      SANDBOX_SETTINGS,
     ];
 
     const env = getAugmentedEnv({
@@ -466,8 +453,6 @@ export class ClaudeRunner implements AiRunner {
         "--include-partial-messages",
         "--model",
         this.model,
-        "--settings",
-        SANDBOX_SETTINGS,
       ];
 
       const env = getAugmentedEnv({

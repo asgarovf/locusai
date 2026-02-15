@@ -11,12 +11,7 @@ export function extractJsonFromLLMOutput(raw: string): string {
     return codeBlockMatch[1]?.trim() || "";
   }
 
-  // 2. If the whole string is already valid JSON, return it
-  if (trimmed.startsWith("{")) {
-    return trimmed;
-  }
-
-  // 3. Find the first top-level '{' and its matching '}' by tracking brace depth
+  // 2. Find the first top-level '{' and its matching '}' by tracking brace depth
   const startIdx = trimmed.indexOf("{");
   if (startIdx === -1) {
     return trimmed; // No JSON object found; let JSON.parse produce the error
@@ -34,20 +29,21 @@ export function extractJsonFromLLMOutput(raw: string): string {
       continue;
     }
 
-    if (ch === "\\") {
-      escaped = true;
+    if (inString) {
+      if (ch === "\\") {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
       continue;
     }
 
+    // Outside of a string
     if (ch === '"') {
-      inString = !inString;
-      continue;
-    }
-
-    if (inString) continue;
-
-    if (ch === "{") depth++;
-    else if (ch === "}") {
+      inString = true;
+    } else if (ch === "{") {
+      depth++;
+    } else if (ch === "}") {
       depth--;
       if (depth === 0) {
         return trimmed.slice(startIdx, i + 1);

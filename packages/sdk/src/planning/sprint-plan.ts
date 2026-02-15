@@ -145,17 +145,25 @@ export function parseSprintPlanFromAI(
 ): SprintPlan {
   const jsonStr = extractJsonFromLLMOutput(raw);
 
-  let parsed = JSON.parse(jsonStr);
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (err) {
+    const preview = jsonStr.slice(0, 200);
+    throw new Error(
+      `Failed to parse sprint plan JSON: ${err instanceof Error ? err.message : String(err)}\nExtracted JSON preview: ${preview}`
+    );
+  }
 
   // Support cross-task reviewer output format which nests the plan under revisedPlan
   if (parsed.revisedPlan) {
-    parsed = parsed.revisedPlan;
+    parsed = parsed.revisedPlan as Record<string, unknown>;
   }
 
   const now = new Date().toISOString();
   const id = `plan-${Date.now()}`;
 
-  const tasks: PlannedTask[] = (parsed.tasks || []).map(
+  const tasks: PlannedTask[] = ((parsed.tasks as Record<string, unknown>[]) || []).map(
     (t: Record<string, unknown>, i: number) => ({
       index: i + 1,
       title: (t.title as string) || `Task ${i + 1}`,
@@ -170,16 +178,16 @@ export function parseSprintPlanFromAI(
 
   return {
     id,
-    name: parsed.name || "Unnamed Sprint",
-    goal: parsed.goal || directive,
+    name: (parsed.name as string) || "Unnamed Sprint",
+    goal: (parsed.goal as string) || directive,
     directive,
     tasks,
-    risks: (parsed.risks || []).map((r: Record<string, unknown>) => ({
+    risks: ((parsed.risks as Record<string, unknown>[]) || []).map((r: Record<string, unknown>) => ({
       description: (r.description as string) || "",
       mitigation: (r.mitigation as string) || "",
       severity: (r.severity as "low" | "medium" | "high") || "medium",
     })),
-    estimatedDays: parsed.estimatedDays || 1,
+    estimatedDays: (parsed.estimatedDays as number) || 1,
     status: "pending",
     createdAt: now,
     updatedAt: now,
