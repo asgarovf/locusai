@@ -1,4 +1,7 @@
 import * as vscode from "vscode";
+import { AuthManager } from "./auth";
+import { registerAllCommands } from "./commands";
+import { getCliBinaryPath } from "./config";
 import { ChatController } from "./core/chat-controller";
 import { SessionManager } from "./sessions/session-manager";
 import { SessionStore } from "./sessions/session-store";
@@ -17,17 +20,6 @@ function getWorkspaceId(): string {
 }
 
 /**
- * Resolve the Locus CLI binary path. Checks the extension setting
- * first, then falls back to looking for `locus` on PATH.
- */
-function getCliBinaryPath(): string {
-  const configured = vscode.workspace
-    .getConfiguration("locusai")
-    .get<string>("cliBinaryPath");
-  return configured || "locus";
-}
-
-/**
  * Get the current working directory for CLI sessions.
  */
 function getCwd(): string {
@@ -39,6 +31,9 @@ function getCwd(): string {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // ── Auth ────────────────────────────────────────────────────────────
+  const authManager = new AuthManager(context.secrets);
+
   // ── Session infrastructure ──────────────────────────────────────────
   const store = new SessionStore(context.globalState, getWorkspaceId());
   const manager = new SessionManager(store);
@@ -64,11 +59,8 @@ export function activate(context: vscode.ExtensionContext): void {
     )
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("locusai.openChat", () => {
-      vscode.commands.executeCommand(`${LocusChatViewProvider.viewType}.focus`);
-    })
-  );
+  // ── Commands ────────────────────────────────────────────────────────
+  registerAllCommands(context, controller, manager, authManager);
 
   // ── Cleanup ─────────────────────────────────────────────────────────
   context.subscriptions.push({

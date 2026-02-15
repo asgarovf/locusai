@@ -20,8 +20,60 @@
       {
         "command": "locusai.openChat",
         "title": "Locus: Open Chat"
+      },
+      {
+        "command": "locusai.runExecTask",
+        "title": "Locus: Run Exec Task"
+      },
+      {
+        "command": "locusai.explainSelection",
+        "title": "Locus: Explain Selection"
+      },
+      {
+        "command": "locusai.resumeLastSession",
+        "title": "Locus: Resume Last Session"
       }
     ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "locusai.explainSelection",
+          "when": "editorHasSelection",
+          "group": "locusai@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "locusai.explainSelection",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Locus AI",
+      "properties": {
+        "locusai.apiUrl": {
+          "type": "string",
+          "default": "https://api.locusai.dev",
+          "description": "Base URL for the Locus API."
+        },
+        "locusai.cliBinaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Locus CLI binary. Leave empty to use 'locus' from PATH."
+        },
+        "locusai.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default AI model for new sessions. Leave empty to use the CLI default."
+        },
+        "locusai.execution.confirmBeforeRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require confirmation before running exec tasks."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
