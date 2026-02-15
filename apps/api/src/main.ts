@@ -16,7 +16,6 @@ async function bootstrap() {
   app.useLogger(logger);
 
   const configService = app.get(TypedConfigService);
-  const isProduction = configService.get("NODE_ENV") === "production";
 
   // Assign a request ID to every incoming request
   app.use(requestIdMiddleware);
@@ -54,14 +53,8 @@ async function bootstrap() {
   // CORS configuration
   const corsOrigin = configService.get("CORS_ORIGIN");
 
-  if (isProduction && corsOrigin === "*") {
-    throw new Error(
-      "CORS_ORIGIN must be explicitly set in production (wildcard '*' is not allowed)"
-    );
-  }
-
   app.enableCors({
-    origin: isProduction ? corsOrigin.split(",") : true,
+    origin: corsOrigin ? corsOrigin.split(",") : ["http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
