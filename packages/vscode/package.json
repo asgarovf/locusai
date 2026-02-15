@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "locusai-vscode",
   "displayName": "Locus AI",
   "description": "Locus AI — AI-native project management for VS Code",
