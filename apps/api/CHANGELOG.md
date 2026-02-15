@@ -1,5 +1,13 @@
 # @locusai/api
 
+## 0.11.7
+
+### Patch Changes
+
+- Simplify planning
+- Updated dependencies
+  - @locusai/shared@0.11.7
+
 ## 0.11.6
 
 ### Patch Changes

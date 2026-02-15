@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.11.7
+
+### Patch Changes
+
+- Simplify planning
+
 ## 0.11.6
 
 ### Patch Changes
