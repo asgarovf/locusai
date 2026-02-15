@@ -60,6 +60,7 @@ export class PlanningMeeting {
       projectContext,
       feedback,
     });
+    console.log(plannerPrompt);
     const plannerOutput = await this.aiRunner.run(plannerPrompt);
     this.log("Planner phase complete.", "success");
 
@@ -97,5 +98,4 @@ export class PlanningMeeting {
     const kb = new KnowledgeBase(this.projectPath);
     return kb.getFullContext();
   }
-
 }

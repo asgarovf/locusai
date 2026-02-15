@@ -57,16 +57,11 @@ export class KnowledgeBase {
 
   getFullContext(): string {
     const context = this.readContext();
-    const progress = this.readProgress();
 
     const parts: string[] = [];
 
     if (context.trim()) {
       parts.push(context.trim());
-    }
-
-    if (progress.trim()) {
-      parts.push(progress.trim());
     }
 
     return parts.join("\n\n---\n\n");
