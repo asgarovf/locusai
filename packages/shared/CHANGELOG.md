@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.12.0
+
+### Minor Changes
+
+- Optimize prompts
+
 ## 0.11.8
 
 ### Patch Changes
