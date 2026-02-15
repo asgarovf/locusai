@@ -321,7 +321,7 @@ export class AgentWorker {
             assignedTo: null,
           });
           await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-            author: this.config.agentId,
+            author: "system",
             text: `⚠️ Agent execution finished with no file changes, so no commit was created.\n\n${result.summary}`,
           });
         } else {
@@ -341,7 +341,7 @@ export class AgentWorker {
             ? `\n\nBranch: \`${result.branch}\``
             : "";
           await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-            author: this.config.agentId,
+            author: "system",
             text: `✅ ${result.summary}${branchInfo}`,
           });
           this.tasksCompleted++;
@@ -359,7 +359,7 @@ export class AgentWorker {
           assignedTo: null,
         });
         await this.client.tasks.addComment(task.id, this.config.workspaceId, {
-          author: this.config.agentId,
+          author: "system",
           text: `❌ ${result.summary}`,
         });
       }

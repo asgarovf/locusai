@@ -1,6 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
 import type { AiRunner } from "../ai/runner.js";
-import { getLocusPath } from "../core/config.js";
 import { KnowledgeBase } from "../project/knowledge-base.js";
 import { buildCrossTaskReviewerPrompt } from "./agents/cross-task-reviewer.js";
 import { buildPlannerPrompt } from "./agents/planner.js";
@@ -54,14 +52,12 @@ export class PlanningMeeting {
     feedback?: string
   ): Promise<PlanningMeetingResult> {
     const projectContext = this.getProjectContext();
-    const codebaseIndex = this.getCodebaseIndex();
 
     // Phase 1: Planner — produces complete sprint plan
     this.log("Phase 1/2: Planner building sprint plan...", "info");
     const plannerPrompt = buildPlannerPrompt({
       directive,
       projectContext,
-      codebaseIndex,
       feedback,
     });
     const plannerOutput = await this.aiRunner.run(plannerPrompt);
@@ -102,34 +98,4 @@ export class PlanningMeeting {
     return kb.getFullContext();
   }
 
-  private getCodebaseIndex(): string {
-    const indexPath = getLocusPath(this.projectPath, "indexFile");
-    if (!existsSync(indexPath)) {
-      return "";
-    }
-
-    try {
-      const raw = readFileSync(indexPath, "utf-8");
-      const index = JSON.parse(raw);
-
-      // Build a compact summary from the index
-      const parts: string[] = [];
-
-      if (index.responsibilities) {
-        parts.push("### File Responsibilities");
-        const entries = Object.entries(index.responsibilities);
-        // Limit to 50 entries to keep prompt size manageable
-        for (const [file, summary] of entries.slice(0, 50)) {
-          parts.push(`- \`${file}\`: ${summary}`);
-        }
-        if (entries.length > 50) {
-          parts.push(`... and ${entries.length - 50} more files`);
-        }
-      }
-
-      return parts.join("\n");
-    } catch {
-      return "";
-    }
-  }
 }

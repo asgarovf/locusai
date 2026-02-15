@@ -88,13 +88,7 @@ export class PromptBuilder {
     prompt += `- Documents: \`.locus/documents\`\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
-    // 4. Codebase Index context
-    const indexPath = getLocusPath(this.projectPath, "indexFile");
-    if (existsSync(indexPath)) {
-      prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
-    }
-
-    // 5. Add Documents (Optimized)
+    // 4. Add Documents (Optimized)
     if (task.docs && task.docs.length > 0) {
       prompt += `## Attached Documents (Summarized)\n`;
       prompt += `> Full content available on server. Rely on Task Description for specific requirements.\n\n`;
@@ -118,13 +112,16 @@ export class PromptBuilder {
 
     // 7. Add Comments & Feedback
     if (task.comments && task.comments.length > 0) {
-      const comments = task.comments.slice(0, 3);
-      prompt += `## Task History & Feedback\n`;
-      prompt += `Review the following comments for context or rejection feedback:\n\n`;
+      const filteredComments = task.comments.filter(
+        (comment) => comment.author !== "system"
+      );
+      const comments = filteredComments.slice(0, 3);
+      prompt += `## Task Comments & Feedback\n`;
       for (const comment of comments) {
         const date = new Date(comment.createdAt).toLocaleString();
-        prompt += `### ${comment.author} (${date})\n${comment.text}\n\n`;
+        prompt += `- ${comment.author} (${date}): ${comment.text}\n`;
       }
+      prompt += "\n";
     }
 
     prompt += `## Instructions
@@ -180,12 +177,6 @@ export class PromptBuilder {
     prompt += `- Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)\n`;
     prompt += `- Documents: \`.locus/documents\` (synced from cloud)\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
-
-    // 4. Codebase Index context
-    const indexPath = getLocusPath(this.projectPath, "indexFile");
-    if (existsSync(indexPath)) {
-      prompt += `## Codebase Overview\nThere is an index file in the .locus/codebase-index.json and if you need you can check it.\n\n`;
-    }
 
     prompt += `## Instructions
 1. Execute the prompt based on the provided project context.

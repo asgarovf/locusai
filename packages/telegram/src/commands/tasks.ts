@@ -160,7 +160,7 @@ export async function rejectTaskCommand(
 
     // Add rejection comment with feedback
     await client.tasks.addComment(taskId, workspaceId, {
-      author: "Telegram",
+      author: "system",
       text: `❌ **Rejected**: ${feedback}`,
     });
 

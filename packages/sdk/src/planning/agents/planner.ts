@@ -9,7 +9,6 @@
 export interface PlannerInput {
   directive: string;
   projectContext: string;
-  codebaseIndex: string;
   feedback?: string;
 }
 
@@ -34,9 +33,6 @@ IMPORTANT: Incorporate this feedback into your plan. The CEO has reviewed a prev
   prompt += `
 ## Project Context
 ${input.projectContext || "No project context available."}
-
-## Codebase Structure
-${input.codebaseIndex || "No codebase index available."}
 
 ## Your Task
 
