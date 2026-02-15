@@ -17,6 +17,8 @@ export interface WorkerConfig {
   model?: string;
   /** AI provider */
   provider?: AiProvider;
+  /** Reasoning effort level for Codex models (e.g. "low", "medium", "high") */
+  reasoningEffort?: string;
 }
 
 export interface CommitPushResult {

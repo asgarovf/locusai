@@ -78,6 +78,7 @@ export class AgentWorker {
       projectPath,
       model: config.model,
       log,
+      reasoningEffort: config.reasoningEffort,
     });
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,

@@ -14,6 +14,8 @@ export interface AiRunnerConfig {
   log?: LogFn;
   /** Maximum execution time in milliseconds (default: 30 minutes) */
   timeoutMs?: number;
+  /** Reasoning effort level for Codex models (e.g. "low", "medium", "high") */
+  reasoningEffort?: string;
 }
 
 export function createAiRunner(
@@ -29,7 +31,8 @@ export function createAiRunner(
         config.projectPath,
         model,
         config.log,
-        config.timeoutMs
+        config.timeoutMs,
+        config.reasoningEffort ?? "high"
       );
     default:
       return new ClaudeRunner(

@@ -322,6 +322,9 @@ export class AgentOrchestrator extends EventEmitter {
     if (this.config.provider) {
       args.push("--provider", this.config.provider);
     }
+    if (this.config.reasoningEffort) {
+      args.push("--reasoning-effort", this.config.reasoningEffort);
+    }
     if (this.resolvedSprintId) {
       args.push("--sprint-id", this.resolvedSprintId);
     }

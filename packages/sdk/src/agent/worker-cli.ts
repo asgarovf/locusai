@@ -37,7 +37,7 @@ export function parseWorkerArgs(argv: string[]): WorkerConfig {
       const value = args[i + 1];
       if (value && !value.startsWith("--")) i++;
       config.provider = resolveProvider(value);
-    }
+    } else if (arg === "--reasoning-effort") config.reasoningEffort = args[++i];
   }
 
   if (

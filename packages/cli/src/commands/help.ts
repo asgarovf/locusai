@@ -39,6 +39,9 @@ export function showHelp(): void {
     ${c.secondary("--provider")} <name>  AI provider: ${c.dim(
       "claude"
     )} or ${c.dim("codex")} (default: ${c.dim("claude")})
+    ${c.secondary("--reasoning-effort")} <level>  Codex reasoning effort: ${c.dim(
+      "low, medium, high"
+    )} (default: model default)
 
   ${c.header(" GETTING STARTED ")}
     ${c.dim("$")} ${c.primary("locus init")}

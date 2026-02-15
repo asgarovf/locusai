@@ -33,4 +33,6 @@ export interface OrchestratorConfig {
   model?: string;
   /** AI provider (e.g. codex, claude, etc.) */
   provider?: AiProvider;
+  /** Reasoning effort level for Codex models (e.g. "low", "medium", "high") */
+  reasoningEffort?: string;
 }

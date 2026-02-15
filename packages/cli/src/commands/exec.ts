@@ -18,6 +18,7 @@ export async function execCommand(args: string[]): Promise<void> {
     options: {
       model: { type: "string" },
       provider: { type: "string" },
+      "reasoning-effort": { type: "string" },
       dir: { type: "string" },
       "no-stream": { type: "boolean" },
       "no-status": { type: "boolean" },
@@ -93,9 +94,12 @@ export async function execCommand(args: string[]): Promise<void> {
 
   const useStreaming = !values["no-stream"];
 
+  const reasoningEffort = values["reasoning-effort"] as string | undefined;
+
   const aiRunner = createAiRunner(provider, {
     projectPath,
     model,
+    reasoningEffort,
   });
 
   const builder = new PromptBuilder(projectPath);

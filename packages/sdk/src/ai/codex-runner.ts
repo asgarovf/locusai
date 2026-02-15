@@ -23,7 +23,8 @@ export class CodexRunner implements AiRunner {
     private projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDER.CODEX],
     private log?: LogFn,
-    timeoutMs?: number
+    timeoutMs?: number,
+    private reasoningEffort?: string
   ) {
     this.timeoutMs = timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
@@ -353,6 +354,10 @@ export class CodexRunner implements AiRunner {
 
     if (this.model) {
       args.push("--model", this.model);
+    }
+
+    if (this.reasoningEffort) {
+      args.push("-c", `model_reasoning_effort=${this.reasoningEffort}`);
     }
 
     args.push("-"); // Read prompt from stdin

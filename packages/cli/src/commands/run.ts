@@ -14,6 +14,7 @@ export async function runCommand(args: string[]): Promise<void> {
       sprint: { type: "string" },
       model: { type: "string" },
       provider: { type: "string" },
+      "reasoning-effort": { type: "string" },
       "skip-planning": { type: "boolean" },
       "api-url": { type: "string" },
       dir: { type: "string" },
@@ -70,11 +71,14 @@ export async function runCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
+  const reasoningEffort = values["reasoning-effort"] as string | undefined;
+
   const orchestrator = new AgentOrchestrator({
     workspaceId: workspaceId as string,
     sprintId: (values.sprint as string) || "",
     model,
     provider,
+    reasoningEffort,
     apiBase,
     maxIterations: 100,
     projectPath,

@@ -63,6 +63,7 @@ export async function planCommand(args: string[]): Promise<void> {
       show: { type: "string" },
       model: { type: "string" },
       provider: { type: "string" },
+      "reasoning-effort": { type: "string" },
       "api-key": { type: "string" },
       "api-url": { type: "string" },
       workspace: { type: "string" },
@@ -142,9 +143,12 @@ export async function planCommand(args: string[]): Promise<void> {
     planSettings.model ||
     DEFAULT_MODEL[provider];
 
+  const reasoningEffort = values["reasoning-effort"] as string | undefined;
+
   const aiRunner = createAiRunner(provider, {
     projectPath,
     model,
+    reasoningEffort,
   });
 
   const log = (
