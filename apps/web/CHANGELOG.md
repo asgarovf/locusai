@@ -1,5 +1,14 @@
 # @locusai/web
 
+## 0.11.6
+
+### Patch Changes
+
+- Reasoning effort option for codex
+- Updated dependencies
+  - @locusai/sdk@0.11.6
+  - @locusai/shared@0.11.6
+
 ## 0.11.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.11.6
+
+### Patch Changes
+
+- Reasoning effort option for codex
+
 ## 0.11.5
 
 ### Patch Changes
