@@ -9,10 +9,15 @@ import {
   cancelCommand,
   completeSprintCommand,
   configCommand,
+  continueDiscussionHandler,
   dashboardCommand,
   devCommand,
+  discussCommand,
+  discussionsCommand,
+  endDiscussCommand,
   execCommand,
   gitCommand,
+  hasActiveDiscussion,
   helpCommand,
   planCommand,
   plansCommand,
@@ -102,6 +107,11 @@ export function createBot(config: TelegramConfig): Telegraf {
   bot.command("dev", (ctx) => devCommand(ctx, config));
   bot.command("review", (ctx) => reviewCommand(ctx, executor));
 
+  // Discussion commands
+  bot.command("discuss", (ctx) => discussCommand(ctx, config));
+  bot.command("discussions", (ctx) => discussionsCommand(ctx, config));
+  bot.command("enddiscuss", (ctx) => endDiscussCommand(ctx, config));
+
   // Config command
   bot.command("config", (ctx) => configCommand(ctx, config));
 
@@ -113,6 +123,20 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
+
+  // Route plain text messages to active discussions
+  bot.on("text", (ctx) => {
+    const text = ctx.message.text;
+    const chatId = ctx.chat.id;
+
+    // Skip commands
+    if (text.startsWith("/")) return;
+
+    // Only handle if there's an active discussion
+    if (!hasActiveDiscussion(chatId)) return;
+
+    continueDiscussionHandler(ctx, config, text);
+  });
 
   // Register inline keyboard callback handlers
   registerCallbacks(bot, config, executor);
@@ -139,6 +163,9 @@ export function createBot(config: TelegramConfig): Telegraf {
     { command: "workspace", description: "Workspace info & stats" },
     { command: "git", description: "Run whitelisted git commands" },
     { command: "dev", description: "Run lint, typecheck, build, test" },
+    { command: "discuss", description: "Start a product discussion" },
+    { command: "discussions", description: "List all discussions" },
+    { command: "enddiscuss", description: "End active discussion & summarize" },
     { command: "config", description: "Show/update settings" },
     { command: "status", description: "Show running processes" },
     { command: "help", description: "Show all commands" },

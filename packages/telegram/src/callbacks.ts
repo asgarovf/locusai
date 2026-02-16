@@ -1,6 +1,11 @@
 import { TaskStatus } from "@locusai/shared";
 import type { Telegraf } from "telegraf";
 import { getClientAndWorkspace } from "./api-client.js";
+import {
+  archiveDiscussion,
+  endDiscussionById,
+  viewDiscussion,
+} from "./commands/discuss.js";
 import type { TelegramConfig } from "./config.js";
 import type { CliExecutor } from "./executor.js";
 import {
@@ -234,5 +239,26 @@ export function registerCallbacks(
         { parse_mode: "HTML" }
       );
     }
+  });
+
+  // ── Discussion: End ─────────────────────────────────────────────────
+  bot.action(/^end:discuss:(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Ending discussion…");
+    const discussionId = ctx.match[1];
+    await endDiscussionById(ctx, config, discussionId);
+  });
+
+  // ── Discussion: View ────────────────────────────────────────────────
+  bot.action(/^view:discuss:(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const discussionId = ctx.match[1];
+    await viewDiscussion(ctx, config, discussionId);
+  });
+
+  // ── Discussion: Archive ─────────────────────────────────────────────
+  bot.action(/^archive:discuss:(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Archiving discussion…");
+    const discussionId = ctx.match[1];
+    await archiveDiscussion(ctx, config, discussionId);
   });
 }

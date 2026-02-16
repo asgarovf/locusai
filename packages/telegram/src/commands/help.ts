@@ -37,6 +37,11 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /git &lt;command&gt; — Run whitelisted git/gh commands
 /dev &lt;command&gt; — Run lint, typecheck, build, test
 
+💬 <b>Discussions:</b>
+/discuss &lt;topic&gt; — Start a product discussion
+/discussions — List all discussions
+/enddiscuss — End active discussion &amp; summarize
+
 ⚙️ <b>Config:</b>
 /config — Show current settings
 /config set &lt;key&gt; &lt;value&gt; — Update a setting
