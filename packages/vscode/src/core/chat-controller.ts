@@ -12,7 +12,7 @@ import {
   type UIIntent,
   UIIntentType,
 } from "@locusai/shared";
-import type { Memento } from "vscode";
+import type { Memento, OutputChannel } from "vscode";
 import type { SessionManager } from "../sessions/session-manager";
 import type { SessionRecord } from "../sessions/types";
 import { CliBridge } from "./cli-bridge";
@@ -26,6 +26,7 @@ export interface ChatControllerConfig {
   getCliBinaryPath: () => string;
   getCwd: () => string;
   globalState: Memento;
+  outputChannel: OutputChannel;
 }
 
 export type EventSink = (event: HostEvent) => void;
@@ -53,6 +54,7 @@ export class ChatController {
   private readonly getCliBinaryPath: () => string;
   private readonly getCwd: () => string;
   private readonly globalState: Memento;
+  private readonly outputChannel: OutputChannel;
   private sink: EventSink | null = null;
   private activeSessionId: string | null = null;
   private firstTextDeltaSeen = new Set<string>();
@@ -62,6 +64,7 @@ export class ChatController {
     this.getCliBinaryPath = config.getCliBinaryPath;
     this.getCwd = config.getCwd;
     this.globalState = config.globalState;
+    this.outputChannel = config.outputChannel;
   }
 
   /**
@@ -362,9 +365,15 @@ export class ChatController {
 
   private handleBridgeError(
     sessionId: string,
-    _record: SessionRecord,
+    record: SessionRecord,
     err: Error
   ): void {
+    // If session already reached a terminal state, the exit handler
+    // already took care of surfacing the error — skip duplicate emission.
+    if (isTerminalStatus(record.data.status)) {
+      return;
+    }
+
     this.emit(
       createErrorEvent(ProtocolErrorCode.PROCESS_CRASHED, err.message, {
         sessionId,
@@ -376,7 +385,15 @@ export class ChatController {
   // ── Event Emission Helpers ──────────────────────────────────────────
 
   private emit(event: HostEvent): void {
-    this.sink?.(event);
+    if (!this.sink) {
+      if (this.activeSessionId) {
+        console.warn(
+          "[Locus] Event sink is null during active session — webview may have been disposed mid-stream"
+        );
+      }
+      return;
+    }
+    this.sink(event);
   }
 
   private emitSessionState(record: SessionRecord): void {

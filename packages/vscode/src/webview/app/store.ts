@@ -246,6 +246,11 @@ export class ChatStore {
     sessionId?: string | undefined;
     error: ProtocolError;
   }): void {
+    // Deduplicate: if the same error code is already displayed, skip.
+    if (this.state.error?.code === payload.error.code) {
+      return;
+    }
+
     this.state.error = payload.error;
     this.state.isStreaming = false;
     this.state.isThinking = false;

@@ -21,7 +21,8 @@ export class LocusChatViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly controller: ChatController
+    private readonly controller: ChatController,
+    private readonly outputChannel: vscode.OutputChannel
   ) {}
 
   public resolveWebviewView(
@@ -71,9 +72,16 @@ export class LocusChatViewProvider implements vscode.WebviewViewProvider {
    * Invalid payloads emit a deterministic error event back.
    */
   private handleIncomingMessage(message: unknown): void {
+    if (!this.webviewView) {
+      return;
+    }
+
     const result = parseUIIntent(message);
 
     if (!result.success) {
+      this.outputChannel.appendLine(
+        `[Locus] Invalid UIIntent: ${result.error}`
+      );
       const errorEvent = createErrorEvent(
         ProtocolErrorCode.MALFORMED_EVENT,
         "Invalid UIIntent payload",
@@ -82,7 +90,7 @@ export class LocusChatViewProvider implements vscode.WebviewViewProvider {
           recoverable: true,
         }
       );
-      this.webviewView?.webview.postMessage(errorEvent);
+      this.webviewView.webview.postMessage(errorEvent);
       return;
     }
 
