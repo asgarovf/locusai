@@ -1,9 +1,11 @@
 import {
   ArrowRight,
+  ArrowUpCircle,
   Bot,
   BrainCircuit,
   Code2,
   FolderSearch,
+  MessageCircle,
   Search,
   Settings,
   Terminal,
@@ -29,7 +31,7 @@ const commands = [
   {
     name: "locus run",
     description:
-      "Spawn autonomous AI agents that claim sprint tasks and ship code.",
+      "Spawn autonomous AI agents that claim sprint tasks and ship code. Use --agents N for parallel multi-agent execution.",
     icon: <Bot className="h-4 w-4" />,
     color: "text-cyan",
     flags: [
@@ -45,7 +47,7 @@ const commands = [
   {
     name: "locus plan",
     description:
-      "Run AI-powered planning meetings that break directives into sprint tasks.",
+      "Run AI-powered multi-agent planning meetings that break directives into sprint tasks.",
     icon: <BrainCircuit className="h-4 w-4" />,
     color: "text-violet",
     flags: [
@@ -119,6 +121,23 @@ const commands = [
     icon: <Terminal className="h-4 w-4" />,
     color: "text-emerald",
     flags: ["sync"],
+    href: null,
+  },
+  {
+    name: "locus telegram",
+    description:
+      "Configure and start the Telegram bot for remote agent control.",
+    icon: <MessageCircle className="h-4 w-4" />,
+    color: "text-cyan",
+    flags: ["setup", "--token <bot-token>", "--chat-id <chat-id>"],
+    href: "/products/telegram",
+  },
+  {
+    name: "locus upgrade",
+    description: "Upgrade Locus CLI to the latest version.",
+    icon: <ArrowUpCircle className="h-4 w-4" />,
+    color: "text-rose",
+    flags: [],
     href: null,
   },
 ];
