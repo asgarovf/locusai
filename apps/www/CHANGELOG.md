@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.12.1
+
+### Patch Changes
+
+- Workflow improvements
+- Updated dependencies
+  - @locusai/shared@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

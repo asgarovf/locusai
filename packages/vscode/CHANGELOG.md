@@ -1,5 +1,11 @@
 # locusai-vscode
 
+## 0.12.1
+
+### Patch Changes
+
+- Workflow improvements
+
 ## 0.12.0
 
 ### Minor Changes
