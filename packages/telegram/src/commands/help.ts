@@ -23,6 +23,7 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /completesprint &lt;id&gt; — Complete a sprint
 
 <b>Execution:</b>
+/agents — List active AI agents
 /run — Start agent on sprint tasks
 /stop — Stop all running processes
 /exec &lt;prompt&gt; — One-shot AI execution
