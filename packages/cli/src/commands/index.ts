@@ -1,4 +1,5 @@
 export { configCommand } from "./config";
+export { discussCommand } from "./discuss";
 export { docsCommand } from "./docs";
 export { execCommand } from "./exec";
 export { SessionCommands, showSessionsHelp } from "./exec-sessions";

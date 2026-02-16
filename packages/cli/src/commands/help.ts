@@ -14,6 +14,11 @@ export function showHelp(): void {
               ${c.dim("remove        Remove all settings")}
     ${c.success("index")}     Index the codebase for AI context
     ${c.success("run")}       Start agent to work on tasks sequentially
+    ${c.success("discuss")}   Start an interactive AI discussion on a topic
+              ${c.dim("--list         List all discussions")}
+              ${c.dim("--show <id>    Show discussion details")}
+              ${c.dim("--archive <id> Archive a discussion")}
+              ${c.dim("--delete <id>  Delete a discussion")}
     ${c.success("plan")}      Run async planning meeting to create sprint plans
     ${c.success("docs")}      Manage workspace docs
               ${c.dim("sync          Sync docs from API to .locus/documents")}
@@ -55,6 +60,7 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus review local")}
     ${c.dim("$")} ${c.primary("locus telegram setup")}
+    ${c.dim("$")} ${c.primary('locus discuss "how should we design the auth system?"')}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
 
   For more information, visit: ${c.underline("https://docs.locusai.dev")}
