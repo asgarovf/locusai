@@ -48,23 +48,39 @@ Use the `locus plan` command to have AI create a sprint for you:
 locus plan "implement user authentication with OAuth"
 ```
 
-This triggers a multi-agent planning meeting:
+This triggers an AI planning meeting where a unified planning team — combining the perspectives of an **Architect**, **Tech Lead**, and **Sprint Organizer** — collaborates in a single pass to produce a complete sprint plan.
+
+#### Planning Meeting Workflow
 
 ```mermaid
 flowchart LR
-    D["Your Directive"] --> TL["Tech Lead<br/>Breaks down work"]
-    TL --> AR["Architect<br/>Designs approach"]
-    AR --> SO["Sprint Organizer<br/>Creates sprint plan"]
-    SO --> P["Plan with Tasks"]
+    D["Your Directive"] --> P["Planning Team<br/>(Architect + Tech Lead +<br/>Sprint Organizer)"]
+    P --> SP["Sprint Plan"]
+    SP --> A{"Approve?"}
+    A -->|Yes| S["Sprint + Tasks Created"]
+    A -->|Reject with feedback| P
+    A -->|Cancel| X["Discarded"]
 ```
 
-The output includes:
-* Sprint name and description
-* Individual tasks with descriptions and priorities
-* Risk assessments
-* Estimated scope
+1. **Directive** — You provide a high-level goal (e.g., "build user authentication with OAuth")
+2. **Planning** — The AI planning team analyzes your codebase and produces a structured plan with:
+   * Sprint name and goal
+   * Sequential tasks with detailed What/Where/How descriptions
+   * Assigned roles (`BACKEND`, `FRONTEND`, `QA`, `PM`, `DESIGN`)
+   * Priority levels and complexity estimates
+   * Risk assessments with mitigations
+3. **Review** — You review the plan and choose to approve, reject with feedback (triggers replanning), or cancel
 
-You can then **approve**, **reject** (with feedback), or **cancel** the plan:
+#### Planning Rules
+
+The planning team follows key constraints to ensure tasks execute cleanly:
+
+* Tasks are designed for **sequential execution** by a single agent on one branch
+* Each task is **self-contained** — it includes all context an independent agent needs
+* No forward dependencies — task N never relies on task N+1
+* Foundation work comes first (shared code, types, schemas before features)
+
+#### Managing Plans
 
 ```bash
 # List pending plans
@@ -94,11 +110,7 @@ When you approve a plan, Locus automatically creates the sprint and all tasks in
 Once a sprint is active with tasks in `BACKLOG`:
 
 ```bash
-# Start a single agent
 locus run
-
-# Or run multiple agents in parallel
-locus run --agents 3
 ```
 
-Agents will claim and execute tasks from the active sprint until all are complete.
+The agent will claim and execute tasks from the active sprint sequentially on a single branch. After each task, changes are committed and pushed. When all tasks are complete, a pull request is created with a summary of the work done.

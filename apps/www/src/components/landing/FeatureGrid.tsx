@@ -5,10 +5,10 @@ import type { LucideIcon } from "lucide-react";
 import {
   BrainCircuit,
   Code2,
-  GitBranch,
+  FileSearch,
   Lock,
   MessageSquare,
-  ShieldCheck,
+  Users,
 } from "lucide-react";
 
 interface Feature {
@@ -21,10 +21,10 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Single-Branch Workflow",
+    title: "Multi-Agent Execution",
     description:
-      "The agent works on a single branch, committing and pushing after each task. A PR is created when all tasks are done.",
-    icon: GitBranch,
+      "Run multiple agents in parallel across tasks. Coordinate work with the --agents flag for faster sprint completion.",
+    icon: Users,
     color: "text-cyan",
     glowColor: "group-hover:shadow-cyan/10",
   },
@@ -37,9 +37,9 @@ const features: Feature[] = [
     glowColor: "group-hover:shadow-violet/10",
   },
   {
-    title: "Sprint Mindmaps",
+    title: "AI Sprint Planning",
     description:
-      "Agents generate high-level technical plans before coding. Every task in a sprint is architecturally coherent.",
+      "Multi-agent planning meetings generate architecturally coherent task breakdowns before any code is written.",
     icon: BrainCircuit,
     color: "text-amber",
     glowColor: "group-hover:shadow-amber/10",
@@ -53,10 +53,10 @@ const features: Feature[] = [
     glowColor: "group-hover:shadow-emerald/10",
   },
   {
-    title: "Built-in CI Runtime",
+    title: "AI Code Review",
     description:
-      "Agents run tests, linters, and builds to verify their own code before pushing. No broken commits.",
-    icon: ShieldCheck,
+      "Automated code review posts inline comments directly to pull requests, catching issues before human review.",
+    icon: FileSearch,
     color: "text-rose",
     glowColor: "group-hover:shadow-rose/10",
   },

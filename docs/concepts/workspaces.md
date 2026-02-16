@@ -45,7 +45,12 @@ A workspace maps to a single project or repository. It contains:
 * **Tasks** — Units of work with status, priority, and acceptance criteria
 * **Sprints** — Time-boxed iterations grouping tasks
 * **Documents** — Knowledge base for the project (PRDs, tech specs, etc.)
+* **Activity Feed** — Real-time log of task completions, plan approvals, and agent activity
 * **API Keys** — Scoped credentials for CLI access
+
+### Cloud Dashboard
+
+The [Locus Dashboard](https://app.locusai.dev) is the primary interface for managing workspaces. From the dashboard you can create and organize sprints, monitor agent progress, review activity feeds, manage team members, and collaborate with your team across workspaces.
 
 ### Creating a Workspace
 
@@ -53,6 +58,19 @@ A workspace maps to a single project or repository. It contains:
 2. Select your organization
 3. Click **Create Workspace**
 4. Name it after your project
+
+---
+
+## Document Syncing
+
+Workspace documents (PRDs, tech specs, architecture notes) are managed in the cloud dashboard and can be synced to your local project for use as AI context during task execution.
+
+```bash
+# Sync documents from your workspace to .locus/documents/
+locus docs sync
+```
+
+Synced documents are stored in `.locus/documents/` and are automatically included as context when agents execute tasks, ensuring they have access to the latest project knowledge.
 
 ---
 

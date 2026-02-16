@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Terminal } from "lucide-react";
+import { ExternalLink, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TerminalLine {
@@ -17,15 +17,16 @@ interface Product {
   description: string;
   terminalTitle: string;
   lines: TerminalLine[];
+  link?: string;
 }
 
 const products: Product[] = [
   {
     label: "AI Agent",
     labelColor: "text-cyan",
-    title: "An autonomous agent that ships code sequentially",
+    title: "Autonomous agents that ship code in parallel",
     description:
-      "An AI agent claims tasks from your sprint one by one, writes code, runs tests, and pushes changes. All work happens on a single branch, and a pull request is created when all tasks are done.",
+      "AI agents claim tasks from your sprint, write code, run tests, and push changes. Run multiple agents in parallel with --agents to execute tasks concurrently across separate branches, or sequentially on a single branch. A pull request is created when all tasks are done.",
     terminalTitle: "locus run",
     lines: [
       {
@@ -61,9 +62,9 @@ const products: Product[] = [
   {
     label: "Sprint Planning",
     labelColor: "text-violet",
-    title: "AI-powered planning with architectural coherence",
+    title: "Multi-agent planning meetings for your codebase",
     description:
-      "Generate technical mindmaps, break down epics into actionable tasks, and ensure every piece of work in a sprint fits together architecturally — before a single line of code is written.",
+      "Run AI planning meetings with specialized agents — Tech Lead, Architect, and Sprint Organizer — that collaborate to break down epics into actionable tasks. Generate technical mindmaps and ensure every piece of work fits together architecturally before a single line of code is written.",
     terminalTitle: "locus plan",
     lines: [
       {
@@ -168,6 +169,55 @@ const products: Product[] = [
       },
     ],
   },
+  {
+    label: "Cloud Dashboard",
+    labelColor: "text-sky",
+    title: "Your team's mission control for sprints",
+    description:
+      "Manage workspaces, visualize sprints on a kanban board, track team activity feeds, and organize your backlog — all from a collaborative cloud dashboard. Built for teams that want full visibility into their agentic workflows.",
+    link: "https://app.locusai.dev",
+    terminalTitle: "app.locusai.dev",
+    lines: [
+      {
+        text: "locus login",
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      { text: "", color: "" },
+      {
+        text: "  ✔ Authenticated as team@company.dev",
+        color: "text-emerald",
+      },
+      { text: "", color: "" },
+      {
+        text: "locus dash",
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      { text: "", color: "" },
+      {
+        text: "  Opening dashboard → app.locusai.dev",
+        color: "text-sky",
+      },
+      { text: "", color: "" },
+      {
+        text: "  Workspace:  acme-eng",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  Sprints:    3 active",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  Backlog:    12 tasks",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  Members:    5 contributors",
+        color: "text-muted-foreground",
+      },
+    ],
+  },
 ];
 
 function MiniTerminal({
@@ -267,6 +317,20 @@ export function ProductShowcase() {
                   <p className="text-[15px] text-muted-foreground leading-relaxed">
                     {product.description}
                   </p>
+                  {product.link && (
+                    <a
+                      href={product.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "inline-flex items-center gap-1.5 mt-4 text-sm font-medium transition-opacity hover:opacity-80",
+                        product.labelColor
+                      )}
+                    >
+                      Open Dashboard
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
 
                 {/* Terminal side */}

@@ -8,6 +8,71 @@ All commands are sent as messages in your Telegram chat with the bot.
 
 ---
 
+## Monitoring Commands
+
+### `/dashboard`
+
+CEO executive overview of your workspace. Shows sprint progress, task breakdown by status, active agents, and recent activity in a single view.
+
+```
+/dashboard
+```
+
+Displays:
+* Active sprint name and task completion (e.g. 4/6 tasks done)
+* Task counts by status (BACKLOG, IN\_PROGRESS, IN\_REVIEW, BLOCKED, DONE)
+* Active agents and their current task assignments
+* Last 5 workspace events
+
+---
+
+### `/workspace`
+
+Show workspace details and statistics.
+
+```
+/workspace
+```
+
+Displays:
+* Workspace name, ID, and org ID
+* Member count
+* Total tasks and breakdown by status
+
+---
+
+### `/activity [count]`
+
+Show a feed of recent workspace events. Defaults to the last 10 events.
+
+```
+/activity
+/activity 5
+/activity 20
+```
+
+* `count` — Optional. Number of events to show (1–20, default 10)
+
+Events include task updates, status changes, PR activity, sprint changes, CI runs, and more.
+
+---
+
+### `/agents`
+
+List all active AI agents in the workspace with their current status.
+
+```
+/agents
+```
+
+Displays per agent:
+* Agent ID (short)
+* Status (WORKING, IDLE, COMPLETED, FAILED)
+* Current task assignment
+* Last heartbeat time
+
+---
+
 ## Planning Commands
 
 ### `/plan <directive>`
@@ -64,19 +129,63 @@ Cancel a plan entirely.
 
 ## Task Commands
 
-### `/tasks`
+### `/tasks [status]`
 
-List active tasks (IN\_PROGRESS, IN\_REVIEW, and BLOCKED).
+List tasks filtered by status. Defaults to active tasks (IN\_PROGRESS, IN\_REVIEW, and BLOCKED).
 
 ```
 /tasks
+/tasks BACKLOG
+/tasks DONE
 ```
 
-Shows task titles, statuses, IDs, and PR links.
+Shows task titles, priorities, statuses, IDs, and PR links. IN\_REVIEW tasks include inline buttons to approve or view.
 
 {% hint style="info" %}
 Requires a configured API key. The workspace is auto-resolved from the key.
 {% endhint %}
+
+---
+
+### `/task <task-id>`
+
+Show detailed information about a specific task.
+
+```
+/task task-abc123
+```
+
+Displays:
+* Title, status, and priority
+* Sprint and assignee (if set)
+* PR link (if available)
+* Full description (truncated at 1000 chars)
+* Acceptance criteria checklist with completion status
+* Last 3 comments
+
+---
+
+### `/backlog`
+
+List all tasks in BACKLOG status that haven't been picked up yet.
+
+```
+/backlog
+```
+
+Shows up to 15 tasks with their priority and sprint assignment. Use `/tasks BACKLOG` for the full list.
+
+---
+
+### `/approvetask <task-id>`
+
+Approve a completed task and move it from IN\_REVIEW to DONE.
+
+```
+/approvetask task-abc123
+```
+
+Only works on tasks with IN\_REVIEW status.
 
 ---
 
@@ -115,6 +224,20 @@ Execute a one-off AI prompt with project context.
 ```
 /exec add validation to the login form
 ```
+
+---
+
+### `/review [pr-number]`
+
+Trigger an AI code review. Reviews a specific PR by number, or staged local changes if no number is provided.
+
+```
+/review
+/review 42
+```
+
+* With no argument — reviews staged local changes
+* With a PR number — reviews that pull request
 
 ---
 
@@ -198,8 +321,6 @@ Show running processes with elapsed time.
 
 ---
 
----
-
 ## System Commands
 
 ### `/start`
@@ -217,7 +338,8 @@ Show all available commands with usage examples.
 | Command | Timeout |
 |---------|---------|
 | `/run` | 1 hour |
-| `/plan` | 5 minutes |
-| `/exec` | 10 minutes |
-| `/dev` | 2 minutes |
-| `/git` | 30 seconds |
+| `/plan` | 1 hour |
+| `/exec` | 1 hour |
+| `/review` | 1 hour |
+| `/dev` | 10 minutes |
+| `/git` | 1 minute |

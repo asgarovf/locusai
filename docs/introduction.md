@@ -36,16 +36,32 @@ graph LR
 AI agents run on **your machine** or **your server**. Source code is never uploaded to any third-party service. Locus only syncs task metadata, status updates, and project context — never your codebase.
 {% endtab %}
 
-{% tab title="Sequential Execution" %}
+{% tab title="Sequential Task Execution" %}
 An AI agent works through your sprint tasks one by one on a **single branch**. Changes are committed and pushed after each task, and a pull request is created when all tasks are done.
 {% endtab %}
 
 {% tab title="AI Sprint Planning" %}
-Run `locus plan "build user authentication"` and a team of AI agents (Tech Lead, Architect, Sprint Organizer) collaborates to create a detailed sprint with tasks, priorities, and risk assessments.
+Run `locus plan "build user authentication"` and a unified AI planning team (Architect, Tech Lead, Sprint Organizer) collaborates to create a detailed sprint with tasks, priorities, and risk assessments. Review, approve, reject with feedback, or cancel plans before they become sprints.
+{% endtab %}
+
+{% tab title="AI Code Review" %}
+Review code with AI using `locus review` for open GitHub PRs or `locus review local` for staged changes. Generates structured reports covering code quality, potential issues, and recommendations.
+{% endtab %}
+
+{% tab title="Discussions" %}
+Start AI-assisted discussions on any topic with full project context. The system extracts structured insights (decisions, requirements, ideas, concerns, learnings) as the conversation progresses, building a knowledge base for your project.
+{% endtab %}
+
+{% tab title="Codebase Indexing" %}
+Run `locus index` to build a semantic index of your codebase. Locus maps symbols, file responsibilities, and project structure — then uses incremental updates to re-index only changed files on subsequent runs.
+{% endtab %}
+
+{% tab title="Interactive Exec REPL" %}
+Use `locus exec` to run one-off prompts with full repository context, or `locus exec -i` for an interactive REPL session. Sessions are automatically saved and can be resumed later with `locus exec -s <id>`.
 {% endtab %}
 
 {% tab title="Telegram Control" %}
-Manage your entire workflow from Telegram. Start agents, approve plans, review tasks, run git commands — all from your phone. See the [Telegram guide](telegram/overview.md).
+Manage your entire workflow from Telegram. Start agents, approve plans, review tasks, run exec prompts, monitor activity — all from your phone. See the [Telegram guide](telegram/overview.md).
 {% endtab %}
 {% endtabs %}
 

@@ -25,6 +25,16 @@ export const metadata: Metadata = {
 
 const commandGroups = [
   {
+    title: "Monitoring",
+    color: "text-rose",
+    commands: [
+      { cmd: "/dashboard", desc: "Executive overview of workspace" },
+      { cmd: "/activity [count]", desc: "Recent workspace events" },
+      { cmd: "/agents", desc: "List active AI agents" },
+      { cmd: "/workspace", desc: "Workspace details and stats" },
+    ],
+  },
+  {
     title: "Planning",
     color: "text-violet",
     commands: [
@@ -36,18 +46,29 @@ const commandGroups = [
     ],
   },
   {
-    title: "Execution",
+    title: "Tasks",
     color: "text-cyan",
+    commands: [
+      { cmd: "/tasks [status]", desc: "List tasks by status" },
+      { cmd: "/task <id>", desc: "Show task details" },
+      { cmd: "/approvetask <id>", desc: "Approve and mark task done" },
+      { cmd: "/rejecttask <id> <feedback>", desc: "Reject task with feedback" },
+      { cmd: "/backlog", desc: "List backlog tasks" },
+    ],
+  },
+  {
+    title: "Execution",
+    color: "text-amber",
     commands: [
       { cmd: "/run", desc: "Start agents on sprint tasks" },
       { cmd: "/stop", desc: "Stop all running processes" },
       { cmd: "/exec <prompt>", desc: "One-shot AI execution" },
-      { cmd: "/tasks", desc: "List active tasks" },
+      { cmd: "/review [pr]", desc: "AI code review" },
     ],
   },
   {
     title: "Git & Dev",
-    color: "text-amber",
+    color: "text-emerald",
     commands: [
       { cmd: "/git status", desc: "Show working tree status" },
       { cmd: "/git diff", desc: "View staged/unstaged changes" },
@@ -59,7 +80,7 @@ const commandGroups = [
   },
   {
     title: "Status",
-    color: "text-emerald",
+    color: "text-foreground",
     commands: [{ cmd: "/status", desc: "Show running processes" }],
   },
 ];
