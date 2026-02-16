@@ -1,4 +1,4 @@
-import { getToolColor, getToolIcon, icons } from "../icons";
+import { getToolBorderClass, getToolColorClass, getToolIcon, icons } from "../icons";
 import type { ToolState } from "../store";
 import { el, formatDuration, truncate } from "../utils";
 
@@ -47,15 +47,15 @@ export class ToolCard {
   private expanded = false;
 
   constructor(tool: ToolState) {
-    const color = getToolColor(tool.tool);
+    const colorClass = getToolColorClass(tool.tool);
+    const borderClass = getToolBorderClass(tool.tool);
     const icon = getToolIcon(tool.tool);
     const summary = getToolSummary(tool);
 
     const toolIcon = el("span", {
-      cls: "lc-tool-icon",
+      cls: ["lc-tool-icon", colorClass],
       html: icon,
     });
-    toolIcon.style.color = color;
 
     this.summaryEl = el("span", {
       cls: "lc-tool-summary",
@@ -88,7 +88,7 @@ export class ToolCard {
     });
 
     // Color accent on left border
-    this.element.style.borderLeftColor = color;
+    this.element.classList.add(borderClass);
 
     this.element.addEventListener("click", () => this.toggle());
     this.element.addEventListener("keydown", (e) => {

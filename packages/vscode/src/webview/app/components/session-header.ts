@@ -14,17 +14,32 @@ const STATE_LABELS: Record<string, string | null> = {
   resuming: "Resuming…",
 };
 
-const STATE_COLORS: Record<string, string> = {
-  idle: "#a1a1aa",
-  starting: "#38bdf8",
-  running: "#38bdf8",
-  streaming: "#22d3ee",
-  completed: "#10b981",
-  failed: "#ef4444",
-  canceled: "#f59e0b",
-  interrupted: "#f97316",
-  resuming: "#38bdf8",
+const STATE_CSS_CLASSES: Record<string, string> = {
+  idle: "lc-state-idle",
+  starting: "lc-state-starting",
+  running: "lc-state-running",
+  streaming: "lc-state-streaming",
+  completed: "lc-state-completed",
+  failed: "lc-state-failed",
+  canceled: "lc-state-canceled",
+  interrupted: "lc-state-interrupted",
+  resuming: "lc-state-resuming",
 };
+
+const STATE_BG_CLASSES: Record<string, string> = {
+  idle: "lc-state-bg-idle",
+  starting: "lc-state-bg-starting",
+  running: "lc-state-bg-running",
+  streaming: "lc-state-bg-streaming",
+  completed: "lc-state-bg-completed",
+  failed: "lc-state-bg-failed",
+  canceled: "lc-state-bg-canceled",
+  interrupted: "lc-state-bg-interrupted",
+  resuming: "lc-state-bg-resuming",
+};
+
+const ALL_STATE_CLASSES = Object.values(STATE_CSS_CLASSES);
+const ALL_STATE_BG_CLASSES = Object.values(STATE_BG_CLASSES);
 
 const PULSING_STATES = new Set(["starting", "running", "resuming"]);
 
@@ -113,7 +128,8 @@ export class SessionHeader {
     const label = STATE_LABELS[stateKey];
     if (label) {
       this.badgeEl.textContent = label;
-      this.badgeEl.style.color = STATE_COLORS[stateKey] || "#a1a1aa";
+      this.badgeEl.classList.remove(...ALL_STATE_CLASSES);
+      this.badgeEl.classList.add(STATE_CSS_CLASSES[stateKey] || "lc-state-idle");
       this.badgeEl.style.display = "";
       this.badgeEl.classList.toggle(
         "lc-badge-pulsing",
@@ -121,7 +137,7 @@ export class SessionHeader {
       );
     } else {
       this.badgeEl.style.display = "none";
-      this.badgeEl.classList.remove("lc-badge-pulsing");
+      this.badgeEl.classList.remove("lc-badge-pulsing", ...ALL_STATE_CLASSES);
     }
 
     // Controls
@@ -203,10 +219,10 @@ export class SessionHeader {
         session.title || session.sessionId.slice(0, 7),
         30
       );
-      const statusColor = STATE_COLORS[session.status] || "#a1a1aa";
+      const bgClass = STATE_BG_CLASSES[session.status] || "lc-state-bg-idle";
 
       item.innerHTML = `
-        <span class="lc-dropdown-dot" style="background:${statusColor}"></span>
+        <span class="lc-dropdown-dot ${bgClass}"></span>
         <span class="lc-dropdown-title">${title}</span>
         <span class="lc-dropdown-status">${session.status}</span>
       `;

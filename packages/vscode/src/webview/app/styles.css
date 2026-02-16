@@ -31,6 +31,36 @@ body {
   overflow: hidden;
 }
 
+/* ── Design Tokens ────────────────────────────────────────────────────── */
+
+:root {
+  /* Accent */
+  --lc-accent: #22d3ee;
+  --lc-accent-hover: #06b6d4;
+  --lc-accent-on: #030305;
+  --lc-accent-system: #a1a1aa;
+
+  /* State colors */
+  --lc-state-idle: #a1a1aa;
+  --lc-state-starting: #38bdf8;
+  --lc-state-running: #38bdf8;
+  --lc-state-streaming: #22d3ee;
+  --lc-state-completed: #10b981;
+  --lc-state-failed: #ef4444;
+  --lc-state-canceled: #f59e0b;
+  --lc-state-interrupted: #f97316;
+  --lc-state-resuming: #38bdf8;
+
+  /* Tool colors */
+  --lc-tool-read: #38bdf8;
+  --lc-tool-write: #10b981;
+  --lc-tool-edit: #f59e0b;
+  --lc-tool-bash: #a1a1aa;
+  --lc-tool-grep: #8b5cf6;
+  --lc-tool-glob: #8b5cf6;
+  --lc-tool-webfetch: #22d3ee;
+}
+
 /* ── Focus ─────────────────────────────────────────────────────────────── */
 
 :focus-visible {
@@ -128,7 +158,7 @@ button:focus-visible,
 }
 
 .lc-header-btn--accent {
-  color: #22d3ee;
+  color: var(--lc-accent);
 }
 
 .lc-header-picker-btn {
@@ -192,7 +222,7 @@ button:focus-visible,
 }
 
 .lc-dropdown-item--active {
-  background: color-mix(in srgb, #22d3ee 12%, var(--vscode-sideBar-background));
+  background: color-mix(in srgb, var(--lc-accent) 12%, var(--vscode-sideBar-background));
 }
 
 .lc-dropdown-dot {
@@ -266,7 +296,7 @@ button:focus-visible,
   border: none;
   border-radius: 9999px;
   background: var(--vscode-editorWidget-background);
-  color: #22d3ee;
+  color: var(--lc-accent);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -278,7 +308,7 @@ button:focus-visible,
 .lc-fab:hover {
   background: color-mix(
     in srgb,
-    #22d3ee 15%,
+    var(--lc-accent) 15%,
     var(--vscode-editorWidget-background)
   );
 }
@@ -342,8 +372,8 @@ button:focus-visible,
 }
 
 .lc-avatar--assistant {
-  background: #22d3ee;
-  color: #030305;
+  background: var(--lc-accent);
+  color: var(--lc-accent-on);
 }
 
 /* ── Message Content ───────────────────────────────────────────────────── */
@@ -383,7 +413,7 @@ button:focus-visible,
   display: inline-block;
   width: 2px;
   height: 1em;
-  background: #22d3ee;
+  background: var(--lc-accent);
   vertical-align: text-bottom;
   margin-left: 2px;
   animation: lc-blink 1s steps(2) infinite;
@@ -470,7 +500,7 @@ button:focus-visible,
 }
 
 .lc-code-streaming {
-  border-bottom: 2px solid #22d3ee;
+  border-bottom: 2px solid var(--lc-accent);
 }
 
 .lc-link {
@@ -492,7 +522,7 @@ button:focus-visible,
     var(--vscode-sideBar-background) 95%,
     var(--vscode-editor-foreground) 5%
   );
-  border-left: 2px solid #a1a1aa;
+  border-left: 2px solid var(--lc-accent-system);
   cursor: pointer;
   transition: background 150ms ease-out;
 }
@@ -556,11 +586,11 @@ button:focus-visible,
 }
 
 .lc-tool-status--completed {
-  color: #10b981;
+  color: var(--lc-state-completed);
 }
 
 .lc-tool-status--failed {
-  color: #ef4444;
+  color: var(--lc-state-failed);
 }
 
 .lc-tool-details {
@@ -604,7 +634,7 @@ button:focus-visible,
 
 .lc-tool-error {
   font-size: calc(var(--vscode-font-size) - 1px);
-  color: #ef4444;
+  color: var(--lc-state-failed);
   margin-top: 4px;
 }
 
@@ -626,7 +656,7 @@ button:focus-visible,
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: #22d3ee;
+  background: var(--lc-accent);
   animation: lc-thinking-pulse 1.4s ease-in-out infinite;
 }
 
@@ -698,8 +728,8 @@ button:focus-visible,
 .lc-card--error {
   flex-direction: column;
   gap: 6px;
-  background: color-mix(in srgb, #ef4444 8%, var(--vscode-sideBar-background));
-  border: 1px solid #ef4444;
+  background: color-mix(in srgb, var(--lc-state-failed) 8%, var(--vscode-sideBar-background));
+  border: 1px solid var(--lc-state-failed);
 }
 
 .lc-error-header {
@@ -711,7 +741,7 @@ button:focus-visible,
 .lc-error-icon {
   display: flex;
   align-items: center;
-  color: #ef4444;
+  color: var(--lc-state-failed);
   flex-shrink: 0;
 }
 
@@ -722,7 +752,7 @@ button:focus-visible,
 
 .lc-error-title {
   font-weight: 600;
-  color: #ef4444;
+  color: var(--lc-state-failed);
 }
 
 .lc-error-message {
@@ -760,12 +790,12 @@ button:focus-visible,
 }
 
 .lc-btn--primary {
-  background: #22d3ee;
-  color: #030305;
+  background: var(--lc-accent);
+  color: var(--lc-accent-on);
 }
 
 .lc-btn--primary:hover {
-  background: #06b6d4;
+  background: var(--lc-accent-hover);
 }
 
 .lc-btn--ghost {
@@ -885,15 +915,15 @@ button:focus-visible,
   height: 32px;
   border: none;
   border-radius: 6px;
-  background: #22d3ee;
-  color: #030305;
+  background: var(--lc-accent);
+  color: var(--lc-accent-on);
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
 }
 
 .lc-composer-submit:hover {
-  background: #06b6d4;
+  background: var(--lc-accent-hover);
 }
 
 .lc-composer-submit svg {
@@ -902,17 +932,17 @@ button:focus-visible,
 }
 
 .lc-composer-submit--stop {
-  background: color-mix(in srgb, #f59e0b 10%, var(--vscode-sideBar-background));
-  color: #f59e0b;
+  background: color-mix(in srgb, var(--lc-state-canceled) 10%, var(--vscode-sideBar-background));
+  color: var(--lc-state-canceled);
 }
 
 .lc-composer-submit--stop:hover {
-  background: color-mix(in srgb, #f59e0b 20%, var(--vscode-sideBar-background));
+  background: color-mix(in srgb, var(--lc-state-canceled) 20%, var(--vscode-sideBar-background));
 }
 
 .lc-composer-submit--loading {
-  background: color-mix(in srgb, #38bdf8 10%, var(--vscode-sideBar-background));
-  color: #38bdf8;
+  background: color-mix(in srgb, var(--lc-state-starting) 10%, var(--vscode-sideBar-background));
+  color: var(--lc-state-starting);
   cursor: default;
 }
 
@@ -969,8 +999,8 @@ button:focus-visible,
   align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
-  background: #22d3ee;
-  color: #030305;
+  background: var(--lc-accent);
+  color: var(--lc-accent-on);
   font-family: var(--vscode-font-family);
   font-size: calc(var(--vscode-font-size) - 1px);
   font-weight: 400;
@@ -980,8 +1010,48 @@ button:focus-visible,
 }
 
 .lc-chip:hover {
-  background: color-mix(in srgb, #22d3ee 15%, var(--vscode-badge-background));
+  background: color-mix(in srgb, var(--lc-accent) 15%, var(--vscode-badge-background));
 }
+
+/* ── State Color Utilities ─────────────────────────────────────────────── */
+
+.lc-state-idle { color: var(--lc-state-idle); }
+.lc-state-starting { color: var(--lc-state-starting); }
+.lc-state-running { color: var(--lc-state-running); }
+.lc-state-streaming { color: var(--lc-state-streaming); }
+.lc-state-completed { color: var(--lc-state-completed); }
+.lc-state-failed { color: var(--lc-state-failed); }
+.lc-state-canceled { color: var(--lc-state-canceled); }
+.lc-state-interrupted { color: var(--lc-state-interrupted); }
+.lc-state-resuming { color: var(--lc-state-resuming); }
+
+.lc-state-bg-idle { background: var(--lc-state-idle); }
+.lc-state-bg-starting { background: var(--lc-state-starting); }
+.lc-state-bg-running { background: var(--lc-state-running); }
+.lc-state-bg-streaming { background: var(--lc-state-streaming); }
+.lc-state-bg-completed { background: var(--lc-state-completed); }
+.lc-state-bg-failed { background: var(--lc-state-failed); }
+.lc-state-bg-canceled { background: var(--lc-state-canceled); }
+.lc-state-bg-interrupted { background: var(--lc-state-interrupted); }
+.lc-state-bg-resuming { background: var(--lc-state-resuming); }
+
+/* ── Tool Color Utilities ─────────────────────────────────────────────── */
+
+.lc-tool-color-read { color: var(--lc-tool-read); }
+.lc-tool-color-write { color: var(--lc-tool-write); }
+.lc-tool-color-edit { color: var(--lc-tool-edit); }
+.lc-tool-color-bash { color: var(--lc-tool-bash); }
+.lc-tool-color-grep { color: var(--lc-tool-grep); }
+.lc-tool-color-glob { color: var(--lc-tool-glob); }
+.lc-tool-color-webfetch { color: var(--lc-tool-webfetch); }
+
+.lc-tool-border-read { border-left-color: var(--lc-tool-read); }
+.lc-tool-border-write { border-left-color: var(--lc-tool-write); }
+.lc-tool-border-edit { border-left-color: var(--lc-tool-edit); }
+.lc-tool-border-bash { border-left-color: var(--lc-tool-bash); }
+.lc-tool-border-grep { border-left-color: var(--lc-tool-grep); }
+.lc-tool-border-glob { border-left-color: var(--lc-tool-glob); }
+.lc-tool-border-webfetch { border-left-color: var(--lc-tool-webfetch); }
 
 /* ── Reduced Motion ────────────────────────────────────────────────────── */
 

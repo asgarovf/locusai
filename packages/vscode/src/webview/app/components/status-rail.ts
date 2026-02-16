@@ -12,16 +12,18 @@ const STATE_LABELS: Record<string, string> = {
   resuming: "Resuming…",
 };
 
-const STATE_COLORS: Record<string, string> = {
-  starting: "#38bdf8",
-  running: "#38bdf8",
-  streaming: "#22d3ee",
-  completed: "#10b981",
-  failed: "#ef4444",
-  canceled: "#f59e0b",
-  interrupted: "#f97316",
-  resuming: "#38bdf8",
+const STATE_CSS_CLASSES: Record<string, string> = {
+  starting: "lc-state-starting",
+  running: "lc-state-running",
+  streaming: "lc-state-streaming",
+  completed: "lc-state-completed",
+  failed: "lc-state-failed",
+  canceled: "lc-state-canceled",
+  interrupted: "lc-state-interrupted",
+  resuming: "lc-state-resuming",
 };
+
+const ALL_STATE_CLASSES = Object.values(STATE_CSS_CLASSES);
 
 const TIMER_STATES = new Set(["starting", "running", "streaming", "resuming"]);
 
@@ -75,7 +77,8 @@ export class StatusRail {
 
     // State label
     this.stateLabel.textContent = STATE_LABELS[stateKey] || stateKey;
-    this.stateLabel.style.color = STATE_COLORS[stateKey] || "#a1a1aa";
+    this.stateLabel.classList.remove(...ALL_STATE_CLASSES);
+    this.stateLabel.classList.add(STATE_CSS_CLASSES[stateKey] || "lc-state-idle");
 
     // Model
     this.modelLabel.textContent = model || "";
