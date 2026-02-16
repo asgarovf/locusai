@@ -26,6 +26,7 @@ import {
   stopCommand,
   taskDetailCommand,
   tasksCommand,
+  workspaceCommand,
 } from "./commands/index.js";
 import type { TelegramConfig } from "./config.js";
 import { CliExecutor } from "./executor.js";
@@ -106,6 +107,9 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
+
+  // Workspace info
+  bot.command("workspace", (ctx) => workspaceCommand(ctx, config));
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));

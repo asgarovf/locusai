@@ -24,3 +24,4 @@ export {
   taskDetailCommand,
   tasksCommand,
 } from "./tasks.js";
+export { workspaceCommand } from "./workspace.js";

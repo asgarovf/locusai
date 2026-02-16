@@ -34,6 +34,9 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /dev &lt;command&gt; — Run lint, typecheck, build, test
 /review [pr-number] — AI review of PR or staged changes
 
+<b>Info:</b>
+/workspace — Workspace info &amp; stats
+
 <b>Status:</b>
 /status — Show running processes
 /activity [count] — Recent workspace activity
