@@ -276,6 +276,7 @@ export class ChatController {
         sessionId,
         prompt: record.data.prompt,
         model: record.data.model,
+        timeoutMs: 300_000,
       });
 
       this.manager.transition(sessionId, SessionTransitionEvent.CLI_SPAWNED);

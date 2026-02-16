@@ -112,15 +112,37 @@ export function createProcessCrashError(
 }
 
 /**
+ * Create a structured error HostEvent for a CLI binary not found (ENOENT).
+ */
+export function createCliNotFoundError(
+  sessionId: string | undefined,
+  binaryPath: string
+): HostEvent {
+  return createErrorEvent(
+    ProtocolErrorCode.CLI_NOT_FOUND,
+    `Locus CLI not found at "${binaryPath}". Install it or set locusai.cliBinaryPath in settings.`,
+    {
+      sessionId,
+      details: { binaryPath },
+      recoverable: false,
+    }
+  );
+}
+
+/**
  * Create a structured error HostEvent for a timeout.
  */
 export function createTimeoutError(
   sessionId: string | undefined,
   timeoutMs: number
 ): HostEvent {
+  const seconds = Math.round(timeoutMs / 1000);
+  const duration =
+    seconds >= 60 ? `${Math.round(seconds / 60)} minute(s)` : `${seconds}s`;
+
   return createErrorEvent(
     ProtocolErrorCode.NETWORK_TIMEOUT,
-    `CLI process timed out after ${timeoutMs}ms`,
+    `CLI session timed out after ${duration}. The process was automatically stopped.`,
     {
       sessionId,
       details: { timeoutMs },
