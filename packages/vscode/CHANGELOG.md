@@ -1,4 +1,4 @@
-# locusai-vscode
+# Changelog
 
 ## 0.13.1
 
@@ -8,9 +8,22 @@
 
 ## 0.13.0
 
-### Minor Changes
+### Features
 
-- Telegram CLI improvements
+- **Chat interface**: Webview-based chat panel with rich message rendering, streaming responses, and markdown support
+- **Session management**: Create, resume, and stop AI sessions directly from VS Code with persistent history
+- **Keyboard shortcuts**: Dedicated keybindings for opening chat (`Ctrl+Shift+L`), new session (`Ctrl+Shift+N`), stop session (`Escape`), and explain selection (`Ctrl+Shift+E`)
+- **Design system**: Cohesive dark-themed UI with state-colored status badges, per-tool icon colors, and responsive layout
+- **Context menu integration**: Right-click "Explain Selection" for quick AI explanations of highlighted code
+- **CLI integration**: Configurable CLI binary path and default model settings
+- **Activity bar**: Dedicated Locus AI view container with custom icon
+
+### Improvements
+
+- Polished empty state and composer UX
+- CLI-not-found error handling and timeout enforcement
+- Hardened webview-host message passing with error feedback
+- State-aware tool card styling with per-tool icon colors
 
 ## 0.12.1
 

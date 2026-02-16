@@ -12,6 +12,7 @@ import {
   type UIIntent,
   UIIntentType,
 } from "@locusai/shared";
+import type { Memento, OutputChannel } from "vscode";
 import type { SessionManager } from "../sessions/session-manager";
 import type { SessionRecord } from "../sessions/types";
 import { CliBridge } from "./cli-bridge";
@@ -24,9 +25,17 @@ export interface ChatControllerConfig {
   manager: SessionManager;
   getCliBinaryPath: () => string;
   getCwd: () => string;
+  globalState: Memento;
+  outputChannel: OutputChannel;
 }
 
 export type EventSink = (event: HostEvent) => void;
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const ACTIVE_SESSION_KEY = "locusai.activeSessionId";
 
 // ============================================================================
 // ChatController
@@ -44,6 +53,8 @@ export class ChatController {
   private readonly manager: SessionManager;
   private readonly getCliBinaryPath: () => string;
   private readonly getCwd: () => string;
+  private readonly globalState: Memento;
+  private readonly outputChannel: OutputChannel;
   private sink: EventSink | null = null;
   private activeSessionId: string | null = null;
   private firstTextDeltaSeen = new Set<string>();
@@ -52,6 +63,8 @@ export class ChatController {
     this.manager = config.manager;
     this.getCliBinaryPath = config.getCliBinaryPath;
     this.getCwd = config.getCwd;
+    this.globalState = config.globalState;
+    this.outputChannel = config.outputChannel;
   }
 
   /**
@@ -60,6 +73,13 @@ export class ChatController {
    */
   setEventSink(sink: EventSink | null): void {
     this.sink = sink;
+  }
+
+  /**
+   * Returns the ID of the currently active session, or null if none.
+   */
+  getActiveSessionId(): string | null {
+    return this.activeSessionId;
   }
 
   /**
@@ -121,6 +141,17 @@ export class ChatController {
     this.manager.dispose();
   }
 
+  // ── Active Session Persistence ──────────────────────────────────────
+
+  private persistActiveSessionId(): void {
+    this.globalState.update(ACTIVE_SESSION_KEY, this.activeSessionId);
+  }
+
+  private restoreActiveSessionId(): void {
+    this.activeSessionId =
+      this.globalState.get<string>(ACTIVE_SESSION_KEY) ?? null;
+  }
+
   // ── Intent Handlers ─────────────────────────────────────────────────
 
   private handleSubmitPrompt(payload: {
@@ -134,6 +165,7 @@ export class ChatController {
     });
 
     this.activeSessionId = record.data.sessionId;
+    this.persistActiveSessionId();
     this.emitSessionState(record);
     this.spawnBridge(record);
   }
@@ -159,6 +191,7 @@ export class ChatController {
     try {
       const resumed = this.manager.resume(sessionId);
       this.activeSessionId = sessionId;
+      this.persistActiveSessionId();
       this.emitSessionState(resumed);
       this.spawnBridge(resumed);
     } catch (err) {
@@ -205,11 +238,13 @@ export class ChatController {
     this.manager.cleanup(sessionId);
     if (this.activeSessionId === sessionId) {
       this.activeSessionId = null;
+      this.persistActiveSessionId();
     }
     this.handleRequestSessions();
   }
 
   private handleWebviewReady(): void {
+    this.restoreActiveSessionId();
     this.handleRequestSessions();
     this.recoverActiveSession();
   }
@@ -241,6 +276,7 @@ export class ChatController {
         sessionId,
         prompt: record.data.prompt,
         model: record.data.model,
+        timeoutMs: 300_000,
       });
 
       this.manager.transition(sessionId, SessionTransitionEvent.CLI_SPAWNED);
@@ -286,6 +322,7 @@ export class ChatController {
 
     // Track session completion.
     if (hostEvent.type === HostEventType.SESSION_COMPLETED) {
+      this.firstTextDeltaSeen.delete(sessionId);
       try {
         this.manager.transition(
           sessionId,
@@ -296,10 +333,11 @@ export class ChatController {
       }
     }
 
-    // Accumulate timeline entries.
+    // Accumulate timeline entries and sync to persisted data.
     const entry = this.toTimelineEntry(hostEvent);
     if (entry) {
       record.timeline.push(entry);
+      record.data.timeline = record.timeline;
       this.updateTimelineSummary(record, hostEvent);
     }
 
@@ -308,6 +346,7 @@ export class ChatController {
 
   private handleBridgeExit(sessionId: string, record: SessionRecord): void {
     record.bridge = null;
+    this.firstTextDeltaSeen.delete(sessionId);
 
     // If we haven't reached a terminal state yet, the process was lost.
     if (!isTerminalStatus(record.data.status)) {
@@ -327,9 +366,15 @@ export class ChatController {
 
   private handleBridgeError(
     sessionId: string,
-    _record: SessionRecord,
+    record: SessionRecord,
     err: Error
   ): void {
+    // If session already reached a terminal state, the exit handler
+    // already took care of surfacing the error — skip duplicate emission.
+    if (isTerminalStatus(record.data.status)) {
+      return;
+    }
+
     this.emit(
       createErrorEvent(ProtocolErrorCode.PROCESS_CRASHED, err.message, {
         sessionId,
@@ -341,7 +386,15 @@ export class ChatController {
   // ── Event Emission Helpers ──────────────────────────────────────────
 
   private emit(event: HostEvent): void {
-    this.sink?.(event);
+    if (!this.sink) {
+      if (this.activeSessionId) {
+        console.warn(
+          "[Locus] Event sink is null during active session — webview may have been disposed mid-stream"
+        );
+      }
+      return;
+    }
+    this.sink(event);
   }
 
   private emitSessionState(record: SessionRecord): void {
@@ -355,6 +408,7 @@ export class ChatController {
           model: record.data.model,
           createdAt: record.data.createdAt,
           updatedAt: record.data.updatedAt,
+          prompt: record.data.prompt,
         },
         timeline: record.timeline,
       })

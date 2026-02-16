@@ -16,7 +16,12 @@ import { ToolCard } from "./components/tool-card";
 import { createUserMessage } from "./components/user-message";
 import type { ChatStore, ToolState } from "./store";
 
-const TERMINAL_STATES = new Set(["completed", "canceled", "failed"]);
+const TERMINAL_STATES = new Set([
+  "completed",
+  "canceled",
+  "failed",
+  "interrupted",
+]);
 
 interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -224,7 +229,9 @@ export class Renderer {
           ? "Session completed"
           : state.status === "canceled"
             ? "Session canceled"
-            : "Session failed";
+            : state.status === "interrupted"
+              ? "Session interrupted"
+              : "Session failed";
       nodes.push(createStatusEvent(label));
     }
 
@@ -241,7 +248,9 @@ export class Renderer {
           ? "Session completed"
           : status === "canceled"
             ? "Session canceled"
-            : "Session failed";
+            : status === "interrupted"
+              ? "Session interrupted"
+              : "Session failed";
       this.timeline.append(createStatusEvent(label));
     }
   }

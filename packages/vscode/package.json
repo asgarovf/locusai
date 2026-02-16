@@ -1,17 +1,37 @@
 {
-  "private": true,
   "name": "locusai-vscode",
   "displayName": "Locus AI",
   "description": "Locus AI — AI-native project management for VS Code",
   "version": "0.13.1",
   "publisher": "locusai",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "preview": true,
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/locusai/locusai"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "chat",
+    "coding assistant",
+    "locus",
+    "project management"
+  ],
+  "galleryBanner": {
+    "color": "#030305",
+    "theme": "dark"
+  },
+  "badges": [],
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": [
-    "Other"
-  ],
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished"
@@ -33,6 +53,40 @@
       {
         "command": "locusai.resumeLastSession",
         "title": "Locus: Resume Last Session"
+      },
+      {
+        "command": "locusai.newSession",
+        "title": "Locus: New Session",
+        "icon": "$(add)"
+      },
+      {
+        "command": "locusai.stopSession",
+        "title": "Locus: Stop Session",
+        "icon": "$(debug-stop)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "locusai.openChat",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
+      },
+      {
+        "command": "locusai.newSession",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n",
+        "when": "focusedView == 'locusai.chatView'"
+      },
+      {
+        "command": "locusai.stopSession",
+        "key": "escape",
+        "when": "focusedView == 'locusai.chatView'"
+      },
+      {
+        "command": "locusai.explainSelection",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorHasSelection"
       }
     ],
     "menus": {
@@ -41,6 +95,18 @@
           "command": "locusai.explainSelection",
           "when": "editorHasSelection",
           "group": "locusai@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "locusai.newSession",
+          "when": "view == locusai.chatView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "locusai.stopSession",
+          "when": "view == locusai.chatView",
+          "group": "navigation@2"
         }
       ],
       "commandPalette": [

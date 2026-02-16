@@ -44,6 +44,8 @@ export interface PersistedSessionData {
   model: string | undefined;
   /** Lightweight summary of the session timeline. */
   timelineSummary: TimelineSummary;
+  /** Full timeline entries, persisted for recovery across reloads. */
+  timeline: TimelineEntry[];
 }
 
 // ============================================================================

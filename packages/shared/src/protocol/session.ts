@@ -154,6 +154,7 @@ export const SessionMetadataSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   title: z.string().optional(),
+  prompt: z.string().optional(),
 });
 
 export type SessionMetadata = z.infer<typeof SessionMetadataSchema>;

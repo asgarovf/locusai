@@ -199,7 +199,7 @@ describe("createTimeoutError", () => {
     expect(event.type).toBe(HostEventType.ERROR);
     expect(event.payload.error.code).toBe(ProtocolErrorCode.NETWORK_TIMEOUT);
     expect(event.payload.error.message).toBe(
-      "CLI process timed out after 30000ms"
+      "CLI session timed out after 30s. The process was automatically stopped."
     );
     expect(event.payload.error.recoverable).toBe(false);
   });

@@ -1,4 +1,4 @@
-import { getToolColor, getToolIcon, icons } from "../icons";
+import { getToolBorderClass, getToolColorClass, getToolIcon, icons } from "../icons";
 import type { ToolState } from "../store";
 import { el, formatDuration, truncate } from "../utils";
 
@@ -45,17 +45,19 @@ export class ToolCard {
   private summaryEl: HTMLElement;
   private durationEl: HTMLElement;
   private expanded = false;
+  private toolColorClass: string;
 
   constructor(tool: ToolState) {
-    const color = getToolColor(tool.tool);
+    this.toolColorClass = getToolColorClass(tool.tool);
+    const colorClass = this.toolColorClass;
+    const borderClass = getToolBorderClass(tool.tool);
     const icon = getToolIcon(tool.tool);
     const summary = getToolSummary(tool);
 
     const toolIcon = el("span", {
-      cls: "lc-tool-icon",
+      cls: ["lc-tool-icon", colorClass],
       html: icon,
     });
-    toolIcon.style.color = color;
 
     this.summaryEl = el("span", {
       cls: "lc-tool-summary",
@@ -88,7 +90,7 @@ export class ToolCard {
     });
 
     // Color accent on left border
-    this.element.style.borderLeftColor = color;
+    this.element.classList.add(borderClass);
 
     this.element.addEventListener("click", () => this.toggle());
     this.element.addEventListener("keydown", (e) => {
@@ -108,6 +110,9 @@ export class ToolCard {
   updateState(tool: ToolState): void {
     // Status icon
     this.statusIconEl.innerHTML = getStatusIcon(tool.status);
+    const isRunning = tool.status === "running";
+    this.statusIconEl.classList.toggle("lc-tool-status--running", isRunning);
+    this.statusIconEl.classList.toggle(this.toolColorClass, isRunning);
     this.statusIconEl.classList.toggle(
       "lc-tool-status--failed",
       tool.status === "failed"

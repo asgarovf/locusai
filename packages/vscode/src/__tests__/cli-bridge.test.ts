@@ -374,11 +374,18 @@ describe("CliBridge", () => {
   });
 
   describe("spawn errors", () => {
-    it("emits error for non-existent binary", async () => {
+    it("emits CLI_NOT_FOUND event for non-existent binary", async () => {
       bridge = new CliBridge();
 
-      const errorPromise = new Promise<Error>((resolve) => {
-        bridge.on("error", resolve);
+      const eventPromise = new Promise<HostEvent>((resolve) => {
+        bridge.on("event", (evt: HostEvent) => {
+          if (
+            evt.type === HostEventType.ERROR &&
+            evt.payload.error.code === ProtocolErrorCode.CLI_NOT_FOUND
+          ) {
+            resolve(evt);
+          }
+        });
       });
 
       bridge.start({
@@ -388,8 +395,10 @@ describe("CliBridge", () => {
         prompt: "test",
       });
 
-      const err = await errorPromise;
-      expect(err.message).toContain("ENOENT");
+      const evt = await eventPromise;
+      expect(evt.payload.error.code).toBe(ProtocolErrorCode.CLI_NOT_FOUND);
+      expect(evt.payload.error.message).toContain("/nonexistent/cli/binary");
+      expect(evt.payload.error.message).toContain("locusai.cliBinaryPath");
     });
 
     it("throws if start() called twice", () => {

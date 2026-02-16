@@ -76,6 +76,7 @@ export class SessionManager {
       context: options.context,
       model: options.model,
       timelineSummary: { ...EMPTY_SUMMARY },
+      timeline: [],
     };
 
     const record: SessionRecord = {
@@ -106,7 +107,7 @@ export class SessionManager {
     const record: SessionRecord = {
       data: persisted,
       bridge: null,
-      timeline: [],
+      timeline: persisted.timeline ?? [],
     };
     this.registry.set(sessionId, record);
     return record;
@@ -281,7 +282,7 @@ export class SessionManager {
       const record: SessionRecord = {
         data,
         bridge: null,
-        timeline: [],
+        timeline: data.timeline ?? [],
       };
       this.registry.set(data.sessionId, record);
     }

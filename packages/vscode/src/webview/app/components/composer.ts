@@ -29,7 +29,7 @@ export class Composer {
 
     this.textarea = document.createElement("textarea");
     this.textarea.className = "lc-composer-input";
-    this.textarea.placeholder = "Ask Locus…";
+    this.textarea.placeholder = "Ask Locus anything... (Enter to send)";
     this.textarea.rows = 1;
     this.textarea.setAttribute("aria-label", "Message input");
     this.textarea.addEventListener("input", () => this.autoGrow());

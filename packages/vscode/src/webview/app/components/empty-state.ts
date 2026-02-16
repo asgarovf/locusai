@@ -39,8 +39,13 @@ export function createEmptyState(callbacks: EmptyStateCallbacks): HTMLElement {
     chips.appendChild(chip);
   }
 
+  const hint = el("p", {
+    cls: "lc-empty-hint",
+    text: "Press Ctrl+Shift+L to open from anywhere",
+  });
+
   return el("div", {
     cls: "lc-empty-state",
-    children: [logo, headline, body, chips],
+    children: [logo, headline, body, chips, hint],
   });
 }

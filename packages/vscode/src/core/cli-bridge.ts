@@ -5,6 +5,7 @@ import {
   parseCliStreamEvent,
 } from "@locusai/shared";
 import {
+  createCliNotFoundError,
   createMalformedEventError,
   createProcessCrashError,
   createTimeoutError,
@@ -70,7 +71,9 @@ export class CliBridge {
   private readonly emitter = new EventEmitter();
   private runner: ProcessRunner | null = null;
   private sessionId: string | undefined;
+  private configuredTimeoutMs = 0;
   private receivedDone = false;
+  private hasEmittedTerminalError = false;
 
   /**
    * Start a CLI session. Spawns the CLI binary in `--json-stream` mode
@@ -84,6 +87,7 @@ export class CliBridge {
     }
 
     this.sessionId = config.sessionId;
+    this.hasEmittedTerminalError = false;
     this.runner = new ProcessRunner();
 
     this.runner.on("stdout-line", (line) => {
@@ -99,19 +103,35 @@ export class CliBridge {
     });
 
     this.runner.on("error", (err) => {
+      if (this.hasEmittedTerminalError) return;
+      this.hasEmittedTerminalError = true;
+
+      // Detect CLI binary not found (ENOENT from spawn).
+      if (isEnoent(err)) {
+        const errorEvent = createCliNotFoundError(
+          this.sessionId,
+          config.cliBinaryPath
+        );
+        this.emitter.emit("event", errorEvent);
+        return;
+      }
+
       this.emitter.emit("error", err);
     });
 
     const args = this.buildArgs(config);
+
+    const timeoutMs = config.timeoutMs ?? 0;
 
     const spawnConfig: SpawnConfig = {
       command: config.cliBinaryPath,
       args,
       cwd: config.cwd,
       env: config.env,
-      timeoutMs: config.timeoutMs,
+      timeoutMs,
     };
 
+    this.configuredTimeoutMs = timeoutMs;
     this.runner.spawn(spawnConfig);
   }
 
@@ -232,8 +252,12 @@ export class CliBridge {
   }
 
   private handleExit(result: ProcessExitResult): void {
-    if (result.timedOut) {
-      const timeoutEvent = createTimeoutError(this.sessionId, 0);
+    if (result.timedOut && !this.hasEmittedTerminalError) {
+      this.hasEmittedTerminalError = true;
+      const timeoutEvent = createTimeoutError(
+        this.sessionId,
+        this.configuredTimeoutMs
+      );
       this.emitter.emit("event", timeoutEvent);
     } else if (result.cancelled) {
       // Cancellation is a deterministic final state.
@@ -241,7 +265,8 @@ export class CliBridge {
       // We emit an error event with PROCESS_CRASHED code only if
       // no done event was received, so the session layer knows
       // the session did not complete normally.
-      if (!this.receivedDone) {
+      if (!this.receivedDone && !this.hasEmittedTerminalError) {
+        this.hasEmittedTerminalError = true;
         const errorEvent = createProcessCrashError(
           this.sessionId,
           result.exitCode,
@@ -252,8 +277,10 @@ export class CliBridge {
     } else if (
       result.exitCode !== null &&
       result.exitCode !== 0 &&
-      !this.receivedDone
+      !this.receivedDone &&
+      !this.hasEmittedTerminalError
     ) {
+      this.hasEmittedTerminalError = true;
       const errorEvent = createProcessCrashError(
         this.sessionId,
         result.exitCode,
@@ -264,4 +291,15 @@ export class CliBridge {
 
     this.emitter.emit("exit", result);
   }
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function isEnoent(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err as NodeJS.ErrnoException).code === "ENOENT"
+  );
 }

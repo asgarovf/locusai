@@ -71,7 +71,8 @@ function formatErrorTitle(code: string): string {
     case "AUTH_EXPIRED":
       return "Authentication Expired";
     case "NETWORK_TIMEOUT":
-      return "Network Timeout";
+    case "TIMEOUT":
+      return "Session Timed Out";
     case "CONTEXT_LIMIT":
       return "Context Limit Reached";
     case "PROCESS_CRASHED":

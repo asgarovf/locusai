@@ -136,7 +136,7 @@ export class ChatStore {
   private handleSessionState(payload: {
     sessionId: string;
     status: SessionStatus;
-    metadata?: { model?: string; createdAt?: number } | undefined;
+    metadata?: { model?: string; createdAt?: number; prompt?: string } | undefined;
     timeline?: TimelineEntry[] | undefined;
   }): void {
     const isNewSession = this.state.sessionId !== payload.sessionId;
@@ -156,6 +156,10 @@ export class ChatStore {
     this.state.status = payload.status;
     this.state.model = payload.metadata?.model;
     this.state.createdAt = payload.metadata?.createdAt;
+
+    if (payload.metadata?.prompt) {
+      this.state.lastPrompt = payload.metadata.prompt;
+    }
 
     if (payload.timeline) {
       this.state.timeline = payload.timeline;
@@ -246,6 +250,11 @@ export class ChatStore {
     sessionId?: string | undefined;
     error: ProtocolError;
   }): void {
+    // Deduplicate: if the same error code is already displayed, skip.
+    if (this.state.error?.code === payload.error.code) {
+      return;
+    }
+
     this.state.error = payload.error;
     this.state.isStreaming = false;
     this.state.isThinking = false;
@@ -260,6 +269,16 @@ export class ChatStore {
   private handleSessionCompleted(): void {
     this.state.isStreaming = false;
     this.state.isThinking = false;
+    // Ensure status reflects completion so the composer re-enables.
+    // SESSION_STATE with 'completed' may arrive separately, but if the
+    // current status is still an active state, update it now.
+    if (
+      this.state.status === "streaming" ||
+      this.state.status === "running" ||
+      this.state.status === "starting"
+    ) {
+      this.state.status = "completed" as SessionStatus;
+    }
     this.flushDeltas();
     this.notify();
   }

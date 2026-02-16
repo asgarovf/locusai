@@ -1,8 +1,10 @@
 src/**
 scripts/**
 node_modules/**
+.gitignore
 tsconfig.json
 tsconfig.tsbuildinfo
+biome.json
 .turbo/**
 **/*.ts
 !dist/**

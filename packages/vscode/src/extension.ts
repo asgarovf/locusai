@@ -31,6 +31,10 @@ function getCwd(): string {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // ── Output channel ─────────────────────────────────────────────────
+  const outputChannel = vscode.window.createOutputChannel("Locus AI");
+  context.subscriptions.push(outputChannel);
+
   // ── Auth ────────────────────────────────────────────────────────────
   const authManager = new AuthManager(context.secrets);
 
@@ -44,12 +48,15 @@ export function activate(context: vscode.ExtensionContext): void {
     manager,
     getCliBinaryPath,
     getCwd,
+    globalState: context.globalState,
+    outputChannel,
   });
 
   // ── Webview provider ────────────────────────────────────────────────
   const chatProvider = new LocusChatViewProvider(
     context.extensionUri,
-    controller
+    controller,
+    outputChannel
   );
 
   context.subscriptions.push(

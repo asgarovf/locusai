@@ -93,16 +93,30 @@ export function getToolIcon(toolName: string): string {
   return toolIconMap[toolName] || icons.session;
 }
 
-const toolColorMap: Record<string, string> = {
-  Read: "#38bdf8",
-  Write: "#10b981",
-  Edit: "#f59e0b",
-  Bash: "#a1a1aa",
-  Grep: "#8b5cf6",
-  Glob: "#8b5cf6",
-  WebFetch: "#22d3ee",
+const toolColorClassMap: Record<string, string> = {
+  Read: "lc-tool-color-read",
+  Write: "lc-tool-color-write",
+  Edit: "lc-tool-color-edit",
+  Bash: "lc-tool-color-bash",
+  Grep: "lc-tool-color-grep",
+  Glob: "lc-tool-color-glob",
+  WebFetch: "lc-tool-color-webfetch",
 };
 
-export function getToolColor(toolName: string): string {
-  return toolColorMap[toolName] || "#a1a1aa";
+export function getToolColorClass(toolName: string): string {
+  return toolColorClassMap[toolName] || "lc-tool-color-bash";
+}
+
+const toolBorderClassMap: Record<string, string> = {
+  Read: "lc-tool-border-read",
+  Write: "lc-tool-border-write",
+  Edit: "lc-tool-border-edit",
+  Bash: "lc-tool-border-bash",
+  Grep: "lc-tool-border-grep",
+  Glob: "lc-tool-border-glob",
+  WebFetch: "lc-tool-border-webfetch",
+};
+
+export function getToolBorderClass(toolName: string): string {
+  return toolBorderClassMap[toolName] || "lc-tool-border-bash";
 }
