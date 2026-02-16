@@ -26,6 +26,8 @@ export {
   type AgentState,
   type OrchestratorConfig,
 } from "./orchestrator/index.js";
+// Node.js-only: Discussion data layer
+export * from "./discussion/index.js";
 // Node.js-only: Planning meeting pipeline
 export * from "./planning/index.js";
 // Utilities

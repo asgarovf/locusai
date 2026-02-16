@@ -25,3 +25,10 @@ export {
   tasksCommand,
 } from "./tasks.js";
 export { workspaceCommand } from "./workspace.js";
+export {
+  continueDiscussionHandler,
+  discussCommand,
+  discussionsCommand,
+  endDiscussCommand,
+  hasActiveDiscussion,
+} from "./discuss.js";

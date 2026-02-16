@@ -3,6 +3,7 @@
 import { c } from "@locusai/sdk/node";
 import {
   configCommand,
+  discussCommand,
   docsCommand,
   execCommand,
   indexCommand,
@@ -41,6 +42,9 @@ async function main() {
       break;
     case "exec":
       await execCommand(args);
+      break;
+    case "discuss":
+      await discussCommand(args);
       break;
     case "plan":
       await planCommand(args);

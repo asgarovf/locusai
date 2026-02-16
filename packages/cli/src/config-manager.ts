@@ -240,6 +240,7 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
+      LOCUS_CONFIG.discussionsDir,
     ];
 
     for (const subdir of locusSubdirs) {
@@ -362,6 +363,7 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
+      LOCUS_CONFIG.discussionsDir,
     ];
 
     const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
