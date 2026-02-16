@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
 import { getLocusPath } from "./config.js";
+import { DiscussionManager } from "../discussion/discussion-manager.js";
+import type { DiscussionInsight } from "../discussion/discussion-types.js";
 
 export class PromptBuilder {
   constructor(private projectPath: string) {}
@@ -31,6 +33,12 @@ export class PromptBuilder {
     // Learnings
     if (learnings) {
       sections += `\n<learnings>\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${learnings}\n</learnings>\n`;
+    }
+
+    // Discussion insights
+    const discussionInsights = this.getDiscussionInsightsContent();
+    if (discussionInsights) {
+      sections += `\n<discussion_insights>\nThese are key decisions and insights from product discussions. Follow them to maintain product coherence:\n${discussionInsights}\n</discussion_insights>\n`;
     }
 
     // Attached documents
@@ -107,6 +115,12 @@ ${sections}
       sections += `\n<learnings>\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${learnings}\n</learnings>\n`;
     }
 
+    // Discussion insights
+    const discussionInsights = this.getDiscussionInsightsContent();
+    if (discussionInsights) {
+      sections += `\n<discussion_insights>\nThese are key decisions and insights from product discussions. Follow them to maintain product coherence:\n${discussionInsights}\n</discussion_insights>\n`;
+    }
+
     return `<direct_execution>
 Execute this prompt: ${query}
 ${sections}
@@ -156,6 +170,7 @@ ${sections}
     return `You have access to the following documentation directories for context:
 - Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)
 - Documents: \`.locus/documents\` (synced from cloud)
+- Discussions: \`.locus/discussions\` (product discussion insights and decisions)
 If you need more information about the project strategies, plans, or architecture, read files in these directories.`;
   }
 
@@ -171,6 +186,59 @@ If you need more information about the project strategies, plans, or architectur
         return null;
       }
       return lines.join("\n");
+    } catch {
+      return null;
+    }
+  }
+
+  private getDiscussionInsightsContent(): string | null {
+    try {
+      const manager = new DiscussionManager(this.projectPath);
+      const insights = manager.getAllInsights();
+
+      if (insights.length === 0) {
+        return null;
+      }
+
+      const groups: Record<string, DiscussionInsight[]> = {};
+      for (const insight of insights) {
+        const key = insight.type;
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(insight);
+      }
+
+      const typeLabels: Record<string, string> = {
+        decision: "Decisions",
+        requirement: "Requirements",
+        idea: "Ideas",
+        concern: "Concerns",
+        learning: "Learnings",
+      };
+
+      let output = "";
+      for (const [type, label] of Object.entries(typeLabels)) {
+        const items = groups[type];
+        if (!items || items.length === 0) continue;
+
+        output += `## ${label}\n`;
+        for (const item of items) {
+          output += `- [${item.title}]: ${item.content}\n`;
+        }
+        output += "\n";
+      }
+
+      if (output.length === 0) {
+        return null;
+      }
+
+      // Cap at 2000 characters to avoid token bloat
+      if (output.length > 2000) {
+        output = `${output.slice(0, 1997)}...`;
+      }
+
+      return output.trimEnd();
     } catch {
       return null;
     }
