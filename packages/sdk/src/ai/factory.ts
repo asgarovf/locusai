@@ -16,6 +16,8 @@ export interface AiRunnerConfig {
   timeoutMs?: number;
   /** Reasoning effort level for Codex models (e.g. "low", "medium", "high") */
   reasoningEffort?: string;
+  /** Maximum number of agentic turns before stopping (print mode only) */
+  maxTurns?: number;
 }
 
 export function createAiRunner(
@@ -31,8 +33,8 @@ export function createAiRunner(
         config.projectPath,
         model,
         config.log,
-        config.timeoutMs,
-        config.reasoningEffort ?? "high"
+        config.reasoningEffort ?? "high",
+        config.timeoutMs
       );
     default:
       return new ClaudeRunner(

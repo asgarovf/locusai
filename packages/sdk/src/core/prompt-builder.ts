@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
 import { getLocusPath } from "./config.js";
@@ -6,200 +6,133 @@ import { getLocusPath } from "./config.js";
 export class PromptBuilder {
   constructor(private projectPath: string) {}
 
-  async build(
-    task: Task,
-    options: { taskContext?: string } = {}
-  ): Promise<string> {
-    let prompt = `# Task: ${task.title}\n\n`;
-
+  async build(task: Task): Promise<string> {
     const roleText = this.roleToText(task.assigneeRole);
+    const description = task.description || "No description provided.";
+    const context = this.getProjectContext();
+    const learnings = this.getLearningsContent();
+    const knowledgeBase = this.getKnowledgeBaseSection();
+
+    let sections = "";
+
+    // Role
     if (roleText) {
-      prompt += `## Role\nYou are acting as a ${roleText}.\n\n`;
+      sections += `\n<role>\nYou are acting as a ${roleText}.\n</role>\n`;
     }
 
-    prompt += `## Description\n${task.description || "No description provided."}\n\n`;
-
-    // 0. Project Metadata (from config)
-    const projectConfig = this.getProjectConfig();
-    if (projectConfig) {
-      prompt += `## Project Metadata\n`;
-      prompt += `- Version: ${projectConfig.version || "Unknown"}\n`;
-      prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
+    // Project context
+    if (context) {
+      sections += `\n<project_context>\n${context}\n</project_context>\n`;
     }
 
-    // Parse Server Context if available
-    let serverContext: Record<string, unknown> | null = null;
-    if (options.taskContext) {
-      try {
-        serverContext = JSON.parse(options.taskContext);
-      } catch {
-        serverContext = { context: options.taskContext };
-      }
+    // Knowledge base
+    sections += `\n<knowledge_base>\n${knowledgeBase}\n</knowledge_base>\n`;
+
+    // Learnings
+    if (learnings) {
+      sections += `\n<learnings>\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${learnings}\n</learnings>\n`;
     }
 
-    // 1. Project Context (Smart Merge)
-    const contextPath = getLocusPath(this.projectPath, "contextFile");
-    let hasLocalContext = false;
-    if (existsSync(contextPath)) {
-      try {
-        const context = readFileSync(contextPath, "utf-8");
-        if (context.trim().length > 20) {
-          prompt += `## Project Context (Local)\n${context}\n\n`;
-          hasLocalContext = true;
-        }
-      } catch (err) {
-        console.warn(`Warning: Could not read context file: ${err}`);
-      }
-    }
-
-    // Fallback to README if local context is missing or thin
-    if (!hasLocalContext) {
-      const fallback = this.getFallbackContext();
-      if (fallback) {
-        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
-      }
-    }
-
-    // Add Server Context (Selective)
-    if (serverContext) {
-      prompt += `## Project Context (Server)\n`;
-      const project = serverContext.project as
-        | { name?: string; techStack?: string[] }
-        | undefined;
-      if (project) {
-        prompt += `- Project: ${project.name || "Unknown"}\n`;
-        if (!hasLocalContext && project.techStack?.length) {
-          prompt += `- Tech Stack: ${project.techStack.join(", ")}\n`;
-        }
-      }
-      if (serverContext.context) {
-        prompt += `\n${serverContext.context}\n`;
-      }
-      prompt += `\n`;
-    }
-
-    // 2. Project Awareness (Structure)
-    prompt += this.getProjectStructure();
-
-    // 3. Project Knowledge Base (Docs & Artifacts)
-    prompt += `## Project Knowledge Base\n`;
-    prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Documents: \`.locus/documents\`\n`;
-    prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
-
-    // 3b. Learnings (accumulated corrections & decisions)
-    prompt += this.getLearningsSection();
-
-    // 4. Add Documents (Optimized)
+    // Attached documents
     if (task.docs && task.docs.length > 0) {
-      prompt += `## Attached Documents (Summarized)\n`;
-      prompt += `> Full content available on server. Rely on Task Description for specific requirements.\n\n`;
+      let docsContent = "";
       for (const doc of task.docs) {
         const content = doc.content || "";
         const limit = 800;
         const preview = content.slice(0, limit);
         const isTruncated = content.length > limit;
-        prompt += `### Doc: ${doc.title}\n${preview}${isTruncated ? "\n...(truncated)..." : ""}\n\n`;
+        docsContent += `### ${doc.title}\n${preview}${isTruncated ? "\n...(truncated)..." : ""}\n\n`;
       }
+      sections += `\n<documents>\n${docsContent.trimEnd()}\n</documents>\n`;
     }
 
-    // 6. Add Checklist
+    // Acceptance criteria
     if (task.acceptanceChecklist && task.acceptanceChecklist.length > 0) {
-      prompt += `## Acceptance Criteria\n`;
+      let criteria = "";
       for (const item of task.acceptanceChecklist) {
-        prompt += `- ${item.done ? "[x]" : "[ ]"} ${item.text}\n`;
+        criteria += `- ${item.done ? "[x]" : "[ ]"} ${item.text}\n`;
       }
-      prompt += "\n";
+      sections += `\n<acceptance_criteria>\n${criteria.trimEnd()}\n</acceptance_criteria>\n`;
     }
 
-    // 7. Add Comments & Feedback
+    // Comments & feedback
     if (task.comments && task.comments.length > 0) {
       const filteredComments = task.comments.filter(
         (comment) => comment.author !== "system"
       );
       const comments = filteredComments.slice(0, 3);
-      prompt += `## Task Comments & Feedback\n`;
-      for (const comment of comments) {
-        const date = new Date(comment.createdAt).toLocaleString();
-        prompt += `- ${comment.author} (${date}): ${comment.text}\n`;
+      if (comments.length > 0) {
+        let commentsContent = "";
+        for (const comment of comments) {
+          const date = new Date(comment.createdAt).toLocaleString();
+          commentsContent += `- ${comment.author} (${date}): ${comment.text}\n`;
+        }
+        sections += `\n<feedback>\n${commentsContent.trimEnd()}\n</feedback>\n`;
       }
-      prompt += "\n";
     }
 
-    prompt += `## Instructions
-1. Complete this task.
-2. **Artifact Management**: If you create any high-level documentation (PRDs, technical drafts, architecture docs), you MUST save them in \`.locus/artifacts/\`. Do NOT create them in the root directory.
-3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-4. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.`;
-    return prompt;
+    return `<task_execution>
+Complete this task: ${task.title}
+
+<description>
+${description}
+</description>
+${sections}
+<rules>
+- Complete the task as described
+- Save any high-level documentation (PRDs, technical drafts, architecture docs) in \`.locus/artifacts/\`
+- Use relative paths from the project root at all times — no absolute local paths
+- Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches — Locus handles git automatically
+</rules>
+</task_execution>`;
   }
 
   async buildGenericPrompt(query: string): Promise<string> {
-    let prompt = `# Direct Execution\n\n`;
-    prompt += `## Prompt\n${query}\n\n`;
+    const context = this.getProjectContext();
+    const learnings = this.getLearningsContent();
+    const knowledgeBase = this.getKnowledgeBaseSection();
 
-    // 0. Project Metadata (from config)
-    const projectConfig = this.getProjectConfig();
-    if (projectConfig) {
-      prompt += `## Project Metadata\n`;
-      prompt += `- Version: ${projectConfig.version || "Unknown"}\n`;
-      prompt += `- Created At: ${projectConfig.createdAt || "Unknown"}\n\n`;
+    let sections = "";
+
+    // Project context
+    if (context) {
+      sections += `\n<project_context>\n${context}\n</project_context>\n`;
     }
 
-    // 1. Project Context (Smart Merge)
+    // Knowledge base
+    sections += `\n<knowledge_base>\n${knowledgeBase}\n</knowledge_base>\n`;
+
+    // Learnings
+    if (learnings) {
+      sections += `\n<learnings>\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${learnings}\n</learnings>\n`;
+    }
+
+    return `<direct_execution>
+Execute this prompt: ${query}
+${sections}
+<rules>
+- Execute the prompt based on the provided project context
+- Use relative paths from the project root at all times — no absolute local paths
+- Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches — Locus handles git automatically
+</rules>
+</direct_execution>`;
+  }
+
+  private getProjectContext(): string | null {
     const contextPath = getLocusPath(this.projectPath, "contextFile");
-    let hasLocalContext = false;
     if (existsSync(contextPath)) {
       try {
         const context = readFileSync(contextPath, "utf-8");
         if (context.trim().length > 20) {
-          prompt += `## Project Context (Local)\n${context}\n\n`;
-          hasLocalContext = true;
+          return context;
         }
       } catch (err) {
         console.warn(`Warning: Could not read context file: ${err}`);
       }
     }
 
-    // Fallback to README if local context is missing or thin
-    if (!hasLocalContext) {
-      const fallback = this.getFallbackContext();
-      if (fallback) {
-        prompt += `## Project Context (README Fallback)\n${fallback}\n\n`;
-      }
-    }
-
-    // 2. Project Awareness (Structure)
-    prompt += this.getProjectStructure();
-
-    // 3. Project Knowledge Base (Docs & Artifacts)
-    prompt += `## Project Knowledge Base\n`;
-    prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)\n`;
-    prompt += `- Documents: \`.locus/documents\` (synced from cloud)\n`;
-    prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
-
-    // 3b. Learnings (accumulated corrections & decisions)
-    prompt += this.getLearningsSection();
-
-    prompt += `## Instructions
-1. Execute the prompt based on the provided project context.
-2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-3. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.`;
-
-    return prompt;
-  }
-
-  private getProjectConfig(): { version?: string; createdAt?: string } | null {
-    const configPath = getLocusPath(this.projectPath, "configFile");
-    if (existsSync(configPath)) {
-      try {
-        return JSON.parse(readFileSync(configPath, "utf-8"));
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    // Fallback to README
+    return this.getFallbackContext() || null;
   }
 
   private getFallbackContext(): string {
@@ -219,44 +152,27 @@ export class PromptBuilder {
     return "";
   }
 
-  private getLearningsSection(): string {
+  private getKnowledgeBaseSection(): string {
+    return `You have access to the following documentation directories for context:
+- Artifacts: \`.locus/artifacts\` (local-only, not synced to cloud)
+- Documents: \`.locus/documents\` (synced from cloud)
+If you need more information about the project strategies, plans, or architecture, read files in these directories.`;
+  }
+
+  private getLearningsContent(): string | null {
     const learningsPath = getLocusPath(this.projectPath, "learningsFile");
     if (!existsSync(learningsPath)) {
-      return "";
+      return null;
     }
     try {
       const content = readFileSync(learningsPath, "utf-8");
-      // Only include if there's meaningful content beyond the template header
       const lines = content.split("\n").filter((l) => l.startsWith("- "));
       if (lines.length === 0) {
-        return "";
+        return null;
       }
-      return `## Learnings\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${lines.join("\n")}\n\n`;
+      return lines.join("\n");
     } catch {
-      return "";
-    }
-  }
-
-  private getProjectStructure(): string {
-    try {
-      const entries = readdirSync(this.projectPath);
-      const folders = entries.filter((e) => {
-        if (e.startsWith(".") || e === "node_modules") return false;
-        try {
-          return statSync(join(this.projectPath, e)).isDirectory();
-        } catch {
-          return false;
-        }
-      });
-      if (folders.length === 0) return "";
-      let structure = `## Project Structure\n`;
-      structure += `Key directories in this project:\n`;
-      for (const folder of folders) {
-        structure += `- \`${folder}/\`\n`;
-      }
-      return `${structure}\n`;
-    } catch {
-      return "";
+      return null;
     }
   }
 

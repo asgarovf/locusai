@@ -23,8 +23,8 @@ export class CodexRunner implements AiRunner {
     private projectPath: string,
     private model: string = DEFAULT_MODEL[PROVIDER.CODEX],
     private log?: LogFn,
-    timeoutMs?: number,
-    private reasoningEffort?: string
+    private reasoningEffort?: string,
+    timeoutMs?: number
   ) {
     this.timeoutMs = timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }

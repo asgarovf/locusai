@@ -132,17 +132,24 @@ export class ClaudeRunner implements AiRunner {
     });
   }
 
-  async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
+  private buildCliArgs(): string[] {
     const args = [
-      "--dangerously-skip-permissions",
       "--print",
-      "--verbose",
       "--output-format",
       "stream-json",
+      "--verbose",
+      "--dangerously-skip-permissions",
+      "--no-session-persistence",
       "--include-partial-messages",
       "--model",
       this.model,
     ];
+
+    return args;
+  }
+
+  async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
+    const args = this.buildCliArgs();
 
     const env = getAugmentedEnv({
       FORCE_COLOR: "1",
@@ -444,16 +451,7 @@ export class ClaudeRunner implements AiRunner {
 
   private executeRun(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const args = [
-        "--dangerously-skip-permissions",
-        "--print",
-        "--verbose",
-        "--output-format",
-        "stream-json",
-        "--include-partial-messages",
-        "--model",
-        this.model,
-      ];
+      const args = this.buildCliArgs();
 
       const env = getAugmentedEnv({
         FORCE_COLOR: "1",

@@ -1,56 +1,58 @@
 /**
- * Extract a JSON object string from LLM output that may contain
- * surrounding prose, markdown code blocks, or other non-JSON text.
+ * Extract a JSON object string from LLM output.
+ *
+ * Handles common LLM output patterns:
+ * - Pure JSON
+ * - JSON wrapped in markdown code fences
+ * - JSON preceded/followed by prose text
  */
 export function extractJsonFromLLMOutput(raw: string): string {
   const trimmed = raw.trim();
 
-  // 1. Try markdown code block extraction first
-  const codeBlockMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (codeBlockMatch) {
-    return codeBlockMatch[1]?.trim() || "";
+  // 1. Try to extract from markdown code fences: ```json ... ``` or ``` ... ```
+  const fenceMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
   }
 
-  // 2. Find the first top-level '{' and its matching '}' by tracking brace depth
-  const startIdx = trimmed.indexOf("{");
-  if (startIdx === -1) {
-    return trimmed; // No JSON object found; let JSON.parse produce the error
-  }
+  // 2. Find the first top-level { ... } by matching braces
+  const start = trimmed.indexOf("{");
+  if (start !== -1) {
+    let depth = 0;
+    let inString = false;
+    let isEscape = false;
 
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
+    for (let i = start; i < trimmed.length; i++) {
+      const ch = trimmed[i];
 
-  for (let i = startIdx; i < trimmed.length; i++) {
-    const ch = trimmed[i];
+      if (isEscape) {
+        isEscape = false;
+        continue;
+      }
 
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-
-    if (inString) {
       if (ch === "\\") {
-        escaped = true;
-      } else if (ch === '"') {
-        inString = false;
+        isEscape = true;
+        continue;
       }
-      continue;
-    }
 
-    // Outside of a string
-    if (ch === '"') {
-      inString = true;
-    } else if (ch === "{") {
-      depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth === 0) {
-        return trimmed.slice(startIdx, i + 1);
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) continue;
+
+      if (ch === "{") depth++;
+      else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          return trimmed.slice(start, i + 1);
+        }
       }
     }
   }
 
-  // If we never balanced, return from the first '{' onward and let JSON.parse report the error
-  return trimmed.slice(startIdx);
+  // 3. Fallback: return trimmed input (will likely fail JSON.parse, but
+  //    gives the caller the best possible error message)
+  return trimmed;
 }

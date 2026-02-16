@@ -1,8 +1,11 @@
+import { existsSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
   c,
   createAiRunner,
   DEFAULT_MODEL,
+  getLocusPath,
   LocusClient,
   PlanManager,
   PlanningMeeting,
@@ -192,8 +195,17 @@ export async function planCommand(args: string[]): Promise<void> {
   try {
     const result = await meeting.run(directive, feedback);
 
-    // Save the plan
+    // Save the plan with proper slug name + markdown, then clean up the temp file
     planManager.save(result.plan);
+
+    // Remove the temp file created by the AI agent (plan-<timestamp>.json)
+    const tempFile = join(
+      getLocusPath(projectPath, "plansDir"),
+      `${result.plan.id}.json`
+    );
+    if (existsSync(tempFile)) {
+      unlinkSync(tempFile);
+    }
 
     console.log(
       `\n  ${c.success("✔")} ${c.success("Planning meeting complete!")}\n`

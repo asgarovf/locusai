@@ -24,24 +24,32 @@ export class CodebaseIndexerService {
       const index = await this.indexer.index(
         (msg) => this.deps.log(msg, "info"),
         async (tree: string) => {
-          const prompt = `You are a codebase analysis expert. Analyze the file tree and extract:
-1. Key symbols (classes, functions, types) and their locations
-2. Responsibilities of each directory/file
-3. Overall project structure
+          const prompt = `<codebase_analysis>
+Analyze this codebase file tree and extract key information.
 
-Analyze this file tree and provide a JSON response with:
-- "symbols": object mapping symbol names to file paths (array)
-- "responsibilities": object mapping paths to brief descriptions
-
-File tree:
+<file_tree>
 ${tree}
+</file_tree>
 
-Return ONLY valid JSON, no markdown formatting.`;
+<rules>
+- Extract key symbols (classes, functions, types) and their file locations
+- Identify responsibilities of each directory/file
+- Map overall project structure
+</rules>
+
+<output>
+Return ONLY valid JSON (no code fences, no markdown):
+{
+  "symbols": { "symbolName": ["file/path.ts"] },
+  "responsibilities": { "path": "brief description" }
+}
+</output>
+</codebase_analysis>`;
 
           const response = await this.deps.aiRunner.run(prompt);
 
-          const jsonStr = extractJsonFromLLMOutput(response);
           try {
+            const jsonStr = extractJsonFromLLMOutput(response);
             return JSON.parse(jsonStr);
           } catch {
             return { symbols: {}, responsibilities: {}, lastIndexed: "" };

@@ -41,33 +41,9 @@ const PlannerOutputSchema = z.object({
 });
 
 /**
- * Schema for the cross-task reviewer output, which wraps the plan
- * inside a `revisedPlan` field alongside review metadata.
+ * Schema for validating the planning team's JSON output.
  */
-const ReviewerOutputSchema = z.object({
-  hasIssues: z.boolean().optional(),
-  issues: z
-    .array(
-      z.object({
-        type: z.string(),
-        description: z.string(),
-        affectedTasks: z.array(z.string()).optional(),
-        resolution: z.string().optional(),
-      })
-    )
-    .optional(),
-  revisedPlan: PlannerOutputSchema,
-});
-
-/**
- * Combined schema that accepts either the reviewer format (with revisedPlan)
- * or a direct planner output. The discriminated union tries reviewer first
- * since that's the expected format from the full pipeline.
- */
-const SprintPlanAIOutputSchema = z.union([
-  ReviewerOutputSchema,
-  PlannerOutputSchema,
-]);
+const SprintPlanAIOutputSchema = PlannerOutputSchema;
 
 // ============================================================================
 // TypeScript Interfaces (unchanged, remain the public API)
@@ -222,10 +198,7 @@ export function parseSprintPlanFromAI(
   raw: string,
   directive: string
 ): SprintPlan {
-  const output = parseJsonWithSchema(raw, SprintPlanAIOutputSchema);
-
-  // Extract the plan data — either from revisedPlan or from direct output
-  const planData = "revisedPlan" in output ? output.revisedPlan : output;
+  const planData = parseJsonWithSchema(raw, SprintPlanAIOutputSchema);
 
   const now = new Date().toISOString();
   const id = `plan-${Date.now()}`;

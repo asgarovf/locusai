@@ -1,9 +1,9 @@
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { AiRunner } from "../ai/runner.js";
-import { buildCrossTaskReviewerPrompt } from "./agents/cross-task-reviewer.js";
+import { getLocusPath } from "../core/config.js";
 import { buildPlannerPrompt } from "./agents/planner.js";
-import { parseSprintPlanFromAI, type SprintPlan } from "./sprint-plan.js";
-
-export type PlanningPhase = "planner" | "review" | "complete";
+import type { SprintPlan } from "./sprint-plan.js";
 
 export interface PlanningMeetingConfig {
   projectPath: string;
@@ -16,18 +16,16 @@ export interface PlanningMeetingConfig {
 
 export interface PlanningMeetingResult {
   plan: SprintPlan;
-  /** Raw outputs from each phase for debugging/transparency */
-  phaseOutputs: {
-    planner: string;
-    review: string;
-  };
+  /** Raw output from the planning team for debugging/transparency */
+  rawOutput: string;
 }
 
 /**
- * Orchestrates a two-phase planning meeting where AI agent personas
- * collaborate to produce a sprint plan.
+ * Orchestrates a single-phase planning meeting where 3 AI team members
+ * (Architect, Tech Lead, Sprint Organizer) collaborate in one pass
+ * to produce a sprint plan.
  *
- * Flow: CEO Directive → Planner → Cross-Task Review → Sprint Plan
+ * Flow: CEO Directive → Planning Team (Architect + Tech Lead + Sprint Organizer) → Sprint Plan
  */
 export class PlanningMeeting {
   private projectPath: string;
@@ -44,37 +42,58 @@ export class PlanningMeeting {
   }
 
   /**
-   * Run the full planning meeting pipeline.
+   * Run the planning meeting.
+   *
+   * The AI agent writes the plan JSON file directly to .locus/plans/
+   * using its file writing tools. We then read it back from disk.
    */
   async run(
     directive: string,
     feedback?: string
   ): Promise<PlanningMeetingResult> {
-    // Phase 1: Planner — produces complete sprint plan
-    this.log("Phase 1/2: Planner building sprint plan...", "info");
-    const plannerPrompt = buildPlannerPrompt({
+    this.log("Planning sprint...", "info");
+
+    const plansDir = getLocusPath(this.projectPath, "plansDir");
+
+    // Ensure plans directory exists
+    if (!existsSync(plansDir)) {
+      mkdirSync(plansDir, { recursive: true });
+    }
+
+    const ts = Date.now();
+    const planId = `plan-${ts}`;
+    const fileName = `plan-${ts}`;
+
+    const prompt = buildPlannerPrompt({
       directive,
       feedback,
+      plansDir,
+      planId,
+      fileName,
     });
-    console.log(plannerPrompt);
-    const plannerOutput = await this.aiRunner.run(plannerPrompt);
-    this.log("Planner phase complete.", "success");
 
-    // Phase 2: Cross-Task Review — validates ordering, descriptions, scope
-    this.log(
-      "Phase 2/2: Reviewer checking for conflicts and quality...",
-      "info"
-    );
-    const crossTaskReviewerPrompt = buildCrossTaskReviewerPrompt({
-      directive,
-      plannerOutput,
-      feedback,
-    });
-    const reviewOutput = await this.aiRunner.run(crossTaskReviewerPrompt);
-    this.log("Review phase complete.", "success");
+    const response = await this.aiRunner.run(prompt);
 
-    // Parse the final output into a SprintPlan
-    const plan = parseSprintPlanFromAI(reviewOutput, directive);
+    this.log("Planning meeting complete.", "success");
+
+    // Read the plan JSON file that the AI agent created
+    const expectedPath = join(plansDir, `${fileName}.json`);
+    let plan: SprintPlan | null = null;
+
+    if (existsSync(expectedPath)) {
+      try {
+        plan = JSON.parse(readFileSync(expectedPath, "utf-8")) as SprintPlan;
+      } catch {
+        // JSON parse failed
+      }
+    }
+
+    if (!plan) {
+      throw new Error(
+        "Planning agent did not create the expected plan JSON file. " +
+          "Check the agent output for errors."
+      );
+    }
 
     if (feedback) {
       plan.feedback = feedback;
@@ -82,10 +101,7 @@ export class PlanningMeeting {
 
     return {
       plan,
-      phaseOutputs: {
-        planner: plannerOutput,
-        review: reviewOutput,
-      },
+      rawOutput: response,
     };
   }
 }
