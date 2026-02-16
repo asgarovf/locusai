@@ -45,9 +45,11 @@ export class ToolCard {
   private summaryEl: HTMLElement;
   private durationEl: HTMLElement;
   private expanded = false;
+  private toolColorClass: string;
 
   constructor(tool: ToolState) {
-    const colorClass = getToolColorClass(tool.tool);
+    this.toolColorClass = getToolColorClass(tool.tool);
+    const colorClass = this.toolColorClass;
     const borderClass = getToolBorderClass(tool.tool);
     const icon = getToolIcon(tool.tool);
     const summary = getToolSummary(tool);
@@ -108,6 +110,9 @@ export class ToolCard {
   updateState(tool: ToolState): void {
     // Status icon
     this.statusIconEl.innerHTML = getStatusIcon(tool.status);
+    const isRunning = tool.status === "running";
+    this.statusIconEl.classList.toggle("lc-tool-status--running", isRunning);
+    this.statusIconEl.classList.toggle(this.toolColorClass, isRunning);
     this.statusIconEl.classList.toggle(
       "lc-tool-status--failed",
       tool.status === "failed"

@@ -585,6 +585,10 @@ button:focus-visible,
   height: 14px;
 }
 
+.lc-tool-status--running {
+  color: inherit;
+}
+
 .lc-tool-status--completed {
   color: var(--lc-state-completed);
 }
