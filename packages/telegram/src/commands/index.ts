@@ -14,4 +14,9 @@ export {
 export { runCommand, stopCommand } from "./run.js";
 export { completeSprintCommand, sprintsCommand } from "./sprints.js";
 export { statusCommand } from "./status.js";
-export { rejectTaskCommand, tasksCommand } from "./tasks.js";
+export {
+  approveTaskCommand,
+  rejectTaskCommand,
+  taskDetailCommand,
+  tasksCommand,
+} from "./tasks.js";

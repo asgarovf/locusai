@@ -14,6 +14,8 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 
 <b>Tasks:</b>
 /tasks — List active tasks
+/task &lt;id&gt; — View task details
+/approvetask &lt;id&gt; — Approve an IN_REVIEW task
 /rejecttask &lt;id&gt; &lt;feedback&gt; — Reject an IN_REVIEW task
 
 <b>Sprints:</b>

@@ -1,6 +1,7 @@
 import { Telegraf } from "telegraf";
 import {
   approveCommand,
+  approveTaskCommand,
   cancelCommand,
   completeSprintCommand,
   configCommand,
@@ -18,6 +19,7 @@ import {
   startCommand,
   statusCommand,
   stopCommand,
+  taskDetailCommand,
   tasksCommand,
 } from "./commands/index.js";
 import type { TelegramConfig } from "./config.js";
@@ -77,6 +79,8 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Task management commands
   bot.command("tasks", (ctx) => tasksCommand(ctx, config));
+  bot.command("task", (ctx) => taskDetailCommand(ctx, config));
+  bot.command("approvetask", (ctx) => approveTaskCommand(ctx, config));
   bot.command("rejecttask", (ctx) => rejectTaskCommand(ctx, config));
 
   // Sprint management commands
