@@ -21,6 +21,18 @@ export * from "./modules/sprints.js";
 export * from "./modules/tasks.js";
 export * from "./modules/workspaces.js";
 
+// Discussion types (browser-safe, no fs dependency)
+export type {
+  Discussion,
+  DiscussionInsight,
+  DiscussionMessage,
+} from "./discussion/discussion-types.js";
+export {
+  DiscussionInsightSchema,
+  DiscussionMessageSchema,
+  DiscussionSchema,
+} from "./discussion/discussion-types.js";
+
 export class LocusClient {
   private readonly api: AxiosInstance;
   public readonly emitter: LocusEmitter;

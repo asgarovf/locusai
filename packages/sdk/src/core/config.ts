@@ -31,6 +31,7 @@ export const LOCUS_CONFIG = {
   sessionsDir: "sessions",
   reviewsDir: "reviews",
   plansDir: "plans",
+  discussionsDir: "discussions",
 };
 
 // Patterns to add to .gitignore for locus projects
@@ -47,6 +48,9 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "",
   "# Locus AI - Plans (generated per task)",
   ".locus/plans/",
+  "",
+  "# Locus AI - Discussions (AI discussion sessions)",
+  ".locus/discussions/",
   "",
   "# Locus AI - Settings (contains API key, telegram config, etc.)",
   ".locus/settings.json",
