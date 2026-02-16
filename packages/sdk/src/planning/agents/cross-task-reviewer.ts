@@ -8,7 +8,6 @@
 
 export interface CrossTaskReviewerInput {
   directive: string;
-  projectContext: string;
   plannerOutput: string;
   feedback?: string;
 }
@@ -47,9 +46,6 @@ IMPORTANT: Ensure the reviewed plan still addresses this feedback.
   }
 
   prompt += `
-## Project Context
-${input.projectContext || "No project context available."}
-
 ## Sprint Plan to Review
 ${input.plannerOutput}
 

@@ -8,7 +8,6 @@
 
 export interface PlannerInput {
   directive: string;
-  projectContext: string;
   feedback?: string;
 }
 
@@ -31,9 +30,6 @@ IMPORTANT: Incorporate this feedback into your plan. The CEO has reviewed a prev
   }
 
   prompt += `
-## Project Context
-${input.projectContext || "No project context available."}
-
 ## Your Task
 
 Analyze the directive and produce a **complete sprint plan** with the following:

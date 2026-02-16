@@ -74,8 +74,7 @@ Before executing a task, Locus builds a rich context for the agent that includes
 * **Workspace documents** — from `.locus/documents/`
 * **Task details** — title, description, acceptance checklist
 * **Sprint context** — current sprint and related tasks
-* **Project knowledge** — from `.locus/project/context.md`
-* **Progress tracking** — from `.locus/project/progress.md`
+* **Learnings** — accumulated corrections and patterns from `.locus/LEARNINGS.md`
 
 ---
 

@@ -102,8 +102,5 @@ packages/telegram/bin/
 # Locus AI - Settings (contains API key, telegram config, etc.)
 .locus/settings.json
 
-# Locus AI - Configuration (contains project context, progress, etc.)
+# Locus AI - Configuration (contains project context, etc.)
 .locus/config.json
-
-# Locus AI - Project progress (contains project progress, etc.)
-.locus/project/progress.md

@@ -4,7 +4,6 @@ import { PROVIDER } from "../core/config.js";
 import { isGhAvailable } from "../git/git-utils.js";
 import { PrService } from "../git/pr-service.js";
 import { LocusClient } from "../index.js";
-import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
@@ -33,7 +32,6 @@ export class ReviewerWorker {
   private client: LocusClient;
   private aiRunner: AiRunner;
   private prService: PrService;
-  private knowledgeBase: KnowledgeBase;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private currentTaskId: string | null = null;
   private maxReviews = 50;
@@ -62,7 +60,6 @@ export class ReviewerWorker {
     });
 
     this.prService = new PrService(projectPath, log);
-    this.knowledgeBase = new KnowledgeBase(projectPath);
 
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Reviewer agent using ${providerLabel} CLI`, "info");
@@ -251,22 +248,6 @@ Then provide a concise review with specific findings. Keep it actionable and foc
       const result = await this.reviewPr(pr);
 
       if (result.reviewed) {
-        const status = result.approved ? "APPROVED" : "CHANGES REQUESTED";
-
-        // Update progress.md
-        try {
-          this.knowledgeBase.updateProgress({
-            role: "user",
-            content: `Review PR #${pr.number}: ${pr.title}`,
-          });
-          this.knowledgeBase.updateProgress({
-            role: "assistant",
-            content: `${status}: ${result.summary}`,
-          });
-        } catch {
-          // Non-critical
-        }
-
         this.reviewsCompleted++;
       } else {
         this.log(`Review skipped: ${result.summary}`, "warn");

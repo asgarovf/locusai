@@ -61,9 +61,8 @@ export async function initCommand(): Promise<void> {
   ${c.bold("Created:")}
     ${c.primary("📁")} ${c.bold(".locus/")}                     ${c.dim("Configuration directory")}
     ${c.primary("📄")} ${c.bold(".locus/config.json")}          ${c.dim("Project settings")}
-    ${c.primary("📄")} ${c.bold(".locus/project/context.md")}   ${c.dim("Project context & knowledge")}
-    ${c.primary("📄")} ${c.bold(".locus/project/progress.md")}  ${c.dim("Sprint progress tracking")}
     ${c.primary("📝")} ${c.bold(".locus/LOCUS.md")}             ${c.dim("AI agent instructions")}
+    ${c.primary("📝")} ${c.bold(".locus/LEARNINGS.md")}         ${c.dim("Continuous learning log")}
 
   ${c.bold("Next steps:")}
     1. Run '${c.primary("locus config setup")}' to configure your API key

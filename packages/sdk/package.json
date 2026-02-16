@@ -23,7 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
@@ -33,7 +33,8 @@
     "@locusai/shared": "^0.12.0",
     "axios": "^1.13.2",
     "events": "^3.3.0",
-    "globby": "^14.0.2"
+    "globby": "^14.0.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

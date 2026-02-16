@@ -10,29 +10,6 @@ import {
 
 const LOCUS_GITIGNORE_MARKER = "# Locus AI";
 
-const DEFAULT_CONTEXT_MD = `# Project
-
-## Mission
-<!-- Describe your project's core purpose and value proposition -->
-
-## Tech Stack
-<!-- List your technologies -->
-
-## Architecture
-<!-- Describe your high-level architecture -->
-
-## Key Decisions
-<!-- Document important technical decisions and their rationale -->
-
-## Feature Areas
-<!-- List your main feature areas and their status -->
-`;
-
-const DEFAULT_PROGRESS_MD = `# Project Progress
-
-No sprints started yet.
-`;
-
 const LOCUS_MD_TEMPLATE = `## Artifacts
 
 When a task produces knowledge, analysis, or research output rather than (or in addition to) code changes, you **must** save the results as a Markdown file in \`.locus/artifacts/\`. Examples of artifact-worthy tasks:
@@ -64,16 +41,33 @@ Complex tasks must be planned before writing code. Create \`.locus/plans/<task-n
 - Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches.
 - The Locus system handles all git operations (commit, push, PR creation) automatically after your execution completes.
 - Focus only on making file changes — the orchestrator takes care of version control.
-- Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically. Changes to this file are excluded from commits to prevent merge conflicts across concurrent agents.
 
 ## Avoiding Hallucinated / Slop Code
 
 - Ask before assuming. If requirements are ambiguous, incomplete, or could be interpreted multiple ways, stop and ask clarifying questions rather than guessing.
-- Never invent APIs, libraries, functions, or config options.** Only use APIs and methods you can verify exist in the project's dependencies or documentation. If unsure whether something exists, ask or look it up first.
+- Never invent APIs, libraries, functions, or config options. Only use APIs and methods you can verify exist in the project's dependencies or documentation. If unsure whether something exists, ask or look it up first.
 - No placeholder or stub logic unless explicitly requested. Every piece of code you write should be functional and intentional. Do not leave TODO blocks, fake return values, or mock implementations without flagging them clearly.
 - Do not generate boilerplate "just in case." Only write code that is directly required by the task. No speculative utilities, unused helpers, or premature abstractions.
 - If you're uncertain, say so. State your confidence level. "I believe this is correct but haven't verified X" is always better than silent guessing.
-- Read before writing Before modifying a file, read the relevant existing code to match conventions, understand context, and avoid duplicating logic that already exists.
+- Read before writing. Before modifying a file, read the relevant existing code to match conventions, understand context, and avoid duplicating logic that already exists.
+
+## Continuous Learning
+
+This project uses a \`.locus/LEARNINGS.md\` file to capture important lessons learned during development. You MUST follow these rules:
+
+- **Read first**: Before starting any task, read \`.locus/LEARNINGS.md\` to avoid repeating past mistakes.
+- **Update when relevant**: After receiving user feedback that corrects your approach (e.g., "use library X instead of writing custom code", "follow pattern Y"), append a concise entry to \`.locus/LEARNINGS.md\`.
+- **What to record**: Architectural decisions, preferred libraries/patterns, common pitfalls, coding conventions, user preferences, and anything that should inform future work.
+- **Keep entries concise**: Each entry should be 1-2 lines. Use the format: \`- **[Category]**: Description of the learning.\`
+- **Do NOT remove existing entries**: Only append new learnings. The file is append-only.
+`;
+
+const DEFAULT_LEARNINGS_MD = `# Learnings
+
+This file captures important lessons, decisions, and corrections made during development.
+It is read by AI agents before every task to avoid repeating mistakes and to follow established patterns.
+
+<!-- Add learnings below this line. Format: - **[Category]**: Description -->
 `;
 
 /**
@@ -215,7 +209,6 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
-      LOCUS_CONFIG.projectDir,
     ];
 
     for (const subdir of locusSubdirs) {
@@ -225,27 +218,16 @@ export class ConfigManager {
       }
     }
 
-    // Create initial project knowledge base files
-    const contextFilePath = getLocusPath(
-      this.projectPath,
-      "projectContextFile"
-    );
-    if (!existsSync(contextFilePath)) {
-      writeFileSync(contextFilePath, DEFAULT_CONTEXT_MD);
-    }
-
-    const progressFilePath = getLocusPath(
-      this.projectPath,
-      "projectProgressFile"
-    );
-    if (!existsSync(progressFilePath)) {
-      writeFileSync(progressFilePath, DEFAULT_PROGRESS_MD);
-    }
-
     // Create LOCUS.md agent instructions file
     const locusMdPath = getLocusPath(this.projectPath, "contextFile");
     if (!existsSync(locusMdPath)) {
       writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
+    }
+
+    // Create LEARNINGS.md for continuous learning
+    const learningsMdPath = getLocusPath(this.projectPath, "learningsFile");
+    if (!existsSync(learningsMdPath)) {
+      writeFileSync(learningsMdPath, DEFAULT_LEARNINGS_MD);
     }
 
     if (!existsSync(locusConfigPath)) {
@@ -303,9 +285,6 @@ export class ConfigManager {
       gitignoreUpdated: false,
     };
 
-    const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
-    const locusMdPath = getLocusPath(this.projectPath, "contextFile");
-
     // 1. Update version and ensure $schema in config
     const config = this.loadConfig();
     if (config) {
@@ -337,7 +316,9 @@ export class ConfigManager {
     }
 
     // 2. Update LOCUS.md with the latest template on every reinit
+    const locusMdPath = getLocusPath(this.projectPath, "contextFile");
     const locusMdExisted = existsSync(locusMdPath);
+
     writeFileSync(locusMdPath, LOCUS_MD_TEMPLATE);
     if (!locusMdExisted) {
       result.directoriesCreated.push(".locus/LOCUS.md");
@@ -350,9 +331,9 @@ export class ConfigManager {
       LOCUS_CONFIG.sessionsDir,
       LOCUS_CONFIG.reviewsDir,
       LOCUS_CONFIG.plansDir,
-      LOCUS_CONFIG.projectDir,
     ];
 
+    const locusConfigDir = join(this.projectPath, LOCUS_CONFIG.dir);
     for (const subdir of locusSubdirs) {
       const subdirPath = join(locusConfigDir, subdir);
       if (!existsSync(subdirPath)) {
@@ -361,23 +342,11 @@ export class ConfigManager {
       }
     }
 
-    // 3b. Ensure project knowledge base files exist
-    const contextFilePath = getLocusPath(
-      this.projectPath,
-      "projectContextFile"
-    );
-    if (!existsSync(contextFilePath)) {
-      writeFileSync(contextFilePath, DEFAULT_CONTEXT_MD);
-      result.directoriesCreated.push(".locus/project/context.md");
-    }
-
-    const progressFilePath = getLocusPath(
-      this.projectPath,
-      "projectProgressFile"
-    );
-    if (!existsSync(progressFilePath)) {
-      writeFileSync(progressFilePath, DEFAULT_PROGRESS_MD);
-      result.directoriesCreated.push(".locus/project/progress.md");
+    // 3. Ensure LEARNINGS.md exists (non-destructive — never overwrite)
+    const learningsMdPath = getLocusPath(this.projectPath, "learningsFile");
+    if (!existsSync(learningsMdPath)) {
+      writeFileSync(learningsMdPath, DEFAULT_LEARNINGS_MD);
+      result.directoriesCreated.push(".locus/LEARNINGS.md");
     }
 
     // 4. Update .gitignore with any missing or outdated patterns

@@ -23,15 +23,13 @@ your-project/
 ├── .locus/
 │   ├── config.json              # Project metadata (name, version)
 │   ├── settings.json            # API key and provider settings
+│   ├── LOCUS.md                 # AI agent instructions
+│   ├── LEARNINGS.md             # Continuous learning log
 │   ├── artifacts/               # Generated files and outputs
 │   ├── documents/               # Synced workspace documents
 │   ├── sessions/                # Exec session history
 │   ├── reviews/                 # Code review reports
-│   ├── plans/                   # Sprint plans
-│   ├── LOCUS.md                    # AI agent instructions
-│   └── project/
-│       ├── context.md           # Project knowledge base
-│       └── progress.md          # Sprint progress tracking
+│   └── plans/                   # Sprint plans
 └── .gitignore                   # Updated with Locus patterns
 ```
 
@@ -54,13 +52,9 @@ You can customize it to include:
 * Dependencies and tools used
 * Any instructions you want agents to follow
 
-### .locus/project/context.md
+### .locus/LEARNINGS.md
 
-A knowledge base file where you can document your project's mission, tech stack, architecture, and key decisions. Agents read this to understand your project context.
-
-### .locus/project/progress.md
-
-Tracks sprint progress and completed tasks. This is updated automatically as agents complete work.
+A continuously growing log of lessons learned during development. When you correct an agent's approach (e.g., "use Zod instead of manual parsing"), the learning is recorded here. Agents read this file before every task to avoid repeating past mistakes.
 
 ---
 

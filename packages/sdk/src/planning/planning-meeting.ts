@@ -1,5 +1,4 @@
 import type { AiRunner } from "../ai/runner.js";
-import { KnowledgeBase } from "../project/knowledge-base.js";
 import { buildCrossTaskReviewerPrompt } from "./agents/cross-task-reviewer.js";
 import { buildPlannerPrompt } from "./agents/planner.js";
 import { parseSprintPlanFromAI, type SprintPlan } from "./sprint-plan.js";
@@ -51,13 +50,10 @@ export class PlanningMeeting {
     directive: string,
     feedback?: string
   ): Promise<PlanningMeetingResult> {
-    const projectContext = this.getProjectContext();
-
     // Phase 1: Planner — produces complete sprint plan
     this.log("Phase 1/2: Planner building sprint plan...", "info");
     const plannerPrompt = buildPlannerPrompt({
       directive,
-      projectContext,
       feedback,
     });
     console.log(plannerPrompt);
@@ -71,7 +67,6 @@ export class PlanningMeeting {
     );
     const crossTaskReviewerPrompt = buildCrossTaskReviewerPrompt({
       directive,
-      projectContext,
       plannerOutput,
       feedback,
     });
@@ -92,10 +87,5 @@ export class PlanningMeeting {
         review: reviewOutput,
       },
     };
-  }
-
-  private getProjectContext(): string {
-    const kb = new KnowledgeBase(this.projectPath);
-    return kb.getFullContext();
   }
 }

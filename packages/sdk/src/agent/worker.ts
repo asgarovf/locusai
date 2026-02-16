@@ -4,7 +4,6 @@ import type { AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
 import { isGhAvailable, isGitAvailable } from "../git/git-utils.js";
 import { LocusClient } from "../index.js";
-import { KnowledgeBase } from "../project/knowledge-base.js";
 import { c } from "../utils/colors.js";
 import { GitWorkflow } from "./git-workflow.js";
 import { TaskExecutor } from "./task-executor.js";
@@ -28,7 +27,6 @@ export class AgentWorker {
   private client: LocusClient;
   private aiRunner: AiRunner;
   private taskExecutor: TaskExecutor;
-  private knowledgeBase: KnowledgeBase;
   private gitWorkflow: GitWorkflow;
 
   // State
@@ -85,9 +83,6 @@ export class AgentWorker {
       projectPath,
       log,
     });
-
-    // Knowledge base for progress updates
-    this.knowledgeBase = new KnowledgeBase(projectPath);
 
     // Git workflow handles branch creation, commit, push, and PR
     this.gitWorkflow = new GitWorkflow(config, log);
@@ -214,26 +209,8 @@ export class AgentWorker {
   }
 
   // ---------------------------------------------------------------------------
-  // Progress & heartbeat
+  // Heartbeat
   // ---------------------------------------------------------------------------
-
-  private updateProgress(task: Task, summary: string): void {
-    try {
-      this.knowledgeBase.updateProgress({
-        role: "user",
-        content: task.title,
-      });
-      this.knowledgeBase.updateProgress({
-        role: "assistant",
-        content: summary,
-      });
-    } catch (err) {
-      this.log(
-        `Failed to update progress: ${err instanceof Error ? err.message : String(err)}`,
-        "warn"
-      );
-    }
-  }
 
   private startHeartbeat(): void {
     this.sendHeartbeat();
@@ -349,8 +326,6 @@ export class AgentWorker {
           // Track for final PR
           this.completedTaskList.push({ title: task.title, id: task.id });
           this.taskSummaries.push(result.summary);
-
-          this.updateProgress(task, result.summary);
         }
       } else {
         this.log(`Failed: ${task.title} - ${result.summary}`, "error");

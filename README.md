@@ -136,15 +136,13 @@ your-project/
 │   ├── config.json              # Project metadata
 │   ├── settings.json            # API key & provider (gitignored)
 │   ├── LOCUS.md                 # Agent instructions
+│   ├── LEARNINGS.md             # Continuous learning log
 │   ├── codebase-index.json      # Semantic index
 │   ├── documents/               # Synced workspace documents
 │   ├── artifacts/               # Generated files
 │   ├── sessions/                # Exec session history
 │   ├── reviews/                 # Code review reports
-│   ├── plans/                   # Sprint plans
-│   └── project/
-│       ├── context.md           # Project knowledge base
-│       └── progress.md          # Sprint progress (auto-updated)
+│   └── plans/                   # Sprint plans
 ├── .claude/skills/              # Claude-specific skills
 └── .codex/skills/               # Codex-specific skills
 ```

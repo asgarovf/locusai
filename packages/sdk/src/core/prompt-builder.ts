@@ -84,9 +84,11 @@ export class PromptBuilder {
     // 3. Project Knowledge Base (Docs & Artifacts)
     prompt += `## Project Knowledge Base\n`;
     prompt += `You have access to the following documentation directories for context:\n`;
-    prompt += `- Artifacts: \`.locus/artifacts\`\n`;
     prompt += `- Documents: \`.locus/documents\`\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
+
+    // 3b. Learnings (accumulated corrections & decisions)
+    prompt += this.getLearningsSection();
 
     // 4. Add Documents (Optimized)
     if (task.docs && task.docs.length > 0) {
@@ -128,8 +130,7 @@ export class PromptBuilder {
 1. Complete this task.
 2. **Artifact Management**: If you create any high-level documentation (PRDs, technical drafts, architecture docs), you MUST save them in \`.locus/artifacts/\`. Do NOT create them in the root directory.
 3. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-4. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.
-5. **Progress**: Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically.`;
+4. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.`;
     return prompt;
   }
 
@@ -178,11 +179,13 @@ export class PromptBuilder {
     prompt += `- Documents: \`.locus/documents\` (synced from cloud)\n`;
     prompt += `If you need more information about the project strategies, plans, or architecture, please read files in these directories.\n\n`;
 
+    // 3b. Learnings (accumulated corrections & decisions)
+    prompt += this.getLearningsSection();
+
     prompt += `## Instructions
 1. Execute the prompt based on the provided project context.
 2. **Paths**: Use relative paths from the project root at all times. Do NOT use absolute local paths (e.g., /Users/...).
-3. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.
-4. **Progress**: Do NOT modify \`.locus/project/progress.md\`. The system updates it automatically.`;
+3. **Git**: Do NOT run \`git add\`, \`git commit\`, \`git push\`, or create branches. The Locus system handles all git operations automatically after your execution completes.`;
 
     return prompt;
   }
@@ -214,6 +217,24 @@ export class PromptBuilder {
       }
     }
     return "";
+  }
+
+  private getLearningsSection(): string {
+    const learningsPath = getLocusPath(this.projectPath, "learningsFile");
+    if (!existsSync(learningsPath)) {
+      return "";
+    }
+    try {
+      const content = readFileSync(learningsPath, "utf-8");
+      // Only include if there's meaningful content beyond the template header
+      const lines = content.split("\n").filter((l) => l.startsWith("- "));
+      if (lines.length === 0) {
+        return "";
+      }
+      return `## Learnings\nThese are accumulated lessons from past tasks. Follow them to avoid repeating mistakes:\n${lines.join("\n")}\n\n`;
+    } catch {
+      return "";
+    }
   }
 
   private getProjectStructure(): string {

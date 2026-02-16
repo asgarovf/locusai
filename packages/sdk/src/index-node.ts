@@ -28,8 +28,7 @@ export {
 } from "./orchestrator/index.js";
 // Node.js-only: Planning meeting pipeline
 export * from "./planning/index.js";
-// Node.js-only: Project knowledge base
-export { KnowledgeBase } from "./project/knowledge-base.js";
 // Utilities
 export { c } from "./utils/colors.js";
 export { extractJsonFromLLMOutput } from "./utils/json-extractor.js";
+export { parseJsonWithSchema } from "./utils/structured-output.js";

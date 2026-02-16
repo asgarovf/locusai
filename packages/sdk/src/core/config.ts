@@ -25,14 +25,12 @@ export const LOCUS_CONFIG = {
   settingsFile: "settings.json",
   indexFile: "codebase-index.json",
   contextFile: "LOCUS.md",
+  learningsFile: "LEARNINGS.md",
   artifactsDir: "artifacts",
   documentsDir: "documents",
   sessionsDir: "sessions",
   reviewsDir: "reviews",
   plansDir: "plans",
-  projectDir: "project",
-  projectContextFile: "context.md",
-  projectProgressFile: "progress.md",
 };
 
 // Patterns to add to .gitignore for locus projects
@@ -53,26 +51,14 @@ export const LOCUS_GITIGNORE_PATTERNS = [
   "# Locus AI - Settings (contains API key, telegram config, etc.)",
   ".locus/settings.json",
   "",
-  "# Locus AI - Configuration (contains project context, progress, etc.)",
+  "# Locus AI - Configuration (contains project context, etc.)",
   ".locus/config.json",
-  "",
-  "# Locus AI - Project progress (contains project progress, etc.)",
-  ".locus/project/progress.md",
 ] as const;
 
 export function getLocusPath(
   projectPath: string,
   fileName: keyof typeof LOCUS_CONFIG
 ): string {
-  // Project knowledge base files live under .locus/project/
-  if (fileName === "projectContextFile" || fileName === "projectProgressFile") {
-    return join(
-      projectPath,
-      LOCUS_CONFIG.dir,
-      LOCUS_CONFIG.projectDir,
-      LOCUS_CONFIG[fileName]
-    );
-  }
   return join(projectPath, LOCUS_CONFIG.dir, LOCUS_CONFIG[fileName]);
 }
 

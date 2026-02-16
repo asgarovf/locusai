@@ -10,7 +10,6 @@ import { join } from "node:path";
 import type { Sprint, Task } from "@locusai/shared";
 import { getLocusPath } from "../core/config.js";
 import type { LocusClient } from "../index.js";
-import { KnowledgeBase } from "../project/knowledge-base.js";
 import {
   plannedTasksToCreatePayloads,
   type SprintPlan,
@@ -24,7 +23,7 @@ import {
 export class PlanManager {
   private plansDir: string;
 
-  constructor(private projectPath: string) {
+  constructor(projectPath: string) {
     this.plansDir = getLocusPath(projectPath, "plansDir");
   }
 
@@ -138,17 +137,6 @@ export class PlanManager {
     plan.status = "approved";
     plan.updatedAt = new Date().toISOString();
     this.save(plan);
-
-    // 5. Update progress.md
-    const kb = new KnowledgeBase(this.projectPath);
-    kb.updateProgress({
-      role: "user",
-      content: `Start sprint: ${plan.name}`,
-    });
-    kb.updateProgress({
-      role: "assistant",
-      content: `Sprint started with ${tasks.length} tasks. Goal: ${plan.goal}`,
-    });
 
     return { sprint, tasks };
   }

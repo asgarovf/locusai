@@ -4,7 +4,74 @@ import {
   type TaskPriority,
   TaskStatus,
 } from "@locusai/shared";
-import { extractJsonFromLLMOutput } from "../utils/json-extractor.js";
+import { z } from "zod";
+import { parseJsonWithSchema } from "../utils/structured-output.js";
+
+// ============================================================================
+// Zod Schemas for LLM Output Parsing
+// ============================================================================
+
+const PlannedTaskSchema = z.object({
+  title: z.string().default("Untitled Task"),
+  description: z.string().default(""),
+  assigneeRole: z
+    .enum(["BACKEND", "FRONTEND", "QA", "PM", "DESIGN"])
+    .default("BACKEND"),
+  priority: z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).default("MEDIUM"),
+  complexity: z.number().min(1).max(5).default(3),
+  acceptanceCriteria: z.array(z.string()).default([]),
+  labels: z.array(z.string()).default([]),
+});
+
+const SprintPlanRiskSchema = z.object({
+  description: z.string().default(""),
+  mitigation: z.string().default(""),
+  severity: z.enum(["low", "medium", "high"]).default("medium"),
+});
+
+/**
+ * Schema for the raw LLM output from the planner agent.
+ */
+const PlannerOutputSchema = z.object({
+  name: z.string().default("Unnamed Sprint"),
+  goal: z.string().default(""),
+  estimatedDays: z.number().default(1),
+  tasks: z.array(PlannedTaskSchema).default([]),
+  risks: z.array(SprintPlanRiskSchema).default([]),
+});
+
+/**
+ * Schema for the cross-task reviewer output, which wraps the plan
+ * inside a `revisedPlan` field alongside review metadata.
+ */
+const ReviewerOutputSchema = z.object({
+  hasIssues: z.boolean().optional(),
+  issues: z
+    .array(
+      z.object({
+        type: z.string(),
+        description: z.string(),
+        affectedTasks: z.array(z.string()).optional(),
+        resolution: z.string().optional(),
+      })
+    )
+    .optional(),
+  revisedPlan: PlannerOutputSchema,
+});
+
+/**
+ * Combined schema that accepts either the reviewer format (with revisedPlan)
+ * or a direct planner output. The discriminated union tries reviewer first
+ * since that's the expected format from the full pipeline.
+ */
+const SprintPlanAIOutputSchema = z.union([
+  ReviewerOutputSchema,
+  PlannerOutputSchema,
+]);
+
+// ============================================================================
+// TypeScript Interfaces (unchanged, remain the public API)
+// ============================================================================
 
 export interface PlannedTask {
   /** Sequential index within the plan (1-based) */
@@ -38,6 +105,10 @@ export interface SprintPlan {
   createdAt: string;
   updatedAt: string;
 }
+
+// ============================================================================
+// Rendering & Conversion
+// ============================================================================
 
 /**
  * Render a sprint plan as readable markdown for CEO review.
@@ -134,60 +205,54 @@ export function plannedTasksToCreatePayloads(
   }));
 }
 
+// ============================================================================
+// AI Output Parsing (Zod-validated)
+// ============================================================================
+
 /**
- * Parse a sprint plan from a JSON string (as returned by AI).
- * Validates required fields, assigns defaults, and ensures tasks
- * are topologically sorted by their dependencies.
+ * Parse a sprint plan from raw LLM output text.
+ *
+ * Uses Zod schemas to validate the JSON structure instead of manual
+ * type assertions. This provides:
+ * - Clear error messages when the LLM produces malformed output
+ * - Automatic defaults for missing fields
+ * - Type-safe parsing without manual casting
  */
 export function parseSprintPlanFromAI(
   raw: string,
   directive: string
 ): SprintPlan {
-  const jsonStr = extractJsonFromLLMOutput(raw);
+  const output = parseJsonWithSchema(raw, SprintPlanAIOutputSchema);
 
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(jsonStr);
-  } catch (err) {
-    const preview = jsonStr.slice(0, 200);
-    throw new Error(
-      `Failed to parse sprint plan JSON: ${err instanceof Error ? err.message : String(err)}\nExtracted JSON preview: ${preview}`
-    );
-  }
-
-  // Support cross-task reviewer output format which nests the plan under revisedPlan
-  if (parsed.revisedPlan) {
-    parsed = parsed.revisedPlan as Record<string, unknown>;
-  }
+  // Extract the plan data — either from revisedPlan or from direct output
+  const planData = "revisedPlan" in output ? output.revisedPlan : output;
 
   const now = new Date().toISOString();
   const id = `plan-${Date.now()}`;
 
-  const tasks: PlannedTask[] = ((parsed.tasks as Record<string, unknown>[]) || []).map(
-    (t: Record<string, unknown>, i: number) => ({
-      index: i + 1,
-      title: (t.title as string) || `Task ${i + 1}`,
-      description: (t.description as string) || "",
-      assigneeRole: (t.assigneeRole as AssigneeRole) || "BACKEND",
-      priority: (t.priority as TaskPriority) || "MEDIUM",
-      complexity: (t.complexity as number) || 3,
-      acceptanceCriteria: (t.acceptanceCriteria as string[]) || [],
-      labels: (t.labels as string[]) || [],
-    })
-  );
+  const tasks: PlannedTask[] = planData.tasks.map((t, i) => ({
+    index: i + 1,
+    title: t.title,
+    description: t.description,
+    assigneeRole: t.assigneeRole as AssigneeRole,
+    priority: t.priority as TaskPriority,
+    complexity: t.complexity,
+    acceptanceCriteria: t.acceptanceCriteria,
+    labels: t.labels,
+  }));
 
   return {
     id,
-    name: (parsed.name as string) || "Unnamed Sprint",
-    goal: (parsed.goal as string) || directive,
+    name: planData.name,
+    goal: planData.goal || directive,
     directive,
     tasks,
-    risks: ((parsed.risks as Record<string, unknown>[]) || []).map((r: Record<string, unknown>) => ({
-      description: (r.description as string) || "",
-      mitigation: (r.mitigation as string) || "",
-      severity: (r.severity as "low" | "medium" | "high") || "medium",
+    risks: planData.risks.map((r) => ({
+      description: r.description,
+      mitigation: r.mitigation,
+      severity: r.severity,
     })),
-    estimatedDays: (parsed.estimatedDays as number) || 1,
+    estimatedDays: planData.estimatedDays,
     status: "pending",
     createdAt: now,
     updatedAt: now,

@@ -4,7 +4,6 @@ import {
   c,
   createAiRunner,
   DEFAULT_MODEL,
-  KnowledgeBase,
   PromptBuilder,
 } from "@locusai/sdk/node";
 import { ExecutionStatsTracker } from "../display/execution-stats";
@@ -116,7 +115,6 @@ export async function execCommand(args: string[]): Promise<void> {
 
   const builder = new PromptBuilder(projectPath);
   const fullPrompt = await builder.buildGenericPrompt(promptInput);
-  const knowledgeBase = new KnowledgeBase(projectPath);
 
   // Add newlines to prevent overlap with banner
   console.log("");
@@ -196,18 +194,6 @@ export async function execCommand(args: string[]): Promise<void> {
       // Non-streaming mode (original behavior)
       responseContent = await aiRunner.run(fullPrompt);
       console.log(responseContent);
-    }
-
-    try {
-      knowledgeBase.updateProgress({ role: "user", content: promptInput });
-      if (responseContent.trim()) {
-        knowledgeBase.updateProgress({
-          role: "assistant",
-          content: responseContent.trim(),
-        });
-      }
-    } catch {
-      // Progress update is best-effort
     }
 
     console.log(`\n  ${c.success("✔")} ${c.success("Execution finished!")}\n`);
@@ -307,17 +293,6 @@ async function execJsonStream(
 
     for await (const chunk of stream) {
       renderer.handleChunk(chunk);
-    }
-
-    // Best-effort progress update (silent failures)
-    try {
-      const knowledgeBase = new KnowledgeBase(projectPath);
-      knowledgeBase.updateProgress({
-        role: "user",
-        content: promptInput,
-      });
-    } catch {
-      // Progress update is best-effort
     }
 
     renderer.emitDone(0);
