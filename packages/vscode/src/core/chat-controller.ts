@@ -73,6 +73,13 @@ export class ChatController {
   }
 
   /**
+   * Returns the ID of the currently active session, or null if none.
+   */
+  getActiveSessionId(): string | null {
+    return this.activeSessionId;
+  }
+
+  /**
    * Route a validated UIIntent to the appropriate handler.
    * Each handler emits HostEvents via the registered sink.
    */
