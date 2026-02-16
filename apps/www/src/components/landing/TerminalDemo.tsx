@@ -12,91 +12,104 @@ interface Line {
 }
 
 const lines: Line[] = [
-  { text: "locus run", color: "text-foreground", prefix: "$ " },
-  { text: "", color: "" },
+  // Phase 1: Plan
   {
-    text: "🚀 Starting agent in ~/dev/my-saas...",
-    color: "text-cyan",
-  },
-  {
-    text: "  Tasks will be executed sequentially on a single branch",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "  Changes will be committed and pushed after each task",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "  A PR will be opened when all tasks are done",
-    color: "text-muted-foreground",
+    text: 'locus plan "Build OAuth integration with Google & GitHub"',
+    color: "text-foreground",
+    prefix: "$ ",
   },
   { text: "", color: "" },
   {
-    text: "  ● Agent spawned: agent-a1b2c3",
-    color: "text-cyan",
+    text: "🧠 Starting planning meeting...",
+    color: "text-violet",
   },
   {
-    text: "  ● Claimed: Implement user authentication",
-    color: "text-cyan",
+    text: "  ● Tech Lead analyzing codebase...",
+    color: "text-violet",
+  },
+  {
+    text: "  ● Architect designing system boundaries...",
+    color: "text-violet",
+  },
+  {
+    text: "  ● Sprint Organizer breaking down tasks...",
+    color: "text-violet",
   },
   { text: "", color: "" },
   {
-    text: "📖 Reading auth/service.ts",
+    text: "  ✔ Plan ready — 4 tasks across 2 epics",
+    color: "text-emerald",
+  },
+  {
+    text: "  ✔ Sprint created: sp_8xk2m",
+    color: "text-emerald",
+  },
+  { text: "", color: "" },
+  // Phase 2: Run with multiple agents
+  {
+    text: "locus run --agents 3",
+    color: "text-foreground",
+    prefix: "$ ",
+  },
+  { text: "", color: "" },
+  {
+    text: "🚀 Starting 3 agents in ~/dev/my-saas...",
     color: "text-cyan",
   },
   {
-    text: "   src/auth/service.ts",
+    text: "  Tasks will be executed in parallel across branches",
     color: "text-muted-foreground",
   },
+  { text: "", color: "" },
   {
-    text: "   ✓ Completed (87ms)",
-    color: "text-emerald",
-  },
-  {
-    text: "✍️  Writing auth.controller.ts",
+    text: "  ● Agent #1 → Implement Google OAuth provider",
     color: "text-cyan",
   },
   {
-    text: "   src/auth/auth.controller.ts (4.2 KB)",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "   ✓ Completed (54ms)",
-    color: "text-emerald",
-  },
-  {
-    text: "⚡ Running npm test -- auth",
+    text: "  ● Agent #2 → Implement GitHub OAuth provider",
     color: "text-cyan",
   },
   {
-    text: "   ✓ Completed (5120ms) — Exit code: 0",
+    text: "  ● Agent #3 → Add OAuth callback routes",
+    color: "text-cyan",
+  },
+  { text: "", color: "" },
+  {
+    text: "  ✔ Agent #2 completed: GitHub OAuth provider",
+    color: "text-emerald",
+  },
+  {
+    text: "  ● Agent #2 → Create auth session middleware",
+    color: "text-cyan",
+  },
+  {
+    text: "  ✔ Agent #1 completed: Google OAuth provider",
+    color: "text-emerald",
+  },
+  {
+    text: "  ✔ Agent #3 completed: OAuth callback routes",
+    color: "text-emerald",
+  },
+  {
+    text: "  ✔ Agent #2 completed: Auth session middleware",
     color: "text-emerald",
   },
   { text: "", color: "" },
   {
-    text: "  ✔ Completed: Implement user authentication",
-    color: "text-emerald",
-  },
-  {
-    text: "  ● Claimed: Add database migrations",
+    text: "  All tasks done. 3 PRs created.",
     color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Add database migrations",
-    color: "text-emerald",
-  },
-  {
-    text: "  ● Claimed: Create API documentation",
-    color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Create API documentation",
-    color: "text-emerald",
   },
   { text: "", color: "" },
+  // Phase 3: Review
+  { text: "locus review", color: "text-foreground", prefix: "$ " },
+  { text: "", color: "" },
   {
-    text: "All tasks done. PR created.",
-    color: "text-cyan",
+    text: "🔍 Found 3 unreviewed PR(s). Starting reviewer...",
+    color: "text-amber",
+  },
+  {
+    text: "  ✔ All PRs reviewed. No issues found.",
+    color: "text-emerald",
   },
 ];
 
@@ -152,7 +165,7 @@ export function TerminalDemo() {
         </div>
         <div className="flex-1 text-center text-[10px] text-muted-foreground flex items-center justify-center gap-1.5 font-sans">
           <Terminal className="w-3 h-3" />
-          locus run
+          locus cli
         </div>
       </div>
 
