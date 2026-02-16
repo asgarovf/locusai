@@ -1,5 +1,6 @@
 import { TaskStatus } from "@locusai/shared";
 import type { Context } from "telegraf";
+import { Markup } from "telegraf";
 import { getClientAndWorkspace, requireApiKey } from "../api-client.js";
 import type { TelegramConfig } from "../config.js";
 import {
@@ -82,10 +83,26 @@ export async function tasksCommand(
       msg += `   ID: \`${task.id}\`\n\n`;
     }
 
-    await ctx.reply(msg.trim(), {
-      parse_mode: "HTML",
-      link_preview_options: { is_disabled: true },
-    });
+    const inReviewTasks = tasks.filter(
+      (t) => t.status === TaskStatus.IN_REVIEW
+    );
+
+    if (inReviewTasks.length > 0) {
+      const buttons = inReviewTasks.slice(0, 5).map((t) => [
+        Markup.button.callback("✅ Approve", `approve:task:${t.id}`),
+        Markup.button.callback("👁 View", `view:task:${t.id}`),
+      ]);
+      await ctx.reply(msg.trim(), {
+        parse_mode: "HTML",
+        link_preview_options: { is_disabled: true },
+        ...Markup.inlineKeyboard(buttons),
+      });
+    } else {
+      await ctx.reply(msg.trim(), {
+        parse_mode: "HTML",
+        link_preview_options: { is_disabled: true },
+      });
+    }
   } catch (err) {
     console.error("[tasks] Failed:", err);
     await ctx.reply(

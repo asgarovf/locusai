@@ -1,6 +1,12 @@
 import type { Context } from "telegraf";
+import { Markup } from "telegraf";
 import type { CliExecutor } from "../executor.js";
-import { formatCommandOutput, formatError, formatInfo } from "../formatter.js";
+import {
+  formatCommandOutput,
+  formatError,
+  formatInfo,
+  stripAnsi,
+} from "../formatter.js";
 import { PLAN_TIMEOUT } from "../timeouts.js";
 
 export async function planCommand(
@@ -66,11 +72,73 @@ export async function plansCommand(
   const args = executor.buildArgs(["plan", "--list"]);
   const result = await executor.execute(args);
   const output = (result.stdout + result.stderr).trim();
-
-  await ctx.reply(
-    formatCommandOutput("locus plan --list", output, result.exitCode),
-    { parse_mode: "HTML" }
+  const formattedOutput = formatCommandOutput(
+    "locus plan --list",
+    output,
+    result.exitCode
   );
+
+  // Parse pending plan IDs from output (format: plan-<id> or similar patterns)
+  const cleanOutput = stripAnsi(output);
+  const planIds = extractPendingPlanIds(cleanOutput);
+
+  if (planIds.length > 0) {
+    const buttons = planIds.slice(0, 5).map((planId) => [
+      Markup.button.callback("✅ Approve", `approve:plan:${planId}`),
+      Markup.button.callback("❌ Cancel", `cancel:plan:${planId}`),
+    ]);
+    await ctx.reply(formattedOutput, {
+      parse_mode: "HTML",
+      ...Markup.inlineKeyboard(buttons),
+    });
+  } else {
+    await ctx.reply(formattedOutput, { parse_mode: "HTML" });
+  }
+}
+
+/**
+ * Extract plan IDs that appear to be pending/awaiting approval from CLI output.
+ * Looks for plan-* identifiers that appear near "pending" or "awaiting" text,
+ * or simply all plan IDs if status context isn't clear.
+ */
+function extractPendingPlanIds(output: string): string[] {
+  const planIds: string[] = [];
+  const lines = output.split("\n");
+
+  for (const line of lines) {
+    // Match plan IDs like plan-abc123, plan-something-here
+    const match = line.match(/\b(plan-[a-zA-Z0-9_-]+)\b/);
+    if (!match) continue;
+
+    const planId = match[1];
+    const lowerLine = line.toLowerCase();
+
+    // Include if line suggests the plan is pending/awaiting action
+    if (
+      lowerLine.includes("pending") ||
+      lowerLine.includes("awaiting") ||
+      lowerLine.includes("review") ||
+      lowerLine.includes("ready")
+    ) {
+      if (!planIds.includes(planId)) {
+        planIds.push(planId);
+      }
+    }
+  }
+
+  // If no status-based matches, try to extract all plan IDs as fallback
+  if (planIds.length === 0) {
+    const allMatches = output.match(/\b(plan-[a-zA-Z0-9_-]+)\b/g);
+    if (allMatches) {
+      for (const id of allMatches) {
+        if (!planIds.includes(id)) {
+          planIds.push(id);
+        }
+      }
+    }
+  }
+
+  return planIds;
 }
 
 export async function approveCommand(

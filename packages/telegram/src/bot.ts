@@ -1,4 +1,5 @@
 import { Telegraf } from "telegraf";
+import { registerCallbacks } from "./callbacks.js";
 import {
   activityCommand,
   agentsCommand,
@@ -108,6 +109,9 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
+
+  // Register inline keyboard callback handlers
+  registerCallbacks(bot, config, executor);
 
   return bot;
 }
