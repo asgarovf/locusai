@@ -99,6 +99,9 @@ packages/telegram/bin/
 # Locus AI - Plans (generated per task)
 .locus/plans/
 
+# Locus AI - Discussions (AI discussion sessions)
+.locus/discussions/
+
 # Locus AI - Settings (contains API key, telegram config, etc.)
 .locus/settings.json
 
