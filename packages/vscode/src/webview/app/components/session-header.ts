@@ -67,7 +67,10 @@ export class SessionHeader {
     this.callbacks = callbacks;
 
     this.titleEl = el("div", { cls: "lc-header-title" });
-    this.badgeEl = el("span", { cls: "lc-header-badge" });
+    this.badgeEl = el("span", {
+      cls: "lc-header-badge",
+      attrs: { role: "status", "aria-live": "polite" },
+    });
     this.controlsEl = el("div", { cls: "lc-header-controls" });
 
     this.pickerBtn = el("button", {
