@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.13.0
+
+### Minor Changes
+
+- Telegram CLI improvements
+
 ## 0.12.1
 
 ### Patch Changes
