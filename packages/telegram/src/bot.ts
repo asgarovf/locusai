@@ -1,9 +1,15 @@
 import { Telegraf } from "telegraf";
+import { registerCallbacks } from "./callbacks.js";
 import {
+  activityCommand,
+  agentsCommand,
   approveCommand,
+  approveTaskCommand,
+  backlogCommand,
   cancelCommand,
   completeSprintCommand,
   configCommand,
+  dashboardCommand,
   devCommand,
   execCommand,
   gitCommand,
@@ -12,12 +18,15 @@ import {
   plansCommand,
   rejectCommand,
   rejectTaskCommand,
+  reviewCommand,
   runCommand,
   sprintsCommand,
   startCommand,
   statusCommand,
   stopCommand,
+  taskDetailCommand,
   tasksCommand,
+  workspaceCommand,
 } from "./commands/index.js";
 import type { TelegramConfig } from "./config.js";
 import { CliExecutor } from "./executor.js";
@@ -60,6 +69,7 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Register commands
   bot.command("start", (ctx) => startCommand(ctx));
   bot.command("help", (ctx) => helpCommand(ctx));
+  bot.command("dashboard", (ctx) => dashboardCommand(ctx, config));
 
   // Planning commands
   bot.command("plan", (ctx) => planCommand(ctx, executor));
@@ -68,6 +78,9 @@ export function createBot(config: TelegramConfig): Telegraf {
   bot.command("reject", (ctx) => rejectCommand(ctx, executor));
   bot.command("cancel", (ctx) => cancelCommand(ctx, executor));
 
+  // Agent monitoring
+  bot.command("agents", (ctx) => agentsCommand(ctx, config));
+
   // Execution commands
   bot.command("run", (ctx) => runCommand(ctx, executor));
   bot.command("stop", (ctx) => stopCommand(ctx, executor));
@@ -75,7 +88,10 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Task management commands
   bot.command("tasks", (ctx) => tasksCommand(ctx, config));
+  bot.command("task", (ctx) => taskDetailCommand(ctx, config));
+  bot.command("approvetask", (ctx) => approveTaskCommand(ctx, config));
   bot.command("rejecttask", (ctx) => rejectTaskCommand(ctx, config));
+  bot.command("backlog", (ctx) => backlogCommand(ctx, config));
 
   // Sprint management commands
   bot.command("sprints", (ctx) => sprintsCommand(ctx, config));
@@ -84,12 +100,49 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Git & Dev commands
   bot.command("git", (ctx) => gitCommand(ctx, config));
   bot.command("dev", (ctx) => devCommand(ctx, config));
+  bot.command("review", (ctx) => reviewCommand(ctx, executor));
 
   // Config command
   bot.command("config", (ctx) => configCommand(ctx, config));
 
+  // Activity feed
+  bot.command("activity", (ctx) => activityCommand(ctx, config));
+
+  // Workspace info
+  bot.command("workspace", (ctx) => workspaceCommand(ctx, config));
+
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
+
+  // Register inline keyboard callback handlers
+  registerCallbacks(bot, config, executor);
+
+  // Register commands with Telegram for autocomplete menu
+  bot.telegram.setMyCommands([
+    { command: "dashboard", description: "Workspace overview & agent status" },
+    { command: "agents", description: "List active AI agents" },
+    { command: "tasks", description: "List tasks (optional: filter by status)" },
+    { command: "task", description: "View task details" },
+    { command: "backlog", description: "List backlog tasks" },
+    { command: "approvetask", description: "Approve an IN_REVIEW task" },
+    { command: "rejecttask", description: "Reject an IN_REVIEW task" },
+    { command: "sprints", description: "List all sprints" },
+    { command: "plan", description: "Start a planning meeting" },
+    { command: "plans", description: "List pending plans" },
+    { command: "approve", description: "Approve a plan" },
+    { command: "reject", description: "Reject a plan with feedback" },
+    { command: "run", description: "Start agent on sprint tasks" },
+    { command: "stop", description: "Stop all running processes" },
+    { command: "exec", description: "One-shot AI execution" },
+    { command: "review", description: "AI review of PR or changes" },
+    { command: "activity", description: "Recent workspace activity" },
+    { command: "workspace", description: "Workspace info & stats" },
+    { command: "git", description: "Run whitelisted git commands" },
+    { command: "dev", description: "Run lint, typecheck, build, test" },
+    { command: "config", description: "Show/update settings" },
+    { command: "status", description: "Show running processes" },
+    { command: "help", description: "Show all commands" },
+  ]).catch((err) => console.error("Failed to set bot commands:", err));
 
   return bot;
 }

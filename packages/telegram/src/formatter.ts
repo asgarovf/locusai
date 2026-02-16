@@ -94,6 +94,29 @@ export function escapeHtml(text: string): string {
 }
 
 /**
+ * Format a date as a relative time string (e.g., "3m ago", "2h ago").
+ */
+export function formatRelativeTime(date: Date | number | string): string {
+  const now = Date.now();
+  const then =
+    typeof date === "string"
+      ? new Date(date).getTime()
+      : date instanceof Date
+        ? date.getTime()
+        : date;
+  const diffMs = now - then;
+  const diffSec = Math.floor(diffMs / 1000);
+
+  if (diffSec < 60) return "just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
+}
+
+/**
  * Split a long message into multiple Telegram messages
  */
 export function splitMessage(
