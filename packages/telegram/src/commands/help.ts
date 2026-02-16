@@ -2,6 +2,9 @@ import type { Context } from "telegraf";
 
 const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 
+<b>Overview:</b>
+/dashboard — Workspace overview &amp; agent status
+
 <b>Planning:</b>
 /plan &lt;directive&gt; — Start a planning meeting
 /plans — List pending plans
