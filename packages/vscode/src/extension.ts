@@ -44,6 +44,7 @@ export function activate(context: vscode.ExtensionContext): void {
     manager,
     getCliBinaryPath,
     getCwd,
+    globalState: context.globalState,
   });
 
   // ── Webview provider ────────────────────────────────────────────────

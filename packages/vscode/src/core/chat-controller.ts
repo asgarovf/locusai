@@ -12,6 +12,7 @@ import {
   type UIIntent,
   UIIntentType,
 } from "@locusai/shared";
+import type { Memento } from "vscode";
 import type { SessionManager } from "../sessions/session-manager";
 import type { SessionRecord } from "../sessions/types";
 import { CliBridge } from "./cli-bridge";
@@ -24,9 +25,16 @@ export interface ChatControllerConfig {
   manager: SessionManager;
   getCliBinaryPath: () => string;
   getCwd: () => string;
+  globalState: Memento;
 }
 
 export type EventSink = (event: HostEvent) => void;
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const ACTIVE_SESSION_KEY = "locusai.activeSessionId";
 
 // ============================================================================
 // ChatController
@@ -44,6 +52,7 @@ export class ChatController {
   private readonly manager: SessionManager;
   private readonly getCliBinaryPath: () => string;
   private readonly getCwd: () => string;
+  private readonly globalState: Memento;
   private sink: EventSink | null = null;
   private activeSessionId: string | null = null;
   private firstTextDeltaSeen = new Set<string>();
@@ -52,6 +61,7 @@ export class ChatController {
     this.manager = config.manager;
     this.getCliBinaryPath = config.getCliBinaryPath;
     this.getCwd = config.getCwd;
+    this.globalState = config.globalState;
   }
 
   /**
@@ -121,6 +131,17 @@ export class ChatController {
     this.manager.dispose();
   }
 
+  // ── Active Session Persistence ──────────────────────────────────────
+
+  private persistActiveSessionId(): void {
+    this.globalState.update(ACTIVE_SESSION_KEY, this.activeSessionId);
+  }
+
+  private restoreActiveSessionId(): void {
+    this.activeSessionId =
+      this.globalState.get<string>(ACTIVE_SESSION_KEY) ?? null;
+  }
+
   // ── Intent Handlers ─────────────────────────────────────────────────
 
   private handleSubmitPrompt(payload: {
@@ -134,6 +155,7 @@ export class ChatController {
     });
 
     this.activeSessionId = record.data.sessionId;
+    this.persistActiveSessionId();
     this.emitSessionState(record);
     this.spawnBridge(record);
   }
@@ -159,6 +181,7 @@ export class ChatController {
     try {
       const resumed = this.manager.resume(sessionId);
       this.activeSessionId = sessionId;
+      this.persistActiveSessionId();
       this.emitSessionState(resumed);
       this.spawnBridge(resumed);
     } catch (err) {
@@ -205,11 +228,13 @@ export class ChatController {
     this.manager.cleanup(sessionId);
     if (this.activeSessionId === sessionId) {
       this.activeSessionId = null;
+      this.persistActiveSessionId();
     }
     this.handleRequestSessions();
   }
 
   private handleWebviewReady(): void {
+    this.restoreActiveSessionId();
     this.handleRequestSessions();
     this.recoverActiveSession();
   }
@@ -296,10 +321,11 @@ export class ChatController {
       }
     }
 
-    // Accumulate timeline entries.
+    // Accumulate timeline entries and sync to persisted data.
     const entry = this.toTimelineEntry(hostEvent);
     if (entry) {
       record.timeline.push(entry);
+      record.data.timeline = record.timeline;
       this.updateTimelineSummary(record, hostEvent);
     }
 
