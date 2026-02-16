@@ -311,6 +311,7 @@ export class ChatController {
 
     // Track session completion.
     if (hostEvent.type === HostEventType.SESSION_COMPLETED) {
+      this.firstTextDeltaSeen.delete(sessionId);
       try {
         this.manager.transition(
           sessionId,
@@ -334,6 +335,7 @@ export class ChatController {
 
   private handleBridgeExit(sessionId: string, record: SessionRecord): void {
     record.bridge = null;
+    this.firstTextDeltaSeen.delete(sessionId);
 
     // If we haven't reached a terminal state yet, the process was lost.
     if (!isTerminalStatus(record.data.status)) {

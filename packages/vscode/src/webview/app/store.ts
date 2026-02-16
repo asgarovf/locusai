@@ -260,6 +260,16 @@ export class ChatStore {
   private handleSessionCompleted(): void {
     this.state.isStreaming = false;
     this.state.isThinking = false;
+    // Ensure status reflects completion so the composer re-enables.
+    // SESSION_STATE with 'completed' may arrive separately, but if the
+    // current status is still an active state, update it now.
+    if (
+      this.state.status === "streaming" ||
+      this.state.status === "running" ||
+      this.state.status === "starting"
+    ) {
+      this.state.status = "completed" as SessionStatus;
+    }
     this.flushDeltas();
     this.notify();
   }
