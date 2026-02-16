@@ -1,5 +1,11 @@
 # locusai-vscode
 
+## 0.13.1
+
+### Patch Changes
+
+- Locus discussions
+
 ## 0.13.0
 
 ### Minor Changes
