@@ -1,17 +1,37 @@
 {
-  "private": true,
   "name": "locusai-vscode",
   "displayName": "Locus AI",
   "description": "Locus AI — AI-native project management for VS Code",
   "version": "0.13.0",
   "publisher": "locusai",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "preview": true,
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/locusai/locusai"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "chat",
+    "coding assistant",
+    "locus",
+    "project management"
+  ],
+  "galleryBanner": {
+    "color": "#030305",
+    "theme": "dark"
+  },
+  "badges": [],
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": [
-    "Other"
-  ],
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished"
