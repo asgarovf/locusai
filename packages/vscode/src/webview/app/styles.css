@@ -1017,6 +1017,12 @@ button:focus-visible,
   background: color-mix(in srgb, var(--lc-accent) 15%, var(--vscode-badge-background));
 }
 
+.lc-empty-hint {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 12px;
+}
+
 /* ── State Color Utilities ─────────────────────────────────────────────── */
 
 .lc-state-idle { color: var(--lc-state-idle); }
@@ -1097,6 +1103,10 @@ button:focus-visible,
 
   .lc-empty-chips {
     flex-direction: column;
+  }
+
+  .lc-empty-hint {
+    display: none;
   }
 }
 

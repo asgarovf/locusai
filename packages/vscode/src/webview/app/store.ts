@@ -136,7 +136,7 @@ export class ChatStore {
   private handleSessionState(payload: {
     sessionId: string;
     status: SessionStatus;
-    metadata?: { model?: string; createdAt?: number } | undefined;
+    metadata?: { model?: string; createdAt?: number; prompt?: string } | undefined;
     timeline?: TimelineEntry[] | undefined;
   }): void {
     const isNewSession = this.state.sessionId !== payload.sessionId;
@@ -156,6 +156,10 @@ export class ChatStore {
     this.state.status = payload.status;
     this.state.model = payload.metadata?.model;
     this.state.createdAt = payload.metadata?.createdAt;
+
+    if (payload.metadata?.prompt) {
+      this.state.lastPrompt = payload.metadata.prompt;
+    }
 
     if (payload.timeline) {
       this.state.timeline = payload.timeline;

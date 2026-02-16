@@ -408,6 +408,7 @@ export class ChatController {
           model: record.data.model,
           createdAt: record.data.createdAt,
           updatedAt: record.data.updatedAt,
+          prompt: record.data.prompt,
         },
         timeline: record.timeline,
       })
