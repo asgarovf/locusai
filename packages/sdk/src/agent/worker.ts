@@ -351,8 +351,6 @@ export class AgentWorker {
         this.taskSummaries
       );
       if (prResult.url) {
-        this.log(`PR created: ${prResult.url}`, "success");
-
         // Update all completed tasks with the PR URL
         for (const task of this.completedTaskList) {
           try {
