@@ -13,6 +13,7 @@ export {
   plansCommand,
   rejectCommand,
 } from "./plan.js";
+export { reviewCommand } from "./review.js";
 export { runCommand, stopCommand } from "./run.js";
 export { completeSprintCommand, sprintsCommand } from "./sprints.js";
 export { statusCommand } from "./status.js";

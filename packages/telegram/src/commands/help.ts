@@ -32,6 +32,7 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 <b>Git &amp; Dev:</b>
 /git &lt;command&gt; — Run whitelisted git/gh commands
 /dev &lt;command&gt; — Run lint, typecheck, build, test
+/review [pr-number] — AI review of PR or staged changes
 
 <b>Status:</b>
 /status — Show running processes
