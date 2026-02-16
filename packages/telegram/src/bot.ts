@@ -117,5 +117,32 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Register inline keyboard callback handlers
   registerCallbacks(bot, config, executor);
 
+  // Register commands with Telegram for autocomplete menu
+  bot.telegram.setMyCommands([
+    { command: "dashboard", description: "Workspace overview & agent status" },
+    { command: "agents", description: "List active AI agents" },
+    { command: "tasks", description: "List tasks (optional: filter by status)" },
+    { command: "task", description: "View task details" },
+    { command: "backlog", description: "List backlog tasks" },
+    { command: "approvetask", description: "Approve an IN_REVIEW task" },
+    { command: "rejecttask", description: "Reject an IN_REVIEW task" },
+    { command: "sprints", description: "List all sprints" },
+    { command: "plan", description: "Start a planning meeting" },
+    { command: "plans", description: "List pending plans" },
+    { command: "approve", description: "Approve a plan" },
+    { command: "reject", description: "Reject a plan with feedback" },
+    { command: "run", description: "Start agent on sprint tasks" },
+    { command: "stop", description: "Stop all running processes" },
+    { command: "exec", description: "One-shot AI execution" },
+    { command: "review", description: "AI review of PR or changes" },
+    { command: "activity", description: "Recent workspace activity" },
+    { command: "workspace", description: "Workspace info & stats" },
+    { command: "git", description: "Run whitelisted git commands" },
+    { command: "dev", description: "Run lint, typecheck, build, test" },
+    { command: "config", description: "Show/update settings" },
+    { command: "status", description: "Show running processes" },
+    { command: "help", description: "Show all commands" },
+  ]).catch((err) => console.error("Failed to set bot commands:", err));
+
   return bot;
 }
