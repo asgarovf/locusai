@@ -124,7 +124,7 @@ export class LocusChatViewProvider implements vscode.WebviewViewProvider {
     const csp = [
       `default-src 'none'`,
       `style-src ${cspSource} 'nonce-${nonce}'`,
-      `script-src 'nonce-${nonce}' 'unsafe-eval'`,
+      `script-src 'nonce-${nonce}'`,
       `font-src ${cspSource}`,
       `img-src ${cspSource}`,
     ].join("; ");

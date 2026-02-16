@@ -39,7 +39,6 @@ const STATE_BG_CLASSES: Record<string, string> = {
 };
 
 const ALL_STATE_CLASSES = Object.values(STATE_CSS_CLASSES);
-const ALL_STATE_BG_CLASSES = Object.values(STATE_BG_CLASSES);
 
 const PULSING_STATES = new Set(["starting", "running", "resuming"]);
 

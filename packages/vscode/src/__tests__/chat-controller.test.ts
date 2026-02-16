@@ -40,6 +40,17 @@ class MockMemento {
   }
 }
 
+const mockOutputChannel = {
+  name: "test",
+  appendLine(_value: string) { /* no-op */ },
+  append(_value: string) { /* no-op */ },
+  clear() { /* no-op */ },
+  show() { /* no-op */ },
+  hide() { /* no-op */ },
+  dispose() { /* no-op */ },
+  replace(_value: string) { /* no-op */ },
+};
+
 // ============================================================================
 // Test Helpers
 // ============================================================================
@@ -50,6 +61,7 @@ const CWD = "/test/workspace";
 
 function createTestInfra() {
   const memento = new MockMemento();
+  const globalState = new MockMemento();
   const store = new SessionStore(memento, WORKSPACE_ID);
   const manager = new SessionManager(store);
   const events: HostEvent[] = [];
@@ -58,6 +70,8 @@ function createTestInfra() {
     manager,
     getCliBinaryPath: () => CLI_PATH,
     getCwd: () => CWD,
+    globalState: globalState as any,
+    outputChannel: mockOutputChannel as any,
   });
 
   controller.setEventSink((event) => {
@@ -339,6 +353,8 @@ describe("ChatController", () => {
         manager: manager2,
         getCliBinaryPath: () => CLI_PATH,
         getCwd: () => CWD,
+        globalState: new MockMemento() as any,
+        outputChannel: mockOutputChannel as any,
       });
       controller.setEventSink((e) => events.push(e));
 
@@ -362,6 +378,8 @@ describe("ChatController", () => {
         manager,
         getCliBinaryPath: () => CLI_PATH,
         getCwd: () => CWD,
+        globalState: new MockMemento() as any,
+        outputChannel: mockOutputChannel as any,
       });
 
       // No sink set — should not throw.
