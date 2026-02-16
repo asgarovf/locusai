@@ -34,6 +34,7 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 
 <b>Status:</b>
 /status — Show running processes
+/activity [count] — Recent workspace activity
 
 <b>Config:</b>
 /config — Show current settings

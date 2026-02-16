@@ -1,5 +1,6 @@
 import { Telegraf } from "telegraf";
 import {
+  activityCommand,
   agentsCommand,
   approveCommand,
   approveTaskCommand,
@@ -97,6 +98,9 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Config command
   bot.command("config", (ctx) => configCommand(ctx, config));
+
+  // Activity feed
+  bot.command("activity", (ctx) => activityCommand(ctx, config));
 
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
