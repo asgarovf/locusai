@@ -1,35 +1,8 @@
-import { LocusClient } from "@locusai/sdk";
 import { TaskStatus } from "@locusai/shared";
 import type { Context } from "telegraf";
+import { getClientAndWorkspace, requireApiKey } from "../api-client.js";
 import type { TelegramConfig } from "../config.js";
 import { escapeHtml, formatError, formatInfo } from "../formatter.js";
-
-function createClient(config: TelegramConfig): LocusClient {
-  return new LocusClient({
-    baseUrl: config.apiBase || "https://api.locusai.dev/api",
-    token: config.apiKey,
-  });
-}
-
-async function resolveWorkspaceId(
-  client: LocusClient,
-  config: TelegramConfig
-): Promise<string> {
-  if (config.workspaceId) {
-    return config.workspaceId;
-  }
-
-  console.log("[workspace] Resolving workspace from API key...");
-  const info = await client.auth.getApiKeyInfo();
-  if (info.workspaceId) {
-    console.log(`[workspace] Resolved workspace: ${info.workspaceId}`);
-    return info.workspaceId;
-  }
-
-  throw new Error(
-    "Could not resolve workspace from API key. Please set workspaceId in settings."
-  );
-}
 
 export async function tasksCommand(
   ctx: Context,
@@ -37,19 +10,10 @@ export async function tasksCommand(
 ): Promise<void> {
   console.log("[tasks] Listing active tasks");
 
-  if (!config.apiKey) {
-    await ctx.reply(
-      formatError(
-        "API key is required for /tasks. Run: locus config setup --api-key <KEY>"
-      ),
-      { parse_mode: "HTML" }
-    );
-    return;
-  }
+  if (!(await requireApiKey(ctx, config, "tasks"))) return;
 
   try {
-    const client = createClient(config);
-    const workspaceId = await resolveWorkspaceId(client, config);
+    const { client, workspaceId } = await getClientAndWorkspace(config);
     const tasks = await client.tasks.list(workspaceId, {
       status: [
         TaskStatus.IN_PROGRESS,
@@ -127,19 +91,10 @@ export async function rejectTaskCommand(
     return;
   }
 
-  if (!config.apiKey) {
-    await ctx.reply(
-      formatError(
-        "API key is required for /rejecttask. Run: locus config setup --api-key <KEY>"
-      ),
-      { parse_mode: "HTML" }
-    );
-    return;
-  }
+  if (!(await requireApiKey(ctx, config, "rejecttask"))) return;
 
   try {
-    const client = createClient(config);
-    const workspaceId = await resolveWorkspaceId(client, config);
+    const { client, workspaceId } = await getClientAndWorkspace(config);
 
     // Verify task exists and is in IN_REVIEW status
     const task = await client.tasks.getById(taskId, workspaceId);

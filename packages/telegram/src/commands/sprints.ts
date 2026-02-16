@@ -1,35 +1,8 @@
-import { LocusClient } from "@locusai/sdk";
 import { SprintStatus } from "@locusai/shared";
 import type { Context } from "telegraf";
+import { getClientAndWorkspace, requireApiKey } from "../api-client.js";
 import type { TelegramConfig } from "../config.js";
 import { escapeHtml, formatError, formatInfo } from "../formatter.js";
-
-function createClient(config: TelegramConfig): LocusClient {
-  return new LocusClient({
-    baseUrl: config.apiBase || "https://api.locusai.dev/api",
-    token: config.apiKey,
-  });
-}
-
-async function resolveWorkspaceId(
-  client: LocusClient,
-  config: TelegramConfig
-): Promise<string> {
-  if (config.workspaceId) {
-    return config.workspaceId;
-  }
-
-  console.log("[workspace] Resolving workspace from API key...");
-  const info = await client.auth.getApiKeyInfo();
-  if (info.workspaceId) {
-    console.log(`[workspace] Resolved workspace: ${info.workspaceId}`);
-    return info.workspaceId;
-  }
-
-  throw new Error(
-    "Could not resolve workspace from API key. Please set workspaceId in settings."
-  );
-}
 
 export async function sprintsCommand(
   ctx: Context,
@@ -37,19 +10,10 @@ export async function sprintsCommand(
 ): Promise<void> {
   console.log("[sprints] Listing sprints");
 
-  if (!config.apiKey) {
-    await ctx.reply(
-      formatError(
-        "API key is required for /sprints. Run: locus config setup --api-key <KEY>"
-      ),
-      { parse_mode: "HTML" }
-    );
-    return;
-  }
+  if (!(await requireApiKey(ctx, config, "sprints"))) return;
 
   try {
-    const client = createClient(config);
-    const workspaceId = await resolveWorkspaceId(client, config);
+    const { client, workspaceId } = await getClientAndWorkspace(config);
     const sprints = await client.sprints.list(workspaceId);
 
     if (sprints.length === 0) {
@@ -123,19 +87,10 @@ export async function completeSprintCommand(
     return;
   }
 
-  if (!config.apiKey) {
-    await ctx.reply(
-      formatError(
-        "API key is required for /completesprint. Run: locus config setup --api-key <KEY>"
-      ),
-      { parse_mode: "HTML" }
-    );
-    return;
-  }
+  if (!(await requireApiKey(ctx, config, "completesprint"))) return;
 
   try {
-    const client = createClient(config);
-    const workspaceId = await resolveWorkspaceId(client, config);
+    const { client, workspaceId } = await getClientAndWorkspace(config);
 
     // Verify sprint exists
     const sprint = await client.sprints.getById(sprintId, workspaceId);
