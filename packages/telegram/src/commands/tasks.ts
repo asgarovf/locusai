@@ -9,44 +9,75 @@ import {
   splitMessage,
 } from "../formatter.js";
 
+const VALID_STATUSES = Object.values(TaskStatus);
+
+const priorityIcon: Record<string, string> = {
+  CRITICAL: "🔴",
+  HIGH: "🟠",
+  MEDIUM: "🟡",
+  LOW: "🟢",
+};
+
+const statusIcon: Record<string, string> = {
+  BACKLOG: "📋",
+  IN_PROGRESS: "🔄",
+  IN_REVIEW: "👀",
+  BLOCKED: "🚫",
+  DONE: "✅",
+};
+
 export async function tasksCommand(
   ctx: Context,
   config: TelegramConfig
 ): Promise<void> {
-  console.log("[tasks] Listing active tasks");
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const filterArg = text.replace(/^\/tasks\s*/, "").trim().toUpperCase();
+
+  console.log(`[tasks] Listing tasks (filter: ${filterArg || "default"})`);
+
+  if (filterArg && !VALID_STATUSES.includes(filterArg as TaskStatus)) {
+    await ctx.reply(
+      formatError(
+        `Invalid status. Available: ${VALID_STATUSES.join(", ")}`
+      ),
+      { parse_mode: "HTML" }
+    );
+    return;
+  }
 
   if (!(await requireApiKey(ctx, config, "tasks"))) return;
 
   try {
     const { client, workspaceId } = await getClientAndWorkspace(config);
+
+    const statusFilter = filterArg
+      ? [filterArg as TaskStatus]
+      : [TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.BLOCKED];
+
     const tasks = await client.tasks.list(workspaceId, {
-      status: [
-        TaskStatus.IN_PROGRESS,
-        TaskStatus.IN_REVIEW,
-        TaskStatus.BLOCKED,
-      ],
+      status: statusFilter,
     });
 
+    const header = filterArg
+      ? `Tasks — ${filterArg} (${tasks.length})`
+      : `Active Tasks (${tasks.length})`;
+
     if (tasks.length === 0) {
-      await ctx.reply(formatInfo("No active tasks found."), {
+      await ctx.reply(formatInfo(`No ${filterArg || "active"} tasks found.`), {
         parse_mode: "HTML",
       });
       return;
     }
 
-    const statusIcon: Record<string, string> = {
-      IN_PROGRESS: "🔄",
-      IN_REVIEW: "👀",
-      BLOCKED: "🚫",
-    };
-
-    let msg = "<b>Active Tasks</b>\n\n";
+    let msg = `<b>${escapeHtml(header)}</b>\n\n`;
     for (const task of tasks) {
-      const icon = statusIcon[task.status] || "•";
+      const sIcon = statusIcon[task.status] || "•";
+      const pIcon = priorityIcon[task.priority] || "•";
       const pr = task.prUrl
         ? ` — <a href="${escapeHtml(task.prUrl)}">PR</a>`
         : "";
-      msg += `${icon} <b>${escapeHtml(task.title)}</b>\n`;
+      msg += `${sIcon} ${pIcon} <b>${escapeHtml(task.title)}</b>\n`;
       msg += `   Status: \`${task.status}\`${pr}\n`;
       msg += `   ID: \`${task.id}\`\n\n`;
     }
@@ -60,6 +91,57 @@ export async function tasksCommand(
     await ctx.reply(
       formatError(
         `Failed to fetch tasks: ${err instanceof Error ? err.message : String(err)}`
+      ),
+      { parse_mode: "HTML" }
+    );
+  }
+}
+
+export async function backlogCommand(
+  ctx: Context,
+  config: TelegramConfig
+): Promise<void> {
+  console.log("[backlog] Listing backlog tasks");
+
+  if (!(await requireApiKey(ctx, config, "backlog"))) return;
+
+  try {
+    const { client, workspaceId } = await getClientAndWorkspace(config);
+    const tasks = await client.tasks.list(workspaceId, {
+      status: [TaskStatus.BACKLOG],
+    });
+
+    if (tasks.length === 0) {
+      await ctx.reply(formatInfo("No backlog tasks found."), {
+        parse_mode: "HTML",
+      });
+      return;
+    }
+
+    const truncate = tasks.length > 15;
+    const displayed = truncate ? tasks.slice(0, 15) : tasks;
+
+    let msg = `<b>Backlog Tasks (${tasks.length})</b>\n\n`;
+    for (const task of displayed) {
+      const pIcon = priorityIcon[task.priority] || "•";
+      const sprint = task.sprintId ? ` · Sprint: ${escapeHtml(task.sprintId)}` : "";
+      msg += `📋 ${pIcon} <b>${escapeHtml(task.title)}</b>\n`;
+      msg += `   ID: \`${task.id}\`${sprint}\n\n`;
+    }
+
+    if (truncate) {
+      msg += `<i>… and ${tasks.length - 15} more. Use /tasks BACKLOG for full list</i>`;
+    }
+
+    await ctx.reply(msg.trim(), {
+      parse_mode: "HTML",
+      link_preview_options: { is_disabled: true },
+    });
+  } catch (err) {
+    console.error("[backlog] Failed:", err);
+    await ctx.reply(
+      formatError(
+        `Failed to fetch backlog: ${err instanceof Error ? err.message : String(err)}`
       ),
       { parse_mode: "HTML" }
     );

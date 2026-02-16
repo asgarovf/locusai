@@ -13,8 +13,9 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /cancel &lt;id&gt; — Cancel a plan
 
 <b>Tasks:</b>
-/tasks — List active tasks
+/tasks [status] — List tasks (default: active)
 /task &lt;id&gt; — View task details
+/backlog — List backlog tasks
 /approvetask &lt;id&gt; — Approve an IN_REVIEW task
 /rejecttask &lt;id&gt; &lt;feedback&gt; — Reject an IN_REVIEW task
 

@@ -4,6 +4,7 @@ import {
   agentsCommand,
   approveCommand,
   approveTaskCommand,
+  backlogCommand,
   cancelCommand,
   completeSprintCommand,
   configCommand,
@@ -87,6 +88,7 @@ export function createBot(config: TelegramConfig): Telegraf {
   bot.command("task", (ctx) => taskDetailCommand(ctx, config));
   bot.command("approvetask", (ctx) => approveTaskCommand(ctx, config));
   bot.command("rejecttask", (ctx) => rejectTaskCommand(ctx, config));
+  bot.command("backlog", (ctx) => backlogCommand(ctx, config));
 
   // Sprint management commands
   bot.command("sprints", (ctx) => sprintsCommand(ctx, config));

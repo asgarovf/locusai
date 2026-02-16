@@ -18,6 +18,7 @@ export { completeSprintCommand, sprintsCommand } from "./sprints.js";
 export { statusCommand } from "./status.js";
 export {
   approveTaskCommand,
+  backlogCommand,
   rejectTaskCommand,
   taskDetailCommand,
   tasksCommand,
