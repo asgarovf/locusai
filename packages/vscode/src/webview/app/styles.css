@@ -31,7 +31,6 @@ body {
   overflow: hidden;
 }
 
-
 /* ── Design Tokens ────────────────────────────────────────────────────── */
 
 :root {
@@ -295,11 +294,7 @@ button:focus-visible,
 
 .lc-dropdown-delete:hover {
   color: var(--lc-state-failed);
-  background: color-mix(
-    in srgb,
-    var(--lc-state-failed) 10%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--lc-state-failed) 10%, transparent);
 }
 
 .lc-dropdown-delete svg {
@@ -1082,20 +1077,35 @@ button:focus-visible,
   align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 10%,
+    transparent
+  );
   color: var(--vscode-editor-foreground);
   font-family: var(--vscode-font-family);
   font-size: calc(var(--vscode-font-size) - 1px);
   font-weight: 400;
-  border: 1px solid color-mix(in srgb, var(--vscode-editor-foreground) 15%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--vscode-editor-foreground) 15%, transparent);
   cursor: pointer;
   line-height: 1.5;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .lc-chip:hover {
-  background: color-mix(in srgb, var(--vscode-editor-foreground) 18%, transparent);
-  border-color: color-mix(in srgb, var(--vscode-editor-foreground) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 18%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--vscode-editor-foreground) 30%,
+    transparent
+  );
 }
 
 .lc-empty-hint {

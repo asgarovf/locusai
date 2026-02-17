@@ -456,7 +456,7 @@ function showDiscussHelp(): void {
     ${c.cyan("locus discuss --delete <id>")}         Delete a discussion
 
   ${c.bold("Options:")}
-    ${c.dim("--model <model>")}    AI model to use
+    ${c.dim("--model <model>")}    AI model (claude: opus, sonnet, haiku | codex: gpt-5.3-codex, gpt-5-codex-mini)
     ${c.dim("--provider <p>")}     AI provider (claude, codex)
     ${c.dim("--reasoning-effort <level>")}  Reasoning effort (low, medium, high)
     ${c.dim("--dir <path>")}       Project directory

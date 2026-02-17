@@ -55,7 +55,12 @@ export class StatusRail {
 
     // Visibility — hide when idle or in a terminal state
     // (terminal states are already shown in the header and timeline)
-    const TERMINAL = new Set(["completed", "canceled", "failed", "interrupted"]);
+    const TERMINAL = new Set([
+      "completed",
+      "canceled",
+      "failed",
+      "interrupted",
+    ]);
     if (stateKey === "idle" || TERMINAL.has(stateKey)) {
       this.element.style.display = "none";
       return;

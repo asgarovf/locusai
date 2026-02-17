@@ -27,8 +27,21 @@
     },
     "model": {
       "type": "string",
-      "description": "AI model to use for agent execution",
-      "examples": ["opus", "sonnet", "gpt-5.3-codex"]
+      "description": "AI model to use for agent execution. Valid values depend on the provider.",
+      "enum": [
+        "opus",
+        "sonnet",
+        "haiku",
+        "opusplan",
+        "claude-opus-4-6",
+        "claude-sonnet-4-5-20250929",
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001",
+        "gpt-5.3-codex",
+        "gpt-5.3-codex-spark",
+        "gpt-5-codex-mini",
+        "gpt-5.2-codex"
+      ]
     },
     "workspaceId": {
       "type": "string",
@@ -56,5 +69,41 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "provider": { "const": "claude" } } },
+      "then": {
+        "properties": {
+          "model": {
+            "enum": [
+              "opus",
+              "sonnet",
+              "haiku",
+              "opusplan",
+              "claude-opus-4-6",
+              "claude-sonnet-4-5-20250929",
+              "claude-sonnet-4-6",
+              "claude-haiku-4-5-20251001"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "provider": { "const": "codex" } } },
+      "then": {
+        "properties": {
+          "model": {
+            "enum": [
+              "gpt-5.3-codex",
+              "gpt-5.3-codex-spark",
+              "gpt-5-codex-mini",
+              "gpt-5.2-codex"
+            ]
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

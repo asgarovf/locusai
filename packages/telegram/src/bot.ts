@@ -19,6 +19,7 @@ import {
   gitCommand,
   hasActiveDiscussion,
   helpCommand,
+  modelCommand,
   planCommand,
   plansCommand,
   rejectCommand,
@@ -115,6 +116,9 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Config command
   bot.command("config", (ctx) => configCommand(ctx, config));
 
+  // Model shortcut command
+  bot.command("model", (ctx) => modelCommand(ctx, config));
+
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
 
@@ -177,6 +181,7 @@ export function createBot(config: TelegramConfig): Telegraf {
         description: "End active discussion & summarize",
       },
       { command: "config", description: "Show/update settings" },
+      { command: "model", description: "View or switch AI model" },
       { command: "status", description: "Show running processes" },
       { command: "help", description: "Show all commands" },
     ])

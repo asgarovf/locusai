@@ -169,9 +169,15 @@ export class ChatStore {
     }
 
     // When session reaches a terminal state, finalize any running tools
-    const terminalStatuses = new Set(["completed", "canceled", "failed", "interrupted"]);
+    const terminalStatuses = new Set([
+      "completed",
+      "canceled",
+      "failed",
+      "interrupted",
+    ]);
     if (payload.status && terminalStatuses.has(payload.status)) {
-      const toolStatus = payload.status === "completed" ? "completed" : "canceled";
+      const toolStatus =
+        payload.status === "completed" ? "completed" : "canceled";
       this.finalizeRunningTools(toolStatus);
       this.state.isStreaming = false;
       this.state.isThinking = false;

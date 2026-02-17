@@ -1,6 +1,6 @@
 export { activityCommand } from "./activity.js";
 export { agentsCommand } from "./agents.js";
-export { configCommand } from "./config.js";
+export { configCommand, modelCommand } from "./config.js";
 export { dashboardCommand } from "./dashboard.js";
 export { devCommand } from "./dev.js";
 export {

@@ -303,7 +303,10 @@ export class Renderer {
     if (!buffer && !isStreaming) return;
 
     this.ensureAssistantMessage();
-    this.assistantMessage!.updateContent(buffer, isStreaming);
+
+    if (!this.assistantMessage) return;
+
+    this.assistantMessage.updateContent(buffer, isStreaming);
   }
 
   private updateToolCards(
@@ -386,10 +389,6 @@ export class Renderer {
 
   private startNewSession(): void {
     this.store.reset();
-    this.composer.focus();
-  }
-
-  private focusComposer(): void {
     this.composer.focus();
   }
 

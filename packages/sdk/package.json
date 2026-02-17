@@ -26,6 +26,7 @@
     "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules"
   },

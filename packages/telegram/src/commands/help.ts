@@ -46,6 +46,7 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /config — Show current settings
 /config set &lt;key&gt; &lt;value&gt; — Update a setting
 /config unset &lt;key&gt; — Remove a setting
+/model [name] — View or switch AI model
 /help — Show this message`;
 
 export async function startCommand(ctx: Context): Promise<void> {

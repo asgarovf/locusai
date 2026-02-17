@@ -489,7 +489,7 @@ function showPlanHelp(): void {
       "--api-url <url>"
     )}    API base URL (default: https://api.locusai.dev/api)
     ${c.dim("--workspace <id>")}   Workspace ID
-    ${c.dim("--model <model>")}    AI model to use
+    ${c.dim("--model <model>")}    AI model (claude: opus, sonnet, haiku | codex: gpt-5.3-codex, gpt-5-codex-mini)
     ${c.dim("--provider <p>")}     AI provider (claude, codex)
     ${c.dim("--feedback <text>")}  CEO feedback when rejecting
     ${c.dim("--dir <path>")}       Project directory

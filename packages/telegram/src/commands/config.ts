@@ -1,5 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  DEFAULT_MODEL,
+  getModelsForProvider,
+  isValidModelForProvider,
+  PROVIDER,
+  type Provider,
+} from "@locusai/sdk/node";
 import type { Context } from "telegraf";
 import { parseArgs } from "../command-whitelist.js";
 import type { TelegramConfig } from "../config.js";
@@ -21,7 +28,7 @@ const ALLOWED_KEYS: Record<
         : "Invalid provider. Must be: claude, codex",
   },
   model: {
-    description: "AI model override (e.g. opus, sonnet, haiku)",
+    description: "AI model override (use /config models to see valid options)",
   },
   apiUrl: {
     description: "Locus API base URL",
@@ -32,6 +39,7 @@ const USAGE = `<b>Usage:</b>
 /config — Show current settings
 /config set &lt;key&gt; &lt;value&gt; — Update a setting
 /config unset &lt;key&gt; — Remove a setting
+/config models — List available models for current provider
 
 <b>Available keys:</b>
 ${Object.entries(ALLOWED_KEYS)
@@ -69,6 +77,60 @@ function formatSettingsDisplay(settings: SettingsJson): string {
   }
 
   return msg;
+}
+
+export async function modelCommand(
+  ctx: Context,
+  config: TelegramConfig
+): Promise<void> {
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const input = text.replace(/^\/model\s*/, "").trim();
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
+
+  console.log(`[model] Received: ${input || "(empty)"}`);
+
+  const settings = loadSettings(config) || {};
+  const currentProvider =
+    (settings.provider as string) || config.provider || PROVIDER.CLAUDE;
+  const currentModel =
+    (settings.model as string) ||
+    config.model ||
+    DEFAULT_MODEL[currentProvider as Provider];
+
+  if (!input) {
+    const models = getModelsForProvider(currentProvider as Provider);
+    let msg = `<b>Current model:</b> <code>${escapeHtml(currentModel)}</code>\n`;
+    msg += `<b>Provider:</b> <code>${escapeHtml(currentProvider)}</code>\n\n`;
+    msg += `<b>Available models:</b>\n`;
+    for (const m of models) {
+      const marker = m === currentModel ? " ✓" : "";
+      msg += `• <code>${escapeHtml(m)}</code>${marker}\n`;
+    }
+    msg += `\nSwitch: /model &lt;name&gt;`;
+    await ctx.reply(msg, { parse_mode: "HTML" });
+    return;
+  }
+
+  // Validate and set
+  if (!isValidModelForProvider(currentProvider as Provider, input)) {
+    const models = getModelsForProvider(currentProvider as Provider);
+    await ctx.reply(
+      formatError(
+        `Model "${escapeHtml(input)}" is not valid for provider "${escapeHtml(currentProvider)}".\n\nValid models: ${models.join(", ")}`
+      ),
+      { parse_mode: "HTML" }
+    );
+    return;
+  }
+
+  settings.model = input;
+  saveSettings(config, settings);
+  await ctx.reply(
+    formatSuccess(`Model set to <code>${escapeHtml(input)}</code>`),
+    { parse_mode: "HTML" }
+  );
 }
 
 export async function configCommand(
@@ -145,12 +207,44 @@ export async function configCommand(
     try {
       const settings = loadSettings(config) || {};
 
+      // Cross-validate model against current provider
+      if (key === "model") {
+        const currentProvider =
+          (settings.provider as string) || config.provider || PROVIDER.CLAUDE;
+        if (!isValidModelForProvider(currentProvider as Provider, value)) {
+          const validModels = getModelsForProvider(currentProvider as Provider);
+          await ctx.reply(
+            formatError(
+              `Model "${escapeHtml(value)}" is not valid for provider "${escapeHtml(currentProvider)}".\n\nValid models: ${validModels.join(", ")}`
+            ),
+            { parse_mode: "HTML" }
+          );
+          return;
+        }
+      }
+
+      // When changing provider, reset model if it's invalid for the new provider
+      let modelResetNote = "";
+      if (key === "provider") {
+        const currentModel = (settings.model as string) || config.model;
+        if (
+          currentModel &&
+          !isValidModelForProvider(value as Provider, currentModel)
+        ) {
+          const newDefault = DEFAULT_MODEL[value as Provider];
+          settings.model = newDefault;
+          modelResetNote = `\nModel was reset to \`${escapeHtml(newDefault)}\` (previous model not valid for ${escapeHtml(value)}).`;
+        }
+      }
+
       settings[key] = value;
 
       saveSettings(config, settings);
 
       await ctx.reply(
-        formatSuccess(`Set \`${escapeHtml(key)}\` = \`${escapeHtml(value)}\``),
+        formatSuccess(
+          `Set \`${escapeHtml(key)}\` = \`${escapeHtml(value)}\`${modelResetNote}`
+        ),
         { parse_mode: "HTML" }
       );
     } catch (err) {
@@ -210,6 +304,22 @@ export async function configCommand(
         { parse_mode: "HTML" }
       );
     }
+    return;
+  }
+
+  if (subcommand === "models") {
+    const settings = loadSettings(config) || {};
+    const currentProvider =
+      (settings.provider as string) || config.provider || PROVIDER.CLAUDE;
+    const models = getModelsForProvider(currentProvider as Provider);
+    const defaultModel = DEFAULT_MODEL[currentProvider as Provider];
+    let msg = `Available models for <b>${escapeHtml(currentProvider)}</b>:\n\n`;
+    for (const m of models) {
+      const isDefault = m === defaultModel ? " (default)" : "";
+      msg += `• ${escapeHtml(m)}${isDefault}\n`;
+    }
+    msg += `\nSet with: /config set model &lt;name&gt;`;
+    await ctx.reply(msg, { parse_mode: "HTML" });
     return;
   }
 
