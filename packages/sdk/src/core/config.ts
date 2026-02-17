@@ -7,10 +7,48 @@ export const PROVIDER = {
 
 export type Provider = (typeof PROVIDER)[keyof typeof PROVIDER];
 
-export const DEFAULT_MODEL: Record<Provider, string> = {
-  [PROVIDER.CLAUDE]: "opus",
-  [PROVIDER.CODEX]: "gpt-5.3-codex",
+export const CLAUDE_MODELS = {
+  OPUS: "opus",
+  SONNET: "sonnet",
+  HAIKU: "haiku",
+  OPUS_PLAN: "opusplan",
+  CLAUDE_OPUS_4_6: "claude-opus-4-6",
+  CLAUDE_SONNET_4_5: "claude-sonnet-4-5-20250929",
+  CLAUDE_SONNET_4_6: "claude-sonnet-4-6",
+  CLAUDE_HAIKU_4_5: "claude-haiku-4-5-20251001",
+} as const;
+export type ClaudeModel = (typeof CLAUDE_MODELS)[keyof typeof CLAUDE_MODELS];
+
+export const CODEX_MODELS = {
+  GPT_5_3_CODEX: "gpt-5.3-codex",
+  GPT_5_3_CODEX_SPARK: "gpt-5.3-codex-spark",
+  GPT_5_CODEX_MINI: "gpt-5-codex-mini",
+  GPT_5_2_CODEX: "gpt-5.2-codex",
+} as const;
+export type CodexModel = (typeof CODEX_MODELS)[keyof typeof CODEX_MODELS];
+
+export type ModelId = ClaudeModel | CodexModel;
+
+export const PROVIDER_MODELS: Record<Provider, readonly ModelId[]> = {
+  [PROVIDER.CLAUDE]: Object.values(CLAUDE_MODELS),
+  [PROVIDER.CODEX]: Object.values(CODEX_MODELS),
+} as const;
+
+export const DEFAULT_MODEL: Record<Provider, ModelId> = {
+  [PROVIDER.CLAUDE]: CLAUDE_MODELS.OPUS,
+  [PROVIDER.CODEX]: CODEX_MODELS.GPT_5_3_CODEX,
 };
+
+export function isValidModelForProvider(
+  provider: Provider,
+  model: string
+): boolean {
+  return (PROVIDER_MODELS[provider] as readonly string[]).includes(model);
+}
+
+export function getModelsForProvider(provider: Provider): readonly ModelId[] {
+  return PROVIDER_MODELS[provider];
+}
 
 export const LOCUS_SCHEMA_BASE_URL = "https://locusai.dev/schemas";
 
