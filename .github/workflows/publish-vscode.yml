@@ -1,0 +1,99 @@
+name: Publish VSCode Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      pre_release:
+        description: 'Publish as pre-release'
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Dry run (package only, do not publish)'
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      pre_release:
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-vscode-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build & Publish VSCode Extension
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.dry_run && '' || 'NPM' }}
+    defaults:
+      run:
+        working-directory: packages/vscode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: .
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Build extension
+        run: bun run build
+
+      - name: Package extension
+        run: bun run package
+        id: package
+
+      - name: Get extension version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extension version: $VERSION"
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusai-vscode-${{ steps.version.outputs.version }}
+          path: packages/vscode/*.vsix
+          retention-days: 90
+
+      - name: Publish to VS Code Marketplace
+        if: ${{ !inputs.dry_run }}
+        run: |
+          if [ "${{ inputs.pre_release }}" = "true" ]; then
+            npx @vscode/vsce publish --no-dependencies --pre-release
+          else
+            npx @vscode/vsce publish --no-dependencies
+          fi
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX Registry
+        if: ${{ !inputs.dry_run }}
+        run: npx ovsx publish *.vsix -p ${{ secrets.OVSX_PAT }}
+        continue-on-error: true
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}

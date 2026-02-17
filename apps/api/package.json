@@ -18,7 +18,7 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "workspace:*",
+    "@locusai/shared": "^0.13.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",

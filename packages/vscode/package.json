@@ -157,6 +157,8 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test src/__tests__",
     "package": "vsce package --no-dependencies",
+    "publish:vscode": "vsce publish --no-dependencies",
+    "publish:vscode:pre": "vsce publish --no-dependencies --pre-release",
     "clean": "rm -rf dist node_modules"
   },
   "devDependencies": {
