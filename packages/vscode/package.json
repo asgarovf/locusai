@@ -155,11 +155,14 @@
     "build:webview": "node scripts/build-webview.mjs",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/__tests__",
+    "test": "node scripts/build-webview.mjs && bun test src/__tests__",
     "package": "vsce package --no-dependencies",
     "publish:vscode": "vsce publish --no-dependencies",
     "publish:vscode:pre": "vsce publish --no-dependencies --pre-release",
     "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@locusai/shared": "^0.13.2"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",
