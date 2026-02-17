@@ -1,6 +1,13 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { type AiProvider, c, LOCUS_CONFIG, PROVIDER } from "@locusai/sdk/node";
+import {
+  type AiProvider,
+  c,
+  getModelsForProvider,
+  isValidModelForProvider,
+  LOCUS_CONFIG,
+  PROVIDER,
+} from "@locusai/sdk/node";
 
 /**
  * Check if a project has been initialized with Locus
@@ -40,6 +47,26 @@ export function resolveProvider(input?: string): AiProvider {
 
   console.error(
     c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
+  );
+  process.exit(1);
+}
+
+/**
+ * Resolve and validate AI model against the given provider
+ */
+export function resolveModel(
+  provider: AiProvider,
+  input?: string
+): string | undefined {
+  if (!input) return undefined;
+  if (isValidModelForProvider(provider, input)) return input;
+
+  const validModels = getModelsForProvider(provider);
+  console.error(
+    c.error(
+      `Error: model '${input}' is not valid for provider '${provider}'.\n` +
+        `Valid models: ${validModels.join(", ")}`
+    )
   );
   process.exit(1);
 }
