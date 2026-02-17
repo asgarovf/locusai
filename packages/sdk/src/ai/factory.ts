@@ -1,4 +1,9 @@
-import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
+import {
+  DEFAULT_MODEL,
+  PROVIDER,
+  getModelsForProvider,
+  isValidModelForProvider,
+} from "../core/config.js";
 import { ClaudeRunner } from "./claude-runner.js";
 import { CodexRunner } from "./codex-runner.js";
 import type { AiProvider, AiRunner } from "./runner.js";
@@ -26,6 +31,15 @@ export function createAiRunner(
 ): AiRunner {
   const resolvedProvider = provider ?? PROVIDER.CLAUDE;
   const model = config.model ?? DEFAULT_MODEL[resolvedProvider];
+
+  // Validate model is compatible with provider
+  if (!isValidModelForProvider(resolvedProvider, model)) {
+    const validModels = getModelsForProvider(resolvedProvider);
+    throw new Error(
+      `Model "${model}" is not valid for provider "${resolvedProvider}". ` +
+        `Valid models: ${validModels.join(", ")}`
+    );
+  }
 
   switch (resolvedProvider) {
     case PROVIDER.CODEX:
