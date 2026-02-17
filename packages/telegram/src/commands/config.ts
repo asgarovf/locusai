@@ -1,13 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Context } from "telegraf";
 import {
-  isValidModelForProvider,
-  getModelsForProvider,
-  PROVIDER,
   DEFAULT_MODEL,
+  getModelsForProvider,
+  isValidModelForProvider,
+  PROVIDER,
   type Provider,
 } from "@locusai/sdk/node";
+import type { Context } from "telegraf";
 import { parseArgs } from "../command-whitelist.js";
 import type { TelegramConfig } from "../config.js";
 import { escapeHtml, formatError, formatSuccess } from "../formatter.js";
@@ -210,15 +210,9 @@ export async function configCommand(
       // Cross-validate model against current provider
       if (key === "model") {
         const currentProvider =
-          (settings.provider as string) ||
-          config.provider ||
-          PROVIDER.CLAUDE;
-        if (
-          !isValidModelForProvider(currentProvider as Provider, value)
-        ) {
-          const validModels = getModelsForProvider(
-            currentProvider as Provider
-          );
+          (settings.provider as string) || config.provider || PROVIDER.CLAUDE;
+        if (!isValidModelForProvider(currentProvider as Provider, value)) {
+          const validModels = getModelsForProvider(currentProvider as Provider);
           await ctx.reply(
             formatError(
               `Model "${escapeHtml(value)}" is not valid for provider "${escapeHtml(currentProvider)}".\n\nValid models: ${validModels.join(", ")}`
@@ -232,8 +226,7 @@ export async function configCommand(
       // When changing provider, reset model if it's invalid for the new provider
       let modelResetNote = "";
       if (key === "provider") {
-        const currentModel =
-          (settings.model as string) || config.model;
+        const currentModel = (settings.model as string) || config.model;
         if (
           currentModel &&
           !isValidModelForProvider(value as Provider, currentModel)

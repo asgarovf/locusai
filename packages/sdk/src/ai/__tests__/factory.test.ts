@@ -1,13 +1,13 @@
-import { describe, it, expect } from "bun:test";
-import { createAiRunner } from "../factory.js";
+import { describe, expect, it } from "bun:test";
 import {
-  PROVIDER,
   CLAUDE_MODELS,
   CODEX_MODELS,
   DEFAULT_MODEL,
-  isValidModelForProvider,
   getModelsForProvider,
+  isValidModelForProvider,
+  PROVIDER,
 } from "../../core/config.js";
+import { createAiRunner } from "../factory.js";
 
 describe("isValidModelForProvider", () => {
   it("accepts opus for claude provider", () => {
@@ -17,9 +17,9 @@ describe("isValidModelForProvider", () => {
   });
 
   it("accepts sonnet for claude provider", () => {
-    expect(
-      isValidModelForProvider(PROVIDER.CLAUDE, CLAUDE_MODELS.SONNET)
-    ).toBe(true);
+    expect(isValidModelForProvider(PROVIDER.CLAUDE, CLAUDE_MODELS.SONNET)).toBe(
+      true
+    );
   });
 
   it("accepts haiku for claude provider", () => {
@@ -69,10 +69,7 @@ describe("isValidModelForProvider", () => {
 
   it("accepts all codex models for codex provider", () => {
     expect(
-      isValidModelForProvider(
-        PROVIDER.CODEX,
-        CODEX_MODELS.GPT_5_3_CODEX_SPARK
-      )
+      isValidModelForProvider(PROVIDER.CODEX, CODEX_MODELS.GPT_5_3_CODEX_SPARK)
     ).toBe(true);
     expect(
       isValidModelForProvider(PROVIDER.CODEX, CODEX_MODELS.GPT_5_CODEX_MINI)
@@ -87,10 +84,7 @@ describe("isValidModelForProvider", () => {
       isValidModelForProvider(PROVIDER.CLAUDE, CODEX_MODELS.GPT_5_3_CODEX)
     ).toBe(false);
     expect(
-      isValidModelForProvider(
-        PROVIDER.CLAUDE,
-        CODEX_MODELS.GPT_5_3_CODEX_SPARK
-      )
+      isValidModelForProvider(PROVIDER.CLAUDE, CODEX_MODELS.GPT_5_3_CODEX_SPARK)
     ).toBe(false);
   });
 

@@ -6,11 +6,30 @@ export interface EmptyStateCallbacks {
 }
 
 const SUGGESTIONS = [
-  { label: "Review my changes", prompt: "Review my local staged and unstaged changes, identify issues and suggest improvements" },
-  { label: "Explain this codebase", prompt: "Explain this codebase — architecture, key modules, and how everything fits together" },
-  { label: "Find and fix bugs", prompt: "Analyze the codebase for potential bugs, issues, and code smells, then fix them" },
-  { label: "Write tests", prompt: "Write tests for the most critical untested code in this project" },
-  { label: "Refactor code", prompt: "Identify code that needs refactoring and improve its structure, readability, and maintainability" },
+  {
+    label: "Review my changes",
+    prompt:
+      "Review my local staged and unstaged changes, identify issues and suggest improvements",
+  },
+  {
+    label: "Explain this codebase",
+    prompt:
+      "Explain this codebase — architecture, key modules, and how everything fits together",
+  },
+  {
+    label: "Find and fix bugs",
+    prompt:
+      "Analyze the codebase for potential bugs, issues, and code smells, then fix them",
+  },
+  {
+    label: "Write tests",
+    prompt: "Write tests for the most critical untested code in this project",
+  },
+  {
+    label: "Refactor code",
+    prompt:
+      "Identify code that needs refactoring and improve its structure, readability, and maintainability",
+  },
 ];
 
 export function createEmptyState(callbacks: EmptyStateCallbacks): HTMLElement {

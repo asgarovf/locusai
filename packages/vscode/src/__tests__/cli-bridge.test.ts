@@ -324,9 +324,7 @@ describe("CliBridge", () => {
       expect(result.cancelled).toBe(true);
 
       // User-initiated cancellation should NOT produce error events
-      const errorEvents = events.filter(
-        (e) => e.type === HostEventType.ERROR
-      );
+      const errorEvents = events.filter((e) => e.type === HostEventType.ERROR);
       expect(errorEvents.length).toBe(0);
     });
   });

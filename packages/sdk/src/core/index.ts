@@ -14,8 +14,8 @@ export {
   LOCUS_SCHEMAS,
   type ModelId,
   PROVIDER,
-  type Provider,
   PROVIDER_MODELS,
+  type Provider,
 } from "./config.js";
 export { type CodebaseIndex, CodebaseIndexer } from "./indexer.js";
 export { PromptBuilder } from "./prompt-builder.js";
