@@ -79,6 +79,60 @@ function formatSettingsDisplay(settings: SettingsJson): string {
   return msg;
 }
 
+export async function modelCommand(
+  ctx: Context,
+  config: TelegramConfig
+): Promise<void> {
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const input = text.replace(/^\/model\s*/, "").trim();
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
+
+  console.log(`[model] Received: ${input || "(empty)"}`);
+
+  const settings = loadSettings(config) || {};
+  const currentProvider =
+    (settings.provider as string) || config.provider || PROVIDER.CLAUDE;
+  const currentModel =
+    (settings.model as string) ||
+    config.model ||
+    DEFAULT_MODEL[currentProvider as Provider];
+
+  if (!input) {
+    const models = getModelsForProvider(currentProvider as Provider);
+    let msg = `<b>Current model:</b> <code>${escapeHtml(currentModel)}</code>\n`;
+    msg += `<b>Provider:</b> <code>${escapeHtml(currentProvider)}</code>\n\n`;
+    msg += `<b>Available models:</b>\n`;
+    for (const m of models) {
+      const marker = m === currentModel ? " ✓" : "";
+      msg += `• <code>${escapeHtml(m)}</code>${marker}\n`;
+    }
+    msg += `\nSwitch: /model &lt;name&gt;`;
+    await ctx.reply(msg, { parse_mode: "HTML" });
+    return;
+  }
+
+  // Validate and set
+  if (!isValidModelForProvider(currentProvider as Provider, input)) {
+    const models = getModelsForProvider(currentProvider as Provider);
+    await ctx.reply(
+      formatError(
+        `Model "${escapeHtml(input)}" is not valid for provider "${escapeHtml(currentProvider)}".\n\nValid models: ${models.join(", ")}`
+      ),
+      { parse_mode: "HTML" }
+    );
+    return;
+  }
+
+  settings.model = input;
+  saveSettings(config, settings);
+  await ctx.reply(
+    formatSuccess(`Model set to <code>${escapeHtml(input)}</code>`),
+    { parse_mode: "HTML" }
+  );
+}
+
 export async function configCommand(
   ctx: Context,
   config: TelegramConfig
