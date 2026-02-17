@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.2
+
+### Patch Changes
+
+- VSCode extension usage
+
 ## 0.13.1
 
 ### Patch Changes

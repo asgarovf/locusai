@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.13.2
+
+### Patch Changes
+
+- VSCode extension usage
+- Updated dependencies
+  - @locusai/shared@0.13.2
+
 ## 0.13.1
 
 ### Patch Changes
