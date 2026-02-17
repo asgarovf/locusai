@@ -83,10 +83,12 @@ export async function plansCommand(
   const planIds = extractPendingPlanIds(cleanOutput);
 
   if (planIds.length > 0) {
-    const buttons = planIds.slice(0, 5).map((planId) => [
-      Markup.button.callback("✅ Approve", `approve:plan:${planId}`),
-      Markup.button.callback("❌ Cancel", `cancel:plan:${planId}`),
-    ]);
+    const buttons = planIds
+      .slice(0, 5)
+      .map((planId) => [
+        Markup.button.callback("✅ Approve", `approve:plan:${planId}`),
+        Markup.button.callback("❌ Cancel", `cancel:plan:${planId}`),
+      ]);
     await ctx.reply(formattedOutput, {
       parse_mode: "HTML",
       ...Markup.inlineKeyboard(buttons),

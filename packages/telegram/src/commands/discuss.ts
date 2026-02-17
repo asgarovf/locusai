@@ -1,9 +1,11 @@
+import type { AiProvider } from "@locusai/sdk/node";
 import {
   createAiRunner,
+  DEFAULT_MODEL,
   DiscussionFacilitator,
   DiscussionManager,
+  PROVIDER,
 } from "@locusai/sdk/node";
-import type { AiProvider } from "@locusai/sdk/node";
 import type { Context } from "telegraf";
 import { Markup } from "telegraf";
 import type { TelegramConfig } from "../config.js";
@@ -39,6 +41,8 @@ function getFacilitator(config: TelegramConfig): DiscussionFacilitator {
     projectPath: config.projectPath,
     aiRunner,
     discussionManager,
+    provider: config.provider ?? PROVIDER.CLAUDE,
+    model: config.model ?? DEFAULT_MODEL[PROVIDER.CLAUDE],
   });
 
   facilitatorCache.set(chatId, facilitator);
@@ -228,7 +232,9 @@ export async function discussionsCommand(
 
     if (discussions.length === 0) {
       await ctx.reply(
-        formatInfo("No discussions found. Start one with /discuss &lt;topic&gt;"),
+        formatInfo(
+          "No discussions found. Start one with /discuss &lt;topic&gt;"
+        ),
         { parse_mode: "HTML" }
       );
       return;
@@ -253,17 +259,22 @@ export async function discussionsCommand(
       const isLast = i === parts.length - 1;
 
       // Add inline buttons for the last part
-      const buttons = discussions.slice(0, 5).flatMap((d) => [
-        Markup.button.callback(`View ${d.id.slice(-6)}`, `view:discuss:${d.id}`),
-        ...(d.status !== "archived"
-          ? [
-              Markup.button.callback(
-                `Archive ${d.id.slice(-6)}`,
-                `archive:discuss:${d.id}`
-              ),
-            ]
-          : []),
-      ]);
+      const buttons = discussions
+        .slice(0, 5)
+        .flatMap((d) => [
+          Markup.button.callback(
+            `View ${d.id.slice(-6)}`,
+            `view:discuss:${d.id}`
+          ),
+          ...(d.status !== "archived"
+            ? [
+                Markup.button.callback(
+                  `Archive ${d.id.slice(-6)}`,
+                  `archive:discuss:${d.id}`
+                ),
+              ]
+            : []),
+        ]);
 
       // Group buttons into rows of 2
       const rows: ReturnType<typeof Markup.button.callback>[][] = [];
@@ -300,9 +311,7 @@ export async function endDiscussCommand(
   const discussionId = activeDiscussions.get(chatId);
   if (!discussionId) {
     await ctx.reply(
-      formatInfo(
-        "No active discussion. Start one with /discuss &lt;topic&gt;"
-      ),
+      formatInfo("No active discussion. Start one with /discuss &lt;topic&gt;"),
       { parse_mode: "HTML" }
     );
     return;

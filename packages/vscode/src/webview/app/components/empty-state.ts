@@ -2,13 +2,15 @@ import { icons } from "../icons";
 import { el } from "../utils";
 
 export interface EmptyStateCallbacks {
-  onSuggestion: (text: string) => void;
+  onSuggestion: (label: string, prompt: string) => void;
 }
 
 const SUGGESTIONS = [
-  "Explain this codebase",
-  "Find and fix bugs",
-  "Write tests for this file",
+  { label: "Review my changes", prompt: "Review my local staged and unstaged changes, identify issues and suggest improvements" },
+  { label: "Explain this codebase", prompt: "Explain this codebase — architecture, key modules, and how everything fits together" },
+  { label: "Find and fix bugs", prompt: "Analyze the codebase for potential bugs, issues, and code smells, then fix them" },
+  { label: "Write tests", prompt: "Write tests for the most critical untested code in this project" },
+  { label: "Refactor code", prompt: "Identify code that needs refactoring and improve its structure, readability, and maintainability" },
 ];
 
 export function createEmptyState(callbacks: EmptyStateCallbacks): HTMLElement {
@@ -29,13 +31,13 @@ export function createEmptyState(callbacks: EmptyStateCallbacks): HTMLElement {
   });
 
   const chips = el("div", { cls: "lc-empty-chips" });
-  for (const suggestion of SUGGESTIONS) {
+  for (const { label, prompt } of SUGGESTIONS) {
     const chip = el("button", {
       cls: "lc-chip",
       attrs: { type: "button", tabindex: "0" },
-      text: suggestion,
+      text: label,
     });
-    chip.addEventListener("click", () => callbacks.onSuggestion(suggestion));
+    chip.addEventListener("click", () => callbacks.onSuggestion(label, prompt));
     chips.appendChild(chip);
   }
 

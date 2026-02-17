@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Provider } from "@locusai/sdk/node";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -18,7 +19,7 @@ export interface TelegramConfig {
   /** Workspace ID (optional, auto-resolved if not set) */
   workspaceId?: string;
   /** AI provider (claude | codex) */
-  provider?: string;
+  provider?: Provider;
   /** AI model override */
   model?: string;
   /** When true, use `bun run packages/cli/src/cli.ts` instead of published `locus` binary */
@@ -96,7 +97,10 @@ export function resolveConfig(): TelegramConfig {
     projectPath,
     apiKey: apiKey || undefined,
     apiBase: isTestMode ? "http://localhost:8000/api" : apiBase,
-    provider: process.env.LOCUS_PROVIDER || settings?.provider || undefined,
+    provider:
+      (process.env.LOCUS_PROVIDER as Provider) ||
+      (settings?.provider as Provider) ||
+      undefined,
     model: process.env.LOCUS_MODEL || settings?.model || undefined,
     testMode: isTestMode,
   };

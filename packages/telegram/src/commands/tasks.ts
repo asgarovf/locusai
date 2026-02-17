@@ -33,15 +33,16 @@ export async function tasksCommand(
 ): Promise<void> {
   const text =
     (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
-  const filterArg = text.replace(/^\/tasks\s*/, "").trim().toUpperCase();
+  const filterArg = text
+    .replace(/^\/tasks\s*/, "")
+    .trim()
+    .toUpperCase();
 
   console.log(`[tasks] Listing tasks (filter: ${filterArg || "default"})`);
 
   if (filterArg && !VALID_STATUSES.includes(filterArg as TaskStatus)) {
     await ctx.reply(
-      formatError(
-        `Invalid status. Available: ${VALID_STATUSES.join(", ")}`
-      ),
+      formatError(`Invalid status. Available: ${VALID_STATUSES.join(", ")}`),
       { parse_mode: "HTML" }
     );
     return;
@@ -88,10 +89,12 @@ export async function tasksCommand(
     );
 
     if (inReviewTasks.length > 0) {
-      const buttons = inReviewTasks.slice(0, 5).map((t) => [
-        Markup.button.callback("✅ Approve", `approve:task:${t.id}`),
-        Markup.button.callback("👁 View", `view:task:${t.id}`),
-      ]);
+      const buttons = inReviewTasks
+        .slice(0, 5)
+        .map((t) => [
+          Markup.button.callback("✅ Approve", `approve:task:${t.id}`),
+          Markup.button.callback("👁 View", `view:task:${t.id}`),
+        ]);
       await ctx.reply(msg.trim(), {
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },
@@ -141,7 +144,9 @@ export async function backlogCommand(
     let msg = `<b>Backlog Tasks (${tasks.length})</b>\n\n`;
     for (const task of displayed) {
       const pIcon = priorityIcon[task.priority] || "•";
-      const sprint = task.sprintId ? ` · Sprint: ${escapeHtml(task.sprintId)}` : "";
+      const sprint = task.sprintId
+        ? ` · Sprint: ${escapeHtml(task.sprintId)}`
+        : "";
       msg += `📋 ${pIcon} <b>${escapeHtml(task.title)}</b>\n`;
       msg += `   ID: \`${task.id}\`${sprint}\n\n`;
     }

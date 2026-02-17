@@ -1,4 +1,9 @@
-import { getToolBorderClass, getToolColorClass, getToolIcon, icons } from "../icons";
+import {
+  getToolBorderClass,
+  getToolColorClass,
+  getToolIcon,
+  icons,
+} from "../icons";
 import type { ToolState } from "../store";
 import { el, formatDuration, truncate } from "../utils";
 
@@ -32,6 +37,8 @@ function getStatusIcon(status: string): string {
       return icons.check;
     case "failed":
       return icons.x;
+    case "canceled":
+      return icons.stop;
     default:
       return icons.spinner;
   }
@@ -120,6 +127,10 @@ export class ToolCard {
     this.statusIconEl.classList.toggle(
       "lc-tool-status--completed",
       tool.status === "completed"
+    );
+    this.statusIconEl.classList.toggle(
+      "lc-tool-status--canceled",
+      tool.status === "canceled"
     );
 
     // Duration

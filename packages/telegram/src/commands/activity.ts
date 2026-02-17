@@ -79,7 +79,8 @@ export async function activityCommand(
 
   if (!(await requireApiKey(ctx, config, "activity"))) return;
 
-  const text = (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
   const countArg = text.replace(/^\/activity\s*/, "").trim();
   const parsed = Number.parseInt(countArg, 10);
   const count =

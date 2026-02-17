@@ -15,7 +15,7 @@ export interface ToolState {
   tool: string;
   toolId: string | undefined;
   parameters: Record<string, unknown> | undefined;
-  status: "running" | "completed" | "failed";
+  status: "running" | "completed" | "failed" | "canceled";
   duration: number | undefined;
   result: unknown;
   error: string | undefined;
@@ -136,7 +136,9 @@ export class ChatStore {
   private handleSessionState(payload: {
     sessionId: string;
     status: SessionStatus;
-    metadata?: { model?: string; createdAt?: number; prompt?: string } | undefined;
+    metadata?:
+      | { model?: string; createdAt?: number; prompt?: string }
+      | undefined;
     timeline?: TimelineEntry[] | undefined;
   }): void {
     const isNewSession = this.state.sessionId !== payload.sessionId;
@@ -164,6 +166,15 @@ export class ChatStore {
     if (payload.timeline) {
       this.state.timeline = payload.timeline;
       this.rebuildFromTimeline(payload.timeline);
+    }
+
+    // When session reaches a terminal state, finalize any running tools
+    const terminalStatuses = new Set(["completed", "canceled", "failed", "interrupted"]);
+    if (payload.status && terminalStatuses.has(payload.status)) {
+      const toolStatus = payload.status === "completed" ? "completed" : "canceled";
+      this.finalizeRunningTools(toolStatus);
+      this.state.isStreaming = false;
+      this.state.isThinking = false;
     }
 
     this.notify();
@@ -279,11 +290,37 @@ export class ChatStore {
     ) {
       this.state.status = "completed" as SessionStatus;
     }
+    this.finalizeRunningTools("completed");
     this.flushDeltas();
     this.notify();
   }
 
+  /**
+   * Reset the store to its initial blank state (no active session).
+   */
+  reset(): void {
+    this.flushDeltas();
+    const sessions = this.state.sessions;
+    const promptHistory = this.state.promptHistory;
+    this.state = this.createInitialState();
+    // Preserve sessions list and prompt history across resets
+    this.state.sessions = sessions;
+    this.state.promptHistory = promptHistory;
+    this.notify();
+  }
+
   // ── Helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * Mark all still-running tools with a final status.
+   */
+  private finalizeRunningTools(status: "completed" | "canceled"): void {
+    for (const tool of this.state.tools.values()) {
+      if (tool.status === "running") {
+        tool.status = status;
+      }
+    }
+  }
 
   private findToolKey(
     toolId: string | undefined,

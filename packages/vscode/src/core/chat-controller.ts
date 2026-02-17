@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { existsSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 import {
   createErrorEvent,
   createHostEvent,
@@ -13,6 +15,7 @@ import {
   UIIntentType,
 } from "@locusai/shared";
 import type { Memento, OutputChannel } from "vscode";
+import { readDiskSessions } from "../sessions/disk-session-reader";
 import type { SessionManager } from "../sessions/session-manager";
 import type { SessionRecord } from "../sessions/types";
 import { CliBridge } from "./cli-bridge";
@@ -205,8 +208,9 @@ export class ChatController {
   }
 
   private handleRequestSessions(): void {
-    const sessions = this.manager.list();
-    const summaries = sessions.map((s) => ({
+    // Sessions from the in-memory/globalState store (created by this extension)
+    const storeSessions = this.manager.list();
+    const storeSummaries = storeSessions.map((s) => ({
       sessionId: s.sessionId,
       status: s.status,
       model: s.model,
@@ -217,9 +221,23 @@ export class ChatController {
       toolCount: s.timelineSummary.toolCount,
     }));
 
+    // Sessions from disk (.locus/sessions/*.json, created by the CLI)
+    const diskSummaries = readDiskSessions(this.getCwd());
+
+    // Merge: store sessions take priority (they have richer state).
+    // Disk sessions that don't exist in the store are appended.
+    const storeIds = new Set(storeSummaries.map((s) => s.sessionId));
+    const merged = [
+      ...storeSummaries,
+      ...diskSummaries.filter((s) => !storeIds.has(s.sessionId)),
+    ];
+
+    // Sort by updatedAt descending
+    merged.sort((a, b) => b.updatedAt - a.updatedAt);
+
     this.emit(
       createHostEvent(HostEventType.SESSION_LIST, {
-        sessions: summaries,
+        sessions: merged,
       })
     );
   }
@@ -235,7 +253,24 @@ export class ChatController {
   }
 
   private handleClearSession(sessionId: string): void {
+    // Remove from in-memory registry and globalState store
     this.manager.cleanup(sessionId);
+
+    // Also remove disk session file if it exists (.locus/sessions/<id>.json)
+    try {
+      const diskPath = join(
+        this.getCwd(),
+        ".locus",
+        "sessions",
+        `${sessionId}.json`
+      );
+      if (existsSync(diskPath)) {
+        unlinkSync(diskPath);
+      }
+    } catch {
+      // Ignore disk deletion errors silently
+    }
+
     if (this.activeSessionId === sessionId) {
       this.activeSessionId = null;
       this.persistActiveSessionId();
@@ -304,6 +339,15 @@ export class ChatController {
     record: SessionRecord,
     hostEvent: HostEvent
   ): void {
+    // Suppress error events for sessions already in a terminal state
+    // (e.g. user-initiated cancellation — errors after CANCELED are noise).
+    if (
+      hostEvent.type === HostEventType.ERROR &&
+      isTerminalStatus(record.data.status)
+    ) {
+      return;
+    }
+
     // Track first text delta for RUNNING → STREAMING transition.
     if (
       hostEvent.type === HostEventType.TEXT_DELTA &&

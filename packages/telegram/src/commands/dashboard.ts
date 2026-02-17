@@ -72,17 +72,11 @@ export async function dashboardCommand(
     msg += "\n";
 
     // --- Sprint section ---
-    const activeSprint = sprints.find(
-      (s) => s.status === SprintStatus.ACTIVE
-    );
+    const activeSprint = sprints.find((s) => s.status === SprintStatus.ACTIVE);
     msg += "\n<b>Sprint</b>\n";
     if (activeSprint) {
-      const sprintTasks = tasks.filter(
-        (t) => t.sprintId === activeSprint.id
-      );
-      const doneTasks = sprintTasks.filter(
-        (t) => t.status === TaskStatus.DONE
-      );
+      const sprintTasks = tasks.filter((t) => t.sprintId === activeSprint.id);
+      const doneTasks = sprintTasks.filter((t) => t.status === TaskStatus.DONE);
       msg += `🟢 ${escapeHtml(activeSprint.name)}`;
       msg += ` — ${doneTasks.length}/${sprintTasks.length} tasks done\n`;
     } else {
@@ -118,7 +112,8 @@ export async function dashboardCommand(
       msg += "No active agents\n";
     } else {
       for (const agent of agents) {
-        const statusLabel = agent.status === "WORKING" ? "🔄 WORKING" : "💤 IDLE";
+        const statusLabel =
+          agent.status === "WORKING" ? "🔄 WORKING" : "💤 IDLE";
         const taskInfo = agent.currentTaskId
           ? ` — task \`${agent.currentTaskId.slice(0, 8)}\``
           : "";

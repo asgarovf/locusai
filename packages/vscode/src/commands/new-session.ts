@@ -4,7 +4,7 @@ import type { ChatController } from "../core/chat-controller";
 import { LocusChatViewProvider } from "../webview";
 
 /**
- * `Locus: New Session` — Clear the active session and focus the
+ * `Locus: New Session` — Stop any running session, then focus the
  * chat view so the user can start a fresh conversation.
  */
 export function registerNewSessionCommand(
@@ -15,10 +15,13 @@ export function registerNewSessionCommand(
     vscode.commands.registerCommand("locusai.newSession", async () => {
       const activeId = controller.getActiveSessionId();
       if (activeId) {
-        const intent = createUIIntent(UIIntentType.CLEAR_SESSION, {
-          sessionId: activeId,
-        });
-        controller.handleIntent(intent);
+        // Stop first if running, then clear
+        controller.handleIntent(
+          createUIIntent(UIIntentType.STOP_SESSION, { sessionId: activeId })
+        );
+        controller.handleIntent(
+          createUIIntent(UIIntentType.CLEAR_SESSION, { sessionId: activeId })
+        );
       }
 
       await vscode.commands.executeCommand(

@@ -31,6 +31,7 @@ body {
   overflow: hidden;
 }
 
+
 /* ── Design Tokens ────────────────────────────────────────────────────── */
 
 :root {
@@ -80,8 +81,8 @@ button:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 40px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 4px;
   border-bottom: 1px solid var(--vscode-panel-border);
   z-index: 20;
   flex-shrink: 0;
@@ -185,9 +186,9 @@ button:focus-visible,
 .lc-header-dropdown {
   display: none;
   position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
+  top: 36px;
+  left: 2px;
+  right: 2px;
   max-height: 300px;
   overflow-y: auto;
   background: var(--vscode-editorWidget-background);
@@ -222,7 +223,11 @@ button:focus-visible,
 }
 
 .lc-dropdown-item--active {
-  background: color-mix(in srgb, var(--lc-accent) 12%, var(--vscode-sideBar-background));
+  background: color-mix(
+    in srgb,
+    var(--lc-accent) 12%,
+    var(--vscode-sideBar-background)
+  );
 }
 
 .lc-dropdown-dot {
@@ -248,6 +253,60 @@ button:focus-visible,
   flex-shrink: 0;
 }
 
+.lc-dropdown-item--new {
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
+  color: var(--lc-accent);
+  font-weight: 500;
+}
+
+.lc-dropdown-new-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--lc-accent);
+}
+
+.lc-dropdown-new-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-dropdown-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.lc-dropdown-item:hover .lc-dropdown-delete {
+  opacity: 1;
+}
+
+.lc-dropdown-delete:hover {
+  color: var(--lc-state-failed);
+  background: color-mix(
+    in srgb,
+    var(--lc-state-failed) 10%,
+    transparent
+  );
+}
+
+.lc-dropdown-delete svg {
+  width: 12px;
+  height: 12px;
+}
+
 .lc-dropdown-empty {
   padding: 12px;
   text-align: center;
@@ -261,7 +320,7 @@ button:focus-visible,
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 12px;
+  padding: 6px 4px;
   scroll-behavior: smooth;
   position: relative;
   z-index: 0;
@@ -283,7 +342,7 @@ button:focus-visible,
 .lc-timeline-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 /* ── Jump-to-Latest FAB ────────────────────────────────────────────────── */
@@ -329,7 +388,7 @@ button:focus-visible,
 .lc-card {
   display: flex;
   gap: 8px;
-  padding: 12px;
+  padding: 8px;
   border-radius: 6px;
 }
 
@@ -338,42 +397,45 @@ button:focus-visible,
 .lc-card--user {
   background: color-mix(
     in srgb,
-    var(--vscode-editor-foreground) 5%,
+    var(--vscode-editor-foreground) 8%,
     var(--vscode-sideBar-background)
   );
+  display: inline-flex;
+  border-radius: 8px;
+  padding: 4px 10px;
+  max-width: fit-content;
 }
 
 /* ── Assistant Message Card ────────────────────────────────────────────── */
 
 .lc-card--assistant {
-  background: var(--vscode-editorWidget-background);
+  background: transparent;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 2px 8px;
 }
 
-/* ── Avatar ────────────────────────────────────────────────────────────── */
+/* ── Assistant Dot ────────────────────────────────────────────────────── */
 
-.lc-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.lc-avatar svg {
-  width: 14px;
-  height: 14px;
-}
-
-.lc-avatar--user {
-  background: var(--vscode-editor-foreground);
-  color: var(--vscode-sideBar-background);
-}
-
-.lc-avatar--assistant {
+.lc-assistant-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: var(--lc-accent);
-  color: var(--lc-accent-on);
+  flex-shrink: 0;
+  margin-top: 5px; /* align with first child (tool card or text) */
+}
+
+/* ── Assistant Tools Container ─────────────────────────────────────────── */
+
+.lc-assistant-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lc-assistant-tools:empty {
+  display: none;
 }
 
 /* ── Message Content ───────────────────────────────────────────────────── */
@@ -383,7 +445,7 @@ button:focus-visible,
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .lc-msg-body {
@@ -516,15 +578,12 @@ button:focus-visible,
 
 .lc-card--tool {
   flex-direction: column;
-  padding: 8px;
-  background: color-mix(
-    in srgb,
-    var(--vscode-sideBar-background) 95%,
-    var(--vscode-editor-foreground) 5%
-  );
+  padding: 1px 6px;
+  background: transparent;
   border-left: 2px solid var(--lc-accent-system);
   cursor: pointer;
   transition: background 150ms ease-out;
+  border-radius: 2px;
 }
 
 .lc-card--tool:hover {
@@ -542,8 +601,8 @@ button:focus-visible,
 .lc-tool-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 20px;
+  gap: 4px;
+  min-height: 16px;
 }
 
 .lc-tool-icon {
@@ -553,13 +612,13 @@ button:focus-visible,
 }
 
 .lc-tool-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
 }
 
 .lc-tool-summary {
   flex: 1;
-  font-size: calc(var(--vscode-font-size) - 1px);
+  font-size: calc(var(--vscode-font-size) - 3px);
   color: var(--vscode-descriptionForeground);
   white-space: nowrap;
   overflow: hidden;
@@ -581,8 +640,8 @@ button:focus-visible,
 }
 
 .lc-tool-status-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
 }
 
 .lc-tool-status--running {
@@ -595,6 +654,10 @@ button:focus-visible,
 
 .lc-tool-status--failed {
   color: var(--lc-state-failed);
+}
+
+.lc-tool-status--canceled {
+  color: var(--lc-state-canceled);
 }
 
 .lc-tool-details {
@@ -732,7 +795,11 @@ button:focus-visible,
 .lc-card--error {
   flex-direction: column;
   gap: 6px;
-  background: color-mix(in srgb, var(--lc-state-failed) 8%, var(--vscode-sideBar-background));
+  background: color-mix(
+    in srgb,
+    var(--lc-state-failed) 8%,
+    var(--vscode-sideBar-background)
+  );
   border: 1px solid var(--lc-state-failed);
 }
 
@@ -822,8 +889,8 @@ button:focus-visible,
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 24px;
-  padding: 0 12px;
+  height: 22px;
+  padding: 0 4px;
   border-top: 1px solid
     color-mix(in srgb, var(--vscode-panel-border) 50%, transparent);
   border-bottom: 1px solid
@@ -849,7 +916,7 @@ button:focus-visible,
 
 .lc-composer {
   flex-shrink: 0;
-  padding: 8px 12px;
+  padding: 6px 4px;
   border-top: 1px solid var(--vscode-panel-border);
   background: var(--vscode-sideBar-background);
   z-index: 20;
@@ -936,16 +1003,28 @@ button:focus-visible,
 }
 
 .lc-composer-submit--stop {
-  background: color-mix(in srgb, var(--lc-state-canceled) 10%, var(--vscode-sideBar-background));
+  background: color-mix(
+    in srgb,
+    var(--lc-state-canceled) 10%,
+    var(--vscode-sideBar-background)
+  );
   color: var(--lc-state-canceled);
 }
 
 .lc-composer-submit--stop:hover {
-  background: color-mix(in srgb, var(--lc-state-canceled) 20%, var(--vscode-sideBar-background));
+  background: color-mix(
+    in srgb,
+    var(--lc-state-canceled) 20%,
+    var(--vscode-sideBar-background)
+  );
 }
 
 .lc-composer-submit--loading {
-  background: color-mix(in srgb, var(--lc-state-starting) 10%, var(--vscode-sideBar-background));
+  background: color-mix(
+    in srgb,
+    var(--lc-state-starting) 10%,
+    var(--vscode-sideBar-background)
+  );
   color: var(--lc-state-starting);
   cursor: default;
 }
@@ -958,7 +1037,7 @@ button:focus-visible,
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 32px 16px;
+  padding: 32px 4px;
   flex: 1;
   min-height: 200px;
 }
@@ -1003,18 +1082,20 @@ button:focus-visible,
   align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
-  background: var(--lc-accent);
-  color: var(--lc-accent-on);
+  background: color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
+  color: var(--vscode-editor-foreground);
   font-family: var(--vscode-font-family);
   font-size: calc(var(--vscode-font-size) - 1px);
   font-weight: 400;
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--vscode-editor-foreground) 15%, transparent);
   cursor: pointer;
   line-height: 1.5;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .lc-chip:hover {
-  background: color-mix(in srgb, var(--lc-accent) 15%, var(--vscode-badge-background));
+  background: color-mix(in srgb, var(--vscode-editor-foreground) 18%, transparent);
+  border-color: color-mix(in srgb, var(--vscode-editor-foreground) 30%, transparent);
 }
 
 .lc-empty-hint {
@@ -1025,43 +1106,107 @@ button:focus-visible,
 
 /* ── State Color Utilities ─────────────────────────────────────────────── */
 
-.lc-state-idle { color: var(--lc-state-idle); }
-.lc-state-starting { color: var(--lc-state-starting); }
-.lc-state-running { color: var(--lc-state-running); }
-.lc-state-streaming { color: var(--lc-state-streaming); }
-.lc-state-completed { color: var(--lc-state-completed); }
-.lc-state-failed { color: var(--lc-state-failed); }
-.lc-state-canceled { color: var(--lc-state-canceled); }
-.lc-state-interrupted { color: var(--lc-state-interrupted); }
-.lc-state-resuming { color: var(--lc-state-resuming); }
+.lc-state-idle {
+  color: var(--lc-state-idle);
+}
+.lc-state-starting {
+  color: var(--lc-state-starting);
+}
+.lc-state-running {
+  color: var(--lc-state-running);
+}
+.lc-state-streaming {
+  color: var(--lc-state-streaming);
+}
+.lc-state-completed {
+  color: var(--lc-state-completed);
+}
+.lc-state-failed {
+  color: var(--lc-state-failed);
+}
+.lc-state-canceled {
+  color: var(--lc-state-canceled);
+}
+.lc-state-interrupted {
+  color: var(--lc-state-interrupted);
+}
+.lc-state-resuming {
+  color: var(--lc-state-resuming);
+}
 
-.lc-state-bg-idle { background: var(--lc-state-idle); }
-.lc-state-bg-starting { background: var(--lc-state-starting); }
-.lc-state-bg-running { background: var(--lc-state-running); }
-.lc-state-bg-streaming { background: var(--lc-state-streaming); }
-.lc-state-bg-completed { background: var(--lc-state-completed); }
-.lc-state-bg-failed { background: var(--lc-state-failed); }
-.lc-state-bg-canceled { background: var(--lc-state-canceled); }
-.lc-state-bg-interrupted { background: var(--lc-state-interrupted); }
-.lc-state-bg-resuming { background: var(--lc-state-resuming); }
+.lc-state-bg-idle {
+  background: var(--lc-state-idle);
+}
+.lc-state-bg-starting {
+  background: var(--lc-state-starting);
+}
+.lc-state-bg-running {
+  background: var(--lc-state-running);
+}
+.lc-state-bg-streaming {
+  background: var(--lc-state-streaming);
+}
+.lc-state-bg-completed {
+  background: var(--lc-state-completed);
+}
+.lc-state-bg-failed {
+  background: var(--lc-state-failed);
+}
+.lc-state-bg-canceled {
+  background: var(--lc-state-canceled);
+}
+.lc-state-bg-interrupted {
+  background: var(--lc-state-interrupted);
+}
+.lc-state-bg-resuming {
+  background: var(--lc-state-resuming);
+}
 
 /* ── Tool Color Utilities ─────────────────────────────────────────────── */
 
-.lc-tool-color-read { color: var(--lc-tool-read); }
-.lc-tool-color-write { color: var(--lc-tool-write); }
-.lc-tool-color-edit { color: var(--lc-tool-edit); }
-.lc-tool-color-bash { color: var(--lc-tool-bash); }
-.lc-tool-color-grep { color: var(--lc-tool-grep); }
-.lc-tool-color-glob { color: var(--lc-tool-glob); }
-.lc-tool-color-webfetch { color: var(--lc-tool-webfetch); }
+.lc-tool-color-read {
+  color: var(--lc-tool-read);
+}
+.lc-tool-color-write {
+  color: var(--lc-tool-write);
+}
+.lc-tool-color-edit {
+  color: var(--lc-tool-edit);
+}
+.lc-tool-color-bash {
+  color: var(--lc-tool-bash);
+}
+.lc-tool-color-grep {
+  color: var(--lc-tool-grep);
+}
+.lc-tool-color-glob {
+  color: var(--lc-tool-glob);
+}
+.lc-tool-color-webfetch {
+  color: var(--lc-tool-webfetch);
+}
 
-.lc-tool-border-read { border-left-color: var(--lc-tool-read); }
-.lc-tool-border-write { border-left-color: var(--lc-tool-write); }
-.lc-tool-border-edit { border-left-color: var(--lc-tool-edit); }
-.lc-tool-border-bash { border-left-color: var(--lc-tool-bash); }
-.lc-tool-border-grep { border-left-color: var(--lc-tool-grep); }
-.lc-tool-border-glob { border-left-color: var(--lc-tool-glob); }
-.lc-tool-border-webfetch { border-left-color: var(--lc-tool-webfetch); }
+.lc-tool-border-read {
+  border-left-color: var(--lc-tool-read);
+}
+.lc-tool-border-write {
+  border-left-color: var(--lc-tool-write);
+}
+.lc-tool-border-edit {
+  border-left-color: var(--lc-tool-edit);
+}
+.lc-tool-border-bash {
+  border-left-color: var(--lc-tool-bash);
+}
+.lc-tool-border-grep {
+  border-left-color: var(--lc-tool-grep);
+}
+.lc-tool-border-glob {
+  border-left-color: var(--lc-tool-glob);
+}
+.lc-tool-border-webfetch {
+  border-left-color: var(--lc-tool-webfetch);
+}
 
 /* ── Reduced Motion ────────────────────────────────────────────────────── */
 
@@ -1111,16 +1256,16 @@ button:focus-visible,
 }
 
 @media (min-width: 400px) {
-  .lc-card {
-    padding: 14px;
+  .lc-card:not(.lc-card--tool) {
+    padding: 10px;
   }
 
   .lc-timeline {
-    padding: 10px 16px;
+    padding: 8px 4px;
   }
 
   .lc-composer {
-    padding: 10px 16px;
+    padding: 8px 4px;
   }
 }
 
@@ -1130,11 +1275,11 @@ button:focus-visible,
     margin: 0 auto;
   }
 
-  .lc-card {
-    padding: 16px;
+  .lc-card:not(.lc-card--tool) {
+    padding: 12px;
   }
 
   .lc-timeline {
-    padding: 12px 24px;
+    padding: 8px 4px;
   }
 }

@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { AssigneeRole, Task } from "@locusai/shared";
-import { getLocusPath } from "./config.js";
 import { DiscussionManager } from "../discussion/discussion-manager.js";
 import type { DiscussionInsight } from "../discussion/discussion-types.js";
+import { getLocusPath } from "./config.js";
 
 export class PromptBuilder {
   constructor(private projectPath: string) {}

@@ -50,6 +50,8 @@ export class Renderer {
   private lastStatus: SessionStatus | null = null;
   private lastSessionId: string | null = null;
   private historyIndex = -1;
+  /** When true, the next session change is from a submit — don't rebuild timeline. */
+  private pendingSubmit = false;
 
   constructor(root: HTMLElement, store: ChatStore, vscode: VsCodeApi) {
     this.store = store;
@@ -59,11 +61,13 @@ export class Renderer {
     this.header = new SessionHeader({
       onStop: (id) =>
         this.sendIntent(UIIntentType.STOP_SESSION, { sessionId: id }),
-      onNewSession: () => this.focusComposer(),
+      onNewSession: () => this.startNewSession(),
       onResume: (id) =>
         this.sendIntent(UIIntentType.RESUME_SESSION, { sessionId: id }),
       onSelectSession: (id) =>
         this.sendIntent(UIIntentType.REQUEST_SESSION_DETAIL, { sessionId: id }),
+      onDeleteSession: (id) =>
+        this.sendIntent(UIIntentType.CLEAR_SESSION, { sessionId: id }),
       onRequestSessions: () => this.sendIntent(UIIntentType.REQUEST_SESSIONS),
     });
 
@@ -121,10 +125,24 @@ export class Renderer {
       state.createdAt
     );
 
-    // Session changed — full rebuild
+    // Session changed
     if (sessionChanged) {
       this.lastSessionId = state.sessionId;
-      this.rebuildTimeline(state);
+
+      if (this.pendingSubmit) {
+        // This session change is from a new prompt submission — don't rebuild.
+        // The user message was already appended by handleSubmit.
+        // Just reset assistant/tool tracking for the new response.
+        this.pendingSubmit = false;
+        this.assistantMessage = null;
+        this.toolCards.clear();
+        this.thinkingEl = null;
+        this.errorEl = null;
+      } else {
+        // Full rebuild (e.g. selecting a session from dropdown)
+        this.rebuildTimeline(state);
+      }
+
       this.lastStatus = state.status;
       return;
     }
@@ -183,23 +201,31 @@ export class Renderer {
       nodes.push(createUserMessage(state.lastPrompt, state.createdAt));
     }
 
-    // Rebuilt tool cards
-    for (const key of state.toolOrder) {
-      const tool = state.tools.get(key);
-      if (tool) {
-        const card = new ToolCard(tool);
-        this.toolCards.set(key, card);
-        nodes.push(card.element);
-      }
-    }
-
-    // Assistant message
-    if (state.assistantBuffer) {
+    // Assistant message (always create if there are tools or text)
+    if (state.assistantBuffer || state.toolOrder.length > 0) {
       this.assistantMessage = new AssistantMessage();
-      this.assistantMessage.updateContent(
-        state.assistantBuffer,
-        state.isStreaming
-      );
+      const container = this.assistantMessage.getToolsContainer();
+
+      // Rebuilt tool cards — only show the last one
+      for (let i = 0; i < state.toolOrder.length; i++) {
+        const key = state.toolOrder[i];
+        const tool = state.tools.get(key);
+        if (tool) {
+          const card = new ToolCard(tool);
+          this.toolCards.set(key, card);
+          if (i < state.toolOrder.length - 1) {
+            card.element.style.display = "none";
+          }
+          container.appendChild(card.element);
+        }
+      }
+
+      if (state.assistantBuffer) {
+        this.assistantMessage.updateContent(
+          state.assistantBuffer,
+          state.isStreaming
+        );
+      }
       nodes.push(this.assistantMessage.element);
     }
 
@@ -217,7 +243,7 @@ export class Renderer {
             this.handleSubmit(state.lastPrompt);
           }
         },
-        onNewSession: () => this.focusComposer(),
+        onNewSession: () => this.startNewSession(),
       });
       nodes.push(this.errorEl);
     }
@@ -265,21 +291,29 @@ export class Renderer {
     }
   }
 
-  private updateAssistantMessage(buffer: string, isStreaming: boolean): void {
-    if (!buffer && !isStreaming) return;
-
+  private ensureAssistantMessage(): AssistantMessage {
     if (!this.assistantMessage) {
       this.assistantMessage = new AssistantMessage();
       this.timeline.append(this.assistantMessage.element);
     }
+    return this.assistantMessage;
+  }
 
-    this.assistantMessage.updateContent(buffer, isStreaming);
+  private updateAssistantMessage(buffer: string, isStreaming: boolean): void {
+    if (!buffer && !isStreaming) return;
+
+    this.ensureAssistantMessage();
+    this.assistantMessage!.updateContent(buffer, isStreaming);
   }
 
   private updateToolCards(
     tools: Map<string, ToolState>,
     order: string[]
   ): void {
+    // Ensure the assistant message exists so tool cards go inside it
+    const msg = this.ensureAssistantMessage();
+    const container = msg.getToolsContainer();
+
     for (const key of order) {
       const tool = tools.get(key);
       if (!tool) continue;
@@ -290,14 +324,15 @@ export class Renderer {
       } else {
         const card = new ToolCard(tool);
         this.toolCards.set(key, card);
-        // Insert before assistant message or thinking indicator
-        const insertBefore =
-          this.thinkingEl || this.assistantMessage?.element || null;
-        if (insertBefore) {
-          this.timeline.getContentEl().insertBefore(card.element, insertBefore);
-        } else {
-          this.timeline.append(card.element);
-        }
+        container.appendChild(card.element);
+      }
+    }
+
+    // Only show the last tool card; hide all others
+    for (let i = 0; i < order.length; i++) {
+      const card = this.toolCards.get(order[i]);
+      if (card) {
+        card.element.style.display = i === order.length - 1 ? "" : "none";
       }
     }
   }
@@ -310,7 +345,7 @@ export class Renderer {
             this.handleSubmit(state.lastPrompt);
           }
         },
-        onNewSession: () => this.focusComposer(),
+        onNewSession: () => this.startNewSession(),
       });
       this.timeline.append(this.errorEl);
     }
@@ -319,7 +354,7 @@ export class Renderer {
   private showEmptyState(): void {
     if (this.emptyStateEl) return;
     this.emptyStateEl = createEmptyState({
-      onSuggestion: (text) => this.handleSubmit(text),
+      onSuggestion: (label, prompt) => this.handleSubmit(prompt, label),
     });
     this.timeline.setContent([this.emptyStateEl]);
   }
@@ -331,24 +366,27 @@ export class Renderer {
     }
   }
 
-  private handleSubmit(text: string): void {
+  private handleSubmit(text: string, displayText?: string): void {
     this.store.recordPrompt(text);
 
     // Add user message to timeline immediately
-    const userMsg = createUserMessage(text);
+    // Use displayText (e.g. chip label) if provided, otherwise show the full prompt
+    const userMsg = createUserMessage(displayText || text);
     this.removeEmptyState();
     this.timeline.append(userMsg);
     this.timeline.scrollToBottom();
 
-    // Reset assistant state for new response
-    this.assistantMessage = null;
-    this.toolCards.clear();
-    this.thinkingEl = null;
-    this.errorEl = null;
+    // Mark that the next session change is from a submit — preserve timeline.
+    this.pendingSubmit = true;
 
     this.sendIntent(UIIntentType.SUBMIT_PROMPT, { text });
     this.composer.clear();
     this.historyIndex = -1;
+  }
+
+  private startNewSession(): void {
+    this.store.reset();
+    this.composer.focus();
   }
 
   private focusComposer(): void {

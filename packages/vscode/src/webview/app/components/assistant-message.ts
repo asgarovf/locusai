@@ -1,4 +1,3 @@
-import { icons } from "../icons";
 import { renderMarkdown } from "../markdown";
 import { el, formatTime } from "../utils";
 
@@ -7,15 +6,16 @@ export class AssistantMessage {
   private bodyEl: HTMLElement;
   private cursorEl: HTMLElement;
   private timeEl: HTMLElement;
+  private toolsEl: HTMLElement;
   private lastContent = "";
 
   constructor() {
-    const avatar = el("div", {
-      cls: "lc-avatar lc-avatar--assistant",
-      html: icons.locus,
+    const dot = el("span", {
+      cls: "lc-assistant-dot",
       attrs: { "aria-hidden": "true" },
     });
 
+    this.toolsEl = el("div", { cls: "lc-assistant-tools" });
     this.bodyEl = el("div", { cls: "lc-msg-body lc-msg-body--md" });
     this.cursorEl = el("span", {
       cls: "lc-streaming-cursor",
@@ -28,14 +28,21 @@ export class AssistantMessage {
 
     const content = el("div", {
       cls: "lc-msg-content",
-      children: [this.bodyEl, this.cursorEl, this.timeEl],
+      children: [this.toolsEl, this.bodyEl, this.cursorEl, this.timeEl],
     });
 
     this.element = el("div", {
       cls: "lc-card lc-card--assistant",
       attrs: { role: "article", "aria-label": "Locus response" },
-      children: [avatar, content],
+      children: [dot, content],
     });
+  }
+
+  /**
+   * Get the container for tool cards.
+   */
+  getToolsContainer(): HTMLElement {
+    return this.toolsEl;
   }
 
   /**
@@ -44,7 +51,7 @@ export class AssistantMessage {
   updateContent(fullText: string, isStreaming: boolean): void {
     if (fullText !== this.lastContent) {
       this.lastContent = fullText;
-      this.bodyEl.innerHTML = renderMarkdown(fullText);
+      this.bodyEl.innerHTML = renderMarkdown(fullText.replace(/^\n+/, ""));
     }
 
     this.cursorEl.style.display = isStreaming ? "" : "none";

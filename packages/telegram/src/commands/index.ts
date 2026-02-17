@@ -3,6 +3,13 @@ export { agentsCommand } from "./agents.js";
 export { configCommand } from "./config.js";
 export { dashboardCommand } from "./dashboard.js";
 export { devCommand } from "./dev.js";
+export {
+  continueDiscussionHandler,
+  discussCommand,
+  discussionsCommand,
+  endDiscussCommand,
+  hasActiveDiscussion,
+} from "./discuss.js";
 export { execCommand } from "./exec.js";
 export { gitCommand } from "./git.js";
 export { helpCommand, startCommand } from "./help.js";
@@ -25,10 +32,3 @@ export {
   tasksCommand,
 } from "./tasks.js";
 export { workspaceCommand } from "./workspace.js";
-export {
-  continueDiscussionHandler,
-  discussCommand,
-  discussionsCommand,
-  endDiscussCommand,
-  hasActiveDiscussion,
-} from "./discuss.js";

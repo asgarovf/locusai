@@ -16,10 +16,9 @@ export async function reviewCommand(
   const prNumber = input || undefined;
 
   if (input && !/^\d+$/.test(input)) {
-    await ctx.reply(
-      formatError("Usage: /review [pr-number]"),
-      { parse_mode: "HTML" }
-    );
+    await ctx.reply(formatError("Usage: /review [pr-number]"), {
+      parse_mode: "HTML",
+    });
     return;
   }
 
@@ -29,9 +28,7 @@ export async function reviewCommand(
 
   await ctx.reply(
     formatInfo(
-      prNumber
-        ? `Reviewing PR #${prNumber}...`
-        : "Reviewing staged changes..."
+      prNumber ? `Reviewing PR #${prNumber}...` : "Reviewing staged changes..."
     ),
     { parse_mode: "HTML" }
   );

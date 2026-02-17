@@ -42,13 +42,27 @@ class MockMemento {
 
 const mockOutputChannel = {
   name: "test",
-  appendLine(_value: string) { /* no-op */ },
-  append(_value: string) { /* no-op */ },
-  clear() { /* no-op */ },
-  show() { /* no-op */ },
-  hide() { /* no-op */ },
-  dispose() { /* no-op */ },
-  replace(_value: string) { /* no-op */ },
+  appendLine(_value: string) {
+    /* no-op */
+  },
+  append(_value: string) {
+    /* no-op */
+  },
+  clear() {
+    /* no-op */
+  },
+  show() {
+    /* no-op */
+  },
+  hide() {
+    /* no-op */
+  },
+  dispose() {
+    /* no-op */
+  },
+  replace(_value: string) {
+    /* no-op */
+  },
 };
 
 // ============================================================================

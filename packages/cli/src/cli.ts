@@ -25,6 +25,14 @@ async function main() {
   const command = process.argv[2];
   const args = process.argv.slice(3);
 
+  // When --json-stream is the first argument (invoked by the VSCode extension
+  // as `locus --json-stream --session-id <id> -- <prompt>`), route directly
+  // to exec with all original args so parseArgs can handle the flags.
+  if (command === "--json-stream") {
+    await execCommand([command, ...args]);
+    return;
+  }
+
   // Skip banner for exec command or when in JSON stream mode
   if (command !== "exec" && !isJsonStream) {
     printBanner();

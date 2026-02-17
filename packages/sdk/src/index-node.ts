@@ -14,6 +14,8 @@ export * from "./ai/index.js";
 // Node.js-only: Core utilities (uses fs)
 export * from "./core/index.js";
 export { PromptBuilder } from "./core/prompt-builder.js";
+// Node.js-only: Discussion data layer
+export * from "./discussion/index.js";
 // Node.js-only: Exec streaming types
 export * from "./exec/index.js";
 // Node.js-only: Git & PR operations
@@ -26,8 +28,6 @@ export {
   type AgentState,
   type OrchestratorConfig,
 } from "./orchestrator/index.js";
-// Node.js-only: Discussion data layer
-export * from "./discussion/index.js";
 // Node.js-only: Planning meeting pipeline
 export * from "./planning/index.js";
 // Utilities

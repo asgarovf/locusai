@@ -1,4 +1,7 @@
-import type { DiscussionInsight, DiscussionMessage } from "../discussion-types.js";
+import type {
+  DiscussionInsight,
+  DiscussionMessage,
+} from "../discussion-types.js";
 
 export interface FacilitatorPromptInput {
   topic: string;
@@ -103,7 +106,7 @@ You are an expert product strategy facilitator. Your job is to:
 export function buildSummaryPrompt(
   topic: string,
   messages: DiscussionMessage[],
-  insights: DiscussionInsight[],
+  insights: DiscussionInsight[]
 ): string {
   let history = "";
   for (const msg of messages) {

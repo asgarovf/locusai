@@ -21,8 +21,8 @@ describe("ProcessRunner", () => {
       });
 
       runner.spawn({
-        command: "echo",
-        args: ["-e", "line1\\nline2\\nline3"],
+        command: "printf",
+        args: ["line1\\nline2\\nline3\\n"],
       });
 
       const result = await done;
@@ -59,8 +59,8 @@ describe("ProcessRunner", () => {
       });
 
       runner.spawn({
-        command: "echo",
-        args: ["-e", "a\\n\\nb"],
+        command: "printf",
+        args: ["a\\n\\nb\\n"],
       });
 
       const result = await done;

@@ -1,23 +1,22 @@
 import { existsSync, readFileSync } from "node:fs";
-import { getLocusPath } from "../core/config.js";
 import type { LogFn } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
+import { getLocusPath, Provider } from "../core/config.js";
 import type { StreamChunk } from "../exec/types.js";
-import type { DiscussionManager } from "./discussion-manager.js";
-import type {
-  Discussion,
-  DiscussionInsight,
-} from "./discussion-types.js";
 import {
   buildFacilitatorPrompt,
   buildSummaryPrompt,
 } from "./agents/facilitator-prompt.js";
+import type { DiscussionManager } from "./discussion-manager.js";
+import type { Discussion, DiscussionInsight } from "./discussion-types.js";
 
 export interface DiscussionFacilitatorConfig {
   projectPath: string;
   aiRunner: AiRunner;
   discussionManager: DiscussionManager;
   log?: LogFn;
+  provider: Provider;
+  model: string;
 }
 
 export interface StartDiscussionResult {
@@ -35,12 +34,16 @@ export class DiscussionFacilitator {
   private aiRunner: AiRunner;
   private discussionManager: DiscussionManager;
   private log: LogFn;
+  private provider: string;
+  private model: string;
 
   constructor(config: DiscussionFacilitatorConfig) {
     this.projectPath = config.projectPath;
     this.aiRunner = config.aiRunner;
     this.discussionManager = config.discussionManager;
     this.log = config.log ?? ((_msg: string) => undefined);
+    this.provider = config.provider;
+    this.model = config.model;
   }
 
   /**
@@ -52,8 +55,8 @@ export class DiscussionFacilitator {
 
     const discussion = this.discussionManager.create(
       topic,
-      "claude",
-      "claude",
+      this.model,
+      this.provider
     );
 
     const { projectContext, learnings, knowledgeBase } = this.buildContext();
@@ -74,14 +77,16 @@ export class DiscussionFacilitator {
     this.discussionManager.addMessage(
       discussion.id,
       "assistant",
-      cleanResponse,
+      cleanResponse
     );
 
     this.log("Discussion started", "success");
 
     const saved = this.discussionManager.load(discussion.id);
     if (!saved) {
-      throw new Error(`Failed to load discussion after creation: ${discussion.id}`);
+      throw new Error(
+        `Failed to load discussion after creation: ${discussion.id}`
+      );
     }
 
     return {
@@ -97,14 +102,18 @@ export class DiscussionFacilitator {
    */
   async continueDiscussion(
     discussionId: string,
-    userMessage: string,
+    userMessage: string
   ): Promise<ContinueDiscussionResult> {
     const discussion = this.discussionManager.load(discussionId);
     if (!discussion) {
       throw new Error(`Discussion not found: ${discussionId}`);
     }
 
-    const updated = this.discussionManager.addMessage(discussionId, "user", userMessage);
+    const updated = this.discussionManager.addMessage(
+      discussionId,
+      "user",
+      userMessage
+    );
 
     const { projectContext, learnings, knowledgeBase } = this.buildContext();
 
@@ -138,14 +147,18 @@ export class DiscussionFacilitator {
    */
   async *continueDiscussionStream(
     discussionId: string,
-    userMessage: string,
+    userMessage: string
   ): AsyncGenerator<StreamChunk, ContinueDiscussionResult, unknown> {
     const discussion = this.discussionManager.load(discussionId);
     if (!discussion) {
       throw new Error(`Discussion not found: ${discussionId}`);
     }
 
-    const updated = this.discussionManager.addMessage(discussionId, "user", userMessage);
+    const updated = this.discussionManager.addMessage(
+      discussionId,
+      "user",
+      userMessage
+    );
 
     const { projectContext, learnings, knowledgeBase } = this.buildContext();
 
@@ -200,7 +213,7 @@ export class DiscussionFacilitator {
     const prompt = buildSummaryPrompt(
       discussion.topic,
       discussion.messages,
-      discussion.insights,
+      discussion.insights
     );
 
     const summary = await this.aiRunner.run(prompt);

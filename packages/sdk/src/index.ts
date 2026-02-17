@@ -10,17 +10,6 @@ import { TasksModule } from "./modules/tasks.js";
 import { WorkspacesModule } from "./modules/workspaces.js";
 import { RetryOptions } from "./utils/retry.js";
 
-// Browser-safe exports only
-export * from "./events.js";
-export * from "./modules/auth.js";
-export * from "./modules/ci.js";
-export * from "./modules/docs.js";
-export * from "./modules/invitations.js";
-export * from "./modules/organizations.js";
-export * from "./modules/sprints.js";
-export * from "./modules/tasks.js";
-export * from "./modules/workspaces.js";
-
 // Discussion types (browser-safe, no fs dependency)
 export type {
   Discussion,
@@ -32,6 +21,16 @@ export {
   DiscussionMessageSchema,
   DiscussionSchema,
 } from "./discussion/discussion-types.js";
+// Browser-safe exports only
+export * from "./events.js";
+export * from "./modules/auth.js";
+export * from "./modules/ci.js";
+export * from "./modules/docs.js";
+export * from "./modules/invitations.js";
+export * from "./modules/organizations.js";
+export * from "./modules/sprints.js";
+export * from "./modules/tasks.js";
+export * from "./modules/workspaces.js";
 
 export class LocusClient {
   private readonly api: AxiosInstance;

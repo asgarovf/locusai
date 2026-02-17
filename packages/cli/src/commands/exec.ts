@@ -25,6 +25,7 @@ export async function execCommand(args: string[]): Promise<void> {
       "no-status": { type: "boolean" },
       interactive: { type: "boolean", short: "i" },
       session: { type: "string", short: "s" },
+      "session-id": { type: "string" },
       "json-stream": { type: "boolean" },
     },
     strict: false,
@@ -222,7 +223,10 @@ async function execJsonStream(
   positionals: string[],
   projectPath: string
 ): Promise<void> {
-  const sessionId = (values.session as string | undefined) ?? randomUUID();
+  const sessionId =
+    (values["session-id"] as string | undefined) ??
+    (values.session as string | undefined) ??
+    randomUUID();
 
   const execSettings = new SettingsManager(projectPath).load();
   const provider = resolveProvider(

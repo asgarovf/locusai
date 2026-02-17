@@ -260,20 +260,10 @@ export class CliBridge {
       );
       this.emitter.emit("event", timeoutEvent);
     } else if (result.cancelled) {
-      // Cancellation is a deterministic final state.
-      // The session layer maps this to SessionStatus.CANCELED.
-      // We emit an error event with PROCESS_CRASHED code only if
-      // no done event was received, so the session layer knows
-      // the session did not complete normally.
-      if (!this.receivedDone && !this.hasEmittedTerminalError) {
-        this.hasEmittedTerminalError = true;
-        const errorEvent = createProcessCrashError(
-          this.sessionId,
-          result.exitCode,
-          result.signal
-        );
-        this.emitter.emit("event", errorEvent);
-      }
+      // User-initiated cancellation — not an error.
+      // The session layer already transitions to CANCELED via USER_STOP.
+      // Do NOT emit a PROCESS_CRASHED error for expected cancellations.
+      this.hasEmittedTerminalError = true;
     } else if (
       result.exitCode !== null &&
       result.exitCode !== 0 &&
@@ -299,7 +289,6 @@ export class CliBridge {
 
 function isEnoent(err: unknown): boolean {
   return (
-    err instanceof Error &&
-    (err as NodeJS.ErrnoException).code === "ENOENT"
+    err instanceof Error && (err as NodeJS.ErrnoException).code === "ENOENT"
   );
 }

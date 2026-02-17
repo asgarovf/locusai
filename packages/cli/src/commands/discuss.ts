@@ -99,6 +99,8 @@ export async function discussCommand(args: string[]): Promise<void> {
     aiRunner,
     discussionManager,
     log,
+    provider,
+    model,
   });
 
   // ── Print banner ──────────────────────────────────────────

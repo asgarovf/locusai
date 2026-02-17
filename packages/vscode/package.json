@@ -97,18 +97,7 @@
           "group": "locusai@1"
         }
       ],
-      "view/title": [
-        {
-          "command": "locusai.newSession",
-          "when": "view == locusai.chatView",
-          "group": "navigation@1"
-        },
-        {
-          "command": "locusai.stopSession",
-          "when": "view == locusai.chatView",
-          "group": "navigation@2"
-        }
-      ],
+      "view/title": [],
       "commandPalette": [
         {
           "command": "locusai.explainSelection",

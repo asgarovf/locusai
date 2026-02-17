@@ -47,6 +47,7 @@ export interface SessionHeaderCallbacks {
   onNewSession: () => void;
   onResume: (sessionId: string) => void;
   onSelectSession: (sessionId: string) => void;
+  onDeleteSession: (sessionId: string) => void;
   onRequestSessions: () => void;
 }
 
@@ -131,7 +132,9 @@ export class SessionHeader {
     if (label) {
       this.badgeEl.textContent = label;
       this.badgeEl.classList.remove(...ALL_STATE_CLASSES);
-      this.badgeEl.classList.add(STATE_CSS_CLASSES[stateKey] || "lc-state-idle");
+      this.badgeEl.classList.add(
+        STATE_CSS_CLASSES[stateKey] || "lc-state-idle"
+      );
       this.badgeEl.style.display = "";
       this.badgeEl.classList.toggle(
         "lc-badge-pulsing",
@@ -142,24 +145,10 @@ export class SessionHeader {
       this.badgeEl.classList.remove("lc-badge-pulsing", ...ALL_STATE_CLASSES);
     }
 
-    // Controls
+    // Controls — only show resume button here (stop is in composer, new session is in dropdown)
     this.controlsEl.innerHTML = "";
 
-    if (status === "running" || status === "streaming") {
-      const stopBtn = el("button", {
-        cls: "lc-header-btn",
-        attrs: {
-          "aria-label": "Stop session",
-          type: "button",
-          tabindex: "0",
-        },
-        html: icons.stop,
-      });
-      stopBtn.addEventListener("click", () => {
-        if (this.sessionId) this.callbacks.onStop(this.sessionId);
-      });
-      this.controlsEl.appendChild(stopBtn);
-    } else if (status === "interrupted" && sessionId) {
+    if (status === "interrupted" && sessionId) {
       const resumeBtn = el("button", {
         cls: ["lc-header-btn", "lc-header-btn--accent"],
         attrs: {
@@ -173,34 +162,39 @@ export class SessionHeader {
         if (this.sessionId) this.callbacks.onResume(this.sessionId);
       });
       this.controlsEl.appendChild(resumeBtn);
-    } else if (
-      status === "completed" ||
-      status === "failed" ||
-      status === "canceled"
-    ) {
-      const newBtn = el("button", {
-        cls: ["lc-header-btn", "lc-header-btn--accent"],
-        attrs: {
-          "aria-label": "New session",
-          type: "button",
-          tabindex: "0",
-        },
-        html: icons.plus,
-      });
-      newBtn.addEventListener("click", () => {
-        this.callbacks.onNewSession();
-      });
-      this.controlsEl.appendChild(newBtn);
     }
   }
 
   updateSessions(sessions: SessionSummary[]): void {
     this.dropdownEl.innerHTML = "";
+
+    // "New Session" action at the top
+    const newSessionItem = el("div", {
+      cls: "lc-dropdown-item lc-dropdown-item--new",
+      attrs: { role: "option", tabindex: "0" },
+    });
+    newSessionItem.innerHTML = `
+      <span class="lc-dropdown-new-icon">${icons.plus}</span>
+      <span class="lc-dropdown-title">New Session</span>
+    `;
+    newSessionItem.addEventListener("click", () => {
+      this.callbacks.onNewSession();
+      this.closeDropdown();
+    });
+    newSessionItem.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.callbacks.onNewSession();
+        this.closeDropdown();
+      }
+    });
+    this.dropdownEl.appendChild(newSessionItem);
+
     if (sessions.length === 0) {
       this.dropdownEl.appendChild(
         el("div", {
           cls: "lc-dropdown-empty",
-          text: "No sessions",
+          text: "No sessions yet",
         })
       );
       return;
@@ -223,11 +217,31 @@ export class SessionHeader {
       );
       const bgClass = STATE_BG_CLASSES[session.status] || "lc-state-bg-idle";
 
-      item.innerHTML = `
-        <span class="lc-dropdown-dot ${bgClass}"></span>
-        <span class="lc-dropdown-title">${title}</span>
-        <span class="lc-dropdown-status">${session.status}</span>
-      `;
+      const dotEl = el("span", { cls: `lc-dropdown-dot ${bgClass}` });
+      const titleEl = el("span", { cls: "lc-dropdown-title", text: title });
+      const statusEl = el("span", {
+        cls: "lc-dropdown-status",
+        text: session.status,
+      });
+
+      const deleteBtn = el("button", {
+        cls: "lc-dropdown-delete",
+        attrs: {
+          "aria-label": "Delete session",
+          type: "button",
+          tabindex: "0",
+        },
+        html: icons.x,
+      });
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.callbacks.onDeleteSession(session.sessionId);
+      });
+
+      item.appendChild(dotEl);
+      item.appendChild(titleEl);
+      item.appendChild(statusEl);
+      item.appendChild(deleteBtn);
 
       if (session.sessionId === this.sessionId) {
         item.classList.add("lc-dropdown-item--active");

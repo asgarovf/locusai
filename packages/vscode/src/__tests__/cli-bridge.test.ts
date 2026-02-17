@@ -305,7 +305,7 @@ describe("CliBridge", () => {
   });
 
   describe("cancellation", () => {
-    it("cancel() terminates process and emits crash error", async () => {
+    it("cancel() terminates process without emitting error", async () => {
       bridge = new CliBridge();
       const events: HostEvent[] = [];
 
@@ -323,12 +323,11 @@ describe("CliBridge", () => {
       const result = await done;
       expect(result.cancelled).toBe(true);
 
-      const crashErrors = events.filter(
-        (e) =>
-          e.type === HostEventType.ERROR &&
-          e.payload.error.code === ProtocolErrorCode.PROCESS_CRASHED
+      // User-initiated cancellation should NOT produce error events
+      const errorEvents = events.filter(
+        (e) => e.type === HostEventType.ERROR
       );
-      expect(crashErrors.length).toBe(1);
+      expect(errorEvents.length).toBe(0);
     });
   });
 

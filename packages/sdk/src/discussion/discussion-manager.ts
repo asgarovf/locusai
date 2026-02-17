@@ -53,10 +53,7 @@ export class DiscussionManager {
     this.ensureDir();
 
     const jsonPath = join(this.discussionsDir, `${discussion.id}.json`);
-    const mdPath = join(
-      this.discussionsDir,
-      `summary-${discussion.id}.md`,
-    );
+    const mdPath = join(this.discussionsDir, `summary-${discussion.id}.md`);
 
     writeFileSync(jsonPath, JSON.stringify(discussion, null, 2), "utf-8");
     writeFileSync(mdPath, this.toMarkdown(discussion), "utf-8");
@@ -87,14 +84,14 @@ export class DiscussionManager {
     this.ensureDir();
 
     const files = readdirSync(this.discussionsDir).filter((f) =>
-      f.endsWith(".json"),
+      f.endsWith(".json")
     );
     const discussions: Discussion[] = [];
 
     for (const file of files) {
       try {
         const discussion = JSON.parse(
-          readFileSync(join(this.discussionsDir, file), "utf-8"),
+          readFileSync(join(this.discussionsDir, file), "utf-8")
         ) as Discussion;
         if (!status || discussion.status === status) {
           discussions.push(discussion);
@@ -106,7 +103,7 @@ export class DiscussionManager {
 
     discussions.sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return discussions;
@@ -165,7 +162,7 @@ export class DiscussionManager {
   addMessage(
     id: string,
     role: "user" | "assistant",
-    content: string,
+    content: string
   ): Discussion {
     const discussion = this.load(id);
     if (!discussion) {
@@ -213,7 +210,7 @@ export class DiscussionManager {
     // Sort by creation date, newest first
     insights.sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return insights;
@@ -241,7 +238,7 @@ export class DiscussionManager {
     lines.push(`**Created:** ${discussion.createdAt}`);
     lines.push(`**Updated:** ${discussion.updatedAt}`);
     lines.push(
-      `**Model:** ${discussion.metadata.model} (${discussion.metadata.provider})`,
+      `**Model:** ${discussion.metadata.model} (${discussion.metadata.provider})`
     );
     lines.push("");
 
@@ -264,9 +261,7 @@ export class DiscussionManager {
       lines.push("");
 
       for (const insight of discussion.insights) {
-        lines.push(
-          `### [${insight.type.toUpperCase()}] ${insight.title}`,
-        );
+        lines.push(`### [${insight.type.toUpperCase()}] ${insight.title}`);
         lines.push("");
         lines.push(insight.content);
         if (insight.tags.length > 0) {
