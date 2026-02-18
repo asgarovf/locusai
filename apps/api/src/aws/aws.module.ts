@@ -1,10 +1,19 @@
 import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
 import { CommonModule } from "@/common/common.module";
+import { AwsCredential } from "@/entities/aws-credential.entity";
+import { AwsInstance } from "@/entities/aws-instance.entity";
+import { AwsCredentialsController } from "./aws-credentials.controller";
+import { AwsCredentialsService } from "./aws-credentials.service";
 import { AwsEc2Service } from "./aws-ec2.service";
 
 @Module({
-  imports: [CommonModule],
-  providers: [AwsEc2Service],
-  exports: [AwsEc2Service],
+  imports: [
+    CommonModule,
+    TypeOrmModule.forFeature([AwsCredential, AwsInstance]),
+  ],
+  controllers: [AwsCredentialsController],
+  providers: [AwsEc2Service, AwsCredentialsService],
+  exports: [AwsEc2Service, AwsCredentialsService],
 })
 export class AwsModule {}

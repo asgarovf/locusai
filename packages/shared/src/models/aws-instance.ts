@@ -67,3 +67,11 @@ export const UpdateAwsInstanceSchema = z.object({
 });
 
 export type UpdateAwsInstance = z.infer<typeof UpdateAwsInstanceSchema>;
+
+export const SaveAwsCredentialsSchema = z.object({
+  accessKeyId: z.string().min(16),
+  secretAccessKey: z.string().min(1),
+  region: z.string().default("us-east-1"),
+});
+
+export type SaveAwsCredentials = z.infer<typeof SaveAwsCredentialsSchema>;
