@@ -103,3 +103,17 @@ export const InstanceIdParamSchema = z.object({
 });
 
 export type InstanceIdParam = z.infer<typeof InstanceIdParamSchema>;
+
+// ============================================================================
+// Security
+// ============================================================================
+
+const CIDR_REGEX = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/;
+
+export const UpdateSecurityRulesSchema = z.object({
+  allowedIps: z.array(
+    z.string().regex(CIDR_REGEX, "Invalid CIDR format (e.g. 1.2.3.4/32)")
+  ),
+});
+
+export type UpdateSecurityRules = z.infer<typeof UpdateSecurityRulesSchema>;

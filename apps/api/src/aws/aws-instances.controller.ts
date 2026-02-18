@@ -5,10 +5,12 @@ import {
   InstanceIdParamSchema,
   type ProvisionAwsInstance,
   ProvisionAwsInstanceSchema,
+  type UpdateSecurityRules,
+  UpdateSecurityRulesSchema,
   WorkspaceIdParam,
   WorkspaceIdParamSchema,
 } from "@locusai/shared";
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { ApiBearerAuth, ApiSecurity, ApiTags } from "@nestjs/swagger";
 import { Member } from "@/auth/decorators";
 import { ZodValidationPipe } from "@/common/pipes";
@@ -118,5 +120,34 @@ export class AwsInstancesController {
       params.instanceId
     );
     return { update };
+  }
+
+  @Get(":instanceId/security")
+  @Member()
+  async getSecurityRules(
+    @Param(new ZodValidationPipe(InstanceIdParamSchema))
+    params: InstanceIdParam
+  ) {
+    const rules = await this.awsInstancesService.getSecurityRules(
+      params.workspaceId,
+      params.instanceId
+    );
+    return { rules };
+  }
+
+  @Put(":instanceId/security")
+  @Member()
+  async updateSecurityRules(
+    @Param(new ZodValidationPipe(InstanceIdParamSchema))
+    params: InstanceIdParam,
+    @Body(new ZodValidationPipe(UpdateSecurityRulesSchema))
+    body: UpdateSecurityRules
+  ) {
+    const rules = await this.awsInstancesService.updateSecurityRules(
+      params.workspaceId,
+      params.instanceId,
+      body.allowedIps
+    );
+    return { rules };
   }
 }

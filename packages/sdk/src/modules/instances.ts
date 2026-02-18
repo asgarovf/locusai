@@ -1,6 +1,7 @@
 import {
   type InstanceAction,
   type ProvisionAwsInstance,
+  type UpdateSecurityRules,
 } from "@locusai/shared";
 import { BaseModule } from "./base.js";
 
@@ -32,6 +33,16 @@ export interface UpdateApplyInfo {
   success: boolean;
   newVersion: string;
   error?: string;
+}
+
+export interface SecurityRuleInfo {
+  port: number;
+  cidr: string;
+  description?: string;
+}
+
+interface SecurityRulesResponse {
+  rules: SecurityRuleInfo[];
 }
 
 interface InstanceResponse {
@@ -113,5 +124,27 @@ export class InstancesModule extends BaseModule {
       `/workspaces/${workspaceId}/aws-instances/${instanceId}/updates`
     );
     return data.update;
+  }
+
+  async getSecurity(
+    workspaceId: string,
+    instanceId: string
+  ): Promise<SecurityRuleInfo[]> {
+    const { data } = await this.api.get<SecurityRulesResponse>(
+      `/workspaces/${workspaceId}/aws-instances/${instanceId}/security`
+    );
+    return data.rules;
+  }
+
+  async updateSecurity(
+    workspaceId: string,
+    instanceId: string,
+    body: UpdateSecurityRules
+  ): Promise<SecurityRuleInfo[]> {
+    const { data } = await this.api.put<SecurityRulesResponse>(
+      `/workspaces/${workspaceId}/aws-instances/${instanceId}/security`,
+      body
+    );
+    return data.rules;
   }
 }

@@ -2,6 +2,7 @@
 
 import {
   type InstanceInfo,
+  type SecurityRuleInfo,
   type UpdateApplyInfo,
   type UpdateCheckInfo,
 } from "@locusai/sdk";
@@ -115,5 +116,31 @@ export function useApplyUpdate() {
       queryKeys.awsInstances.list(workspaceId),
       queryKeys.awsInstances.all(),
     ],
+  });
+}
+
+export function useInstanceSecurity(instanceId: string, enabled: boolean) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery<SecurityRuleInfo[]>({
+    queryKey: queryKeys.awsInstances.security(workspaceId, instanceId),
+    queryFn: () => locusClient.instances.getSecurity(workspaceId, instanceId),
+    enabled: !!workspaceId && !!instanceId && enabled,
+  });
+}
+
+export function useUpdateInstanceSecurity() {
+  const workspaceId = useWorkspaceId();
+
+  return useMutationWithToast<
+    SecurityRuleInfo[],
+    { instanceId: string; allowedIps: string[] }
+  >({
+    mutationFn: ({ instanceId, allowedIps }) =>
+      locusClient.instances.updateSecurity(workspaceId, instanceId, {
+        allowedIps,
+      }),
+    successMessage: "Security rules updated",
+    invalidateKeys: [queryKeys.awsInstances.all()],
   });
 }

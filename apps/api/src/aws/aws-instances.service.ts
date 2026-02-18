@@ -354,6 +354,86 @@ export class AwsInstancesService {
     }, POLL_INTERVAL_MS);
   }
 
+  async getSecurityRules(workspaceId: string, instanceId: string) {
+    const instance = await this.instanceRepository.findOne({
+      where: { id: instanceId, workspaceId },
+    });
+
+    if (!instance) {
+      throw new NotFoundException("Instance not found");
+    }
+
+    if (!instance.securityGroupId) {
+      throw new BadRequestException("Instance has no security group");
+    }
+
+    let credentials: AwsCredentials;
+    try {
+      credentials = (await this.awsCredentialsService.getDecryptedCredentials(
+        workspaceId
+      )) as AwsCredentials;
+    } catch {
+      throw new BadRequestException("AWS credentials not configured");
+    }
+
+    return this.awsEc2Service.getSecurityGroupRules(
+      credentials,
+      instance.securityGroupId
+    );
+  }
+
+  async updateSecurityRules(
+    workspaceId: string,
+    instanceId: string,
+    allowedIps: string[]
+  ) {
+    const instance = await this.instanceRepository.findOne({
+      where: { id: instanceId, workspaceId },
+    });
+
+    if (!instance) {
+      throw new NotFoundException("Instance not found");
+    }
+
+    if (!instance.securityGroupId) {
+      throw new BadRequestException("Instance has no security group");
+    }
+
+    let credentials: AwsCredentials;
+    try {
+      credentials = (await this.awsCredentialsService.getDecryptedCredentials(
+        workspaceId
+      )) as AwsCredentials;
+    } catch {
+      throw new BadRequestException("AWS credentials not configured");
+    }
+
+    // If no IPs specified, default to open access
+    const cidrs =
+      allowedIps.length > 0 ? allowedIps : ["0.0.0.0/0"];
+
+    const rules = cidrs.map((cidr) => ({
+      port: 22,
+      cidr,
+      description: cidr === "0.0.0.0/0" ? "SSH access (open)" : "SSH access",
+    }));
+
+    await this.awsEc2Service.updateSecurityGroupIngress(
+      credentials,
+      instance.securityGroupId,
+      rules
+    );
+
+    this.logger.log(
+      `Updated security rules for instance ${instanceId}: ${cidrs.join(", ")}`
+    );
+
+    return this.awsEc2Service.getSecurityGroupRules(
+      credentials,
+      instance.securityGroupId
+    );
+  }
+
   private mapEc2StateToStatus(
     state: string | undefined
   ): InstanceStatus | null {

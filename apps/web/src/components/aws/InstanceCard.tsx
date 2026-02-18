@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   Check,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Copy,
   ExternalLink,
@@ -27,6 +29,7 @@ import {
   useSyncInstance,
 } from "@/hooks/useAwsInstances";
 import { cn } from "@/lib/utils";
+import { SecurityIndicator, SecuritySettings } from "./SecuritySettings";
 
 interface InstanceCardProps {
   instance: InstanceInfo;
@@ -89,6 +92,7 @@ function getRelativeTime(date: string | Date | null): string {
 
 export function InstanceCard({ instance }: InstanceCardProps) {
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
   const instanceAction = useInstanceAction();
   const syncInstance = useSyncInstance();
   const updateCheck = useCheckUpdates(
@@ -161,16 +165,22 @@ export function InstanceCard({ instance }: InstanceCardProps) {
               </div>
             </div>
           </div>
-          <Badge variant={statusConfig.variant} size="sm">
-            <span
-              className={cn(
-                "w-1.5 h-1.5 rounded-full mr-1.5",
-                statusConfig.dotColor,
-                isProvisioning && "animate-pulse"
-              )}
+          <div className="flex items-center gap-1.5">
+            <SecurityIndicator
+              instanceId={instance.id}
+              enabled={isRunning || isStopped}
             />
-            {statusConfig.label}
-          </Badge>
+            <Badge variant={statusConfig.variant} size="sm">
+              <span
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full mr-1.5",
+                  statusConfig.dotColor,
+                  isProvisioning && "animate-pulse"
+                )}
+              />
+              {statusConfig.label}
+            </Badge>
+          </div>
         </div>
 
         {/* Details */}
@@ -275,6 +285,31 @@ export function InstanceCard({ instance }: InstanceCardProps) {
                 <span className="text-xs">
                   Up to date ({updateCheck.data.currentVersion})
                 </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Security Section */}
+        {(isRunning || isStopped) && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowSecurity(!showSecurity)}
+              className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5"
+            >
+              <span className="uppercase tracking-wider">Security</span>
+              {showSecurity ? (
+                <ChevronUp size={14} />
+              ) : (
+                <ChevronDown size={14} />
+              )}
+            </button>
+            {showSecurity && (
+              <div className="mt-2">
+                <SecuritySettings
+                  instanceId={instance.id}
+                  enabled={isRunning || isStopped}
+                />
               </div>
             )}
           </div>

@@ -115,5 +115,12 @@ export const queryKeys = {
         workspaceId,
         instanceId,
       ] as const,
+    security: (workspaceId: string, instanceId: string) =>
+      [
+        ...queryKeys.awsInstances.all(),
+        "security",
+        workspaceId,
+        instanceId,
+      ] as const,
   },
 };

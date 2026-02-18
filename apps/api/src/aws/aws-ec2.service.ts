@@ -4,7 +4,9 @@ import {
   CreateSecurityGroupCommand,
   DeleteSecurityGroupCommand,
   DescribeInstancesCommand,
+  DescribeSecurityGroupRulesCommand,
   EC2Client,
+  RevokeSecurityGroupIngressCommand,
   RunInstancesCommand,
   StartInstancesCommand,
   StopInstancesCommand,
@@ -30,6 +32,12 @@ interface CreateSecurityGroupParams {
   groupName: string;
   description: string;
   vpcId?: string;
+}
+
+export interface SecurityGroupRule {
+  port: number;
+  cidr: string;
+  description?: string;
 }
 
 @Injectable()
@@ -219,6 +227,98 @@ export class AwsEc2Service {
         })
       );
       this.logger.log(`Deleted security group ${groupId}`);
+    } finally {
+      client.destroy();
+    }
+  }
+
+  async getSecurityGroupRules(
+    credentials: AwsCredentials,
+    securityGroupId: string
+  ): Promise<SecurityGroupRule[]> {
+    const client = this.createClient(credentials);
+    try {
+      const result = await client.send(
+        new DescribeSecurityGroupRulesCommand({
+          Filters: [
+            {
+              Name: "group-id",
+              Values: [securityGroupId],
+            },
+          ],
+        })
+      );
+
+      return (result.SecurityGroupRules ?? [])
+        .filter((rule) => !rule.IsEgress)
+        .map((rule) => ({
+          port: rule.FromPort ?? 0,
+          cidr: rule.CidrIpv4 ?? "0.0.0.0/0",
+          description: rule.Description,
+        }));
+    } finally {
+      client.destroy();
+    }
+  }
+
+  async updateSecurityGroupIngress(
+    credentials: AwsCredentials,
+    securityGroupId: string,
+    rules: SecurityGroupRule[]
+  ): Promise<void> {
+    const client = this.createClient(credentials);
+    try {
+      // First, get existing ingress rules to revoke them
+      const existing = await client.send(
+        new DescribeSecurityGroupRulesCommand({
+          Filters: [
+            {
+              Name: "group-id",
+              Values: [securityGroupId],
+            },
+          ],
+        })
+      );
+
+      const ingressRules = (existing.SecurityGroupRules ?? []).filter(
+        (rule) => !rule.IsEgress
+      );
+
+      // Revoke all existing ingress rules
+      if (ingressRules.length > 0) {
+        await client.send(
+          new RevokeSecurityGroupIngressCommand({
+            GroupId: securityGroupId,
+            SecurityGroupRuleIds: ingressRules
+              .map((r) => r.SecurityGroupRuleId)
+              .filter((id): id is string => !!id),
+          })
+        );
+      }
+
+      // Authorize new ingress rules
+      if (rules.length > 0) {
+        await client.send(
+          new AuthorizeSecurityGroupIngressCommand({
+            GroupId: securityGroupId,
+            IpPermissions: rules.map((rule) => ({
+              IpProtocol: "tcp",
+              FromPort: rule.port,
+              ToPort: rule.port,
+              IpRanges: [
+                {
+                  CidrIp: rule.cidr,
+                  Description: rule.description ?? "SSH access",
+                },
+              ],
+            })),
+          })
+        );
+      }
+
+      this.logger.log(
+        `Updated security group ${securityGroupId} with ${rules.length} ingress rule(s)`
+      );
     } finally {
       client.destroy();
     }
