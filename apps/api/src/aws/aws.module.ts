@@ -12,6 +12,7 @@ import { AwsEc2Service } from "./aws-ec2.service";
 import { AwsInstancesController } from "./aws-instances.controller";
 import { AwsInstancesService } from "./aws-instances.service";
 import { AwsTerminalGateway } from "./aws-terminal.gateway";
+import { AwsUpdatesService } from "./aws-updates.service";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AwsTerminalGateway } from "./aws-terminal.gateway";
     AwsCredentialsService,
     AwsInstancesService,
     AwsTerminalGateway,
+    AwsUpdatesService,
   ],
   exports: [AwsEc2Service, AwsCredentialsService, AwsInstancesService],
 })

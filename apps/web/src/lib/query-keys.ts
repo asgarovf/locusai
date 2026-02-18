@@ -108,5 +108,12 @@ export const queryKeys = {
         workspaceId,
         instanceId,
       ] as const,
+    updates: (workspaceId: string, instanceId: string) =>
+      [
+        ...queryKeys.awsInstances.all(),
+        "updates",
+        workspaceId,
+        instanceId,
+      ] as const,
   },
 };

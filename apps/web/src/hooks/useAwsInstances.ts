@@ -1,6 +1,10 @@
 "use client";
 
-import { type InstanceInfo } from "@locusai/sdk";
+import {
+  type InstanceInfo,
+  type UpdateApplyInfo,
+  type UpdateCheckInfo,
+} from "@locusai/sdk";
 import { type InstanceAction, InstanceStatus } from "@locusai/shared";
 import { useQuery } from "@tanstack/react-query";
 import { locusClient } from "@/lib/api-client";
@@ -87,5 +91,29 @@ export function useSyncInstance() {
       locusClient.instances.sync(workspaceId, instanceId),
     successMessage: "Instance status synced",
     invalidateKeys: [queryKeys.awsInstances.list(workspaceId)],
+  });
+}
+
+export function useCheckUpdates(instanceId: string, enabled: boolean) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery<UpdateCheckInfo>({
+    queryKey: queryKeys.awsInstances.updates(workspaceId, instanceId),
+    queryFn: () => locusClient.instances.checkUpdates(workspaceId, instanceId),
+    enabled: !!workspaceId && !!instanceId && enabled,
+  });
+}
+
+export function useApplyUpdate() {
+  const workspaceId = useWorkspaceId();
+
+  return useMutationWithToast<UpdateApplyInfo, { instanceId: string }>({
+    mutationFn: ({ instanceId }) =>
+      locusClient.instances.applyUpdate(workspaceId, instanceId),
+    successMessage: "Instance updated successfully",
+    invalidateKeys: [
+      queryKeys.awsInstances.list(workspaceId),
+      queryKeys.awsInstances.all(),
+    ],
   });
 }

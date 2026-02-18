@@ -4,6 +4,8 @@ import { type InstanceInfo } from "@locusai/sdk";
 import { InstanceAction, InstanceStatus } from "@locusai/shared";
 import {
   AlertTriangle,
+  ArrowDownToLine,
+  Check,
   Clock,
   Copy,
   ExternalLink,
@@ -18,7 +20,12 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { Badge, Button, Modal, showToast } from "@/components/ui";
-import { useInstanceAction, useSyncInstance } from "@/hooks/useAwsInstances";
+import {
+  useApplyUpdate,
+  useCheckUpdates,
+  useInstanceAction,
+  useSyncInstance,
+} from "@/hooks/useAwsInstances";
 import { cn } from "@/lib/utils";
 
 interface InstanceCardProps {
@@ -84,6 +91,11 @@ export function InstanceCard({ instance }: InstanceCardProps) {
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
   const instanceAction = useInstanceAction();
   const syncInstance = useSyncInstance();
+  const updateCheck = useCheckUpdates(
+    instance.id,
+    instance.status === InstanceStatus.RUNNING
+  );
+  const applyUpdate = useApplyUpdate();
 
   const statusConfig = STATUS_CONFIG[instance.status] ?? {
     label: instance.status,
@@ -228,6 +240,45 @@ export function InstanceCard({ instance }: InstanceCardProps) {
             </div>
           )}
         </div>
+
+        {/* Update Section */}
+        {isRunning && updateCheck.data && (
+          <div className="flex items-center justify-between text-sm mb-4 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
+            {updateCheck.data.updateAvailable ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Badge variant="warning" size="sm">
+                    <ArrowDownToLine size={12} className="mr-1" />
+                    Update available
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {updateCheck.data.currentVersion} →{" "}
+                    {updateCheck.data.latestVersion}
+                  </span>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() =>
+                    applyUpdate.mutate({ instanceId: instance.id })
+                  }
+                  disabled={applyUpdate.isPending}
+                  isLoading={applyUpdate.isPending}
+                  loadingText="Updating..."
+                >
+                  Update Now
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Check size={14} className="text-emerald-500" />
+                <span className="text-xs">
+                  Up to date ({updateCheck.data.currentVersion})
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-3 border-t border-border/30">

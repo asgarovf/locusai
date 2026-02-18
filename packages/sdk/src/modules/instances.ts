@@ -22,12 +22,32 @@ export interface InstanceInfo {
   updatedAt: string;
 }
 
+export interface UpdateCheckInfo {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+}
+
+export interface UpdateApplyInfo {
+  success: boolean;
+  newVersion: string;
+  error?: string;
+}
+
 interface InstanceResponse {
   instance: InstanceInfo;
 }
 
 interface InstancesResponse {
   instances: InstanceInfo[];
+}
+
+interface UpdateCheckResponse {
+  update: UpdateCheckInfo;
+}
+
+interface UpdateApplyResponse {
+  update: UpdateApplyInfo;
 }
 
 export class InstancesModule extends BaseModule {
@@ -73,5 +93,25 @@ export class InstancesModule extends BaseModule {
       `/workspaces/${workspaceId}/aws-instances/${instanceId}/sync`
     );
     return data.instance;
+  }
+
+  async checkUpdates(
+    workspaceId: string,
+    instanceId: string
+  ): Promise<UpdateCheckInfo> {
+    const { data } = await this.api.get<UpdateCheckResponse>(
+      `/workspaces/${workspaceId}/aws-instances/${instanceId}/updates`
+    );
+    return data.update;
+  }
+
+  async applyUpdate(
+    workspaceId: string,
+    instanceId: string
+  ): Promise<UpdateApplyInfo> {
+    const { data } = await this.api.post<UpdateApplyResponse>(
+      `/workspaces/${workspaceId}/aws-instances/${instanceId}/updates`
+    );
+    return data.update;
   }
 }
