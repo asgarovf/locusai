@@ -38,3 +38,11 @@ jest.mock("@/entities/membership.entity", () => ({
 jest.mock("@/entities/otp-verification.entity", () => ({
   OtpVerification: class {},
 }));
+
+jest.mock("@/entities/aws-credential.entity", () => ({
+  AwsCredential: class {},
+}));
+
+jest.mock("@/entities/aws-instance.entity", () => ({
+  AwsInstance: class {},
+}));
