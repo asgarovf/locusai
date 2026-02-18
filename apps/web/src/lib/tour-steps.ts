@@ -287,64 +287,6 @@ export const backlogTour = () => {
 };
 
 /**
- * Interview Onboarding Tour
- * Guides users through the project setup interview process
- */
-export const interviewTour = () => {
-  const steps: DriveStep[] = [
-    {
-      element: "#chat-context",
-      popover: {
-        title: "Welcome to Your New Workspace!",
-        description:
-          "I'll guide you through a quick interview to understand your project. Your answers help me create a tailored workspace with the right structure.",
-        side: "bottom",
-        align: "center",
-      },
-    },
-    {
-      element: "#chat-input",
-      popover: {
-        title: "Chat with Locus",
-        description:
-          "Type your responses here. I'll ask about your project goals, team size, and workflow preferences to set everything up perfectly.",
-        side: "top",
-        align: "center",
-      },
-    },
-    {
-      element: "#chat-sidebar-toggle",
-      popover: {
-        title: "Conversation History",
-        description:
-          "Your setup conversation is saved here. You can always come back to review or continue where you left off.",
-        side: "right",
-        align: "start",
-      },
-    },
-    {
-      popover: {
-        title: "Building Your Manifest",
-        description:
-          "As we chat, I'll build a project manifest that captures your requirements. This manifest helps organize tasks, sprints, and goals for your team.",
-      },
-    },
-  ];
-
-  const driverObj = driver({
-    ...driverConfig,
-    steps,
-    onDestroyStarted: () => {
-      setStorageItem(STORAGE_KEYS.TOUR_INTERVIEW_SEEN, "true");
-      driverObj.destroy();
-    },
-  });
-
-  driverObj.drive();
-  return driverObj;
-};
-
-/**
  * General keyboard shortcuts info
  */
 export const keyboardShortcutsTour = () => {
