@@ -443,7 +443,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                   <span>Settings</span>
                 </Link>
                 <Link
-                  href="/settings/aws"
+                  href="/hosting"
                   className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
                   onClick={() => {
                     setIsUserMenuOpen(false);

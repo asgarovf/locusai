@@ -97,4 +97,16 @@ export const queryKeys = {
     detail: (workspaceId: string) =>
       [...queryKeys.awsCredentials.all(), "detail", workspaceId] as const,
   },
+  awsInstances: {
+    all: () => ["aws-instances"] as const,
+    list: (workspaceId: string) =>
+      [...queryKeys.awsInstances.all(), "list", workspaceId] as const,
+    detail: (workspaceId: string, instanceId: string) =>
+      [
+        ...queryKeys.awsInstances.all(),
+        "detail",
+        workspaceId,
+        instanceId,
+      ] as const,
+  },
 };
