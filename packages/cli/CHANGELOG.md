@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.13.3
+
+### Patch Changes
+
+- Performance improvements & refactoring
+- Updated dependencies
+  - @locusai/sdk@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes
@@ -661,21 +669,18 @@
   ## Major Highlights
 
   ### @locusai/cli
-
   - **New `locus run` command**: Starts the local agent runtime that connects to the cloud.
   - **Improved `locus index`**: Now creates a semantic map of your codebase for better agent context.
   - **Removed MCP Server**: The standalone MCP server (`locus serve`) has been replaced by the direct agent runtime.
   - **Terminal UI**: Enhanced CLI output with emoji status indicators and clear lifecycle phases.
 
   ### @locusai/sdk
-
   - **Agent Orchestrator**: New core engine that manages the agent lifecycle (Dispatch -> Plan -> Execute -> Verify).
   - **Sprint Mindmaps**: Agents now generate high-level technical plans for sprints before executing individual tasks.
   - **Anthropic & Claude CLI Support**: Native integration with Claude for planning and coding.
   - **Artifact Syncing**: Automatically syncs locally generated plans and docs to the Locus Dashboard.
 
   ### @locusai/shared
-
   - Updated schemas to support the new `Agent` and `Orchestrator` models.
   - Added `Sprint.mindmap` and `Sprint.mindmapUpdatedAt` fields.
 

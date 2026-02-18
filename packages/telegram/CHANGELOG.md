@@ -1,5 +1,13 @@
 # @locusai/telegram
 
+## 0.13.3
+
+### Patch Changes
+
+- Performance improvements & refactoring
+- Updated dependencies
+  - @locusai/sdk@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes
