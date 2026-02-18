@@ -59,6 +59,9 @@ export class AwsInstance {
   @Column({ type: "jsonb", default: [] })
   integrations: unknown[];
 
+  @Column({ name: "security_group_id", type: "varchar", nullable: true })
+  securityGroupId: string | null;
+
   @Column({ name: "error_message", type: "text", nullable: true })
   errorMessage: string | null;
 

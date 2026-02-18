@@ -75,3 +75,31 @@ export const SaveAwsCredentialsSchema = z.object({
 });
 
 export type SaveAwsCredentials = z.infer<typeof SaveAwsCredentialsSchema>;
+
+// ============================================================================
+// Provisioning & Actions
+// ============================================================================
+
+export const ProvisionAwsInstanceSchema = z.object({
+  repoUrl: z.string().min(1),
+  githubToken: z.string().min(1),
+  instanceType: z
+    .enum(["t3.micro", "t3.small", "t3.medium"])
+    .default("t3.small"),
+  integrations: z.array(IntegrationSchema).optional().default([]),
+});
+
+export type ProvisionAwsInstance = z.infer<typeof ProvisionAwsInstanceSchema>;
+
+export const InstanceActionBodySchema = z.object({
+  action: z.nativeEnum(InstanceAction),
+});
+
+export type InstanceActionBody = z.infer<typeof InstanceActionBodySchema>;
+
+export const InstanceIdParamSchema = z.object({
+  workspaceId: z.string().uuid("Invalid Workspace ID"),
+  instanceId: z.string().uuid("Invalid Instance ID"),
+});
+
+export type InstanceIdParam = z.infer<typeof InstanceIdParamSchema>;

@@ -1,11 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import {
-  type AiProvider,
-  c,
-  LOCUS_CONFIG,
-  PROVIDER,
-} from "@locusai/sdk/node";
+import { type AiProvider, c, LOCUS_CONFIG, PROVIDER } from "@locusai/sdk/node";
 
 /**
  * Check if a project has been initialized with Locus

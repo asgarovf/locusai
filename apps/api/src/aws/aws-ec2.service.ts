@@ -2,6 +2,7 @@ import {
   type _InstanceType,
   AuthorizeSecurityGroupIngressCommand,
   CreateSecurityGroupCommand,
+  DeleteSecurityGroupCommand,
   DescribeInstancesCommand,
   EC2Client,
   RunInstancesCommand,
@@ -201,6 +202,23 @@ export class AwsEc2Service {
         `Created security group ${groupId} (${params.groupName})`
       );
       return groupId;
+    } finally {
+      client.destroy();
+    }
+  }
+
+  async deleteSecurityGroup(
+    credentials: AwsCredentials,
+    groupId: string
+  ): Promise<void> {
+    const client = this.createClient(credentials);
+    try {
+      await client.send(
+        new DeleteSecurityGroupCommand({
+          GroupId: groupId,
+        })
+      );
+      this.logger.log(`Deleted security group ${groupId}`);
     } finally {
       client.destroy();
     }

@@ -56,6 +56,9 @@ export const ConfigSchema = z
 
     // Encryption
     ENCRYPTION_KEY: z.string().optional(),
+
+    // AWS
+    LOCUS_AMI_ID: z.string().optional(),
   })
   .superRefine((config, context) => {
     if (!config.SWAGGER_DOCS_ENABLED) {
