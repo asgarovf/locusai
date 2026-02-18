@@ -59,6 +59,8 @@ export const ConfigSchema = z
 
     // AWS
     LOCUS_AMI_ID: z.string().optional(),
+    LOCUS_AWS_KEY_PAIR_NAME: z.string().optional(),
+    LOCUS_SSH_PRIVATE_KEY_PATH: z.string().optional(),
   })
   .superRefine((config, context) => {
     if (!config.SWAGGER_DOCS_ENABLED) {
