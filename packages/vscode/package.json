@@ -4,6 +4,7 @@
   "description": "Locus AI — AI-native project management for VS Code",
   "version": "0.13.3",
   "publisher": "locusai",
+  "private": true,
   "license": "MIT",
   "icon": "assets/icon.png",
   "preview": true,
