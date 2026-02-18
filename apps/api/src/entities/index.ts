@@ -1,5 +1,7 @@
 export * from "./agent-registration.entity";
 export * from "./api-key.entity";
+export * from "./aws-credential.entity";
+export * from "./aws-instance.entity";
 export * from "./comment.entity";
 export * from "./doc.entity";
 export * from "./doc-group.entity";

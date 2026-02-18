@@ -53,6 +53,9 @@ export const ConfigSchema = z
 
     // OTP security
     OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
+
+    // Encryption
+    ENCRYPTION_KEY: z.string().optional(),
   })
   .superRefine((config, context) => {
     if (!config.SWAGGER_DOCS_ENABLED) {
