@@ -1,6 +1,7 @@
 export * from "./backlog";
 export * from "./task-panel";
 export * from "./useApiKeysQuery";
+export * from "./useAwsCredentials";
 export * from "./useAuthenticatedUser";
 export * from "./useAuthenticatedUserWithOrg";
 export * from "./useAuthLayoutLogic";

@@ -35,6 +35,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Server,
   Settings,
   User as UserIcon,
 } from "lucide-react";
@@ -440,6 +441,17 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                 >
                   <Settings size={16} />
                   <span>Settings</span>
+                </Link>
+                <Link
+                  href="/settings/aws"
+                  className="flex items-center gap-2 p-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    onNavigate?.();
+                  }}
+                >
+                  <Server size={16} />
+                  <span>Hosting</span>
                 </Link>
                 <div className="border-t border-border/50 mt-1 pt-1">
                   <button

@@ -92,4 +92,9 @@ export const queryKeys = {
     list: (orgId: string) =>
       [...queryKeys.invitations.all(), "list", orgId] as const,
   },
+  awsCredentials: {
+    all: () => ["aws-credentials"] as const,
+    detail: (workspaceId: string) =>
+      [...queryKeys.awsCredentials.all(), "detail", workspaceId] as const,
+  },
 };
