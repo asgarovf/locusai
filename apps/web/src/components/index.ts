@@ -1,6 +1,5 @@
 export * from "./AuthLayoutUI";
 export * from "./BoardFilter";
-export * from "./BoardFilter";
 export * from "./BottomNav";
 export * from "./Header";
 export * from "./onboarding";
