@@ -32,7 +32,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@locusai/sdk": "^0.13.3"
+    "@locusai/sdk": "^0.13.3",
+    "@locusai/shared": "^0.13.3"
   },
   "devDependencies": {}
 }

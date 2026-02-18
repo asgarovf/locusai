@@ -32,6 +32,7 @@
   "license": "MIT",
   "dependencies": {
     "@locusai/sdk": "^0.13.3",
+    "@locusai/shared": "^0.13.3",
     "dotenv": "^16.4.7",
     "telegraf": "^4.16.3"
   },

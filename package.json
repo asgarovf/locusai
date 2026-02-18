@@ -45,6 +45,7 @@
   "dependencies": {
     "@nestjs/config": "^4.0.2",
     "driver.js": "^1.4.0",
+    "express": "^5.2.1",
     "pg": "^8.17.1"
   },
   "trustedDependencies": [

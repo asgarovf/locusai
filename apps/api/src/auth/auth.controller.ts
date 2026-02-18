@@ -32,7 +32,7 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { ZodValidationPipe } from "@/common/pipes";
 import {
   AuthApiKeyInfoDto,
