@@ -140,6 +140,9 @@ export async function upgradeCommand(ctx: Context): Promise<void> {
     return;
   }
 
+  // Check if any packages were actually updated (not just "already at latest")
+  const packagesUpdated = output.includes("updated to");
+
   // Show upgrade output
   if (output) {
     const truncated = truncateOutput(output, 3000);
@@ -153,7 +156,15 @@ export async function upgradeCommand(ctx: Context): Promise<void> {
     });
   }
 
-  // Step 2: Restart the telegram service
+  // Step 2: Only restart if packages were actually updated
+  if (!packagesUpdated) {
+    await ctx.reply(
+      formatInfo("All packages already at latest version. No restart needed."),
+      { parse_mode: "HTML" }
+    );
+    return;
+  }
+
   // Send this message before restarting since the process will terminate
   await ctx.reply(
     formatInfo(

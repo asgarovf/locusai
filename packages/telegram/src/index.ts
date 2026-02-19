@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 
   console.log("Starting bot (long-polling)...\n");
-  await bot.launch();
+  await bot.launch({ dropPendingUpdates: true });
   console.log("Bot is running. Send /help in Telegram to get started.\n");
 }
 
