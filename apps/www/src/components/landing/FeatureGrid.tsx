@@ -3,12 +3,12 @@
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
+  Bot,
   BrainCircuit,
-  Code2,
   FileSearch,
   Lock,
+  MessageCircle,
   MessageSquare,
-  Users,
 } from "lucide-react";
 
 interface Feature {
@@ -21,9 +21,10 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Multi-Agent Execution",
-    description: "Run multiple agents in parallel across tasks.",
-    icon: Users,
+    title: "Autonomous Agent",
+    description:
+      "AI agents claim sprint tasks, write code, run tests, commit, and push — then open a pull request when done.",
+    icon: Bot,
     color: "text-cyan",
     glowColor: "group-hover:shadow-cyan/10",
   },
@@ -44,10 +45,10 @@ const features: Feature[] = [
     glowColor: "group-hover:shadow-amber/10",
   },
   {
-    title: "Codebase Intelligence",
+    title: "AI Discussions",
     description:
-      "Semantic indexing gives agents deep understanding of your project structure, patterns, and conventions.",
-    icon: Code2,
+      "Interactive AI discussions with insight extraction. Think through architecture and design before writing code.",
+    icon: MessageCircle,
     color: "text-emerald",
     glowColor: "group-hover:shadow-emerald/10",
   },

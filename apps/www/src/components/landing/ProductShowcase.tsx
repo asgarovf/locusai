@@ -24,7 +24,7 @@ const products: Product[] = [
   {
     label: "AI Agent",
     labelColor: "text-cyan",
-    title: "Autonomous agents that ship code in parallel",
+    title: "Autonomous agents that ship your code",
     description:
       "AI agents claim tasks from your sprint, write code, run tests, and push changes. A pull request is created when all tasks are done.",
     terminalTitle: "locus run",
@@ -48,7 +48,6 @@ const products: Product[] = [
         color: "text-muted-foreground",
       },
       { text: "", color: "" },
-      { text: "  ● Agent spawned: agent-a1b2c3", color: "text-cyan" },
       { text: "  ● Claimed: Implement user auth", color: "text-cyan" },
       { text: "  ✔ Completed: Implement user auth", color: "text-emerald" },
       { text: "  ● Claimed: Add database migrations", color: "text-cyan" },
@@ -64,7 +63,7 @@ const products: Product[] = [
     labelColor: "text-violet",
     title: "Multi-agent planning meetings for your codebase",
     description:
-      "Run AI planning meetings with specialized agents — Tech Lead, Architect, and Sprint Organizer — that collaborate to break down epics into actionable tasks. Generate technical mindmaps and ensure every piece of work fits together architecturally before a single line of code is written.",
+      "Run AI planning meetings with specialized agents — Tech Lead, Architect, and Sprint Organizer — that collaborate to break down epics into actionable tasks. Review and approve plans before they become sprints.",
     terminalTitle: "locus plan",
     lines: [
       {
@@ -82,7 +81,7 @@ const products: Product[] = [
       { text: "    5 tasks • 2 minutes ago", color: "text-muted-foreground" },
       { text: "", color: "" },
       {
-        text: "locus plan --approve pl_8xk2m",
+        text: "locus plan --approve plan-1708300000",
         color: "text-foreground",
         prefix: "$ ",
       },
@@ -91,8 +90,46 @@ const products: Product[] = [
         text: "  ✔ Sprint created: Build authentication system",
         color: "text-emerald",
       },
-      { text: "    Sprint ID: sp_3nf92k", color: "text-muted-foreground" },
       { text: "    5 tasks created", color: "text-muted-foreground" },
+    ],
+  },
+  {
+    label: "AI Discussions",
+    labelColor: "text-emerald",
+    title: "Think through problems with AI before writing code",
+    description:
+      "Start interactive AI discussions on architecture, design, or any topic with full project context. The system extracts structured insights — decisions, requirements, ideas, and concerns — as the conversation progresses.",
+    terminalTitle: "locus discuss",
+    lines: [
+      {
+        text: 'locus discuss "How should we handle auth tokens?"',
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      { text: "", color: "" },
+      {
+        text: "🧠 Starting discussion with project context...",
+        color: "text-emerald",
+      },
+      { text: "", color: "" },
+      {
+        text: "  You: Should we use JWT or session cookies?",
+        color: "text-foreground",
+      },
+      {
+        text: "  AI: Given your NestJS backend and the need for...",
+        color: "text-muted-foreground",
+      },
+      { text: "", color: "" },
+      {
+        text: "  💡 Insight extracted: Use short-lived JWTs with refresh tokens",
+        color: "text-emerald",
+      },
+      { text: "", color: "" },
+      {
+        text: "  Type summary to end, or keep discussing...",
+        color: "text-muted-foreground",
+      },
     ],
   },
   {
@@ -130,7 +167,7 @@ const products: Product[] = [
     labelColor: "text-rose",
     title: "A powerful command line for every workflow",
     description:
-      "Interactive REPL, exec mode for one-off tasks, session management, and built-in codebase indexing. Everything you need to work with AI agents from your terminal.",
+      "Interactive REPL, exec mode for one-off tasks, and session management. Everything you need to work with AI agents from your terminal.",
     terminalTitle: "locus exec",
     lines: [
       {
@@ -179,24 +216,22 @@ const products: Product[] = [
     terminalTitle: "app.locusai.dev",
     lines: [
       {
-        text: "locus login",
+        text: "locus config setup",
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
       {
-        text: "  ✔ Authenticated as team@company.dev",
+        text: "  ✔ API key saved",
+        color: "text-emerald",
+      },
+      {
+        text: "  ✔ Workspace linked: acme-eng",
         color: "text-emerald",
       },
       { text: "", color: "" },
       {
-        text: "locus dash",
-        color: "text-foreground",
-        prefix: "$ ",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Opening dashboard → app.locusai.dev",
+        text: "  Dashboard → app.locusai.dev",
         color: "text-sky",
       },
       { text: "", color: "" },

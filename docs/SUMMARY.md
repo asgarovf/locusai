@@ -28,12 +28,18 @@
 * [config](cli/config.md)
 * [run](cli/run.md)
 * [plan](cli/plan.md)
+* [discuss](cli/discuss.md)
 * [exec](cli/exec.md)
 * [review](cli/review.md)
 * [agents](cli/agents.md)
 * [docs](cli/docs.md)
 * [index](cli/index-codebase.md)
 * [telegram](cli/telegram.md)
+
+## VSCode Extension
+
+* [Overview](vscode/overview.md)
+* [Features](vscode/features.md)
 
 ## Telegram
 

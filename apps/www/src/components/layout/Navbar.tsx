@@ -50,12 +50,27 @@ const products: NavDropdownItem[] = [
     color: "text-violet",
   },
   {
+    title: "AI Discussions",
+    description:
+      "Interactive AI discussions with structured insight extraction",
+    icon: <MessageSquare className="h-4 w-4" />,
+    href: "/products/discuss",
+    badge: "New",
+    color: "text-emerald",
+  },
+  {
     title: "Code Review",
     description: "Automated AI code review for PRs and staged changes",
     icon: <Search className="h-4 w-4" />,
     href: "/products/review",
-    badge: "New",
     color: "text-amber",
+  },
+  {
+    title: "VSCode Extension",
+    description: "Chat, explain code, and run tasks from your editor",
+    icon: <Code2 className="h-4 w-4" />,
+    href: "/products/vscode",
+    color: "text-cyan",
   },
   {
     title: "Telegram Bot",

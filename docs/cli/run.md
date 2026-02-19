@@ -36,6 +36,7 @@ locus run [options]
 | `--workspace <ID>` | Override workspace ID | Auto-resolved |
 | `--model <MODEL>` | AI model to use | From config |
 | `--provider <PROVIDER>` | AI provider (`claude` or `codex`) | From config |
+| `--reasoning-effort <LEVEL>` | Reasoning level (`low`, `medium`, `high`) | — |
 | `--api-key <KEY>` | Override API key | From config |
 | `--api-url <URL>` | Override API base URL | From config |
 | `--dir <PATH>` | Project directory | Current directory |
@@ -45,7 +46,7 @@ locus run [options]
 ## Examples
 
 ```bash
-# Run a single agent
+# Run the agent
 locus run
 
 # Use a specific provider
@@ -70,34 +71,6 @@ When you run `locus run`, the agent:
 
 {% hint style="warning" %}
 Ensure you have an **active sprint** with tasks in `BACKLOG` status before running the agent. Otherwise, no tasks will be dispatched.
-{% endhint %}
-
----
-
-### How It Works
-
-1. The orchestrator spawns N agent worker processes (up to a maximum of 5)
-2. Each agent independently requests a task from the sprint backlog via the **dispatch** API
-3. The server assigns tasks atomically — only one agent can claim a given task
-4. Each agent creates its own branch, executes its task, commits, and pushes
-5. Agents continue claiming tasks until the backlog is empty
-6. A pull request is created for each agent's branch when it finishes
-
-### Task Dispatch and Locking
-
-Locus uses server-side task dispatch to prevent conflicts between agents:
-
-* When an agent requests a task, the API **atomically assigns** it and sets the status to `IN_PROGRESS`
-* If two agents request a task at the same time, only one receives it — the other gets a different task or retries
-* Each task's `assignedTo` field tracks which agent owns it
-* Failed tasks are returned to `BACKLOG` so another agent can pick them up
-
-### Branch Isolation
-
-Each agent works on its own git branch, so parallel agents never interfere with each other's file changes. Branches follow the naming pattern `locus/<identifier>` and are pushed independently.
-
-{% hint style="info" %}
-Multi-agent execution works best when your sprint has **independent tasks** that don't modify the same files. For tasks with dependencies, use [task tiers](../concepts/sprints.md) to control execution order.
 {% endhint %}
 
 ---

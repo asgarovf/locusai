@@ -52,8 +52,8 @@ Review code with AI using `locus review` for open GitHub PRs or `locus review lo
 Start AI-assisted discussions on any topic with full project context. The system extracts structured insights (decisions, requirements, ideas, concerns, learnings) as the conversation progresses, building a knowledge base for your project.
 {% endtab %}
 
-{% tab title="Codebase Indexing" %}
-Run `locus index` to build a semantic index of your codebase. Locus maps symbols, file responsibilities, and project structure — then uses incremental updates to re-index only changed files on subsequent runs.
+{% tab title="VSCode Extension" %}
+Chat with AI, explain code selections, and run exec tasks directly from VSCode. The extension communicates with the Locus CLI under the hood, giving you the same agent capabilities without leaving your editor.
 {% endtab %}
 
 {% tab title="Interactive Exec REPL" %}
