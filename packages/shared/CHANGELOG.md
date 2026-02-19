@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.14.2
+
+### Patch Changes
+
+- Fix infinite loop on telegram upgrade command
+
 ## 0.14.1
 
 ### Patch Changes

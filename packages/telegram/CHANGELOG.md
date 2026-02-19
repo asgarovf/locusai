@@ -1,5 +1,14 @@
 # @locusai/telegram
 
+## 0.14.2
+
+### Patch Changes
+
+- Fix infinite loop on telegram upgrade command
+- Updated dependencies
+  - @locusai/sdk@0.14.2
+  - @locusai/shared@0.14.2
+
 ## 0.14.1
 
 ### Patch Changes
