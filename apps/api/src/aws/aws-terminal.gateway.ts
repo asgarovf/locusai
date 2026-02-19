@@ -12,7 +12,9 @@ import {
 import type { Socket } from "socket.io";
 import { Client, type ClientChannel } from "ssh2";
 import { TypedConfigService } from "@/config/config.service";
+import { OrganizationsService } from "@/organizations/organizations.service";
 import { UsersService } from "@/users/users.service";
+import { WorkspacesService } from "@/workspaces/workspaces.service";
 import { AwsInstancesService } from "./aws-instances.service";
 
 interface TerminalSession {
@@ -31,7 +33,9 @@ export class AwsTerminalGateway
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly awsInstancesService: AwsInstancesService,
-    private readonly configService: TypedConfigService
+    private readonly configService: TypedConfigService,
+    private readonly workspacesService: WorkspacesService,
+    private readonly organizationsService: OrganizationsService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -65,6 +69,30 @@ export class AwsTerminalGateway
         client.emit("error", {
           message: "workspaceId and instanceId are required",
         });
+        client.disconnect();
+        return;
+      }
+
+      // Verify workspace membership before granting SSH access
+      const workspace = await this.workspacesService.findById(workspaceId);
+      if (!workspace) {
+        this.logger.warn(
+          `Connection rejected: workspace not found (${client.id})`
+        );
+        client.emit("error", { message: "Workspace not found" });
+        client.disconnect();
+        return;
+      }
+
+      const members = await this.organizationsService.getMembers(
+        workspace.orgId
+      );
+      const isMember = members.some((m) => m.userId === user.id);
+      if (!isMember) {
+        this.logger.warn(
+          `Connection rejected: user ${user.id} is not a member of workspace ${workspaceId} (${client.id})`
+        );
+        client.emit("error", { message: "Access denied" });
         client.disconnect();
         return;
       }

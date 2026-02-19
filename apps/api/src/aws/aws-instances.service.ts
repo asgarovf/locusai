@@ -13,6 +13,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { EncryptionService } from "@/common/services/encryption.service";
 import { AwsInstance } from "@/entities/aws-instance.entity";
 import { AwsCredentialsService } from "./aws-credentials.service";
 import { AwsEc2Service } from "./aws-ec2.service";
@@ -30,7 +31,8 @@ export class AwsInstancesService {
     private readonly instanceRepository: Repository<AwsInstance>,
     private readonly awsCredentialsService: AwsCredentialsService,
     private readonly awsEc2Service: AwsEc2Service,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly encryptionService: EncryptionService
   ) {}
 
   async provisionInstance(workspaceId: string, dto: ProvisionAwsInstance) {
@@ -53,7 +55,7 @@ export class AwsInstancesService {
       instanceType: dto.instanceType,
       region: credentials.region,
       repoUrl: dto.repoUrl,
-      githubToken: dto.githubToken,
+      githubTokenEncrypted: this.encryptionService.encrypt(dto.githubToken),
       integrations: dto.integrations ?? [],
     });
 
@@ -82,7 +84,7 @@ export class AwsInstancesService {
         {
           instanceType: dto.instanceType,
           amiId,
-          securityGroupName,
+          securityGroupId,
           userData,
         }
       );
@@ -110,7 +112,7 @@ export class AwsInstancesService {
       );
     }
 
-    return saved;
+    return this.sanitizeInstance(saved);
   }
 
   async getInstance(workspaceId: string, instanceId: string) {
@@ -129,14 +131,15 @@ export class AwsInstancesService {
       await this.refreshInstanceStatus(instance, workspaceId);
     }
 
-    return instance;
+    return this.sanitizeInstance(instance);
   }
 
   async listInstances(workspaceId: string) {
-    return this.instanceRepository.find({
+    const instances = await this.instanceRepository.find({
       where: { workspaceId },
       order: { createdAt: "DESC" },
     });
+    return instances.map((instance) => this.sanitizeInstance(instance));
   }
 
   async performAction(
@@ -213,7 +216,7 @@ export class AwsInstancesService {
       `Performed action ${action} on instance ${instanceId} (EC2: ${instance.ec2InstanceId})`
     );
 
-    return instance;
+    return this.sanitizeInstance(instance);
   }
 
   async syncInstanceStatus(workspaceId: string, instanceId: string) {
@@ -226,11 +229,11 @@ export class AwsInstancesService {
     }
 
     if (!instance.ec2InstanceId) {
-      return instance;
+      return this.sanitizeInstance(instance);
     }
 
     await this.refreshInstanceStatus(instance, workspaceId);
-    return instance;
+    return this.sanitizeInstance(instance);
   }
 
   private async refreshInstanceStatus(
@@ -453,23 +456,55 @@ export class AwsInstancesService {
   }
 
   private buildUserDataScript(dto: ProvisionAwsInstance): string {
-    const integrationSetup = (dto.integrations ?? [])
+    const repoUrlWithoutProtocol = dto.repoUrl.replace("https://", "");
+
+    // Validate repo URL format to prevent injection
+    if (!/^[a-zA-Z0-9._\-/]+$/.test(repoUrlWithoutProtocol)) {
+      throw new BadRequestException("Invalid repository URL format");
+    }
+
+    // Validate integration names to prevent injection
+    const integrations = dto.integrations ?? [];
+    for (const integration of integrations) {
+      if (!/^[a-zA-Z0-9._\-]+$/.test(integration.name)) {
+        throw new BadRequestException(
+          `Invalid integration name: ${integration.name}`
+        );
+      }
+    }
+
+    const integrationSetup = integrations
       .map(
-        (integration) => `echo "Setting up integration: ${integration.name}"`
+        (integration) =>
+          `echo "Setting up integration: ${integration.name}"`
       )
       .join("\n");
+
+    // Use environment variable for the token to avoid leaking it in
+    // process listings or cloud-init logs. The token is passed via
+    // user-data which is already only accessible to the instance itself.
+    const escapedToken = this.shellEscape(dto.githubToken);
+    const escapedRepoUrl = this.shellEscape(repoUrlWithoutProtocol);
 
     return `#!/bin/bash
 set -euo pipefail
 
+# Redirect output but disable command tracing to prevent secret leakage
 exec > /var/log/locus-setup.log 2>&1
 
 echo "=== Locus Agent Setup ==="
 echo "Started at: $(date)"
 
-# Clone repository
+# Use environment variable for token to avoid leaking in process listings
+export GH_TOKEN=${escapedToken}
+
+# Clone repository using token from environment
 cd /home/ubuntu
-git clone https://${dto.githubToken}@${dto.repoUrl.replace("https://", "")} repo
+git clone "https://\${GH_TOKEN}@${escapedRepoUrl}" repo
+
+# Clear token from environment immediately after use
+unset GH_TOKEN
+
 cd repo
 
 # Configure Locus agent
@@ -484,5 +519,15 @@ ${integrationSetup}
 echo "=== Setup Complete ==="
 echo "Completed at: $(date)"
 `;
+  }
+
+  private shellEscape(value: string): string {
+    // Wrap in single quotes; escape any embedded single quotes
+    return "'" + value.replace(/'/g, "'\\''") + "'";
+  }
+
+  private sanitizeInstance(instance: AwsInstance): Omit<AwsInstance, "githubTokenEncrypted"> {
+    const { githubTokenEncrypted: _, ...sanitized } = instance;
+    return sanitized;
   }
 }

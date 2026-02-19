@@ -18,7 +18,7 @@ import { Injectable, Logger } from "@nestjs/common";
 interface LaunchParams {
   instanceType: string;
   amiId: string;
-  securityGroupName: string;
+  securityGroupId: string;
   keyName?: string;
   userData?: string;
 }
@@ -66,7 +66,7 @@ export class AwsEc2Service {
           InstanceType: params.instanceType as _InstanceType,
           MinCount: 1,
           MaxCount: 1,
-          SecurityGroups: [params.securityGroupName],
+          SecurityGroupIds: [params.securityGroupId],
           KeyName: params.keyName,
           UserData: params.userData
             ? Buffer.from(params.userData).toString("base64")

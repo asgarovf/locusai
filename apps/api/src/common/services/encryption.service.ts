@@ -9,7 +9,13 @@ export class EncryptionService {
   constructor(private configService: TypedConfigService) {
     const hex = this.configService.get("ENCRYPTION_KEY");
     if (hex) {
-      this.key = Buffer.from(hex, "hex");
+      const key = Buffer.from(hex, "hex");
+      if (key.length !== 32) {
+        throw new Error(
+          `ENCRYPTION_KEY must be exactly 32 bytes (64 hex chars), got ${key.length} bytes`
+        );
+      }
+      this.key = key;
     }
   }
 

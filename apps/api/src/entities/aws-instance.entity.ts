@@ -53,8 +53,8 @@ export class AwsInstance {
   @Column({ name: "repo_url", type: "varchar" })
   repoUrl: string;
 
-  @Column({ name: "github_token", type: "text" })
-  githubToken: string;
+  @Column({ name: "github_token_encrypted", type: "text" })
+  githubTokenEncrypted: string;
 
   @Column({ type: "jsonb", default: [] })
   integrations: unknown[];

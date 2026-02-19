@@ -40,17 +40,12 @@ export class AwsUpdatesService {
     const instance = await this.findRunningInstance(workspaceId, instanceId);
     const latestVersion = this.configService.get("LOCUS_AGENT_LATEST_VERSION");
 
-    const currentVersion = await this.executeCommand(
-      instance,
-      "locus-agent --version"
-    );
-
-    const trimmedVersion = currentVersion.trim();
+    const currentVersion = await this.getInstalledVersion(instance);
 
     return {
-      currentVersion: trimmedVersion,
+      currentVersion,
       latestVersion,
-      updateAvailable: trimmedVersion !== latestVersion,
+      updateAvailable: currentVersion !== latestVersion,
     };
   }
 
@@ -63,21 +58,18 @@ export class AwsUpdatesService {
     try {
       const output = await this.executeCommand(
         instance,
-        "curl -fsSL https://locus.dev/install.sh | bash"
+        "sudo locus upgrade"
       );
 
       this.logger.log(
         `Update applied on instance ${instanceId}: ${output.substring(0, 200)}`
       );
 
-      const newVersion = await this.executeCommand(
-        instance,
-        "locus-agent --version"
-      );
+      const newVersion = await this.getInstalledVersion(instance);
 
       return {
         success: true,
-        newVersion: newVersion.trim(),
+        newVersion,
       };
     } catch (error) {
       const message =
@@ -90,6 +82,32 @@ export class AwsUpdatesService {
         error: message,
       };
     }
+  }
+
+  /**
+   * Get the installed @locusai/cli version from the instance.
+   * Uses `npm list -g --json` which returns structured JSON, avoiding
+   * the formatted/colorized output of `locus version`.
+   */
+  private async getInstalledVersion(instance: AwsInstance): Promise<string> {
+    const output = await this.executeCommand(
+      instance,
+      "npm list -g @locusai/cli --depth=0 --json"
+    );
+
+    try {
+      const parsed = JSON.parse(output);
+      const version = parsed.dependencies?.["@locusai/cli"]?.version;
+      if (typeof version === "string" && version.length > 0) {
+        return version;
+      }
+    } catch {
+      this.logger.warn(
+        `Failed to parse npm list output for instance ${instance.id}: ${output.substring(0, 200)}`
+      );
+    }
+
+    return "unknown";
   }
 
   private async findRunningInstance(

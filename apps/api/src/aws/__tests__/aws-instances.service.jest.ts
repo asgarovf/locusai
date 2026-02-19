@@ -10,6 +10,7 @@ import { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { EncryptionService } from "@/common/services/encryption.service";
 import { AwsInstance } from "@/entities/aws-instance.entity";
 import { AwsCredentialsService } from "../aws-credentials.service";
 import { AwsEc2Service } from "../aws-ec2.service";
@@ -21,6 +22,7 @@ describe("AwsInstancesService", () => {
   let credentialsService: jest.Mocked<AwsCredentialsService>;
   let ec2Service: jest.Mocked<AwsEc2Service>;
   let configService: jest.Mocked<ConfigService>;
+  let encryptionService: jest.Mocked<EncryptionService>;
 
   const WORKSPACE_ID = "workspace-123";
   const INSTANCE_ID = "instance-456";
@@ -83,6 +85,13 @@ describe("AwsInstancesService", () => {
             get: jest.fn(),
           },
         },
+        {
+          provide: EncryptionService,
+          useValue: {
+            encrypt: jest.fn().mockReturnValue("encrypted_token"),
+            decrypt: jest.fn().mockReturnValue("ghp_test_token_123"),
+          },
+        },
       ],
     }).compile();
 
@@ -91,6 +100,7 @@ describe("AwsInstancesService", () => {
     credentialsService = module.get(AwsCredentialsService);
     ec2Service = module.get(AwsEc2Service);
     configService = module.get(ConfigService);
+    encryptionService = module.get(EncryptionService);
   });
 
   afterEach(() => {
@@ -118,7 +128,7 @@ describe("AwsInstancesService", () => {
         instanceType: "t3.small",
         region: "us-east-1",
         repoUrl: mockProvisionDto.repoUrl,
-        githubToken: mockProvisionDto.githubToken,
+        githubTokenEncrypted: "encrypted_token",
         integrations: [],
         ec2InstanceId: null,
         securityGroupId: null,
@@ -141,7 +151,7 @@ describe("AwsInstancesService", () => {
           status: InstanceStatus.PROVISIONING,
           instanceType: "t3.small",
           repoUrl: mockProvisionDto.repoUrl,
-          githubToken: mockProvisionDto.githubToken,
+          githubTokenEncrypted: "encrypted_token",
         })
       );
       expect(instanceRepo.save).toHaveBeenCalled();
@@ -155,7 +165,7 @@ describe("AwsInstancesService", () => {
         mockCredentials,
         expect.objectContaining({
           instanceType: "t3.small",
-          securityGroupName: `locus-instance-${INSTANCE_ID}`,
+          securityGroupId: "sg-12345",
         })
       );
       expect(result.ec2InstanceId).toBe(EC2_INSTANCE_ID);
