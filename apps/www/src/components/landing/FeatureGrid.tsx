@@ -22,8 +22,7 @@ interface Feature {
 const features: Feature[] = [
   {
     title: "Multi-Agent Execution",
-    description:
-      "Run multiple agents in parallel across tasks. Coordinate work with the --agents flag for faster sprint completion.",
+    description: "Run multiple agents in parallel across tasks.",
     icon: Users,
     color: "text-cyan",
     glowColor: "group-hover:shadow-cyan/10",

@@ -40,26 +40,22 @@ Read the [full documentation](https://docs.locusai.dev) to learn more.
 
 ## Quick Start
 
-The fastest way to use Locus is via `npx`. No installation required.
-
-### 1. Initialize a new project
+### 1. Install `locus` as global package
 
 ```bash
-npx @locusai/cli init
+npm install -g @locusai/cli
 ```
 
-### 2. Configure your API key
+### 2. Initialize a new project
 
 ```bash
-npx @locusai/cli config setup --api-key <YOUR_KEY>
+locus init
 ```
 
-### 3. Index your codebase
-
-Create a semantic map for the agent:
+### 3. Setup your configuration
 
 ```bash
-npx @locusai/cli index
+locus config setup
 ```
 
 ### 4. Run the agent
@@ -68,12 +64,6 @@ Start agents to pick up and execute tasks from your active sprint:
 
 ```bash
 npx @locusai/cli run
-```
-
-Run multiple agents in parallel:
-
-```bash
-npx @locusai/cli run --agents 3
 ```
 
 Use a different provider:
@@ -99,6 +89,7 @@ npx @locusai/cli run --provider codex
 | `locus telegram` | Configure and start the Telegram bot |
 | `locus upgrade` | Upgrade CLI to the latest version |
 | `locus version` | Show current version |
+| `locus disccus` | Discuss an idea with agents |
 
 ---
 
@@ -116,6 +107,7 @@ locus-dev/                       ← The platform (Open Source)
     ├── cli/                     ← Local Agent Runtime & CLI
     ├── sdk/                     ← Core Logic & API Client
     ├── shared/                  ← Shared Types & Schemas
+    ├── vscode/                  ← VSCode Extension
     └── telegram/                ← Telegram Bot for Remote Control
 ```
 
@@ -143,8 +135,6 @@ your-project/
 │   ├── sessions/                # Exec session history
 │   ├── reviews/                 # Code review reports
 │   └── plans/                   # Sprint plans
-├── .claude/skills/              # Claude-specific skills
-└── .codex/skills/               # Codex-specific skills
 ```
 
 ---

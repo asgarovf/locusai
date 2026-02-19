@@ -38,7 +38,6 @@ locus run [options]
 | `--provider <PROVIDER>` | AI provider (`claude` or `codex`) | From config |
 | `--api-key <KEY>` | Override API key | From config |
 | `--api-url <URL>` | Override API base URL | From config |
-| `--agents <N>` | Number of agents to run in parallel (max 5) | `1` |
 | `--dir <PATH>` | Project directory | Current directory |
 
 ---
@@ -48,9 +47,6 @@ locus run [options]
 ```bash
 # Run a single agent
 locus run
-
-# Run multiple agents in parallel
-locus run --agents 3
 
 # Use a specific provider
 locus run --provider codex
@@ -77,15 +73,6 @@ Ensure you have an **active sprint** with tasks in `BACKLOG` status before runni
 {% endhint %}
 
 ---
-
-## Multi-Agent Execution
-
-When you pass the `--agents` flag, Locus spawns multiple agent workers that execute tasks from the sprint **in parallel**. Each agent runs as a separate process and works independently.
-
-```bash
-# Spawn 3 agents to work on tasks concurrently
-locus run --agents 3
-```
 
 ### How It Works
 

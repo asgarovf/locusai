@@ -1,6 +1,7 @@
 import { TaskStatus } from "@locusai/shared";
 import type { Telegraf } from "telegraf";
 import { getClientAndWorkspace } from "./api-client.js";
+import { convertArtifactToPlan, showArtifact } from "./commands/artifacts.js";
 import {
   archiveDiscussion,
   endDiscussionById,
@@ -23,6 +24,8 @@ import {
  *   - view:task:<uuid>
  *   - approve:plan:<planId>
  *   - cancel:plan:<planId>
+ *   - view:artifact:<name>
+ *   - plan:artifact:<name>
  */
 export function registerCallbacks(
   bot: Telegraf,
@@ -260,5 +263,19 @@ export function registerCallbacks(
     await ctx.answerCbQuery("Archiving discussion…");
     const discussionId = ctx.match[1];
     await archiveDiscussion(ctx, config, discussionId);
+  });
+
+  // ── Artifact: View ───────────────────────────────────────────────────
+  bot.action(/^view:artifact:(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const artifactName = ctx.match[1];
+    await showArtifact(ctx, config, artifactName);
+  });
+
+  // ── Artifact: Convert to Plan ────────────────────────────────────────
+  bot.action(/^plan:artifact:(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Converting to plan…");
+    const artifactName = ctx.match[1];
+    await convertArtifactToPlan(ctx, config, executor, artifactName);
   });
 }

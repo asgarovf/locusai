@@ -5,6 +5,7 @@ import {
   agentsCommand,
   approveCommand,
   approveTaskCommand,
+  artifactsCommand,
   backlogCommand,
   cancelCommand,
   completeSprintCommand,
@@ -120,6 +121,9 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Model shortcut command
   bot.command("model", (ctx) => modelCommand(ctx, config));
 
+  // Artifacts command
+  bot.command("artifacts", (ctx) => artifactsCommand(ctx, config));
+
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
 
@@ -173,6 +177,10 @@ export function createBot(config: TelegramConfig): Telegraf {
       { command: "run", description: "Start agent on sprint tasks" },
       { command: "stop", description: "Stop all running processes" },
       { command: "exec", description: "One-shot AI execution" },
+      {
+        command: "artifacts",
+        description: "List & manage knowledge artifacts",
+      },
       { command: "review", description: "AI review of PR or changes" },
       { command: "activity", description: "Recent workspace activity" },
       { command: "workspace", description: "Workspace info & stats" },

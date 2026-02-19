@@ -34,7 +34,8 @@
     "build:sdk": "cd packages/sdk && bun run build",
     "build:cli-only": "cd packages/cli && bun run build",
     "build:telegram": "cd packages/telegram && bun run build",
-    "clean": "turbo clean && rm -rf bun.lock"
+    "clean": "turbo clean && rm -rf bun.lock",
+    "simulate": "bun run packages/cli/src/cli.ts"
   },
   "type": "module",
   "packageManager": "bun@1.2.4",

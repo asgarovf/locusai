@@ -31,11 +31,10 @@ const commands = [
   {
     name: "locus run",
     description:
-      "Spawn autonomous AI agents that claim sprint tasks and ship code. Use --agents N for parallel multi-agent execution.",
+      "Spawn autonomous AI agents that claim sprint tasks and ship code.",
     icon: <Bot className="h-4 w-4" />,
     color: "text-cyan",
     flags: [
-      "--agents <N>",
       "--provider <name>",
       "--sprint <id>",
       "--auto-push",

@@ -33,6 +33,8 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 
 🔧 <b>Dev &amp; Git:</b>
 /exec &lt;prompt&gt; — One-shot AI execution
+/artifacts — List knowledge artifacts
+/artifacts &lt;name&gt; — View an artifact
 /review [pr-number] — AI review of PR or changes
 /git &lt;command&gt; — Run whitelisted git/gh commands
 /dev &lt;command&gt; — Run lint, typecheck, build, test

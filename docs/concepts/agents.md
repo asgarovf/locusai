@@ -64,14 +64,6 @@ When all tasks are done:
 
 ---
 
-## Parallel Execution
-
-By default, `locus run` spawns a single agent that processes tasks sequentially. To run multiple agents in parallel, use the `--agents` flag:
-
-```bash
-locus run --agents 3
-```
-
 ### Agent Pool
 
 The orchestrator manages a pool of up to **5 agent workers**. Each agent is a separate process that:

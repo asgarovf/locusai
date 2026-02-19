@@ -302,6 +302,41 @@ describe("CliBridge", () => {
       );
       expect(crashErrors.length).toBe(0);
     });
+
+    it("does not emit crash error if done event was received even with non-zero exit", async () => {
+      bridge = new CliBridge();
+      const events: HostEvent[] = [];
+
+      // Simulate: CLI emits done event then exits with code 1
+      // (e.g. signal handler calling process.exit(1) after completion)
+      const body = [
+        ...ndjsonBody([
+          makeCliEvent("done", SID, {
+            exitCode: 0,
+            duration: 100,
+            success: true,
+          }),
+        ]).split("\n"),
+        "exit 1",
+      ].join("\n");
+
+      const done = new Promise<ProcessExitResult>((resolve) => {
+        bridge.on("event", (e) => events.push(e));
+        bridge.on("exit", resolve);
+      });
+
+      startBridge(script(body));
+
+      const result = await done;
+      expect(result.exitCode).toBe(1);
+
+      const crashErrors = events.filter(
+        (e) =>
+          e.type === HostEventType.ERROR &&
+          e.payload.error.code === ProtocolErrorCode.PROCESS_CRASHED
+      );
+      expect(crashErrors.length).toBe(0);
+    });
   });
 
   describe("cancellation", () => {

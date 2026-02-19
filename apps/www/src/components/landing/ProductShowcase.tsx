@@ -26,7 +26,7 @@ const products: Product[] = [
     labelColor: "text-cyan",
     title: "Autonomous agents that ship code in parallel",
     description:
-      "AI agents claim tasks from your sprint, write code, run tests, and push changes. Run multiple agents in parallel with --agents to execute tasks concurrently across separate branches, or sequentially on a single branch. A pull request is created when all tasks are done.",
+      "AI agents claim tasks from your sprint, write code, run tests, and push changes. A pull request is created when all tasks are done.",
     terminalTitle: "locus run",
     lines: [
       {

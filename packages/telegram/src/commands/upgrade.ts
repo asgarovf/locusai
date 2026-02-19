@@ -179,9 +179,7 @@ export async function upgradeCommand(ctx: Context): Promise<void> {
     const result = await runCommand(cmd, args, 30_000);
 
     if (result.exitCode !== 0) {
-      const errOutput = stripAnsi(
-        (result.stdout + result.stderr).trim()
-      );
+      const errOutput = stripAnsi((result.stdout + result.stderr).trim());
       console.error(
         `[upgrade] Restart command failed: ${cmd} ${args.join(" ")} — ${errOutput}`
       );

@@ -47,13 +47,13 @@ const lines: Line[] = [
   { text: "", color: "" },
   // Phase 2: Run with multiple agents
   {
-    text: "locus run --agents 3",
+    text: "locus run",
     color: "text-foreground",
     prefix: "$ ",
   },
   { text: "", color: "" },
   {
-    text: "🚀 Starting 3 agents in ~/dev/my-saas...",
+    text: "🚀 Starting agent in ~/dev/my-saas...",
     color: "text-cyan",
   },
   {

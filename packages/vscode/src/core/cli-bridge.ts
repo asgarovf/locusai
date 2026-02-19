@@ -264,10 +264,15 @@ export class CliBridge {
       // The session layer already transitions to CANCELED via USER_STOP.
       // Do NOT emit a PROCESS_CRASHED error for expected cancellations.
       this.hasEmittedTerminalError = true;
+    } else if (this.receivedDone) {
+      // The CLI emitted a `done` event — the session completed from the
+      // CLI's perspective. Do NOT emit PROCESS_CRASHED even if the
+      // process exits with a non-zero code (e.g. signal handler calling
+      // process.exit(1) after stdout data was already flushed).
+      this.hasEmittedTerminalError = true;
     } else if (
       result.exitCode !== null &&
       result.exitCode !== 0 &&
-      !this.receivedDone &&
       !this.hasEmittedTerminalError
     ) {
       this.hasEmittedTerminalError = true;

@@ -245,15 +245,26 @@ async function execJsonStream(
     cwd: projectPath,
   });
 
-  // Register signal handlers to guarantee terminal done event
+  // Register signal handlers to guarantee terminal done event.
+  // If the renderer already emitted `done`, the work is complete —
+  // let the process exit naturally with code 0 instead of forcing
+  // exit(1) which the extension interprets as PROCESS_CRASHED.
   const handleSignal = () => {
-    if (!renderer.isDone()) {
-      renderer.emitFatalError(
-        "PROCESS_CRASHED",
-        "Process terminated by signal"
-      );
+    if (renderer.isDone()) {
+      // Work is complete — remove signal handlers and let the process
+      // exit naturally. Do NOT call process.exit(1) here, as that would
+      // cause the extension to see a non-zero exit code and report
+      // PROCESS_CRASHED even though the session succeeded.
+      return;
     }
-    process.exit(1);
+    renderer.emitFatalError("PROCESS_CRASHED", "Process terminated by signal");
+    // Drain stdout before exiting so the extension receives the
+    // error + done events we just wrote.
+    if (process.stdout.writableNeedDrain) {
+      process.stdout.once("drain", () => process.exit(1));
+    } else {
+      process.exit(1);
+    }
   };
   process.on("SIGINT", handleSignal);
   process.on("SIGTERM", handleSignal);
@@ -300,6 +311,11 @@ async function execJsonStream(
     }
 
     renderer.emitDone(0);
+
+    // Remove signal handlers after successful completion so they
+    // don't interfere with the natural process exit (code 0).
+    process.removeListener("SIGINT", handleSignal);
+    process.removeListener("SIGTERM", handleSignal);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (!renderer.isDone()) {
