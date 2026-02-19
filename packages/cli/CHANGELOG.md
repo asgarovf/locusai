@@ -1,5 +1,15 @@
 # @locusai/cli
 
+## 0.14.3
+
+### Patch Changes
+
+- Artifacts command to manage project artifacts
+  Attempt fixing vscode execution interruptions
+- Updated dependencies
+  - @locusai/sdk@0.14.3
+  - @locusai/shared@0.14.3
+
 ## 0.14.2
 
 ### Patch Changes
