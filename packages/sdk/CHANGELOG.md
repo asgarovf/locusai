@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.14.1
+
+### Patch Changes
+
+- Remove preview tag from vscode extension
+- Updated dependencies
+  - @locusai/shared@0.14.1
+
 ## 0.14.0
 
 ### Minor Changes
