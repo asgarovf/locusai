@@ -6,18 +6,19 @@ import {
   TransformInterceptor,
 } from "./interceptors";
 import { AppLogger } from "./logger";
-import { EmailService } from "./services";
+import { EmailService, EncryptionService } from "./services";
 
 @Global()
 @Module({
   providers: [
     AppLogger,
     EmailService,
+    EncryptionService,
     AllExceptionsFilter,
     LoggingInterceptor,
     SanitizeInterceptor,
     TransformInterceptor,
   ],
-  exports: [AppLogger, EmailService],
+  exports: [AppLogger, EmailService, EncryptionService],
 })
 export class CommonModule {}

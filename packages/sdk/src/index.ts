@@ -3,6 +3,7 @@ import { LocusConfig, LocusEmitter, LocusEvent } from "./events.js";
 import { AuthModule } from "./modules/auth.js";
 import { CiModule } from "./modules/ci.js";
 import { DocsModule } from "./modules/docs.js";
+import { InstancesModule } from "./modules/instances.js";
 import { InvitationsModule } from "./modules/invitations.js";
 import { OrganizationsModule } from "./modules/organizations.js";
 import { SprintsModule } from "./modules/sprints.js";
@@ -26,6 +27,7 @@ export * from "./events.js";
 export * from "./modules/auth.js";
 export * from "./modules/ci.js";
 export * from "./modules/docs.js";
+export * from "./modules/instances.js";
 export * from "./modules/invitations.js";
 export * from "./modules/organizations.js";
 export * from "./modules/sprints.js";
@@ -44,6 +46,7 @@ export class LocusClient {
   public readonly invitations: InvitationsModule;
   public readonly docs: DocsModule;
   public readonly ci: CiModule;
+  public readonly instances: InstancesModule;
 
   constructor(config: LocusConfig) {
     this.emitter = new LocusEmitter();
@@ -68,6 +71,7 @@ export class LocusClient {
     this.invitations = new InvitationsModule(this.api, this.emitter);
     this.docs = new DocsModule(this.api, this.emitter);
     this.ci = new CiModule(this.api, this.emitter);
+    this.instances = new InstancesModule(this.api, this.emitter);
 
     if (config.retryOptions) {
       this.setupRetryInterceptor(config.retryOptions);

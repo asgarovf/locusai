@@ -3,7 +3,14 @@ module.exports = {
   rootDir: ".",
   testRegex: ".*\\.jest\\.ts$",
   transform: {
-    "^.+\\.(t|j)s$": "@swc/jest",
+    "^.+\\.(t|j)s$": [
+      "@swc/jest",
+      {
+        jsc: {
+          externalHelpers: false,
+        },
+      },
+    ],
   },
   collectCoverageFrom: ["**/*.(t|j)s"],
   coverageDirectory: "./coverage",

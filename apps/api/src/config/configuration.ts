@@ -53,6 +53,15 @@ export const ConfigSchema = z
 
     // OTP security
     OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
+
+    // Encryption
+    ENCRYPTION_KEY: z.string().min(64).max(64).optional(),
+
+    // AWS
+    LOCUS_AMI_ID: z.string().optional(),
+    LOCUS_AWS_KEY_PAIR_NAME: z.string().optional(),
+    LOCUS_SSH_PRIVATE_KEY_PATH: z.string().optional(),
+    LOCUS_AGENT_LATEST_VERSION: z.string().default("1.0.0"),
   })
   .superRefine((config, context) => {
     if (!config.SWAGGER_DOCS_ENABLED) {
@@ -61,7 +70,7 @@ export const ConfigSchema = z
 
     if (!config.SWAGGER_DOCS_USERNAME) {
       context.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `SWAGGER_DOCS_USERNAME ${SWAGGER_REQUIRED_MESSAGE}`,
         path: ["SWAGGER_DOCS_USERNAME"],
       });
@@ -69,7 +78,7 @@ export const ConfigSchema = z
 
     if (!config.SWAGGER_DOCS_PASSWORD) {
       context.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `SWAGGER_DOCS_PASSWORD ${SWAGGER_REQUIRED_MESSAGE}`,
         path: ["SWAGGER_DOCS_PASSWORD"],
       });
@@ -120,7 +129,7 @@ export default () => {
   if (!result.success) {
     console.error(
       "❌ Invalid environment variables:",
-      z.treeifyError(result.error)
+      JSON.stringify(result.error, null, 2)
     );
     throw new Error("Invalid api configuration");
   }

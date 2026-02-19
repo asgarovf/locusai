@@ -9,6 +9,7 @@ import { ApiKey } from "@/entities/api-key.entity";
 import { Membership } from "@/entities/membership.entity";
 import { Organization } from "@/entities/organization.entity";
 import { Task } from "@/entities/task.entity";
+import { User } from "@/entities/user.entity";
 import { Workspace } from "@/entities/workspace.entity";
 import { EventsService } from "@/events/events.service";
 import { WorkspacesService } from "../workspaces.service";
@@ -57,6 +58,11 @@ const MockAgentRegistrationRepository = () => ({
   delete: jest.fn(),
 });
 
+const MockUserRepository = () => ({
+  findOne: jest.fn(),
+  update: jest.fn(),
+});
+
 describe("WorkspacesService", () => {
   let service: WorkspacesService;
   let workspaceRepo: jest.Mocked<Repository<Workspace>>;
@@ -89,6 +95,10 @@ describe("WorkspacesService", () => {
         {
           provide: getRepositoryToken(AgentRegistration),
           useFactory: MockAgentRegistrationRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useFactory: MockUserRepository,
         },
         {
           provide: EventsService,

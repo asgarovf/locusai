@@ -1,6 +1,7 @@
 export * from "./activity";
 export * from "./agent";
 export * from "./auth";
+export * from "./aws-instance";
 export * from "./ci";
 export * from "./doc";
 export * from "./doc-group";
