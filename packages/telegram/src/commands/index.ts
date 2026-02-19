@@ -31,4 +31,5 @@ export {
   taskDetailCommand,
   tasksCommand,
 } from "./tasks.js";
+export { upgradeCommand } from "./upgrade.js";
 export { workspaceCommand } from "./workspace.js";

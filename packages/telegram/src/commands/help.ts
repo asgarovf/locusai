@@ -47,6 +47,7 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /config set &lt;key&gt; &lt;value&gt; — Update a setting
 /config unset &lt;key&gt; — Remove a setting
 /model [name] — View or switch AI model
+/upgrade — Upgrade Locus CLI &amp; restart bot
 /help — Show this message`;
 
 export async function startCommand(ctx: Context): Promise<void> {

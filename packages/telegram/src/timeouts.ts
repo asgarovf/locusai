@@ -20,3 +20,6 @@ export const GIT_TIMEOUT = 60_000; // 1 minute
 
 /** Timeout for /dev commands (lint, typecheck, build, test). */
 export const DEV_TIMEOUT = 600_000; // 10 minutes
+
+/** Timeout for /upgrade command (npm install can be slow). */
+export const UPGRADE_TIMEOUT = 300_000; // 5 minutes

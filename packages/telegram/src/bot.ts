@@ -32,6 +32,7 @@ import {
   stopCommand,
   taskDetailCommand,
   tasksCommand,
+  upgradeCommand,
   workspaceCommand,
 } from "./commands/index.js";
 import type { TelegramConfig } from "./config.js";
@@ -128,6 +129,9 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Status commands
   bot.command("status", (ctx) => statusCommand(ctx, executor));
 
+  // Upgrade command
+  bot.command("upgrade", (ctx) => upgradeCommand(ctx));
+
   // Route plain text messages to active discussions
   bot.on("text", (ctx) => {
     const text = ctx.message.text;
@@ -183,6 +187,7 @@ export function createBot(config: TelegramConfig): Telegraf {
       { command: "config", description: "Show/update settings" },
       { command: "model", description: "View or switch AI model" },
       { command: "status", description: "Show running processes" },
+      { command: "upgrade", description: "Upgrade Locus CLI & restart bot" },
       { command: "help", description: "Show all commands" },
     ])
     .catch((err) => console.error("Failed to set bot commands:", err));
