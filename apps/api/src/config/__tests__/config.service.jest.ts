@@ -25,6 +25,7 @@ describe("ConfigModule", () => {
       imports: [
         NestConfigModule.forRoot({
           load: [configuration],
+          ignoreEnvFile: true,
         }),
       ],
       providers: [TypedConfigService],

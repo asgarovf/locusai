@@ -7,6 +7,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TypedConfigService } from "../../config/config.service";
 import { AuthController } from "../auth.controller";
 import { AuthService } from "../auth.service";
+import { IpReputationService } from "../services";
 
 describe("AuthController", () => {
   let controller: AuthController;
@@ -32,6 +33,14 @@ describe("AuthController", () => {
           provide: TypedConfigService,
           useValue: {
             get: jest.fn().mockReturnValue("http://localhost:3000"),
+          },
+        },
+        {
+          provide: IpReputationService,
+          useValue: {
+            assertNotBlocked: jest.fn(),
+            recordFailedAttempt: jest.fn(),
+            isBlocked: jest.fn().mockReturnValue(false),
           },
         },
       ],
