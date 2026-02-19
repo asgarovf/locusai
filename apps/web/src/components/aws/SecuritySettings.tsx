@@ -1,15 +1,7 @@
 "use client";
 
 import { type SecurityRuleInfo } from "@locusai/sdk";
-import {
-  AlertTriangle,
-  Loader2,
-  Plus,
-  Shield,
-  ShieldAlert,
-  Trash2,
-  Wifi,
-} from "lucide-react";
+import { Loader2, Plus, Shield, ShieldAlert, Trash2, Wifi } from "lucide-react";
 import { useState } from "react";
 import { Badge, Button, Input, showToast } from "@/components/ui";
 import {
@@ -26,9 +18,7 @@ interface SecuritySettingsProps {
 const CIDR_REGEX = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/;
 
 function isOpenToAll(rules: SecurityRuleInfo[]): boolean {
-  return rules.some(
-    (rule) => rule.port === 22 && rule.cidr === "0.0.0.0/0"
-  );
+  return rules.some((rule) => rule.port === 22 && rule.cidr === "0.0.0.0/0");
 }
 
 function getSshCidrs(rules: SecurityRuleInfo[]): string[] {
@@ -124,13 +114,10 @@ export function SecuritySettings({
       {/* Warning banner */}
       {isOpen && (
         <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10">
-          <ShieldAlert
-            size={14}
-            className="text-amber-500 shrink-0 mt-0.5"
-          />
+          <ShieldAlert size={14} className="text-amber-500 shrink-0 mt-0.5" />
           <div className="text-xs text-amber-400">
-            <span className="font-medium">SSH is open to all IPs.</span>{" "}
-            We recommend restricting access to your IP address.
+            <span className="font-medium">SSH is open to all IPs.</span> We
+            recommend restricting access to your IP address.
           </div>
         </div>
       )}
@@ -238,11 +225,7 @@ export function SecurityIndicator({
 
   return (
     <div
-      title={
-        isOpen
-          ? "SSH open to all IPs"
-          : "SSH restricted to specific IPs"
-      }
+      title={isOpen ? "SSH open to all IPs" : "SSH restricted to specific IPs"}
       className={cn(
         "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs",
         isOpen
@@ -250,15 +233,7 @@ export function SecurityIndicator({
           : "bg-emerald-500/10 text-emerald-500"
       )}
     >
-      {isOpen ? (
-        <>
-          <ShieldAlert size={12} />
-        </>
-      ) : (
-        <>
-          <Shield size={12} />
-        </>
-      )}
+      {isOpen ? <ShieldAlert size={12} /> : <Shield size={12} />}
     </div>
   );
 }

@@ -159,9 +159,7 @@ export class WorkspacesModule extends BaseModule {
   // AWS Credentials Management
   // ============================================================================
 
-  async getAwsCredentials(
-    workspaceId: string
-  ): Promise<AwsCredentialInfo> {
+  async getAwsCredentials(workspaceId: string): Promise<AwsCredentialInfo> {
     const { data } = await this.api.get<AwsCredentialResponse>(
       `/workspaces/${workspaceId}/aws-credentials`
     );

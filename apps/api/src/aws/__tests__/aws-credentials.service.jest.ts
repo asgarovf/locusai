@@ -104,9 +104,9 @@ describe("AwsCredentialsService", () => {
     it("should throw BadRequestException when credentials are invalid", async () => {
       ec2Service.validateCredentials.mockResolvedValue(false);
 
-      await expect(
-        service.saveCredentials(WORKSPACE_ID, dto)
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.saveCredentials(WORKSPACE_ID, dto)).rejects.toThrow(
+        BadRequestException
+      );
 
       expect(encryptionService.encrypt).not.toHaveBeenCalled();
       expect(credentialRepo.save).not.toHaveBeenCalled();

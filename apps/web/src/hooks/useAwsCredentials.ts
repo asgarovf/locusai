@@ -2,18 +2,16 @@
 
 import { type SaveAwsCredentialsInput } from "@locusai/sdk";
 import { useQuery } from "@tanstack/react-query";
-import { useMutationWithToast } from "./useMutationWithToast";
-import { useWorkspaceIdOptional } from "./useWorkspaceId";
 import { locusClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useMutationWithToast } from "./useMutationWithToast";
+import { useWorkspaceIdOptional } from "./useWorkspaceId";
 
 export function useAwsCredentialsQuery() {
   const workspaceId = useWorkspaceIdOptional();
 
   return useQuery({
-    queryKey: workspaceId
-      ? queryKeys.awsCredentials.detail(workspaceId)
-      : [],
+    queryKey: workspaceId ? queryKeys.awsCredentials.detail(workspaceId) : [],
     queryFn: async () => {
       if (!workspaceId) return null;
       return locusClient.workspaces.getAwsCredentials(workspaceId);

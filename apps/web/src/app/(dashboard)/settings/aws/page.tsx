@@ -23,10 +23,7 @@ function AwsSettingsContent() {
 
         <div className="bg-secondary/30 border border-border/50 rounded-2xl p-5">
           <div className="flex gap-3">
-            <Info
-              size={18}
-              className="text-muted-foreground shrink-0 mt-0.5"
-            />
+            <Info size={18} className="text-muted-foreground shrink-0 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-foreground mb-2">
                 Required IAM Permissions

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { Terminal } from "@xterm/xterm";
+import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import "@xterm/xterm/css/xterm.css";
 import { config } from "@/lib/config";
@@ -134,9 +134,7 @@ export function WebTerminal({ workspaceId, instanceId }: WebTerminalProps) {
     });
 
     socket.on("disconnected", () => {
-      terminal.writeln(
-        "\r\n\x1b[33mSSH session disconnected.\x1b[0m\r\n"
-      );
+      terminal.writeln("\r\n\x1b[33mSSH session disconnected.\x1b[0m\r\n");
       setStatus("disconnected");
     });
 
@@ -193,19 +191,14 @@ export function WebTerminal({ workspaceId, instanceId }: WebTerminalProps) {
     <div className="flex flex-col h-full">
       {/* Status bar */}
       <div className="flex items-center gap-2 px-4 py-2 bg-secondary/30 border-b border-border/50">
-        <span
-          className={cn("w-2 h-2 rounded-full", statusConfig.dotColor)}
-        />
+        <span className={cn("w-2 h-2 rounded-full", statusConfig.dotColor)} />
         <span className={cn("text-xs font-medium", statusConfig.textColor)}>
           {statusConfig.label}
         </span>
       </div>
 
       {/* Terminal container */}
-      <div
-        ref={terminalRef}
-        className="flex-1 bg-[#09090b] px-2 py-1"
-      />
+      <div ref={terminalRef} className="flex-1 bg-[#09090b] px-2 py-1" />
     </div>
   );
 }

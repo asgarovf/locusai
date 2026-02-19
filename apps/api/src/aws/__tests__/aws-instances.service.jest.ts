@@ -2,10 +2,7 @@ import "reflect-metadata";
 import "../../test-setup";
 
 import { InstanceAction, InstanceStatus } from "@locusai/shared";
-import {
-  BadRequestException,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -22,7 +19,6 @@ describe("AwsInstancesService", () => {
   let credentialsService: jest.Mocked<AwsCredentialsService>;
   let ec2Service: jest.Mocked<AwsEc2Service>;
   let configService: jest.Mocked<ConfigService>;
-  let encryptionService: jest.Mocked<EncryptionService>;
 
   const WORKSPACE_ID = "workspace-123";
   const INSTANCE_ID = "instance-456";
@@ -100,7 +96,6 @@ describe("AwsInstancesService", () => {
     credentialsService = module.get(AwsCredentialsService);
     ec2Service = module.get(AwsEc2Service);
     configService = module.get(ConfigService);
-    encryptionService = module.get(EncryptionService);
   });
 
   afterEach(() => {
@@ -435,9 +430,7 @@ describe("AwsInstancesService", () => {
       const instance = createInstance({ securityGroupId: "sg-12345" });
       instanceRepo.findOne.mockResolvedValue(instance);
       instanceRepo.save.mockResolvedValue(instance);
-      ec2Service.deleteSecurityGroup.mockRejectedValue(
-        new Error("SG in use")
-      );
+      ec2Service.deleteSecurityGroup.mockRejectedValue(new Error("SG in use"));
 
       const result = await service.performAction(
         WORKSPACE_ID,
@@ -585,10 +578,7 @@ describe("AwsInstancesService", () => {
         { port: 22, cidr: "0.0.0.0/0", description: "SSH access" },
       ]);
 
-      const result = await service.getSecurityRules(
-        WORKSPACE_ID,
-        INSTANCE_ID
-      );
+      const result = await service.getSecurityRules(WORKSPACE_ID, INSTANCE_ID);
 
       expect(result).toEqual([
         { port: 22, cidr: "0.0.0.0/0", description: "SSH access" },

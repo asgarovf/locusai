@@ -412,8 +412,7 @@ export class AwsInstancesService {
     }
 
     // If no IPs specified, default to open access
-    const cidrs =
-      allowedIps.length > 0 ? allowedIps : ["0.0.0.0/0"];
+    const cidrs = allowedIps.length > 0 ? allowedIps : ["0.0.0.0/0"];
 
     const rules = cidrs.map((cidr) => ({
       port: 22,
@@ -466,7 +465,7 @@ export class AwsInstancesService {
     // Validate integration names to prevent injection
     const integrations = dto.integrations ?? [];
     for (const integration of integrations) {
-      if (!/^[a-zA-Z0-9._\-]+$/.test(integration.name)) {
+      if (!/^[a-zA-Z0-9._-]+$/.test(integration.name)) {
         throw new BadRequestException(
           `Invalid integration name: ${integration.name}`
         );
@@ -475,8 +474,7 @@ export class AwsInstancesService {
 
     const integrationSetup = integrations
       .map(
-        (integration) =>
-          `echo "Setting up integration: ${integration.name}"`
+        (integration) => `echo "Setting up integration: ${integration.name}"`
       )
       .join("\n");
 
@@ -523,10 +521,12 @@ echo "Completed at: $(date)"
 
   private shellEscape(value: string): string {
     // Wrap in single quotes; escape any embedded single quotes
-    return "'" + value.replace(/'/g, "'\\''") + "'";
+    return `'${value.replace(/'/g, "'\\''")}'`;
   }
 
-  private sanitizeInstance(instance: AwsInstance): Omit<AwsInstance, "githubTokenEncrypted"> {
+  private sanitizeInstance(
+    instance: AwsInstance
+  ): Omit<AwsInstance, "githubTokenEncrypted"> {
     const { githubTokenEncrypted: _, ...sanitized } = instance;
     return sanitized;
   }

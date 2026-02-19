@@ -56,10 +56,7 @@ export class AwsUpdatesService {
     const instance = await this.findRunningInstance(workspaceId, instanceId);
 
     try {
-      const output = await this.executeCommand(
-        instance,
-        "sudo locus upgrade"
-      );
+      const output = await this.executeCommand(instance, "sudo locus upgrade");
 
       this.logger.log(
         `Update applied on instance ${instanceId}: ${output.substring(0, 200)}`

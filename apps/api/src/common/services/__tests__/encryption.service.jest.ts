@@ -121,7 +121,8 @@ describe("EncryptionService", () => {
   });
 
   it("should handle unicode strings", () => {
-    const plaintext = "Hello, World! \u{1F680}\u{1F30D} \u00E9\u00E0\u00FC\u00F1";
+    const plaintext =
+      "Hello, World! \u{1F680}\u{1F30D} \u00E9\u00E0\u00FC\u00F1";
     const encrypted = service.encrypt(plaintext);
     const decrypted = service.decrypt(encrypted);
     expect(decrypted).toBe(plaintext);

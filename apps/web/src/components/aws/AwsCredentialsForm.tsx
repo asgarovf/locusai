@@ -32,7 +32,11 @@ export function AwsCredentialsForm() {
     if (!accessKeyId.trim() || !secretAccessKey.trim()) return;
 
     saveMutation.mutate(
-      { accessKeyId: accessKeyId.trim(), secretAccessKey: secretAccessKey.trim(), region },
+      {
+        accessKeyId: accessKeyId.trim(),
+        secretAccessKey: secretAccessKey.trim(),
+        region,
+      },
       {
         onSuccess: () => {
           setAccessKeyId("");
