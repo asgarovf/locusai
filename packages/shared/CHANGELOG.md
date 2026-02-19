@@ -1,5 +1,12 @@
 # @locusai/shared
 
+## 0.14.0
+
+### Minor Changes
+
+- New commands
+  Reliability & performance updates
+
 ## 0.13.3
 
 ### Patch Changes
