@@ -1,5 +1,14 @@
 # @locusai/cli
 
+## 0.14.5
+
+### Patch Changes
+
+- VScode extension metadata
+- Updated dependencies
+  - @locusai/sdk@0.14.5
+  - @locusai/shared@0.14.5
+
 ## 0.14.4
 
 ### Patch Changes

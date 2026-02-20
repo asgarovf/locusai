@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.14.5
+
+### Patch Changes
+
+- VScode extension metadata
+
 ## 0.14.4
 
 ### Patch Changes
