@@ -132,4 +132,4 @@ All tasks are committed to the same branch sequentially. This keeps the workflow
 
 For Swagger/OpenAPI documentation access controls, secret ownership, and incident disable steps, see:
 
-- [Swagger Docs Access Policy](swagger-docs-access.md)
+- [Swagger Docs Access Policy](../contributing/swagger-docs-access.md)

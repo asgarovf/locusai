@@ -11,7 +11,6 @@
 ## Core Concepts
 
 * [Architecture](concepts/architecture.md)
-* [Swagger Docs Access Policy](concepts/swagger-docs-access.md)
 * [Workspaces](concepts/workspaces.md)
 * [Tasks](concepts/tasks.md)
 * [Sprints](concepts/sprints.md)
@@ -61,3 +60,4 @@
 ## Contributing
 
 * [Development Guide](contributing/guide.md)
+* [Swagger Docs Access Policy](contributing/swagger-docs-access.md)

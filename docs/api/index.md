@@ -5,7 +5,7 @@ description: Discovery page for API documentation and operational runbooks.
 # API Docs
 
 ## Swagger/OpenAPI Access
-- Operational runbook: [Swagger Docs Access Policy](../concepts/swagger-docs-access.md)
+- Operational runbook: [Swagger Docs Access Policy](../contributing/swagger-docs-access.md)
 - Runtime routes:
   - `/api/docs`
   - `/api/docs-json`
