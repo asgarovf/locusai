@@ -264,17 +264,17 @@ async function convertToPlan(projectPath: string, name: string): Promise<void> {
 }
 
 /**
- * Execute the plan conversion via the exec command.
+ * Execute the plan conversion via the plan command.
  */
 async function runPlanConversion(artifactName: string): Promise<void> {
-  const { execCommand } = await import("./exec");
+  const { planCommand } = await import("./plan");
 
   console.log(
     `\n  ${c.primary("Converting artifact to plan:")} ${c.cyan(artifactName)}\n`
   );
 
-  const prompt = `Create a plan according to ${artifactName}`;
-  await execCommand([prompt]);
+  const directive = `Prepare a plan according to the artifact: ${artifactName}`;
+  await planCommand([directive]);
 }
 
 /**

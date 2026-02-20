@@ -230,8 +230,8 @@ export async function convertArtifactToPlan(
     { parse_mode: "HTML" }
   );
 
-  const prompt = `Create a plan according to ${artifactName}`;
-  const args = executor.buildArgs(["exec", prompt, "--no-stream"]);
+  const directive = `Prepare a plan according to the artifact: ${artifactName}`;
+  const args = executor.buildArgs(["plan", directive, "--no-stream"]);
 
   executor.execute(args).then(
     async (result) => {
