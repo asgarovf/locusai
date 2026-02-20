@@ -11,6 +11,3 @@ description: Discovery page for API documentation and operational runbooks.
   - `/api/docs-json`
 
 Use the runbook for enable/disable behavior, auth requirements, secret ownership, and emergency disable verification.
-
-## Coverage Notes
-- [OpenAPI Metadata Deferred Endpoints](openapi-deferred-endpoints.md)

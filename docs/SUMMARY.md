@@ -19,7 +19,6 @@
 ## API
 
 * [API Docs](api/index.md)
-* [OpenAPI Metadata Deferred Endpoints](api/openapi-deferred-endpoints.md)
 
 ## CLI Reference
 
