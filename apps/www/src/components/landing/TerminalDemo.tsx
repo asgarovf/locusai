@@ -126,8 +126,10 @@ const lines: Line[] = [
 
 export function TerminalDemo() {
   const [visibleLines, setVisibleLines] = useState(0);
+  const [iteration, setIteration] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const restartRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const startAnimation = () => {
@@ -137,18 +139,22 @@ export function TerminalDemo() {
           if (prev >= lines.length) {
             if (timerRef.current) clearInterval(timerRef.current);
             timerRef.current = null;
-            setTimeout(startAnimation, 3000);
+            restartRef.current = setTimeout(() => {
+              setIteration((i) => i + 1);
+              startAnimation();
+            }, 3000);
             return prev;
           }
           return prev + 1;
         });
-      }, 400);
+      }, 500);
     };
 
     startAnimation();
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (restartRef.current) clearTimeout(restartRef.current);
     };
   }, []);
 
@@ -187,7 +193,7 @@ export function TerminalDemo() {
       >
         {lines.slice(0, visibleLines).map((line, i) => (
           <motion.div
-            key={`line-${i}`}
+            key={`line-${iteration}-${i}`}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.15 }}
