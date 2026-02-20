@@ -1,5 +1,14 @@
 # @locusai/www
 
+## 0.14.4
+
+### Patch Changes
+
+- Documentation fixes
+  Command reliability
+- Updated dependencies
+  - @locusai/shared@0.14.4
+
 ## 0.14.3
 
 ### Patch Changes
