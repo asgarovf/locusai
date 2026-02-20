@@ -36,7 +36,8 @@ Read the [full documentation](https://docs.locusai.dev) to learn more.
 - **Skills System** — Extend agent capabilities with markdown instruction files for specialized domain knowledge.
 - **Telegram Bot** — Control agents, plan sprints, approve plans, and monitor execution remotely from your phone.
 - **Self-Hosting** — Deploy Locus on your own server for 24/7 agent availability with remote Telegram control.
-- **VSCode Extension** (SOON) — Chat with agents, manage tasks, and start work directly from your editor.
+- **AI Discussions** — Start interactive AI discussions with full project context. Extracts structured insights (decisions, requirements, ideas, concerns) as the conversation progresses.
+- **VSCode Extension** — Chat with agents, explain code selections, and run exec tasks directly from your editor.
 
 ## Quick Start
 
@@ -63,13 +64,13 @@ locus config setup
 Start agents to pick up and execute tasks from your active sprint:
 
 ```bash
-npx @locusai/cli run
+locus run
 ```
 
 Use a different provider:
 
 ```bash
-npx @locusai/cli run --provider codex
+locus run --provider codex
 ```
 
 ---
@@ -80,8 +81,9 @@ npx @locusai/cli run --provider codex
 |---------|-------------|
 | `locus init` | Initialize a project with the `.locus/` structure |
 | `locus config` | Manage settings (API key, provider, model) |
-| `locus run` | Start agents to execute sprint tasks |
+| `locus run` | Start agent to execute sprint tasks sequentially |
 | `locus plan` | AI sprint planning with a multi-agent meeting |
+| `locus discuss` | Interactive AI discussions with insight extraction |
 | `locus exec` | Execute a prompt with repo context (supports interactive REPL) |
 | `locus review` | AI code review for PRs and local changes |
 | `locus index` | Create a semantic codebase index |

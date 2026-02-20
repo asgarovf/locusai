@@ -6,6 +6,7 @@ import {
   GitBranch,
   Github,
   MessageSquare,
+  Monitor,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,6 +32,13 @@ const tools: Tool[] = [
     icon: Code2,
     color: "text-emerald",
     href: "https://openai.com/index/introducing-codex/",
+  },
+  {
+    name: "VS Code",
+    tag: "Editor Extension",
+    icon: Monitor,
+    color: "text-cyan",
+    href: "/products/vscode",
   },
   {
     name: "GitHub",
@@ -73,7 +81,7 @@ export function SupportedTools() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl px-6 mx-auto relative">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl px-6 mx-auto relative">
         {tools.map((tool) => (
           <Link
             key={tool.name}

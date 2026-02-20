@@ -20,11 +20,14 @@ locus <command> [options]
 | [`config`](config.md) | Manage settings (API key, provider, model) |
 | [`run`](run.md) | Start agent to work on sprint tasks sequentially |
 | [`plan`](plan.md) | Run AI sprint planning meeting |
+| [`discuss`](discuss.md) | Start interactive AI discussions with insight extraction |
 | [`exec`](exec.md) | Execute a prompt with repository context |
 | [`review`](review.md) | AI code review for PRs and staged changes |
 | [`docs`](docs.md) | Sync workspace documents |
 | [`index`](index-codebase.md) | Index the codebase for AI context |
 | [`telegram`](telegram.md) | Configure the Telegram bot |
+| `upgrade` | Upgrade CLI to the latest version |
+| `version` | Show installed version |
 
 ---
 
