@@ -3,10 +3,31 @@ import {
   SuggestionStatus,
   SUGGESTION_TTL_HOURS,
 } from "@locusai/shared";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { LessThan, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { Suggestion } from "@/entities/suggestion.entity";
+
+const VALID_TRANSITIONS: Record<SuggestionStatus, SuggestionStatus[]> = {
+  [SuggestionStatus.NEW]: [
+    SuggestionStatus.NOTIFIED,
+    SuggestionStatus.ACTED_ON,
+    SuggestionStatus.SKIPPED,
+    SuggestionStatus.EXPIRED,
+  ],
+  [SuggestionStatus.NOTIFIED]: [
+    SuggestionStatus.ACTED_ON,
+    SuggestionStatus.SKIPPED,
+    SuggestionStatus.EXPIRED,
+  ],
+  [SuggestionStatus.ACTED_ON]: [],
+  [SuggestionStatus.SKIPPED]: [],
+  [SuggestionStatus.EXPIRED]: [],
+};
 
 @Injectable()
 export class SuggestionsService {
@@ -70,10 +91,21 @@ export class SuggestionsService {
     });
     if (!suggestion) throw new NotFoundException("Suggestion not found");
 
+    const allowed = VALID_TRANSITIONS[suggestion.status];
+    if (!allowed.includes(status)) {
+      throw new BadRequestException(
+        `Cannot transition from ${suggestion.status} to ${status}`
+      );
+    }
+
     suggestion.status = status;
 
     const saved = await this.suggestionRepository.save(suggestion);
     return Array.isArray(saved) ? saved[0] : saved;
+  }
+
+  async markNotified(id: string): Promise<Suggestion> {
+    return this.updateStatus(id, SuggestionStatus.NOTIFIED);
   }
 
   async expireStale(): Promise<number> {
