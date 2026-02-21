@@ -3,6 +3,16 @@
   "version": "0.14.5",
   "description": "Telegram bot for Locus - remote control your AI agents from Telegram",
   "type": "module",
+  "main": "./src/lib.ts",
+  "types": "./src/lib.ts",
+  "exports": {
+    ".": {
+      "types": "./src/lib.ts",
+      "development": "./src/lib.ts",
+      "import": "./src/lib.ts",
+      "default": "./src/lib.ts"
+    }
+  },
   "bin": {
     "locus-telegram": "./bin/telegram.js"
   },

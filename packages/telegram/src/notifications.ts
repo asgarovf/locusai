@@ -1,4 +1,4 @@
-import type { EventEmitter } from "events";
+import type { EventEmitter } from "node:events";
 import type { Suggestion } from "@locusai/shared";
 import type { Telegraf } from "telegraf";
 import { Markup } from "telegraf";
@@ -9,6 +9,7 @@ import { escapeHtml, truncateOutput } from "./formatter.js";
 const JOB_STARTED = "JOB_STARTED";
 const JOB_COMPLETED = "JOB_COMPLETED";
 const JOB_FAILED = "JOB_FAILED";
+const PROPOSALS_GENERATED = "PROPOSALS_GENERATED";
 
 // ── Job result types (structural — avoids hard dependency on sdk/node) ──
 
@@ -55,6 +56,14 @@ const JOB_DISPLAY_NAMES: Record<string, string> = {
 function formatJobName(jobType: string): string {
   return JOB_DISPLAY_NAMES[jobType] ?? jobType;
 }
+
+// ── Complexity display ──────────────────────────────────────────────────
+
+const COMPLEXITY_DISPLAY: Record<string, string> = {
+  low: "2/5",
+  medium: "3/5",
+  high: "4/5",
+};
 
 // ── Suggestion type icons ───────────────────────────────────────────────
 
@@ -109,6 +118,17 @@ export class JobNotifier {
         console.error("[notifier] Failed to send JOB_FAILED:", err)
       );
     });
+
+    emitter.on(
+      PROPOSALS_GENERATED,
+      (payload: { suggestions: Suggestion[] }) => {
+        for (const suggestion of payload.suggestions) {
+          this.notifyProposal(suggestion).catch((err) =>
+            console.error("[notifier] Failed to send proposal:", err)
+          );
+        }
+      }
+    );
   }
 
   // ── Lifecycle notifications ─────────────────────────────────────────
@@ -166,6 +186,39 @@ export class JobNotifier {
     });
   }
 
+  // ── Proposal notification ──────────────────────────────────────────
+
+  async notifyProposal(suggestion: Suggestion): Promise<void> {
+    const complexity =
+      COMPLEXITY_DISPLAY[
+        String(suggestion.metadata?.complexity).toLowerCase()
+      ] ?? "3/5";
+
+    const relatedTo =
+      (suggestion.metadata?.relatedBacklogItem as string) || "New initiative";
+
+    let msg = `💡 <b>Proposal:</b> ${escapeHtml(suggestion.title)}\n\n`;
+    msg += `${escapeHtml(truncateOutput(suggestion.description, 800))}\n\n`;
+    msg += `<b>Complexity:</b> ${escapeHtml(complexity)}\n`;
+    msg += `<b>Related to:</b> ${escapeHtml(relatedTo)}`;
+
+    const buttons = [
+      [
+        Markup.button.callback("▶️ Start", `proposal_start_${suggestion.id}`),
+        Markup.button.callback("⏭ Skip", `proposal_skip_${suggestion.id}`),
+        Markup.button.callback(
+          "📋 Details",
+          `proposal_details_${suggestion.id}`
+        ),
+      ],
+    ];
+
+    await this.bot.telegram.sendMessage(this.chatId, msg, {
+      parse_mode: "HTML",
+      ...Markup.inlineKeyboard(buttons),
+    });
+  }
+
   // ── Suggestion notification ─────────────────────────────────────────
 
   async notifySuggestion(suggestion: Suggestion): Promise<void> {
@@ -177,14 +230,8 @@ export class JobNotifier {
 
     const buttons = [
       [
-        Markup.button.callback(
-          "🔧 Fix",
-          `suggestion_fix_${suggestion.id}`
-        ),
-        Markup.button.callback(
-          "⏭ Skip",
-          `suggestion_skip_${suggestion.id}`
-        ),
+        Markup.button.callback("🔧 Fix", `suggestion_fix_${suggestion.id}`),
+        Markup.button.callback("⏭ Skip", `suggestion_skip_${suggestion.id}`),
         Markup.button.callback(
           "📋 Details",
           `suggestion_details_${suggestion.id}`

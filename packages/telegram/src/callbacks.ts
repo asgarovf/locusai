@@ -281,6 +281,182 @@ export function registerCallbacks(
     await convertArtifactToPlan(ctx, config, executor, artifactName);
   });
 
+  // ── Proposal: Start ────────────────────────────────────────────────
+  bot.action(/^proposal_start_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Starting proposal…");
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(formatError("API key is required to act on proposals."), {
+        parse_mode: "HTML",
+      });
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.updateStatus(
+        workspaceId,
+        suggestionId,
+        { status: SuggestionStatus.ACTED_ON }
+      );
+
+      try {
+        await ctx.editMessageText(
+          `▶️ Proposal "<b>${escapeHtml(suggestion.title)}</b>" accepted. Starting planning…`,
+          { parse_mode: "HTML" }
+        );
+      } catch {
+        await ctx.reply(
+          `▶️ Proposal "<b>${escapeHtml(suggestion.title)}</b>" accepted. Starting planning…`,
+          { parse_mode: "HTML" }
+        );
+      }
+
+      // Trigger the plan → sprint pipeline with the proposal description
+      const planPrompt = `${suggestion.title}\n\n${suggestion.description}`;
+      const args = executor.buildArgs(["plan", planPrompt], {
+        needsApiKey: true,
+      });
+      const result = await executor.execute(args);
+      const output = (result.stdout + result.stderr).trim();
+
+      if (output) {
+        const parts = splitMessage(
+          formatCommandOutput("locus plan", output, result.exitCode)
+        );
+        for (const part of parts) {
+          await ctx.reply(part, { parse_mode: "HTML" });
+        }
+      }
+    } catch (err) {
+      console.error("[callback:proposal_start] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to start proposal: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
+  });
+
+  // ── Proposal: Skip ────────────────────────────────────────────────
+  bot.action(/^proposal_skip_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Skipping…");
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(formatError("API key is required to act on proposals."), {
+        parse_mode: "HTML",
+      });
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.updateStatus(
+        workspaceId,
+        suggestionId,
+        { status: SuggestionStatus.SKIPPED }
+      );
+
+      try {
+        await ctx.editMessageText(
+          `⏭ Proposal "<b>${escapeHtml(suggestion.title)}</b>" skipped. Won't suggest this again.`,
+          { parse_mode: "HTML" }
+        );
+      } catch {
+        await ctx.reply(
+          `⏭ Proposal "<b>${escapeHtml(suggestion.title)}</b>" skipped. Won't suggest this again.`,
+          { parse_mode: "HTML" }
+        );
+      }
+    } catch (err) {
+      console.error("[callback:proposal_skip] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to skip proposal: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
+  });
+
+  // ── Proposal: Details ─────────────────────────────────────────────
+  bot.action(/^proposal_details_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(
+        formatError("API key is required to view proposal details."),
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.get(
+        workspaceId,
+        suggestionId
+      );
+
+      const complexityMap: Record<string, string> = {
+        low: "2/5",
+        medium: "3/5",
+        high: "4/5",
+      };
+      const complexity =
+        complexityMap[String(suggestion.metadata?.complexity).toLowerCase()] ??
+        "—";
+      const relatedTo =
+        (suggestion.metadata?.relatedBacklogItem as string) || "New initiative";
+
+      let msg = `📋 <b>Proposal Details</b>\n\n`;
+      msg += `<b>Title:</b> ${escapeHtml(suggestion.title)}\n`;
+      msg += `<b>Type:</b> ${escapeHtml(suggestion.type)}\n`;
+      msg += `<b>Status:</b> ${escapeHtml(suggestion.status)}\n`;
+      msg += `<b>Complexity:</b> ${escapeHtml(complexity)}\n`;
+      msg += `<b>Related to:</b> ${escapeHtml(relatedTo)}\n`;
+      msg += `<b>Created:</b> ${escapeHtml(suggestion.createdAt)}\n`;
+      msg += `<b>Expires:</b> ${escapeHtml(suggestion.expiresAt)}\n`;
+
+      if (suggestion.jobRunId) {
+        msg += `<b>Job Run:</b> <code>${escapeHtml(suggestion.jobRunId)}</code>\n`;
+      }
+
+      msg += `\n<b>Description:</b>\n${escapeHtml(truncateOutput(suggestion.description, 2000))}`;
+
+      if (suggestion.metadata && Object.keys(suggestion.metadata).length > 0) {
+        const {
+          complexity: _c,
+          relatedBacklogItem: _r,
+          ...rest
+        } = suggestion.metadata;
+        if (Object.keys(rest).length > 0) {
+          msg += `\n\n<b>Metadata:</b>\n<pre>${escapeHtml(JSON.stringify(rest, null, 2).slice(0, 500))}</pre>`;
+        }
+      }
+
+      const parts = splitMessage(msg);
+      for (const part of parts) {
+        await ctx.reply(part, {
+          parse_mode: "HTML",
+          link_preview_options: { is_disabled: true },
+        });
+      }
+    } catch (err) {
+      console.error("[callback:proposal_details] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to fetch proposal: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
+  });
+
   // ── Suggestion: Fix ──────────────────────────────────────────────────
   bot.action(/^suggestion_fix_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery("Applying fix…");

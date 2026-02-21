@@ -1,7 +1,14 @@
+import type {
+  AutonomyRule,
+  JobConfig,
+  JobType,
+  Suggestion,
+} from "@locusai/shared";
 import { EventEmitter } from "events";
-import type { AutonomyRule, JobConfig, JobType } from "@locusai/shared";
 import cron, { type ScheduledTask } from "node-cron";
+import type { LocusClient } from "../index.js";
 import type { JobRunner } from "./job-runner.js";
+import type { ProposalEngine } from "./proposals/proposal-engine.js";
 
 // ============================================================================
 // Scheduler Events
@@ -14,6 +21,7 @@ export enum SchedulerEvent {
   JOB_TRIGGERED = "JOB_TRIGGERED",
   JOB_SKIPPED = "JOB_SKIPPED",
   CONFIG_RELOADED = "CONFIG_RELOADED",
+  PROPOSALS_GENERATED = "PROPOSALS_GENERATED",
 }
 
 export interface SchedulerStartedPayload {
@@ -40,6 +48,21 @@ export interface ConfigReloadedPayload {
   newJobCount: number;
 }
 
+export interface ProposalsGeneratedPayload {
+  suggestions: Suggestion[];
+}
+
+// ============================================================================
+// Proposal Scheduler Config
+// ============================================================================
+
+export interface ProposalSchedulerConfig {
+  engine: ProposalEngine;
+  projectPath: string;
+  client: LocusClient;
+  workspaceId: string;
+}
+
 // ============================================================================
 // Config Loader Function Type
 // ============================================================================
@@ -60,11 +83,14 @@ export class JobScheduler {
   private runningJobs = new Set<JobType>();
   private currentConfigs: JobConfig[] = [];
   private currentAutonomyRules: AutonomyRule[] = [];
+  private proposalRunning = false;
+  private proposalDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly runner: JobRunner,
     private readonly configLoader: ConfigLoader,
-    private readonly emitter: EventEmitter
+    private readonly emitter: EventEmitter,
+    private readonly proposalConfig?: ProposalSchedulerConfig
   ) {}
 
   start(): void {
@@ -90,6 +116,10 @@ export class JobScheduler {
   }
 
   stop(): void {
+    if (this.proposalDebounceTimer) {
+      clearTimeout(this.proposalDebounceTimer);
+      this.proposalDebounceTimer = null;
+    }
     for (const [, task] of this.tasks) {
       task.stop();
     }
@@ -192,6 +222,53 @@ export class JobScheduler {
       })
       .finally(() => {
         this.runningJobs.delete(jobType);
+        this.scheduleProposalCycle();
       });
+  }
+
+  // ── Proposal Cycle ────────────────────────────────────────────────────
+
+  /**
+   * Debounced check: wait 30s after the last job completes. If no more
+   * jobs are running, trigger the proposal engine.
+   */
+  private scheduleProposalCycle(): void {
+    if (!this.proposalConfig) return;
+
+    if (this.proposalDebounceTimer) {
+      clearTimeout(this.proposalDebounceTimer);
+    }
+
+    this.proposalDebounceTimer = setTimeout(() => {
+      this.proposalDebounceTimer = null;
+      if (this.runningJobs.size === 0) {
+        this.runProposalCycle();
+      }
+    }, 30_000);
+  }
+
+  private async runProposalCycle(): Promise<void> {
+    if (!this.proposalConfig || this.proposalRunning) return;
+    this.proposalRunning = true;
+
+    const { engine, projectPath, client, workspaceId } = this.proposalConfig;
+
+    try {
+      const suggestions = await engine.runProposalCycle(
+        projectPath,
+        client,
+        workspaceId
+      );
+
+      if (suggestions.length > 0) {
+        this.emitter.emit(SchedulerEvent.PROPOSALS_GENERATED, {
+          suggestions,
+        } satisfies ProposalsGeneratedPayload);
+      }
+    } catch (err) {
+      console.error("[scheduler] Proposal cycle failed:", err);
+    } finally {
+      this.proposalRunning = false;
+    }
   }
 }

@@ -4,20 +4,23 @@ import { parseArgs } from "node:util";
 import {
   c,
   createDefaultRegistry,
-  JobEvent,
-  JobRunner,
-  JobScheduler,
-  LOCUS_CONFIG,
-  LocusClient,
-  SchedulerEvent,
   type JobCompletedPayload,
+  JobEvent,
   type JobFailedPayload,
+  JobRunner,
   type JobScheduledPayload,
+  JobScheduler,
   type JobSkippedPayload,
   type JobStartedPayload,
   type JobTriggeredPayload,
+  LOCUS_CONFIG,
+  LocusClient,
+  ProposalEngine,
+  type ProposalsGeneratedPayload,
+  SchedulerEvent,
   type SchedulerStartedPayload,
 } from "@locusai/sdk/node";
+import { createNotifier } from "@locusai/telegram";
 import { SettingsManager } from "../settings-manager";
 import { requireInitialization } from "../utils";
 import { WorkspaceResolver } from "../workspace-resolver";
@@ -162,16 +165,51 @@ async function startCommand(
   const registry = createDefaultRegistry();
   const runner = new JobRunner(registry, client, projectPath, workspaceId);
 
+  // ---- Proposal engine ----
+  const proposalEngine = new ProposalEngine();
+
   const scheduler = new JobScheduler(
     runner,
     () => ({
       jobConfigs: settingsManager.getJobConfigs(),
       autonomyRules: settingsManager.getAutonomyRules(),
     }),
-    client.emitter
+    client.emitter,
+    {
+      engine: proposalEngine,
+      projectPath,
+      client,
+      workspaceId,
+    }
   );
 
-  // ---- Event listeners for logging ----
+  // ---- Telegram notifier (optional) ----
+  const telegramSettings = settings.telegram;
+  let telegramEnabled = false;
+
+  if (telegramSettings?.botToken && telegramSettings?.chatId) {
+    try {
+      const notifier = createNotifier(
+        telegramSettings.botToken,
+        telegramSettings.chatId
+      );
+      notifier.connect(client.emitter);
+      telegramEnabled = true;
+      console.log(
+        `  ${c.success("✔")} ${c.bold("Telegram notifications enabled")} ${c.dim(`(chat ${telegramSettings.chatId})`)}`
+      );
+    } catch (err) {
+      console.error(
+        `  ${c.error("✖")} Failed to initialize Telegram notifier: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  } else {
+    console.log(
+      `  ${c.dim("Telegram not configured — using console logging only")}`
+    );
+  }
+
+  // ---- Event listeners for console logging ----
 
   client.emitter.on(
     SchedulerEvent.SCHEDULER_STARTED,
@@ -211,30 +249,34 @@ async function startCommand(
     }
   );
 
-  client.emitter.on(
-    JobEvent.JOB_STARTED,
-    (payload: JobStartedPayload) => {
-      console.log(
-        `  ${c.info("●")} ${formatJobType(payload.jobType)} running... ${c.dim(`(run ${payload.jobRunId})`)}`
-      );
-    }
-  );
+  client.emitter.on(JobEvent.JOB_STARTED, (payload: JobStartedPayload) => {
+    console.log(
+      `  ${c.info("●")} ${formatJobType(payload.jobType)} running... ${c.dim(`(run ${payload.jobRunId})`)}`
+    );
+  });
+
+  client.emitter.on(JobEvent.JOB_COMPLETED, (payload: JobCompletedPayload) => {
+    console.log(
+      `  ${c.success("✔")} ${formatJobType(payload.jobType)} completed — ${payload.result.summary}`
+    );
+  });
+
+  client.emitter.on(JobEvent.JOB_FAILED, (payload: JobFailedPayload) => {
+    console.log(
+      `  ${c.error("✖")} ${formatJobType(payload.jobType)} failed — ${payload.error}`
+    );
+  });
 
   client.emitter.on(
-    JobEvent.JOB_COMPLETED,
-    (payload: JobCompletedPayload) => {
+    SchedulerEvent.PROPOSALS_GENERATED,
+    (payload: ProposalsGeneratedPayload) => {
+      const count = payload.suggestions.length;
       console.log(
-        `  ${c.success("✔")} ${formatJobType(payload.jobType)} completed — ${payload.result.summary}`
+        `  ${c.info("💡")} ${c.bold(`${count} proposal(s) generated`)}`
       );
-    }
-  );
-
-  client.emitter.on(
-    JobEvent.JOB_FAILED,
-    (payload: JobFailedPayload) => {
-      console.log(
-        `  ${c.error("✖")} ${formatJobType(payload.jobType)} failed — ${payload.error}`
-      );
+      for (const suggestion of payload.suggestions) {
+        console.log(`    ${c.dim("•")} ${suggestion.title}`);
+      }
     }
   );
 
@@ -270,6 +312,10 @@ async function startCommand(
   console.log(`  ${c.dim("PID:")} ${process.pid}`);
   console.log(`  ${c.dim("Project:")} ${projectPath}`);
   console.log(`  ${c.dim("Workspace:")} ${workspaceId}`);
+  console.log(
+    `  ${c.dim("Telegram:")} ${telegramEnabled ? "enabled" : "not configured"}`
+  );
+  console.log(`  ${c.dim("Proposals:")} enabled`);
 
   scheduler.start();
 
