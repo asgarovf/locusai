@@ -71,6 +71,31 @@ registry.register({
   },
 });
 
+registry.register({
+  name: "status",
+  aliases: [],
+  description: "Show current session status",
+  usage: "/status",
+  category: "session",
+  execute: (session) => {
+    const mode = session.getMode?.() ?? "prompt";
+    const discussionState = session.getDiscussionState?.();
+
+    console.log(`\n  ${c.primary("Session Status")}\n`);
+    console.log(`  ${c.dim("Provider:")}  ${c.bold(session.getProvider())}`);
+    console.log(`  ${c.dim("Model:")}     ${c.bold(session.getModel())}`);
+    console.log(`  ${c.dim("Session:")}   ${c.cyan(session.getSessionId())}`);
+    console.log(`  ${c.dim("Mode:")}      ${c.bold(mode)}`);
+    if (mode === "discussion" && discussionState) {
+      console.log(
+        `  ${c.dim("Discussion:")} ${c.yellow(discussionState.discussionId)}`
+      );
+    }
+    console.log(`  ${c.dim("Project:")}   ${session.getProjectPath()}`);
+    console.log();
+  },
+});
+
 // ── Navigation commands ───────────────────────────────────────
 
 registry.register({

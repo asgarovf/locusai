@@ -131,6 +131,13 @@ export class SlashCommandRegistry {
   }
 
   /**
+   * Get all command names prefixed with "/" for auto-completion.
+   */
+  getCommandNames(): string[] {
+    return Array.from(this.commands.values()).map((cmd) => `/${cmd.name}`);
+  }
+
+  /**
    * Get commands grouped by category, in display order.
    */
   getByCategory(): Map<SlashCommandCategory, SlashCommand[]> {

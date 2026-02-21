@@ -14,6 +14,7 @@ import { ProgressRenderer } from "../display/progress-renderer";
 import type { LocusSettings } from "../settings-manager";
 import { registry } from "./commands";
 import type { DiscussionState, REPLMode } from "./slash-commands";
+import { StatusBar } from "./status-bar";
 
 export interface InteractiveREPLOptions {
   projectPath: string;
@@ -52,6 +53,9 @@ export class InteractiveREPL {
   private _mode: REPLMode = "prompt";
   private _discussionState: DiscussionState | null = null;
 
+  // Status bar
+  private statusBar: StatusBar;
+
   // Multi-line paste support
   private inputBuffer: string[] = [];
   private inputDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -70,6 +74,7 @@ export class InteractiveREPL {
     this.promptBuilder = new PromptBuilder(options.projectPath);
     this.renderer = new ProgressRenderer({ animated: true });
     this.historyManager = new HistoryManager(options.projectPath);
+    this.statusBar = new StatusBar();
 
     // Load existing session or create new one
     if (options.sessionId) {
@@ -122,6 +127,7 @@ export class InteractiveREPL {
       projectPath: this.projectPath,
       model: this._model,
     });
+    this.updateStatusBar();
   }
 
   setModel(model: string): void {
@@ -130,6 +136,7 @@ export class InteractiveREPL {
       projectPath: this.projectPath,
       model,
     });
+    this.updateStatusBar();
   }
 
   getSettings(): LocusSettings {
@@ -156,12 +163,14 @@ export class InteractiveREPL {
     this._mode = "discussion";
     this._discussionState = state;
     this.refreshPrompt();
+    this.updateStatusBar();
   }
 
   exitDiscussionMode(): void {
     this._mode = "prompt";
     this._discussionState = null;
     this.refreshPrompt();
+    this.updateStatusBar();
   }
 
   getDiscussionState(): DiscussionState | null {
@@ -171,9 +180,9 @@ export class InteractiveREPL {
   refreshPrompt(): void {
     if (!this.rl) return;
     if (this._mode === "discussion") {
-      this.rl.setPrompt(c.cyan("discuss > "));
+      this.rl.setPrompt(c.yellow("discuss > "));
     } else {
-      this.rl.setPrompt(c.cyan("> "));
+      this.rl.setPrompt(c.cyan("locus > "));
     }
   }
 
@@ -189,10 +198,12 @@ export class InteractiveREPL {
       input: process.stdin,
       output: process.stdout,
       terminal: true,
+      completer: (line: string) => this.completeSlashCommand(line),
     });
 
-    this.rl.setPrompt(c.cyan("> "));
+    this.rl.setPrompt(c.cyan("locus > "));
     this.rl.prompt();
+    this.updateStatusBar();
 
     this.rl.on("line", (input) => this.handleLine(input));
     this.rl.on("close", () => this.shutdown());
@@ -227,6 +238,7 @@ export class InteractiveREPL {
       this._provider
     );
     console.log(c.success("Context reset. Starting fresh conversation."));
+    this.updateStatusBar();
   }
 
   /**
@@ -242,6 +254,30 @@ export class InteractiveREPL {
     console.log(c.dim("\nGoodbye!"));
     this.rl?.close();
     process.exit(0);
+  }
+
+  // ── Tab completion ─────────────────────────────────────────
+
+  private completeSlashCommand(line: string): [string[], string] {
+    if (!line.startsWith("/")) {
+      return [[], line];
+    }
+
+    const commandNames = registry.getCommandNames();
+    const matches = commandNames.filter((name) => name.startsWith(line));
+    return [matches, line];
+  }
+
+  // ── Status bar ────────────────────────────────────────────────
+
+  private updateStatusBar(): void {
+    this.statusBar.update({
+      provider: this._provider,
+      model: this._model,
+      sessionId: this.currentSession.id,
+      mode: this._mode,
+      discussionId: this._discussionState?.discussionId,
+    });
   }
 
   // ── Input handling ───────────────────────────────────────────
