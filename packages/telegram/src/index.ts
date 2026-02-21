@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   console.log(`API Key: ${config.apiKey ? "configured" : "not set"}`);
   console.log("----------------------------------------------\n");
 
-  const bot = createBot(config);
+  const { bot } = createBot(config);
 
   // Graceful shutdown
   const shutdown = (signal: string) => {

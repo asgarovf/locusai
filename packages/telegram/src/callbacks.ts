@@ -1,4 +1,4 @@
-import { TaskStatus } from "@locusai/shared";
+import { SuggestionStatus, TaskStatus } from "@locusai/shared";
 import type { Telegraf } from "telegraf";
 import { getClientAndWorkspace } from "./api-client.js";
 import { convertArtifactToPlan, showArtifact } from "./commands/artifacts.js";
@@ -13,7 +13,9 @@ import {
   escapeHtml,
   formatCommandOutput,
   formatError,
+  formatSuccess,
   splitMessage,
+  truncateOutput,
 } from "./formatter.js";
 
 /**
@@ -277,5 +279,150 @@ export function registerCallbacks(
     await ctx.answerCbQuery("Converting to plan…");
     const artifactName = ctx.match[1];
     await convertArtifactToPlan(ctx, config, executor, artifactName);
+  });
+
+  // ── Suggestion: Fix ──────────────────────────────────────────────────
+  bot.action(/^suggestion_fix_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Applying fix…");
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(
+        formatError("API key is required to act on suggestions."),
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.updateStatus(
+        workspaceId,
+        suggestionId,
+        { status: SuggestionStatus.ACTED_ON }
+      );
+
+      try {
+        await ctx.editMessageText(
+          formatSuccess(
+            `Suggestion "<b>${escapeHtml(suggestion.title)}</b>" marked as fixed.`
+          ),
+          { parse_mode: "HTML" }
+        );
+      } catch {
+        await ctx.reply(
+          formatSuccess(
+            `Suggestion "<b>${escapeHtml(suggestion.title)}</b>" marked as fixed.`
+          ),
+          { parse_mode: "HTML" }
+        );
+      }
+    } catch (err) {
+      console.error("[callback:suggestion_fix] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to update suggestion: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
+  });
+
+  // ── Suggestion: Skip ─────────────────────────────────────────────────
+  bot.action(/^suggestion_skip_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery("Skipping…");
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(
+        formatError("API key is required to act on suggestions."),
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.updateStatus(
+        workspaceId,
+        suggestionId,
+        { status: SuggestionStatus.SKIPPED }
+      );
+
+      try {
+        await ctx.editMessageText(
+          `⏭ Suggestion "<b>${escapeHtml(suggestion.title)}</b>" skipped.`,
+          { parse_mode: "HTML" }
+        );
+      } catch {
+        await ctx.reply(
+          `⏭ Suggestion "<b>${escapeHtml(suggestion.title)}</b>" skipped.`,
+          { parse_mode: "HTML" }
+        );
+      }
+    } catch (err) {
+      console.error("[callback:suggestion_skip] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to update suggestion: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
+  });
+
+  // ── Suggestion: Details ──────────────────────────────────────────────
+  bot.action(/^suggestion_details_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const suggestionId = ctx.match[1];
+
+    if (!config.apiKey) {
+      await ctx.reply(
+        formatError("API key is required to view suggestion details."),
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+
+    try {
+      const { client, workspaceId } = await getClientAndWorkspace(config);
+      const suggestion = await client.suggestions.get(
+        workspaceId,
+        suggestionId
+      );
+
+      let msg = `📋 <b>Suggestion Details</b>\n\n`;
+      msg += `<b>Title:</b> ${escapeHtml(suggestion.title)}\n`;
+      msg += `<b>Type:</b> ${escapeHtml(suggestion.type)}\n`;
+      msg += `<b>Status:</b> ${escapeHtml(suggestion.status)}\n`;
+      msg += `<b>Created:</b> ${escapeHtml(suggestion.createdAt)}\n`;
+      msg += `<b>Expires:</b> ${escapeHtml(suggestion.expiresAt)}\n`;
+
+      if (suggestion.jobRunId) {
+        msg += `<b>Job Run:</b> <code>${escapeHtml(suggestion.jobRunId)}</code>\n`;
+      }
+
+      msg += `\n<b>Description:</b>\n${escapeHtml(truncateOutput(suggestion.description, 2000))}`;
+
+      if (suggestion.metadata && Object.keys(suggestion.metadata).length > 0) {
+        msg += `\n\n<b>Metadata:</b>\n<pre>${escapeHtml(JSON.stringify(suggestion.metadata, null, 2).slice(0, 500))}</pre>`;
+      }
+
+      const parts = splitMessage(msg);
+      for (const part of parts) {
+        await ctx.reply(part, {
+          parse_mode: "HTML",
+          link_preview_options: { is_disabled: true },
+        });
+      }
+    } catch (err) {
+      console.error("[callback:suggestion_details] Failed:", err);
+      await ctx.reply(
+        formatError(
+          `Failed to fetch suggestion: ${err instanceof Error ? err.message : String(err)}`
+        ),
+        { parse_mode: "HTML" }
+      );
+    }
   });
 }

@@ -20,6 +20,8 @@ import {
   gitCommand,
   hasActiveDiscussion,
   helpCommand,
+  jobHistoryCommand,
+  jobsCommand,
   modelCommand,
   planCommand,
   plansCommand,
@@ -27,6 +29,7 @@ import {
   rejectTaskCommand,
   reviewCommand,
   runCommand,
+  runJobCommand,
   sprintsCommand,
   startCommand,
   statusCommand,
@@ -39,15 +42,22 @@ import {
 import type { TelegramConfig } from "./config.js";
 import { CliExecutor } from "./executor.js";
 import { formatError } from "./formatter.js";
+import { JobNotifier } from "./notifications.js";
 import { HANDLER_TIMEOUT } from "./timeouts.js";
 
-export function createBot(config: TelegramConfig): Telegraf {
+export interface CreateBotResult {
+  bot: Telegraf;
+  notifier: JobNotifier;
+}
+
+export function createBot(config: TelegramConfig): CreateBotResult {
   const bot = new Telegraf(config.botToken, {
     // Default is 90s which is too short for long-running CLI commands.
     // Our executor has its own per-command timeouts defined in timeouts.ts.
     handlerTimeout: HANDLER_TIMEOUT,
   });
   const executor = new CliExecutor(config);
+  const notifier = new JobNotifier(bot, config.chatId);
 
   // Auth middleware — only allow configured chat ID
   bot.use(async (ctx, next) => {
@@ -124,6 +134,11 @@ export function createBot(config: TelegramConfig): Telegraf {
   // Artifacts command
   bot.command("artifacts", (ctx) => artifactsCommand(ctx, config));
 
+  // Job commands
+  bot.command("jobs", (ctx) => jobsCommand(ctx, config));
+  bot.command("runjob", (ctx) => runJobCommand(ctx, executor));
+  bot.command("jobhistory", (ctx) => jobHistoryCommand(ctx, config));
+
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
 
@@ -192,6 +207,9 @@ export function createBot(config: TelegramConfig): Telegraf {
         command: "enddiscuss",
         description: "End active discussion & summarize",
       },
+      { command: "jobs", description: "List configured scan jobs" },
+      { command: "runjob", description: "Manually trigger a job" },
+      { command: "jobhistory", description: "Recent job run history" },
       { command: "config", description: "Show/update settings" },
       { command: "model", description: "View or switch AI model" },
       { command: "status", description: "Show running processes" },
@@ -200,5 +218,5 @@ export function createBot(config: TelegramConfig): Telegraf {
     ])
     .catch((err) => console.error("Failed to set bot commands:", err));
 
-  return bot;
+  return { bot, notifier };
 }
