@@ -47,6 +47,7 @@ export class ClaudeRunner implements AiRunner {
   private currentToolName?: string;
   private activeTools: Map<number, ActiveToolExecution> = new Map();
   private activeProcess: ChildProcess | null = null;
+  private aborted = false;
   timeoutMs: number;
 
   constructor(
@@ -71,6 +72,7 @@ export class ClaudeRunner implements AiRunner {
    */
   abort(): void {
     if (this.activeProcess && !this.activeProcess.killed) {
+      this.aborted = true;
       this.activeProcess.kill("SIGTERM");
       this.activeProcess = null;
     }
@@ -149,6 +151,7 @@ export class ClaudeRunner implements AiRunner {
   }
 
   async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
+    this.aborted = false;
     const args = this.buildCliArgs();
 
     const env = getAugmentedEnv({
@@ -265,7 +268,8 @@ export class ClaudeRunner implements AiRunner {
         process.stderr.write(`${stderrBuffer}\n`);
       }
 
-      if (code !== 0 && !errorMessage) {
+      // Don't report error if the process was intentionally aborted
+      if (code !== 0 && !errorMessage && !this.aborted) {
         // Use stderr if available, otherwise fall back to the last result
         // content from the JSON stream (Claude CLI reports errors there
         // when using --output-format stream-json)
@@ -450,6 +454,7 @@ export class ClaudeRunner implements AiRunner {
   }
 
   private executeRun(prompt: string): Promise<string> {
+    this.aborted = false;
     return new Promise((resolve, reject) => {
       const args = this.buildCliArgs();
 
@@ -513,7 +518,7 @@ export class ClaudeRunner implements AiRunner {
         }
 
         process.stdout.write("\n");
-        if (code === 0) {
+        if (code === 0 || this.aborted) {
           resolve(finalResult);
         } else {
           // Use stderr if available, otherwise fall back to result content

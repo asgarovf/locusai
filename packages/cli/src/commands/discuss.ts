@@ -1,4 +1,3 @@
-import * as readline from "node:readline";
 import { parseArgs } from "node:util";
 import {
   c,
@@ -9,6 +8,13 @@ import {
   DiscussionManager,
 } from "@locusai/sdk/node";
 import { ProgressRenderer } from "../display/progress-renderer";
+import {
+  buildImageContext,
+  detectImages,
+  imageDisplayName,
+  stripImagePaths,
+} from "../repl/image-detect";
+import { InputHandler } from "../repl/input-handler";
 import { SettingsManager } from "../settings-manager";
 import { requireInitialization, resolveProvider } from "../utils";
 
@@ -138,20 +144,15 @@ export async function discussCommand(args: string[]): Promise<void> {
   }
 
   console.log(
-    `  ${c.dim("Type your response, or 'help' for commands. Use 'exit' or Ctrl+C to quit.")}\n`
+    `  ${c.dim("Type your response, or 'help' for commands.")}`
+  );
+  console.log(
+    `  ${c.dim("Enter to send, Shift+Enter for newline. Use 'exit' or Ctrl+D to quit.")}\n`
   );
 
   // ── REPL loop ─────────────────────────────────────────────
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: true,
-  });
-
-  rl.setPrompt(c.cyan("> "));
-  rl.prompt();
-
   let isProcessing = false;
+  let interrupted = false;
 
   const shutdown = () => {
     if (isProcessing) {
@@ -161,100 +162,105 @@ export async function discussCommand(args: string[]): Promise<void> {
       `\n  ${c.dim("Discussion saved.")} ${c.dim("ID:")} ${c.cyan(discussionId)}`
     );
     console.log(c.dim("\n  Goodbye!\n"));
-    rl.close();
+    inputHandler.stop();
     process.exit(0);
   };
 
-  process.on("SIGINT", () => {
-    if (isProcessing) {
-      aiRunner.abort();
-      isProcessing = false;
-      console.log(c.dim("\n[Interrupted]"));
-      rl.prompt();
-    } else {
-      shutdown();
-    }
-  });
-
-  rl.on("close", () => {
-    shutdown();
-  });
-
-  rl.on("line", async (input: string) => {
+  const handleSubmit = async (input: string) => {
+    interrupted = false;
     const trimmed = input.trim();
 
-    if (trimmed === "" || isProcessing) {
-      rl.prompt();
+    if (trimmed === "") {
+      inputHandler.showPrompt();
       return;
     }
 
-    // ── REPL special commands ─────────────────────────────
-    const lowerInput = trimmed.toLowerCase();
+    // ── REPL special commands (only single-line) ──────────
+    if (!trimmed.includes("\n")) {
+      const lowerInput = trimmed.toLowerCase();
 
-    if (lowerInput === "help") {
-      showReplHelp();
-      rl.prompt();
-      return;
-    }
+      if (lowerInput === "help") {
+        showReplHelp();
+        inputHandler.showPrompt();
+        return;
+      }
 
-    if (lowerInput === "exit" || lowerInput === "quit") {
-      shutdown();
-      return;
-    }
+      if (lowerInput === "exit" || lowerInput === "quit") {
+        shutdown();
+        return;
+      }
 
-    if (lowerInput === "insights") {
-      showCurrentInsights(discussionManager, discussionId);
-      rl.prompt();
-      return;
-    }
+      if (lowerInput === "insights") {
+        showCurrentInsights(discussionManager, discussionId);
+        inputHandler.showPrompt();
+        return;
+      }
 
-    if (lowerInput === "summary") {
-      isProcessing = true;
-      const summaryRenderer = new ProgressRenderer({ animated: true });
+      if (lowerInput === "summary") {
+        isProcessing = true;
+        const summaryRenderer = new ProgressRenderer({ animated: true });
 
-      try {
-        summaryRenderer.showThinkingStarted();
-        const summary = await facilitator.summarizeDiscussion(discussionId);
-        summaryRenderer.showThinkingStopped();
+        try {
+          summaryRenderer.showThinkingStarted();
+          const summary =
+            await facilitator.summarizeDiscussion(discussionId);
+          summaryRenderer.showThinkingStopped();
 
-        process.stdout.write("\n");
-        process.stdout.write(summary);
-        process.stdout.write("\n");
+          process.stdout.write("\n");
+          process.stdout.write(summary);
+          process.stdout.write("\n");
 
-        summaryRenderer.finalize();
+          summaryRenderer.finalize();
 
-        // Show completion message
-        const discussion = discussionManager.load(discussionId);
-        if (discussion) {
+          // Show completion message
+          const discussion = discussionManager.load(discussionId);
+          if (discussion) {
+            console.log(
+              `\n  ${c.success("✔")} ${c.success("Discussion completed!")}\n`
+            );
+            console.log(
+              `  ${c.dim("Messages:")} ${discussion.messages.length}  ${c.dim("Insights:")} ${discussion.insights.length}\n`
+            );
+          }
+
           console.log(
-            `\n  ${c.success("✔")} ${c.success("Discussion completed!")}\n`
+            `  ${c.dim("To review:")} ${c.cyan(`locus discuss --show ${discussionId}`)}`
           );
           console.log(
-            `  ${c.dim("Messages:")} ${discussion.messages.length}  ${c.dim("Insights:")} ${discussion.insights.length}\n`
+            `  ${c.dim("To list all:")} ${c.cyan("locus discuss --list")}\n`
+          );
+        } catch (error) {
+          summaryRenderer.finalize();
+          console.error(
+            `\n  ${c.error("✖")} ${c.red("Failed to summarize:")} ${
+              error instanceof Error ? error.message : String(error)
+            }\n`
           );
         }
 
-        console.log(
-          `  ${c.dim("To review:")} ${c.cyan(`locus discuss --show ${discussionId}`)}`
-        );
-        console.log(
-          `  ${c.dim("To list all:")} ${c.cyan("locus discuss --list")}\n`
-        );
-      } catch (error) {
-        summaryRenderer.finalize();
-        console.error(
-          `\n  ${c.error("✖")} ${c.red("Failed to summarize:")} ${
-            error instanceof Error ? error.message : String(error)
-          }\n`
-        );
+        inputHandler.stop();
+        process.exit(0);
+        return;
       }
-
-      rl.close();
-      process.exit(0);
-      return;
     }
 
     // ── Continue discussion with user input ───────────────
+
+    // Detect image file paths (e.g. pasted macOS screenshots)
+    const images = detectImages(trimmed);
+    if (images.length > 0) {
+      for (const img of images) {
+        const status = img.exists ? c.success("attached") : c.warning("not found");
+        process.stdout.write(
+          `  ${c.cyan(`[Image: ${imageDisplayName(img.path)}]`)} ${status}\r\n`
+        );
+      }
+    }
+
+    // Strip image paths from the input and append Read instructions
+    const cleanedInput = stripImagePaths(trimmed, images);
+    const effectiveInput = cleanedInput + buildImageContext(images);
+
     isProcessing = true;
     const chunkRenderer = new ProgressRenderer({ animated: true });
 
@@ -263,7 +269,7 @@ export async function discussCommand(args: string[]): Promise<void> {
 
       const stream = facilitator.continueDiscussionStream(
         discussionId,
-        trimmed
+        effectiveInput
       );
 
       let result: { response: string; insights: DiscussionInsight[] } = {
@@ -301,8 +307,41 @@ export async function discussCommand(args: string[]): Promise<void> {
     }
 
     isProcessing = false;
-    rl.prompt();
+    // Don't show prompt if already shown by interrupt handler
+    if (!interrupted) {
+      inputHandler.showPrompt();
+    }
+  };
+
+  const inputHandler = new InputHandler({
+    prompt: c.cyan("> "),
+    continuationPrompt: c.dim("\u2026 "),
+    onSubmit: (input) => {
+      handleSubmit(input).catch((err) => {
+        console.error(
+          `\n  ${c.error("✖")} ${c.red(
+            err instanceof Error ? err.message : String(err)
+          )}\n`
+        );
+        inputHandler.showPrompt();
+      });
+    },
+    onInterrupt: () => {
+      if (isProcessing) {
+        interrupted = true;
+        aiRunner.abort();
+        isProcessing = false;
+        console.log(c.dim("\n[Interrupted]"));
+        inputHandler.showPrompt();
+      } else {
+        shutdown();
+      }
+    },
+    onClose: () => shutdown(),
   });
+
+  inputHandler.start();
+  inputHandler.showPrompt();
 }
 
 // ── Sub-commands ──────────────────────────────────────────────
@@ -439,6 +478,14 @@ function showReplHelp(): void {
     ${c.cyan("insights")}    Show all insights extracted so far
     ${c.cyan("exit")}        Save and exit without generating a summary
     ${c.cyan("help")}        Show this help message
+
+  ${c.header(" KEY BINDINGS ")}
+
+    ${c.cyan("Enter")}              Send message
+    ${c.cyan("Shift+Enter")}        Insert newline (also: Alt+Enter, Ctrl+J)
+    ${c.cyan("Ctrl+C")}             Interrupt / clear input / exit
+    ${c.cyan("Ctrl+U")}             Clear current input
+    ${c.cyan("Ctrl+W")}             Delete last word
 
   ${c.dim("Type anything else to continue the discussion.")}
 `);

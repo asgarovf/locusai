@@ -83,6 +83,15 @@ function showHelp(): void {
   ${c.success("history")} / ${c.dim("hist")}       List recent sessions
   ${c.success("session")} / ${c.dim("sid")}        Show current session ID
 
+  ${c.primary("Key Bindings")}
+
+  ${c.success("Enter")}              Send message
+  ${c.success("Shift+Enter")}        Insert newline (also: Alt+Enter, Ctrl+J)
+  ${c.success("Ctrl+C")}             Interrupt running agent / clear input / exit
+  ${c.success("Ctrl+D")}             Exit (on empty input)
+  ${c.success("Ctrl+U")}             Clear current input
+  ${c.success("Ctrl+W")}             Delete last word
+
   ${c.dim("Any other input will be sent as a prompt to the AI.")}
 `);
 }

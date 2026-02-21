@@ -60,7 +60,6 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus run")}
 
   ${c.header(" EXAMPLES ")}
-    ${c.dim("$")} ${c.primary("locus config show")}
     ${c.dim("$")} ${c.primary("locus run")}
     ${c.dim("$")} ${c.primary("locus docs sync")}
     ${c.dim("$")} ${c.primary("locus review")}
@@ -69,7 +68,6 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary('locus discuss "how should we design the auth system?"')}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
     ${c.dim("$")} ${c.primary("locus artifacts")}
-    ${c.dim("$")} ${c.primary("locus artifacts show reduce-cli-terminal-output")}
 
   For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);

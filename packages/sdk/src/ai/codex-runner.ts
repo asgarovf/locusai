@@ -15,6 +15,7 @@ const DEFAULT_TIMEOUT_MS = 60 * 60 * 1000;
 
 export class CodexRunner implements AiRunner {
   private activeProcess: ChildProcess | null = null;
+  private aborted = false;
   private eventEmitter?: ExecEventEmitter;
   private currentToolName?: string;
   timeoutMs: number;
@@ -38,12 +39,14 @@ export class CodexRunner implements AiRunner {
    */
   abort(): void {
     if (this.activeProcess && !this.activeProcess.killed) {
+      this.aborted = true;
       this.activeProcess.kill("SIGTERM");
       this.activeProcess = null;
     }
   }
 
   async run(prompt: string): Promise<string> {
+    this.aborted = false;
     const maxRetries = 3;
     let lastError: Error | null = null;
 
@@ -195,7 +198,7 @@ export class CodexRunner implements AiRunner {
     codex.on("close", (code) => {
       this.activeProcess = null;
 
-      if (code === 0) {
+      if (code === 0 || this.aborted) {
         const result = this.readOutput(outputPath, finalOutput);
         this.cleanupTempFile(outputPath);
         // Codex commonly writes the assistant response only to --output-last-message.
@@ -328,7 +331,7 @@ export class CodexRunner implements AiRunner {
       codex.on("close", (code) => {
         this.activeProcess = null;
 
-        if (code === 0) {
+        if (code === 0 || this.aborted) {
           const result = this.readOutput(outputPath, output);
           this.cleanupTempFile(outputPath);
           resolve(result);

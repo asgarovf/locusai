@@ -1,4 +1,3 @@
-import * as readline from "node:readline";
 import {
   type AiProvider,
   type AiRunner,
@@ -11,6 +10,13 @@ import {
 import { ExecutionStatsTracker } from "../display/execution-stats";
 import { ProgressRenderer } from "../display/progress-renderer";
 import { parseCommand } from "./commands";
+import {
+  buildImageContext,
+  detectImages,
+  imageDisplayName,
+  stripImagePaths,
+} from "./image-detect";
+import { InputHandler } from "./input-handler";
 
 export interface InteractiveSessionOptions {
   projectPath: string;
@@ -25,11 +31,12 @@ export interface InteractiveSessionOptions {
  * Allows users to submit multiple prompts while preserving conversation context.
  */
 export class InteractiveSession {
-  private readline: readline.Interface | null = null;
+  private inputHandler: InputHandler | null = null;
   private aiRunner: AiRunner;
   private promptBuilder: PromptBuilder;
   private renderer: ProgressRenderer;
   private isProcessing = false;
+  private interrupted = false;
   private conversationHistory: Array<{
     role: "user" | "assistant";
     content: string;
@@ -39,11 +46,6 @@ export class InteractiveSession {
   private projectPath: string;
   private model: string;
   private provider: string;
-
-  // Multi-line paste support
-  private inputBuffer: string[] = [];
-  private inputDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private static readonly PASTE_DEBOUNCE_MS = 50;
 
   constructor(options: InteractiveSessionOptions) {
     this.aiRunner = createAiRunner(options.provider, {
@@ -95,65 +97,44 @@ export class InteractiveSession {
   async start(): Promise<void> {
     this.printWelcome();
 
-    this.readline = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: true,
+    this.inputHandler = new InputHandler({
+      prompt: c.cyan("> "),
+      continuationPrompt: c.dim("\u2026 "),
+      onSubmit: (input) => {
+        this.handleSubmit(input).catch((err) => {
+          console.error(
+            c.error(
+              `Error: ${err instanceof Error ? err.message : String(err)}`
+            )
+          );
+          this.inputHandler?.showPrompt();
+        });
+      },
+      onInterrupt: () => {
+        if (this.isProcessing) {
+          this.interrupted = true;
+          this.renderer.stopThinkingAnimation();
+          this.aiRunner.abort();
+          console.log(c.dim("\n[Interrupted]"));
+          this.isProcessing = false;
+          this.inputHandler?.showPrompt();
+        } else {
+          this.shutdown();
+        }
+      },
+      onClose: () => this.shutdown(),
     });
 
-    this.readline.setPrompt(c.cyan("> "));
-    this.readline.prompt();
-
-    this.readline.on("line", (input) => this.handleLine(input));
-    this.readline.on("close", () => this.shutdown());
-
-    // Handle CTRL+C gracefully
-    process.on("SIGINT", () => {
-      // Clear any pending input buffer on interrupt
-      if (this.inputDebounceTimer) {
-        clearTimeout(this.inputDebounceTimer);
-        this.inputDebounceTimer = null;
-      }
-      this.inputBuffer = [];
-
-      if (this.isProcessing) {
-        this.renderer.stopThinkingAnimation();
-        console.log(c.dim("\n[Interrupted]"));
-        this.isProcessing = false;
-        this.readline?.prompt();
-      } else {
-        this.shutdown();
-      }
-    });
+    this.inputHandler.start();
+    this.inputHandler.showPrompt();
   }
 
-  private handleLine(input: string): void {
-    // Buffer the input line
-    this.inputBuffer.push(input);
-
-    // Clear any existing debounce timer
-    if (this.inputDebounceTimer) {
-      clearTimeout(this.inputDebounceTimer);
-    }
-
-    // Set a new debounce timer - when pasting multi-line text,
-    // lines come in rapid succession. We wait for a pause to detect
-    // when the paste is complete.
-    this.inputDebounceTimer = setTimeout(() => {
-      this.processBufferedInput();
-    }, InteractiveSession.PASTE_DEBOUNCE_MS);
-  }
-
-  private async processBufferedInput(): Promise<void> {
-    // Join all buffered lines and clear the buffer
-    const fullInput = this.inputBuffer.join("\n");
-    this.inputBuffer = [];
-    this.inputDebounceTimer = null;
-
-    const trimmed = fullInput.trim();
+  private async handleSubmit(input: string): Promise<void> {
+    this.interrupted = false;
+    const trimmed = input.trim();
 
     if (trimmed === "") {
-      this.readline?.prompt();
+      this.inputHandler?.showPrompt();
       return;
     }
 
@@ -162,13 +143,16 @@ export class InteractiveSession {
       const command = parseCommand(trimmed);
       if (command) {
         await command.execute(this, trimmed.slice(command.name.length).trim());
-        if (this.readline) this.readline.prompt();
+        this.inputHandler?.showPrompt();
         return;
       }
     }
 
     await this.executePrompt(trimmed);
-    this.readline?.prompt();
+    // Don't show prompt if already shown by interrupt handler
+    if (!this.interrupted) {
+      this.inputHandler?.showPrompt();
+    }
   }
 
   private async executePrompt(prompt: string): Promise<void> {
@@ -176,7 +160,21 @@ export class InteractiveSession {
     const statsTracker = new ExecutionStatsTracker();
 
     try {
-      const fullPrompt = await this.buildPromptWithHistory(prompt);
+      // Detect image file paths (e.g. pasted macOS screenshots)
+      const images = detectImages(prompt);
+      if (images.length > 0) {
+        for (const img of images) {
+          const status = img.exists ? c.success("attached") : c.warning("not found");
+          process.stdout.write(
+            `  ${c.cyan(`[Image: ${imageDisplayName(img.path)}]`)} ${status}\r\n`
+          );
+        }
+      }
+
+      // Strip image paths from the prompt and append Read instructions
+      const cleanedPrompt = stripImagePaths(prompt, images);
+      const effectivePrompt = cleanedPrompt + buildImageContext(images);
+      const fullPrompt = await this.buildPromptWithHistory(effectivePrompt);
       const stream = this.aiRunner.runStream(fullPrompt);
       let responseContent = "";
 
@@ -328,15 +326,10 @@ export class InteractiveSession {
    * Shutdown the interactive session.
    */
   shutdown(): void {
-    // Clear any pending input debounce timer
-    if (this.inputDebounceTimer) {
-      clearTimeout(this.inputDebounceTimer);
-      this.inputDebounceTimer = null;
-    }
     this.renderer.stopThinkingAnimation();
     this.aiRunner.abort();
     console.log(c.dim("\nGoodbye!"));
-    this.readline?.close();
+    this.inputHandler?.stop();
     process.exit(0);
   }
 
@@ -351,6 +344,7 @@ export class InteractiveSession {
   ${c.primary("Locus Interactive Mode")}
   ${sessionInfo}
   ${c.dim("Type your prompt, or 'help' for commands")}
+  ${c.dim("Enter to send, Shift+Enter for newline")}
   ${c.dim("Use 'exit' or Ctrl+D to quit")}
 `);
   }
