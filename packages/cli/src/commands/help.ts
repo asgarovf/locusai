@@ -6,6 +6,10 @@ export function showHelp(): void {
     ${c.primary("locus")} ${c.dim("<command> [options]")}
 
   ${c.header(" COMMANDS ")}
+    ${c.success("start")}     Launch interactive REPL session ${c.dim("(default when no command)")}
+              ${c.dim("--session, -s <id> Resume a previous session")}
+              ${c.dim("--provider <name>  AI provider")}
+              ${c.dim("--model <name>     AI model")}
     ${c.success("init")}      Initialize Locus in the current directory
     ${c.success("config")}    Manage settings (API key, provider, model)
               ${c.dim("setup         Interactive one-time setup")}
@@ -57,7 +61,7 @@ export function showHelp(): void {
   ${c.header(" GETTING STARTED ")}
     ${c.dim("$")} ${c.primary("locus init")}
     ${c.dim("$")} ${c.primary("locus config setup")}
-    ${c.dim("$")} ${c.primary("locus run")}
+    ${c.dim("$")} ${c.primary("locus start")}
 
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary("locus config show")}

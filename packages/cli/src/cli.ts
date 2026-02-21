@@ -13,6 +13,7 @@ import {
   reviewCommand,
   runCommand,
   showHelp,
+  startCommand,
   telegramCommand,
   upgradeCommand,
   versionCommand,
@@ -34,12 +35,17 @@ async function main() {
     return;
   }
 
-  // Skip banner for exec command or when in JSON stream mode
-  if (command !== "exec" && !isJsonStream) {
+  // Skip banner for exec, start, or no-command-with-TTY (defaults to start),
+  // and when in JSON stream mode
+  const isDefaultStart = !command && process.stdin.isTTY;
+  if (command !== "exec" && command !== "start" && !isDefaultStart && !isJsonStream) {
     printBanner();
   }
 
   switch (command) {
+    case "start":
+      await startCommand(args);
+      break;
     case "run":
       await runCommand(args);
       break;
@@ -82,7 +88,12 @@ async function main() {
       await upgradeCommand();
       break;
     default:
-      showHelp();
+      // No command given — default to `locus start` when stdin is a TTY
+      if (!command && process.stdin.isTTY) {
+        await startCommand(args);
+      } else {
+        showHelp();
+      }
   }
 }
 

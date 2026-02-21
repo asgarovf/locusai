@@ -80,16 +80,17 @@ export async function execCommand(args: string[]): Promise<void> {
   const isInteractive = values.interactive as boolean;
   const sessionId = values.session as string | undefined;
 
-  // Interactive mode: start REPL session
+  // Interactive mode: delegate to unified InteractiveREPL
   if (isInteractive) {
-    const { InteractiveSession } = await import("../repl/interactive-session");
-    const session = new InteractiveSession({
+    const { InteractiveREPL } = await import("../repl/interactive-repl");
+    const repl = new InteractiveREPL({
       projectPath,
       provider,
       model,
+      settings: execSettings,
       sessionId,
     });
-    await session.start();
+    await repl.start();
     return;
   }
 

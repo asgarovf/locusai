@@ -1,8 +1,11 @@
 import { c } from "@locusai/sdk/node";
-import type { InteractiveSession } from "./interactive-session";
-import { type SlashCommand, SlashCommandRegistry } from "./slash-commands";
+import {
+  type REPLSession,
+  type SlashCommand,
+  SlashCommandRegistry,
+} from "./slash-commands";
 
-export type { SlashCommand };
+export type { SlashCommand, REPLSession };
 export { SlashCommandRegistry };
 
 /**
@@ -12,7 +15,7 @@ export interface ReplCommand {
   name: string;
   aliases: string[];
   description: string;
-  execute: (session: InteractiveSession, args?: string) => Promise<void> | void;
+  execute: (session: REPLSession, args?: string) => Promise<void> | void;
 }
 
 /**
@@ -120,7 +123,7 @@ export const REPL_COMMANDS: ReplCommand[] = registry.getAll().map((cmd) => ({
 /**
  * Display session history.
  */
-function showHistory(session: InteractiveSession, args?: string): void {
+function showHistory(session: REPLSession, args?: string): void {
   const historyManager = session.getHistoryManager();
   const limit = args ? Number.parseInt(args, 10) : 10;
   const sessions = historyManager.listSessions({

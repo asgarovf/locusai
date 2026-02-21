@@ -1,7 +1,17 @@
-import { c } from "@locusai/sdk/node";
-import type { InteractiveSession } from "./interactive-session";
+import { c, type HistoryManager } from "@locusai/sdk/node";
 
 export type SlashCommandCategory = "session" | "ai" | "config" | "navigation";
+
+/**
+ * Minimal session interface that slash commands can depend on.
+ * Both InteractiveSession and InteractiveREPL satisfy this contract.
+ */
+export interface REPLSession {
+  getSessionId(): string;
+  getHistoryManager(): HistoryManager;
+  resetContext(): void;
+  shutdown(): void;
+}
 
 export interface SlashCommand {
   /** Command name without the leading slash */
@@ -12,7 +22,7 @@ export interface SlashCommand {
   /** Usage example, e.g. "/history [limit]" */
   usage: string;
   category: SlashCommandCategory;
-  execute: (session: InteractiveSession, args?: string) => Promise<void> | void;
+  execute: (session: REPLSession, args?: string) => Promise<void> | void;
 }
 
 export interface ParsedCommand {
