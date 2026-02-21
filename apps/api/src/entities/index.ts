@@ -7,10 +7,13 @@ export * from "./doc.entity";
 export * from "./doc-group.entity";
 export * from "./event.entity";
 export * from "./invitation.entity";
+export * from "./job-run.entity";
+
 export * from "./membership.entity";
 export * from "./organization.entity";
 export * from "./otp-verification.entity";
 export * from "./sprint.entity";
+export * from "./suggestion.entity";
 export * from "./task.entity";
 export * from "./user.entity";
 export * from "./workspace.entity";

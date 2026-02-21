@@ -18,6 +18,8 @@ import { ConfigModule } from "./config/config.module";
 import { TypedConfigService } from "./config/config.service";
 import { DocsModule } from "./docs/docs.module";
 import { ApiKey } from "./entities/api-key.entity";
+import { JobRun } from "./entities/job-run.entity";
+import { Suggestion } from "./entities/suggestion.entity";
 import { EventsModule } from "./events/events.module";
 import { HealthModule } from "./health/health.module";
 import { InvitationsModule } from "./invitations/invitations.module";
@@ -41,7 +43,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     }),
 
     // Register entities for global use
-    TypeOrmModule.forFeature([ApiKey]),
+    TypeOrmModule.forFeature([ApiKey, JobRun, Suggestion]),
 
     // Throttler Module for rate limiting
     ThrottlerModule.forRootAsync({
