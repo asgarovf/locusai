@@ -1,4 +1,4 @@
-import { c, type HistoryManager } from "@locusai/sdk/node";
+import { c, type AiProvider, type HistoryManager } from "@locusai/sdk/node";
 
 export type SlashCommandCategory = "session" | "ai" | "config" | "navigation";
 
@@ -11,6 +11,11 @@ export interface REPLSession {
   getHistoryManager(): HistoryManager;
   resetContext(): void;
   shutdown(): void;
+  getProjectPath(): string;
+  getProvider(): AiProvider;
+  getModel(): string;
+  setProvider(provider: AiProvider): void;
+  setModel(model: string): void;
 }
 
 export interface SlashCommand {

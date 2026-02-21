@@ -315,6 +315,34 @@ export class InteractiveSession {
     return this.historyManager;
   }
 
+  getProjectPath(): string {
+    return this.projectPath;
+  }
+
+  getProvider(): AiProvider {
+    return this.provider as AiProvider;
+  }
+
+  getModel(): string {
+    return this.model;
+  }
+
+  setProvider(provider: AiProvider): void {
+    this.provider = provider;
+    this.aiRunner = createAiRunner(provider, {
+      projectPath: this.projectPath,
+      model: this.model,
+    });
+  }
+
+  setModel(model: string): void {
+    this.model = model;
+    this.aiRunner = createAiRunner(this.provider as AiProvider, {
+      projectPath: this.projectPath,
+      model,
+    });
+  }
+
   /**
    * Save the current session to disk.
    */

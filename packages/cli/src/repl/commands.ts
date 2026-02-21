@@ -1,5 +1,9 @@
 import { c } from "@locusai/sdk/node";
 import {
+  modelCommand,
+  providerCommand,
+} from "./commands/config-commands";
+import {
   type REPLSession,
   type SlashCommand,
   SlashCommandRegistry,
@@ -87,6 +91,9 @@ registry.register({
   category: "config",
   execute: () => registry.showHelp(),
 });
+
+registry.register(providerCommand);
+registry.register(modelCommand);
 
 /**
  * Parse user input and return matching command if found.
