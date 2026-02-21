@@ -1,5 +1,6 @@
 export { artifactsCommand } from "./artifacts";
 export { configCommand } from "./config";
+export { daemonCommand } from "./daemon";
 export { discussCommand } from "./discuss";
 export { docsCommand } from "./docs";
 export { execCommand } from "./exec";

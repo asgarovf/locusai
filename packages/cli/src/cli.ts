@@ -4,6 +4,7 @@ import { c } from "@locusai/sdk/node";
 import {
   artifactsCommand,
   configCommand,
+  daemonCommand,
   discussCommand,
   docsCommand,
   execCommand,
@@ -70,6 +71,9 @@ async function main() {
       break;
     case "jobs":
       await jobsCommand(args);
+      break;
+    case "daemon":
+      await daemonCommand(args);
       break;
     case "docs":
       await docsCommand(args);

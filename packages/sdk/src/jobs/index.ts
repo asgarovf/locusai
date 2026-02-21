@@ -9,4 +9,14 @@ export type {
   JobStartedPayload,
 } from "./job-runner.js";
 export { createDefaultRegistry } from "./default-registry.js";
+export { JobScheduler, SchedulerEvent } from "./scheduler.js";
+export type {
+  ConfigLoader,
+  ConfigReloadedPayload,
+  JobScheduledPayload,
+  JobSkippedPayload,
+  JobTriggeredPayload,
+  SchedulerConfig,
+  SchedulerStartedPayload,
+} from "./scheduler.js";
 export { DependencyScanJob, LintScanJob, TestScanJob, TodoScanJob } from "./scans/index.js";
