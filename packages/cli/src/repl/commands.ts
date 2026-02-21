@@ -1,8 +1,6 @@
 import { c } from "@locusai/sdk/node";
-import {
-  modelCommand,
-  providerCommand,
-} from "./commands/config-commands";
+import { modelCommand, providerCommand } from "./commands/config-commands";
+import { discussCommand } from "./commands/discuss-command";
 import {
   type REPLSession,
   type SlashCommand,
@@ -94,6 +92,10 @@ registry.register({
 
 registry.register(providerCommand);
 registry.register(modelCommand);
+
+// ── AI commands ──────────────────────────────────────────────
+
+registry.register(discussCommand);
 
 /**
  * Parse user input and return matching command if found.

@@ -1,6 +1,21 @@
-import { c, type AiProvider, type HistoryManager } from "@locusai/sdk/node";
+import {
+  c,
+  type AiProvider,
+  type AiRunner,
+  type DiscussionFacilitator,
+  type DiscussionManager,
+  type HistoryManager,
+} from "@locusai/sdk/node";
 
 export type SlashCommandCategory = "session" | "ai" | "config" | "navigation";
+
+export type REPLMode = "prompt" | "discussion";
+
+export interface DiscussionState {
+  facilitator: DiscussionFacilitator;
+  discussionId: string;
+  discussionManager: DiscussionManager;
+}
 
 /**
  * Minimal session interface that slash commands can depend on.
@@ -16,6 +31,14 @@ export interface REPLSession {
   getModel(): string;
   setProvider(provider: AiProvider): void;
   setModel(model: string): void;
+
+  // Discussion mode — only InteractiveREPL implements these
+  getAiRunner?(): AiRunner;
+  getMode?(): REPLMode;
+  enterDiscussionMode?(state: DiscussionState): void;
+  exitDiscussionMode?(): void;
+  getDiscussionState?(): DiscussionState | null;
+  refreshPrompt?(): void;
 }
 
 export interface SlashCommand {

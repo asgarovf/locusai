@@ -3,6 +3,7 @@ import {
   type AiProvider,
   type AiRunner,
   type ConversationSession,
+  type DiscussionInsight,
   c,
   createAiRunner,
   HistoryManager,
@@ -12,6 +13,7 @@ import { ExecutionStatsTracker } from "../display/execution-stats";
 import { ProgressRenderer } from "../display/progress-renderer";
 import type { LocusSettings } from "../settings-manager";
 import { registry } from "./commands";
+import type { DiscussionState, REPLMode } from "./slash-commands";
 
 export interface InteractiveREPLOptions {
   projectPath: string;
@@ -45,6 +47,10 @@ export class InteractiveREPL {
   private _model: string;
   private _provider: AiProvider;
   private _settings: LocusSettings;
+
+  // Discussion mode
+  private _mode: REPLMode = "prompt";
+  private _discussionState: DiscussionState | null = null;
 
   // Multi-line paste support
   private inputBuffer: string[] = [];
@@ -136,6 +142,39 @@ export class InteractiveREPL {
 
   getHistoryManager(): HistoryManager {
     return this.historyManager;
+  }
+
+  getAiRunner(): AiRunner {
+    return this.aiRunner;
+  }
+
+  getMode(): REPLMode {
+    return this._mode;
+  }
+
+  enterDiscussionMode(state: DiscussionState): void {
+    this._mode = "discussion";
+    this._discussionState = state;
+    this.refreshPrompt();
+  }
+
+  exitDiscussionMode(): void {
+    this._mode = "prompt";
+    this._discussionState = null;
+    this.refreshPrompt();
+  }
+
+  getDiscussionState(): DiscussionState | null {
+    return this._discussionState;
+  }
+
+  refreshPrompt(): void {
+    if (!this.rl) return;
+    if (this._mode === "discussion") {
+      this.rl.setPrompt(c.cyan("discuss > "));
+    } else {
+      this.rl.setPrompt(c.cyan("> "));
+    }
   }
 
   // ── Lifecycle ────────────────────────────────────────────────
@@ -239,6 +278,13 @@ export class InteractiveREPL {
         if (this.rl) this.rl.prompt();
         return;
       }
+    }
+
+    // In discussion mode, send non-slash input to the discussion facilitator
+    if (this._mode === "discussion" && this._discussionState) {
+      await this.executeDiscussionInput(trimmed);
+      this.rl?.prompt();
+      return;
     }
 
     // Not a command — execute as AI prompt
@@ -345,6 +391,52 @@ export class InteractiveREPL {
     }
   }
 
+  private async executeDiscussionInput(input: string): Promise<void> {
+    if (!this._discussionState) return;
+
+    this.isProcessing = true;
+    const { facilitator, discussionId } = this._discussionState;
+    const chunkRenderer = new ProgressRenderer({ animated: true });
+
+    try {
+      chunkRenderer.showThinkingStarted();
+
+      const stream = facilitator.continueDiscussionStream(discussionId, input);
+      let result: { response: string; insights: DiscussionInsight[] } = {
+        response: "",
+        insights: [],
+      };
+
+      let iterResult = await stream.next();
+      while (!iterResult.done) {
+        chunkRenderer.renderChunk(iterResult.value);
+        iterResult = await stream.next();
+      }
+
+      result = iterResult.value;
+      chunkRenderer.finalize();
+
+      // Display extracted insights inline
+      if (result.insights.length > 0) {
+        console.log("");
+        for (const insight of result.insights) {
+          const tag = formatInsightTag(insight.type);
+          console.log(`  ${tag} ${c.bold(insight.title)}`);
+          console.log(`  ${c.dim(insight.content)}\n`);
+        }
+      }
+    } catch (error) {
+      chunkRenderer.finalize();
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+    }
+
+    this.isProcessing = false;
+  }
+
   private async buildPromptWithHistory(userInput: string): Promise<string> {
     const basePrompt = await this.promptBuilder.buildGenericPrompt(userInput);
 
@@ -385,5 +477,20 @@ export class InteractiveREPL {
 
   ${c.dim("Type /help for available commands")}
 `);
+  }
+}
+
+function formatInsightTag(type: DiscussionInsight["type"]): string {
+  switch (type) {
+    case "decision":
+      return c.green("[DECISION]");
+    case "requirement":
+      return c.blue("[REQUIREMENT]");
+    case "idea":
+      return c.yellow("[IDEA]");
+    case "concern":
+      return c.red("[CONCERN]");
+    case "learning":
+      return c.cyan("[LEARNING]");
   }
 }
