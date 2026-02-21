@@ -12,6 +12,7 @@ export { jobsCommand } from "./jobs";
 export { planCommand } from "./plan";
 export { reviewCommand } from "./review";
 export { runCommand } from "./run";
+export { setupJobsCommand } from "./setup-jobs";
 export { telegramCommand } from "./telegram";
 export { upgradeCommand } from "./upgrade";
 export { versionCommand } from "./version";

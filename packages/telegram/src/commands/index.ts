@@ -5,7 +5,12 @@ export {
   convertArtifactToPlan,
   showArtifact,
 } from "./artifacts.js";
-export { configCommand, modelCommand } from "./config.js";
+export {
+  configCommand,
+  modelCommand,
+  registerSetupJobsCallbacks,
+  setupJobsCommand,
+} from "./config.js";
 export { dashboardCommand } from "./dashboard.js";
 export { devCommand } from "./dev.js";
 export {

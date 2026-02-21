@@ -23,6 +23,8 @@ import {
   jobHistoryCommand,
   jobsCommand,
   modelCommand,
+  registerSetupJobsCallbacks,
+  setupJobsCommand,
   planCommand,
   plansCommand,
   rejectCommand,
@@ -138,6 +140,7 @@ export function createBot(config: TelegramConfig): CreateBotResult {
   bot.command("jobs", (ctx) => jobsCommand(ctx, config));
   bot.command("runjob", (ctx) => runJobCommand(ctx, executor));
   bot.command("jobhistory", (ctx) => jobHistoryCommand(ctx, config));
+  bot.command("setupjobs", (ctx) => setupJobsCommand(ctx, config));
 
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
@@ -167,6 +170,7 @@ export function createBot(config: TelegramConfig): CreateBotResult {
 
   // Register inline keyboard callback handlers
   registerCallbacks(bot, config, executor);
+  registerSetupJobsCallbacks(bot, config);
 
   // Register commands with Telegram for autocomplete menu
   bot.telegram
@@ -210,6 +214,7 @@ export function createBot(config: TelegramConfig): CreateBotResult {
       { command: "jobs", description: "List configured scan jobs" },
       { command: "runjob", description: "Manually trigger a job" },
       { command: "jobhistory", description: "Recent job run history" },
+      { command: "setupjobs", description: "Configure job system wizard" },
       { command: "config", description: "Show/update settings" },
       { command: "model", description: "View or switch AI model" },
       { command: "status", description: "Show running processes" },
