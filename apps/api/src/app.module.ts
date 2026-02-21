@@ -23,8 +23,10 @@ import { Suggestion } from "./entities/suggestion.entity";
 import { EventsModule } from "./events/events.module";
 import { HealthModule } from "./health/health.module";
 import { InvitationsModule } from "./invitations/invitations.module";
+import { JobsModule } from "./jobs/jobs.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { SprintsModule } from "./sprints/sprints.module";
+import { SuggestionsModule } from "./suggestions/suggestions.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { UsersModule } from "./users/users.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
@@ -75,6 +77,8 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     TasksModule,
     SprintsModule,
     InvitationsModule,
+    JobsModule,
+    SuggestionsModule,
     DocsModule,
     CiModule,
     AwsModule,

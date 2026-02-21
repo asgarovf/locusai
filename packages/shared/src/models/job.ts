@@ -68,3 +68,26 @@ export const JobRunSchema = z.object({
 });
 
 export type JobRun = z.infer<typeof JobRunSchema>;
+
+// ============================================================================
+// Create / Update Schemas
+// ============================================================================
+
+export const CreateJobRunSchema = z.object({
+  jobType: z.enum(JobType),
+  status: z.enum(JobStatus).optional().default(JobStatus.RUNNING),
+  startedAt: z.string().optional(),
+  error: z.string().optional(),
+  result: JobRunResultSchema.optional(),
+});
+
+export type CreateJobRun = z.infer<typeof CreateJobRunSchema>;
+
+export const UpdateJobRunSchema = z.object({
+  status: z.enum(JobStatus).optional(),
+  result: JobRunResultSchema.optional(),
+  error: z.string().nullable().optional(),
+  completedAt: z.string().optional(),
+});
+
+export type UpdateJobRun = z.infer<typeof UpdateJobRunSchema>;

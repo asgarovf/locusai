@@ -44,3 +44,26 @@ export const SuggestionSchema = z.object({
 });
 
 export type Suggestion = z.infer<typeof SuggestionSchema>;
+
+// ============================================================================
+// Create / Update Schemas
+// ============================================================================
+
+export const CreateSuggestionSchema = z.object({
+  type: z.enum(SuggestionType),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  jobRunId: z.string().uuid().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+  expiresAt: z.string().optional(),
+});
+
+export type CreateSuggestion = z.infer<typeof CreateSuggestionSchema>;
+
+export const UpdateSuggestionStatusSchema = z.object({
+  status: z.enum(SuggestionStatus),
+});
+
+export type UpdateSuggestionStatus = z.infer<
+  typeof UpdateSuggestionStatusSchema
+>;
