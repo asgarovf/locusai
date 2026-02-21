@@ -8,4 +8,4 @@ export type {
   JobFailedPayload,
   JobStartedPayload,
 } from "./job-runner.js";
-export { DependencyScanJob, LintScanJob, TodoScanJob } from "./scans/index.js";
+export { DependencyScanJob, LintScanJob, TestScanJob, TodoScanJob } from "./scans/index.js";
