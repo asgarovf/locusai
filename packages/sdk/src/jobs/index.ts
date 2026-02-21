@@ -20,3 +20,5 @@ export type {
   SchedulerStartedPayload,
 } from "./scheduler.js";
 export { DependencyScanJob, LintScanJob, TestScanJob, TodoScanJob } from "./scans/index.js";
+export { ContextGatherer, ProposalEngine } from "./proposals/index.js";
+export type { ArtifactFile, ProposalContext } from "./proposals/index.js";
