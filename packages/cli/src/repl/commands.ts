@@ -96,27 +96,25 @@ registry.register({
   },
 });
 
-// ── Navigation commands ───────────────────────────────────────
-
 registry.register({
   name: "history",
   aliases: ["hist"],
   description: "List recent sessions",
   usage: "/history [limit]",
-  category: "navigation",
+  category: "session",
   execute: (session, args) => showHistory(session, args),
 });
-
-// ── Config commands ───────────────────────────────────────────
 
 registry.register({
   name: "help",
   aliases: ["?", "h"],
-  description: "Show available commands",
+  description: "Show this help",
   usage: "/help",
-  category: "config",
+  category: "session",
   execute: () => registry.showHelp(),
 });
+
+// ── Config commands ───────────────────────────────────────────
 
 registry.register(providerCommand);
 registry.register(modelCommand);

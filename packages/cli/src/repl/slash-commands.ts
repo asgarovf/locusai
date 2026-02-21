@@ -7,7 +7,7 @@ import {
   type HistoryManager,
 } from "@locusai/sdk/node";
 
-export type SlashCommandCategory = "session" | "ai" | "config" | "navigation";
+export type SlashCommandCategory = "session" | "config" | "ai";
 
 export type REPLMode = "prompt" | "discussion";
 
@@ -59,18 +59,12 @@ export interface ParsedCommand {
 }
 
 const CATEGORY_LABELS: Record<SlashCommandCategory, string> = {
-  session: "Session",
+  session: "SESSION",
+  config: "CONFIG",
   ai: "AI",
-  config: "Configuration",
-  navigation: "Navigation",
 };
 
-const CATEGORY_ORDER: SlashCommandCategory[] = [
-  "session",
-  "ai",
-  "config",
-  "navigation",
-];
+const CATEGORY_ORDER: SlashCommandCategory[] = ["session", "config", "ai"];
 
 export class SlashCommandRegistry {
   private commands: Map<string, SlashCommand> = new Map();
@@ -159,21 +153,19 @@ export class SlashCommandRegistry {
   showHelp(): void {
     const grouped = this.getByCategory();
 
-    console.log(`\n  ${c.primary("Available Commands")}\n`);
+    // Find the longest command name for alignment
+    const allCmds = this.getAll();
+    const maxLen = Math.max(...allCmds.map((cmd) => cmd.name.length));
+    const pad = (name: string) => name.padEnd(maxLen + 2);
+
+    console.log();
 
     for (const [category, cmds] of grouped) {
       const label = CATEGORY_LABELS[category];
-      console.log(`  ${c.dim(`── ${label} ──`)}`);
+      console.log(`  ${c.dim(label)}`);
 
       for (const cmd of cmds) {
-        const aliasStr =
-          cmd.aliases.length > 0
-            ? ` ${c.dim(`(${cmd.aliases.map((a) => `/${a}`).join(", ")})`)}`
-            : "";
-        const usage = cmd.usage ? `  ${c.dim(cmd.usage)}` : "";
-        console.log(
-          `  ${c.success(`/${cmd.name}`)}${aliasStr}  ${cmd.description}${usage}`
-        );
+        console.log(`    ${c.success(`/${pad(cmd.name)}`)} ${cmd.description}`);
       }
       console.log();
     }

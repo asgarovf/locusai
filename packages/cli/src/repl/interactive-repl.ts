@@ -504,14 +504,25 @@ export class InteractiveREPL {
         ? `${c.dim(`(${messageCount} messages)`)}`
         : c.dim("(new)");
 
+    // Check if this is a first-run (no existing sessions)
+    const existingSessions = this.historyManager.listSessions({ limit: 1 });
+    const isFirstRun =
+      existingSessions.length === 0 ||
+      (existingSessions.length === 1 &&
+        existingSessions[0].id === this.currentSession.id &&
+        existingSessions[0].messages.length === 0);
+
+    const hint = isFirstRun
+      ? `\n  ${c.dim("Tip: Type a prompt to chat with AI, or try /discuss, /plan, /review")}`
+      : `\n  ${c.dim("Type /help for available commands")}`;
+
     console.log(`
   ${c.primary("Locus Interactive Mode")}
 
   ${c.dim("Session:")}  ${c.cyan(this.currentSession.id)} ${sessionStatus}
   ${c.dim("Provider:")} ${c.bold(this._provider)}
   ${c.dim("Model:")}    ${c.bold(this._model)}
-
-  ${c.dim("Type /help for available commands")}
+${hint}
 `);
   }
 }
