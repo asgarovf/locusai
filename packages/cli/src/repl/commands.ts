@@ -1,7 +1,9 @@
 import { c } from "@locusai/sdk/node";
+import { artifactsCommand } from "./commands/artifacts-command";
 import { modelCommand, providerCommand } from "./commands/config-commands";
 import { discussCommand } from "./commands/discuss-command";
 import { planCommand } from "./commands/plan-command";
+import { reviewCommand } from "./commands/review-command";
 import {
   type REPLSession,
   type SlashCommand,
@@ -98,6 +100,8 @@ registry.register(modelCommand);
 
 registry.register(discussCommand);
 registry.register(planCommand);
+registry.register(reviewCommand);
+registry.register(artifactsCommand);
 
 /**
  * Parse user input and return matching command if found.
