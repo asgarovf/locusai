@@ -1,6 +1,13 @@
 import { c } from "@locusai/sdk/node";
 import type { InteractiveSession } from "./interactive-session";
+import { type SlashCommand, SlashCommandRegistry } from "./slash-commands";
 
+export type { SlashCommand };
+export { SlashCommandRegistry };
+
+/**
+ * Legacy interface kept for type compatibility.
+ */
 export interface ReplCommand {
   name: string;
   aliases: string[];
@@ -9,90 +16,113 @@ export interface ReplCommand {
 }
 
 /**
- * Built-in REPL commands for the interactive session.
+ * The global slash command registry.
+ * All built-in commands are registered here at module load time.
  */
-export const REPL_COMMANDS: ReplCommand[] = [
-  {
-    name: "exit",
-    aliases: ["quit", "q"],
-    description: "Exit interactive mode",
-    execute: (session) => session.shutdown(),
+export const registry = new SlashCommandRegistry();
+
+// ── Session commands ──────────────────────────────────────────
+
+registry.register({
+  name: "exit",
+  aliases: ["quit", "q"],
+  description: "Exit interactive mode",
+  usage: "/exit",
+  category: "session",
+  execute: (session) => session.shutdown(),
+});
+
+registry.register({
+  name: "clear",
+  aliases: ["cls"],
+  description: "Clear the screen",
+  usage: "/clear",
+  category: "session",
+  execute: () => console.clear(),
+});
+
+registry.register({
+  name: "reset",
+  aliases: ["r"],
+  description: "Reset conversation context",
+  usage: "/reset",
+  category: "session",
+  execute: (session) => session.resetContext(),
+});
+
+registry.register({
+  name: "session",
+  aliases: ["sid"],
+  description: "Show current session ID",
+  usage: "/session",
+  category: "session",
+  execute: (session) => {
+    console.log(
+      `\n  ${c.dim("Session ID:")} ${c.cyan(session.getSessionId())}\n`
+    );
   },
-  {
-    name: "clear",
-    aliases: ["cls"],
-    description: "Clear the screen",
-    execute: () => console.clear(),
-  },
-  {
-    name: "help",
-    aliases: ["?", "h"],
-    description: "Show available commands",
-    execute: () => showHelp(),
-  },
-  {
-    name: "reset",
-    aliases: ["r"],
-    description: "Reset conversation context",
-    execute: (session) => session.resetContext(),
-  },
-  {
-    name: "history",
-    aliases: ["hist"],
-    description: "List recent sessions",
-    execute: (session, args) => showHistory(session, args),
-  },
-  {
-    name: "session",
-    aliases: ["sid"],
-    description: "Show current session ID",
-    execute: (session) => {
-      console.log(
-        `\n  ${c.dim("Session ID:")} ${c.cyan(session.getSessionId())}\n`
-      );
-    },
-  },
-];
+});
+
+// ── Navigation commands ───────────────────────────────────────
+
+registry.register({
+  name: "history",
+  aliases: ["hist"],
+  description: "List recent sessions",
+  usage: "/history [limit]",
+  category: "navigation",
+  execute: (session, args) => showHistory(session, args),
+});
+
+// ── Config commands ───────────────────────────────────────────
+
+registry.register({
+  name: "help",
+  aliases: ["?", "h"],
+  description: "Show available commands",
+  usage: "/help",
+  category: "config",
+  execute: () => registry.showHelp(),
+});
 
 /**
  * Parse user input and return matching command if found.
+ * Supports both "/command" and bare-word syntax for backward compatibility.
  */
-export function parseCommand(input: string): ReplCommand | null {
-  const lowerInput = input.toLowerCase();
+export function parseCommand(
+  input: string
+): { command: ReplCommand; args: string } | null {
+  const result = registry.parse(input);
+  if (!result) return null;
 
-  for (const cmd of REPL_COMMANDS) {
-    if (lowerInput === cmd.name || cmd.aliases.includes(lowerInput)) {
-      return cmd;
-    }
-  }
-
-  return null;
+  // Map SlashCommand back to ReplCommand shape for callers that expect it
+  return {
+    command: {
+      name: result.command.name,
+      aliases: result.command.aliases,
+      description: result.command.description,
+      execute: result.command.execute,
+    },
+    args: result.args,
+  };
 }
 
 /**
- * Display help for all available REPL commands.
+ * Legacy export — flat list of all registered commands as ReplCommand[].
  */
-function showHelp(): void {
-  console.log(`
-  ${c.primary("Available Commands")}
-
-  ${c.success("exit")} / ${c.dim("quit, q")}       Exit interactive mode
-  ${c.success("clear")} / ${c.dim("cls")}          Clear the screen
-  ${c.success("help")} / ${c.dim("?, h")}          Show this help message
-  ${c.success("reset")} / ${c.dim("r")}            Reset conversation context
-  ${c.success("history")} / ${c.dim("hist")}       List recent sessions
-  ${c.success("session")} / ${c.dim("sid")}        Show current session ID
-
-  ${c.dim("Any other input will be sent as a prompt to the AI.")}
-`);
-}
+export const REPL_COMMANDS: ReplCommand[] = registry.getAll().map((cmd) => ({
+  name: cmd.name,
+  aliases: cmd.aliases,
+  description: cmd.description,
+  execute: cmd.execute,
+}));
 
 /**
  * Display session history.
  */
 function showHistory(session: InteractiveSession, args?: string): void {
   const historyManager = session.getHistoryManager();
-  const limit = args ? parseInt(args, 10) : 10;
+  const limit = args ? Number.parseInt(args, 10) : 10;
   const sessions = historyManager.listSessions({
     limit: Number.isNaN(limit) ? 10 : limit,
   });

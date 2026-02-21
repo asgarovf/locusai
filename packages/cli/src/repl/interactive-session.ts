@@ -159,9 +159,9 @@ export class InteractiveSession {
 
     // Check for special commands (only if single line)
     if (!trimmed.includes("\n")) {
-      const command = parseCommand(trimmed);
-      if (command) {
-        await command.execute(this, trimmed.slice(command.name.length).trim());
+      const parsed = parseCommand(trimmed);
+      if (parsed) {
+        await parsed.command.execute(this, parsed.args);
         if (this.readline) this.readline.prompt();
         return;
       }
