@@ -7,6 +7,7 @@ export { SessionCommands, showSessionsHelp } from "./exec-sessions";
 export { showHelp } from "./help";
 export { indexCommand } from "./index-codebase";
 export { initCommand } from "./init";
+export { jobsCommand } from "./jobs";
 export { planCommand } from "./plan";
 export { reviewCommand } from "./review";
 export { runCommand } from "./run";

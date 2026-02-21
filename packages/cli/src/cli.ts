@@ -9,6 +9,7 @@ import {
   execCommand,
   indexCommand,
   initCommand,
+  jobsCommand,
   planCommand,
   reviewCommand,
   runCommand,
@@ -66,6 +67,9 @@ async function main() {
       break;
     case "config":
       await configCommand(args);
+      break;
+    case "jobs":
+      await jobsCommand(args);
       break;
     case "docs":
       await docsCommand(args);

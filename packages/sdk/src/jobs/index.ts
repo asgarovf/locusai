@@ -8,4 +8,5 @@ export type {
   JobFailedPayload,
   JobStartedPayload,
 } from "./job-runner.js";
+export { createDefaultRegistry } from "./default-registry.js";
 export { DependencyScanJob, LintScanJob, TestScanJob, TodoScanJob } from "./scans/index.js";
