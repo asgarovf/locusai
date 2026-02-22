@@ -164,7 +164,9 @@ export class InteractiveSession {
       const images = detectImages(prompt);
       if (images.length > 0) {
         for (const img of images) {
-          const status = img.exists ? c.success("attached") : c.warning("not found");
+          const status = img.exists
+            ? c.success("attached")
+            : c.warning("not found");
           process.stdout.write(
             `  ${c.cyan(`[Image: ${imageDisplayName(img.path)}]`)} ${status}\r\n`
           );

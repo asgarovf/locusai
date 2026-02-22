@@ -1,5 +1,6 @@
 export { artifactsCommand } from "./artifacts";
 export { configCommand } from "./config";
+export { daemonCommand } from "./daemon";
 export { discussCommand } from "./discuss";
 export { docsCommand } from "./docs";
 export { execCommand } from "./exec";
@@ -7,9 +8,11 @@ export { SessionCommands, showSessionsHelp } from "./exec-sessions";
 export { showHelp } from "./help";
 export { indexCommand } from "./index-codebase";
 export { initCommand } from "./init";
+export { jobsCommand } from "./jobs";
 export { planCommand } from "./plan";
 export { reviewCommand } from "./review";
 export { runCommand } from "./run";
+export { setupJobsCommand } from "./setup-jobs";
 export { telegramCommand } from "./telegram";
 export { upgradeCommand } from "./upgrade";
 export { versionCommand } from "./version";

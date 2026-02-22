@@ -5,8 +5,10 @@ import { CiModule } from "./modules/ci.js";
 import { DocsModule } from "./modules/docs.js";
 import { InstancesModule } from "./modules/instances.js";
 import { InvitationsModule } from "./modules/invitations.js";
+import { JobsModule } from "./modules/jobs.js";
 import { OrganizationsModule } from "./modules/organizations.js";
 import { SprintsModule } from "./modules/sprints.js";
+import { SuggestionsModule } from "./modules/suggestions.js";
 import { TasksModule } from "./modules/tasks.js";
 import { WorkspacesModule } from "./modules/workspaces.js";
 import { RetryOptions } from "./utils/retry.js";
@@ -29,8 +31,10 @@ export * from "./modules/ci.js";
 export * from "./modules/docs.js";
 export * from "./modules/instances.js";
 export * from "./modules/invitations.js";
+export * from "./modules/jobs.js";
 export * from "./modules/organizations.js";
 export * from "./modules/sprints.js";
+export * from "./modules/suggestions.js";
 export * from "./modules/tasks.js";
 export * from "./modules/workspaces.js";
 
@@ -47,6 +51,8 @@ export class LocusClient {
   public readonly docs: DocsModule;
   public readonly ci: CiModule;
   public readonly instances: InstancesModule;
+  public readonly jobs: JobsModule;
+  public readonly suggestions: SuggestionsModule;
 
   constructor(config: LocusConfig) {
     this.emitter = new LocusEmitter();
@@ -72,6 +78,8 @@ export class LocusClient {
     this.docs = new DocsModule(this.api, this.emitter);
     this.ci = new CiModule(this.api, this.emitter);
     this.instances = new InstancesModule(this.api, this.emitter);
+    this.jobs = new JobsModule(this.api, this.emitter);
+    this.suggestions = new SuggestionsModule(this.api, this.emitter);
 
     if (config.retryOptions) {
       this.setupRetryInterceptor(config.retryOptions);

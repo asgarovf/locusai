@@ -23,7 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build": "bun build ./src/index.ts ./src/index-node.ts ./src/agent/worker.ts --outdir ./dist --target node --format cjs --external axios --external events --external globby --external @locusai/shared --external zod --external node-cron && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "test": "bun test",
@@ -35,10 +35,12 @@
     "axios": "^1.13.2",
     "events": "^3.3.0",
     "globby": "^14.0.2",
+    "node-cron": "^3.0.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "@types/node": "^22.10.7"
+    "@types/node": "^22.10.7",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.8.3"
   }
 }

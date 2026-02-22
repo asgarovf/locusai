@@ -4,14 +4,17 @@ import { c } from "@locusai/sdk/node";
 import {
   artifactsCommand,
   configCommand,
+  daemonCommand,
   discussCommand,
   docsCommand,
   execCommand,
   indexCommand,
   initCommand,
+  jobsCommand,
   planCommand,
   reviewCommand,
   runCommand,
+  setupJobsCommand,
   showHelp,
   telegramCommand,
   upgradeCommand,
@@ -66,6 +69,15 @@ async function main() {
       break;
     case "config":
       await configCommand(args);
+      break;
+    case "jobs":
+      await jobsCommand(args);
+      break;
+    case "setup-jobs":
+      await setupJobsCommand(args);
+      break;
+    case "daemon":
+      await daemonCommand(args);
       break;
     case "docs":
       await docsCommand(args);

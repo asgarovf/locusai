@@ -22,6 +22,8 @@ export * from "./exec/index.js";
 export * from "./git/index.js";
 // Re-export everything from main index (browser-safe)
 export * from "./index.js";
+// Node.js-only: Job runner framework
+export * from "./jobs/index.js";
 // Node.js-only: Orchestrator
 export {
   AgentOrchestrator,

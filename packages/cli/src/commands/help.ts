@@ -36,6 +36,16 @@ export function showHelp(): void {
               ${c.dim("sessions show <id> Show session messages")}
               ${c.dim("sessions delete <id> Delete a session")}
               ${c.dim("sessions clear     Clear all sessions")}
+    ${c.success("jobs")}      Manage and run autonomous scan jobs
+              ${c.dim("list              Show all jobs with status")}
+              ${c.dim("run [type]        Run a job or all enabled jobs")}
+              ${c.dim("enable <type>     Enable a job type")}
+              ${c.dim("disable <type>    Disable a job type")}
+              ${c.dim("config <type>     Show/edit job config")}
+    ${c.success("daemon")}    Run the job scheduling daemon
+              ${c.dim("start             Start daemon (foreground)")}
+              ${c.dim("status            Check if daemon is running")}
+              ${c.dim("stop              Stop the running daemon")}
     ${c.success("artifacts")} List and manage knowledge artifacts
               ${c.dim("show <name>        Show artifact content")}
               ${c.dim("plan <name>        Convert artifact to a plan")}
@@ -68,6 +78,9 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary('locus discuss "how should we design the auth system?"')}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
     ${c.dim("$")} ${c.primary("locus artifacts")}
+    ${c.dim("$")} ${c.primary("locus jobs list")}
+    ${c.dim("$")} ${c.primary("locus jobs run lint")}
+    ${c.dim("$")} ${c.primary("locus daemon start")}
 
   For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);

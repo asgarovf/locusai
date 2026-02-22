@@ -143,9 +143,7 @@ export async function discussCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  console.log(
-    `  ${c.dim("Type your response, or 'help' for commands.")}`
-  );
+  console.log(`  ${c.dim("Type your response, or 'help' for commands.")}`);
   console.log(
     `  ${c.dim("Enter to send, Shift+Enter for newline. Use 'exit' or Ctrl+D to quit.")}\n`
   );
@@ -202,8 +200,7 @@ export async function discussCommand(args: string[]): Promise<void> {
 
         try {
           summaryRenderer.showThinkingStarted();
-          const summary =
-            await facilitator.summarizeDiscussion(discussionId);
+          const summary = await facilitator.summarizeDiscussion(discussionId);
           summaryRenderer.showThinkingStopped();
 
           process.stdout.write("\n");
@@ -250,7 +247,9 @@ export async function discussCommand(args: string[]): Promise<void> {
     const images = detectImages(trimmed);
     if (images.length > 0) {
       for (const img of images) {
-        const status = img.exists ? c.success("attached") : c.warning("not found");
+        const status = img.exists
+          ? c.success("attached")
+          : c.warning("not found");
         process.stdout.write(
           `  ${c.cyan(`[Image: ${imageDisplayName(img.path)}]`)} ${status}\r\n`
         );
