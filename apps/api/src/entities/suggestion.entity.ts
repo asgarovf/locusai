@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { JobRun } from "./job-run.entity";
 import { Workspace } from "./workspace.entity";
 
 @Entity("suggestions")
@@ -36,10 +35,6 @@ export class Suggestion {
 
   @Column({ name: "job_run_id", nullable: true })
   jobRunId: string;
-
-  @ManyToOne(() => JobRun, { onDelete: "SET NULL", nullable: true })
-  @JoinColumn({ name: "job_run_id" })
-  jobRun: JobRun;
 
   @Index()
   @Column({ name: "workspace_id" })

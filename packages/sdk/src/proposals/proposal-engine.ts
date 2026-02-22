@@ -1,6 +1,6 @@
 import { type Suggestion, SuggestionType } from "@locusai/shared";
-import { createAiRunner } from "../../ai/factory.js";
-import type { LocusClient } from "../../index.js";
+import { createAiRunner } from "../ai/factory.js";
+import type { LocusClient } from "../index.js";
 import { ContextGatherer, type ProposalContext } from "./context-gatherer.js";
 
 // ============================================================================
@@ -105,21 +105,6 @@ export class ProposalEngine {
       "You are a proactive software engineering advisor. Based on the project context below, propose 1-3 high-value next steps the team should take. Focus on actionable, impactful work."
     );
 
-    // Recent job results
-    if (context.jobRuns.length > 0) {
-      const jobSummaries = context.jobRuns
-        .filter((j) => j.result)
-        .map(
-          (j) =>
-            `- [${j.jobType}] ${j.status}: ${j.result?.summary ?? "No summary"} (${j.result?.filesChanged ?? 0} files changed)`
-        )
-        .join("\n");
-
-      if (jobSummaries) {
-        sections.push(`## Recent Job Results\n${jobSummaries}`);
-      }
-    }
-
     // Sprint state
     if (context.activeSprint) {
       const sprintInfo = `Sprint: ${context.activeSprint.name} (${context.activeSprint.status})`;
@@ -180,7 +165,6 @@ PROPOSAL_END
 
 Rules:
 - Focus on what would deliver the most value right now
-- Consider what the recent job results revealed (bugs, tech debt, missing tests)
 - Align with the current sprint goals when possible
 - Don't propose things that are already in progress
 - Don't re-propose previously skipped suggestions

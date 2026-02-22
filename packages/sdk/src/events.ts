@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-
 import { RetryOptions } from "./utils/retry.js";
 
 export enum LocusEvent {

@@ -7,7 +7,7 @@ export * from "./ci";
 export * from "./doc";
 export * from "./doc-group";
 export * from "./invitation";
-export * from "./job";
+
 export * from "./organization";
 export * from "./sprint";
 export * from "./suggestion";

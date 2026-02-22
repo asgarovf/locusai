@@ -8,8 +8,6 @@ export {
 export {
   configCommand,
   modelCommand,
-  registerSetupJobsCallbacks,
-  setupJobsCommand,
 } from "./config.js";
 export { dashboardCommand } from "./dashboard.js";
 export { devCommand } from "./dev.js";
@@ -23,7 +21,6 @@ export {
 export { execCommand } from "./exec.js";
 export { gitCommand } from "./git.js";
 export { helpCommand, startCommand } from "./help.js";
-export { jobHistoryCommand, jobsCommand, runJobCommand } from "./jobs.js";
 export {
   approveCommand,
   cancelCommand,

@@ -3,6 +3,7 @@
 import "dotenv/config";
 import { createBot } from "./bot.js";
 import { resolveConfig } from "./config.js";
+import { ProposalScheduler } from "./scheduler.js";
 
 async function main(): Promise<void> {
   console.log("Locus Telegram Bot");
@@ -16,11 +17,16 @@ async function main(): Promise<void> {
   console.log(`API Key: ${config.apiKey ? "configured" : "not set"}`);
   console.log("----------------------------------------------\n");
 
-  const { bot } = createBot(config);
+  const { bot, notifier } = createBot(config);
+
+  // Start proposal scheduler (embedded — replaces standalone daemon)
+  const scheduler = new ProposalScheduler(config, notifier);
+  await scheduler.start();
 
   // Graceful shutdown
   const shutdown = (signal: string) => {
     console.log(`\nReceived ${signal}. Shutting down...`);
+    scheduler.stop();
     bot.stop(signal);
     process.exit(0);
   };

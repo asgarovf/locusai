@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, mock } from "bun:test";
 import { EventEmitter } from "events";
 import type { Suggestion, SuggestionStatus, SuggestionType } from "@locusai/shared";
-import { JobNotifier } from "../notifications.js";
+import { Notifier } from "../notifications.js";
 
 // ── Mock Telegraf bot ──────────────────────────────────────────────────
 
@@ -42,128 +42,14 @@ function makeSuggestion(
 
 // ── Tests ──────────────────────────────────────────────────────────────
 
-describe("JobNotifier", () => {
+describe("Notifier", () => {
   let mockBot: ReturnType<typeof createMockBot>;
-  let notifier: JobNotifier;
+  let notifier: Notifier;
   const CHAT_ID = 12345;
 
   beforeEach(() => {
     mockBot = createMockBot();
-    notifier = new JobNotifier(mockBot.bot, CHAT_ID);
-  });
-
-  describe("notifyJobStarted", () => {
-    it("sends a formatted start message", async () => {
-      await notifier.notifyJobStarted("LINT_SCAN", "Lint Scan");
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      const msg = mockBot.sentMessages[0];
-      expect(msg.chatId).toBe(CHAT_ID);
-      expect(msg.text).toContain("Starting");
-      expect(msg.text).toContain("Lint Scan");
-      expect(msg.text).toContain("LINT_SCAN");
-      expect(msg.options.parse_mode).toBe("HTML");
-    });
-  });
-
-  describe("notifyJobCompleted", () => {
-    it("sends correctly formatted completion message", async () => {
-      await notifier.notifyJobCompleted({
-        jobType: "LINT_SCAN",
-        jobRunId: "run-1",
-        result: {
-          summary: "Fixed 3 lint issues",
-          suggestions: [
-            {
-              type: "CODE_FIX",
-              title: "Fix errors",
-              description: "desc",
-            },
-          ],
-          filesChanged: 5,
-        },
-      });
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("Lint Scan");
-      expect(msg.text).toContain("completed");
-      expect(msg.text).toContain("Fixed 3 lint issues");
-      expect(msg.text).toContain("Files changed:");
-      expect(msg.text).toContain("5");
-      expect(msg.text).toContain("Suggestions:");
-      expect(msg.text).toContain("1");
-    });
-
-    it("includes PR link when present", async () => {
-      await notifier.notifyJobCompleted({
-        jobType: "LINT_SCAN",
-        jobRunId: "run-1",
-        result: {
-          summary: "Auto-fixed issues",
-          suggestions: [],
-          filesChanged: 2,
-          prUrl: "https://github.com/org/repo/pull/42",
-        },
-      });
-
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("PR:");
-      expect(msg.text).toContain("https://github.com/org/repo/pull/42");
-    });
-
-    it("includes errors when present", async () => {
-      await notifier.notifyJobCompleted({
-        jobType: "DEPENDENCY_CHECK",
-        jobRunId: "run-2",
-        result: {
-          summary: "Dependency check done",
-          suggestions: [],
-          filesChanged: 0,
-          errors: ["Could not parse package.json", "npm audit failed"],
-        },
-      });
-
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("Errors:");
-      expect(msg.text).toContain("Could not parse package.json");
-      expect(msg.text).toContain("npm audit failed");
-    });
-
-    it("displays correct job name for DEPENDENCY_CHECK", async () => {
-      await notifier.notifyJobCompleted({
-        jobType: "DEPENDENCY_CHECK",
-        jobRunId: "run-1",
-        result: {
-          summary: "All up to date",
-          suggestions: [],
-          filesChanged: 0,
-        },
-      });
-
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("Dependency Check");
-    });
-  });
-
-  describe("notifyJobFailed", () => {
-    it("sends error message with job name and error text", async () => {
-      await notifier.notifyJobFailed("LINT_SCAN", "Linter binary not found");
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("Lint Scan");
-      expect(msg.text).toContain("failed");
-      expect(msg.text).toContain("Linter binary not found");
-      expect(msg.options.parse_mode).toBe("HTML");
-    });
-
-    it("displays correct job name for TODO_CLEANUP", async () => {
-      await notifier.notifyJobFailed("TODO_CLEANUP", "scan error");
-
-      const msg = mockBot.sentMessages[0];
-      expect(msg.text).toContain("TODO Cleanup");
-    });
+    notifier = new Notifier(mockBot.bot, CHAT_ID);
   });
 
   describe("notifyProposal", () => {
@@ -306,60 +192,6 @@ describe("JobNotifier", () => {
   });
 
   describe("connect", () => {
-    it("subscribes to JOB_STARTED events", async () => {
-      const emitter = new EventEmitter();
-      notifier.connect(emitter);
-
-      emitter.emit("JOB_STARTED", {
-        jobType: "LINT_SCAN",
-        jobRunId: "run-1",
-      });
-
-      // Wait for async handler
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      expect(mockBot.sentMessages[0].text).toContain("Lint Scan");
-    });
-
-    it("subscribes to JOB_COMPLETED events", async () => {
-      const emitter = new EventEmitter();
-      notifier.connect(emitter);
-
-      emitter.emit("JOB_COMPLETED", {
-        jobType: "DEPENDENCY_CHECK",
-        jobRunId: "run-2",
-        result: {
-          summary: "Done",
-          suggestions: [],
-          filesChanged: 0,
-        },
-      });
-
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      expect(mockBot.sentMessages[0].text).toContain("Dependency Check");
-      expect(mockBot.sentMessages[0].text).toContain("completed");
-    });
-
-    it("subscribes to JOB_FAILED events", async () => {
-      const emitter = new EventEmitter();
-      notifier.connect(emitter);
-
-      emitter.emit("JOB_FAILED", {
-        jobType: "FLAKY_TEST_DETECTION",
-        jobRunId: "run-3",
-        error: "Test runner crashed",
-      });
-
-      await new Promise((r) => setTimeout(r, 50));
-
-      expect(mockBot.sentMessages).toHaveLength(1);
-      expect(mockBot.sentMessages[0].text).toContain("Flaky Test Detection");
-      expect(mockBot.sentMessages[0].text).toContain("Test runner crashed");
-    });
-
     it("subscribes to PROPOSALS_GENERATED and sends individual proposal notifications", async () => {
       const emitter = new EventEmitter();
       notifier.connect(emitter);

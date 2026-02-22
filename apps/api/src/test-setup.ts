@@ -47,10 +47,6 @@ jest.mock("@/entities/aws-instance.entity", () => ({
   AwsInstance: class {},
 }));
 
-jest.mock("@/entities/job-run.entity", () => ({
-  JobRun: class {},
-}));
-
 jest.mock("@/entities/suggestion.entity", () => ({
   Suggestion: class {},
 }));

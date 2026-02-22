@@ -143,7 +143,8 @@ async function setupCommand(
     ${c.primary("Chat ID:")}  ${parsedChatId}
 
   ${c.bold("Next steps:")}
-    Start the bot with: ${c.primary("locus telegram run")}
+    Install as service: ${c.primary("locus service install")}
+    Or run manually:    ${c.primary("locus telegram run")}
 `);
 }
 

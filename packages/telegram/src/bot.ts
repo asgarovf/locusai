@@ -20,18 +20,13 @@ import {
   gitCommand,
   hasActiveDiscussion,
   helpCommand,
-  jobHistoryCommand,
-  jobsCommand,
   modelCommand,
   planCommand,
   plansCommand,
-  registerSetupJobsCallbacks,
   rejectCommand,
   rejectTaskCommand,
   reviewCommand,
   runCommand,
-  runJobCommand,
-  setupJobsCommand,
   sprintsCommand,
   startCommand,
   statusCommand,
@@ -44,12 +39,12 @@ import {
 import type { TelegramConfig } from "./config.js";
 import { CliExecutor } from "./executor.js";
 import { formatError } from "./formatter.js";
-import { JobNotifier } from "./notifications.js";
+import { Notifier } from "./notifications.js";
 import { HANDLER_TIMEOUT } from "./timeouts.js";
 
 export interface CreateBotResult {
   bot: Telegraf;
-  notifier: JobNotifier;
+  notifier: Notifier;
 }
 
 export function createBot(config: TelegramConfig): CreateBotResult {
@@ -59,7 +54,7 @@ export function createBot(config: TelegramConfig): CreateBotResult {
     handlerTimeout: HANDLER_TIMEOUT,
   });
   const executor = new CliExecutor(config);
-  const notifier = new JobNotifier(bot, config.chatId);
+  const notifier = new Notifier(bot, config.chatId);
 
   // Auth middleware — only allow configured chat ID
   bot.use(async (ctx, next) => {
@@ -136,12 +131,6 @@ export function createBot(config: TelegramConfig): CreateBotResult {
   // Artifacts command
   bot.command("artifacts", (ctx) => artifactsCommand(ctx, config));
 
-  // Job commands
-  bot.command("jobs", (ctx) => jobsCommand(ctx, config));
-  bot.command("runjob", (ctx) => runJobCommand(ctx, executor));
-  bot.command("jobhistory", (ctx) => jobHistoryCommand(ctx, config));
-  bot.command("setupjobs", (ctx) => setupJobsCommand(ctx, config));
-
   // Activity feed
   bot.command("activity", (ctx) => activityCommand(ctx, config));
 
@@ -170,7 +159,6 @@ export function createBot(config: TelegramConfig): CreateBotResult {
 
   // Register inline keyboard callback handlers
   registerCallbacks(bot, config, executor);
-  registerSetupJobsCallbacks(bot, config);
 
   // Register commands with Telegram for autocomplete menu
   bot.telegram
@@ -211,10 +199,6 @@ export function createBot(config: TelegramConfig): CreateBotResult {
         command: "enddiscuss",
         description: "End active discussion & summarize",
       },
-      { command: "jobs", description: "List configured scan jobs" },
-      { command: "runjob", description: "Manually trigger a job" },
-      { command: "jobhistory", description: "Recent job run history" },
-      { command: "setupjobs", description: "Configure job system wizard" },
       { command: "config", description: "Show/update settings" },
       { command: "model", description: "View or switch AI model" },
       { command: "status", description: "Show running processes" },

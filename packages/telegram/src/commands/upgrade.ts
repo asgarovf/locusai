@@ -72,16 +72,14 @@ function getRestartInfo(): {
   if (platform === "linux") {
     return {
       label: "systemd (Linux)",
-      commands: [
-        { cmd: "sudo", args: ["systemctl", "restart", "locus-telegram"] },
-      ],
+      commands: [{ cmd: "sudo", args: ["systemctl", "restart", "locus"] }],
     };
   }
 
   if (platform === "darwin") {
     const plistPath = join(
       homedir(),
-      "Library/LaunchAgents/com.locus.telegram.plist"
+      "Library/LaunchAgents/com.locus.agent.plist"
     );
     return {
       label: "launchctl (macOS)",

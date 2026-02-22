@@ -4,58 +4,7 @@ import type { Telegraf } from "telegraf";
 import { Markup } from "telegraf";
 import { escapeHtml, truncateOutput } from "./formatter.js";
 
-// Job event names (mirrored from @locusai/sdk/node JobEvent enum to avoid
-// pulling in Node-only exports at the package level).
-const JOB_STARTED = "JOB_STARTED";
-const JOB_COMPLETED = "JOB_COMPLETED";
-const JOB_FAILED = "JOB_FAILED";
 const PROPOSALS_GENERATED = "PROPOSALS_GENERATED";
-
-// ── Job result types (structural — avoids hard dependency on sdk/node) ──
-
-interface JobResultPayload {
-  summary: string;
-  suggestions: Array<{
-    type: string;
-    title: string;
-    description: string;
-    metadata?: Record<string, unknown>;
-  }>;
-  filesChanged: number;
-  prUrl?: string;
-  errors?: string[];
-}
-
-interface JobStartedPayload {
-  jobType: string;
-  jobRunId: string;
-}
-
-interface JobCompletedPayload {
-  jobType: string;
-  jobRunId: string;
-  result: JobResultPayload;
-}
-
-interface JobFailedPayload {
-  jobType: string;
-  jobRunId: string;
-  error: string;
-}
-
-// ── Display names ───────────────────────────────────────────────────────
-
-const JOB_DISPLAY_NAMES: Record<string, string> = {
-  LINT_SCAN: "Lint Scan",
-  DEPENDENCY_CHECK: "Dependency Check",
-  TODO_CLEANUP: "TODO Cleanup",
-  FLAKY_TEST_DETECTION: "Flaky Test Detection",
-  CUSTOM: "Custom",
-};
-
-function formatJobName(jobType: string): string {
-  return JOB_DISPLAY_NAMES[jobType] ?? jobType;
-}
 
 // ── Complexity display ──────────────────────────────────────────────────
 
@@ -76,49 +25,26 @@ const SUGGESTION_TYPE_ICONS: Record<string, string> = {
 };
 
 // ============================================================================
-// JobNotifier
+// Notifier
 // ============================================================================
 
 /**
- * Sends Telegram messages in response to job lifecycle events.
+ * Sends Telegram messages in response to proposal/suggestion events.
  *
  * Usage:
- *   const notifier = new JobNotifier(bot, chatId);
- *   notifier.connect(client.emitter); // subscribes to JOB_* events
+ *   const notifier = new Notifier(bot, chatId);
+ *   notifier.connect(client.emitter); // subscribes to events
  */
-export class JobNotifier {
+export class Notifier {
   constructor(
     private readonly bot: Telegraf,
     private readonly chatId: number
   ) {}
 
   /**
-   * Subscribe to job lifecycle events on the given emitter.
-   * Typically called with `client.emitter` from a LocusClient that
-   * is also used by a JobRunner / JobScheduler.
+   * Subscribe to proposal events on the given emitter.
    */
   connect(emitter: EventEmitter): void {
-    emitter.on(JOB_STARTED, (payload: JobStartedPayload) => {
-      this.notifyJobStarted(
-        payload.jobType,
-        formatJobName(payload.jobType)
-      ).catch((err) =>
-        console.error("[notifier] Failed to send JOB_STARTED:", err)
-      );
-    });
-
-    emitter.on(JOB_COMPLETED, (payload: JobCompletedPayload) => {
-      this.notifyJobCompleted(payload).catch((err) =>
-        console.error("[notifier] Failed to send JOB_COMPLETED:", err)
-      );
-    });
-
-    emitter.on(JOB_FAILED, (payload: JobFailedPayload) => {
-      this.notifyJobFailed(payload.jobType, payload.error).catch((err) =>
-        console.error("[notifier] Failed to send JOB_FAILED:", err)
-      );
-    });
-
     emitter.on(
       PROPOSALS_GENERATED,
       (payload: { suggestions: Suggestion[] }) => {
@@ -129,61 +55,6 @@ export class JobNotifier {
         }
       }
     );
-  }
-
-  // ── Lifecycle notifications ─────────────────────────────────────────
-
-  async notifyJobStarted(jobType: string, jobName: string): Promise<void> {
-    const msg =
-      `🔄 <b>Starting:</b> ${escapeHtml(jobName)}\n` +
-      `<b>Type:</b> <code>${escapeHtml(jobType)}</code>`;
-
-    await this.bot.telegram.sendMessage(this.chatId, msg, {
-      parse_mode: "HTML",
-    });
-  }
-
-  async notifyJobCompleted(payload: JobCompletedPayload): Promise<void> {
-    const { jobType, result } = payload;
-    const jobName = formatJobName(jobType);
-
-    let msg = `✅ <b>${escapeHtml(jobName)}</b> completed\n\n`;
-    msg += `${escapeHtml(truncateOutput(result.summary, 500))}\n\n`;
-    msg += `<b>Files changed:</b> ${result.filesChanged}\n`;
-    msg += `<b>Suggestions:</b> ${result.suggestions.length}\n`;
-
-    if (result.prUrl) {
-      msg += `<b>PR:</b> <a href="${escapeHtml(result.prUrl)}">${escapeHtml(result.prUrl)}</a>\n`;
-    }
-
-    if (result.errors?.length) {
-      msg += "\n<b>Errors:</b>\n";
-      for (const err of result.errors.slice(0, 5)) {
-        msg += `⚠️ ${escapeHtml(err)}\n`;
-      }
-    }
-
-    const buttons: ReturnType<typeof Markup.button.url>[][] = [];
-    if (result.prUrl) {
-      buttons.push([Markup.button.url("🔗 View PR", result.prUrl)]);
-    }
-
-    await this.bot.telegram.sendMessage(this.chatId, msg, {
-      parse_mode: "HTML",
-      link_preview_options: { is_disabled: true },
-      ...(buttons.length > 0 ? Markup.inlineKeyboard(buttons) : {}),
-    });
-  }
-
-  async notifyJobFailed(jobType: string, error: string): Promise<void> {
-    const jobName = formatJobName(jobType);
-    const msg =
-      `❌ <b>${escapeHtml(jobName)}</b> failed\n\n` +
-      `<b>Error:</b> ${escapeHtml(truncateOutput(error, 1000))}`;
-
-    await this.bot.telegram.sendMessage(this.chatId, msg, {
-      parse_mode: "HTML",
-    });
   }
 
   // ── Proposal notification ──────────────────────────────────────────

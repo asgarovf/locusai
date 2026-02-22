@@ -39,11 +39,6 @@ const HELP_TEXT = `<b>Locus Bot — Command Center</b>
 /git &lt;command&gt; — Run whitelisted git/gh commands
 /dev &lt;command&gt; — Run lint, typecheck, build, test
 
-🔄 <b>Jobs:</b>
-/jobs — List configured scan jobs
-/runjob &lt;type&gt; — Trigger a job (lint, dependency, todo, test)
-/jobhistory — Recent job run history
-
 💬 <b>Discussions:</b>
 /discuss &lt;topic&gt; — Start a product discussion
 /discussions — List all discussions

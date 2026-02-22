@@ -1,7 +1,5 @@
 import {
   AssigneeRole,
-  JobStatus,
-  JobType,
   MembershipRole,
   SprintStatus,
   SuggestionStatus,
@@ -749,97 +747,6 @@ export class AcceptedMembershipDto {
 export class AcceptInvitationResponseDto {
   @ApiProperty({ type: AcceptedMembershipDto })
   membership: AcceptedMembershipDto;
-}
-
-// ============================================================================
-// Job Runs
-// ============================================================================
-
-export class JobRunResultDto {
-  @ApiProperty()
-  summary: string;
-
-  @ApiProperty()
-  filesChanged: number;
-
-  @ApiPropertyOptional()
-  prUrl?: string;
-
-  @ApiPropertyOptional({ type: [String] })
-  errors?: string[];
-}
-
-export class JobRunDto {
-  @ApiProperty({ format: "uuid" })
-  id: string;
-
-  @ApiProperty({ enum: JobType })
-  jobType: JobType;
-
-  @ApiProperty({ enum: JobStatus })
-  status: JobStatus;
-
-  @ApiProperty({ format: "uuid" })
-  workspaceId: string;
-
-  @ApiPropertyOptional({ type: JobRunResultDto, nullable: true })
-  result?: JobRunResultDto | null;
-
-  @ApiPropertyOptional({ nullable: true })
-  error?: string | null;
-
-  @ApiProperty({ description: "ISO timestamp" })
-  startedAt: string;
-
-  @ApiPropertyOptional({ nullable: true, description: "ISO timestamp" })
-  completedAt?: string | null;
-
-  @ApiProperty({ description: "ISO timestamp" })
-  createdAt: string;
-
-  @ApiProperty({ description: "ISO timestamp" })
-  updatedAt: string;
-}
-
-export class JobRunResponseDto {
-  @ApiProperty({ type: JobRunDto })
-  jobRun: JobRunDto;
-}
-
-export class JobRunsResponseDto {
-  @ApiProperty({ type: [JobRunDto] })
-  jobRuns: JobRunDto[];
-}
-
-export class CreateJobRunRequestDto {
-  @ApiProperty({ enum: JobType })
-  jobType: JobType;
-
-  @ApiPropertyOptional({ enum: JobStatus, default: JobStatus.RUNNING })
-  status?: JobStatus;
-
-  @ApiPropertyOptional({ description: "ISO timestamp" })
-  startedAt?: string;
-
-  @ApiPropertyOptional()
-  error?: string;
-
-  @ApiPropertyOptional({ type: JobRunResultDto })
-  result?: JobRunResultDto;
-}
-
-export class UpdateJobRunRequestDto {
-  @ApiPropertyOptional({ enum: JobStatus })
-  status?: JobStatus;
-
-  @ApiPropertyOptional({ type: JobRunResultDto })
-  result?: JobRunResultDto;
-
-  @ApiPropertyOptional({ nullable: true })
-  error?: string | null;
-
-  @ApiPropertyOptional({ description: "ISO timestamp" })
-  completedAt?: string;
 }
 
 // ============================================================================

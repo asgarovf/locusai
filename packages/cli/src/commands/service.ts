@@ -1,0 +1,477 @@
+import { spawn } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { c } from "@locusai/sdk/node";
+import { SettingsManager } from "../settings-manager";
+import { requireInitialization } from "../utils";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const SERVICE_NAME = "locus";
+const SYSTEMD_UNIT_PATH = `/etc/systemd/system/${SERVICE_NAME}.service`;
+const PLIST_LABEL = "com.locus.agent";
+
+function getPlistPath(): string {
+  return join(homedir(), "Library/LaunchAgents", `${PLIST_LABEL}.plist`);
+}
+
+// ============================================================================
+// Help
+// ============================================================================
+
+function showServiceHelp(): void {
+  console.log(`
+  ${c.header(" SERVICE ")}
+    ${c.primary("locus service")} ${c.dim("<subcommand>")}
+
+  ${c.header(" SUBCOMMANDS ")}
+    ${c.success("install")}           Install Locus as a system service
+                      ${c.dim("Sets up systemd (Linux) or launchd (macOS)")}
+                      ${c.dim("to run the Telegram bot + proposal scheduler")}
+    ${c.success("uninstall")}         Remove the system service
+    ${c.success("status")}            Check if the service is running
+
+  ${c.header(" EXAMPLES ")}
+    ${c.dim("$")} ${c.primary("locus service install")}
+    ${c.dim("$")} ${c.primary("locus service status")}
+    ${c.dim("$")} ${c.primary("locus service uninstall")}
+`);
+}
+
+// ============================================================================
+// Shell helpers
+// ============================================================================
+
+function runShell(
+  cmd: string,
+  args: string[]
+): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    const proc = spawn(cmd, args, { stdio: ["pipe", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    proc.stdout?.on("data", (d: Buffer) => {
+      stdout += d.toString();
+    });
+    proc.stderr?.on("data", (d: Buffer) => {
+      stderr += d.toString();
+    });
+    proc.on("close", (exitCode) => resolve({ exitCode, stdout, stderr }));
+    proc.on("error", (err) =>
+      resolve({ exitCode: 1, stdout, stderr: err.message })
+    );
+  });
+}
+
+// ============================================================================
+// Systemd (Linux)
+// ============================================================================
+
+function generateSystemdUnit(
+  projectPath: string,
+  user: string,
+  binaryPath: string
+): string {
+  return `[Unit]
+Description=Locus AI Agent (Telegram bot + proposal scheduler)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${user}
+WorkingDirectory=${projectPath}
+ExecStart=${binaryPath}
+Restart=on-failure
+RestartSec=10
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:${homedir()}/.bun/bin:${homedir()}/.nvm/current/bin:${homedir()}/.local/bin
+Environment=HOME=${homedir()}
+
+[Install]
+WantedBy=multi-user.target
+`;
+}
+
+async function installSystemd(projectPath: string): Promise<void> {
+  const user = process.env.USER || "root";
+
+  // Determine the binary path
+  const monorepoEntry = join(projectPath, "packages/telegram/src/index.ts");
+  const isMonorepo = existsSync(monorepoEntry);
+
+  let binaryPath: string;
+  if (isMonorepo) {
+    const bunPath =
+      (await runShell("which", ["bun"])).stdout.trim() ||
+      join(homedir(), ".bun/bin/bun");
+    binaryPath = `${bunPath} run ${monorepoEntry}`;
+  } else {
+    const npmGlobalBin = (await runShell("npm", ["bin", "-g"])).stdout.trim();
+    const telegramBin = join(npmGlobalBin, "locus-telegram");
+    binaryPath = existsSync(telegramBin) ? telegramBin : "locus-telegram";
+  }
+
+  const unit = generateSystemdUnit(projectPath, user, binaryPath);
+
+  console.log(
+    `\n  ${c.info("▶")} Writing systemd unit to ${c.dim(SYSTEMD_UNIT_PATH)}`
+  );
+  writeFileSync(SYSTEMD_UNIT_PATH, unit, "utf-8");
+
+  console.log(`  ${c.info("▶")} Reloading systemd daemon...`);
+  await runShell("systemctl", ["daemon-reload"]);
+
+  console.log(`  ${c.info("▶")} Enabling and starting ${SERVICE_NAME}...`);
+  await runShell("systemctl", ["enable", SERVICE_NAME]);
+  const startResult = await runShell("systemctl", ["start", SERVICE_NAME]);
+
+  if (startResult.exitCode !== 0) {
+    console.error(
+      `\n  ${c.error("✖")} Failed to start service: ${startResult.stderr.trim()}`
+    );
+    console.error(
+      `  ${c.dim("Check logs with:")} ${c.primary(`journalctl -u ${SERVICE_NAME} -f`)}`
+    );
+    return;
+  }
+
+  console.log(`
+  ${c.success("✔")} ${c.bold("Locus service installed and running!")}
+
+  ${c.bold("Service:")} ${SERVICE_NAME}
+  ${c.bold("Unit file:")} ${SYSTEMD_UNIT_PATH}
+
+  ${c.bold("Useful commands:")}
+    ${c.dim("$")} ${c.primary(`sudo systemctl status ${SERVICE_NAME}`)}
+    ${c.dim("$")} ${c.primary(`sudo systemctl restart ${SERVICE_NAME}`)}
+    ${c.dim("$")} ${c.primary(`journalctl -u ${SERVICE_NAME} -f`)}
+`);
+}
+
+async function uninstallSystemd(): Promise<void> {
+  if (!existsSync(SYSTEMD_UNIT_PATH)) {
+    console.log(
+      `\n  ${c.dim("No systemd service found. Nothing to remove.")}\n`
+    );
+    return;
+  }
+
+  console.log(`  ${c.info("▶")} Stopping and disabling ${SERVICE_NAME}...`);
+  await runShell("systemctl", ["stop", SERVICE_NAME]);
+  await runShell("systemctl", ["disable", SERVICE_NAME]);
+
+  const { unlinkSync } = await import("node:fs");
+  unlinkSync(SYSTEMD_UNIT_PATH);
+  await runShell("systemctl", ["daemon-reload"]);
+
+  console.log(`\n  ${c.success("✔")} ${c.bold("Locus service removed.")}\n`);
+}
+
+async function statusSystemd(): Promise<void> {
+  const result = await runShell("systemctl", ["is-active", SERVICE_NAME]);
+  const state = result.stdout.trim();
+
+  if (state === "active") {
+    console.log(
+      `\n  ${c.success("●")} ${c.bold("Locus service is running")} ${c.dim("(systemd)")}\n`
+    );
+  } else if (existsSync(SYSTEMD_UNIT_PATH)) {
+    console.log(
+      `\n  ${c.secondary("●")} ${c.bold(`Locus service is ${state}`)} ${c.dim("(systemd)")}\n`
+    );
+    console.log(
+      `  ${c.dim("Start with:")} ${c.primary(`sudo systemctl start ${SERVICE_NAME}`)}\n`
+    );
+  } else {
+    console.log(
+      `\n  ${c.secondary("●")} ${c.bold("Locus service is not installed")}\n`
+    );
+    console.log(
+      `  ${c.dim("Install with:")} ${c.primary("locus service install")}\n`
+    );
+  }
+}
+
+// ============================================================================
+// Launchd (macOS)
+// ============================================================================
+
+function generatePlist(
+  projectPath: string,
+  binaryPath: string,
+  binaryArgs: string[]
+): string {
+  const argsXml = [binaryPath, ...binaryArgs]
+    .map((a) => `    <string>${a}</string>`)
+    .join("\n");
+
+  const logDir = join(homedir(), "Library/Logs/Locus");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${PLIST_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+${argsXml}
+  </array>
+  <key>WorkingDirectory</key>
+  <string>${projectPath}</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>${join(logDir, "locus.log")}</string>
+  <key>StandardErrorPath</key>
+  <string>${join(logDir, "locus-error.log")}</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin:${homedir()}/.bun/bin:${homedir()}/.nvm/current/bin:${homedir()}/.local/bin</string>
+  </dict>
+</dict>
+</plist>
+`;
+}
+
+async function installLaunchd(projectPath: string): Promise<void> {
+  const plistPath = getPlistPath();
+
+  // Unload existing if present
+  if (existsSync(plistPath)) {
+    await runShell("launchctl", ["unload", plistPath]);
+  }
+
+  // Determine the binary
+  const monorepoEntry = join(projectPath, "packages/telegram/src/index.ts");
+  const isMonorepo = existsSync(monorepoEntry);
+
+  let binaryPath: string;
+  let binaryArgs: string[];
+  if (isMonorepo) {
+    const bunPath =
+      (await runShell("which", ["bun"])).stdout.trim() ||
+      join(homedir(), ".bun/bin/bun");
+    binaryPath = bunPath;
+    binaryArgs = ["run", monorepoEntry];
+  } else {
+    const npmGlobalBin = (await runShell("npm", ["bin", "-g"])).stdout.trim();
+    const telegramBin = join(npmGlobalBin, "locus-telegram");
+    binaryPath = existsSync(telegramBin) ? telegramBin : "locus-telegram";
+    binaryArgs = [];
+  }
+
+  // Ensure log directory exists
+  const logDir = join(homedir(), "Library/Logs/Locus");
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(logDir, { recursive: true });
+
+  // Ensure LaunchAgents directory exists
+  const launchAgentsDir = join(homedir(), "Library/LaunchAgents");
+  mkdirSync(launchAgentsDir, { recursive: true });
+
+  const plist = generatePlist(projectPath, binaryPath, binaryArgs);
+
+  console.log(`\n  ${c.info("▶")} Writing plist to ${c.dim(plistPath)}`);
+  writeFileSync(plistPath, plist, "utf-8");
+
+  console.log(`  ${c.info("▶")} Loading service...`);
+  const loadResult = await runShell("launchctl", ["load", plistPath]);
+
+  if (loadResult.exitCode !== 0) {
+    console.error(
+      `\n  ${c.error("✖")} Failed to load service: ${loadResult.stderr.trim()}`
+    );
+    return;
+  }
+
+  const logPath = join(logDir, "locus.log");
+  console.log(`
+  ${c.success("✔")} ${c.bold("Locus service installed and running!")}
+
+  ${c.bold("Plist:")} ${plistPath}
+  ${c.bold("Logs:")}  ${logPath}
+
+  ${c.bold("Useful commands:")}
+    ${c.dim("$")} ${c.primary(`launchctl list | grep ${PLIST_LABEL}`)}
+    ${c.dim("$")} ${c.primary(`tail -f ${logPath}`)}
+`);
+}
+
+async function uninstallLaunchd(): Promise<void> {
+  const plistPath = getPlistPath();
+
+  if (!existsSync(plistPath)) {
+    console.log(
+      `\n  ${c.dim("No launchd service found. Nothing to remove.")}\n`
+    );
+    return;
+  }
+
+  console.log(`  ${c.info("▶")} Unloading service...`);
+  await runShell("launchctl", ["unload", plistPath]);
+
+  const { unlinkSync } = await import("node:fs");
+  unlinkSync(plistPath);
+
+  console.log(`\n  ${c.success("✔")} ${c.bold("Locus service removed.")}\n`);
+}
+
+async function statusLaunchd(): Promise<void> {
+  const plistPath = getPlistPath();
+
+  if (!existsSync(plistPath)) {
+    console.log(
+      `\n  ${c.secondary("●")} ${c.bold("Locus service is not installed")}\n`
+    );
+    console.log(
+      `  ${c.dim("Install with:")} ${c.primary("locus service install")}\n`
+    );
+    return;
+  }
+
+  const result = await runShell("launchctl", ["list"]);
+  const lines = result.stdout.split("\n");
+  const match = lines.find((l) => l.includes(PLIST_LABEL));
+
+  if (match) {
+    // Format: PID  Status  Label
+    const parts = match.trim().split(/\s+/);
+    const pid = parts[0] === "-" ? null : parts[0];
+
+    if (pid) {
+      console.log(
+        `\n  ${c.success("●")} ${c.bold("Locus service is running")} ${c.dim(`(PID ${pid}, launchd)`)}\n`
+      );
+    } else {
+      console.log(
+        `\n  ${c.secondary("●")} ${c.bold("Locus service is stopped")} ${c.dim("(launchd)")}\n`
+      );
+      console.log(
+        `  ${c.dim("Start with:")} ${c.primary(`launchctl load ${plistPath}`)}\n`
+      );
+    }
+  } else {
+    console.log(
+      `\n  ${c.secondary("●")} ${c.bold("Locus service is not loaded")} ${c.dim("(plist exists but not loaded)")}\n`
+    );
+    console.log(
+      `  ${c.dim("Load with:")} ${c.primary(`launchctl load ${plistPath}`)}\n`
+    );
+  }
+}
+
+// ============================================================================
+// Platform router
+// ============================================================================
+
+function getPlatform(): "linux" | "darwin" | null {
+  if (process.platform === "linux") return "linux";
+  if (process.platform === "darwin") return "darwin";
+  return null;
+}
+
+// ============================================================================
+// Subcommands
+// ============================================================================
+
+async function installCommand(projectPath: string): Promise<void> {
+  const platform = getPlatform();
+
+  if (!platform) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold(`Unsupported platform: ${process.platform}`)}\n` +
+        `  Service management is supported on Linux (systemd) and macOS (launchd).\n`
+    );
+    process.exit(1);
+  }
+
+  // Validate Telegram is configured
+  const manager = new SettingsManager(projectPath);
+  const settings = manager.load();
+
+  if (!settings.telegram?.botToken || !settings.telegram?.chatId) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold("Telegram is not configured.")}\n` +
+        `  Run ${c.primary("locus telegram setup")} first.\n`
+    );
+    process.exit(1);
+  }
+
+  if (!settings.apiKey) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold("API key is not configured.")}\n` +
+        `  Run ${c.primary("locus config setup --api-key <key>")} first.\n`
+    );
+    process.exit(1);
+  }
+
+  if (platform === "linux") {
+    await installSystemd(projectPath);
+  } else {
+    await installLaunchd(projectPath);
+  }
+}
+
+async function uninstallCommand(): Promise<void> {
+  const platform = getPlatform();
+  if (!platform) {
+    console.error(
+      `\n  ${c.error("✖")} Unsupported platform: ${process.platform}\n`
+    );
+    process.exit(1);
+  }
+
+  if (platform === "linux") {
+    await uninstallSystemd();
+  } else {
+    await uninstallLaunchd();
+  }
+}
+
+async function statusCommandHandler(): Promise<void> {
+  const platform = getPlatform();
+  if (!platform) {
+    console.error(
+      `\n  ${c.error("✖")} Unsupported platform: ${process.platform}\n`
+    );
+    process.exit(1);
+  }
+
+  if (platform === "linux") {
+    await statusSystemd();
+  } else {
+    await statusLaunchd();
+  }
+}
+
+// ============================================================================
+// Entry point
+// ============================================================================
+
+export async function serviceCommand(args: string[]): Promise<void> {
+  const projectPath = process.cwd();
+  requireInitialization(projectPath, "service");
+
+  const subcommand = args[0];
+
+  switch (subcommand) {
+    case "install":
+      await installCommand(projectPath);
+      break;
+    case "uninstall":
+      await uninstallCommand();
+      break;
+    case "status":
+      await statusCommandHandler();
+      break;
+    default:
+      showServiceHelp();
+  }
+}

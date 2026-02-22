@@ -1,16 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { JobRun, Sprint, Suggestion, Task } from "@locusai/shared";
-import type { LocusClient } from "../../index.js";
+import type { Sprint, Suggestion, Task } from "@locusai/shared";
+import type { LocusClient } from "../index.js";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface ProposalContext {
-  /** Recent job run results (up to 10) */
-  jobRuns: JobRun[];
   /** Active sprint, if any */
   activeSprint: Sprint | null;
   /** Tasks in the current sprint */
@@ -43,13 +41,11 @@ export class ContextGatherer {
     workspaceId: string
   ): Promise<ProposalContext> {
     // Run API calls in parallel for efficiency
-    const [jobRuns, activeSprint, allTasks, skippedSuggestions] =
-      await Promise.all([
-        this.fetchJobRuns(client, workspaceId),
-        this.fetchActiveSprint(client, workspaceId),
-        this.fetchTasks(client, workspaceId),
-        this.fetchSkippedSuggestions(client, workspaceId),
-      ]);
+    const [activeSprint, allTasks, skippedSuggestions] = await Promise.all([
+      this.fetchActiveSprint(client, workspaceId),
+      this.fetchTasks(client, workspaceId),
+      this.fetchSkippedSuggestions(client, workspaceId),
+    ]);
 
     // Split tasks into sprint vs backlog
     const sprintTasks = activeSprint
@@ -63,7 +59,6 @@ export class ContextGatherer {
     const locusInstructions = this.readLocusInstructions(projectPath);
 
     return {
-      jobRuns,
       activeSprint,
       sprintTasks,
       backlogTasks,
@@ -77,17 +72,6 @@ export class ContextGatherer {
   // ==========================================================================
   // API Fetchers
   // ==========================================================================
-
-  private async fetchJobRuns(
-    client: LocusClient,
-    workspaceId: string
-  ): Promise<JobRun[]> {
-    try {
-      return await client.jobs.list(workspaceId, { limit: 10 });
-    } catch {
-      return [];
-    }
-  }
 
   private async fetchActiveSprint(
     client: LocusClient,
