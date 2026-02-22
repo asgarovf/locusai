@@ -1,7 +1,10 @@
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { c } from "@locusai/sdk/node";
 
 const PACKAGES = ["@locusai/cli", "@locusai/telegram"] as const;
+const SYSTEMD_UNIT_PATH = "/etc/systemd/system/locus.service";
+const SYSTEMD_TELEGRAM_UNIT_PATH = "/etc/systemd/system/locus-telegram.service";
 
 function getInstalledVersion(pkg: string): string | null {
   try {
@@ -79,6 +82,31 @@ export async function upgradeCommand(): Promise<void> {
         `  ${c.error("✖")} Failed to update ${c.bold(pkg)}. Try manually:\n` +
           `    ${c.primary(`npm install -g ${pkg}@latest`)}\n`
       );
+    }
+  }
+
+  // Restart systemd services if they exist
+  if (process.platform === "linux") {
+    for (const unit of [SYSTEMD_UNIT_PATH, SYSTEMD_TELEGRAM_UNIT_PATH]) {
+      if (!existsSync(unit)) continue;
+      const split = unit.split("/").pop();
+
+      if (!split) {
+        throw "PATH NOTH FOUND";
+      }
+
+      const name = split.replace(".service", "");
+      try {
+        console.log(`  ${c.info("▶")} Restarting ${name} service...`);
+        execSync(`systemctl restart ${name}`, {
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+        console.log(`  ${c.success("✔")} ${name} service restarted\n`);
+      } catch {
+        console.log(
+          `  ${c.dim("⚠")} Could not restart ${name} service (may need sudo)\n`
+        );
+      }
     }
   }
 

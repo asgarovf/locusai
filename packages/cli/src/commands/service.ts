@@ -7,6 +7,16 @@ import { SettingsManager } from "../settings-manager";
 import { requireInitialization } from "../utils";
 
 // ============================================================================
+// Binary resolution
+// ============================================================================
+
+async function findBinary(): Promise<string | null> {
+  const result = await runShell("which", ["locus-telegram"]);
+  const p = result.stdout.trim();
+  return p?.startsWith?.("/") ? p : null;
+}
+
+// ============================================================================
 // Constants
 // ============================================================================
 
@@ -98,20 +108,13 @@ WantedBy=multi-user.target
 async function installSystemd(projectPath: string): Promise<void> {
   const user = process.env.USER || "root";
 
-  // Determine the binary path
-  const monorepoEntry = join(projectPath, "packages/telegram/src/index.ts");
-  const isMonorepo = existsSync(monorepoEntry);
-
-  let binaryPath: string;
-  if (isMonorepo) {
-    const bunPath =
-      (await runShell("which", ["bun"])).stdout.trim() ||
-      join(homedir(), ".bun/bin/bun");
-    binaryPath = `${bunPath} run ${monorepoEntry}`;
-  } else {
-    const npmGlobalBin = (await runShell("npm", ["bin", "-g"])).stdout.trim();
-    const telegramBin = join(npmGlobalBin, "locus-telegram");
-    binaryPath = existsSync(telegramBin) ? telegramBin : "locus-telegram";
+  const binaryPath = await findBinary();
+  if (!binaryPath) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold("Could not find locus-telegram binary.")}\n` +
+        `  Install with: ${c.primary("npm install -g @locusai/telegram")}\n`
+    );
+    process.exit(1);
   }
 
   const unit = generateSystemdUnit(projectPath, user, binaryPath);
@@ -248,24 +251,15 @@ async function installLaunchd(projectPath: string): Promise<void> {
     await runShell("launchctl", ["unload", plistPath]);
   }
 
-  // Determine the binary
-  const monorepoEntry = join(projectPath, "packages/telegram/src/index.ts");
-  const isMonorepo = existsSync(monorepoEntry);
-
-  let binaryPath: string;
-  let binaryArgs: string[];
-  if (isMonorepo) {
-    const bunPath =
-      (await runShell("which", ["bun"])).stdout.trim() ||
-      join(homedir(), ".bun/bin/bun");
-    binaryPath = bunPath;
-    binaryArgs = ["run", monorepoEntry];
-  } else {
-    const npmGlobalBin = (await runShell("npm", ["bin", "-g"])).stdout.trim();
-    const telegramBin = join(npmGlobalBin, "locus-telegram");
-    binaryPath = existsSync(telegramBin) ? telegramBin : "locus-telegram";
-    binaryArgs = [];
+  const binaryPath = await findBinary();
+  if (!binaryPath) {
+    console.error(
+      `\n  ${c.error("✖")} ${c.bold("Could not find locus-telegram binary.")}\n` +
+        `  Install with: ${c.primary("npm install -g @locusai/telegram")}\n`
+    );
+    process.exit(1);
   }
+  const binaryArgs: string[] = [];
 
   // Ensure log directory exists
   const logDir = join(homedir(), "Library/Logs/Locus");
