@@ -2,7 +2,7 @@
   "name": "locusai-vscode",
   "displayName": "Locus AI",
   "description": "Locus AI — AI-native project management for VS Code",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "publisher": "locusai",
   "private": true,
   "license": "MIT",
@@ -163,7 +163,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "^0.16.0"
+    "@locusai/shared": "^0.16.1"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

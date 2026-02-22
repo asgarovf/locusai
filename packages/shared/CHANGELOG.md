@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.16.1
+
+### Patch Changes
+
+- Revert new services structure
+
 ## 0.14.5
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@locusai/telegram",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Telegram bot for Locus - remote control your AI agents from Telegram",
   "type": "module",
   "bin": {
@@ -31,8 +31,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@locusai/sdk": "^0.16.0",
-    "@locusai/shared": "^0.16.0",
+    "@locusai/sdk": "^0.16.1",
+    "@locusai/shared": "^0.16.1",
     "dotenv": "^16.4.7",
     "telegraf": "^4.16.3"
   },

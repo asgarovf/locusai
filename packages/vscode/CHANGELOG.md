@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.1
+
+### Patch Changes
+
+- Revert new services structure
+- Updated dependencies
+  - @locusai/shared@0.16.1
+
 ## 0.14.5
 
 ### Patch Changes
