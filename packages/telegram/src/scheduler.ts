@@ -1,4 +1,3 @@
-import { LocusClient } from "@locusai/sdk";
 import { ProposalEngine } from "@locusai/sdk/node";
 import { createClient, resolveWorkspaceId } from "./api-client.js";
 import type { TelegramConfig } from "./config.js";
