@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.15.3
+
+### Patch Changes
+
+- Binary lookup
+
 ## 0.15.2
 
 ### Patch Changes

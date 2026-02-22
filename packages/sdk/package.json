@@ -1,6 +1,6 @@
 {
   "name": "@locusai/sdk",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -31,7 +31,7 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "^0.15.2",
+    "@locusai/shared": "^0.15.3",
     "axios": "^1.13.2",
     "events": "^3.3.0",
     "globby": "^14.0.2",

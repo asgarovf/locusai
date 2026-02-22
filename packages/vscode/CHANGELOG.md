@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.3
+
+### Patch Changes
+
+- Binary lookup
+- Updated dependencies
+  - @locusai/shared@0.15.3
+
 ## 0.15.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @locusai/cli
 
+## 0.15.3
+
+### Patch Changes
+
+- Binary lookup
+- Updated dependencies
+  - @locusai/sdk@0.15.3
+  - @locusai/shared@0.15.3
+  - @locusai/telegram@0.15.3
+
 ## 0.15.2
 
 ### Patch Changes
