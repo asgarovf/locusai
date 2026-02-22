@@ -1,5 +1,15 @@
 # @locusai/cli
 
+## 0.15.1
+
+### Patch Changes
+
+- Locus commands overhaul
+- Updated dependencies
+  - @locusai/sdk@0.15.1
+  - @locusai/shared@0.15.1
+  - @locusai/telegram@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes
