@@ -117,7 +117,7 @@ export async function discussCommand(args: string[]): Promise<void> {
   console.log(`  ${c.dim("Model:")} ${c.dim(`${model} (${provider})`)}\n`);
 
   // ── Start discussion (AI opening) ─────────────────────────
-  const renderer = new ProgressRenderer({ animated: true });
+  const renderer = new ProgressRenderer();
 
   let discussionId: string;
   try {
@@ -196,7 +196,7 @@ export async function discussCommand(args: string[]): Promise<void> {
 
       if (lowerInput === "summary") {
         isProcessing = true;
-        const summaryRenderer = new ProgressRenderer({ animated: true });
+        const summaryRenderer = new ProgressRenderer();
 
         try {
           summaryRenderer.showThinkingStarted();
@@ -261,7 +261,7 @@ export async function discussCommand(args: string[]): Promise<void> {
     const effectiveInput = cleanedInput + buildImageContext(images);
 
     isProcessing = true;
-    const chunkRenderer = new ProgressRenderer({ animated: true });
+    const chunkRenderer = new ProgressRenderer();
 
     try {
       chunkRenderer.showThinkingStarted();

@@ -53,7 +53,7 @@ export class InteractiveSession {
       model: options.model,
     });
     this.promptBuilder = new PromptBuilder(options.projectPath);
-    this.renderer = new ProgressRenderer({ animated: true });
+    this.renderer = new ProgressRenderer();
     this.historyManager = new HistoryManager(options.projectPath);
     this.projectPath = options.projectPath;
     this.model = options.model;

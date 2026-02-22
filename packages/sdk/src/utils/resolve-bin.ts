@@ -10,6 +10,7 @@ const EXTRA_BIN_DIRS = [
   join(homedir(), ".local", "bin"),
   join(homedir(), ".npm", "bin"),
   join(homedir(), ".npm-global", "bin"),
+  join(homedir(), ".npm-packages", "bin"),
   join(homedir(), ".yarn", "bin"),
   join(homedir(), ".bun", "bin"),
   join(homedir(), "Library", "pnpm"),

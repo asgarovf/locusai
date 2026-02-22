@@ -53,11 +53,6 @@ const ANSI = {
  */
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-export interface ProgressRendererOptions {
-  /** Whether to use animated thinking indicator (default: false) */
-  animated?: boolean;
-}
-
 /**
  * Renders progress indicators during AI execution using continuous output.
  *
@@ -80,17 +75,12 @@ export class ProgressRenderer {
   private toolDisplay = new ToolDisplay();
   private toolDisplayShown = false;
   private thinkingShown = false;
-  private animated: boolean;
   private spinnerInterval: ReturnType<typeof setInterval> | null = null;
   private spinnerFrameIndex = 0;
   private thinkingStartTime: number | null = null;
   private isInTextBlock = false; // Track if we're currently outputting text
   // Buffer to handle completion marker that may span multiple chunks
   private textBuffer = "";
-
-  constructor(options: ProgressRendererOptions = {}) {
-    this.animated = options.animated ?? false;
-  }
 
   /**
    * Show thinking indicator with optional animation.
@@ -101,18 +91,9 @@ export class ProgressRenderer {
     this.isThinking = true;
     this.thinkingStartTime = Date.now();
 
-    if (this.animated) {
-      // For animated mode, use in-place spinner update
-      if (!this.thinkingShown) {
-        this.thinkingShown = true;
-        this.startThinkingAnimation();
-      }
-    } else {
-      // For non-animated mode, show static message once
-      if (!this.thinkingShown) {
-        console.log(c.dim("🤔 Thinking...\n"));
-        this.thinkingShown = true;
-      }
+    if (!this.thinkingShown) {
+      this.thinkingShown = true;
+      this.startThinkingAnimation();
     }
   }
 
@@ -167,7 +148,7 @@ export class ProgressRenderer {
     }
 
     // Clear the thinking line if we were animating
-    if (this.animated && this.thinkingShown && this.isThinking) {
+    if (this.thinkingShown && this.isThinking) {
       process.stdout.write(`${ANSI.MOVE_TO_START}${ANSI.CLEAR_LINE}\n`);
     }
 

@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { c } from "@locusai/sdk/node";
 import { SettingsManager } from "../settings-manager";
 import { requireInitialization } from "../utils";
@@ -14,6 +14,116 @@ async function findBinary(): Promise<string | null> {
   const result = await runShell("which", ["locus-telegram"]);
   const p = result.stdout.trim();
   return p?.startsWith?.("/") ? p : null;
+}
+
+/**
+ * Find the directory containing a given binary.
+ * Returns the directory path or null if not found.
+ */
+async function findBinDir(binary: string): Promise<string | null> {
+  const result = await runShell("which", [binary]);
+  const p = result.stdout.trim();
+  if (p?.startsWith?.("/")) return dirname(p);
+  return null;
+}
+
+/**
+ * Resolve the nvm node bin directory for the active/default version.
+ * nvm does NOT create a `current` symlink — it uses versioned directories.
+ */
+function resolveNvmBinDir(): string | null {
+  const nvmDir = process.env.NVM_DIR || join(homedir(), ".nvm");
+  const versionsDir = join(nvmDir, "versions", "node");
+
+  if (!existsSync(versionsDir)) return null;
+
+  let versions: string[];
+  try {
+    versions = readdirSync(versionsDir).filter((d) => d.startsWith("v"));
+  } catch {
+    return null;
+  }
+
+  if (versions.length === 0) return null;
+
+  // 1. Try to match the currently running Node version
+  const currentNodeVersion = `v${process.versions.node}`;
+  const currentBin = join(versionsDir, currentNodeVersion, "bin");
+  if (versions.includes(currentNodeVersion) && existsSync(currentBin)) {
+    return currentBin;
+  }
+
+  // 2. Try to read the default alias
+  const aliasPath = join(nvmDir, "alias", "default");
+  if (existsSync(aliasPath)) {
+    try {
+      const alias = readFileSync(aliasPath, "utf-8").trim();
+      const match = versions.find(
+        (v) => v === `v${alias}` || v.startsWith(`v${alias}.`)
+      );
+      if (match) {
+        const bin = join(versionsDir, match, "bin");
+        if (existsSync(bin)) return bin;
+      }
+    } catch {
+      // Ignore read errors
+    }
+  }
+
+  // 3. Fall back to the highest semver version
+  const sorted = versions.sort((a, b) => {
+    const pa = a.slice(1).split(".").map(Number);
+    const pb = b.slice(1).split(".").map(Number);
+    for (let i = 0; i < 3; i++) {
+      if ((pa[i] || 0) !== (pb[i] || 0)) return (pb[i] || 0) - (pa[i] || 0);
+    }
+    return 0;
+  });
+
+  const bin = join(versionsDir, sorted[0], "bin");
+  return existsSync(bin) ? bin : null;
+}
+
+/**
+ * Build the PATH string for the service environment.
+ * Includes all known binary directories and dynamically detected paths.
+ */
+async function buildServicePath(): Promise<string> {
+  const home = homedir();
+  const dirs = new Set<string>();
+
+  // Standard system dirs
+  dirs.add("/usr/local/bin");
+  dirs.add("/usr/bin");
+  dirs.add("/bin");
+
+  // Common user-installed binary dirs
+  const candidates = [
+    join(home, ".bun", "bin"),
+    join(home, ".local", "bin"),
+    join(home, ".npm", "bin"),
+    join(home, ".npm-global", "bin"),
+    join(home, ".yarn", "bin"),
+  ];
+  for (const d of candidates) {
+    if (existsSync(d)) dirs.add(d);
+  }
+
+  // nvm — resolve actual version directory (not the nonexistent `current` symlink)
+  const nvmBin = resolveNvmBinDir();
+  if (nvmBin) dirs.add(nvmBin);
+
+  // fnm — uses a `current` symlink
+  const fnmCurrent = join(home, ".fnm", "current", "bin");
+  if (existsSync(fnmCurrent)) dirs.add(fnmCurrent);
+
+  // Detect where `claude` and `codex` are installed and include their directories
+  for (const bin of ["claude", "codex"]) {
+    const dir = await findBinDir(bin);
+    if (dir) dirs.add(dir);
+  }
+
+  return Array.from(dirs).join(":");
 }
 
 // ============================================================================
@@ -83,7 +193,8 @@ function runShell(
 function generateSystemdUnit(
   projectPath: string,
   user: string,
-  binaryPath: string
+  binaryPath: string,
+  servicePath: string
 ): string {
   return `[Unit]
 Description=Locus AI Agent (Telegram bot + proposal scheduler)
@@ -97,7 +208,7 @@ WorkingDirectory=${projectPath}
 ExecStart=${binaryPath}
 Restart=on-failure
 RestartSec=10
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:${homedir()}/.bun/bin:${homedir()}/.nvm/current/bin:${homedir()}/.local/bin
+Environment=PATH=${servicePath}
 Environment=HOME=${homedir()}
 
 [Install]
@@ -117,7 +228,24 @@ async function installSystemd(projectPath: string): Promise<void> {
     process.exit(1);
   }
 
-  const unit = generateSystemdUnit(projectPath, user, binaryPath);
+  // Warn if CLI tools are not found — they're required at runtime
+  if (!(await findBinDir("claude"))) {
+    console.warn(
+      `\n  ${c.secondary("⚠")} ${c.bold("Could not find 'claude' CLI in PATH.")}\n` +
+        `  The service needs the Claude Code CLI to execute tasks.\n` +
+        `  Install with: ${c.primary("npm install -g @anthropic-ai/claude-code")}\n`
+    );
+  }
+  if (!(await findBinDir("codex"))) {
+    console.warn(
+      `\n  ${c.secondary("⚠")} ${c.bold("Could not find 'codex' CLI in PATH.")}\n` +
+        `  The service needs the Codex CLI if using the Codex provider.\n` +
+        `  Install with: ${c.primary("npm install -g @openai/codex")}\n`
+    );
+  }
+
+  const servicePath = await buildServicePath();
+  const unit = generateSystemdUnit(projectPath, user, binaryPath, servicePath);
 
   console.log(
     `\n  ${c.info("▶")} Writing systemd unit to ${c.dim(SYSTEMD_UNIT_PATH)}`
@@ -205,7 +333,8 @@ async function statusSystemd(): Promise<void> {
 function generatePlist(
   projectPath: string,
   binaryPath: string,
-  binaryArgs: string[]
+  binaryArgs: string[],
+  servicePath: string
 ): string {
   const argsXml = [binaryPath, ...binaryArgs]
     .map((a) => `    <string>${a}</string>`)
@@ -236,7 +365,7 @@ ${argsXml}
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/usr/local/bin:/usr/bin:/bin:${homedir()}/.bun/bin:${homedir()}/.nvm/current/bin:${homedir()}/.local/bin</string>
+    <string>${servicePath}</string>
   </dict>
 </dict>
 </plist>
@@ -261,6 +390,22 @@ async function installLaunchd(projectPath: string): Promise<void> {
   }
   const binaryArgs: string[] = [];
 
+  // Warn if CLI tools are not found — they're required at runtime
+  if (!(await findBinDir("claude"))) {
+    console.warn(
+      `\n  ${c.secondary("⚠")} ${c.bold("Could not find 'claude' CLI in PATH.")}\n` +
+        `  The service needs the Claude Code CLI to execute tasks.\n` +
+        `  Install with: ${c.primary("npm install -g @anthropic-ai/claude-code")}\n`
+    );
+  }
+  if (!(await findBinDir("codex"))) {
+    console.warn(
+      `\n  ${c.secondary("⚠")} ${c.bold("Could not find 'codex' CLI in PATH.")}\n` +
+        `  The service needs the Codex CLI if using the Codex provider.\n` +
+        `  Install with: ${c.primary("npm install -g @openai/codex")}\n`
+    );
+  }
+
   // Ensure log directory exists
   const logDir = join(homedir(), "Library/Logs/Locus");
   const { mkdirSync } = await import("node:fs");
@@ -270,7 +415,8 @@ async function installLaunchd(projectPath: string): Promise<void> {
   const launchAgentsDir = join(homedir(), "Library/LaunchAgents");
   mkdirSync(launchAgentsDir, { recursive: true });
 
-  const plist = generatePlist(projectPath, binaryPath, binaryArgs);
+  const servicePath = await buildServicePath();
+  const plist = generatePlist(projectPath, binaryPath, binaryArgs, servicePath);
 
   console.log(`\n  ${c.info("▶")} Writing plist to ${c.dim(plistPath)}`);
   writeFileSync(plistPath, plist, "utf-8");
