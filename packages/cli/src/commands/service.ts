@@ -187,6 +187,38 @@ function runShell(
 }
 
 // ============================================================================
+// Process cleanup
+// ============================================================================
+
+/**
+ * Force-kill any orphaned locus-telegram processes that survived
+ * service unload/stop. This prevents the Telegram bot from continuing
+ * to respond after `locus service uninstall`.
+ */
+async function killOrphanedProcesses(): Promise<void> {
+  const result = await runShell("pgrep", ["-f", "locus-telegram"]);
+  const pids = result.stdout
+    .trim()
+    .split("\n")
+    .filter((p) => p.length > 0);
+
+  if (pids.length === 0) return;
+
+  console.log(
+    `  ${c.info("▶")} Killing ${pids.length} orphaned locus-telegram process${pids.length > 1 ? "es" : ""}...`
+  );
+  await runShell("pkill", ["-f", "locus-telegram"]);
+
+  // Give processes a moment to exit, then force-kill any survivors
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  const check = await runShell("pgrep", ["-f", "locus-telegram"]);
+  if (check.stdout.trim().length > 0) {
+    await runShell("pkill", ["-9", "-f", "locus-telegram"]);
+  }
+}
+
+// ============================================================================
 // Systemd (Linux)
 // ============================================================================
 
@@ -287,6 +319,8 @@ async function uninstallSystemd(): Promise<void> {
     console.log(
       `\n  ${c.dim("No systemd service found. Nothing to remove.")}\n`
     );
+    // Still kill orphaned processes even if unit file is already gone
+    await killOrphanedProcesses();
     return;
   }
 
@@ -297,6 +331,9 @@ async function uninstallSystemd(): Promise<void> {
   const { unlinkSync } = await import("node:fs");
   unlinkSync(SYSTEMD_UNIT_PATH);
   await runShell("systemctl", ["daemon-reload"]);
+
+  // Force-kill any orphaned locus-telegram processes
+  await killOrphanedProcesses();
 
   console.log(`\n  ${c.success("✔")} ${c.bold("Locus service removed.")}\n`);
 }
@@ -451,6 +488,8 @@ async function uninstallLaunchd(): Promise<void> {
     console.log(
       `\n  ${c.dim("No launchd service found. Nothing to remove.")}\n`
     );
+    // Still kill orphaned processes even if plist is already gone
+    await killOrphanedProcesses();
     return;
   }
 
@@ -459,6 +498,9 @@ async function uninstallLaunchd(): Promise<void> {
 
   const { unlinkSync } = await import("node:fs");
   unlinkSync(plistPath);
+
+  // Force-kill any orphaned locus-telegram processes
+  await killOrphanedProcesses();
 
   console.log(`\n  ${c.success("✔")} ${c.bold("Locus service removed.")}\n`);
 }
