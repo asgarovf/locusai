@@ -1,5 +1,14 @@
 # @locusai/telegram
 
+## 0.15.4
+
+### Patch Changes
+
+- Service improvements
+- Updated dependencies
+  - @locusai/sdk@0.15.4
+  - @locusai/shared@0.15.4
+
 ## 0.15.3
 
 ### Patch Changes
