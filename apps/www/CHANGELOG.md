@@ -1,5 +1,16 @@
 # @locusai/www
 
+## 0.15.0
+
+### Minor Changes
+
+- Constant AI runner on background
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/shared@0.15.0
+
 ## 0.14.5
 
 ### Patch Changes

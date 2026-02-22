@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.15.0
+
+### Minor Changes
+
+- Constant AI runner on background
+
 ## 0.14.5
 
 ### Patch Changes
