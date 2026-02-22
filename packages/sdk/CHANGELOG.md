@@ -1,5 +1,13 @@
 # @locusai/sdk
 
+## 0.15.5
+
+### Patch Changes
+
+- Command improvements
+- Updated dependencies
+  - @locusai/shared@0.15.5
+
 ## 0.15.4
 
 ### Patch Changes

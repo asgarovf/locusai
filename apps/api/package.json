@@ -1,6 +1,6 @@
 {
   "name": "@locusai/api",
-  "version": "0.15.4",
+  "version": "0.15.5",
   "description": "",
   "author": "farhad@locusai.team",
   "private": true,
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.992.0",
-    "@locusai/shared": "^0.15.4",
+    "@locusai/shared": "^0.15.5",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",

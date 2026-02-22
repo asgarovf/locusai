@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.15.5
+
+### Patch Changes
+
+- Command improvements
+
 ## 0.15.4
 
 ### Patch Changes
