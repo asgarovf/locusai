@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.2
+
+### Patch Changes
+
+- Fix upgrade commands
+- Updated dependencies
+  - @locusai/shared@0.15.2
+
 ## 0.15.1
 
 ### Patch Changes

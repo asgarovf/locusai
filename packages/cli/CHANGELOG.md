@@ -1,5 +1,15 @@
 # @locusai/cli
 
+## 0.15.2
+
+### Patch Changes
+
+- Fix upgrade commands
+- Updated dependencies
+  - @locusai/sdk@0.15.2
+  - @locusai/shared@0.15.2
+  - @locusai/telegram@0.15.2
+
 ## 0.15.1
 
 ### Patch Changes
