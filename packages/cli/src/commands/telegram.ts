@@ -5,6 +5,10 @@ import { createInterface } from "node:readline";
 import { c } from "@locusai/sdk/node";
 import { SettingsManager } from "../settings-manager";
 
+// ============================================================================
+// Helpers
+// ============================================================================
+
 function ask(question: string): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
@@ -25,13 +29,17 @@ function maskToken(token: string): string {
   return `${token.slice(0, 4)}...${token.slice(-4)}`;
 }
 
+// ============================================================================
+// Help
+// ============================================================================
+
 function showTelegramHelp(): void {
   console.log(`
   ${c.header(" TELEGRAM ")}
     ${c.primary("locus telegram")} ${c.dim("<subcommand> [options]")}
 
   ${c.header(" SUBCOMMANDS ")}
-    ${c.success("run")}       Start the Telegram bot
+    ${c.success("start")}     Start the Telegram bot
     ${c.success("setup")}     Interactive Telegram bot setup (or pass flags below)
     ${c.success("config")}    Show current Telegram configuration
     ${c.success("set")}       Set a config value
@@ -40,7 +48,7 @@ function showTelegramHelp(): void {
     ${c.success("remove")}    Remove Telegram configuration
 
   ${c.header(" EXAMPLES ")}
-    ${c.dim("$")} ${c.primary("locus telegram run")}
+    ${c.dim("$")} ${c.primary("locus telegram start")}
     ${c.dim("$")} ${c.primary('locus telegram setup --token "123:ABC" --chat-id 987654')}
     ${c.dim("$")} ${c.primary("locus telegram config")}
     ${c.dim("$")} ${c.primary("locus telegram remove")}
@@ -52,10 +60,11 @@ function showTelegramHelp(): void {
 `);
 }
 
-async function setupCommand(
-  args: string[],
-  projectPath: string
-): Promise<void> {
+// ============================================================================
+// Subcommands
+// ============================================================================
+
+async function setup(args: string[], projectPath: string): Promise<void> {
   let token: string | undefined;
   let chatId: string | undefined;
 
@@ -143,12 +152,12 @@ async function setupCommand(
     ${c.primary("Chat ID:")}  ${parsedChatId}
 
   ${c.bold("Next steps:")}
-    Install as service: ${c.primary("locus service install")}
-    Or run manually:    ${c.primary("locus telegram run")}
+    Start as daemon:  ${c.primary("locus daemon start")}
+    Or run manually:  ${c.primary("locus telegram start")}
 `);
 }
 
-function configCommand(projectPath: string): void {
+function showConfig(projectPath: string): void {
   const manager = new SettingsManager(projectPath);
   const settings = manager.load();
   const tg = settings.telegram;
@@ -166,32 +175,19 @@ function configCommand(projectPath: string): void {
 
   const entries: [string, string][] = [];
 
-  if (tg.botToken) {
-    entries.push(["botToken", maskToken(tg.botToken)]);
-  }
-  if (tg.chatId) {
-    entries.push(["chatId", String(tg.chatId)]);
-  }
-  if (tg.testMode !== undefined) {
+  if (tg.botToken) entries.push(["botToken", maskToken(tg.botToken)]);
+  if (tg.chatId) entries.push(["chatId", String(tg.chatId)]);
+  if (tg.testMode !== undefined)
     entries.push(["testMode", String(tg.testMode)]);
-  }
 
   // Also show shared settings that affect Telegram
-  if (settings.apiKey) {
+  if (settings.apiKey)
     entries.push(["apiKey (shared)", maskToken(settings.apiKey)]);
-  }
-  if (settings.apiUrl) {
-    entries.push(["apiUrl (shared)", settings.apiUrl]);
-  }
-  if (settings.provider) {
-    entries.push(["provider (shared)", settings.provider]);
-  }
-  if (settings.model) {
-    entries.push(["model (shared)", settings.model]);
-  }
-  if (settings.workspaceId) {
+  if (settings.apiUrl) entries.push(["apiUrl (shared)", settings.apiUrl]);
+  if (settings.provider) entries.push(["provider (shared)", settings.provider]);
+  if (settings.model) entries.push(["model (shared)", settings.model]);
+  if (settings.workspaceId)
     entries.push(["workspaceId (shared)", settings.workspaceId]);
-  }
 
   for (const [key, value] of entries) {
     console.log(`    ${c.primary(`${key}:`)}  ${value}`);
@@ -200,7 +196,7 @@ function configCommand(projectPath: string): void {
   console.log("");
 }
 
-function setCommand(args: string[], projectPath: string): void {
+function setValue(args: string[], projectPath: string): void {
   const key = args[0]?.trim();
   const value = args.slice(1).join(" ").trim();
 
@@ -252,7 +248,7 @@ function setCommand(args: string[], projectPath: string): void {
   );
 }
 
-function removeCommand(projectPath: string): void {
+function removeConfig(projectPath: string): void {
   const manager = new SettingsManager(projectPath);
   const settings = manager.load();
 
@@ -270,8 +266,7 @@ function removeCommand(projectPath: string): void {
   );
 }
 
-function runBotCommand(projectPath: string): void {
-  // Check if telegram is configured
+function startBot(projectPath: string): void {
   const manager = new SettingsManager(projectPath);
   const settings = manager.load();
 
@@ -284,30 +279,16 @@ function runBotCommand(projectPath: string): void {
   }
 
   // Determine how to launch the telegram bot
-  const monorepoTelegramEntry = join(
-    projectPath,
-    "packages/telegram/src/index.ts"
-  );
-  const isMonorepo = existsSync(monorepoTelegramEntry);
+  const monorepoEntry = join(projectPath, "packages/telegram/src/index.ts");
+  const isMonorepo = existsSync(monorepoEntry);
 
-  let cmd: string;
-  let args: string[];
+  const cmd = isMonorepo ? "bun" : "locus-telegram";
+  const cmdArgs = isMonorepo ? ["run", monorepoEntry] : [];
 
-  if (isMonorepo) {
-    cmd = "bun";
-    args = ["run", monorepoTelegramEntry];
-  } else {
-    cmd = "locus-telegram";
-    args = [];
-  }
-
-  // Pass agent count override as environment variable
-  const env = { ...process.env };
-
-  const child = spawn(cmd, args, {
+  const child = spawn(cmd, cmdArgs, {
     cwd: projectPath,
     stdio: "inherit",
-    env,
+    env: { ...process.env },
   });
 
   child.on("error", (err) => {
@@ -329,25 +310,30 @@ function runBotCommand(projectPath: string): void {
   });
 }
 
+// ============================================================================
+// Entry point
+// ============================================================================
+
 export async function telegramCommand(args: string[]): Promise<void> {
   const projectPath = process.cwd();
-  const subcommand = args[0];
+  const [subcommand, ...subArgs] = args;
 
   switch (subcommand) {
-    case "run":
-      runBotCommand(projectPath);
+    case "start":
+    case "run": // backward compat
+      startBot(projectPath);
       break;
     case "setup":
-      await setupCommand(args, projectPath);
+      await setup(subArgs, projectPath);
       break;
     case "config":
-      configCommand(projectPath);
+      showConfig(projectPath);
       break;
     case "set":
-      setCommand(args, projectPath);
+      setValue(subArgs, projectPath);
       break;
     case "remove":
-      removeCommand(projectPath);
+      removeConfig(projectPath);
       break;
     default:
       showTelegramHelp();

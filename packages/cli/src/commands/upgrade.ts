@@ -1,10 +1,8 @@
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { c } from "@locusai/sdk/node";
+import { isDaemonRunning, restartDaemonIfRunning } from "../utils/process";
 
 const PACKAGES = ["@locusai/cli", "@locusai/telegram"] as const;
-const SYSTEMD_UNIT_PATH = "/etc/systemd/system/locus.service";
-const SYSTEMD_TELEGRAM_UNIT_PATH = "/etc/systemd/system/locus-telegram.service";
 
 function getInstalledVersion(pkg: string): string | null {
   try {
@@ -33,6 +31,9 @@ function getLatestVersion(pkg: string): string | null {
 export async function upgradeCommand(): Promise<void> {
   console.log(`\n  ${c.header(" UPGRADE ")}\n`);
 
+  // Check if daemon is running BEFORE upgrading (so we know whether to restart)
+  const daemonWasRunning = await isDaemonRunning();
+
   try {
     console.log(`  ${c.dim("◌")} Cleaning npm cache...`);
     execSync("npm cache clean --force", {
@@ -42,6 +43,8 @@ export async function upgradeCommand(): Promise<void> {
   } catch {
     console.log(`  ${c.dim("⚠")} Could not clean npm cache, continuing...\n`);
   }
+
+  let anyUpdated = false;
 
   for (const pkg of PACKAGES) {
     const current = getInstalledVersion(pkg);
@@ -77,6 +80,7 @@ export async function upgradeCommand(): Promise<void> {
       console.log(
         `  ${c.success("✔")} ${c.bold(pkg)} updated to ${c.primary(`v${latest}`)}\n`
       );
+      anyUpdated = true;
     } catch {
       console.error(
         `  ${c.error("✖")} Failed to update ${c.bold(pkg)}. Try manually:\n` +
@@ -85,29 +89,19 @@ export async function upgradeCommand(): Promise<void> {
     }
   }
 
-  // Restart systemd services if they exist
-  if (process.platform === "linux") {
-    for (const unit of [SYSTEMD_UNIT_PATH, SYSTEMD_TELEGRAM_UNIT_PATH]) {
-      if (!existsSync(unit)) continue;
-      const split = unit.split("/").pop();
-
-      if (!split) {
-        throw "PATH NOTH FOUND";
-      }
-
-      const name = split.replace(".service", "");
-      try {
-        console.log(`  ${c.info("▶")} Restarting ${name} service...`);
-        execSync(`systemctl restart ${name}`, {
-          stdio: ["pipe", "pipe", "pipe"],
-        });
-        console.log(`  ${c.success("✔")} ${name} service restarted\n`);
-      } catch {
-        console.log(
-          `  ${c.dim("⚠")} Could not restart ${name} service (may need sudo)\n`
-        );
-      }
+  // Restart daemon if it was running and packages were updated
+  if (daemonWasRunning && anyUpdated) {
+    console.log(`  ${c.info("▶")} Restarting locus daemon...`);
+    const restarted = await restartDaemonIfRunning();
+    if (restarted) {
+      console.log(`  ${c.success("✔")} Locus daemon restarted\n`);
+    } else {
+      console.log(
+        `  ${c.dim("⚠")} Could not restart daemon (may need sudo)\n`
+      );
     }
+  } else if (daemonWasRunning && !anyUpdated) {
+    console.log(`  ${c.dim("No updates — daemon left running")}\n`);
   }
 
   console.log("");

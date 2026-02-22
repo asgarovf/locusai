@@ -24,11 +24,17 @@ export function showHelp(): void {
               ${c.dim("sync          Sync docs from API to .locus/documents")}
     ${c.success("review")}    Review open Locus PRs on GitHub with AI
               ${c.dim("local         Review staged changes locally (no GitHub)")}
-    ${c.success("telegram")}  Configure the Telegram bot
+    ${c.success("telegram")}  Manage the Telegram bot
+              ${c.dim("start         Start the Telegram bot")}
               ${c.dim("setup         Interactive bot token and chat ID setup")}
               ${c.dim("config        Show current configuration")}
               ${c.dim("set <k> <v>   Update a config value")}
               ${c.dim("remove        Remove Telegram configuration")}
+    ${c.success("daemon")}    Manage the Locus background service
+              ${c.dim("start         Install and start the daemon")}
+              ${c.dim("stop          Stop and remove the daemon")}
+              ${c.dim("restart       Restart the daemon")}
+              ${c.dim("status        Check if the daemon is running")}
     ${c.success("exec")}      Run a prompt with repository context
               ${c.dim("--interactive, -i  Start interactive REPL mode")}
               ${c.dim("--session, -s <id> Resume a previous session")}
@@ -36,10 +42,6 @@ export function showHelp(): void {
               ${c.dim("sessions show <id> Show session messages")}
               ${c.dim("sessions delete <id> Delete a session")}
               ${c.dim("sessions clear     Clear all sessions")}
-    ${c.success("service")}   Manage the Locus system service
-              ${c.dim("install           Install as systemd/launchd service")}
-              ${c.dim("uninstall         Remove the system service")}
-              ${c.dim("status            Check if service is running")}
     ${c.success("artifacts")} List and manage knowledge artifacts
               ${c.dim("show <name>        Show artifact content")}
               ${c.dim("plan <name>        Convert artifact to a plan")}
@@ -62,18 +64,18 @@ export function showHelp(): void {
     ${c.dim("$")} ${c.primary("locus init")}
     ${c.dim("$")} ${c.primary("locus config setup")}
     ${c.dim("$")} ${c.primary("locus telegram setup")}
-    ${c.dim("$")} ${c.primary("locus service install")}
+    ${c.dim("$")} ${c.primary("locus daemon start")}
 
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} ${c.primary("locus run")}
     ${c.dim("$")} ${c.primary("locus docs sync")}
     ${c.dim("$")} ${c.primary("locus review")}
     ${c.dim("$")} ${c.primary("locus review local")}
-    ${c.dim("$")} ${c.primary("locus telegram setup")}
+    ${c.dim("$")} ${c.primary("locus telegram start")}
     ${c.dim("$")} ${c.primary('locus discuss "how should we design the auth system?"')}
     ${c.dim("$")} ${c.primary("locus exec sessions list")}
     ${c.dim("$")} ${c.primary("locus artifacts")}
-    ${c.dim("$")} ${c.primary("locus service install")}
+    ${c.dim("$")} ${c.primary("locus daemon start")}
 
   For more information, visit: ${c.underline("https://docs.locusai.dev")}
 `);
