@@ -1,5 +1,10 @@
-import { DependencyScanJob, LintScanJob, TestScanJob, TodoScanJob } from "./scans/index.js";
 import { JobRegistry } from "./job-registry.js";
+import {
+  DependencyScanJob,
+  LintScanJob,
+  TestScanJob,
+  TodoScanJob,
+} from "./scans/index.js";
 
 export function createDefaultRegistry(): JobRegistry {
   const registry = new JobRegistry();

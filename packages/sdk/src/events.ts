@@ -19,7 +19,7 @@ export class LocusEmitter extends EventEmitter {
   on(event: LocusEvent.TOKEN_EXPIRED, listener: () => void): this;
   on(event: LocusEvent.AUTH_ERROR, listener: (error: Error) => void): this;
   on(event: LocusEvent.REQUEST_ERROR, listener: (error: Error) => void): this;
-  on(event: string, listener: (...args: any[]) => void): this;
+  on(event: string, listener: (...args: unknown[]) => void): this;
   on(
     event: LocusEvent | string,
     listener: ((...args: unknown[]) => void) | (() => void)

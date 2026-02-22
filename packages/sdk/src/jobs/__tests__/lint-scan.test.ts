@@ -1,12 +1,11 @@
-import { describe, expect, it, beforeEach, mock, spyOn } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import {
+  type AutonomyRule,
   ChangeCategory,
   JobSeverity,
   JobType,
   RiskLevel,
   SuggestionType,
-  type AutonomyRule,
-  type JobConfig,
 } from "@locusai/shared";
 import type { JobContext } from "../base-job.js";
 import { LintScanJob } from "../scans/lint-scan.js";
@@ -36,11 +35,19 @@ function makeContext(overrides: Partial<JobContext> = {}): JobContext {
 }
 
 const STYLE_AUTOEXEC_RULES: AutonomyRule[] = [
-  { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
+  {
+    category: ChangeCategory.STYLE,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
 ];
 
 const STYLE_MANUAL_RULES: AutonomyRule[] = [
-  { category: ChangeCategory.STYLE, riskLevel: RiskLevel.HIGH, autoExecute: false },
+  {
+    category: ChangeCategory.STYLE,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
 ];
 
 // ── Testable subclass ──────────────────────────────────────────────────
@@ -52,7 +59,6 @@ class TestableLintScan extends LintScanJob {
   private _linterKind: "biome" | "eslint" | null = "biome";
   private _lintOutput = { stdout: "", stderr: "", exitCode: 0 };
   private _fixOutput = { stdout: "", stderr: "", exitCode: 0 };
-  private _diffOutput = "";
   private _fixCalled = false;
 
   setLinter(kind: "biome" | "eslint" | null) {
@@ -65,10 +71,6 @@ class TestableLintScan extends LintScanJob {
 
   setFixOutput(stdout: string, stderr = "", exitCode = 0) {
     this._fixOutput = { stdout, stderr, exitCode };
-  }
-
-  setDiffOutput(files: string) {
-    this._diffOutput = files;
   }
 
   get fixCalled(): boolean {
@@ -113,11 +115,7 @@ class TestableLintScan extends LintScanJob {
 
     // Stub git operations to avoid real git calls
     orig.gitExec = () => "";
-    const origCommitAndPush = orig.commitAndPush;
     orig.commitAndPush = () => null;
-
-    // Override auto-fix to use our stubbed runLinter and skip real git
-    const origAutoFixMethod = orig.autoFix.bind(this);
 
     try {
       return await LintScanJob.prototype.run.call(this, context);
@@ -196,11 +194,7 @@ describe("LintScanJob", () => {
 
     it("parses biome output with both errors and warnings", async () => {
       job.setLinter("biome");
-      job.setLintOutput(
-        "Found 2 errors.\nFound 7 warnings.",
-        "",
-        1
-      );
+      job.setLintOutput("Found 2 errors.\nFound 7 warnings.", "", 1);
 
       const result = await job.run(
         makeContext({ autonomyRules: STYLE_MANUAL_RULES })
@@ -215,11 +209,7 @@ describe("LintScanJob", () => {
   describe("eslint detection", () => {
     it("parses eslint summary output correctly", async () => {
       job.setLinter("eslint");
-      job.setLintOutput(
-        "10 problems (4 errors, 6 warnings)",
-        "",
-        1
-      );
+      job.setLintOutput("10 problems (4 errors, 6 warnings)", "", 1);
 
       const result = await job.run(
         makeContext({ autonomyRules: STYLE_MANUAL_RULES })
@@ -261,9 +251,7 @@ describe("LintScanJob", () => {
       job.setLinter("biome");
       job.setLintOutput("Found 2 errors.", "", 1);
 
-      const result = await job.run(
-        makeContext({ autonomyRules: STYLE_AUTOEXEC_RULES })
-      );
+      await job.run(makeContext({ autonomyRules: STYLE_AUTOEXEC_RULES }));
 
       expect(job.fixCalled).toBe(true);
     });

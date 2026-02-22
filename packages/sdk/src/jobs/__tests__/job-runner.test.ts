@@ -1,19 +1,18 @@
-import { describe, expect, it, beforeEach, mock } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import {
+  type AutonomyRule,
   ChangeCategory,
+  type JobConfig,
+  JobSeverity,
   JobStatus,
   JobType,
   RiskLevel,
   SuggestionType,
-  type AutonomyRule,
-  type JobConfig,
-  JobSeverity,
 } from "@locusai/shared";
 import { EventEmitter } from "events";
+import type { BaseJob, JobResult } from "../base-job.js";
 import { JobRegistry } from "../job-registry.js";
-import { JobRunner, JobEvent } from "../job-runner.js";
-import type { BaseJob } from "../base-job.js";
-import type { JobContext, JobResult } from "../base-job.js";
+import { JobEvent, JobRunner } from "../job-runner.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -29,7 +28,11 @@ function makeConfig(overrides: Partial<JobConfig> = {}): JobConfig {
 }
 
 const RULES: AutonomyRule[] = [
-  { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
+  {
+    category: ChangeCategory.STYLE,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
 ];
 
 function createMockClient() {
@@ -38,7 +41,11 @@ function createMockClient() {
     emitter,
     jobs: {
       create: mock(() =>
-        Promise.resolve({ id: "run-1", jobType: JobType.LINT_SCAN, status: JobStatus.RUNNING })
+        Promise.resolve({
+          id: "run-1",
+          jobType: JobType.LINT_SCAN,
+          status: JobStatus.RUNNING,
+        })
       ),
       update: mock(() => Promise.resolve({})),
     },
@@ -256,7 +263,9 @@ describe("JobRunner", () => {
 
       try {
         await runner.runJob(JobType.LINT_SCAN, makeConfig(), RULES);
-      } catch {}
+      } catch {
+        /* expected error */
+      }
 
       expect(events).toHaveLength(1);
       expect(events[0]).toEqual({
@@ -275,9 +284,7 @@ describe("JobRunner", () => {
       registry.register(failingJob);
 
       // Make the update call also fail
-      client.jobs.update = mock(() =>
-        Promise.reject(new Error("API down"))
-      );
+      client.jobs.update = mock(() => Promise.reject(new Error("API down")));
 
       // Should still throw the original error, not the update error
       await expect(
@@ -364,9 +371,7 @@ describe("JobRunner", () => {
     });
 
     it("returns empty map when no jobs are enabled", async () => {
-      const configs = [
-        makeConfig({ type: JobType.LINT_SCAN, enabled: false }),
-      ];
+      const configs = [makeConfig({ type: JobType.LINT_SCAN, enabled: false })];
 
       const results = await runner.runAllEnabled(configs, RULES);
       expect(results.size).toBe(0);

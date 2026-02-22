@@ -1,8 +1,8 @@
 import { createInterface } from "node:readline";
 import { c } from "@locusai/sdk/node";
 import {
-  ChangeCategory,
   type AutonomyRule,
+  ChangeCategory,
   JobSeverity,
   JobType,
   RiskLevel,
@@ -170,13 +170,6 @@ function buildAutonomyRules(level: AutonomyLevel): AutonomyRule[] {
   }
 }
 
-function getAutonomyLabel(level: AutonomyLevel): string {
-  for (const opt of Object.values(AUTONOMY_OPTIONS)) {
-    if (opt.level === level) return opt.label;
-  }
-  return level;
-}
-
 export async function setupJobsCommand(_args: string[]): Promise<void> {
   const projectPath = process.cwd();
   requireInitialization(projectPath, "setup-jobs");
@@ -203,15 +196,18 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
     enableInput === ""
       ? currentEnabled
       : enableInput.toLowerCase().startsWith("y");
-  console.log(
-    `  ${enabled ? c.success("✔ Enabled") : c.dim("✖ Disabled")}\n`
-  );
+  console.log(`  ${enabled ? c.success("✔ Enabled") : c.dim("✖ Disabled")}\n`);
 
   if (!enabled) {
-    const settings = { ...existing, jobs: { ...existing.jobs, enabled: false } };
+    const settings = {
+      ...existing,
+      jobs: { ...existing.jobs, enabled: false },
+    };
     manager.save(settings);
     console.log(`  ${c.success("✔")} ${c.bold("Configuration saved.")}`);
-    console.log(`  ${c.dim("Job system is disabled. Run this wizard again to enable it.")}\n`);
+    console.log(
+      `  ${c.dim("Job system is disabled. Run this wizard again to enable it.")}\n`
+    );
     return;
   }
 
@@ -237,13 +233,13 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
 
   for (let i = 0; i < jobTypes.length; i++) {
     const check = currentJobStates[i] ? c.success("[x]") : c.dim("[ ]");
-    console.log(`    ${check} ${c.bold(`${i + 1}.`)} ${JOB_LABELS[jobTypes[i]]}`);
+    console.log(
+      `    ${check} ${c.bold(`${i + 1}.`)} ${JOB_LABELS[jobTypes[i]]}`
+    );
   }
   console.log("");
 
-  const jobInput = await ask(
-    `  Enable which jobs? ${c.dim("(1,2,3,4)")} `
-  );
+  const jobInput = await ask(`  Enable which jobs? ${c.dim("(1,2,3,4)")} `);
 
   let enabledJobs: Set<JobType>;
   if (jobInput === "") {
@@ -276,15 +272,13 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
   console.log("");
 
   const currentSchedule = existing.jobs?.schedule ?? "0 2 * * *";
-  const scheduleInput = await ask(
-    `  Select schedule ${c.dim("(1)")} `
-  );
+  const scheduleInput = await ask(`  Select schedule ${c.dim("(1)")} `);
 
   let schedule: string;
   const scheduleChoice = scheduleInput || "1";
   const selectedSchedule = SCHEDULE_OPTIONS[scheduleChoice];
 
-  if (selectedSchedule && selectedSchedule.cron) {
+  if (selectedSchedule?.cron) {
     schedule = selectedSchedule.cron;
     console.log(`  ${c.success("✔")} ${selectedSchedule.label}\n`);
   } else if (scheduleChoice === "4") {
@@ -308,9 +302,7 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
   }
   console.log("");
 
-  const autonomyInput = await ask(
-    `  Select autonomy level ${c.dim("(2)")} `
-  );
+  const autonomyInput = await ask(`  Select autonomy level ${c.dim("(2)")} `);
   const autonomyChoice = autonomyInput || "2";
   const selectedAutonomy =
     AUTONOMY_OPTIONS[autonomyChoice] ?? AUTONOMY_OPTIONS["2"];
@@ -319,7 +311,9 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
   // ── Step 5: Telegram check ──────────────────────────────────────────
   console.log(`  ${c.primary("Step 5/5")} ${c.bold("Telegram Integration")}`);
 
-  const hasTelegram = !!(existing.telegram?.botToken && existing.telegram?.chatId);
+  const hasTelegram = !!(
+    existing.telegram?.botToken && existing.telegram?.chatId
+  );
   if (hasTelegram) {
     console.log(
       `  ${c.success("✔")} Telegram is configured. Notifications will be sent to your chat.\n`
@@ -347,9 +341,7 @@ export async function setupJobsCommand(_args: string[]): Promise<void> {
     `    ${c.primary("Jobs:")}      ${enabledJobNames.join(", ") || c.dim("None")}`
   );
   console.log(`    ${c.primary("Schedule:")}  ${scheduleLabel}`);
-  console.log(
-    `    ${c.primary("Autonomy:")}  ${selectedAutonomy.label}`
-  );
+  console.log(`    ${c.primary("Autonomy:")}  ${selectedAutonomy.label}`);
   console.log(
     `    ${c.primary("Telegram:")}  ${hasTelegram ? "Connected" : "Not configured"}`
   );

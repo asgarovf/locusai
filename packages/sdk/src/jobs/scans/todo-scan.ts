@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
 import { JobType, SuggestionType } from "@locusai/shared";
-import { BaseJob } from "../base-job.js";
 import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { BaseJob } from "../base-job.js";
 
 // ============================================================================
 // Types
@@ -190,8 +190,7 @@ export class TodoScanJob extends BaseJob {
     // Build type counts
     const counts: string[] = [];
     if (grouped.TODO.length > 0) counts.push(`${grouped.TODO.length} TODOs`);
-    if (grouped.FIXME.length > 0)
-      counts.push(`${grouped.FIXME.length} FIXMEs`);
+    if (grouped.FIXME.length > 0) counts.push(`${grouped.FIXME.length} FIXMEs`);
     if (grouped.HACK.length > 0) counts.push(`${grouped.HACK.length} HACKs`);
     if (grouped.XXX.length > 0) counts.push(`${grouped.XXX.length} XXXs`);
 

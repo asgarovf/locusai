@@ -54,10 +54,7 @@ export class SuggestionsController {
     @Body(new ZodValidationPipe(CreateSuggestionSchema))
     body: CreateSuggestion
   ) {
-    const suggestion = await this.suggestionsService.create(
-      workspaceId,
-      body
-    );
+    const suggestion = await this.suggestionsService.create(workspaceId, body);
     return { suggestion };
   }
 

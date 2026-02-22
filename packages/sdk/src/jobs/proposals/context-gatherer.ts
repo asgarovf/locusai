@@ -1,12 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type {
-  JobRun,
-  Sprint,
-  Suggestion,
-  Task,
-} from "@locusai/shared";
+import type { JobRun, Sprint, Suggestion, Task } from "@locusai/shared";
 import type { LocusClient } from "../../index.js";
 
 // ============================================================================
@@ -153,16 +148,11 @@ export class ContextGatherer {
     if (!existsSync(artifactsDir)) return [];
 
     try {
-      const files = readdirSync(artifactsDir).filter((f) =>
-        f.endsWith(".md")
-      );
+      const files = readdirSync(artifactsDir).filter((f) => f.endsWith(".md"));
 
       return files.slice(0, 10).map((name) => ({
         name,
-        content: readFileSync(join(artifactsDir, name), "utf-8").slice(
-          0,
-          2000
-        ),
+        content: readFileSync(join(artifactsDir, name), "utf-8").slice(0, 2000),
       }));
     } catch {
       return [];

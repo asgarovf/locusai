@@ -39,12 +39,44 @@ export type AutonomyRule = z.infer<typeof AutonomyRuleSchema>;
 
 export const DEFAULT_AUTONOMY_RULES: AutonomyRule[] = [
   { category: ChangeCategory.FIX, riskLevel: RiskLevel.LOW, autoExecute: true },
-  { category: ChangeCategory.REFACTOR, riskLevel: RiskLevel.LOW, autoExecute: true },
-  { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
-  { category: ChangeCategory.DEPENDENCY, riskLevel: RiskLevel.LOW, autoExecute: true },
-  { category: ChangeCategory.FEATURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-  { category: ChangeCategory.ARCHITECTURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-  { category: ChangeCategory.DATABASE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-  { category: ChangeCategory.AUTH, riskLevel: RiskLevel.HIGH, autoExecute: false },
-  { category: ChangeCategory.API, riskLevel: RiskLevel.HIGH, autoExecute: false },
+  {
+    category: ChangeCategory.REFACTOR,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
+  {
+    category: ChangeCategory.STYLE,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
+  {
+    category: ChangeCategory.DEPENDENCY,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
+  {
+    category: ChangeCategory.FEATURE,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
+  {
+    category: ChangeCategory.ARCHITECTURE,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
+  {
+    category: ChangeCategory.DATABASE,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
+  {
+    category: ChangeCategory.AUTH,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
+  {
+    category: ChangeCategory.API,
+    riskLevel: RiskLevel.HIGH,
+    autoExecute: false,
+  },
 ];

@@ -1,8 +1,4 @@
-import {
-  CreateJobRun,
-  JobRun,
-  UpdateJobRun,
-} from "@locusai/shared";
+import { CreateJobRun, JobRun, UpdateJobRun } from "@locusai/shared";
 import { BaseModule } from "./base.js";
 
 interface JobRunResponse {

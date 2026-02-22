@@ -119,9 +119,17 @@ export class SettingsManager {
     const globalSchedule = settings.jobs?.schedule ?? DEFAULT_SCHEDULE;
 
     return DEFAULT_JOB_CONFIGS.map((defaultConfig) => {
-      const userOverride = userConfigs.find((c) => c.type === defaultConfig.type);
+      const userOverride = userConfigs.find(
+        (c) => c.type === defaultConfig.type
+      );
       if (!userOverride) {
-        return { ...defaultConfig, schedule: { ...defaultConfig.schedule, cronExpression: globalSchedule } };
+        return {
+          ...defaultConfig,
+          schedule: {
+            ...defaultConfig.schedule,
+            cronExpression: globalSchedule,
+          },
+        };
       }
       return {
         ...defaultConfig,
@@ -144,9 +152,7 @@ export class SettingsManager {
       return DEFAULT_AUTONOMY_RULES;
     }
 
-    const ruleMap = new Map(
-      DEFAULT_AUTONOMY_RULES.map((r) => [r.category, r])
-    );
+    const ruleMap = new Map(DEFAULT_AUTONOMY_RULES.map((r) => [r.category, r]));
     for (const rule of userRules) {
       ruleMap.set(rule.category, rule);
     }

@@ -154,9 +154,7 @@ export class ProposalEngine {
 
     // Project instructions
     if (context.locusInstructions) {
-      sections.push(
-        `## Project Instructions\n${context.locusInstructions}`
-      );
+      sections.push(`## Project Instructions\n${context.locusInstructions}`);
     }
 
     // Skipped suggestions (so AI avoids re-proposing)
@@ -210,9 +208,7 @@ Rules:
       const complexity = this.extractField(content, "Complexity") ?? "medium";
       const relatedRaw = this.extractField(content, "Related Backlog");
       const relatedBacklogItem =
-        relatedRaw && relatedRaw.toLowerCase() !== "none"
-          ? relatedRaw
-          : null;
+        relatedRaw && relatedRaw.toLowerCase() !== "none" ? relatedRaw : null;
 
       if (title && description) {
         proposals.push({

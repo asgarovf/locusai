@@ -8,8 +8,8 @@ import {
   type Provider,
 } from "@locusai/sdk/node";
 import {
-  ChangeCategory,
   type AutonomyRule,
+  ChangeCategory,
   JobSeverity,
   JobType,
   RiskLevel,
@@ -374,34 +374,106 @@ function buildAutonomyRules(level: string): AutonomyRule[] {
       }));
     case "aggressive":
       return [
-        { category: ChangeCategory.FIX, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.REFACTOR, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.DEPENDENCY, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.DATABASE, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.AUTH, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.API, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.FEATURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-        { category: ChangeCategory.ARCHITECTURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
+        {
+          category: ChangeCategory.FIX,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.REFACTOR,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.STYLE,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.DEPENDENCY,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.DATABASE,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.AUTH,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.API,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.FEATURE,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
+        {
+          category: ChangeCategory.ARCHITECTURE,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
       ];
     default: // balanced
       return [
-        { category: ChangeCategory.FIX, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.REFACTOR, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.DEPENDENCY, riskLevel: RiskLevel.LOW, autoExecute: true },
-        { category: ChangeCategory.FEATURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-        { category: ChangeCategory.ARCHITECTURE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-        { category: ChangeCategory.DATABASE, riskLevel: RiskLevel.HIGH, autoExecute: false },
-        { category: ChangeCategory.AUTH, riskLevel: RiskLevel.HIGH, autoExecute: false },
-        { category: ChangeCategory.API, riskLevel: RiskLevel.HIGH, autoExecute: false },
+        {
+          category: ChangeCategory.FIX,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.REFACTOR,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.STYLE,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.DEPENDENCY,
+          riskLevel: RiskLevel.LOW,
+          autoExecute: true,
+        },
+        {
+          category: ChangeCategory.FEATURE,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
+        {
+          category: ChangeCategory.ARCHITECTURE,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
+        {
+          category: ChangeCategory.DATABASE,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
+        {
+          category: ChangeCategory.AUTH,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
+        {
+          category: ChangeCategory.API,
+          riskLevel: RiskLevel.HIGH,
+          autoExecute: false,
+        },
       ];
   }
 }
 
 export async function setupJobsCommand(
   ctx: Context,
-  config: TelegramConfig
+  _config: TelegramConfig
 ): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
@@ -475,9 +547,12 @@ export function registerSetupJobsCallbacks(
 
     const state = setupJobsStates.get(chatId);
     if (!state) {
-      await ctx.reply(formatError("No setup in progress. Run /setupjobs to start."), {
-        parse_mode: "HTML",
-      });
+      await ctx.reply(
+        formatError("No setup in progress. Run /setupjobs to start."),
+        {
+          parse_mode: "HTML",
+        }
+      );
       return;
     }
 
@@ -656,12 +731,7 @@ export function registerSetupJobsCallbacks(
                 "sjobs_auto_balanced"
               ),
             ],
-            [
-              Markup.button.callback(
-                "⚡ Aggressive",
-                "sjobs_auto_aggressive"
-              ),
-            ],
+            [Markup.button.callback("⚡ Aggressive", "sjobs_auto_aggressive")],
           ]),
         });
       } catch {
@@ -680,12 +750,7 @@ export function registerSetupJobsCallbacks(
                 "sjobs_auto_balanced"
               ),
             ],
-            [
-              Markup.button.callback(
-                "⚡ Aggressive",
-                "sjobs_auto_aggressive"
-              ),
-            ],
+            [Markup.button.callback("⚡ Aggressive", "sjobs_auto_aggressive")],
           ]),
         });
       }
@@ -755,9 +820,12 @@ export function registerSetupJobsCallbacks(
 
     const state = setupJobsStates.get(chatId);
     if (!state) {
-      await ctx.reply(formatError("No setup in progress. Run /setupjobs to start."), {
-        parse_mode: "HTML",
-      });
+      await ctx.reply(
+        formatError("No setup in progress. Run /setupjobs to start."),
+        {
+          parse_mode: "HTML",
+        }
+      );
       return;
     }
 

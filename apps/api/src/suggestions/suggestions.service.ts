@@ -1,7 +1,7 @@
 import {
   CreateSuggestion,
-  SuggestionStatus,
   SUGGESTION_TTL_HOURS,
+  SuggestionStatus,
 } from "@locusai/shared";
 import {
   BadRequestException,

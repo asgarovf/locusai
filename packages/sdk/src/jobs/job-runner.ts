@@ -111,8 +111,7 @@ export class JobRunner {
 
       return result;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : String(err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
 
       // Update job run with failed status
       await this.client.jobs

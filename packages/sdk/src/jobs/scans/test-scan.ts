@@ -1,13 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  ChangeCategory,
-  JobType,
-  SuggestionType,
-} from "@locusai/shared";
-import { BaseJob } from "../base-job.js";
+import { JobType, SuggestionType } from "@locusai/shared";
 import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { BaseJob } from "../base-job.js";
 
 // ============================================================================
 // Types
@@ -55,7 +51,7 @@ export class TestScanJob extends BaseJob {
   readonly name = "Flaky Test Detection";
 
   async run(context: JobContext): Promise<JobResult> {
-    const { projectPath, autonomyRules } = context;
+    const { projectPath } = context;
     const retryCount =
       (context.config.options?.retryCount as number | undefined) ?? 2;
 
@@ -189,7 +185,10 @@ export class TestScanJob extends BaseJob {
     try {
       const files = readdirSync(projectPath);
       if (files.some((f) => f.startsWith("jest.config."))) {
-        return { kind: "jest", command: ["npx", "jest", "--json", "--no-coverage"] };
+        return {
+          kind: "jest",
+          command: ["npx", "jest", "--json", "--no-coverage"],
+        };
       }
     } catch {
       // Directory read failed
@@ -199,7 +198,10 @@ export class TestScanJob extends BaseJob {
     try {
       const files = readdirSync(projectPath);
       if (files.some((f) => f.startsWith("vitest.config."))) {
-        return { kind: "vitest", command: ["npx", "vitest", "run", "--reporter=json"] };
+        return {
+          kind: "vitest",
+          command: ["npx", "vitest", "run", "--reporter=json"],
+        };
       }
     } catch {
       // Directory read failed
@@ -217,28 +219,37 @@ export class TestScanJob extends BaseJob {
           pkgJson.devDependencies?.jest ||
           pkgJson.dependencies?.jest
         ) {
-          return { kind: "jest", command: ["npx", "jest", "--json", "--no-coverage"] };
+          return {
+            kind: "jest",
+            command: ["npx", "jest", "--json", "--no-coverage"],
+          };
         }
 
         // Check for vitest as dependency
-        if (
-          pkgJson.devDependencies?.vitest ||
-          pkgJson.dependencies?.vitest
-        ) {
-          return { kind: "vitest", command: ["npx", "vitest", "run", "--reporter=json"] };
+        if (pkgJson.devDependencies?.vitest || pkgJson.dependencies?.vitest) {
+          return {
+            kind: "vitest",
+            command: ["npx", "vitest", "run", "--reporter=json"],
+          };
         }
 
         // Check for mocha
-        if (
-          pkgJson.devDependencies?.mocha ||
-          pkgJson.dependencies?.mocha
-        ) {
-          return { kind: "mocha", command: ["npx", "mocha", "--reporter=json"] };
+        if (pkgJson.devDependencies?.mocha || pkgJson.dependencies?.mocha) {
+          return {
+            kind: "mocha",
+            command: ["npx", "mocha", "--reporter=json"],
+          };
         }
 
         // Check if there's a test script defined
-        if (pkgJson.scripts?.test && pkgJson.scripts.test !== "echo \"Error: no test specified\" && exit 1") {
-          return { kind: "fallback", command: ["npm", "test", "--", "--no-coverage"] };
+        if (
+          pkgJson.scripts?.test &&
+          pkgJson.scripts.test !== 'echo "Error: no test specified" && exit 1'
+        ) {
+          return {
+            kind: "fallback",
+            command: ["npm", "test", "--", "--no-coverage"],
+          };
         }
       } catch {
         // JSON parse failed
@@ -301,7 +312,8 @@ export class TestScanJob extends BaseJob {
       const testResults = jsonData.testResults ?? [];
       for (const suite of testResults) {
         const filePath = suite.testFilePath ?? suite.name ?? "unknown";
-        const assertionResults = suite.assertionResults ?? suite.testResults ?? [];
+        const assertionResults =
+          suite.assertionResults ?? suite.testResults ?? [];
         for (const test of assertionResults) {
           const ancestors = Array.isArray(test.ancestorTitles)
             ? test.ancestorTitles.join(" > ")
@@ -313,7 +325,12 @@ export class TestScanJob extends BaseJob {
           tests.push({
             testFile: filePath,
             testName,
-            status: test.status === "passed" ? "passed" : test.status === "pending" ? "skipped" : "failed",
+            status:
+              test.status === "passed"
+                ? "passed"
+                : test.status === "pending"
+                  ? "skipped"
+                  : "failed",
             failureMessages: Array.isArray(test.failureMessages)
               ? test.failureMessages.map(String)
               : [],
@@ -449,7 +466,7 @@ export class TestScanJob extends BaseJob {
 
   private classifyTests(
     allRuns: TestRunRecord[],
-    firstRunTests: TestCaseResult[]
+    _firstRunTests: TestCaseResult[]
   ): {
     flaky: ClassifiedTest[];
     broken: ClassifiedTest[];
@@ -495,7 +512,7 @@ export class TestScanJob extends BaseJob {
 
       // Truncate long failure messages
       const truncatedMessages = failureMessages.map((m) =>
-        m.length > 500 ? m.slice(0, 500) + "..." : m
+        m.length > 500 ? `${m.slice(0, 500)}...` : m
       );
 
       if (passCount > 0 && failCount > 0) {
@@ -536,6 +553,7 @@ export class TestScanJob extends BaseJob {
     return map;
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: parsing arbitrary JSON output
   private extractJson(text: string): Record<string, any> | null {
     // Try to find and parse a JSON object in the output
     // Jest sometimes prepends non-JSON text before the JSON blob

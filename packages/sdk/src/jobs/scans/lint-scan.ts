@@ -1,18 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import {
-  ChangeCategory,
-  JobType,
-  SuggestionType,
-} from "@locusai/shared";
-import { BaseJob } from "../base-job.js";
-import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { ChangeCategory, JobType, SuggestionType } from "@locusai/shared";
 import {
   detectRemoteProvider,
   getDefaultBranch,
   isGhAvailable,
 } from "../../git/git-utils.js";
+import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { BaseJob } from "../base-job.js";
 
 // ============================================================================
 // Types
@@ -105,7 +101,10 @@ export class LintScanJob extends BaseJob {
 
   private detectLinter(projectPath: string): DetectedLinter | null {
     // Check for Biome
-    if (existsSync(join(projectPath, "biome.json")) || existsSync(join(projectPath, "biome.jsonc"))) {
+    if (
+      existsSync(join(projectPath, "biome.json")) ||
+      existsSync(join(projectPath, "biome.jsonc"))
+    ) {
       return {
         kind: "biome",
         checkCommand: ["bunx", "biome", "check", "."],
@@ -137,7 +136,8 @@ export class LintScanJob extends BaseJob {
     try {
       const files = readdirSync(projectPath);
       const hasFlatConfig = files.some(
-        (f) => f.startsWith("eslint.config.") && /\.(js|cjs|mjs|ts|cts|mts)$/.test(f)
+        (f) =>
+          f.startsWith("eslint.config.") && /\.(js|cjs|mjs|ts|cts|mts)$/.test(f)
       );
       if (hasFlatConfig) {
         return {
@@ -273,15 +273,11 @@ export class LintScanJob extends BaseJob {
     // Detect changed files
     let changedFiles: string[];
     try {
-      const diffOutput = execFileSync(
-        "git",
-        ["diff", "--name-only"],
-        {
-          cwd: projectPath,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"],
-        }
-      ).trim();
+      const diffOutput = execFileSync("git", ["diff", "--name-only"], {
+        cwd: projectPath,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
       changedFiles = diffOutput ? diffOutput.split("\n") : [];
     } catch {
       changedFiles = [];
@@ -296,12 +292,7 @@ export class LintScanJob extends BaseJob {
     }
 
     // Create branch, commit, and push
-    const prUrl = this.commitAndPush(
-      projectPath,
-      changedFiles,
-      linter,
-      parsed
-    );
+    const prUrl = this.commitAndPush(projectPath, changedFiles, linter, parsed);
 
     const summary = prUrl
       ? `Auto-fixed ${this.issueCountSummary(parsed)} across ${changedFiles.length} file(s) — PR created (${linter.kind})`
@@ -336,10 +327,7 @@ export class LintScanJob extends BaseJob {
       this.gitExec(["commit", "-m", commitMessage], projectPath);
 
       // Push
-      this.gitExec(
-        ["push", "-u", "origin", branchName],
-        projectPath
-      );
+      this.gitExec(["push", "-u", "origin", branchName], projectPath);
 
       // Create PR if gh is available and remote is GitHub
       let prUrl: string | null = null;

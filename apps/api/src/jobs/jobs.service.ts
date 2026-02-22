@@ -1,4 +1,9 @@
-import { JobStatus, JobType, CreateJobRun, UpdateJobRun } from "@locusai/shared";
+import {
+  CreateJobRun,
+  JobStatus,
+  JobType,
+  UpdateJobRun,
+} from "@locusai/shared";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -11,10 +16,7 @@ export class JobsService {
     private readonly jobRunRepository: Repository<JobRun>
   ) {}
 
-  async create(
-    workspaceId: string,
-    data: CreateJobRun
-  ): Promise<JobRun> {
+  async create(workspaceId: string, data: CreateJobRun): Promise<JobRun> {
     const jobRun = this.jobRunRepository.create({
       workspaceId,
       jobType: data.jobType,

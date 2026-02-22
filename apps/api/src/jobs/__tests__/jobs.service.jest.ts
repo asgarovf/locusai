@@ -47,6 +47,7 @@ describe("JobsService", () => {
 
       const result = await service.create("ws-1", {
         jobType: JobType.LINT_SCAN,
+        status: JobStatus.RUNNING,
       });
 
       expect(repository.create).toHaveBeenCalledWith({
@@ -86,6 +87,7 @@ describe("JobsService", () => {
 
       await service.create("ws-1", {
         jobType: JobType.LINT_SCAN,
+        status: JobStatus.RUNNING,
         startedAt,
       });
 
@@ -103,6 +105,7 @@ describe("JobsService", () => {
 
       const result = await service.create("ws-1", {
         jobType: JobType.LINT_SCAN,
+        status: JobStatus.RUNNING,
       });
 
       expect(result).toEqual(jobRun);

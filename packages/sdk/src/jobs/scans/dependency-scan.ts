@@ -1,18 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import {
-  ChangeCategory,
-  JobType,
-  SuggestionType,
-} from "@locusai/shared";
-import { BaseJob } from "../base-job.js";
-import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { ChangeCategory, JobType, SuggestionType } from "@locusai/shared";
 import {
   detectRemoteProvider,
   getDefaultBranch,
   isGhAvailable,
 } from "../../git/git-utils.js";
+import type { JobContext, JobResult, JobSuggestion } from "../base-job.js";
+import { BaseJob } from "../base-job.js";
 
 // ============================================================================
 // Types
@@ -100,7 +96,11 @@ export class DependencyScanJob extends BaseJob {
     let filesChanged = 0;
     let prUrl: string | undefined;
 
-    if (canAutoExecute && (patch.length > 0 || minor.length > 0) && major.length === 0) {
+    if (
+      canAutoExecute &&
+      (patch.length > 0 || minor.length > 0) &&
+      major.length === 0
+    ) {
       const autoResult = this.autoUpdate(pm, patch, minor, projectPath);
       filesChanged = autoResult.filesChanged;
       prUrl = autoResult.prUrl ?? undefined;
@@ -428,10 +428,7 @@ export class DependencyScanJob extends BaseJob {
     }
   }
 
-  private runInstallCommand(
-    pm: PackageManager,
-    projectPath: string
-  ): void {
+  private runInstallCommand(pm: PackageManager, projectPath: string): void {
     const commands: Record<PackageManager, string[]> = {
       bun: ["bun", "install"],
       npm: ["npm", "install"],
@@ -460,7 +457,9 @@ export class DependencyScanJob extends BaseJob {
       this.gitExec(["add", ...changedFiles], projectPath);
 
       // Commit
-      const packageList = packages.map((p) => `${p.name}@${p.latest}`).join(", ");
+      const packageList = packages
+        .map((p) => `${p.name}@${p.latest}`)
+        .join(", ");
       const commitMessage = `fix(deps): update ${packages.length} safe dependencies\n\nUpdated: ${packageList}\nPackage manager: ${pm}\nAgent: locus-dependency-check\nCo-authored-by: LocusAI <agent@locusai.team>`;
       this.gitExec(["commit", "-m", commitMessage], projectPath);
 
@@ -483,8 +482,7 @@ export class DependencyScanJob extends BaseJob {
             "### Updated packages",
             "",
             ...packages.map(
-              (p) =>
-                `- \`${p.name}\`: ${p.current} → ${p.latest} (${p.risk})`
+              (p) => `- \`${p.name}\`: ${p.current} → ${p.latest} (${p.risk})`
             ),
             "",
             `- **Files changed**: ${changedFiles.length}`,
@@ -638,11 +636,7 @@ export class DependencyScanJob extends BaseJob {
     }
   }
 
-  private exec(
-    bin: string,
-    args: string[],
-    cwd: string
-  ): CommandOutput {
+  private exec(bin: string, args: string[], cwd: string): CommandOutput {
     try {
       const stdout = execFileSync(bin, args, {
         cwd,

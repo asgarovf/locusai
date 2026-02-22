@@ -1,18 +1,17 @@
-import { describe, expect, it, beforeEach, afterEach, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import {
+  type AutonomyRule,
   ChangeCategory,
+  type JobConfig,
   JobSeverity,
   JobType,
   RiskLevel,
-  type AutonomyRule,
-  type JobConfig,
 } from "@locusai/shared";
 import { EventEmitter } from "events";
 import {
+  type ConfigLoader,
   JobScheduler,
   SchedulerEvent,
-  type ConfigLoader,
-  type SchedulerConfig,
 } from "../scheduler.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -29,7 +28,11 @@ function makeConfig(overrides: Partial<JobConfig> = {}): JobConfig {
 }
 
 const DEFAULT_RULES: AutonomyRule[] = [
-  { category: ChangeCategory.STYLE, riskLevel: RiskLevel.LOW, autoExecute: true },
+  {
+    category: ChangeCategory.STYLE,
+    riskLevel: RiskLevel.LOW,
+    autoExecute: true,
+  },
 ];
 
 function createMockRunner() {
@@ -212,9 +215,7 @@ describe("JobScheduler", () => {
     });
 
     it("reschedules jobs after reload", () => {
-      let callCount = 0;
       const loader: ConfigLoader = () => {
-        callCount++;
         return { jobConfigs: configs, autonomyRules: DEFAULT_RULES };
       };
 
@@ -286,9 +287,7 @@ describe("JobScheduler", () => {
       scheduler.start();
 
       const skippedEvents: any[] = [];
-      emitter.on(SchedulerEvent.JOB_SKIPPED, (p: any) =>
-        skippedEvents.push(p)
-      );
+      emitter.on(SchedulerEvent.JOB_SKIPPED, (p: any) => skippedEvents.push(p));
 
       // Trigger the job manually via the private method
       (scheduler as any).triggerJob(JobType.LINT_SCAN);
@@ -324,11 +323,6 @@ describe("JobScheduler", () => {
       });
 
       scheduler = new JobScheduler(runner, loader, emitter);
-
-      let startedPayload: any;
-      emitter.on(SchedulerEvent.SCHEDULER_STARTED, (p: any) => {
-        startedPayload = p;
-      });
 
       // Should not throw
       scheduler.start();

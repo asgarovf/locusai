@@ -37,7 +37,10 @@ const JOB_TYPE_ALIASES: Record<string, string> = {
 
 function resolveJobType(input: string): string | undefined {
   const lower = input.toLowerCase();
-  return JOB_TYPE_ALIASES[lower] ?? (Object.values(JobType).includes(input as JobType) ? input : undefined);
+  return (
+    JOB_TYPE_ALIASES[lower] ??
+    (Object.values(JobType).includes(input as JobType) ? input : undefined)
+  );
 }
 
 // ── Status icons ────────────────────────────────────────────────────────
@@ -123,8 +126,7 @@ function loadJobConfigs(projectPath: string): JobDisplayConfig[] {
       type: def.type,
       enabled: override.enabled ?? def.enabled,
       severity: override.severity ?? def.severity,
-      cronExpression:
-        override.schedule?.cronExpression ?? globalSchedule,
+      cronExpression: override.schedule?.cronExpression ?? globalSchedule,
     };
   });
 }
@@ -170,7 +172,8 @@ export async function runJobCommand(
   ctx: Context,
   executor: CliExecutor
 ): Promise<void> {
-  const text = (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
+  const text =
+    (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
   const args = text.split(/\s+/).slice(1);
   const typeArg = args[0];
 
@@ -217,7 +220,9 @@ export async function runJobCommand(
 
     if (result.exitCode === 0) {
       await ctx.reply(
-        formatSuccess(`${jobName} completed.\n\n<pre>${escapeHtml(output.slice(0, 3000))}</pre>`),
+        formatSuccess(
+          `${jobName} completed.\n\n<pre>${escapeHtml(output.slice(0, 3000))}</pre>`
+        ),
         { parse_mode: "HTML" }
       );
     } else {
