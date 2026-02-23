@@ -92,35 +92,4 @@ export const queryKeys = {
     list: (orgId: string) =>
       [...queryKeys.invitations.all(), "list", orgId] as const,
   },
-  awsCredentials: {
-    all: () => ["aws-credentials"] as const,
-    detail: (workspaceId: string) =>
-      [...queryKeys.awsCredentials.all(), "detail", workspaceId] as const,
-  },
-  awsInstances: {
-    all: () => ["aws-instances"] as const,
-    list: (workspaceId: string) =>
-      [...queryKeys.awsInstances.all(), "list", workspaceId] as const,
-    detail: (workspaceId: string, instanceId: string) =>
-      [
-        ...queryKeys.awsInstances.all(),
-        "detail",
-        workspaceId,
-        instanceId,
-      ] as const,
-    updates: (workspaceId: string, instanceId: string) =>
-      [
-        ...queryKeys.awsInstances.all(),
-        "updates",
-        workspaceId,
-        instanceId,
-      ] as const,
-    security: (workspaceId: string, instanceId: string) =>
-      [
-        ...queryKeys.awsInstances.all(),
-        "security",
-        workspaceId,
-        instanceId,
-      ] as const,
-  },
 };

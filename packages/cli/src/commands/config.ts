@@ -1,10 +1,11 @@
 import { createInterface } from "node:readline";
-import { c } from "@locusai/sdk/node";
 import {
   type LocusSettings,
+  maskSecret,
   SettingsManager,
   type TelegramSettings,
-} from "../settings-manager";
+} from "@locusai/commands";
+import { c } from "@locusai/sdk/node";
 
 function ask(question: string): Promise<string> {
   const rl = createInterface({
@@ -34,11 +35,6 @@ const TELEGRAM_KEYS = [
 ] as const;
 
 const ALL_KEYS = [...TOP_LEVEL_KEYS, ...TELEGRAM_KEYS] as const;
-
-function maskSecret(value: string): string {
-  if (value.length <= 8) return "****";
-  return `${value.slice(0, 4)}...${value.slice(-4)}`;
-}
 
 function showConfigHelp(): void {
   console.log(`

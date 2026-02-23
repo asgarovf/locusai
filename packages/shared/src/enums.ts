@@ -39,18 +39,6 @@ export enum SprintStatus {
   COMPLETED = "COMPLETED",
 }
 
-export enum InstanceStatus {
-  PROVISIONING = "PROVISIONING",
-  RUNNING = "RUNNING",
-  STOPPED = "STOPPED",
-  TERMINATED = "TERMINATED",
-  ERROR = "ERROR",
-}
-
-export enum AwsRegion {
-  US_EAST_1 = "us-east-1",
-}
-
 export enum EventType {
   TASK_CREATED = "TASK_CREATED",
   TASK_UPDATED = "TASK_UPDATED",

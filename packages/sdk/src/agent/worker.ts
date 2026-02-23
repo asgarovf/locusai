@@ -1,10 +1,10 @@
 import { type Sprint, type Task, TaskStatus } from "@locusai/shared";
-import { createAiRunner } from "../ai/factory.js";
+import type { LogFn } from "../ai/factory.js";
+import { createAiRunner, createWorkerLogger } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
 import { isGhAvailable, isGitAvailable } from "../git/git-utils.js";
 import { LocusClient } from "../index.js";
-import { c } from "../utils/colors.js";
 import { GitWorkflow } from "./git-workflow.js";
 import { TaskExecutor } from "./task-executor.js";
 import type { TaskResult, WorkerConfig } from "./worker-types.js";
@@ -39,8 +39,12 @@ export class AgentWorker {
   private completedTaskList: Array<{ title: string; id: string }> = [];
   private taskSummaries: string[] = [];
 
+  log: LogFn;
+
   constructor(private config: WorkerConfig) {
     const projectPath = config.projectPath || process.cwd();
+
+    this.log = createWorkerLogger(config.agentId);
 
     this.client = new LocusClient({
       baseUrl: config.apiBase,
@@ -52,8 +56,6 @@ export class AgentWorker {
         factor: 2,
       },
     });
-
-    const log = this.log.bind(this);
 
     // Prerequisite checks
     if (!isGitAvailable()) {
@@ -75,36 +77,21 @@ export class AgentWorker {
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
-      log,
+      log: this.log,
       reasoningEffort: config.reasoningEffort,
     });
     this.taskExecutor = new TaskExecutor({
       aiRunner: this.aiRunner,
       projectPath,
-      log,
+      log: this.log,
     });
 
     // Git workflow handles branch creation, commit, push, and PR
-    this.gitWorkflow = new GitWorkflow(config, log);
+    this.gitWorkflow = new GitWorkflow(config, this.log);
 
     // Log initialization
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Using ${providerLabel} CLI for all phases`, "info");
-  }
-
-  log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
-    const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
-    const colorFn = {
-      info: c.cyan,
-      success: c.green,
-      warn: c.yellow,
-      error: c.red,
-    }[level];
-    const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
-
-    console.log(
-      `${c.dim(`[${timestamp}]`)} ${c.bold(`[${this.config.agentId.slice(-8)}]`)} ${colorFn(`${prefix} ${message}`)}`
-    );
   }
 
   // ---------------------------------------------------------------------------

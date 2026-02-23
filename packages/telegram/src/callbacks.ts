@@ -1,3 +1,5 @@
+import { cancelPlan, resolveApiContext } from "@locusai/commands";
+import { PlanManager } from "@locusai/sdk/node";
 import { TaskStatus } from "@locusai/shared";
 import type { Telegraf } from "telegraf";
 import { getClientAndWorkspace } from "./api-client.js";
@@ -9,12 +11,7 @@ import {
 } from "./commands/discuss.js";
 import type { TelegramConfig } from "./config.js";
 import type { CliExecutor } from "./executor.js";
-import {
-  escapeHtml,
-  formatCommandOutput,
-  formatError,
-  splitMessage,
-} from "./formatter.js";
+import { escapeHtml, formatError, splitMessage } from "./formatter.js";
 
 /**
  * Register inline keyboard callback query handlers.
@@ -184,22 +181,30 @@ export function registerCallbacks(
     const planId = ctx.match[1];
 
     try {
-      const args = executor.buildArgs(["plan", "--approve", planId], {
-        needsApiKey: true,
+      const { client, workspaceId } = await resolveApiContext({
+        projectPath: config.projectPath,
+        apiKey: config.apiKey,
+        apiUrl: config.apiBase,
+        workspaceId: config.workspaceId,
       });
-      const result = await executor.execute(args);
-      const output = (result.stdout + result.stderr).trim();
+
+      const planManager = new PlanManager(config.projectPath);
+      const { sprint, tasks } = await planManager.approve(
+        planId,
+        client,
+        workspaceId
+      );
+
+      let msg = `✅ <b>Sprint created: ${escapeHtml(sprint.name)}</b>\n`;
+      msg += `Tasks: ${tasks.length}\n\n`;
+      for (const task of tasks) {
+        msg += `• ${escapeHtml(task.title)} [${task.assigneeRole || "UNASSIGNED"}]\n`;
+      }
 
       try {
-        await ctx.editMessageText(
-          formatCommandOutput("locus plan --approve", output, result.exitCode),
-          { parse_mode: "HTML" }
-        );
+        await ctx.editMessageText(msg.trim(), { parse_mode: "HTML" });
       } catch {
-        await ctx.reply(
-          formatCommandOutput("locus plan --approve", output, result.exitCode),
-          { parse_mode: "HTML" }
-        );
+        await ctx.reply(msg.trim(), { parse_mode: "HTML" });
       }
     } catch (err) {
       console.error("[callback:approve:plan] Failed:", err);
@@ -218,18 +223,17 @@ export function registerCallbacks(
     const planId = ctx.match[1];
 
     try {
-      const args = executor.buildArgs(["plan", "--cancel", planId]);
-      const result = await executor.execute(args);
-      const output = (result.stdout + result.stderr).trim();
+      const planManager = new PlanManager(config.projectPath);
+      cancelPlan(planManager, planId);
 
       try {
         await ctx.editMessageText(
-          formatCommandOutput("locus plan --cancel", output, result.exitCode),
+          `⊘ Plan <code>${escapeHtml(planId)}</code> cancelled.`,
           { parse_mode: "HTML" }
         );
       } catch {
         await ctx.reply(
-          formatCommandOutput("locus plan --cancel", output, result.exitCode),
+          `⊘ Plan <code>${escapeHtml(planId)}</code> cancelled.`,
           { parse_mode: "HTML" }
         );
       }

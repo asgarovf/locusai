@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Key, Server, Trash2, Users } from "lucide-react";
+import { ChevronRight, Key, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageLayout } from "@/components";
@@ -37,21 +37,6 @@ function SettingsContent() {
               icon={<Key size={18} />}
               title="API Keys"
               description="Manage API keys for CLI and integrations"
-            >
-              <div className="text-muted-foreground">
-                <ChevronRight size={20} />
-              </div>
-            </SettingItem>
-          </Link>
-        </SettingSection>
-
-        {/* Infrastructure */}
-        <SettingSection title="Infrastructure">
-          <Link href="/settings/aws">
-            <SettingItem
-              icon={<Server size={18} />}
-              title="Hosting"
-              description="Connect AWS credentials to provision agent servers"
             >
               <div className="text-muted-foreground">
                 <ChevronRight size={20} />

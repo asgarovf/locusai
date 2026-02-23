@@ -1,10 +1,10 @@
-import { createAiRunner } from "../ai/factory.js";
+import type { LogFn } from "../ai/factory.js";
+import { createAiRunner, createWorkerLogger } from "../ai/factory.js";
 import type { AiProvider, AiRunner } from "../ai/runner.js";
 import { PROVIDER } from "../core/config.js";
 import { isGhAvailable } from "../git/git-utils.js";
 import { PrService } from "../git/pr-service.js";
 import { LocusClient } from "../index.js";
-import { c } from "../utils/colors.js";
 
 function resolveProvider(value: string | undefined): AiProvider {
   if (!value || value.startsWith("--")) return PROVIDER.CLAUDE;
@@ -36,9 +36,12 @@ export class ReviewerWorker {
   private currentTaskId: string | null = null;
   private maxReviews = 50;
   private reviewsCompleted = 0;
+  log: LogFn;
 
   constructor(private config: ReviewerConfig) {
     const projectPath = config.projectPath || process.cwd();
+
+    this.log = createWorkerLogger(config.agentId, "R");
 
     this.client = new LocusClient({
       baseUrl: config.apiBase,
@@ -51,33 +54,17 @@ export class ReviewerWorker {
       },
     });
 
-    const log = this.log.bind(this);
     const provider = config.provider ?? PROVIDER.CLAUDE;
     this.aiRunner = createAiRunner(provider, {
       projectPath,
       model: config.model,
-      log,
+      log: this.log,
     });
 
-    this.prService = new PrService(projectPath, log);
+    this.prService = new PrService(projectPath, this.log);
 
     const providerLabel = provider === "codex" ? "Codex" : "Claude";
     this.log(`Reviewer agent using ${providerLabel} CLI`, "info");
-  }
-
-  log(message: string, level: "info" | "success" | "warn" | "error" = "info") {
-    const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
-    const colorFn = {
-      info: c.cyan,
-      success: c.green,
-      warn: c.yellow,
-      error: c.red,
-    }[level];
-    const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
-
-    console.log(
-      `${c.dim(`[${timestamp}]`)} ${c.bold(`[R:${this.config.agentId.slice(-8)}]`)} ${colorFn(`${prefix} ${message}`)}`
-    );
   }
 
   /**

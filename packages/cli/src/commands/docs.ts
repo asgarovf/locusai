@@ -1,9 +1,8 @@
 import { parseArgs } from "node:util";
-import { c, DocumentFetcher, LocusClient } from "@locusai/sdk/node";
+import { createCliLogger, resolveApiContext } from "@locusai/commands";
+import { c, DocumentFetcher } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
-import { SettingsManager } from "../settings-manager";
 import { requireInitialization, VERSION } from "../utils";
-import { WorkspaceResolver } from "../workspace-resolver";
 
 export async function docsCommand(args: string[]): Promise<void> {
   const subcommand = args[0];
@@ -43,34 +42,15 @@ async function docsSyncCommand(args: string[]): Promise<void> {
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const settingsManager = new SettingsManager(projectPath);
-  const settings = settingsManager.load();
-
-  const apiKey = (values["api-key"] as string) || settings.apiKey;
-  if (!apiKey) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red("API key is required")}\n` +
-        `  ${c.dim(
-          "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
-        )}\n`
-    );
-    process.exit(1);
-  }
-
-  const apiBase =
-    (values["api-url"] as string) ||
-    settings.apiUrl ||
-    "https://api.locusai.dev/api";
-
-  const resolver = new WorkspaceResolver({
-    apiKey,
-    apiBase,
-    workspaceId: values.workspace as string | undefined,
-  });
-
-  let workspaceId: string;
+  // Resolve API context using shared helper
+  let apiContext: Awaited<ReturnType<typeof resolveApiContext>>;
   try {
-    workspaceId = await resolver.resolve();
+    apiContext = await resolveApiContext({
+      projectPath,
+      apiKey: values["api-key"] as string | undefined,
+      apiUrl: values["api-url"] as string | undefined,
+      workspaceId: values.workspace as string | undefined,
+    });
   } catch (error) {
     console.error(
       `\n  ${c.error("✖")} ${c.red(
@@ -80,30 +60,11 @@ async function docsSyncCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const client = new LocusClient({
-    baseUrl: apiBase,
-    token: apiKey,
-  });
-
   const fetcher = new DocumentFetcher({
-    client,
-    workspaceId,
+    client: apiContext.client,
+    workspaceId: apiContext.workspaceId,
     projectPath,
-    log: (message, level) => {
-      if (level === "error") {
-        console.log(`  ${c.error("✖")} ${message}`);
-        return;
-      }
-      if (level === "warn") {
-        console.log(`  ${c.warning("!")} ${message}`);
-        return;
-      }
-      if (level === "success") {
-        console.log(`  ${c.success("✔")} ${message}`);
-        return;
-      }
-      console.log(`  ${c.info("●")} ${message}`);
-    },
+    log: createCliLogger(),
   });
 
   console.log(`\n  ${c.info("●")} ${c.bold("Syncing docs from API...")}\n`);

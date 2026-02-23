@@ -1,0 +1,26 @@
+{
+  "name": "@locusai/commands",
+  "version": "0.16.1",
+  "description": "Shared command logic for Locus CLI and Telegram bot",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format cjs --external @locusai/sdk --external @locusai/shared --external zod && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@locusai/sdk": "^0.16.1",
+    "@locusai/shared": "^0.16.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.10.7"
+  }
+}

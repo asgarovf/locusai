@@ -2,41 +2,11 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { DEFAULT_MODEL, PROVIDER } from "../core/config.js";
 import type { ExecEventEmitter } from "../exec/event-emitter.js";
-import type { StreamChunk, ToolParams } from "../exec/types.js";
-import { c } from "../utils/colors.js";
+import type { StreamChunk } from "../exec/types.js";
 import { getAugmentedEnv } from "../utils/resolve-bin.js";
+import { ClaudeStreamParser } from "./claude-stream-parser.js";
 import { LogFn } from "./factory.js";
 import type { AiRunner } from "./runner.js";
-
-interface ClaudeStreamItem {
-  type: string;
-  result?: string;
-  event?: {
-    type: string;
-    index?: number;
-    delta?: {
-      type: string;
-      text?: string;
-      partial_json?: string;
-    };
-    content_block?: {
-      type: string;
-      name?: string;
-      id?: string;
-    };
-  };
-}
-
-/**
- * Tracks active tool executions including parameter accumulation.
- */
-interface ActiveToolExecution {
-  name: string;
-  id?: string;
-  index: number;
-  parameterJson: string;
-  startTime: number;
-}
 
 /** Default timeout: 1 hour */
 const DEFAULT_TIMEOUT_MS = 60 * 60 * 1000;
@@ -45,7 +15,6 @@ export class ClaudeRunner implements AiRunner {
   private projectPath: string;
   private eventEmitter?: ExecEventEmitter;
   private currentToolName?: string;
-  private activeTools: Map<number, ActiveToolExecution> = new Map();
   private activeProcess: ChildProcess | null = null;
   private aborted = false;
   timeoutMs: number;
@@ -97,8 +66,9 @@ export class ClaudeRunner implements AiRunner {
 
         if (!isLastAttempt) {
           const delay = Math.pow(2, attempt) * 1000;
-          console.warn(
-            `Claude CLI attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`
+          this.log?.(
+            `Claude CLI attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`,
+            "warn"
           );
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
@@ -152,6 +122,7 @@ export class ClaudeRunner implements AiRunner {
 
   async *runStream(prompt: string): AsyncGenerator<StreamChunk, void, unknown> {
     this.aborted = false;
+    const parser = new ClaudeStreamParser();
     const args = this.buildCliArgs();
 
     const env = getAugmentedEnv({
@@ -229,7 +200,7 @@ export class ClaudeRunner implements AiRunner {
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        const chunk = this.parseStreamLineToChunk(line);
+        const chunk = parser.parseLineToChunk(line);
         if (chunk) {
           // Track result content so we can use it for error reporting
           if (chunk.type === "result") {
@@ -358,103 +329,10 @@ export class ClaudeRunner implements AiRunner {
     }
   }
 
-  private parseStreamLineToChunk(line: string): StreamChunk | null {
-    if (!line.trim()) return null;
-
-    try {
-      const item = JSON.parse(line) as ClaudeStreamItem;
-      return this.processStreamItemToChunk(item);
-    } catch {
-      return null;
-    }
-  }
-
-  private processStreamItemToChunk(item: ClaudeStreamItem): StreamChunk | null {
-    if (item.type === "result") {
-      return { type: "result", content: item.result || "" };
-    }
-
-    if (item.type === "stream_event" && item.event) {
-      return this.handleEventToChunk(item.event);
-    }
-
-    return null;
-  }
-
-  private handleEventToChunk(
-    event: Required<ClaudeStreamItem>["event"]
-  ): StreamChunk | null {
-    const { type, delta, content_block, index } = event;
-
-    // Handle text deltas
-    if (type === "content_block_delta" && delta?.type === "text_delta") {
-      return { type: "text_delta", content: delta.text || "" };
-    }
-
-    // Handle tool parameter deltas - accumulate JSON
-    if (
-      type === "content_block_delta" &&
-      delta?.type === "input_json_delta" &&
-      delta.partial_json !== undefined &&
-      index !== undefined
-    ) {
-      const activeTool = this.activeTools.get(index);
-      if (activeTool) {
-        activeTool.parameterJson += delta.partial_json;
-      }
-      return null;
-    }
-
-    // Handle tool use start
-    if (type === "content_block_start" && content_block) {
-      if (content_block.type === "tool_use" && content_block.name) {
-        // Track the tool execution with index
-        if (index !== undefined) {
-          this.activeTools.set(index, {
-            name: content_block.name,
-            id: content_block.id,
-            index,
-            parameterJson: "",
-            startTime: Date.now(),
-          });
-        }
-        // Return tool_use without parameters - will be updated on content_block_stop
-        return {
-          type: "tool_use",
-          tool: content_block.name,
-          id: content_block.id,
-        };
-      }
-      if (content_block.type === "thinking") {
-        return { type: "thinking" };
-      }
-    }
-
-    // Handle content block stop - emit tool parameters chunk
-    if (type === "content_block_stop" && index !== undefined) {
-      const activeTool = this.activeTools.get(index);
-      if (activeTool?.parameterJson) {
-        try {
-          const parameters = JSON.parse(activeTool.parameterJson) as ToolParams;
-          // Return a tool_parameters chunk with the full parameters
-          return {
-            type: "tool_parameters" as const,
-            tool: activeTool.name,
-            id: activeTool.id,
-            parameters,
-          };
-        } catch {
-          // JSON parsing failed - params incomplete
-        }
-      }
-      return null;
-    }
-
-    return null;
-  }
-
   private executeRun(prompt: string): Promise<string> {
     this.aborted = false;
+    const parser = new ClaudeStreamParser();
+
     return new Promise((resolve, reject) => {
       const args = this.buildCliArgs();
 
@@ -482,7 +360,7 @@ export class ClaudeRunner implements AiRunner {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          const result = this.handleStreamLine(line);
+          const result = parser.parseLine(line, this.log);
           if (result) finalResult = result;
         }
       });
@@ -531,43 +409,6 @@ export class ClaudeRunner implements AiRunner {
       claude.stdin.write(prompt);
       claude.stdin.end();
     });
-  }
-
-  private handleStreamLine(line: string): string | null {
-    if (!line.trim()) return null;
-
-    try {
-      const item = JSON.parse(line) as ClaudeStreamItem;
-      return this.processStreamItem(item);
-    } catch {
-      // Ignore partial or non-JSON lines
-      return null;
-    }
-  }
-
-  private processStreamItem(item: ClaudeStreamItem): string | null {
-    if (item.type === "result") {
-      return item.result || "";
-    }
-
-    if (item.type === "stream_event" && item.event) {
-      this.handleEvent(item.event);
-    }
-
-    return null;
-  }
-
-  private handleEvent(event: Required<ClaudeStreamItem>["event"]) {
-    const { type, content_block } = event;
-
-    if (type === "content_block_start" && content_block) {
-      if (content_block.type === "tool_use" && content_block.name) {
-        this.log?.(
-          `\n${c.primary("[Claude]")} ${c.bold(`Running ${content_block.name}...`)}\n`,
-          "info"
-        );
-      }
-    }
   }
 
   private shouldSuppressLine(line: string): boolean {

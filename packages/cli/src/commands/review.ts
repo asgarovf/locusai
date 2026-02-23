@@ -2,18 +2,20 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
+  createCliLogger,
+  resolveAiSettings,
+  resolveApiContext,
+} from "@locusai/commands";
+import {
   c,
   createAiRunner,
-  DEFAULT_MODEL,
   LOCUS_CONFIG,
   PrService,
   ReviewerWorker,
   ReviewService,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
-import { SettingsManager } from "../settings-manager";
-import { requireInitialization, resolveProvider, VERSION } from "../utils";
-import { WorkspaceResolver } from "../workspace-resolver";
+import { requireInitialization, VERSION } from "../utils";
 
 /**
  * `locus review` — review open Locus PRs on GitHub using AI.
@@ -52,17 +54,18 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
   const configManager = new ConfigManager(projectPath);
   configManager.updateVersion(VERSION);
 
-  const settingsManager = new SettingsManager(projectPath);
-  const settings = settingsManager.load();
-
-  const apiKey = (values["api-key"] as string) || settings.apiKey;
-
-  if (!apiKey) {
-    console.error(c.error("Error: API key is required for PR review"));
+  // Resolve API context using shared helper
+  let apiContext: Awaited<ReturnType<typeof resolveApiContext>>;
+  try {
+    apiContext = await resolveApiContext({
+      projectPath,
+      apiKey: values["api-key"] as string | undefined,
+      apiUrl: values["api-url"] as string | undefined,
+      workspaceId: values.workspace as string | undefined,
+    });
+  } catch (error) {
     console.error(
-      c.dim(
-        "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
-      )
+      c.error(error instanceof Error ? error.message : String(error))
     );
     console.error(
       c.dim("For local staged-changes review, use: locus review local")
@@ -70,48 +73,14 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const provider = resolveProvider(
-    (values.provider as string) || settings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    settings.model ||
-    DEFAULT_MODEL[provider];
-  const apiBase =
-    (values["api-url"] as string) ||
-    settings.apiUrl ||
-    "https://api.locusai.dev/api";
-
-  // Resolve workspace ID
-  let workspaceId: string;
-  try {
-    const resolver = new WorkspaceResolver({
-      apiKey,
-      apiBase,
-      workspaceId: values.workspace as string | undefined,
-    });
-    workspaceId = await resolver.resolve();
-  } catch (error) {
-    console.error(
-      c.error(error instanceof Error ? error.message : String(error))
-    );
-    process.exit(1);
-  }
+  const { provider, model } = resolveAiSettings({
+    projectPath,
+    provider: values.provider as string | undefined,
+    model: values.model as string | undefined,
+  });
 
   // Check for unreviewed PRs first
-  const log = (
-    msg: string,
-    level: "info" | "success" | "warn" | "error" = "info"
-  ) => {
-    const colorFn = {
-      info: c.cyan,
-      success: c.green,
-      warn: c.yellow,
-      error: c.red,
-    }[level];
-    const prefix = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
-    console.log(`  ${colorFn(`${prefix} ${msg}`)}`);
-  };
+  const log = createCliLogger();
 
   const prService = new PrService(projectPath, log);
   const unreviewedPrs = prService.listUnreviewedLocusPrs();
@@ -129,10 +98,10 @@ async function reviewPrsCommand(args: string[]): Promise<void> {
 
   const reviewer = new ReviewerWorker({
     agentId,
-    workspaceId,
-    apiBase,
+    workspaceId: apiContext.workspaceId,
+    apiBase: apiContext.apiBase,
     projectPath,
-    apiKey,
+    apiKey: apiContext.apiKey,
     model,
     provider,
   });
@@ -171,15 +140,11 @@ async function reviewLocalCommand(args: string[]): Promise<void> {
   const projectPath = (values.dir as string) || process.cwd();
   requireInitialization(projectPath, "review local");
 
-  const localSettings = new SettingsManager(projectPath).load();
-
-  const provider = resolveProvider(
-    (values.provider as string) || localSettings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    localSettings.model ||
-    DEFAULT_MODEL[provider];
+  const { provider, model } = resolveAiSettings({
+    projectPath,
+    provider: values.provider as string | undefined,
+    model: values.model as string | undefined,
+  });
 
   const aiRunner = createAiRunner(provider, {
     projectPath,
@@ -189,18 +154,7 @@ async function reviewLocalCommand(args: string[]): Promise<void> {
   const reviewService = new ReviewService({
     aiRunner,
     projectPath,
-    log: (msg, level) => {
-      switch (level) {
-        case "error":
-          console.log(`  ${c.error("✖")} ${msg}`);
-          break;
-        case "success":
-          console.log(`  ${c.success("✔")} ${msg}`);
-          break;
-        default:
-          console.log(`  ${c.dim(msg)}`);
-      }
-    },
+    log: createCliLogger(),
   });
 
   console.log(

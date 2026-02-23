@@ -4,6 +4,7 @@ import {
   isValidModelForProvider,
   PROVIDER,
 } from "../core/config.js";
+import { c } from "../utils/colors.js";
 import { ClaudeRunner } from "./claude-runner.js";
 import { CodexRunner } from "./codex-runner.js";
 import type { AiProvider, AiRunner } from "./runner.js";
@@ -12,6 +13,41 @@ export type LogFn = (
   message: string,
   level?: "info" | "success" | "warn" | "error"
 ) => void;
+
+/**
+ * Silent no-op logger. Use as default when logging is optional.
+ */
+export const noopLogger: LogFn = () => {
+  // Empty noop logger
+};
+
+/**
+ * Creates a worker-style logger with timestamps and agent ID prefix.
+ * Used by SDK agent workers for structured log output.
+ *
+ * Output format: `[HH:mm:ss] [agent-id] ℹ message`
+ */
+export function createWorkerLogger(agentId: string, prefix?: string): LogFn {
+  const tag = prefix ? `${prefix}:${agentId.slice(-8)}` : agentId.slice(-8);
+
+  return (
+    message: string,
+    level: "info" | "success" | "warn" | "error" = "info"
+  ) => {
+    const timestamp = new Date().toISOString().split("T")[1]?.slice(0, 8) ?? "";
+    const colorFn = {
+      info: c.cyan,
+      success: c.green,
+      warn: c.yellow,
+      error: c.red,
+    }[level];
+    const icon = { info: "ℹ", success: "✓", warn: "⚠", error: "✗" }[level];
+
+    console.log(
+      `${c.dim(`[${timestamp}]`)} ${c.bold(`[${tag}]`)} ${colorFn(`${icon} ${message}`)}`
+    );
+  };
+}
 
 export interface AiRunnerConfig {
   projectPath: string;

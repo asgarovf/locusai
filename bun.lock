@@ -30,7 +30,7 @@
     },
     "apps/api": {
       "name": "@locusai/api",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
         "@aws-sdk/client-ec2": "^3.992.0",
         "@locusai/shared": "^0.13.3",
@@ -86,7 +86,7 @@
     },
     "apps/web": {
       "name": "@locusai/web",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -148,7 +148,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
         "@locusai/shared": "^0.13.3",
         "@next/third-parties": "^16.1.4",
@@ -175,20 +175,33 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "bin": {
         "locus": "./bin/locus.js",
       },
       "dependencies": {
-        "@locusai/sdk": "^0.13.3",
-        "@locusai/shared": "^0.13.3",
+        "@locusai/commands": "^0.16.1",
+        "@locusai/sdk": "^0.16.1",
+        "@locusai/shared": "^0.16.1",
+      },
+    },
+    "packages/commands": {
+      "name": "@locusai/commands",
+      "version": "0.16.1",
+      "dependencies": {
+        "@locusai/sdk": "^0.16.1",
+        "@locusai/shared": "^0.16.1",
+      },
+      "devDependencies": {
+        "@types/node": "^22.10.7",
+        "typescript": "^5.8.3",
       },
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
-        "@locusai/shared": "^0.13.3",
+        "@locusai/shared": "^0.16.1",
         "axios": "^1.13.2",
         "events": "^3.3.0",
         "globby": "^14.0.2",
@@ -201,20 +214,21 @@
     },
     "packages/shared": {
       "name": "@locusai/shared",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
         "zod": "^4.3.6",
       },
     },
     "packages/telegram": {
       "name": "@locusai/telegram",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "bin": {
         "locus-telegram": "./bin/telegram.js",
       },
       "dependencies": {
-        "@locusai/sdk": "^0.13.3",
-        "@locusai/shared": "^0.13.3",
+        "@locusai/commands": "^0.16.1",
+        "@locusai/sdk": "^0.16.1",
+        "@locusai/shared": "^0.16.1",
         "dotenv": "^16.4.7",
         "telegraf": "^4.16.3",
       },
@@ -225,7 +239,7 @@
     },
     "packages/vscode": {
       "name": "locusai-vscode",
-      "version": "0.13.3",
+      "version": "0.16.1",
       "dependencies": {
         "@locusai/shared": "^0.13.2",
       },
@@ -701,6 +715,8 @@
     "@locusai/api": ["@locusai/api@workspace:apps/api"],
 
     "@locusai/cli": ["@locusai/cli@workspace:packages/cli"],
+
+    "@locusai/commands": ["@locusai/commands@workspace:packages/commands"],
 
     "@locusai/sdk": ["@locusai/sdk@workspace:packages/sdk"],
 

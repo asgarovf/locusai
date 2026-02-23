@@ -4,7 +4,6 @@ export * from "./useApiKeysQuery";
 export * from "./useAuthenticatedUser";
 export * from "./useAuthenticatedUserWithOrg";
 export * from "./useAuthLayoutLogic";
-export * from "./useAwsCredentials";
 export * from "./useBoard";
 export * from "./useDashboardLayout";
 export * from "./useDocs";

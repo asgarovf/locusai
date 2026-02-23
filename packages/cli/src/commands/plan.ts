@@ -2,18 +2,24 @@ import { existsSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
+  cancelPlan,
+  createCliLogger,
+  listPlans,
+  rejectPlan,
+  resolveAiSettings,
+  resolveApiContext,
+  showPlan,
+} from "@locusai/commands";
+import {
   c,
   createAiRunner,
-  DEFAULT_MODEL,
   getLocusPath,
   LocusClient,
   PlanManager,
   PlanningMeeting,
 } from "@locusai/sdk/node";
 import { ConfigManager } from "../config-manager";
-import { SettingsManager } from "../settings-manager";
-import { requireInitialization, resolveProvider, VERSION } from "../utils";
-import { WorkspaceResolver } from "../workspace-resolver";
+import { requireInitialization, VERSION } from "../utils";
 
 /**
  * Normalise plan-ID arguments so `--approve plan -1771009897498` is
@@ -78,17 +84,36 @@ export async function planCommand(args: string[]): Promise<void> {
 
   // ── List plans ──────────────────────────────────────────────
   if (values.list) {
-    return listPlans(planManager);
+    return renderPlanList(planManager);
   }
 
   // ── Show plan details ───────────────────────────────────────
   if (values.show) {
-    return showPlan(planManager, values.show as string);
+    const md = showPlan(planManager, values.show as string);
+    if (!md) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(`Plan not found: ${values.show}`)}\n`
+      );
+      process.exit(1);
+    }
+    console.log(`\n${md}\n`);
+    return;
   }
 
   // ── Cancel plan ─────────────────────────────────────────────
   if (values.cancel) {
-    return cancelPlan(planManager, values.cancel as string);
+    try {
+      cancelPlan(planManager, values.cancel as string);
+      console.log(`\n  ${c.success("✔")} ${c.dim("Plan cancelled.")}\n`);
+    } catch (error) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   // ── Reject plan ─────────────────────────────────────────────
@@ -107,21 +132,55 @@ export async function planCommand(args: string[]): Promise<void> {
       );
       process.exit(1);
     }
-    return rejectPlan(planManager, values.reject as string, feedback);
+    try {
+      const plan = rejectPlan(planManager, values.reject as string, feedback);
+      console.log(
+        `\n  ${c.warning("!")} ${c.bold("Plan rejected:")} ${plan.name}\n`
+      );
+      console.log(`  ${c.dim("Feedback saved:")} ${feedback}\n`);
+      console.log(
+        `  ${c.dim(
+          "Re-run the planning meeting with the same directive to incorporate feedback:"
+        )}`
+      );
+      console.log(`  ${c.cyan(`locus plan "${plan.directive}"`)}\n`);
+    } catch (error) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   // ── Approve plan (requires API) ─────────────────────────────
   if (values.approve) {
-    const { client, workspaceId } = await resolveApiContext(
-      projectPath,
-      values
-    );
-    return approvePlan(
-      planManager,
-      values.approve as string,
-      client,
-      workspaceId
-    );
+    const configManager = new ConfigManager(projectPath);
+    configManager.updateVersion(VERSION);
+
+    try {
+      const { client, workspaceId } = await resolveApiContext({
+        projectPath,
+        apiKey: values["api-key"] as string | undefined,
+        apiUrl: values["api-url"] as string | undefined,
+        workspaceId: values.workspace as string | undefined,
+      });
+      return await renderApprovePlan(
+        planManager,
+        values.approve as string,
+        client,
+        workspaceId
+      );
+    } catch (error) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+      process.exit(1);
+    }
   }
 
   // ── Trigger new planning meeting ────────────────────────────
@@ -131,15 +190,11 @@ export async function planCommand(args: string[]): Promise<void> {
     return;
   }
 
-  const planSettings = new SettingsManager(projectPath).load();
-
-  const provider = resolveProvider(
-    (values.provider as string) || planSettings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    planSettings.model ||
-    DEFAULT_MODEL[provider];
+  const { provider, model } = resolveAiSettings({
+    projectPath,
+    provider: values.provider as string | undefined,
+    model: values.model as string | undefined,
+  });
 
   const reasoningEffort = values["reasoning-effort"] as string | undefined;
 
@@ -149,20 +204,7 @@ export async function planCommand(args: string[]): Promise<void> {
     reasoningEffort,
   });
 
-  const log = (
-    message: string,
-    level?: "info" | "success" | "warn" | "error"
-  ) => {
-    const icon =
-      level === "success"
-        ? c.success("✔")
-        : level === "error"
-          ? c.error("✖")
-          : level === "warn"
-            ? c.warning("!")
-            : c.info("●");
-    console.log(`  ${icon} ${message}`);
-  };
+  const log = createCliLogger();
 
   console.log(
     `\n  ${c.header(" PLANNING MEETING ")} ${c.bold(
@@ -249,10 +291,10 @@ export async function planCommand(args: string[]): Promise<void> {
   }
 }
 
-// ── Sub-commands ──────────────────────────────────────────────
+// ── CLI rendering helpers ─────────────────────────────────────
 
-function listPlans(planManager: PlanManager): void {
-  const plans = planManager.list();
+function renderPlanList(planManager: PlanManager): void {
+  const plans = listPlans(planManager);
 
   if (plans.length === 0) {
     console.log(`\n  ${c.dim("No plans found.")}\n`);
@@ -281,7 +323,7 @@ function listPlans(planManager: PlanManager): void {
     console.log(
       `  ${statusIcon} ${c.bold(plan.name)} ${c.dim(
         `[${plan.status}]`
-      )} ${c.dim(`— ${plan.tasks.length} tasks`)}`
+      )} ${c.dim(`— ${plan.taskCount} tasks`)}`
     );
     console.log(`    ${c.dim("ID:")} ${plan.id}`);
     console.log(`    ${c.dim("Created:")} ${plan.createdAt}`);
@@ -292,59 +334,7 @@ function listPlans(planManager: PlanManager): void {
   }
 }
 
-function showPlan(planManager: PlanManager, idOrSlug: string): void {
-  const md = planManager.getMarkdown(idOrSlug);
-  if (!md) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(`Plan not found: ${idOrSlug}`)}\n`
-    );
-    process.exit(1);
-  }
-  console.log(`\n${md}\n`);
-}
-
-function cancelPlan(planManager: PlanManager, idOrSlug: string): void {
-  try {
-    planManager.cancel(idOrSlug);
-    console.log(`\n  ${c.success("✔")} ${c.dim("Plan cancelled.")}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        error instanceof Error ? error.message : String(error)
-      )}\n`
-    );
-    process.exit(1);
-  }
-}
-
-function rejectPlan(
-  planManager: PlanManager,
-  idOrSlug: string,
-  feedback: string
-): void {
-  try {
-    const plan = planManager.reject(idOrSlug, feedback);
-    console.log(
-      `\n  ${c.warning("!")} ${c.bold("Plan rejected:")} ${plan.name}\n`
-    );
-    console.log(`  ${c.dim("Feedback saved:")} ${feedback}\n`);
-    console.log(
-      `  ${c.dim(
-        "Re-run the planning meeting with the same directive to incorporate feedback:"
-      )}`
-    );
-    console.log(`  ${c.cyan(`locus plan "${plan.directive}"`)}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        error instanceof Error ? error.message : String(error)
-      )}\n`
-    );
-    process.exit(1);
-  }
-}
-
-async function approvePlan(
+async function renderApprovePlan(
   planManager: PlanManager,
   idOrSlug: string,
   client: LocusClient,
@@ -384,52 +374,6 @@ async function approvePlan(
     );
     process.exit(1);
   }
-}
-
-// ── Helpers ──────────────────────────────────────────────────
-
-async function resolveApiContext(
-  projectPath: string,
-  values: Record<string, unknown>
-): Promise<{ client: LocusClient; workspaceId: string }> {
-  const configManager = new ConfigManager(projectPath);
-  configManager.updateVersion(VERSION);
-
-  const settingsManager = new SettingsManager(projectPath);
-  const settings = settingsManager.load();
-
-  const apiKey = (values["api-key"] as string) || settings.apiKey;
-  if (!apiKey) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red("API key is required for this operation")}\n`
-    );
-    console.error(
-      `  ${c.dim(
-        "Configure with: locus config setup --api-key <key>\n  Or pass --api-key flag"
-      )}\n`
-    );
-    process.exit(1);
-  }
-
-  const apiBase =
-    (values["api-url"] as string) ||
-    settings.apiUrl ||
-    "https://api.locusai.dev/api";
-
-  const resolver = new WorkspaceResolver({
-    apiKey,
-    apiBase,
-    workspaceId: values.workspace as string | undefined,
-  });
-
-  const workspaceId = await resolver.resolve();
-
-  const client = new LocusClient({
-    baseUrl: apiBase,
-    token: apiKey,
-  });
-
-  return { client, workspaceId };
 }
 
 function printPlanSummary(plan: {

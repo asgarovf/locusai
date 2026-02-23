@@ -1,3 +1,7 @@
+import {
+  resolveWorkspaceId as baseResolveWorkspaceId,
+  resolveApiContext,
+} from "@locusai/commands";
 import { LocusClient } from "@locusai/sdk";
 import type { Context } from "telegraf";
 import type { TelegramConfig } from "./config.js";
@@ -14,27 +18,21 @@ export async function resolveWorkspaceId(
   client: LocusClient,
   config: TelegramConfig
 ): Promise<string> {
-  if (config.workspaceId) {
-    return config.workspaceId;
-  }
-
   console.log("[workspace] Resolving workspace from API key...");
-  const info = await client.auth.getApiKeyInfo();
-  if (info.workspaceId) {
-    console.log(`[workspace] Resolved workspace: ${info.workspaceId}`);
-    return info.workspaceId;
-  }
-
-  throw new Error(
-    "Could not resolve workspace from API key. Please set workspaceId in settings."
-  );
+  const workspaceId = await baseResolveWorkspaceId(client, config.workspaceId);
+  console.log(`[workspace] Resolved workspace: ${workspaceId}`);
+  return workspaceId;
 }
 
 export async function getClientAndWorkspace(
   config: TelegramConfig
 ): Promise<{ client: LocusClient; workspaceId: string }> {
-  const client = createClient(config);
-  const workspaceId = await resolveWorkspaceId(client, config);
+  const { client, workspaceId } = await resolveApiContext({
+    projectPath: config.projectPath,
+    apiKey: config.apiKey,
+    apiUrl: config.apiBase,
+    workspaceId: config.workspaceId,
+  });
   return { client, workspaceId };
 }
 

@@ -1,11 +1,20 @@
+import {
+  cancelPlan,
+  listPlans,
+  rejectPlan,
+  resolveApiContext,
+} from "@locusai/commands";
+import { PlanManager } from "@locusai/sdk/node";
 import type { Context } from "telegraf";
 import { Markup } from "telegraf";
+import type { TelegramConfig } from "../config.js";
 import type { CliExecutor } from "../executor.js";
 import {
+  escapeHtml,
   formatCommandOutput,
   formatError,
   formatInfo,
-  stripAnsi,
+  formatSuccess,
 } from "../formatter.js";
 import { PLAN_TIMEOUT } from "../timeouts.js";
 
@@ -66,86 +75,70 @@ export async function planCommand(
 
 export async function plansCommand(
   ctx: Context,
-  executor: CliExecutor
+  config: TelegramConfig
 ): Promise<void> {
   console.log("[plans] Listing plans");
-  const args = executor.buildArgs(["plan", "--list"]);
-  const result = await executor.execute(args);
-  const output = (result.stdout + result.stderr).trim();
-  const formattedOutput = formatCommandOutput(
-    "locus plan --list",
-    output,
-    result.exitCode
-  );
 
-  // Parse pending plan IDs from output (format: plan-<id> or similar patterns)
-  const cleanOutput = stripAnsi(output);
-  const planIds = extractPendingPlanIds(cleanOutput);
+  try {
+    const planManager = new PlanManager(config.projectPath);
+    const plans = listPlans(planManager);
 
-  if (planIds.length > 0) {
-    const buttons = planIds
-      .slice(0, 5)
-      .map((planId) => [
-        Markup.button.callback("✅ Approve", `approve:plan:${planId}`),
-        Markup.button.callback("❌ Cancel", `cancel:plan:${planId}`),
-      ]);
-    await ctx.reply(formattedOutput, {
-      parse_mode: "HTML",
-      ...Markup.inlineKeyboard(buttons),
-    });
-  } else {
-    await ctx.reply(formattedOutput, { parse_mode: "HTML" });
-  }
-}
-
-/**
- * Extract plan IDs that appear to be pending/awaiting approval from CLI output.
- * Looks for plan-* identifiers that appear near "pending" or "awaiting" text,
- * or simply all plan IDs if status context isn't clear.
- */
-function extractPendingPlanIds(output: string): string[] {
-  const planIds: string[] = [];
-  const lines = output.split("\n");
-
-  for (const line of lines) {
-    // Match plan IDs like plan-abc123, plan-something-here
-    const match = line.match(/\b(plan-[a-zA-Z0-9_-]+)\b/);
-    if (!match) continue;
-
-    const planId = match[1];
-    const lowerLine = line.toLowerCase();
-
-    // Include if line suggests the plan is pending/awaiting action
-    if (
-      lowerLine.includes("pending") ||
-      lowerLine.includes("awaiting") ||
-      lowerLine.includes("review") ||
-      lowerLine.includes("ready")
-    ) {
-      if (!planIds.includes(planId)) {
-        planIds.push(planId);
-      }
+    if (plans.length === 0) {
+      await ctx.reply(
+        formatInfo("No plans found. Create one with /plan &lt;directive&gt;"),
+        { parse_mode: "HTML" }
+      );
+      return;
     }
-  }
 
-  // If no status-based matches, try to extract all plan IDs as fallback
-  if (planIds.length === 0) {
-    const allMatches = output.match(/\b(plan-[a-zA-Z0-9_-]+)\b/g);
-    if (allMatches) {
-      for (const id of allMatches) {
-        if (!planIds.includes(id)) {
-          planIds.push(id);
-        }
+    const statusIcons: Record<string, string> = {
+      pending: "🟡",
+      approved: "✅",
+      rejected: "❌",
+      cancelled: "⊘",
+    };
+
+    let msg = "<b>📋 Sprint Plans</b>\n\n";
+    for (const p of plans) {
+      const icon = statusIcons[p.status] || "•";
+      msg += `${icon} <b>${escapeHtml(p.name)}</b> [${p.status}]\n`;
+      msg += `   ${p.taskCount} tasks · <code>${p.id}</code>\n`;
+      if (p.feedback) {
+        msg += `   Feedback: ${escapeHtml(p.feedback)}\n`;
       }
+      msg += "\n";
     }
-  }
 
-  return planIds;
+    // Add action buttons for pending plans
+    const pendingPlans = plans.filter((p) => p.status === "pending");
+    if (pendingPlans.length > 0) {
+      const buttons = pendingPlans
+        .slice(0, 5)
+        .map((p) => [
+          Markup.button.callback("✅ Approve", `approve:plan:${p.id}`),
+          Markup.button.callback("❌ Cancel", `cancel:plan:${p.id}`),
+        ]);
+      await ctx.reply(msg.trim(), {
+        parse_mode: "HTML",
+        ...Markup.inlineKeyboard(buttons),
+      });
+    } else {
+      await ctx.reply(msg.trim(), { parse_mode: "HTML" });
+    }
+  } catch (err) {
+    console.error("[plans] Failed:", err);
+    await ctx.reply(
+      formatError(
+        `Failed to list plans: ${err instanceof Error ? err.message : String(err)}`
+      ),
+      { parse_mode: "HTML" }
+    );
+  }
 }
 
 export async function approveCommand(
   ctx: Context,
-  executor: CliExecutor
+  config: TelegramConfig
 ): Promise<void> {
   const text =
     (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
@@ -160,25 +153,58 @@ export async function approveCommand(
     return;
   }
 
+  if (!config.apiKey) {
+    await ctx.reply(
+      formatError(
+        "API key is required for /approve. Run: locus config setup --api-key &lt;KEY&gt;"
+      ),
+      { parse_mode: "HTML" }
+    );
+    return;
+  }
+
   await ctx.reply(formatInfo(`Approving plan: ${planId}...`), {
     parse_mode: "HTML",
   });
 
-  const args = executor.buildArgs(["plan", "--approve", planId], {
-    needsApiKey: true,
-  });
-  const result = await executor.execute(args);
-  const output = (result.stdout + result.stderr).trim();
+  try {
+    const { client, workspaceId } = await resolveApiContext({
+      projectPath: config.projectPath,
+      apiKey: config.apiKey,
+      apiUrl: config.apiBase,
+      workspaceId: config.workspaceId,
+    });
 
-  await ctx.reply(
-    formatCommandOutput("locus plan --approve", output, result.exitCode),
-    { parse_mode: "HTML" }
-  );
+    const planManager = new PlanManager(config.projectPath);
+    const { sprint, tasks } = await planManager.approve(
+      planId,
+      client,
+      workspaceId
+    );
+
+    let msg = `✅ <b>Sprint created: ${escapeHtml(sprint.name)}</b>\n\n`;
+    msg += `Sprint ID: <code>${sprint.id}</code>\n`;
+    msg += `Tasks: ${tasks.length}\n\n`;
+
+    for (const task of tasks) {
+      msg += `• ${escapeHtml(task.title)} [${task.assigneeRole || "UNASSIGNED"}]\n`;
+    }
+
+    await ctx.reply(msg.trim(), { parse_mode: "HTML" });
+  } catch (err) {
+    console.error("[approve] Failed:", err);
+    await ctx.reply(
+      formatError(
+        `Failed to approve plan: ${err instanceof Error ? err.message : String(err)}`
+      ),
+      { parse_mode: "HTML" }
+    );
+  }
 }
 
 export async function rejectCommand(
   ctx: Context,
-  executor: CliExecutor
+  config: TelegramConfig
 ): Promise<void> {
   const text =
     (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
@@ -202,33 +228,35 @@ export async function rejectCommand(
   if (!feedback) {
     await ctx.reply(
       formatError("Feedback is required when rejecting a plan."),
-      {
-        parse_mode: "HTML",
-      }
+      { parse_mode: "HTML" }
     );
     return;
   }
 
-  await ctx.reply(formatInfo(`Rejecting plan: ${planId}...`), {
-    parse_mode: "HTML",
-  });
+  try {
+    const planManager = new PlanManager(config.projectPath);
+    const plan = rejectPlan(planManager, planId, feedback);
 
-  const args = executor.buildArgs(
-    ["plan", "--reject", planId, "--feedback", feedback],
-    { needsApiKey: false }
-  );
-  const result = await executor.execute(args);
-  const output = (result.stdout + result.stderr).trim();
-
-  await ctx.reply(
-    formatCommandOutput("locus plan --reject", output, result.exitCode),
-    { parse_mode: "HTML" }
-  );
+    await ctx.reply(
+      formatSuccess(
+        `Plan rejected: ${escapeHtml(plan.name)}\nFeedback: ${escapeHtml(feedback)}\n\nRe-run /plan with the same directive to incorporate feedback.`
+      ),
+      { parse_mode: "HTML" }
+    );
+  } catch (err) {
+    console.error("[reject] Failed:", err);
+    await ctx.reply(
+      formatError(
+        `Failed to reject plan: ${err instanceof Error ? err.message : String(err)}`
+      ),
+      { parse_mode: "HTML" }
+    );
+  }
 }
 
 export async function cancelCommand(
   ctx: Context,
-  executor: CliExecutor
+  config: TelegramConfig
 ): Promise<void> {
   const text =
     (ctx.message && "text" in ctx.message ? ctx.message.text : "") || "";
@@ -243,12 +271,20 @@ export async function cancelCommand(
     return;
   }
 
-  const args = executor.buildArgs(["plan", "--cancel", planId]);
-  const result = await executor.execute(args);
-  const output = (result.stdout + result.stderr).trim();
+  try {
+    const planManager = new PlanManager(config.projectPath);
+    cancelPlan(planManager, planId);
 
-  await ctx.reply(
-    formatCommandOutput("locus plan --cancel", output, result.exitCode),
-    { parse_mode: "HTML" }
-  );
+    await ctx.reply(formatSuccess(`Plan cancelled: ${escapeHtml(planId)}`), {
+      parse_mode: "HTML",
+    });
+  } catch (err) {
+    console.error("[cancel] Failed:", err);
+    await ctx.reply(
+      formatError(
+        `Failed to cancel plan: ${err instanceof Error ? err.message : String(err)}`
+      ),
+      { parse_mode: "HTML" }
+    );
+  }
 }

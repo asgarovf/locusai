@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import type { LogFn } from "../ai/factory.js";
+import { noopLogger } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { getLocusPath, Provider } from "../core/config.js";
 import type { StreamChunk } from "../exec/types.js";
@@ -41,7 +42,7 @@ export class DiscussionFacilitator {
     this.projectPath = config.projectPath;
     this.aiRunner = config.aiRunner;
     this.discussionManager = config.discussionManager;
-    this.log = config.log ?? ((_msg: string) => undefined);
+    this.log = config.log ?? noopLogger;
     this.provider = config.provider;
     this.model = config.model;
   }

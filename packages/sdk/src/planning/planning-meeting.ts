@@ -1,5 +1,7 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { LogFn } from "../ai/factory.js";
+import { noopLogger } from "../ai/factory.js";
 import type { AiRunner } from "../ai/runner.js";
 import { getLocusPath } from "../core/config.js";
 import { buildPlannerPrompt } from "./agents/planner.js";
@@ -8,10 +10,7 @@ import type { SprintPlan } from "./sprint-plan.js";
 export interface PlanningMeetingConfig {
   projectPath: string;
   aiRunner: AiRunner;
-  log?: (
-    message: string,
-    level?: "info" | "success" | "warn" | "error"
-  ) => void;
+  log?: LogFn;
 }
 
 export interface PlanningMeetingResult {
@@ -30,15 +29,12 @@ export interface PlanningMeetingResult {
 export class PlanningMeeting {
   private projectPath: string;
   private aiRunner: AiRunner;
-  private log: (
-    message: string,
-    level?: "info" | "success" | "warn" | "error"
-  ) => void;
+  private log: LogFn;
 
   constructor(config: PlanningMeetingConfig) {
     this.projectPath = config.projectPath;
     this.aiRunner = config.aiRunner;
-    this.log = config.log ?? ((_msg: string) => undefined);
+    this.log = config.log ?? noopLogger;
   }
 
   /**

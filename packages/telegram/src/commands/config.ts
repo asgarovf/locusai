@@ -1,5 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { SettingsManager } from "@locusai/commands";
 import {
   DEFAULT_MODEL,
   getModelsForProvider,
@@ -11,9 +10,6 @@ import type { Context } from "telegraf";
 import { parseArgs } from "../command-whitelist.js";
 import type { TelegramConfig } from "../config.js";
 import { escapeHtml, formatError, formatSuccess } from "../formatter.js";
-
-const CONFIG_DIR = ".locus";
-const SETTINGS_FILE = "settings.json";
 
 /** Settings keys that can be modified via /config */
 const ALLOWED_KEYS: Record<
@@ -50,20 +46,15 @@ interface SettingsJson {
   [key: string]: unknown;
 }
 
-function getSettingsPath(config: TelegramConfig): string {
-  return join(config.projectPath, CONFIG_DIR, SETTINGS_FILE);
-}
-
 function loadSettings(config: TelegramConfig): SettingsJson | null {
-  const path = getSettingsPath(config);
-  if (!existsSync(path)) return null;
-  const raw = readFileSync(path, "utf-8");
-  return JSON.parse(raw) as SettingsJson;
+  const manager = new SettingsManager(config.projectPath);
+  if (!manager.exists()) return null;
+  return manager.load() as SettingsJson;
 }
 
 function saveSettings(config: TelegramConfig, settings: SettingsJson): void {
-  const path = getSettingsPath(config);
-  writeFileSync(path, `${JSON.stringify(settings, null, 2)}\n`, "utf-8");
+  const manager = new SettingsManager(config.projectPath);
+  manager.save(settings);
 }
 
 function formatSettingsDisplay(settings: SettingsJson): string {

@@ -9,6 +9,7 @@
   "references": [
     { "path": "./packages/shared" },
     { "path": "./packages/sdk" },
+    { "path": "./packages/commands" },
     { "path": "./apps/api" },
     { "path": "./apps/web" },
     { "path": "./packages/cli" },

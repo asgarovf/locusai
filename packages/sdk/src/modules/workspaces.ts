@@ -154,32 +154,6 @@ export class WorkspacesModule extends BaseModule {
   async deleteApiKey(workspaceId: string, keyId: string): Promise<void> {
     await this.api.delete(`/workspaces/${workspaceId}/api-keys/${keyId}`);
   }
-
-  // ============================================================================
-  // AWS Credentials Management
-  // ============================================================================
-
-  async getAwsCredentials(workspaceId: string): Promise<AwsCredentialInfo> {
-    const { data } = await this.api.get<AwsCredentialResponse>(
-      `/workspaces/${workspaceId}/aws-credentials`
-    );
-    return data.credential;
-  }
-
-  async saveAwsCredentials(
-    workspaceId: string,
-    body: SaveAwsCredentialsInput
-  ): Promise<AwsCredentialInfo> {
-    const { data } = await this.api.put<AwsCredentialResponse>(
-      `/workspaces/${workspaceId}/aws-credentials`,
-      body
-    );
-    return data.credential;
-  }
-
-  async deleteAwsCredentials(workspaceId: string): Promise<void> {
-    await this.api.delete(`/workspaces/${workspaceId}/aws-credentials`);
-  }
 }
 
 export interface WorkspaceApiKey {
@@ -200,22 +174,4 @@ interface ApiKeysResponse {
 
 interface ApiKeyResponse {
   apiKey: WorkspaceApiKey;
-}
-
-export interface AwsCredentialInfo {
-  id: string;
-  accessKeyId?: string;
-  region: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-interface AwsCredentialResponse {
-  credential: AwsCredentialInfo;
-}
-
-export interface SaveAwsCredentialsInput {
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
 }

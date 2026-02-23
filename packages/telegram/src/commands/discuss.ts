@@ -1,10 +1,14 @@
+import {
+  listDiscussions,
+  resolveAiSettings,
+  archiveDiscussion as sharedArchiveDiscussion,
+  showDiscussion,
+} from "@locusai/commands";
 import type { AiProvider } from "@locusai/sdk/node";
 import {
   createAiRunner,
-  DEFAULT_MODEL,
   DiscussionFacilitator,
   DiscussionManager,
-  PROVIDER,
 } from "@locusai/sdk/node";
 import type { Context } from "telegraf";
 import { Markup } from "telegraf";
@@ -27,6 +31,12 @@ function getFacilitator(config: TelegramConfig): DiscussionFacilitator {
   const cached = facilitatorCache.get(chatId);
   if (cached) return cached;
 
+  const { provider, model } = resolveAiSettings({
+    projectPath: config.projectPath,
+    provider: config.provider,
+    model: config.model,
+  });
+
   const aiRunner = createAiRunner(
     (config.provider as AiProvider) ?? undefined,
     {
@@ -41,8 +51,8 @@ function getFacilitator(config: TelegramConfig): DiscussionFacilitator {
     projectPath: config.projectPath,
     aiRunner,
     discussionManager,
-    provider: config.provider ?? PROVIDER.CLAUDE,
-    model: config.model ?? DEFAULT_MODEL[PROVIDER.CLAUDE],
+    provider,
+    model,
   });
 
   facilitatorCache.set(chatId, facilitator);
@@ -228,7 +238,7 @@ export async function discussionsCommand(
 
   try {
     const manager = getDiscussionManager(config);
-    const discussions = manager.list();
+    const discussions = listDiscussions(manager);
 
     if (discussions.length === 0) {
       await ctx.reply(
@@ -250,7 +260,7 @@ export async function discussionsCommand(
     for (const d of discussions) {
       const icon = statusIcons[d.status] || "•";
       msg += `${icon} <b>${escapeHtml(d.title)}</b>\n`;
-      msg += `   Status: ${d.status} · Messages: ${d.messages.length} · Insights: ${d.insights.length}\n`;
+      msg += `   Status: ${d.status} · Messages: ${d.messageCount} · Insights: ${d.insightCount}\n`;
       msg += `   <code>${d.id}</code>\n\n`;
     }
 
@@ -422,7 +432,7 @@ export async function viewDiscussion(
 ): Promise<void> {
   try {
     const manager = getDiscussionManager(config);
-    const markdown = manager.getMarkdown(discussionId);
+    const markdown = showDiscussion(manager, discussionId);
 
     if (!markdown) {
       await ctx.reply(formatError(`Discussion not found: ${discussionId}`), {
@@ -456,7 +466,7 @@ export async function archiveDiscussion(
 ): Promise<void> {
   try {
     const manager = getDiscussionManager(config);
-    manager.archive(discussionId);
+    sharedArchiveDiscussion(manager, discussionId);
 
     try {
       await ctx.editMessageText(

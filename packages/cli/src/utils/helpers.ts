@@ -1,18 +1,15 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { type AiProvider, c, LOCUS_CONFIG, PROVIDER } from "@locusai/sdk/node";
+import {
+  resolveProvider as baseResolveProvider,
+  isProjectInitialized,
+} from "@locusai/commands";
+import { type AiProvider, c } from "@locusai/sdk/node";
+
+// Re-export for use in CLI commands
+export { isProjectInitialized };
 
 /**
- * Check if a project has been initialized with Locus
- */
-export function isProjectInitialized(projectPath: string): boolean {
-  const locusDir = join(projectPath, LOCUS_CONFIG.dir);
-  const configPath = join(locusDir, LOCUS_CONFIG.configFile);
-  return existsSync(locusDir) && existsSync(configPath);
-}
-
-/**
- * Require that a project is initialized before running a command
+ * Require that a project is initialized before running a command.
+ * CLI-specific: prints colored error and exits the process.
  */
 export function requireInitialization(
   projectPath: string,
@@ -32,14 +29,16 @@ export function requireInitialization(
 }
 
 /**
- * Resolve and validate AI provider from input string
+ * Resolve and validate AI provider from input string.
+ * CLI-specific: prints colored error and exits the process on invalid input.
  */
 export function resolveProvider(input?: string): AiProvider {
-  if (!input) return PROVIDER.CLAUDE;
-  if (input === PROVIDER.CLAUDE || input === PROVIDER.CODEX) return input;
-
-  console.error(
-    c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
-  );
-  process.exit(1);
+  try {
+    return baseResolveProvider(input);
+  } catch {
+    console.error(
+      c.error(`Error: invalid provider '${input}'. Use 'claude' or 'codex'.`)
+    );
+    process.exit(1);
+  }
 }

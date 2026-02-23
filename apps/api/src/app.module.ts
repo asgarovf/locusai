@@ -5,7 +5,6 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "./auth/auth.module";
 import { JwtOrApiKeyGuard, MembershipRolesGuard } from "./auth/guards";
-import { AwsModule } from "./aws/aws.module";
 import { CiModule } from "./ci/ci.module";
 import { CommonModule } from "./common/common.module";
 import { AllExceptionsFilter } from "./common/filters";
@@ -75,7 +74,6 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     InvitationsModule,
     DocsModule,
     CiModule,
-    AwsModule,
   ],
   providers: [
     {

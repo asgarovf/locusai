@@ -81,10 +81,10 @@ export function createBot(config: TelegramConfig): Telegraf {
 
   // Planning commands
   bot.command("plan", (ctx) => planCommand(ctx, executor));
-  bot.command("plans", (ctx) => plansCommand(ctx, executor));
-  bot.command("approve", (ctx) => approveCommand(ctx, executor));
-  bot.command("reject", (ctx) => rejectCommand(ctx, executor));
-  bot.command("cancel", (ctx) => cancelCommand(ctx, executor));
+  bot.command("plans", (ctx) => plansCommand(ctx, config));
+  bot.command("approve", (ctx) => approveCommand(ctx, config));
+  bot.command("reject", (ctx) => rejectCommand(ctx, config));
+  bot.command("cancel", (ctx) => cancelCommand(ctx, config));
 
   // Agent monitoring
   bot.command("agents", (ctx) => agentsCommand(ctx, config));

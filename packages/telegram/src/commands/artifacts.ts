@@ -1,5 +1,6 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { findArtifact, formatSize, listArtifacts } from "@locusai/commands";
 import type { Context } from "telegraf";
 import { Markup } from "telegraf";
 import type { TelegramConfig } from "../config.js";
@@ -14,52 +15,6 @@ import {
 } from "../formatter.js";
 
 const ARTIFACTS_DIR = ".locus/artifacts";
-
-interface ArtifactInfo {
-  name: string;
-  fileName: string;
-  createdAt: Date;
-  size: number;
-}
-
-/**
- * List artifacts sorted by creation time (newest first).
- */
-function listArtifacts(projectPath: string): ArtifactInfo[] {
-  const artifactsDir = join(projectPath, ARTIFACTS_DIR);
-
-  if (!existsSync(artifactsDir)) {
-    return [];
-  }
-
-  const files = readdirSync(artifactsDir).filter((f) => f.endsWith(".md"));
-
-  return files
-    .map((fileName) => {
-      const filePath = join(artifactsDir, fileName);
-      const stat = statSync(filePath);
-      const name = fileName.replace(/\.md$/, "");
-
-      return {
-        name,
-        fileName,
-        createdAt: stat.birthtime,
-        size: stat.size,
-      };
-    })
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-}
-
-/**
- * Format file size for display.
- */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(1)}KB`;
-  const mb = kb / 1024;
-  return `${mb.toFixed(1)}MB`;
-}
 
 /**
  * /artifacts — List all artifacts with inline buttons to view/plan.
@@ -135,43 +90,26 @@ export async function showArtifact(
   config: TelegramConfig,
   name: string
 ): Promise<void> {
-  const artifactsDir = join(config.projectPath, ARTIFACTS_DIR);
-  const fileName = name.endsWith(".md") ? name : `${name}.md`;
-  const filePath = join(artifactsDir, fileName);
+  const result = findArtifact(config.projectPath, name);
 
-  let content: string;
-  let artifactName = name.replace(/\.md$/, "");
-
-  if (existsSync(filePath)) {
-    content = readFileSync(filePath, "utf-8");
-  } else {
-    // Try partial match
-    const artifacts = listArtifacts(config.projectPath);
-    const matches = artifacts.filter((a) =>
-      a.name.toLowerCase().includes(name.toLowerCase())
-    );
-
-    if (matches.length === 1) {
-      const matchPath = join(artifactsDir, matches[0].fileName);
-      content = readFileSync(matchPath, "utf-8");
-      artifactName = matches[0].name;
-    } else if (matches.length > 1) {
-      let msg = `<b>Multiple artifacts match "${escapeHtml(name)}":</b>\n\n`;
-      for (const m of matches) {
-        msg += `• <b>${escapeHtml(m.name)}</b>\n`;
-      }
-      await ctx.reply(msg, { parse_mode: "HTML" });
-      return;
-    } else {
-      await ctx.reply(
-        formatError(`Artifact "${escapeHtml(name)}" not found.`),
-        { parse_mode: "HTML" }
-      );
-      return;
-    }
+  if (!result) {
+    await ctx.reply(formatError(`Artifact "${escapeHtml(name)}" not found.`), {
+      parse_mode: "HTML",
+    });
+    return;
   }
 
-  const truncated = truncateOutput(escapeHtml(content), 3500);
+  if (!result.match) {
+    let msg = `<b>Multiple artifacts match "${escapeHtml(name)}":</b>\n\n`;
+    for (const m of result.ambiguous) {
+      msg += `• <b>${escapeHtml(m.name)}</b>\n`;
+    }
+    await ctx.reply(msg, { parse_mode: "HTML" });
+    return;
+  }
+
+  const truncated = truncateOutput(escapeHtml(result.content), 3500);
+  const artifactName = result.info.name;
 
   let msg = `<b>📄 ${escapeHtml(artifactName)}</b>\n\n`;
   msg += `<pre>${truncated}</pre>`;
@@ -185,10 +123,10 @@ export async function showArtifact(
     ],
   ]);
 
-  const parts = splitMessage(msg);
-  for (let i = 0; i < parts.length; i++) {
-    const isLast = i === parts.length - 1;
-    await ctx.reply(parts[i], {
+  const msgParts = splitMessage(msg);
+  for (let i = 0; i < msgParts.length; i++) {
+    const isLast = i === msgParts.length - 1;
+    await ctx.reply(msgParts[i], {
       parse_mode: "HTML",
       ...(isLast ? buttons : {}),
     });
@@ -212,11 +150,8 @@ export async function convertArtifactToPlan(
 
   if (!existsSync(filePath)) {
     // Try partial match
-    const artifacts = listArtifacts(config.projectPath);
-    const match = artifacts.find((a) =>
-      a.name.toLowerCase().includes(name.toLowerCase())
-    );
-    if (!match) {
+    const result = findArtifact(config.projectPath, name);
+    if (!result || !result.match) {
       await ctx.reply(
         formatError(`Artifact "${escapeHtml(name)}" not found.`),
         { parse_mode: "HTML" }
@@ -248,8 +183,8 @@ export async function convertArtifactToPlan(
         let msg = `<b>📋 Plan from: ${escapeHtml(artifactName)}</b>\n\n`;
         msg += `<pre>${cleanOutput}</pre>`;
 
-        const parts = splitMessage(msg);
-        for (const part of parts) {
+        const msgParts = splitMessage(msg);
+        for (const part of msgParts) {
           await ctx.reply(part, { parse_mode: "HTML" });
         }
       } catch (err) {

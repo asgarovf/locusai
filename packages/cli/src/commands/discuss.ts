@@ -1,8 +1,15 @@
 import { parseArgs } from "node:util";
 import {
+  archiveDiscussion,
+  createCliLogger,
+  deleteDiscussion,
+  listDiscussions,
+  resolveAiSettings,
+  showDiscussion,
+} from "@locusai/commands";
+import {
   c,
   createAiRunner,
-  DEFAULT_MODEL,
   DiscussionFacilitator,
   type DiscussionInsight,
   DiscussionManager,
@@ -15,8 +22,7 @@ import {
   stripImagePaths,
 } from "../repl/image-detect";
 import { InputHandler } from "../repl/input-handler";
-import { SettingsManager } from "../settings-manager";
-import { requireInitialization, resolveProvider } from "../utils";
+import { requireInitialization } from "../utils";
 
 export async function discussCommand(args: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
@@ -42,22 +48,52 @@ export async function discussCommand(args: string[]): Promise<void> {
 
   // ── List discussions ──────────────────────────────────────
   if (values.list) {
-    return listDiscussions(discussionManager);
+    return renderDiscussionList(discussionManager);
   }
 
   // ── Show discussion ───────────────────────────────────────
   if (values.show) {
-    return showDiscussion(discussionManager, values.show as string);
+    const md = showDiscussion(discussionManager, values.show as string);
+    if (!md) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(`Discussion not found: ${values.show}`)}\n`
+      );
+      process.exit(1);
+    }
+    console.log(`\n${md}\n`);
+    return;
   }
 
   // ── Archive discussion ────────────────────────────────────
   if (values.archive) {
-    return archiveDiscussion(discussionManager, values.archive as string);
+    try {
+      archiveDiscussion(discussionManager, values.archive as string);
+      console.log(`\n  ${c.success("✔")} ${c.dim("Discussion archived.")}\n`);
+    } catch (error) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   // ── Delete discussion ─────────────────────────────────────
   if (values.delete) {
-    return deleteDiscussion(discussionManager, values.delete as string);
+    try {
+      deleteDiscussion(discussionManager, values.delete as string);
+      console.log(`\n  ${c.success("✔")} ${c.dim("Discussion deleted.")}\n`);
+    } catch (error) {
+      console.error(
+        `\n  ${c.error("✖")} ${c.red(
+          error instanceof Error ? error.message : String(error)
+        )}\n`
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   // ── Start interactive discussion ──────────────────────────
@@ -67,15 +103,11 @@ export async function discussCommand(args: string[]): Promise<void> {
     return;
   }
 
-  const settings = new SettingsManager(projectPath).load();
-
-  const provider = resolveProvider(
-    (values.provider as string) || settings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    settings.model ||
-    DEFAULT_MODEL[provider];
+  const { provider, model } = resolveAiSettings({
+    projectPath,
+    provider: values.provider as string | undefined,
+    model: values.model as string | undefined,
+  });
 
   const reasoningEffort = values["reasoning-effort"] as string | undefined;
 
@@ -85,20 +117,7 @@ export async function discussCommand(args: string[]): Promise<void> {
     reasoningEffort,
   });
 
-  const log = (
-    message: string,
-    level?: "info" | "success" | "warn" | "error"
-  ) => {
-    const icon =
-      level === "success"
-        ? c.success("✔")
-        : level === "error"
-          ? c.error("✖")
-          : level === "warn"
-            ? c.warning("!")
-            : c.info("●");
-    console.log(`  ${icon} ${message}`);
-  };
+  const log = createCliLogger();
 
   const facilitator = new DiscussionFacilitator({
     projectPath,
@@ -143,9 +162,7 @@ export async function discussCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  console.log(
-    `  ${c.dim("Type your response, or 'help' for commands.")}`
-  );
+  console.log(`  ${c.dim("Type your response, or 'help' for commands.")}`);
   console.log(
     `  ${c.dim("Enter to send, Shift+Enter for newline. Use 'exit' or Ctrl+D to quit.")}\n`
   );
@@ -202,8 +219,7 @@ export async function discussCommand(args: string[]): Promise<void> {
 
         try {
           summaryRenderer.showThinkingStarted();
-          const summary =
-            await facilitator.summarizeDiscussion(discussionId);
+          const summary = await facilitator.summarizeDiscussion(discussionId);
           summaryRenderer.showThinkingStopped();
 
           process.stdout.write("\n");
@@ -250,7 +266,9 @@ export async function discussCommand(args: string[]): Promise<void> {
     const images = detectImages(trimmed);
     if (images.length > 0) {
       for (const img of images) {
-        const status = img.exists ? c.success("attached") : c.warning("not found");
+        const status = img.exists
+          ? c.success("attached")
+          : c.warning("not found");
         process.stdout.write(
           `  ${c.cyan(`[Image: ${imageDisplayName(img.path)}]`)} ${status}\r\n`
         );
@@ -344,10 +362,10 @@ export async function discussCommand(args: string[]): Promise<void> {
   inputHandler.showPrompt();
 }
 
-// ── Sub-commands ──────────────────────────────────────────────
+// ── CLI rendering helpers ─────────────────────────────────────
 
-function listDiscussions(discussionManager: DiscussionManager): void {
-  const discussions = discussionManager.list();
+function renderDiscussionList(discussionManager: DiscussionManager): void {
+  const discussions = listDiscussions(discussionManager);
 
   if (discussions.length === 0) {
     console.log(`\n  ${c.dim("No discussions found.")}\n`);
@@ -372,63 +390,13 @@ function listDiscussions(discussionManager: DiscussionManager): void {
     console.log(
       `  ${statusIcon} ${c.bold(disc.title)} ${c.dim(
         `[${disc.status}]`
-      )} ${c.dim(`— ${disc.messages.length} messages, ${disc.insights.length} insights`)}`
+      )} ${c.dim(`— ${disc.messageCount} messages, ${disc.insightCount} insights`)}`
     );
     console.log(`    ${c.dim("ID:")} ${disc.id}`);
     console.log(`    ${c.dim("Created:")} ${disc.createdAt}`);
     console.log("");
   }
 }
-
-function showDiscussion(
-  discussionManager: DiscussionManager,
-  id: string
-): void {
-  const md = discussionManager.getMarkdown(id);
-  if (!md) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(`Discussion not found: ${id}`)}\n`
-    );
-    process.exit(1);
-  }
-  console.log(`\n${md}\n`);
-}
-
-function archiveDiscussion(
-  discussionManager: DiscussionManager,
-  id: string
-): void {
-  try {
-    discussionManager.archive(id);
-    console.log(`\n  ${c.success("✔")} ${c.dim("Discussion archived.")}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        error instanceof Error ? error.message : String(error)
-      )}\n`
-    );
-    process.exit(1);
-  }
-}
-
-function deleteDiscussion(
-  discussionManager: DiscussionManager,
-  id: string
-): void {
-  try {
-    discussionManager.delete(id);
-    console.log(`\n  ${c.success("✔")} ${c.dim("Discussion deleted.")}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        error instanceof Error ? error.message : String(error)
-      )}\n`
-    );
-    process.exit(1);
-  }
-}
-
-// ── Helpers ──────────────────────────────────────────────────
 
 function showCurrentInsights(
   discussionManager: DiscussionManager,

@@ -63,8 +63,9 @@ export class CodexRunner implements AiRunner {
 
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000;
-          console.warn(
-            `Codex CLI attempt ${attempt} failed: ${lastError.message}. Retrying in ${delay}ms...`
+          this.log?.(
+            `Codex CLI attempt ${attempt} failed: ${lastError.message}. Retrying in ${delay}ms...`,
+            "warn"
           );
           await this.sleep(delay);
         }

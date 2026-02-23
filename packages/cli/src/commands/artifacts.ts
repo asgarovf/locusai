@@ -1,96 +1,14 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { c, getLocusPath } from "@locusai/sdk/node";
+import {
+  type ArtifactInfo,
+  findArtifact,
+  formatDate,
+  formatSize,
+  listArtifacts,
+  readArtifact,
+} from "@locusai/commands";
+import { c } from "@locusai/sdk/node";
 import { requireInitialization } from "../utils";
-
-interface ArtifactInfo {
-  name: string;
-  fileName: string;
-  createdAt: Date;
-  size: number;
-}
-
-/**
- * List artifacts sorted by creation time (newest first).
- */
-function listArtifacts(projectPath: string): ArtifactInfo[] {
-  const artifactsDir = getLocusPath(projectPath, "artifactsDir");
-
-  if (!existsSync(artifactsDir)) {
-    return [];
-  }
-
-  const files = readdirSync(artifactsDir).filter((f) => f.endsWith(".md"));
-
-  return files
-    .map((fileName) => {
-      const filePath = join(artifactsDir, fileName);
-      const stat = statSync(filePath);
-      const name = fileName.replace(/\.md$/, "");
-
-      return {
-        name,
-        fileName,
-        createdAt: stat.birthtime,
-        size: stat.size,
-      };
-    })
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-}
-
-/**
- * Read an artifact's content by name (with or without .md extension).
- */
-function readArtifact(
-  projectPath: string,
-  name: string
-): { content: string; info: ArtifactInfo } | null {
-  const artifactsDir = getLocusPath(projectPath, "artifactsDir");
-  const fileName = name.endsWith(".md") ? name : `${name}.md`;
-  const filePath = join(artifactsDir, fileName);
-
-  if (!existsSync(filePath)) {
-    return null;
-  }
-
-  const stat = statSync(filePath);
-  const content = readFileSync(filePath, "utf-8");
-
-  return {
-    content,
-    info: {
-      name: fileName.replace(/\.md$/, ""),
-      fileName,
-      createdAt: stat.birthtime,
-      size: stat.size,
-    },
-  };
-}
-
-/**
- * Format file size for display.
- */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(1)}KB`;
-  const mb = kb / 1024;
-  return `${mb.toFixed(1)}MB`;
-}
-
-/**
- * Format a date for display.
- */
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 /**
  * Artifacts command for the Locus CLI.
@@ -180,38 +98,24 @@ async function listArtifactsCommand(projectPath: string): Promise<void> {
  * Show the content of a specific artifact.
  */
 async function showArtifact(projectPath: string, name: string): Promise<void> {
-  const result = readArtifact(projectPath, name);
+  const result = findArtifact(projectPath, name);
 
   if (!result) {
-    // Try partial match
-    const artifacts = listArtifacts(projectPath);
-    const matches = artifacts.filter((a) =>
-      a.name.toLowerCase().includes(name.toLowerCase())
-    );
-
-    if (matches.length === 1) {
-      const match = readArtifact(projectPath, matches[0].name);
-      if (match) {
-        printArtifact(match.info, match.content);
-        return;
-      }
-    }
-
-    if (matches.length > 1) {
-      console.error(
-        `\n  ${c.error("Error:")} Multiple artifacts match "${name}":\n`
-      );
-      for (const m of matches) {
-        console.log(`    ${c.cyan(m.name)}`);
-      }
-      console.log();
-      return;
-    }
-
     console.error(`\n  ${c.error("Error:")} Artifact "${name}" not found\n`);
     console.log(
       `  ${c.dim("Use 'locus artifacts' to see available artifacts")}\n`
     );
+    return;
+  }
+
+  if (!result.match) {
+    console.error(
+      `\n  ${c.error("Error:")} Multiple artifacts match "${name}":\n`
+    );
+    for (const m of result.ambiguous) {
+      console.log(`    ${c.cyan(m.name)}`);
+    }
+    console.log();
     return;
   }
 
@@ -236,23 +140,17 @@ function printArtifact(info: ArtifactInfo, content: string): void {
  * Convert an artifact to a plan by executing a prompt.
  */
 async function convertToPlan(projectPath: string, name: string): Promise<void> {
-  const result = readArtifact(projectPath, name);
+  const result = findArtifact(projectPath, name);
 
   if (!result) {
-    // Try partial match
-    const artifacts = listArtifacts(projectPath);
-    const matches = artifacts.filter((a) =>
-      a.name.toLowerCase().includes(name.toLowerCase())
+    console.error(`\n  ${c.error("Error:")} Artifact "${name}" not found\n`);
+    console.log(
+      `  ${c.dim("Use 'locus artifacts' to see available artifacts")}\n`
     );
+    return;
+  }
 
-    if (matches.length === 1) {
-      const match = readArtifact(projectPath, matches[0].name);
-      if (match) {
-        await runPlanConversion(match.info.name);
-        return;
-      }
-    }
-
+  if (!result.match) {
     console.error(`\n  ${c.error("Error:")} Artifact "${name}" not found\n`);
     console.log(
       `  ${c.dim("Use 'locus artifacts' to see available artifacts")}\n`
@@ -291,12 +189,12 @@ export function showArtifactsHelp(): void {
   ${c.header(" EXAMPLES ")}
     ${c.dim("$")} locus artifacts
     ${c.dim("$")} locus artifacts show reduce-cli-terminal-output
-    ${c.dim("$")} locus artifacts plan aws-instance-orchestration-prd
+    ${c.dim("$")} locus artifacts plan api-auth-refactor-prd
 
   ${c.dim("Artifact names can be partial matches.")}
 `);
 }
 
-// Re-export utilities for use in telegram
+// Re-export utilities for backward compatibility
 export { listArtifacts, readArtifact, formatSize, formatDate };
 export type { ArtifactInfo };

@@ -302,9 +302,19 @@ export class InputHandler {
     let j = pos + 2; // skip ESC [
 
     // Parameter bytes: 0x30–0x3F
-    while (j < data.length && data.charCodeAt(j) >= 0x30 && data.charCodeAt(j) <= 0x3f) j++;
+    while (
+      j < data.length &&
+      data.charCodeAt(j) >= 0x30 &&
+      data.charCodeAt(j) <= 0x3f
+    )
+      j++;
     // Intermediate bytes: 0x20–0x2F
-    while (j < data.length && data.charCodeAt(j) >= 0x20 && data.charCodeAt(j) <= 0x2f) j++;
+    while (
+      j < data.length &&
+      data.charCodeAt(j) >= 0x20 &&
+      data.charCodeAt(j) <= 0x2f
+    )
+      j++;
     // Final byte
     if (j < data.length) j++;
 

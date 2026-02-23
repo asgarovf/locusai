@@ -1,5 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { SettingsManager } from "@locusai/commands";
 import { Provider } from "@locusai/sdk/node";
 import dotenv from "dotenv";
 
@@ -26,38 +25,12 @@ export interface TelegramConfig {
   testMode?: boolean;
 }
 
-interface SettingsJson {
-  apiKey?: string;
-  apiUrl?: string;
-  provider?: string;
-  model?: string;
-  workspaceId?: string;
-  telegram?: {
-    botToken?: string;
-    chatId?: number;
-    testMode?: boolean;
-  };
-}
-
-const SETTINGS_FILE = "settings.json";
-const CONFIG_DIR = ".locus";
-
-function loadSettings(projectPath: string): SettingsJson | null {
-  const settingsPath = join(projectPath, CONFIG_DIR, SETTINGS_FILE);
-
-  if (!existsSync(settingsPath)) {
-    return null;
-  }
-
-  const raw = readFileSync(settingsPath, "utf-8");
-  return JSON.parse(raw) as SettingsJson;
-}
-
 export function resolveConfig(): TelegramConfig {
   const projectPath = process.env.LOCUS_PROJECT_PATH || process.cwd();
 
-  // Load from settings.json
-  const settings = loadSettings(projectPath);
+  // Load from settings.json via shared SettingsManager
+  const settingsManager = new SettingsManager(projectPath);
+  const settings = settingsManager.exists() ? settingsManager.load() : null;
   const tg = settings?.telegram;
 
   // Environment variables override file config
