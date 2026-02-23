@@ -1,6 +1,6 @@
 {
   "name": "@locusai/commands",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "description": "Shared command logic for Locus CLI and Telegram bot",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,8 +16,8 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
-    "@locusai/sdk": "^0.16.1",
-    "@locusai/shared": "^0.16.1"
+    "@locusai/sdk": "^0.16.2",
+    "@locusai/shared": "^0.16.2"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

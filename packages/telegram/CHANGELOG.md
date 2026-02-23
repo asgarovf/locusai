@@ -1,5 +1,15 @@
 # @locusai/telegram
 
+## 0.16.2
+
+### Patch Changes
+
+- Refactoring
+- Updated dependencies
+  - @locusai/commands@0.16.2
+  - @locusai/sdk@0.16.2
+  - @locusai/shared@0.16.2
+
 ## 0.16.1
 
 ### Patch Changes

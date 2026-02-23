@@ -1,6 +1,6 @@
 {
   "name": "@locusai/api",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "description": "",
   "author": "farhad@locusai.team",
   "private": true,
@@ -18,7 +18,7 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "^0.16.1",
+    "@locusai/shared": "^0.16.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
