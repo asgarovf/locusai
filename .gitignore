@@ -95,3 +95,5 @@ packages/cli2/bin/
 .locus/sessions/
 .locus/logs/
 .locus/worktrees/
+.locus/artifacts/
+.locus/discussions/

@@ -72,8 +72,8 @@ const GITIGNORE_ENTRIES = [
   ".locus/sessions/",
   ".locus/logs/",
   ".locus/worktrees/",
-  ".locus/artifacts",
-  ".locus/discussions",
+  ".locus/artifacts/",
+  ".locus/discussions/",
 ];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ export async function initCommand(cwd: string): Promise<void> {
   );
 
   if (entriesToAdd.length > 0) {
-    const newContent = `${gitignoreContent.trimEnd()}\n${GITIGNORE_ENTRIES.join("\n")}\n`;
+    const newContent = `${gitignoreContent.trimEnd()}\n\n${entriesToAdd.join("\n")}\n`;
     writeFileSync(gitignorePath, newContent, "utf-8");
     process.stderr.write(`${green("✓")} Updated .gitignore\n`);
   } else {

@@ -71,18 +71,6 @@ codex exec --full-auto --skip-git-repo-check
 
 ## Configuration
 
-### Setting the Provider
-
-The AI provider is configured in `.locus/config.json` under the `ai` key. You can set it using the config command:
-
-```bash
-# Set provider to Claude
-locus config set ai.provider claude
-
-# Set provider to Codex
-locus config set ai.provider codex
-```
-
 ### Setting the Model
 
 ```bash
