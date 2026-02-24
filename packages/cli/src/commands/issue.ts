@@ -2,13 +2,15 @@
  * `locus issue` — Manage GitHub issues as work items.
  *
  * Subcommands:
- *   create  — Create a new issue with labels and optional sprint
+ *   create  — Create a new issue via AI-powered task generation
  *   list    — List issues with filters (sprint, priority, status, assignee)
  *   show    — Show issue details
  *   label   — Bulk-assign issues to a sprint or add labels
  *   close   — Close an issue
  */
 
+import { createInterface } from "node:readline";
+import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import {
   createIssue,
@@ -160,72 +162,190 @@ async function issueCreate(
   projectRoot: string,
   parsed: IssueArgs
 ): Promise<void> {
-  const title = parsed.positional[0];
-  if (!title) {
-    process.stderr.write(`${red("✗")} Missing issue title.\n`);
+  const config = loadConfig(projectRoot);
+
+  // Get the task description from positional args or prompt interactively
+  let userPrompt = parsed.positional.join(" ").trim();
+
+  if (!userPrompt) {
+    if (!process.stdin.isTTY) {
+      process.stderr.write(`${red("✗")} No task description provided.\n`);
+      process.stderr.write(
+        `  Usage: ${bold('locus issue create "Describe the task..."')}\n`
+      );
+      process.exit(1);
+    }
+    userPrompt = await askQuestion(`${cyan("?")} Describe the task: `);
+    if (!userPrompt) {
+      process.stderr.write(`${red("✗")} No description provided.\n`);
+      process.exit(1);
+    }
+  }
+
+  // Call AI silently to generate structured issue details
+  const aiResult = await runAI({
+    prompt: buildIssueCreationPrompt(userPrompt),
+    provider: config.ai.provider,
+    model: config.ai.model,
+    cwd: projectRoot,
+    silent: true,
+    activity: "generating issue",
+  });
+
+  if (!aiResult.success && !aiResult.interrupted) {
     process.stderr.write(
-      `  Usage: ${bold('locus issue create "Title" [--body "..."] [--priority high] [--type feature] [--sprint "Sprint 1"]')}\n`
+      `${red("✗")} Failed to generate issue: ${aiResult.error}\n`
     );
     process.exit(1);
   }
 
-  const _config = loadConfig(projectRoot);
-  const labels: string[] = ["agent:managed"];
+  if (aiResult.interrupted) {
+    process.stderr.write(`${yellow("○")} Cancelled.\n`);
+    return;
+  }
 
-  // Priority label
-  if (parsed.flags.priority) {
-    const pLabel = `p:${parsed.flags.priority}`;
-    const valid = PRIORITY_LABELS.find((l) => l.name === pLabel);
-    if (!valid) {
-      process.stderr.write(
-        `${red("✗")} Invalid priority: ${parsed.flags.priority}. Use: ${PRIORITY_LABELS.map((l) => l.name.replace("p:", "")).join(", ")}\n`
-      );
-      process.exit(1);
-    }
+  // Parse JSON from AI output
+  let issueData: {
+    title: string;
+    body: string;
+    priority: string;
+    type: string;
+  };
+  try {
+    const jsonText = extractJSON(aiResult.output);
+    issueData = JSON.parse(jsonText);
+  } catch {
+    process.stderr.write(`${red("✗")} Failed to parse AI response.\n`);
+    process.stderr.write(
+      `${dim("Raw output:")} ${aiResult.output.slice(0, 300)}\n`
+    );
+    process.exit(1);
+    return;
+  }
+
+  if (!issueData.title) {
+    process.stderr.write(`${red("✗")} AI response is missing a title.\n`);
+    process.exit(1);
+    return;
+  }
+
+  // Show preview
+  process.stderr.write(`\n${bold("Generated Issue:")}\n\n`);
+  process.stderr.write(`  ${bold("Title:")}    ${issueData.title}\n`);
+  if (issueData.type) {
+    process.stderr.write(
+      `  ${bold("Type:")}     ${formatType([`type:${issueData.type}`]) || issueData.type}\n`
+    );
+  }
+  if (issueData.priority) {
+    process.stderr.write(
+      `  ${bold("Priority:")} ${formatPriority([`p:${issueData.priority}`]) || issueData.priority}\n`
+    );
+  }
+  if (parsed.flags.sprint) {
+    process.stderr.write(`  ${bold("Sprint:")}   ${parsed.flags.sprint}\n`);
+  }
+  if (issueData.body?.trim()) {
+    process.stderr.write(
+      `\n${dim("───────────────────────────────────────")}\n`
+    );
+    process.stderr.write(`${issueData.body.trim()}\n`);
+    process.stderr.write(
+      `${dim("───────────────────────────────────────")}\n`
+    );
+  }
+  process.stderr.write("\n");
+
+  // Ask for confirmation
+  const answer = await askQuestion(
+    `${cyan("?")} Create this issue? ${dim("[Y/n]")} `
+  );
+  if (answer.toLowerCase() === "n" || answer.toLowerCase() === "no") {
+    process.stderr.write(`${yellow("○")} Cancelled.\n`);
+    return;
+  }
+
+  // Build labels
+  const labels: string[] = ["agent:managed", "locus:queued"];
+
+  const pLabel = `p:${issueData.priority}`;
+  if (PRIORITY_LABELS.find((l) => l.name === pLabel)) {
     labels.push(pLabel);
   }
 
-  // Type label
-  if (parsed.flags.type) {
-    const tLabel = `type:${parsed.flags.type}`;
-    const valid = TYPE_LABELS.find((l) => l.name === tLabel);
-    if (!valid) {
-      process.stderr.write(
-        `${red("✗")} Invalid type: ${parsed.flags.type}. Use: ${TYPE_LABELS.map((l) => l.name.replace("type:", "")).join(", ")}\n`
-      );
-      process.exit(1);
-    }
+  const tLabel = `type:${issueData.type}`;
+  if (TYPE_LABELS.find((l) => l.name === tLabel)) {
     labels.push(tLabel);
   }
-
-  // Status label (default: queued)
-  labels.push("locus:queued");
-
-  const body = parsed.flags.body ?? "";
 
   process.stderr.write(`${cyan("●")} Creating issue...`);
 
   try {
-    const number = createIssue(title, body, labels, parsed.flags.sprint, {
-      cwd: projectRoot,
-    });
-
-    process.stderr.write(
-      `\r${green("✓")} Created issue ${bold(`#${number}`)} — ${title}\n`
+    const number = createIssue(
+      issueData.title,
+      issueData.body ?? "",
+      labels,
+      parsed.flags.sprint,
+      { cwd: projectRoot }
     );
 
+    process.stderr.write(
+      `\r${green("✓")} Created issue ${bold(`#${number}`)} — ${issueData.title}\n`
+    );
     if (parsed.flags.sprint) {
       process.stderr.write(`  Sprint: ${parsed.flags.sprint}\n`);
     }
-    if (labels.length > 1) {
-      process.stderr.write(`  Labels: ${labels.join(", ")}\n`);
-    }
+    process.stderr.write(`  Labels: ${labels.join(", ")}\n`);
   } catch (e) {
     process.stderr.write(
       `\r${red("✗")} Failed to create issue: ${(e as Error).message}\n`
     );
     process.exit(1);
   }
+}
+
+// ─── Issue Creation Helpers ───────────────────────────────────────────────────
+
+function buildIssueCreationPrompt(userRequest: string): string {
+  return [
+    "You are a task planner for a software development team.",
+    "Given a user request, create a well-structured GitHub issue.",
+    "",
+    'Output ONLY a valid JSON object with exactly these fields:',
+    '- "title": A concise, actionable issue title (max 80 characters)',
+    '- "body": Detailed markdown description with context, acceptance criteria, and technical notes',
+    '- "priority": One of: critical, high, medium, low',
+    '- "type": One of: feature, bug, chore, refactor, docs',
+    "",
+    `User request: ${userRequest}`,
+    "",
+    "Output ONLY the JSON object. No explanations, no code execution, no other text.",
+  ].join("\n");
+}
+
+function extractJSON(text: string): string {
+  // Try JSON inside a markdown code block
+  const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlock) return codeBlock[1].trim();
+
+  // Try raw JSON object
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) return jsonMatch[0];
+
+  return text.trim();
+}
+
+function askQuestion(question: string): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stderr,
+    });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
 }
 
 async function issueList(
@@ -625,16 +745,13 @@ function printIssueHelp(): void {
 ${bold("locus issue")} — Manage GitHub issues as work items
 
 ${bold("Subcommands:")}
-  ${cyan("create")} ${dim("(c)")}   Create a new issue
+  ${cyan("create")} ${dim("(c)")}   Create a new issue via AI
   ${cyan("list")} ${dim("(ls)")}    List issues (default)
   ${cyan("show")}          Show issue details
   ${cyan("label")}         Bulk-update labels / sprint assignment
   ${cyan("close")}         Close an issue
 
 ${bold("Create options:")}
-  ${dim("--body, -b")}     Issue body text
-  ${dim("--priority, -p")} Priority: critical, high, medium, low
-  ${dim("--type, -t")}     Type: feature, bug, chore, refactor, docs
   ${dim("--sprint, -s")}   Assign to sprint (milestone)
 
 ${bold("List options:")}
@@ -647,7 +764,9 @@ ${bold("List options:")}
   ${dim("--limit, -n")}    Max results (default: 50)
 
 ${bold("Examples:")}
-  locus issue create "Fix login bug" --priority high --type bug
+  locus issue create "Add dark mode support"
+  locus issue create "Fix login bug" --sprint "Sprint 1"
+  locus issue create  ${dim("# interactive prompt")}
   locus issue list --sprint "Sprint 1" --status queued
   locus issue show 42
   locus issue label 42 43 --sprint "Sprint 2"

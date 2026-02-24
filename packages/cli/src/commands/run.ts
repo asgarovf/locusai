@@ -17,7 +17,7 @@ import {
   checkForConflicts,
   printConflictReport,
 } from "../core/conflict.js";
-import { getIssue, listIssues, listMilestones } from "../core/github.js";
+import { createPR, getIssue, listIssues, listMilestones } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
 import { getRateLimiter } from "../core/rate-limiter.js";
 import {
@@ -152,7 +152,8 @@ async function handleSprintRun(
   issues = sortByOrder(issues);
 
   // Create run state
-  const branchName = `locus/sprint-${sprintName.toLowerCase().replace(/\s+/g, "-")}`;
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  const branchName = `locus/sprint-${sprintName.toLowerCase().replace(/\s+/g, "-")}-${randomSuffix}`;
   const state = createSprintRunState(
     sprintName,
     branchName,
@@ -285,16 +286,22 @@ async function handleSprintRun(
     markTaskInProgress(state, task.issue);
     saveRunState(projectRoot, state);
 
-    // Execute
+    // Execute (skip per-task PR — a single sprint PR is created after all tasks)
     const result = await executeIssue(projectRoot, {
       issueNumber: task.issue,
       provider: config.ai.provider,
       model: flags.model ?? config.ai.model,
       dryRun: flags.dryRun,
       sprintContext,
+      skipPR: true,
     });
 
     if (result.success) {
+      // Ensure all changes are committed before moving to the next task
+      if (!flags.dryRun) {
+        const issueTitle = issue?.title ?? "";
+        ensureTaskCommit(projectRoot, task.issue, issueTitle);
+      }
       markTaskDone(state, task.issue, result.prNumber);
     } else {
       markTaskFailed(state, task.issue, result.error ?? "Unknown error");
@@ -321,6 +328,23 @@ async function handleSprintRun(
   process.stderr.write(
     `  ${green("✓")} Done: ${stats.done}  ${red("✗")} Failed: ${stats.failed}  ${dim(`Duration: ${timer.formatted()}`)}\n\n`
   );
+
+  // Create a single PR for the entire sprint
+  if (!flags.dryRun && stats.done > 0) {
+    const completedTasks = state.tasks
+      .filter((t) => t.status === "done")
+      .map((t) => ({
+        issue: t.issue,
+        title: issues.find((i) => i.number === t.issue)?.title,
+      }));
+    await createSprintPR(
+      projectRoot,
+      config,
+      sprintName,
+      branchName,
+      completedTasks
+    );
+  }
 
   if (stats.failed === 0) {
     clearRunState(projectRoot);
@@ -578,6 +602,8 @@ async function handleResume(
     }
   }
 
+  const isSprintRun = state.type === "sprint";
+
   // Resume execution
   const timer = createTimer();
   let task = getNextTask(state);
@@ -597,15 +623,28 @@ async function handleResume(
       issueNumber: task.issue,
       provider: config.ai.provider,
       model: config.ai.model,
+      // Sprint runs use a single sprint-level PR created at the end
+      skipPR: isSprintRun,
     });
 
     if (result.success) {
+      if (isSprintRun) {
+        // Fetch issue title for the commit message if possible
+        let issueTitle = "";
+        try {
+          const iss = getIssue(task.issue, { cwd: projectRoot });
+          issueTitle = iss.title;
+        } catch {
+          // Non-fatal
+        }
+        ensureTaskCommit(projectRoot, task.issue, issueTitle);
+      }
       markTaskDone(state, task.issue, result.prNumber);
     } else {
       markTaskFailed(state, task.issue, result.error ?? "Unknown error");
       saveRunState(projectRoot, state);
 
-      if (config.sprint.stopOnFailure && state.type === "sprint") {
+      if (config.sprint.stopOnFailure && isSprintRun) {
         process.stderr.write(
           `\n${red("✗")} Sprint stopped: task #${task.issue} failed.\n`
         );
@@ -621,6 +660,20 @@ async function handleResume(
   process.stderr.write(
     `\n${bold("Resume complete:")} ${green(`✓ ${finalStats.done}`)} ${finalStats.failed > 0 ? red(`✗ ${finalStats.failed}`) : ""} ${dim(`(${timer.formatted()})`)}\n\n`
   );
+
+  // Create sprint PR if this was a sprint run and there were completed tasks
+  if (isSprintRun && state.branch && state.sprint && finalStats.done > 0) {
+    const completedTasks = state.tasks
+      .filter((t) => t.status === "done")
+      .map((t) => ({ issue: t.issue }));
+    await createSprintPR(
+      projectRoot,
+      config,
+      state.sprint,
+      state.branch,
+      completedTasks
+    );
+  }
 
   if (finalStats.failed === 0) {
     clearRunState(projectRoot);
@@ -643,4 +696,99 @@ function getOrder(issue: Issue): number | null {
     if (match) return Number.parseInt(match[1], 10);
   }
   return null;
+}
+
+/**
+ * Safety-net commit: if the AI left uncommitted changes after a task,
+ * stage and commit them so the sprint branch stays clean per task.
+ */
+function ensureTaskCommit(
+  projectRoot: string,
+  issueNumber: number,
+  issueTitle: string
+): void {
+  try {
+    const status = execSync("git status --porcelain", {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+
+    if (!status) return;
+
+    execSync("git add -A", {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    const message = `chore: complete #${issueNumber} - ${issueTitle}`;
+    execSync(`git commit -m ${JSON.stringify(message)}`, {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    process.stderr.write(
+      `  ${dim(`Committed uncommitted changes for #${issueNumber}`)}\n`
+    );
+  } catch {
+    // Non-fatal — AI may have already committed everything
+  }
+}
+
+/**
+ * Create a single sprint-level PR covering all completed tasks.
+ */
+async function createSprintPR(
+  projectRoot: string,
+  config: LocusConfig,
+  sprintName: string,
+  branchName: string,
+  tasks: Array<{ issue: number; title?: string }>
+): Promise<number | undefined> {
+  if (!config.agent.autoPR) return undefined;
+
+  try {
+    const diff = execSync(
+      `git diff origin/${config.agent.baseBranch}..HEAD --stat`,
+      {
+        cwd: projectRoot,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }
+    ).trim();
+
+    if (!diff) {
+      process.stderr.write(`  ${dim("No changes — skipping sprint PR")}\n`);
+      return undefined;
+    }
+
+    execSync(`git push -u origin ${branchName}`, {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    const taskLines = tasks
+      .map((t) => `- Closes #${t.issue}${t.title ? `: ${t.title}` : ""}`)
+      .join("\n");
+
+    const prBody = `## Sprint: ${sprintName}\n\n${taskLines}\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
+
+    const prNumber = createPR(
+      `Sprint: ${sprintName}`,
+      prBody,
+      branchName,
+      config.agent.baseBranch,
+      { cwd: projectRoot }
+    );
+
+    process.stderr.write(`  ${green("✓")} Created sprint PR #${prNumber}\n`);
+    return prNumber;
+  } catch (e) {
+    getLogger().warn(`Failed to create sprint PR: ${e}`);
+    process.stderr.write(`  ${yellow("⚠")} Could not create sprint PR: ${e}\n`);
+    return undefined;
+  }
 }

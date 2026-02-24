@@ -72,6 +72,8 @@ const GITIGNORE_ENTRIES = [
   ".locus/sessions/",
   ".locus/logs/",
   ".locus/worktrees/",
+  ".locus/artifacts",
+  ".locus/discussions",
 ];
 
 // ─── Command ─────────────────────────────────────────────────────────────────

@@ -16,20 +16,24 @@ Issues can be created through the Locus CLI or directly on GitHub. The CLI adds 
 
 ### Via the CLI
 
+Describe the task in plain language and the AI generates a structured issue for you:
+
 ```bash
 # Basic issue
 locus issue create "Add input validation for email field"
 
-# With type and priority
-locus issue create "Fix broken pagination" --type bug --priority critical
-
 # Assigned to a sprint
-locus issue create "Write API documentation" --type docs --priority medium --sprint "Sprint 1"
+locus issue create "Write API documentation" --sprint "Sprint 1"
+
+# Interactive prompt
+locus issue create
 ```
 
+The AI selects a concise title, writes a detailed body with acceptance criteria, and chooses the appropriate priority and type. A preview is shown before the issue is posted, and you must confirm with `Y` to proceed.
+
 When created through the CLI, issues are automatically labeled with:
-- A type label (e.g., `type:feature`)
-- A priority label (e.g., `p:high`)
+- A type label (e.g., `type:feature`) — chosen by AI
+- A priority label (e.g., `p:high`) — chosen by AI
 - The status label `locus:queued`
 - The `agent:managed` label
 - A milestone assignment (if `--sprint` is provided)
@@ -181,10 +185,10 @@ Populate the sprint with tasks. You can do this manually or with AI-assisted pla
 # AI-generated plan
 locus plan "Implement user authentication"
 
-# Manual issue creation
-locus issue create "Set up OAuth provider" --type feature --priority high --sprint "Sprint 1"
-locus issue create "Add login page UI" --type feature --priority high --sprint "Sprint 1"
-locus issue create "Write auth middleware" --type feature --priority medium --sprint "Sprint 1"
+# Manual issue creation (AI generates title, body, priority, and type)
+locus issue create "Set up OAuth provider" --sprint "Sprint 1"
+locus issue create "Add login page UI" --sprint "Sprint 1"
+locus issue create "Write auth middleware" --sprint "Sprint 1"
 ```
 
 ### 3. Execute

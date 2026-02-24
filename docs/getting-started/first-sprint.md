@@ -31,24 +31,20 @@ You have two options for creating work items: manually or with AI planning.
 
 ### Option A: Manual Issue Creation
 
-Create individual issues with `locus issue create`:
+Create individual issues with `locus issue create`. Describe the task in plain language — the AI generates a structured issue (title, body, priority, type) for you to review before it is posted to GitHub:
 
 ```bash
-# Basic issue
+# Describe the task; AI fills in all details
 locus issue create "Add user authentication endpoint"
 
-# With priority and type
-locus issue create "Add rate limiting to API" --priority high --type feature
+# Assign to a sprint at creation time
+locus issue create "Add rate limiting to API" --sprint "Sprint 1"
 
-# With body text and sprint assignment
-locus issue create "Fix null pointer in user service" \
-  --body "The /users/:id endpoint crashes when the user does not exist." \
-  --priority critical \
-  --type bug \
-  --sprint "Sprint 1"
+# Prompt interactively
+locus issue create
 ```
 
-Each issue is created on GitHub with the appropriate labels (`p:high`, `type:feature`, `locus:queued`, `agent:managed`).
+The AI chooses the appropriate priority and type, writes a detailed body with acceptance criteria, and shows a preview. Confirm with `Y` to post. Each issue is created on GitHub with the appropriate labels (`p:high`, `type:feature`, `locus:queued`, `agent:managed`).
 
 ### Option B: AI-Powered Planning
 

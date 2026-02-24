@@ -175,9 +175,9 @@ export async function executeIssue(
     `\n${green("✓")} Issue #${issueNumber} completed ${dim(`(${timer.formatted()})`)}\n`
   );
 
-  // Create PR if configured
+  // Create PR if configured and not skipped (sprint runs use a single sprint-level PR)
   let prNumber: number | undefined;
-  if (config.agent.autoPR) {
+  if (config.agent.autoPR && !options.skipPR) {
     prNumber = await createIssuePR(projectRoot, config, issue);
   }
 

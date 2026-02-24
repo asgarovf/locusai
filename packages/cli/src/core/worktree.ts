@@ -53,16 +53,30 @@ export function getWorktreePath(
   return join(getWorktreeDir(projectRoot), `issue-${issueNumber}`);
 }
 
-/** Get the branch name for a worktree issue. */
-function getBranchName(issueNumber: number): string {
-  return `locus/issue-${issueNumber}`;
+/** Generate a new unique branch name for a worktree issue. */
+function generateBranchName(issueNumber: number): string {
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  return `locus/issue-${issueNumber}-${randomSuffix}`;
+}
+
+/** Read the current branch name from an existing worktree directory. */
+function getWorktreeBranch(worktreePath: string): string | null {
+  try {
+    return execSync("git branch --show-current", {
+      cwd: worktreePath,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim() || null;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Worktree Lifecycle ──────────────────────────────────────────────────────
 
 /**
  * Create a new git worktree for an issue.
- * Creates `.locus/worktrees/issue-<N>` with branch `locus/issue-<N>` based on `baseBranch`.
+ * Creates `.locus/worktrees/issue-<N>` with branch `locus/issue-<N>-<random>` based on `baseBranch`.
  */
 export function createWorktree(
   projectRoot: string,
@@ -71,21 +85,20 @@ export function createWorktree(
 ): WorktreeInfo {
   const log = getLogger();
   const worktreePath = getWorktreePath(projectRoot, issueNumber);
-  const branch = getBranchName(issueNumber);
 
-  // If worktree already exists, return it
+  // If worktree already exists, return it (read actual branch from git)
   if (existsSync(worktreePath)) {
     log.verbose(`Worktree already exists for issue #${issueNumber}`);
+    const existingBranch = getWorktreeBranch(worktreePath) ?? `locus/issue-${issueNumber}`;
     return {
       issueNumber,
       path: worktreePath,
-      branch,
+      branch: existingBranch,
       status: "active",
     };
   }
 
-  // Delete the branch if it already exists (leftover from a previous run)
-  gitSafe(`branch -D ${branch}`, projectRoot);
+  const branch = generateBranchName(issueNumber);
 
   // Create the worktree with a new branch based on baseBranch
   git(
@@ -114,12 +127,14 @@ export function createWorktree(
 export function removeWorktree(projectRoot: string, issueNumber: number): void {
   const log = getLogger();
   const worktreePath = getWorktreePath(projectRoot, issueNumber);
-  const branch = getBranchName(issueNumber);
 
   if (!existsSync(worktreePath)) {
     log.verbose(`Worktree for issue #${issueNumber} does not exist`);
     return;
   }
+
+  // Read the actual branch name before removing the worktree
+  const branch = getWorktreeBranch(worktreePath);
 
   // Remove the worktree
   try {
@@ -135,7 +150,9 @@ export function removeWorktree(projectRoot: string, issueNumber: number): void {
   }
 
   // Clean up the branch
-  gitSafe(`branch -D ${branch}`, projectRoot);
+  if (branch) {
+    gitSafe(`branch -D ${branch}`, projectRoot);
+  }
 }
 
 /**
@@ -174,7 +191,7 @@ export function listWorktrees(projectRoot: string): WorktreeInfo[] {
 
     const issueNumber = Number.parseInt(match[1], 10);
     const path = join(worktreeDir, entry);
-    const branch = getBranchName(issueNumber);
+    const branch = getWorktreeBranch(path) ?? `locus/issue-${issueNumber}`;
 
     // Check if git recognizes it as an active worktree
     // Use realpathSync to handle macOS /var → /private/var symlinks
@@ -236,10 +253,14 @@ export function pushWorktreeBranch(
   issueNumber: number
 ): string {
   const worktreePath = getWorktreePath(projectRoot, issueNumber);
-  const branch = getBranchName(issueNumber);
 
   if (!existsSync(worktreePath)) {
     throw new Error(`Worktree for issue #${issueNumber} does not exist`);
+  }
+
+  const branch = getWorktreeBranch(worktreePath);
+  if (!branch) {
+    throw new Error(`Could not determine branch for worktree #${issueNumber}`);
   }
 
   git(`push -u origin ${branch}`, worktreePath);

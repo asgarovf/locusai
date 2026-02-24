@@ -22,29 +22,40 @@ If no subcommand is provided, `list` is used by default.
 
 ### create (c)
 
-Create a new GitHub issue with Locus labels.
+Create a new GitHub issue using AI. Describe the task in plain language and the AI generates a structured issue — title, detailed description, priority, and type — which you can review and confirm before it is posted to GitHub.
 
 ```bash
-locus issue create "<title>" [options]
+locus issue create [description] [options]
 ```
+
+If `description` is omitted, you are prompted to enter it interactively.
 
 **Options:**
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--body` | `-b` | Issue body text |
-| `--priority` | `-p` | Priority: `critical`, `high`, `medium`, `low` |
-| `--type` | `-t` | Type: `feature`, `bug`, `chore`, `refactor`, `docs` |
 | `--sprint` | `-s` | Assign to a sprint (milestone name) |
 
-Every created issue automatically receives the `agent:managed` and `locus:queued` labels.
+The AI selects the appropriate priority (`critical`, `high`, `medium`, `low`) and type (`feature`, `bug`, `chore`, `refactor`, `docs`) from the description. Every created issue automatically receives the `agent:managed` and `locus:queued` labels.
+
+**Flow:**
+
+1. Provide a plain-language description of the task
+2. AI generates a title, body, priority, and type
+3. A preview is shown for review
+4. Confirm with `Y` to post the issue to GitHub
 
 **Examples:**
 
 ```bash
-locus issue create "Fix login bug" --priority high --type bug
-locus issue create "Add OAuth support" -p medium -t feature -s "Sprint 1"
-locus issue create "Update README" --body "Add setup instructions" --type docs
+# Pass the description directly
+locus issue create "Add dark mode support to settings page"
+
+# Assign to a sprint at creation time
+locus issue create "Fix broken pagination on user list" --sprint "Sprint 2"
+
+# Prompt interactively
+locus issue create
 ```
 
 ---

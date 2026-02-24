@@ -7,10 +7,10 @@
  * - Partial output preservation on interrupt
  */
 
+import { inferProviderFromModel } from "../core/ai-models.js";
 import { getStatusIndicator } from "../display/status-indicator.js";
 import { StreamRenderer } from "../display/stream-renderer.js";
 import { dim, red, yellow } from "../display/terminal.js";
-import { inferProviderFromModel } from "../core/ai-models.js";
 import { listenForInterrupt } from "../repl/input-handler.js";
 import type { AgentRunner, RunnerResult } from "../types.js";
 import { createRunnerAsync } from "./runner.js";
@@ -128,7 +128,6 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       model: options.model,
       cwd: options.cwd,
       signal: abortController.signal,
-      verbose: options.verbose,
       onOutput: (chunk) => {
         if (wasAborted) return;
         if (!hasOutput) {

@@ -47,10 +47,6 @@ export class ClaudeRunner implements AgentRunner {
       "--no-session-persistence",
     ];
 
-    if (options.verbose) {
-      args.push("--verbose");
-    }
-
     if (options.model) {
       args.push("--model", options.model);
     }

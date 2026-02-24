@@ -186,8 +186,6 @@ export interface RunnerOptions {
   cwd: string;
   onOutput?: (chunk: string) => void;
   signal?: AbortSignal;
-  /** Enable verbose output (thinking, tool details). */
-  verbose?: boolean;
 }
 
 export interface RunnerResult {
@@ -207,6 +205,8 @@ export interface AgentOptions {
   dryRun?: boolean;
   feedbackContext?: string;
   sprintContext?: string;
+  /** Skip per-task PR creation (used for sprint runs where a single sprint PR is created instead). */
+  skipPR?: boolean;
 }
 
 export interface AgentResult {
