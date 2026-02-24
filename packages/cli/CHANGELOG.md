@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.17.2
+
+### Patch Changes
+
+- Remove provider command from repl
+
 ## 0.17.1
 
 ### Patch Changes
