@@ -9,7 +9,7 @@ export function Footer() {
       <div className="absolute inset-0 bg-linear-to-t from-violet/2 to-transparent pointer-events-none" />
 
       <div className="max-w-6xl px-6 mx-auto relative">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-14">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-14">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Image
@@ -20,7 +20,7 @@ export function Footer() {
               className="mb-4"
             />
             <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px] mb-4">
-              AI-native project management for engineering teams. Open source.
+              GitHub-native AI engineering. Open source and free forever.
             </p>
             <Link
               href="https://github.com/asgarovf/locusai"
@@ -32,74 +32,66 @@ export function Footer() {
             </Link>
           </div>
 
-          {/* Products */}
+          {/* CLI */}
           <div>
             <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
-              Products
+              CLI Commands
             </h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
-                  href="/products/agents"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/init"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  AI Agents
+                  locus init
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/planning"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/plan"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  Sprint Planning
+                  locus plan
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/discuss"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/run"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  AI Discussions
+                  locus run
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/review"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/exec"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  Code Review
+                  locus exec
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/vscode"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/review"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  VSCode Extension
+                  locus review
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/telegram"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/issue"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  Telegram Bot
+                  locus issue
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products/self-hosting"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  href="https://docs.locusai.dev/cli/sprint"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
                 >
-                  Self-Hosting
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="https://app.locusai.dev"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Dashboard
+                  locus sprint
                 </Link>
               </li>
             </ul>
@@ -121,26 +113,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/cli"
+                  href="https://docs.locusai.dev/getting-started/installation"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  CLI Reference
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/security"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Security
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/integrations"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Integrations
+                  Getting Started
                 </Link>
               </li>
               <li>
@@ -152,10 +128,18 @@ export function Footer() {
                   npm
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/security"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Security
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Community */}
+          {/* Community & Legal */}
           <div>
             <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
               Community
@@ -188,39 +172,6 @@ export function Footer() {
                   Contributing
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
-              Company
-            </h4>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="https://app.locusai.dev/login"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Sign in
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="https://app.locusai.dev/register"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Get Started
-                </Link>
-              </li>
               <li>
                 <Link
                   href="/privacy"
@@ -247,7 +198,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Locus AI. MIT License.
           </p>
           <p className="text-xs text-muted-foreground">
-            Open source. Run locally. Ship faster.
+            Open source. GitHub-native. Ship faster.
           </p>
         </div>
       </div>

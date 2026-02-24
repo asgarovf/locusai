@@ -20,10 +20,10 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "Locus",
   applicationCategory: "DeveloperApplication",
-  operatingSystem: "Linux, macOS",
+  operatingSystem: "Linux, macOS, Windows",
   url: "https://locusai.dev",
   description:
-    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code from your terminal.",
+    "GitHub-native AI engineering CLI. Turn GitHub issues into shipped code with AI agents. Plan sprints, execute tasks, and iterate on feedback.",
   offers: {
     "@type": "Offer",
     price: "0",
@@ -58,17 +58,14 @@ export default async function Home() {
       />
       <Navbar />
       <main className="flex-1">
-        {/* Hero with install tabs */}
+        {/* Hero with install command */}
         <Hero version={version} />
 
-        {/* Terminal demo — with colorful background */}
+        {/* Terminal demo */}
         <div className="relative -mt-16 md:-mt-28 z-20 mb-16">
-          {/* Colorful background wrapper */}
           <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl max-w-5xl mx-auto px-3 sm:px-6">
-            {/* Background gradient fill */}
             <div className="absolute inset-0 bg-white rounded-3xl" />
 
-            {/* Organic wavy SVG lines */}
             <svg
               aria-hidden="true"
               className="absolute inset-0 w-full h-full"
@@ -103,20 +100,19 @@ export default async function Home() {
               />
             </svg>
 
-            {/* Terminal inside the colorful area */}
             <div className="relative z-10 py-6 sm:py-10 md:py-14 px-2 sm:px-4 md:px-10">
               <TerminalDemo />
             </div>
           </div>
         </div>
 
-        {/* Tool logos marquee */}
+        {/* Tool logos */}
         <SupportedTools />
 
         {/* Why Locus - feature grid */}
         <FeatureGrid />
 
-        {/* Products showcase */}
+        {/* How it works - product showcase */}
         <ProductShowcase />
 
         {/* Final CTA */}

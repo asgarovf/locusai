@@ -1,96 +1,121 @@
 ---
-description: Manage Locus CLI settings — API key and model (provider can be inferred from model).
+description: View and manage Locus project settings stored in .locus/config.json.
 ---
 
-# config
+# locus config
 
-Manage your Locus CLI configuration. Settings are stored in `.locus/settings.json`.
+View and update local project settings. Configuration is stored in `.locus/config.json` and is generated during `locus init`.
+
+## Usage
+
+```bash
+locus config <subcommand> [args]
+```
+
+If no subcommand is provided, `show` is used by default.
 
 ---
 
 ## Subcommands
 
-### `config setup`
+### show
 
-Interactive configuration wizard.
-
-```bash
-locus config setup
-```
-
-Or configure non-interactively with flags:
-
-```bash
-locus config setup --api-key "locus_..." --model claude-sonnet-4-6
-```
-
-| Flag | Description |
-|------|-------------|
-| `--api-key <KEY>` | Locus API key (required) |
-| `--api-url <URL>` | API base URL (optional) |
-| `--provider <P>` | AI provider: `claude` or `codex` (optional; inferred when model is set) |
-| `--model <M>` | Specific AI model name (recommended) |
-
----
-
-### `config show`
-
-Display current settings with secrets masked.
+Display the current configuration organized by section.
 
 ```bash
 locus config show
+locus config           # Same as 'locus config show'
 ```
 
-Output example:
+Sections displayed:
 
-```
-  API Key:    locus_...abc
-  API URL:    https://api.locusai.dev/api
-  Provider:   claude
-  Model:      (default)
-```
+| Section | Keys |
+|---------|------|
+| **GitHub** | `owner`, `repo`, `defaultBranch` |
+| **AI** | `provider`, `model` |
+| **Agent** | `maxParallel`, `autoLabel`, `autoPR`, `baseBranch`, `rebaseBeforeTask` |
+| **Sprint** | `active`, `stopOnFailure` |
+| **Logging** | `level`, `maxFiles`, `maxTotalSizeMB` |
 
----
+### set
 
-### `config set`
-
-Update a specific setting.
+Update a specific configuration value using dot-notation paths.
 
 ```bash
-locus config set <key> <value>
+locus config set <path> <value>
 ```
-
-Valid keys:
-
-| Key | Description |
-|-----|-------------|
-| `apiKey` | Locus API key |
-| `apiUrl` | API base URL |
-| `provider` | AI provider (`claude` or `codex`; optional when `model` is set) |
-| `model` | AI model name (provider inferred automatically) |
-| `workspaceId` | Workspace ID (auto-resolved from API key) |
-| `telegram.botToken` | Telegram bot token |
-| `telegram.chatId` | Telegram chat ID |
-| `telegram.testMode` | Enable test mode (`true` / `false`) |
 
 **Examples:**
 
 ```bash
-locus config set model gpt-5.3-codex
-locus config set model claude-sonnet-4-6
-locus config set telegram.botToken "123456:ABC..."
+locus config set ai.model claude-sonnet-4-6
+locus config set ai.provider codex
+locus config set agent.maxParallel 5
+locus config set agent.baseBranch develop
+locus config set agent.rebaseBeforeTask false
+locus config set sprint.stopOnFailure false
+locus config set logging.level debug
 ```
+
+### get
+
+Read a specific configuration value. Output goes to stdout for scripting.
+
+```bash
+locus config get <path>
+```
+
+**Examples:**
+
+```bash
+locus config get ai.model
+locus config get sprint.active
+locus config get agent.maxParallel
+```
+
+For nested objects, the output is formatted as JSON.
 
 ---
 
-### `config remove`
+## Configuration Keys
 
-Delete all settings.
+| Path | Type | Default | Description |
+|------|------|---------|-------------|
+| `github.owner` | string | (detected) | GitHub repository owner |
+| `github.repo` | string | (detected) | GitHub repository name |
+| `github.defaultBranch` | string | (detected) | Default branch (e.g., `main`) |
+| `ai.provider` | string | `"claude"` | AI provider: `claude` or `codex` |
+| `ai.model` | string | (provider default) | AI model identifier |
+| `agent.maxParallel` | number | `3` | Maximum parallel issue execution |
+| `agent.autoLabel` | boolean | `true` | Automatically manage labels during execution |
+| `agent.autoPR` | boolean | `true` | Automatically create PRs after task completion |
+| `agent.baseBranch` | string | (detected) | Branch that sprint and worktree branches are based on |
+| `agent.rebaseBeforeTask` | boolean | `true` | Rebase sprint branch before each task |
+| `sprint.active` | string/null | `null` | Name of the active sprint |
+| `sprint.stopOnFailure` | boolean | `true` | Stop sprint execution when a task fails |
+| `logging.level` | string | `"normal"` | Log level: `silent`, `normal`, `verbose`, `debug` |
+| `logging.maxFiles` | number | `10` | Maximum number of log files to keep |
+| `logging.maxTotalSizeMB` | number | `50` | Maximum total log size in MB |
+
+---
+
+## Examples
 
 ```bash
-locus config remove
-```
+# Show all settings
+locus config show
 
-{% hint style="danger" %}
-This permanently deletes your `.locus/settings.json` file. You'll need to run `locus config setup` again.
-{% endhint %}
+# Switch AI provider and model
+locus config set ai.provider codex
+locus config set ai.model gpt-5.3-codex
+
+# Increase parallelism
+locus config set agent.maxParallel 8
+
+# Set active sprint
+locus config set sprint.active "Sprint 2"
+
+# Read a value for scripting
+MODEL=$(locus config get ai.model)
+echo "Using model: $MODEL"
+```

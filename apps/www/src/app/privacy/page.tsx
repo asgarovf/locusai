@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
               Privacy Policy
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Last updated: January 29, 2026
+              Last updated: February 24, 2026
             </p>
           </div>
         </section>
@@ -44,64 +44,63 @@ export default function PrivacyPolicyPage() {
                   1. Introduction
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Locus AI (&quot;Locus&quot;, &quot;we&quot;, &quot;us&quot;,
-                  or &quot;our&quot;) operates the Locus platform, including the
-                  cloud dashboard at app.locusai.dev, the CLI tools, and related
-                  services. This Privacy Policy explains how we collect, use,
-                  disclose, and safeguard your information when you use our
-                  platform.
+                  Locus AI (&quot;Locus&quot;, &quot;we&quot;, &quot;us&quot;, or
+                  &quot;our&quot;) develops the Locus CLI tool and this website
+                  (locusai.dev). This Privacy Policy explains how we handle your
+                  information. Locus is a local-first, GitHub-native tool — it
+                  has no cloud backend, no user accounts, and no server-side data
+                  storage.
                 </p>
               </div>
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  2. Information We Collect
+                  2. Information We Do Not Collect
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  Locus is designed to be fully local. The following data never
+                  passes through any Locus server:
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc list-inside">
+                  <li>Your source code and repository contents</li>
+                  <li>
+                    AI provider credentials (Anthropic API keys, OpenAI API
+                    keys)
+                  </li>
+                  <li>AI prompts and AI-generated responses</li>
+                  <li>GitHub tokens or authentication data</li>
+                  <li>Local file system contents accessed by agents</li>
+                  <li>Git diffs, patches, or code review content</li>
+                  <li>
+                    Your GitHub issues, milestones, labels, or pull requests
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-4">
+                  3. Information We May Collect
                 </h2>
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-base font-medium text-white mb-2">
-                      Account Information
+                      Website Analytics
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      When you create an account, we collect your email address,
-                      name, user role, organization name, and team size. If you
-                      sign in via Google OAuth, we receive your name and email
-                      address from Google.
+                      We may use Google Analytics on this website (locusai.dev)
+                      to collect aggregated, anonymous usage statistics such as
+                      pages visited, referral sources, and general traffic
+                      patterns. This data does not identify individual users.
                     </p>
                   </div>
                   <div>
                     <h3 className="text-base font-medium text-white mb-2">
-                      Workspace and Project Data
+                      npm Download Statistics
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      We store workspace configurations, sprint definitions,
-                      task specifications (titles, descriptions, priorities,
-                      statuses, labels, acceptance criteria), documentation,
-                      comments, and team collaboration data that you create
-                      within the Locus dashboard.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-medium text-white mb-2">
-                      Agent and Execution Metadata
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      When you run AI agents via the CLI, we collect agent
-                      registration data, heartbeat status, task assignment
-                      events, and pull request URLs. We do not collect your
-                      source code, AI prompts, or AI-generated output &mdash;
-                      these remain entirely on your local machine.
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-medium text-white mb-2">
-                      Usage Data
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      We may collect information about how you interact with our
-                      platform, including pages visited, features used, and
-                      general usage patterns. We use Google Analytics on our
-                      marketing site for aggregated analytics.
+                      The CLI is distributed via npm. npm collects its own
+                      download statistics, which are publicly available. We do
+                      not control or have access to individual download data.
                     </p>
                   </div>
                 </div>
@@ -109,149 +108,71 @@ export default function PrivacyPolicyPage() {
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  3. Information We Do Not Collect
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Locus is designed with a local-first architecture. The
-                  following data never passes through Locus servers:
-                </p>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground leading-relaxed list-disc list-inside">
-                  <li>Your source code and repository contents</li>
-                  <li>
-                    AI provider credentials (Claude API keys, Codex API keys)
-                  </li>
-                  <li>AI prompts and AI-generated responses</li>
-                  <li>Local file system contents accessed by agents</li>
-                  <li>Git diffs, patches, or code review content</li>
-                </ul>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  4. How We Use Your Information
-                </h2>
-                <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc list-inside">
-                  <li>
-                    To provide and maintain the Locus platform and its features
-                  </li>
-                  <li>To manage your account and workspace access</li>
-                  <li>
-                    To coordinate task assignments and sprint planning between
-                    your dashboard and local agents
-                  </li>
-                  <li>
-                    To send transactional emails (verification codes, workspace
-                    invitations)
-                  </li>
-                  <li>To improve and optimize the platform</li>
-                  <li>To respond to support inquiries</li>
-                </ul>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  5. Third-Party Services
+                  4. Third-Party Services
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  Your use of the following third-party services is governed by
-                  their respective privacy policies:
+                  When you use Locus, your data flows directly between your
+                  machine and these third-party services:
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc list-inside">
                   <li>
                     <strong className="text-white">AI Providers</strong>{" "}
-                    (Anthropic Claude, OpenAI Codex) &mdash; Your code and
-                    prompts are sent directly from your machine to your chosen
-                    AI provider. Locus does not intermediate these requests.
+                    (Anthropic Claude, OpenAI Codex) — Your code and prompts are
+                    sent directly from your machine to your chosen AI provider.
+                    Locus does not intermediate these requests.
                   </li>
                   <li>
-                    <strong className="text-white">
-                      GitHub / GitLab / Bitbucket
-                    </strong>{" "}
-                    &mdash; Git operations and PR creation happen directly
-                    between your machine and your git provider.
+                    <strong className="text-white">GitHub</strong> — Issues,
+                    milestones, labels, and pull requests are managed via the
+                    GitHub CLI (gh) directly from your machine.
                   </li>
                   <li>
-                    <strong className="text-white">Google OAuth</strong> &mdash;
-                    If you choose to sign in with Google, your authentication is
-                    handled by Google&apos;s OAuth service.
-                  </li>
-                  <li>
-                    <strong className="text-white">Telegram</strong> &mdash; If
-                    you configure the Telegram bot integration, commands are
-                    exchanged via the Telegram Bot API.
-                  </li>
-                  <li>
-                    <strong className="text-white">Google Analytics</strong>{" "}
-                    &mdash; We use Google Analytics on our marketing website for
-                    aggregated usage statistics.
+                    <strong className="text-white">Google Analytics</strong> — We
+                    use Google Analytics on this website for aggregated usage
+                    statistics.
                   </li>
                 </ul>
               </div>
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  6. Data Storage and Security
+                  5. Local Data Storage
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Cloud-stored data (account information, workspace data, task
-                  metadata) is stored on secure infrastructure. We implement
-                  appropriate technical and organizational measures to protect
-                  your information. API keys for accessing the Locus API are
-                  generated per-workspace and can be revoked at any time from
-                  your dashboard settings.
+                  Locus stores configuration and session data locally in the
+                  .locus/ directory within your project. This includes project
+                  settings, REPL session history, execution logs, and run state.
+                  All of this data stays on your machine. The .locus/ directory
+                  is gitignored by default for sensitive files like config.json.
                 </p>
               </div>
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  7. Self-Hosting
+                  6. Open Source
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Locus is open source and can be self-hosted. When you
-                  self-host, all data remains on your own infrastructure and no
-                  data is sent to Locus servers. This privacy policy applies
-                  only to the hosted version of Locus at app.locusai.dev.
+                  Locus is fully open source under the MIT License. You can
+                  audit every line of code to verify exactly what data is
+                  accessed and where it goes. There is no telemetry, no
+                  analytics SDK, and no phone-home behavior in the CLI.
                 </p>
               </div>
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  8. Data Retention
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  We retain your account and workspace data for as long as your
-                  account is active. You can delete your account and associated
-                  data from your dashboard settings. Upon account deletion, your
-                  personal data will be removed from our systems within 30 days.
-                </p>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  9. Your Rights
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  You have the right to access, correct, or delete your personal
-                  information. You can manage most of this directly from your
-                  dashboard settings. For additional requests, contact us via
-                  GitHub Issues or email.
-                </p>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  10. Changes to This Policy
+                  7. Changes to This Policy
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   We may update this Privacy Policy from time to time. We will
-                  notify you of any material changes by posting the new policy
-                  on this page and updating the &quot;Last updated&quot; date.
+                  notify you of any material changes by posting the new policy on
+                  this page and updating the &quot;Last updated&quot; date.
                 </p>
               </div>
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  11. Contact
+                  8. Contact
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   If you have questions about this Privacy Policy, please reach

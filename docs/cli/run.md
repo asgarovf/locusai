@@ -1,80 +1,135 @@
 ---
-description: Start the AI agent to execute sprint tasks.
+description: Execute issues using AI agents. Supports sprint mode (sequential), single issue mode (worktree), and parallel mode (multiple worktrees).
 ---
 
-# run
+# locus run
 
-Start an AI agent that claims and executes tasks from your active sprint sequentially on a single branch.
+The core execution command. Runs AI agents to implement GitHub issues. Supports three execution modes depending on the arguments provided.
+
+## Usage
 
 ```bash
-locus run [options]
+locus run [issue-numbers...] [options]
 ```
-
----
-
-## How It Works
-
-1. Spawns an agent and registers it with the Locus API
-2. Creates a single branch for the entire run
-3. Requests a task from the active sprint via dispatch
-4. Builds context (project metadata, instructions, codebase index, documents)
-5. Executes the task using your configured AI provider
-6. Commits changes and pushes the branch
-7. Updates the task status to `IN_REVIEW`
-8. Repeats until no more tasks are available
-9. Creates a pull request with all completed tasks
-10. Checks out the base branch
 
 ---
 
 ## Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--skip-planning` | Skip the planning phase | `false` |
-| `--sprint <ID>` | Target a specific sprint | Active sprint |
-| `--workspace <ID>` | Override workspace ID | Auto-resolved |
-| `--model <MODEL>` | AI model to use | From config |
-| `--provider <PROVIDER>` | AI provider (`claude` or `codex`) | From config |
-| `--reasoning-effort <LEVEL>` | Reasoning level (`low`, `medium`, `high`) | — |
-| `--api-key <KEY>` | Override API key | From config |
-| `--api-url <URL>` | Override API base URL | From config |
-| `--dir <PATH>` | Project directory | Current directory |
+| Flag | Description |
+|------|-------------|
+| `--resume` | Resume a previously interrupted run (sprint or parallel) |
+| `--dry-run` | Show what would happen without executing agents or making changes |
+| `--model <name>` | Override the AI model for this run |
+
+---
+
+## Execution Modes
+
+### Sprint Mode (no arguments)
+
+When called without issue numbers, Locus runs the active sprint. Tasks are executed sequentially on a single branch.
+
+```bash
+locus run
+```
+
+**How it works:**
+
+1. Reads the active sprint from `config.json`.
+2. Fetches all open issues in the sprint, sorted by `order:N` labels.
+3. Creates or checks out a sprint branch (e.g., `locus/sprint-sprint-1`).
+4. Executes each issue in order using the configured AI agent.
+5. Passes a cumulative diff of previous tasks as context to later tasks.
+6. Tracks progress in `.locus/run-state.json`.
+
+If `sprint.stopOnFailure` is `true` (the default), the sprint halts when a task fails. Resume with `locus run --resume`.
+
+Before each task (when `agent.rebaseBeforeTask` is enabled), Locus checks for conflicts with the base branch and attempts an auto-rebase.
+
+### Single Issue Mode (one argument)
+
+Run a single issue. If the issue belongs to a sprint, it runs on the current branch without a worktree. If it is a standalone issue, it runs in an isolated git worktree.
+
+```bash
+locus run 42
+```
+
+**How it works:**
+
+1. Checks if the issue is part of a sprint (has a milestone).
+2. For sprint issues: executes directly in the project root.
+3. For standalone issues: creates a worktree at `.locus/worktrees/issue-42/` with a branch like `locus/issue-42`.
+4. After execution, worktrees are cleaned up on success and preserved on failure for debugging.
+
+### Parallel Mode (multiple arguments)
+
+Run multiple standalone issues concurrently, each in its own worktree.
+
+```bash
+locus run 42 43 44
+```
+
+**How it works:**
+
+1. Validates that none of the issues are sprint issues (sprint issues must run sequentially).
+2. Cleans up any stale worktrees.
+3. Creates a worktree for each issue.
+4. Executes issues in batches up to `agent.maxParallel` concurrency.
+5. Worktrees are cleaned up on success, preserved on failure.
+
+---
+
+## Resuming Runs
+
+If a sprint or parallel run is interrupted (by failure, signal, or crash), use `--resume` to pick up where you left off.
+
+```bash
+locus run --resume
+```
+
+Resume reads the run state from `.locus/run-state.json`, skips completed tasks, retries failed tasks, and continues with pending ones. For sprint runs, the correct branch is checked out automatically.
+
+---
+
+## Run State
+
+Active runs are tracked in `.locus/run-state.json` with:
+
+- Run ID and type (`sprint` or `parallel`)
+- Sprint name and branch (for sprint runs)
+- Per-task status: `pending`, `in_progress`, `done`, `failed`
+- Associated PR numbers for completed tasks
+- Error messages for failed tasks
+
+The run state file is cleared when all tasks complete successfully.
 
 ---
 
 ## Examples
 
 ```bash
-# Run the agent
+# Run the active sprint
 locus run
 
-# Use a specific provider
-locus run --provider codex
+# Preview sprint execution
+locus run --dry-run
 
-# Target a specific sprint
-locus run --sprint "sprint-id-123"
+# Run a single issue
+locus run 42
+
+# Run multiple issues in parallel
+locus run 42 43 44
+
+# Resume after a failure
+locus run --resume
+
+# Run with a different model
+locus run --model claude-sonnet-4-6
 ```
 
 ---
 
-## What Happens
+## Rate Limiting
 
-When you run `locus run`, the agent:
-
-* Creates a branch (e.g. `locus/<sprintId>`)
-* Claims tasks one at a time from the sprint backlog
-* Executes each task with the AI provider
-* Commits and pushes after each task
-* Opens a single PR when all tasks are done
-* Checks out the base branch
-
-{% hint style="warning" %}
-Ensure you have an **active sprint** with tasks in `BACKLOG` status before running the agent. Otherwise, no tasks will be dispatched.
-{% endhint %}
-
----
-
-## Stopping the Agent
-
-Press `Ctrl+C` to gracefully stop the agent. Locus will signal the running agent to complete its current operation, checkout the base branch, and clean up.
+Locus includes built-in rate limiting to avoid overloading AI provider APIs. Before each task, the rate limiter is consulted. If limits are approaching, execution pauses automatically until capacity is available.

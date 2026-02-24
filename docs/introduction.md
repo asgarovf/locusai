@@ -1,161 +1,71 @@
 ---
-description: AI-native project management that keeps your code local and your planning in the cloud.
+description: GitHub-native AI engineering CLI. Turn issues into shipped code.
 ---
 
 # Introduction
 
-## What is Locus?
+**Locus** is a CLI tool that turns GitHub issues into shipped code using AI agents. It uses GitHub as its entire backend — Issues are tasks, Milestones are sprints, Labels track status, and Pull Requests are deliverables.
 
-**Locus** is an AI-native project management platform designed for teams that use AI coding agents. It separates _planning_ (in the cloud) from _execution_ (on your machine), so your source code never leaves your infrastructure.
+No servers. No database. No accounts. Just `npm install -g @locusai/cli` and go.
 
-{% hint style="info" %}
-Locus works with **Claude** (Anthropic) and **Codex** (OpenAI) as AI providers. You choose which agent runs your tasks.
-{% endhint %}
+## What Locus Does
 
-### How it works
-
-```mermaid
-graph LR
-    A[Plan in Dashboard] --> B[Dispatch Tasks]
-    B --> C[Agents Execute Locally]
-    C --> D[Code Stays on Your Machine]
-    D --> E[PRs Created on GitHub]
-```
-
-1. **Plan** — Create sprints and tasks in the [Locus Dashboard](https://app.locusai.dev), or let AI plan them for you with `locus plan`
-2. **Dispatch** — Tasks are dispatched to your local machine where the AI agent claims and executes them
-3. **Execute** — The agent works on a single branch, executing tasks sequentially and pushing after each one
-4. **Review** — A pull request is created when all tasks are done, and you can review with `locus review` or via the Telegram bot
-
----
+1. **Plan** — Describe what you want to build. AI analyzes your codebase and creates structured GitHub issues with priority, type, and execution order.
+2. **Execute** — Run `locus run` and AI agents claim tasks, write code, run tests, commit, and push — creating a PR for each task.
+3. **Review** — AI reviews pull requests and posts inline comments on GitHub.
+4. **Iterate** — Address PR feedback automatically. The agent re-executes with review comments as context until the code is ready to merge.
 
 ## Key Features
 
-{% tabs %}
-{% tab title="Local Execution" %}
-AI agents run on **your machine** or **your server**. Source code is never uploaded to any third-party service. Locus only syncs task metadata, status updates, and project context — never your codebase.
-{% endtab %}
-
-{% tab title="Sequential Task Execution" %}
-An AI agent works through your sprint tasks one by one on a **single branch**. Changes are committed and pushed after each task, and a pull request is created when all tasks are done.
-{% endtab %}
-
-{% tab title="AI Sprint Planning" %}
-Run `locus plan "build user authentication"` and a unified AI planning team (Architect, Tech Lead, Sprint Organizer) collaborates to create a detailed sprint with tasks, priorities, and risk assessments. Review, approve, reject with feedback, or cancel plans before they become sprints.
-{% endtab %}
-
-{% tab title="AI Code Review" %}
-Review code with AI using `locus review` for open GitHub PRs or `locus review local` for staged changes. Generates structured reports covering code quality, potential issues, and recommendations.
-{% endtab %}
-
-{% tab title="Discussions" %}
-Start AI-assisted discussions on any topic with full project context. The system extracts structured insights (decisions, requirements, ideas, concerns, learnings) as the conversation progresses, building a knowledge base for your project.
-{% endtab %}
-
-{% tab title="VSCode Extension" %}
-Chat with AI, explain code selections, and run exec tasks directly from VSCode. The extension communicates with the Locus CLI under the hood, giving you the same agent capabilities without leaving your editor.
-{% endtab %}
-
-{% tab title="Interactive Exec REPL" %}
-Use `locus exec` to run one-off prompts with full repository context, or `locus exec -i` for an interactive REPL session. Sessions are automatically saved and can be resumed later with `locus exec -s <id>`.
-{% endtab %}
-
-{% tab title="Telegram Control" %}
-Manage your entire workflow from Telegram. Start agents, approve plans, review tasks, run exec prompts, monitor activity — all from your phone. See the [Telegram guide](telegram/overview.md).
-{% endtab %}
-{% endtabs %}
-
----
+- **GitHub IS the backend** — No custom API, no database. Everything is stored on GitHub.
+- **Zero infrastructure** — No server to deploy, no accounts to create. Single auth via `gh auth login`.
+- **Sprint execution** — Sequential task execution on a single branch. Each task builds on the last.
+- **Parallel worktrees** — Run standalone issues in parallel using git worktrees.
+- **AI sprint planning** — Describe a goal, get structured GitHub issues with execution order.
+- **Interactive REPL** — Full-featured terminal with streaming, sessions, tab completion, and slash commands.
+- **AI code review** — Review PRs with AI analysis and inline comments.
+- **AI-agnostic** — Works with Claude (Anthropic) and Codex (OpenAI).
+- **Recoverable** — Failed runs resume where they left off. No re-executing completed work.
+- **Open source** — MIT licensed, free forever.
 
 ## Quick Start
 
-Get up and running in under 2 minutes:
-
 ```bash
-# Install the CLI
+# Install
 npm install -g @locusai/cli
 
-# Initialize in your project
-cd your-project
+# Initialize in your repo
 locus init
 
-# Configure your API key
-locus config setup
+# Plan a sprint
+locus plan "Build user authentication with OAuth"
 
-# Start working on tasks
+# Execute the sprint
 locus run
+
+# Review the PRs
+locus review
 ```
 
-{% hint style="success" %}
-That's it. Locus will claim the next available task from your active sprint, execute it with your chosen AI provider, and create a pull request when done.
-{% endhint %}
+## Prerequisites
 
----
+- [Node.js](https://nodejs.org) 18 or later
+- [GitHub CLI](https://cli.github.com) (`gh`) installed and authenticated
+- A GitHub repository
+- An AI provider CLI: [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [Codex](https://openai.com/index/introducing-codex/)
 
-## Architecture Overview
+## How It's Different
 
-```mermaid
-graph TB
-    subgraph Cloud["☁️ Locus Cloud"]
-        Dashboard["Dashboard<br/>(app.locusai.dev)"]
-        API["API Server"]
-        DB["Database"]
-        Dashboard --> API
-        API --> DB
-    end
+Unlike traditional project management tools, Locus doesn't have its own backend. Your GitHub repository **is** the project management system:
 
-    subgraph Local["💻 Your Machine"]
-        CLI["Locus CLI"]
-        Agent["AI Agent"]
-        Branch["Single Branch"]
-        CLI --> Agent
-        Agent --> Branch
-    end
+| Concept | GitHub Equivalent |
+|---------|-------------------|
+| Task | GitHub Issue |
+| Sprint | GitHub Milestone |
+| Status | GitHub Labels (`locus:queued`, `locus:in-progress`, `locus:done`) |
+| Priority | GitHub Labels (`p:critical`, `p:high`, `p:medium`, `p:low`) |
+| Type | GitHub Labels (`type:feature`, `type:bug`, `type:chore`, etc.) |
+| Execution Order | GitHub Labels (`order:1`, `order:2`, ...) |
+| Deliverable | Pull Request |
 
-    subgraph Integrations["🔗 Integrations"]
-        TG["Telegram Bot"]
-        GH["GitHub"]
-    end
-
-    API <-->|"Task metadata only"| CLI
-    Agent -->|"Push changes"| GH
-    TG <-->|"Commands"| CLI
-```
-
-{% hint style="warning" %}
-Locus syncs **task metadata only** with the cloud — titles, descriptions, statuses, and acceptance criteria. Your source code stays entirely on your machine.
-{% endhint %}
-
----
-
-## What's Next?
-
-<table data-card-size="large" data-view="cards">
-
-<thead>
-<tr>
-<th></th>
-<th></th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td><strong>Installation</strong></td>
-<td>Install the Locus CLI and get your environment ready. <a href="getting-started/installation.md">Get started →</a></td>
-</tr>
-<tr>
-<td><strong>Telegram Bot</strong></td>
-<td>Control your agents from Telegram. <a href="telegram/overview.md">Learn more →</a></td>
-</tr>
-<tr>
-<td><strong>CLI Reference</strong></td>
-<td>Explore all commands and options. <a href="cli/overview.md">View commands →</a></td>
-</tr>
-<tr>
-<td><strong>Self-Hosting</strong></td>
-<td>Deploy agents on your own server for 24/7 execution. <a href="self-hosting/overview.md">Setup guide →</a></td>
-</tr>
-</tbody>
-
-</table>
+Anyone with access to the GitHub repository can see the project state — no special dashboard required.

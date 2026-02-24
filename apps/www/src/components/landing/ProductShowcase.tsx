@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ExternalLink, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TerminalLine {
@@ -17,238 +17,210 @@ interface Product {
   description: string;
   terminalTitle: string;
   lines: TerminalLine[];
-  link?: string;
 }
 
 const products: Product[] = [
   {
-    label: "AI Agent",
+    label: "Sprint Execution",
     labelColor: "text-cyan",
-    title: "Autonomous agents that ship your code",
+    title: "AI agents that execute your sprint, task by task",
     description:
-      "AI agents claim tasks from your sprint, write code, run tests, and push changes. A pull request is created when all tasks are done.",
+      "Run your active sprint and watch AI agents claim tasks, write code, run tests, commit, and push — in order. Each task builds on the previous one. Failed runs resume exactly where they left off.",
     terminalTitle: "locus run",
     lines: [
       {
-        text: "locus run --provider claude",
+        text: "locus run",
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
       {
-        text: "🚀 Starting agent in ~/dev/my-saas...",
+        text: "Sprint 1 — 4 tasks on branch locus/sprint-1",
         color: "text-cyan",
       },
+      { text: "", color: "" },
       {
-        text: "  Tasks will be executed sequentially on a single branch",
-        color: "text-muted-foreground",
+        text: "  [1/4] Implement user auth              done",
+        color: "text-emerald",
       },
       {
-        text: "  Changes will be committed and pushed after each task",
-        color: "text-muted-foreground",
+        text: "  [2/4] Add database migrations           done",
+        color: "text-emerald",
+      },
+      {
+        text: "  [3/4] Create API endpoints              done",
+        color: "text-emerald",
+      },
+      {
+        text: "  [4/4] Write integration tests           done",
+        color: "text-emerald",
       },
       { text: "", color: "" },
-      { text: "  ● Claimed: Implement user auth", color: "text-cyan" },
-      { text: "  ✔ Completed: Implement user auth", color: "text-emerald" },
-      { text: "  ● Claimed: Add database migrations", color: "text-cyan" },
-      { text: "  ✔ Completed: Add database migrations", color: "text-emerald" },
-      { text: "  ● Claimed: Create API docs", color: "text-cyan" },
-      { text: "  ✔ Completed: Create API docs", color: "text-emerald" },
-      { text: "", color: "" },
-      { text: "  All tasks done. PR created.", color: "text-cyan" },
+      {
+        text: "  All tasks completed. 4 PRs created.",
+        color: "text-cyan",
+      },
     ],
   },
   {
-    label: "Sprint Planning",
+    label: "AI Planning",
     labelColor: "text-violet",
-    title: "Multi-agent planning meetings for your codebase",
+    title: "Describe a goal, get a structured sprint",
     description:
-      "Run AI planning meetings with specialized agents — Tech Lead, Architect, and Sprint Organizer — that collaborate to break down epics into actionable tasks. Review and approve plans before they become sprints.",
+      "Tell Locus what you want to build. The AI analyzes your codebase, breaks your goal into GitHub issues with priority labels, type labels, and execution order — then creates them in a milestone.",
     terminalTitle: "locus plan",
     lines: [
       {
-        text: 'locus plan "Build authentication system with OAuth"',
+        text: 'locus plan "Build authentication with OAuth and JWT"',
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
-      { text: "locus plan --list", color: "text-foreground", prefix: "$ " },
-      { text: "", color: "" },
       {
-        text: "  ◯ Build authentication system with OAuth",
+        text: "  Planning with AI agent...",
         color: "text-violet",
       },
-      { text: "    5 tasks • 2 minutes ago", color: "text-muted-foreground" },
-      { text: "", color: "" },
       {
-        text: "locus plan --approve plan-1708300000",
-        color: "text-foreground",
-        prefix: "$ ",
+        text: "  Analyzing codebase structure...",
+        color: "text-violet",
       },
       { text: "", color: "" },
       {
-        text: "  ✔ Sprint created: Build authentication system",
+        text: "  Created Sprint: Authentication",
         color: "text-emerald",
       },
-      { text: "    5 tasks created", color: "text-muted-foreground" },
+      {
+        text: "  #21  p:high    type:feature  order:1  Setup OAuth providers",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  #22  p:high    type:feature  order:2  JWT token service",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  #23  p:medium  type:feature  order:3  Auth middleware",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  #24  p:medium  type:chore    order:4  Auth tests",
+        color: "text-muted-foreground",
+      },
     ],
   },
   {
-    label: "AI Discussions",
+    label: "Interactive REPL",
     labelColor: "text-emerald",
-    title: "Think through problems with AI before writing code",
+    title: "A full-featured AI terminal for your codebase",
     description:
-      "Start interactive AI discussions on architecture, design, or any topic with full project context. The system extracts structured insights — decisions, requirements, ideas, and concerns — as the conversation progresses.",
-    terminalTitle: "locus discuss",
+      "Start an interactive session with full project context. Streaming markdown, syntax highlighting, session persistence, tab completion, and slash commands. Resume any session later.",
+    terminalTitle: "locus exec",
     lines: [
       {
-        text: 'locus discuss "How should we handle auth tokens?"',
+        text: "locus exec",
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
       {
-        text: "🧠 Starting discussion with project context...",
+        text: "  Locus REPL v3 — type /help for commands",
         color: "text-emerald",
       },
       { text: "", color: "" },
       {
-        text: "  You: Should we use JWT or session cookies?",
+        text: '  > "Add rate limiting to the API endpoints"',
         color: "text-foreground",
       },
+      { text: "", color: "" },
       {
-        text: "  AI: Given your NestJS backend and the need for...",
+        text: "  Reading src/middleware/...",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  Writing src/middleware/rate-limit.ts...",
+        color: "text-muted-foreground",
+      },
+      {
+        text: "  Editing src/app.ts...",
         color: "text-muted-foreground",
       },
       { text: "", color: "" },
       {
-        text: "  💡 Insight extracted: Use short-lived JWTs with refresh tokens",
+        text: "  Done. 2 files created, 1 file modified.",
         color: "text-emerald",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Type summary to end, or keep discussing...",
-        color: "text-muted-foreground",
       },
     ],
   },
   {
     label: "Code Review",
     labelColor: "text-amber",
-    title: "Automated review for every pull request",
+    title: "AI-powered review for every pull request",
     description:
-      "Get instant AI-powered code review on GitHub pull requests and local staged changes. Catches bugs, security issues, and style violations before they reach production.",
+      "Review open PRs with AI analysis. Posts inline comments on GitHub. Catches bugs, security issues, and style violations. Iterate on feedback until the code is ready to merge.",
     terminalTitle: "locus review",
     lines: [
       { text: "locus review", color: "text-foreground", prefix: "$ " },
       { text: "", color: "" },
       {
-        text: "🔍 Found 2 unreviewed PR(s). Starting reviewer...",
+        text: "  Reviewing 2 open PRs...",
         color: "text-amber",
       },
       { text: "", color: "" },
       {
-        text: "locus review local",
+        text: "  PR #18 — Add user authentication",
         color: "text-foreground",
-        prefix: "$ ",
+      },
+      {
+        text: "    3 comments posted",
+        color: "text-muted-foreground",
       },
       { text: "", color: "" },
-      { text: "🔍 Reviewing staged changes...", color: "text-amber" },
-      { text: "", color: "" },
-      { text: "  ✔ Review complete!", color: "text-emerald" },
       {
-        text: "  Report saved to: .locus/reviews/review-2026-02-11.md",
-        color: "text-muted-foreground",
+        text: "  PR #19 — Add database migrations",
+        color: "text-foreground",
+      },
+      {
+        text: "    No issues found",
+        color: "text-emerald",
       },
     ],
   },
   {
-    label: "CLI Toolkit",
+    label: "Issue Management",
     labelColor: "text-rose",
-    title: "A powerful command line for every workflow",
+    title: "Full control over issues and sprints from the CLI",
     description:
-      "Interactive REPL, exec mode for one-off tasks, and session management. Everything you need to work with AI agents from your terminal.",
-    terminalTitle: "locus exec",
+      "Create, list, and manage GitHub issues and sprints without leaving your terminal. Assign priorities, types, sprints, and reorder task execution with a single command.",
+    terminalTitle: "locus sprint + locus issue",
     lines: [
       {
-        text: 'locus exec "add dark mode to settings page"',
+        text: 'locus sprint show "Sprint 1"',
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
       {
-        text: "🚀 Executing prompt with repository context...",
+        text: "  Sprint 1 — 75% complete",
         color: "text-rose",
       },
-      { text: "  [Tool: ReadFile] completed", color: "text-muted-foreground" },
-      { text: "  [Tool: WriteFile] completed", color: "text-muted-foreground" },
-      { text: "", color: "" },
-      { text: "  ✔ Execution finished!", color: "text-emerald" },
-      { text: "", color: "" },
       {
-        text: "locus exec --interactive",
-        color: "text-foreground",
-        prefix: "$ ",
-      },
-      { text: "  Starting interactive REPL...", color: "text-rose" },
-      {
-        text: "locus exec sessions list",
-        color: "text-foreground",
-        prefix: "$ ",
-      },
-      {
-        text: "  e8f2 — add dark mode to settings page",
+        text: "  ████████████░░░░  3/4 tasks done",
         color: "text-muted-foreground",
       },
-      {
-        text: "    1 messages • just now",
-        color: "text-muted-foreground",
-      },
-    ],
-  },
-  {
-    label: "Cloud Dashboard",
-    labelColor: "text-sky",
-    title: "Your team's mission control for sprints",
-    description:
-      "Manage workspaces, visualize sprints on a kanban board, track team activity feeds, and organize your backlog — all from a collaborative cloud dashboard. Built for teams that want full visibility into their agentic workflows.",
-    link: "https://app.locusai.dev",
-    terminalTitle: "app.locusai.dev",
-    lines: [
-      {
-        text: "locus config setup",
-        color: "text-foreground",
-        prefix: "$ ",
-      },
       { text: "", color: "" },
       {
-        text: "  ✔ API key saved",
+        text: "  #12  order:1  done     Setup OAuth",
         color: "text-emerald",
       },
       {
-        text: "  ✔ Workspace linked: acme-eng",
+        text: "  #13  order:2  done     JWT service",
         color: "text-emerald",
       },
-      { text: "", color: "" },
       {
-        text: "  Dashboard → app.locusai.dev",
-        color: "text-sky",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Workspace:  acme-eng",
-        color: "text-muted-foreground",
+        text: "  #14  order:3  done     Auth middleware",
+        color: "text-emerald",
       },
       {
-        text: "  Sprints:    3 active",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  Backlog:    12 tasks",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  Members:    5 contributors",
+        text: "  #15  order:4  queued   Auth tests",
         color: "text-muted-foreground",
       },
     ],
@@ -310,10 +282,10 @@ export function ProductShowcase() {
           className="text-center mb-20"
         >
           <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-4">
-            Products
+            How it works
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-            A complete platform for agentic engineering
+            Plan, execute, review, iterate
           </h2>
         </motion.div>
 
@@ -352,20 +324,6 @@ export function ProductShowcase() {
                   <p className="text-[15px] text-muted-foreground leading-relaxed">
                     {product.description}
                   </p>
-                  {product.link && (
-                    <a
-                      href={product.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "inline-flex items-center gap-1.5 mt-4 text-sm font-medium transition-opacity hover:opacity-80",
-                        product.labelColor
-                      )}
-                    >
-                      Open Dashboard
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
                 </div>
 
                 {/* Terminal side */}

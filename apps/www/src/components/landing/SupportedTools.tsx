@@ -1,13 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  Bot,
-  Box,
-  Code2,
-  GitBranch,
-  Github,
-  MessageSquare,
-  Monitor,
-} from "lucide-react";
+import { Bot, Code2, GitBranch, Github, Terminal } from "lucide-react";
 import Link from "next/link";
 
 interface Tool {
@@ -34,39 +26,25 @@ const tools: Tool[] = [
     href: "https://openai.com/index/introducing-codex/",
   },
   {
-    name: "VS Code",
-    tag: "Editor Extension",
-    icon: Monitor,
-    color: "text-cyan",
-    href: "/products/vscode",
-  },
-  {
     name: "GitHub",
-    tag: "Version Control",
+    tag: "Backend",
     icon: Github,
     color: "text-foreground",
     href: "https://github.com",
   },
   {
+    name: "GitHub CLI",
+    tag: "Core Dependency",
+    icon: Terminal,
+    color: "text-cyan",
+    href: "https://cli.github.com",
+  },
+  {
     name: "Git",
-    tag: "Branch Management",
+    tag: "Version Control",
     icon: GitBranch,
     color: "text-amber",
     href: "https://git-scm.com",
-  },
-  {
-    name: "Telegram",
-    tag: "Remote Control",
-    icon: MessageSquare,
-    color: "text-cyan",
-    href: "https://telegram.org",
-  },
-  {
-    name: "Bun",
-    tag: "Runtime",
-    icon: Box,
-    color: "text-rose",
-    href: "https://bun.sh",
   },
 ];
 
@@ -77,11 +55,11 @@ export function SupportedTools() {
 
       <div className="max-w-5xl px-6 mx-auto mb-10 text-center relative">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">
-          Works with your favorite tools
+          Built on tools you already use
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl px-6 mx-auto relative">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl px-6 mx-auto relative">
         {tools.map((tool) => (
           <Link
             key={tool.name}

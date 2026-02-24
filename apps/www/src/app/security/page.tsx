@@ -4,7 +4,6 @@ import {
   Globe,
   HardDrive,
   Lock,
-  Server,
   Shield,
   ShieldCheck,
 } from "lucide-react";
@@ -15,7 +14,7 @@ import { Footer, Navbar } from "@/components/layout";
 export const metadata: Metadata = {
   title: "Security",
   description:
-    "How Locus keeps your code safe. Local execution, no cloud dependency, and full transparency.",
+    "How Locus keeps your code safe. Local execution, GitHub-native, and full transparency.",
   alternates: {
     canonical: "https://locusai.dev/security",
   },
@@ -29,14 +28,14 @@ const principles = [
     icon: <HardDrive className="h-5 w-5" />,
     title: "Runs entirely on your machine",
     description:
-      "Locus agents execute locally using your own AI provider credentials. Your code, your prompts, and your output never pass through Locus servers. The CLI communicates with the Locus API only for workspace management — task assignments, sprint status, and plan approvals.",
+      "Locus agents execute locally using your own AI provider credentials. Your code, your prompts, and your output never pass through any third-party server. The CLI communicates directly with GitHub via the gh CLI and with your AI provider — nothing in between.",
     color: "text-cyan",
   },
   {
     icon: <Lock className="h-5 w-5" />,
-    title: "No arbitrary code execution",
+    title: "GitHub-native — no custom backend",
     description:
-      "The Telegram bot only accepts whitelisted commands — planning, reviewing, agent management, and pre-approved git/dev operations. There is no arbitrary shell access. Each command type has its own timeout to prevent runaway processes.",
+      "There is no Locus server, no database, and no cloud API. All project data — issues, sprints, status, PRs — lives entirely on GitHub. You control access through standard GitHub repository permissions.",
     color: "text-emerald",
   },
   {
@@ -47,17 +46,17 @@ const principles = [
     color: "text-amber",
   },
   {
-    icon: <Server className="h-5 w-5" />,
-    title: "Self-host everything",
-    description:
-      "Deploy the full stack on your own infrastructure. The install script sets up agents and the Telegram bot as system services on your own servers. No dependency on hosted infrastructure beyond your chosen AI provider.",
-    color: "text-rose",
-  },
-  {
     icon: <ShieldCheck className="h-5 w-5" />,
     title: "Credentials stay local",
     description:
-      "API keys and tokens are stored in .locus/settings.json — a local file on your machine. Provider credentials (Claude, Codex) are managed by the respective CLI tools and never sent to Locus. The .locus/ directory is gitignored by default.",
+      "No API keys are stored in the Locus config. GitHub auth is handled by the gh CLI. AI provider credentials are managed by environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY) or the provider CLI's own config. The .locus/ directory is gitignored by default.",
+    color: "text-rose",
+  },
+  {
+    icon: <Shield className="h-5 w-5" />,
+    title: "Git isolation for parallel tasks",
+    description:
+      "Standalone tasks execute in isolated git worktrees. Each agent works on its own branch with no interference. Failed worktrees are preserved for debugging and cleaned up on success.",
     color: "text-cyan",
   },
 ];
@@ -66,26 +65,20 @@ const dataFlow = [
   {
     label: "Your code & prompts",
     destination: "Your AI provider (Claude / Codex)",
-    note: "Direct. Never touches Locus servers.",
+    note: "Direct. Handled by the provider CLI on your machine.",
     color: "text-emerald",
   },
   {
-    label: "Task status & sprint data",
-    destination: "Locus API (app.locusai.dev)",
-    note: "Workspace management only. No code content.",
+    label: "Issues, PRs, labels",
+    destination: "GitHub (via gh CLI)",
+    note: "Direct API calls from your machine to GitHub.",
     color: "text-violet",
   },
   {
-    label: "PR reviews",
+    label: "PR reviews & comments",
     destination: "GitHub (via gh CLI)",
-    note: "Direct API calls from your machine.",
+    note: "Posted directly to GitHub. No intermediary.",
     color: "text-amber",
-  },
-  {
-    label: "Telegram commands",
-    destination: "Telegram Bot API",
-    note: "Single authorized chat only.",
-    color: "text-cyan",
   },
 ];
 
@@ -105,8 +98,8 @@ export default function SecurityPage() {
               Your code never leaves your machine
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Locus is designed with security-first principles. Local execution,
-              git isolation, no cloud dependency, and full source transparency.
+              Locus is GitHub-native with zero infrastructure. Local execution,
+              git isolation, and full source transparency.
             </p>
           </div>
         </section>

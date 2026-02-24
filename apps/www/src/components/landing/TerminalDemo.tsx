@@ -20,44 +20,36 @@ const lines: Line[] = [
   },
   { text: "", color: "" },
   {
-    text: "🧠 Starting planning meeting...",
+    text: "Planning with AI agent...",
     color: "text-violet",
   },
   {
-    text: "  ● Tech Lead analyzing codebase...",
-    color: "text-violet",
-  },
-  {
-    text: "  ● Architect designing system boundaries...",
-    color: "text-violet",
-  },
-  {
-    text: "  ● Sprint Organizer breaking down tasks...",
+    text: "  Analyzing codebase and requirements...",
     color: "text-violet",
   },
   { text: "", color: "" },
   {
-    text: "  ✔ Planning meeting complete!",
+    text: "  Created 4 GitHub issues in Sprint 1:",
     color: "text-emerald",
   },
   {
-    text: "  To approve: locus plan --approve plan-1708300000",
+    text: "  #12  order:1  Implement Google OAuth provider",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  #13  order:2  Implement GitHub OAuth provider",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  #14  order:3  Add OAuth callback routes",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  #15  order:4  Create auth session middleware",
     color: "text-muted-foreground",
   },
   { text: "", color: "" },
-  // Phase 1b: Approve the plan
-  {
-    text: "locus plan --approve plan-1708300000",
-    color: "text-foreground",
-    prefix: "$ ",
-  },
-  { text: "", color: "" },
-  {
-    text: "  ✔ Sprint created — 4 tasks ready",
-    color: "text-emerald",
-  },
-  { text: "", color: "" },
-  // Phase 2: Run agent sequentially
+  // Phase 2: Run sprint
   {
     text: "locus run",
     color: "text-foreground",
@@ -65,49 +57,29 @@ const lines: Line[] = [
   },
   { text: "", color: "" },
   {
-    text: "🚀 Starting agent in ~/dev/my-saas...",
+    text: "Sprint 1 — 4 tasks on branch locus/sprint-1",
     color: "text-cyan",
-  },
-  {
-    text: "  Tasks will be executed sequentially on a single branch",
-    color: "text-muted-foreground",
   },
   { text: "", color: "" },
   {
-    text: "  ● Claimed: Implement Google OAuth provider",
-    color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Implement Google OAuth provider",
+    text: "  [1/4] Implement Google OAuth provider       done",
     color: "text-emerald",
   },
   {
-    text: "  ● Claimed: Implement GitHub OAuth provider",
-    color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Implement GitHub OAuth provider",
+    text: "  [2/4] Implement GitHub OAuth provider       done",
     color: "text-emerald",
   },
   {
-    text: "  ● Claimed: Add OAuth callback routes",
-    color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Add OAuth callback routes",
+    text: "  [3/4] Add OAuth callback routes             done",
     color: "text-emerald",
   },
   {
-    text: "  ● Claimed: Create auth session middleware",
-    color: "text-cyan",
-  },
-  {
-    text: "  ✔ Completed: Create auth session middleware",
+    text: "  [4/4] Create auth session middleware         done",
     color: "text-emerald",
   },
   { text: "", color: "" },
   {
-    text: "  All tasks done. PR created.",
+    text: "  All tasks completed. 4 PRs created.",
     color: "text-cyan",
   },
   { text: "", color: "" },
@@ -115,11 +87,11 @@ const lines: Line[] = [
   { text: "locus review", color: "text-foreground", prefix: "$ " },
   { text: "", color: "" },
   {
-    text: "🔍 Found 1 unreviewed PR(s). Starting reviewer...",
+    text: "  Reviewing 4 open PRs...",
     color: "text-amber",
   },
   {
-    text: "  ✔ All PRs reviewed. No issues found.",
+    text: "  All PRs reviewed. No issues found.",
     color: "text-emerald",
   },
 ];

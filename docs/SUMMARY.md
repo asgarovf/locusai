@@ -5,58 +5,30 @@
 ## Getting Started
 
 * [Installation](getting-started/installation.md)
-* [Workspace Setup](getting-started/workspace-setup.md)
-* [Project Initialization](getting-started/initialization.md)
+* [Initialization](getting-started/initialization.md)
+* [Your First Sprint](getting-started/first-sprint.md)
 
 ## Core Concepts
 
-* [Architecture](concepts/architecture.md)
-* [Workspaces](concepts/workspaces.md)
-* [Tasks](concepts/tasks.md)
-* [Sprints](concepts/sprints.md)
-* [Agents](concepts/agents.md)
-
-## API
-
-* [API Docs](api/index.md)
+* [How Locus Works](concepts/how-it-works.md)
+* [GitHub as Backend](concepts/github-backend.md)
+* [Sprints & Issues](concepts/sprints-and-issues.md)
+* [Execution Model](concepts/execution-model.md)
+* [AI Providers](concepts/ai-providers.md)
 
 ## CLI Reference
 
 * [Overview](cli/overview.md)
-* [config](cli/config.md)
-* [run](cli/run.md)
-* [plan](cli/plan.md)
-* [discuss](cli/discuss.md)
-* [exec](cli/exec.md)
-* [review](cli/review.md)
-* [agents](cli/agents.md)
-* [docs](cli/docs.md)
-* [index](cli/index-codebase.md)
-* [telegram](cli/telegram.md)
-
-## VSCode Extension
-
-* [Overview](vscode/overview.md)
-* [Features](vscode/features.md)
-
-## Telegram
-
-* [Overview](telegram/overview.md)
-* [Setup Guide](telegram/setup.md)
-* [Command Reference](telegram/commands.md)
-
-## Self-Hosting
-
-* [Why Self-Host?](self-hosting/overview.md)
-* [Linux Setup](self-hosting/linux-setup.md)
-* [macOS Setup](self-hosting/macos-setup.md)
-* [Windows Setup](self-hosting/windows-setup.md)
-
-## Skills
-
-* [Overview](skills/overview.md)
-
-## Contributing
-
-* [Development Guide](contributing/guide.md)
-* [Swagger Docs Access Policy](contributing/swagger-docs-access.md)
+* [locus init](cli/init.md)
+* [locus issue](cli/issue.md)
+* [locus sprint](cli/sprint.md)
+* [locus plan](cli/plan.md)
+* [locus run](cli/run.md)
+* [locus exec](cli/exec.md)
+* [locus review](cli/review.md)
+* [locus iterate](cli/iterate.md)
+* [locus discuss](cli/discuss.md)
+* [locus status](cli/status.md)
+* [locus config](cli/config.md)
+* [locus logs](cli/logs.md)
+* [locus upgrade](cli/upgrade.md)

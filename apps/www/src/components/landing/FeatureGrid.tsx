@@ -6,9 +6,9 @@ import {
   Bot,
   BrainCircuit,
   FileSearch,
-  Lock,
-  MessageCircle,
-  MessageSquare,
+  GitFork,
+  Github,
+  Terminal,
 } from "lucide-react";
 
 interface Feature {
@@ -16,57 +16,50 @@ interface Feature {
   description: string;
   icon: LucideIcon;
   color: string;
-  glowColor: string;
 }
 
 const features: Feature[] = [
   {
-    title: "Autonomous Agent",
+    title: "GitHub Is Your Backend",
     description:
-      "AI agents claim sprint tasks, write code, run tests, commit, and push — then open a pull request when done.",
-    icon: Bot,
+      "No servers, no database, no API keys. Issues are tasks, Milestones are sprints, Labels track status, and PRs are deliverables. Everything lives on GitHub.",
+    icon: Github,
     color: "text-cyan",
-    glowColor: "group-hover:shadow-cyan/10",
   },
   {
-    title: "Secure Local Execution",
+    title: "Sprint Execution",
     description:
-      "Your code never leaves your machine. Agents run locally while coordinating tasks through the cloud dashboard.",
-    icon: Lock,
+      "Sequential task execution on a single branch. Each task builds on the last. Failed runs resume automatically — no re-executing completed work.",
+    icon: Bot,
     color: "text-violet",
-    glowColor: "group-hover:shadow-violet/10",
   },
   {
     title: "AI Sprint Planning",
     description:
-      "Multi-agent planning meetings generate architecturally coherent task breakdowns before any code is written.",
+      "Describe a goal in plain English. AI analyzes your codebase, creates structured GitHub issues with priority, type labels, and execution order.",
     icon: BrainCircuit,
     color: "text-amber",
-    glowColor: "group-hover:shadow-amber/10",
   },
   {
-    title: "AI Discussions",
+    title: "Parallel Worktrees",
     description:
-      "Interactive AI discussions with insight extraction. Think through architecture and design before writing code.",
-    icon: MessageCircle,
+      "Run standalone issues in parallel using git worktrees. Each agent works in isolation with its own branch — up to 3 concurrent agents by default.",
+    icon: GitFork,
     color: "text-emerald",
-    glowColor: "group-hover:shadow-emerald/10",
+  },
+  {
+    title: "Interactive REPL",
+    description:
+      "Full-featured terminal with streaming markdown, session persistence, tab completion, slash commands, and image support. Resume any session.",
+    icon: Terminal,
+    color: "text-rose",
   },
   {
     title: "AI Code Review",
     description:
-      "Automated code review posts inline comments directly to pull requests, catching issues before human review.",
+      "Review pull requests with AI-powered analysis. Post inline comments directly. Iterate on feedback until the PR is merged.",
     icon: FileSearch,
-    color: "text-rose",
-    glowColor: "group-hover:shadow-rose/10",
-  },
-  {
-    title: "Telegram Control",
-    description:
-      "Start agents, review PRs, run git commands, and manage your entire workflow remotely from Telegram.",
-    icon: MessageSquare,
     color: "text-cyan",
-    glowColor: "group-hover:shadow-cyan/10",
   },
 ];
 
@@ -105,11 +98,11 @@ export function FeatureGrid() {
             Why Locus
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
-            Built for teams that ship with AI agents
+            Zero infrastructure. Pure GitHub.
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-            Everything you need to plan, dispatch, and verify AI-generated code
-            at production quality.
+            Everything you need to plan, execute, and iterate on AI-generated
+            code &mdash; using tools you already have.
           </p>
         </motion.div>
 

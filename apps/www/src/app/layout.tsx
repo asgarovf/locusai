@@ -25,26 +25,26 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "Locus | AI Agents That Ship Your Code",
+    default: "Locus | GitHub-Native AI Engineering",
     template: "%s | Locus",
   },
   description:
-    "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
+    "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
   keywords: [
     "AI agents",
-    "agentic engineering",
-    "project management",
-    "autonomous agents",
-    "AI development",
+    "GitHub CLI",
+    "AI engineering",
     "developer tools",
-    "engineering teams",
-    "AI planning",
     "CLI",
     "code automation",
     "sprint planning",
     "code review",
-    "Telegram bot",
-    "self-hosting",
+    "git worktrees",
+    "AI coding",
+    "GitHub issues",
+    "GitHub milestones",
+    "autonomous coding",
+    "open source",
   ],
   authors: [{ name: "Locus Team" }],
   creator: "Locus",
@@ -54,23 +54,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://locusai.dev",
     siteName: "Locus",
-    title: "Locus | AI Agents That Ship Your Code",
+    title: "Locus | GitHub-Native AI Engineering",
     description:
-      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
+      "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Locus - AI Agents That Ship Your Code",
+        alt: "Locus - GitHub-Native AI Engineering",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus | AI Agents That Ship Your Code",
+    title: "Locus | GitHub-Native AI Engineering",
     description:
-      "Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
+      "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -102,7 +102,7 @@ const jsonLd = {
         "@id": "https://locusai.dev/#organization",
       },
       description:
-        "The AI-native project management platform for engineering teams. Plan sprints, assign tasks to AI agents, and ship code — all from your terminal.",
+        "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
     },
   ],
 };

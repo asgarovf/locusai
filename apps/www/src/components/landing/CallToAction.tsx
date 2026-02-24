@@ -26,15 +26,15 @@ export function CallToAction() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            <span className="font-sans">Stop writing code.</span>
+            <span className="font-sans">Your issues.</span>
             <br />
             <span className="font-bold gradient-text-hero">
-              Start shipping it.
+              Shipped by AI.
             </span>
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto mb-8 text-sm md:text-base leading-relaxed">
-            Locus is open source and free to self-host. Start building with AI
-            agents today.
+            Locus is open source and free forever. No servers to deploy, no
+            accounts to create. Just install and go.
           </p>
 
           <div className="max-w-md mx-auto mb-8">
@@ -43,17 +43,18 @@ export function CallToAction() {
 
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
             <Link
-              href="https://app.locusai.dev/register"
+              href="https://docs.locusai.dev"
               className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
             >
-              Get Started Free
+              Get Started
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href="https://docs.locusai.dev"
+              href="https://github.com/asgarovf/locusai"
+              target="_blank"
               className="inline-flex items-center gap-2 text-sm font-medium text-white px-7 py-3 rounded-xl border border-border/60 hover:bg-white/[0.06] hover:border-border transition-colors"
             >
-              Read the Docs
+              View on GitHub
             </Link>
           </div>
         </motion.div>

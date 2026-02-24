@@ -1,8 +1,10 @@
 ---
-description: Complete reference for all Locus CLI commands.
+description: Complete reference for all Locus v3 CLI commands, global options, and common workflows.
 ---
 
 # CLI Overview
+
+Locus is a GitHub-native AI engineering CLI. All project state lives in GitHub (issues, milestones, PRs, labels) while Locus orchestrates AI agents to plan, execute, review, and iterate on your codebase.
 
 ## Usage
 
@@ -14,70 +16,103 @@ locus <command> [options]
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| [`init`](../getting-started/initialization.md) | Initialize Locus in the current directory |
-| [`config`](config.md) | Manage settings (API key, provider, model) |
-| [`run`](run.md) | Start agent to work on sprint tasks sequentially |
-| [`plan`](plan.md) | Run AI sprint planning meeting |
-| [`discuss`](discuss.md) | Start interactive AI discussions with insight extraction |
-| [`exec`](exec.md) | Execute a prompt with repository context |
-| [`review`](review.md) | AI code review for PRs and staged changes |
-| [`docs`](docs.md) | Sync workspace documents |
-| [`index`](index-codebase.md) | Index the codebase for AI context |
-| [`telegram`](telegram.md) | Configure the Telegram bot |
-| `upgrade` | Upgrade CLI to the latest version |
-| `version` | Show installed version |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| [`init`](init.md) | | Initialize Locus in a GitHub repository |
+| [`issue`](issue.md) | `i` | Manage GitHub issues as work items |
+| [`sprint`](sprint.md) | `s` | Manage sprints via GitHub Milestones |
+| [`plan`](plan.md) | | AI-powered sprint planning |
+| [`run`](run.md) | | Execute issues using AI agents |
+| [`exec`](exec.md) | `e` | Interactive REPL or one-shot execution |
+| [`review`](review.md) | | AI-powered code review on PRs |
+| [`iterate`](iterate.md) | | Re-execute tasks with PR feedback |
+| [`discuss`](discuss.md) | | AI-powered architectural discussions |
+| [`status`](status.md) | | Dashboard view of current project state |
+| [`config`](config.md) | | View and manage settings |
+| [`logs`](logs.md) | | View, tail, and manage execution logs |
+| [`upgrade`](upgrade.md) | | Check for and install updates |
 
 ---
 
 ## Global Options
 
-| Option | Description |
-|--------|-------------|
-| `--help` | Show help message |
-| `--provider <name>` | AI provider: `claude` or `codex` (default: `claude`) |
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--help` | `-h` | Show help message |
+| `--version` | `-V` | Print installed version |
+| `--debug` | `-d` | Enable debug-level logging |
+| `--model` | `-m` | Override AI model for the command |
+| `--dry-run` | | Preview what the command would do without side effects |
+| `--resume` | | Resume a previously interrupted sprint or parallel run |
 
 ---
 
 ## Getting Started
 
 ```bash
-# Initialize and configure
+# 1. Initialize Locus in your repo
 locus init
-locus config setup
 
-# Start working
+# 2. Edit the generated project context file
+vim .locus/LOCUS.md
+
+# 3. Create issues manually or let AI plan them
+locus plan "Build user authentication with OAuth"
+
+# 4. Run the active sprint
 locus run
-
-# Or plan first
-locus plan "your goal"
 ```
 
 ---
 
 ## Common Workflows
 
-### Execute sprint tasks
+### Sprint execution (sequential, single branch)
 
 ```bash
+locus sprint active "Sprint 1"
 locus run
 ```
 
-### One-off AI execution
+### Run a single issue in a worktree
 
 ```bash
-locus exec "add error handling to the login endpoint"
+locus run 42
 ```
 
-### Review pull requests
+### Run multiple issues in parallel (worktrees)
 
 ```bash
-locus review
+locus run 42 43 44
 ```
 
-### Interactive session
+### Interactive AI coding session
 
 ```bash
-locus exec -i
+locus exec
+```
+
+### One-shot AI execution
+
+```bash
+locus exec "Add error handling to the payment endpoint"
+```
+
+### AI code review
+
+```bash
+locus review          # All open agent PRs
+locus review 15       # Specific PR
+```
+
+### Iterate on PR feedback
+
+```bash
+locus iterate --pr 15
+```
+
+### Check project status
+
+```bash
+locus status
 ```
