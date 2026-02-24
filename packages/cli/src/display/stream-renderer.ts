@@ -1,132 +1,253 @@
-import { c, type StreamChunk } from "@locusai/sdk/node";
-
 /**
- * Renders streaming chunks to the terminal in real-time.
+ * Newline-gated markdown streaming renderer.
+ * Buffers text until complete lines are received, then renders
+ * with ANSI markdown formatting. Adaptive two-gear pacing.
+ * Uses synchronized output for flicker reduction.
  */
+
+import {
+  beginSync,
+  bold,
+  cyan,
+  dim,
+  endSync,
+  getCapabilities,
+  gray,
+  green,
+  italic,
+  underline,
+  yellow,
+} from "./terminal.js";
+
 export class StreamRenderer {
-  private currentLine = "";
-  private isThinking = false;
-  // Buffer to handle completion marker that may span multiple chunks
-  private textBuffer = "";
+  private buffer: string = "";
+  private lineQueue: string[] = [];
+  private inCodeBlock: boolean = false;
+  private codeBlockLang: string = "";
+  private inTable: boolean = false;
+  private renderTimer: ReturnType<typeof setInterval> | null = null;
+  private catchUpMode: boolean = false;
+  private totalLinesRendered: number = 0;
+  private onRender: (line: string) => void;
 
-  /**
-   * Render a stream chunk to the terminal.
-   */
-  renderChunk(chunk: StreamChunk): void {
-    switch (chunk.type) {
-      case "text_delta":
-        this.renderTextDelta(chunk.content);
-        break;
+  constructor(onRender?: (line: string) => void) {
+    this.onRender = onRender ?? ((line) => process.stdout.write(`${line}\r\n`));
+  }
 
-      case "tool_use":
-        this.renderToolUse(chunk.tool);
-        break;
-
-      case "thinking":
-        this.renderThinking(chunk.content);
-        break;
-
-      case "result":
-        // Final result - usually already shown via text_delta
-        break;
-
-      case "error":
-        this.renderError(chunk.error);
-        break;
+  /** Start the rendering loop. */
+  start(): void {
+    if (this.renderTimer) return;
+    this.renderTimer = setInterval(() => this.tick(), 16); // ~60fps
+    if (this.renderTimer.unref) {
+      this.renderTimer.unref();
     }
   }
 
-  private renderTextDelta(content: string): void {
-    // Clear thinking indicator if active
-    if (this.isThinking) {
-      this.clearThinking();
-    }
+  /** Feed a text delta from the AI stream. */
+  push(text: string): void {
+    this.buffer += text;
 
-    // Add content to buffer
-    this.textBuffer += content;
+    // Extract complete lines (newline-gated)
+    const lines = this.buffer.split("\n");
+    this.buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
 
-    // Calculate safe output length
-    const safeLength = this.textBuffer.length;
-
-    // Output the safe portion
-    const safeContent = this.textBuffer.slice(0, safeLength);
-    this.textBuffer = this.textBuffer.slice(safeLength);
-
-    if (!safeContent) return;
-
-    process.stdout.write(safeContent);
-    this.currentLine += safeContent;
-
-    if (safeContent.includes("\n")) {
-      this.currentLine = safeContent.split("\n").pop() || "";
+    for (const line of lines) {
+      this.lineQueue.push(line);
     }
   }
 
-  private renderToolUse(tool: string): void {
-    // Clear thinking indicator if active
-    if (this.isThinking) {
-      this.clearThinking();
+  /** Stop rendering and flush remaining content. */
+  stop(): void {
+    if (this.renderTimer) {
+      clearInterval(this.renderTimer);
+      this.renderTimer = null;
     }
 
-    // Ensure we start on a new line
-    if (this.currentLine.length > 0) {
-      process.stdout.write("\n");
-      this.currentLine = "";
+    // Flush remaining queue
+    while (this.lineQueue.length > 0) {
+      const line = this.lineQueue.shift();
+      if (line !== undefined) this.renderLine(line);
     }
 
-    process.stdout.write(c.gray(`[Using ${tool}...]\n`));
+    // Flush any remaining buffer content
+    if (this.buffer.trim()) {
+      this.renderLine(this.buffer);
+      this.buffer = "";
+    }
+
+    // Reset state
+    this.inTable = false;
   }
 
-  private renderThinking(content?: string): void {
-    if (!this.isThinking) {
-      this.isThinking = true;
-      const thinkingMsg = content ? `[Thinking: ${content}]` : "[Thinking...]";
-      process.stdout.write(c.dim(thinkingMsg));
-    }
+  /** Get total lines rendered. */
+  getLinesRendered(): number {
+    return this.totalLinesRendered;
   }
 
-  private clearThinking(): void {
-    if (this.isThinking) {
-      // Clear the thinking indicator by overwriting with spaces
-      process.stdout.write(`\r${" ".repeat(50)}\r`);
-      this.isThinking = false;
-    }
-  }
+  // ─── Render Loop ──────────────────────────────────────────────────────────
 
-  private renderError(error: string): void {
-    if (this.isThinking) {
-      this.clearThinking();
-    }
-
-    if (this.currentLine.length > 0) {
-      process.stdout.write("\n");
-      this.currentLine = "";
-    }
-
-    process.stdout.write(`\n${c.error("Error:")} ${c.red(error)}\n`);
-  }
-
-  /**
-   * Call when streaming is complete to ensure proper line ending.
-   */
-  finalize(): void {
-    if (this.isThinking) {
-      this.clearThinking();
-    }
-
-    // Flush any remaining buffered text (filtering out completion marker)
-    if (this.textBuffer) {
-      const remaining = this.textBuffer;
-      if (remaining) {
-        process.stdout.write(remaining);
-        this.currentLine += remaining;
+  private tick(): void {
+    if (this.lineQueue.length === 0) {
+      if (this.catchUpMode) {
+        this.catchUpMode = false;
       }
-      this.textBuffer = "";
+      return;
     }
 
-    if (this.currentLine.length > 0) {
-      process.stdout.write("\n");
-      this.currentLine = "";
+    // Determine pacing mode
+    if (this.lineQueue.length > 8 || this.catchUpMode) {
+      // CatchUp mode: drain entire queue
+      this.catchUpMode = true;
+      while (this.lineQueue.length > 0) {
+        const line = this.lineQueue.shift();
+        if (line !== undefined) this.renderLine(line);
+      }
+    } else {
+      // Smooth mode: drain one line per tick
+      const line = this.lineQueue.shift();
+      if (line !== undefined) this.renderLine(line);
     }
+  }
+
+  private renderLine(raw: string): void {
+    const formatted = this.formatMarkdown(raw);
+    beginSync();
+    this.onRender(formatted);
+    endSync();
+    this.totalLinesRendered++;
+  }
+
+  // ─── Markdown Formatting ──────────────────────────────────────────────────
+
+  private formatMarkdown(line: string): string {
+    // Code block start/end
+    if (line.startsWith("```")) {
+      this.inCodeBlock = !this.inCodeBlock;
+      if (this.inCodeBlock) {
+        this.codeBlockLang = line.slice(3).trim();
+        return dim(
+          `┌─ ${this.codeBlockLang || "code"} ${"─".repeat(Math.max(0, 40 - (this.codeBlockLang?.length ?? 0)))}`
+        );
+      }
+      this.codeBlockLang = "";
+      return dim(`└${"─".repeat(44)}`);
+    }
+
+    // Inside code block — no further formatting
+    if (this.inCodeBlock) {
+      return `  ${this.highlightCode(line)}`;
+    }
+
+    // Headers
+    if (line.startsWith("### ")) {
+      return bold(cyan(line.slice(4)));
+    }
+    if (line.startsWith("## ")) {
+      return bold(cyan(line.slice(3)));
+    }
+    if (line.startsWith("# ")) {
+      return bold(cyan(line.slice(2)));
+    }
+
+    // Horizontal rule
+    if (/^[-*_]{3,}$/.test(line.trim())) {
+      return dim("─".repeat(Math.min(60, getCapabilities().columns - 4)));
+    }
+
+    // Table rows (pipe-delimited)
+    if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+      return this.formatTableLine(line);
+    }
+
+    // List items
+    if (/^(\s*[-*+]\s)/.test(line)) {
+      return this.formatInline(line.replace(/^(\s*)([-*+])(\s)/, "$1•$3"));
+    }
+
+    // Numbered lists
+    if (/^\s*\d+\.\s/.test(line)) {
+      return this.formatInline(line);
+    }
+
+    // Blockquotes
+    if (line.startsWith("> ")) {
+      return dim("│ ") + italic(this.formatInline(line.slice(2)));
+    }
+
+    // Inline formatting
+    return this.formatInline(line);
+  }
+
+  private formatInline(text: string): string {
+    let result = text;
+
+    // Markdown links: [text](url)
+    result = result.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      (_, linkText, url) => `${underline(cyan(linkText))} ${dim(`(${url})`)}`
+    );
+
+    // Bold: **text**
+    result = result.replace(/\*\*([^*]+)\*\*/g, (_, content) => bold(content));
+
+    // Italic: *text*
+    result = result.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, (_, content) =>
+      italic(content)
+    );
+
+    // Strikethrough: ~~text~~
+    result = result.replace(/~~([^~]+)~~/g, (_, content) => dim(content));
+
+    // Inline code: `text`
+    result = result.replace(/`([^`]+)`/g, (_, content) => cyan(content));
+
+    return result;
+  }
+
+  private formatTableLine(line: string): string {
+    const trimmed = line.trim();
+    const cells = trimmed
+      .slice(1, -1)
+      .split("|")
+      .map((c) => c.trim());
+
+    // Separator row (e.g., |---|---|)
+    if (cells.every((c) => /^[-:]+$/.test(c))) {
+      this.inTable = true;
+      return dim(
+        `├${"─".repeat(Math.min(60, getCapabilities().columns - 4))}┤`
+      );
+    }
+
+    // Header or data row
+    const formatted = cells.map((cell) => this.formatInline(cell));
+
+    if (!this.inTable) {
+      // First row = header
+      this.inTable = true;
+      return `  ${formatted.map((c) => bold(c)).join(dim(" │ "))}`;
+    }
+
+    return `  ${formatted.join(dim(" │ "))}`;
+  }
+
+  private highlightCode(line: string): string {
+    // Basic syntax highlighting — keywords and strings
+    let result = line;
+
+    // Strings (single and double quoted)
+    result = result.replace(/(["'])(?:(?!\1|\\).|\\.)*\1/g, (match) =>
+      green(match)
+    );
+
+    // Comments (// and #)
+    result = result.replace(/(\/\/.*|#.*)$/, (match) => gray(match));
+
+    // Keywords (common across languages)
+    const keywords =
+      /\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await|try|catch|throw|new|this|type|interface|enum|def|fn|pub|use|mod|struct|impl)\b/g;
+    result = result.replace(keywords, (match) => yellow(match));
+
+    return result;
   }
 }

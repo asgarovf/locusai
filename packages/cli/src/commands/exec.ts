@@ -1,326 +1,226 @@
-import { randomUUID } from "node:crypto";
-import { parseArgs } from "node:util";
-import {
-  c,
-  createAiRunner,
-  DEFAULT_MODEL,
-  PromptBuilder,
-} from "@locusai/sdk/node";
-import { ExecutionStatsTracker } from "../display/execution-stats";
-import { JsonStreamRenderer } from "../display/json-stream-renderer";
-import { ProgressRenderer } from "../display/progress-renderer";
-import { SettingsManager } from "../settings-manager";
-import { requireInitialization, resolveProvider } from "../utils";
-import { SessionCommands, showSessionsHelp } from "./exec-sessions";
+/**
+ * `locus exec` — Interactive REPL, one-shot execution, and session management.
+ *
+ * Usage:
+ *   locus exec                        # Interactive REPL
+ *   locus exec "Add error handling"   # One-shot prompt
+ *   locus exec -s <session-id>        # Resume session
+ *   locus exec sessions list          # List sessions
+ *   locus exec sessions show <id>     # Show session details
+ *   locus exec sessions delete <id>   # Delete session
+ *   locus exec --json-stream          # NDJSON mode for VSCode extension
+ */
 
-export async function execCommand(args: string[]): Promise<void> {
-  const { values, positionals } = parseArgs({
-    args,
-    options: {
-      model: { type: "string" },
-      provider: { type: "string" },
-      "reasoning-effort": { type: "string" },
-      dir: { type: "string" },
-      "no-stream": { type: "boolean" },
-      "no-status": { type: "boolean" },
-      interactive: { type: "boolean", short: "i" },
-      session: { type: "string", short: "s" },
-      "session-id": { type: "string" },
-      "json-stream": { type: "boolean" },
-    },
-    strict: false,
-  });
+import { createRunnerAsync } from "../ai/runner.js";
+import { loadConfig } from "../core/config.js";
+import { getLogger } from "../core/logger.js";
+import { buildReplPrompt } from "../core/prompt-builder.js";
+import { JsonStream } from "../display/json-stream.js";
+import { bold, cyan, dim, green, red } from "../display/terminal.js";
+import { startRepl } from "../repl/repl.js";
+import { SessionManager } from "../repl/session-manager.js";
 
-  const jsonStream = values["json-stream"] as boolean;
-  const projectPath = (values.dir as string) || process.cwd();
+export async function execCommand(
+  projectRoot: string,
+  args: string[],
+  flags: {
+    sessionId?: string;
+    jsonStream?: boolean;
+  } = {}
+): Promise<void> {
+  const config = loadConfig(projectRoot);
+  const _log = getLogger();
 
-  // In JSON stream mode, wrap the entire execution so that all failure
-  // paths emit structured error + done events.
-  if (jsonStream) {
-    await execJsonStream(values, positionals, projectPath);
-    return;
+  // Session management subcommands
+  if (args[0] === "sessions") {
+    return handleSessionSubcommand(projectRoot, args.slice(1));
   }
 
-  requireInitialization(projectPath, "exec");
-
-  // Handle sessions subcommand
-  if (positionals[0] === "sessions") {
-    const sessionAction = positionals[1];
-    const sessionArg = positionals[2];
-    const cmds = new SessionCommands(projectPath);
-
-    switch (sessionAction) {
-      case "list":
-        await cmds.list();
-        return;
-      case "show":
-        await cmds.show(sessionArg);
-        return;
-      case "delete":
-        await cmds.delete(sessionArg);
-        return;
-      case "clear":
-        await cmds.clear();
-        return;
-      default:
-        showSessionsHelp();
-        return;
-    }
+  // JSON stream mode (for VSCode extension)
+  if (flags.jsonStream) {
+    return handleJsonStream(projectRoot, config, args, flags.sessionId);
   }
 
-  const execSettings = new SettingsManager(projectPath).load();
+  // Determine mode
+  const prompt = args.join(" ").trim();
 
-  const provider = resolveProvider(
-    (values.provider as string) || execSettings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    execSettings.model ||
-    DEFAULT_MODEL[provider];
-  const isInteractive = values.interactive as boolean;
-  const sessionId = values.session as string | undefined;
-
-  // Interactive mode: start REPL session
-  if (isInteractive) {
-    const { InteractiveSession } = await import("../repl/interactive-session");
-    const session = new InteractiveSession({
-      projectPath,
-      provider,
-      model,
-      sessionId,
+  if (prompt) {
+    // One-shot mode
+    await startRepl({
+      projectRoot,
+      config,
+      prompt,
+      sessionId: flags.sessionId,
     });
-    await session.start();
-    return;
-  }
-
-  // Single execution mode
-  const promptInput = positionals.join(" ");
-  if (!promptInput) {
-    console.error(
-      c.error(
-        'Error: Prompt is required. Usage: locus exec "your prompt" or locus exec --interactive'
-      )
-    );
-    process.exit(1);
-  }
-
-  const useStreaming = !values["no-stream"];
-
-  const reasoningEffort = values["reasoning-effort"] as string | undefined;
-
-  const aiRunner = createAiRunner(provider, {
-    projectPath,
-    model,
-    reasoningEffort,
-  });
-
-  const builder = new PromptBuilder(projectPath);
-  const fullPrompt = await builder.buildGenericPrompt(promptInput);
-
-  // Add newlines to prevent overlap with banner
-  console.log("");
-  console.log(
-    `${c.primary("🚀")} ${c.bold("Executing prompt with repository context...")}`
-  );
-  console.log("");
-
-  let responseContent = "";
-
-  try {
-    if (useStreaming) {
-      // Stream output in real-time with continuous logging (no in-place updates)
-      const renderer = new ProgressRenderer();
-      const statsTracker = new ExecutionStatsTracker();
-      const stream = aiRunner.runStream(fullPrompt);
-
-      // Show initial thinking indicator
-      renderer.showThinkingStarted();
-
-      for await (const chunk of stream) {
-        switch (chunk.type) {
-          case "text_delta":
-            renderer.renderTextDelta(chunk.content);
-            responseContent += chunk.content;
-            break;
-
-          case "tool_use":
-            statsTracker.toolStarted(chunk.tool, chunk.id);
-            renderer.showToolStarted(chunk.tool, chunk.id);
-            break;
-
-          case "thinking":
-            renderer.showThinkingStarted();
-            break;
-
-          case "tool_result":
-            if (chunk.success) {
-              statsTracker.toolCompleted(chunk.tool, chunk.id);
-              renderer.showToolCompleted(chunk.tool, undefined, chunk.id);
-            } else {
-              statsTracker.toolFailed(
-                chunk.tool,
-                chunk.error ?? "Unknown error",
-                chunk.id
-              );
-              renderer.showToolFailed(
-                chunk.tool,
-                chunk.error ?? "Unknown error",
-                chunk.id
-              );
-            }
-            break;
-
-          case "result":
-            // Final result - usually already shown via text_delta
-            break;
-
-          case "error": {
-            statsTracker.setError(chunk.error);
-            renderer.renderError(chunk.error);
-            renderer.finalize();
-            const errorStats = statsTracker.finalize();
-            renderer.showSummary(errorStats);
-            console.error(
-              `\n  ${c.error("✖")} ${c.error("Execution failed!")}\n`
-            );
-            process.exit(1);
-          }
-        }
-      }
-
-      renderer.finalize();
-      const stats = statsTracker.finalize();
-      renderer.showSummary(stats);
-    } else {
-      // Non-streaming mode (original behavior)
-      responseContent = await aiRunner.run(fullPrompt);
-      console.log(responseContent);
-    }
-
-    console.log(`\n  ${c.success("✔")} ${c.success("Execution finished!")}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.error("Execution failed:")} ${c.red(error instanceof Error ? error.message : String(error))}\n`
-    );
-    process.exit(1);
+  } else {
+    // Interactive REPL
+    await startRepl({
+      projectRoot,
+      config,
+      sessionId: flags.sessionId,
+    });
   }
 }
 
-// ============================================================================
-// JSON Stream Mode
-// ============================================================================
+// ─── Session Management ─────────────────────────────────────────────────────
 
-/**
- * Execute a prompt in JSON stream mode.
- *
- * All output goes to stdout as NDJSON lines conforming to
- * {@link CliStreamEvent} schemas. Human-readable output is suppressed.
- * Guarantees deterministic terminal behavior: every code path emits
- * a `done` event (preceded by `error` on failure).
- */
-async function execJsonStream(
-  values: Record<string, unknown>,
-  positionals: string[],
-  projectPath: string
+async function handleSessionSubcommand(
+  projectRoot: string,
+  args: string[]
 ): Promise<void> {
-  const sessionId =
-    (values["session-id"] as string | undefined) ??
-    (values.session as string | undefined) ??
-    randomUUID();
+  const sessionManager = new SessionManager(projectRoot);
+  const subcommand = args[0] ?? "list";
 
-  const execSettings = new SettingsManager(projectPath).load();
-  const provider = resolveProvider(
-    (values.provider as string) || execSettings.provider
-  );
-  const model =
-    (values.model as string | undefined) ||
-    execSettings.model ||
-    DEFAULT_MODEL[provider];
+  switch (subcommand) {
+    case "list": {
+      const sessions = sessionManager.list();
+      if (sessions.length === 0) {
+        process.stderr.write(`${dim("No sessions found.")}\n`);
+        return;
+      }
 
-  const renderer = new JsonStreamRenderer({
-    sessionId,
-    command: "exec",
-    model,
-    provider,
-    cwd: projectPath,
-  });
-
-  // Register signal handlers to guarantee terminal done event.
-  // If the renderer already emitted `done`, the work is complete —
-  // let the process exit naturally with code 0 instead of forcing
-  // exit(1) which the extension interprets as PROCESS_CRASHED.
-  const handleSignal = () => {
-    if (renderer.isDone()) {
-      // Work is complete — remove signal handlers and let the process
-      // exit naturally. Do NOT call process.exit(1) here, as that would
-      // cause the extension to see a non-zero exit code and report
-      // PROCESS_CRASHED even though the session succeeded.
-      return;
+      process.stderr.write(
+        `\n${bold("Sessions")} ${dim(`(${sessions.length})`)}\n\n`
+      );
+      for (const s of sessions.slice(0, 20)) {
+        const age = formatAge(s.updated);
+        const shortId = s.id.length > 16 ? s.id.slice(0, 16) : s.id;
+        process.stderr.write(
+          `  ${cyan(shortId.padEnd(16))} ${dim(age.padEnd(12))} ${dim(`${s.messageCount} msgs`)} ${dim(`${s.provider}/${s.model}`)}\n`
+        );
+      }
+      process.stderr.write("\n");
+      break;
     }
-    renderer.emitFatalError("PROCESS_CRASHED", "Process terminated by signal");
-    // Drain stdout before exiting so the extension receives the
-    // error + done events we just wrote.
-    if (process.stdout.writableNeedDrain) {
-      process.stdout.once("drain", () => process.exit(1));
-    } else {
-      process.exit(1);
+
+    case "show": {
+      const id = args[1];
+      if (!id) {
+        process.stderr.write(
+          `${red("✗")} Usage: locus exec sessions show <id>\n`
+        );
+        return;
+      }
+      const session = sessionManager.load(id);
+      if (!session) {
+        process.stderr.write(`${red("✗")} Session not found: ${bold(id)}\n`);
+        return;
+      }
+
+      process.stderr.write(`\n${bold("Session")} ${dim(session.id)}\n`);
+      process.stderr.write(
+        `  ${dim("Created:")}  ${new Date(session.created).toLocaleString()}\n`
+      );
+      process.stderr.write(
+        `  ${dim("Updated:")}  ${new Date(session.updated).toLocaleString()}\n`
+      );
+      process.stderr.write(
+        `  ${dim("Provider:")} ${session.metadata.provider} / ${session.metadata.model}\n`
+      );
+      process.stderr.write(
+        `  ${dim("Messages:")} ${session.messages.length}\n`
+      );
+      process.stderr.write(
+        `  ${dim("Tokens:")}   ${session.metadata.totalTokens}\n`
+      );
+      process.stderr.write(`\n${bold("Messages:")}\n\n`);
+
+      for (const msg of session.messages.slice(-10)) {
+        const role = msg.role === "user" ? cyan("You") : green("AI");
+        const preview = msg.content.slice(0, 120).replace(/\n/g, " ");
+        process.stderr.write(`  ${role}: ${dim(preview)}\n`);
+      }
+      process.stderr.write("\n");
+      break;
     }
-  };
-  process.on("SIGINT", handleSignal);
-  process.on("SIGTERM", handleSignal);
+
+    case "delete": {
+      const id = args[1];
+      if (!id) {
+        process.stderr.write(
+          `${red("✗")} Usage: locus exec sessions delete <id>\n`
+        );
+        return;
+      }
+      if (sessionManager.delete(id)) {
+        process.stderr.write(`${green("✓")} Deleted session ${id}\n`);
+      } else {
+        process.stderr.write(`${red("✗")} Session not found: ${id}\n`);
+      }
+      break;
+    }
+
+    default:
+      process.stderr.write(
+        `${red("✗")} Unknown sessions subcommand: ${bold(subcommand)}\n`
+      );
+      process.stderr.write(
+        `  Available: ${cyan("list")}, ${cyan("show")}, ${cyan("delete")}\n`
+      );
+  }
+}
+
+// ─── JSON Stream Mode ───────────────────────────────────────────────────────
+
+async function handleJsonStream(
+  projectRoot: string,
+  config: ReturnType<typeof loadConfig>,
+  args: string[],
+  sessionId?: string
+): Promise<void> {
+  const sid = sessionId ?? `stream-${Date.now()}`;
+  const stream = new JsonStream(sid);
+  const prompt = args.join(" ").trim();
+
+  if (!prompt) {
+    stream.emitError("No prompt provided", false);
+    return;
+  }
+
+  stream.emitStart();
+  stream.emitStatus("thinking");
 
   try {
-    // Validate initialization
-    try {
-      requireInitialization(projectPath, "exec");
-    } catch (initError) {
-      renderer.emitFatalError(
-        "CLI_NOT_FOUND",
-        initError instanceof Error ? initError.message : String(initError)
-      );
-      process.exit(1);
+    const fullPrompt = buildReplPrompt(prompt, projectRoot, config);
+    const runner = await createRunnerAsync(config.ai.provider);
+
+    const available = await runner.isAvailable();
+    if (!available) {
+      stream.emitError(`${config.ai.provider} CLI not available`, false);
+      return;
     }
 
-    // Validate prompt
-    const promptInput = positionals.join(" ");
-    if (!promptInput) {
-      renderer.emitFatalError(
-        "UNKNOWN",
-        'Prompt is required. Usage: locus exec --json-stream "your prompt"'
-      );
-      process.exit(1);
-    }
+    stream.emitStatus("working");
 
-    renderer.emitStart();
-    renderer.emitStatus("running", "Building prompt context");
-
-    const aiRunner = createAiRunner(provider, {
-      projectPath,
-      model,
+    const result = await runner.execute({
+      prompt: fullPrompt,
+      model: config.ai.model,
+      cwd: projectRoot,
+      onOutput: (chunk) => {
+        stream.emitTextDelta(chunk);
+      },
     });
 
-    const builder = new PromptBuilder(projectPath);
-    const fullPrompt = await builder.buildGenericPrompt(promptInput);
-
-    renderer.emitStatus("streaming", "Streaming AI response");
-
-    const stream = aiRunner.runStream(fullPrompt);
-
-    for await (const chunk of stream) {
-      renderer.handleChunk(chunk);
+    if (result.success) {
+      stream.emitDone();
+    } else {
+      stream.emitError(result.error ?? "Execution failed", true);
     }
-
-    renderer.emitDone(0);
-
-    // Remove signal handlers after successful completion so they
-    // don't interfere with the natural process exit (code 0).
-    process.removeListener("SIGINT", handleSignal);
-    process.removeListener("SIGTERM", handleSignal);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!renderer.isDone()) {
-      renderer.emitFatalError("UNKNOWN", message);
-    }
-    process.exit(1);
+  } catch (e) {
+    stream.emitError(e instanceof Error ? e.message : String(e), false);
   }
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function formatAge(isoDate: string): string {
+  const ms = Date.now() - new Date(isoDate).getTime();
+  const minutes = Math.floor(ms / 60_000);
+  const hours = Math.floor(ms / 3_600_000);
+  const days = Math.floor(ms / 86_400_000);
+
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return "just now";
 }

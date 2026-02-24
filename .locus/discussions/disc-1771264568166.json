@@ -1,0 +1,14 @@
+{
+  "id": "disc-1771264568166",
+  "title": "help",
+  "topic": "help",
+  "status": "active",
+  "messages": [],
+  "insights": [],
+  "createdAt": "2026-02-16T17:56:08.166Z",
+  "updatedAt": "2026-02-16T17:56:08.166Z",
+  "metadata": {
+    "model": "claude",
+    "provider": "claude"
+  }
+}

@@ -1,139 +1,290 @@
-import { c } from "@locusai/sdk/node";
-import type { InteractiveSession } from "./interactive-session";
+/**
+ * Slash commands for the REPL.
+ * Handles /help, /clear, /reset, /history, /session, etc.
+ */
 
-export interface ReplCommand {
+import { execSync } from "node:child_process";
+import { inferProviderFromModel } from "../core/ai-models.js";
+import { bold, cyan, dim, green, red } from "../display/terminal.js";
+import type { AIProvider, Session } from "../types.js";
+
+export interface SlashCommandContext {
+  projectRoot: string;
+  session: Session;
+  /** Callback to reset conversation context. */
+  onReset: () => void;
+  /** Callback to switch model. */
+  onModelChange: (model: string) => void;
+  /** Callback to switch provider. */
+  onProviderChange: (provider: AIProvider) => void;
+  /** Callback to force-save session. */
+  onSave: () => void;
+  /** Callback to exit the REPL. */
+  onExit: () => void;
+}
+
+export interface SlashCommandDef {
   name: string;
   aliases: string[];
   description: string;
-  execute: (session: InteractiveSession, args?: string) => Promise<void> | void;
+  handler: (args: string, ctx: SlashCommandContext) => void;
 }
 
-/**
- * Built-in REPL commands for the interactive session.
- */
-export const REPL_COMMANDS: ReplCommand[] = [
-  {
-    name: "exit",
-    aliases: ["quit", "q"],
-    description: "Exit interactive mode",
-    execute: (session) => session.shutdown(),
-  },
-  {
-    name: "clear",
-    aliases: ["cls"],
-    description: "Clear the screen",
-    execute: () => console.clear(),
-  },
-  {
-    name: "help",
-    aliases: ["?", "h"],
-    description: "Show available commands",
-    execute: () => showHelp(),
-  },
-  {
-    name: "reset",
-    aliases: ["r"],
-    description: "Reset conversation context",
-    execute: (session) => session.resetContext(),
-  },
-  {
-    name: "history",
-    aliases: ["hist"],
-    description: "List recent sessions",
-    execute: (session, args) => showHistory(session, args),
-  },
-  {
-    name: "session",
-    aliases: ["sid"],
-    description: "Show current session ID",
-    execute: (session) => {
-      console.log(
-        `\n  ${c.dim("Session ID:")} ${c.cyan(session.getSessionId())}\n`
-      );
+/** All available slash commands. */
+export function getSlashCommands(): SlashCommandDef[] {
+  return [
+    {
+      name: "/help",
+      aliases: ["/h", "/?"],
+      description: "Show available commands",
+      handler: cmdHelp,
     },
-  },
-];
+    {
+      name: "/clear",
+      aliases: ["/cls"],
+      description: "Clear screen",
+      handler: cmdClear,
+    },
+    {
+      name: "/reset",
+      aliases: ["/r"],
+      description: "Reset conversation context",
+      handler: cmdReset,
+    },
+    {
+      name: "/history",
+      aliases: ["/hist"],
+      description: "Show input history",
+      handler: cmdHistory,
+    },
+    {
+      name: "/session",
+      aliases: ["/sid"],
+      description: "Show current session info",
+      handler: cmdSession,
+    },
+    {
+      name: "/model",
+      aliases: ["/m"],
+      description: "Switch AI model",
+      handler: cmdModel,
+    },
+    {
+      name: "/provider",
+      aliases: ["/p"],
+      description: "Switch AI provider",
+      handler: cmdProvider,
+    },
+    {
+      name: "/diff",
+      aliases: ["/d"],
+      description: "Show cumulative diff of all changes",
+      handler: cmdDiff,
+    },
+    {
+      name: "/undo",
+      aliases: ["/u"],
+      description: "Undo last AI change",
+      handler: cmdUndo,
+    },
+    {
+      name: "/save",
+      aliases: [],
+      description: "Force-save current session",
+      handler: cmdSave,
+    },
+    {
+      name: "/exit",
+      aliases: ["/quit", "/q"],
+      description: "Exit REPL",
+      handler: cmdExit,
+    },
+  ];
+}
 
-/**
- * Parse user input and return matching command if found.
- */
-export function parseCommand(input: string): ReplCommand | null {
-  const lowerInput = input.toLowerCase();
+/** Get all command names including aliases (for tab completion). */
+export function getAllCommandNames(): string[] {
+  const commands = getSlashCommands();
+  const names: string[] = [];
+  for (const cmd of commands) {
+    names.push(cmd.name);
+    names.push(...cmd.aliases);
+  }
+  return names;
+}
 
-  for (const cmd of REPL_COMMANDS) {
-    if (lowerInput === cmd.name || cmd.aliases.includes(lowerInput)) {
-      return cmd;
+/** Try to handle input as a slash command. Returns true if handled. */
+export function handleSlashCommand(
+  input: string,
+  ctx: SlashCommandContext
+): boolean {
+  const trimmed = input.trim();
+  if (!trimmed.startsWith("/")) return false;
+
+  const [cmdName, ...argParts] = trimmed.split(/\s+/);
+  const args = argParts.join(" ");
+  const commands = getSlashCommands();
+
+  for (const cmd of commands) {
+    if (cmd.name === cmdName || cmd.aliases.includes(cmdName)) {
+      cmd.handler(args, ctx);
+      return true;
     }
   }
 
-  return null;
+  process.stderr.write(`${red("✗")} Unknown command: ${bold(cmdName)}\n`);
+  process.stderr.write(`  Type ${cyan("/help")} for available commands.\n`);
+  return true;
 }
 
-/**
- * Display help for all available REPL commands.
- */
-function showHelp(): void {
-  console.log(`
-  ${c.primary("Available Commands")}
+// ─── Command Handlers ───────────────────────────────────────────────────────
 
-  ${c.success("exit")} / ${c.dim("quit, q")}       Exit interactive mode
-  ${c.success("clear")} / ${c.dim("cls")}          Clear the screen
-  ${c.success("help")} / ${c.dim("?, h")}          Show this help message
-  ${c.success("reset")} / ${c.dim("r")}            Reset conversation context
-  ${c.success("history")} / ${c.dim("hist")}       List recent sessions
-  ${c.success("session")} / ${c.dim("sid")}        Show current session ID
+function cmdHelp(_args: string, _ctx: SlashCommandContext): void {
+  const commands = getSlashCommands();
+  process.stderr.write(`\n${bold("Available Commands:")}\n\n`);
 
-  ${c.primary("Key Bindings")}
-
-  ${c.success("Enter")}              Send message
-  ${c.success("Shift+Enter")}        Insert newline (also: Alt+Enter, Ctrl+J)
-  ${c.success("Ctrl+C")}             Interrupt running agent / clear input / exit
-  ${c.success("Ctrl+D")}             Exit (on empty input)
-  ${c.success("Ctrl+U")}             Clear current input
-  ${c.success("Ctrl+W")}             Delete last word
-
-  ${c.dim("Any other input will be sent as a prompt to the AI.")}
-`);
+  for (const cmd of commands) {
+    const aliases =
+      cmd.aliases.length > 0 ? dim(` (${cmd.aliases.join(", ")})`) : "";
+    process.stderr.write(`  ${cyan(cmd.name.padEnd(12))}${aliases}\n`);
+    process.stderr.write(`  ${"".padEnd(12)}${dim(cmd.description)}\n`);
+  }
+  process.stderr.write("\n");
 }
 
-/**
- * Display session history.
- */
-function showHistory(session: InteractiveSession, args?: string): void {
-  const historyManager = session.getHistoryManager();
-  const limit = args ? parseInt(args, 10) : 10;
-  const sessions = historyManager.listSessions({
-    limit: Number.isNaN(limit) ? 10 : limit,
-  });
+function cmdClear(_args: string, _ctx: SlashCommandContext): void {
+  process.stdout.write("\x1b[2J\x1b[H");
+}
 
-  if (sessions.length === 0) {
-    console.log(`\n  ${c.dim("No sessions found.")}\n`);
+function cmdReset(_args: string, ctx: SlashCommandContext): void {
+  ctx.onReset();
+  process.stderr.write(`${green("✓")} Conversation context reset.\n`);
+}
+
+function cmdHistory(_args: string, _ctx: SlashCommandContext): void {
+  // History is displayed by the REPL orchestrator
+  process.stderr.write(
+    `${dim("Recent input history is shown above the prompt.")}\n`
+  );
+}
+
+function cmdSession(_args: string, ctx: SlashCommandContext): void {
+  const s = ctx.session;
+  process.stderr.write(`\n${bold("Session Info:")}\n`);
+  process.stderr.write(`  ${dim("ID:")}       ${s.id}\n`);
+  process.stderr.write(
+    `  ${dim("Created:")}  ${new Date(s.created).toLocaleString()}\n`
+  );
+  process.stderr.write(
+    `  ${dim("Updated:")}  ${new Date(s.updated).toLocaleString()}\n`
+  );
+  process.stderr.write(
+    `  ${dim("Provider:")} ${s.metadata.provider} / ${s.metadata.model}\n`
+  );
+  process.stderr.write(`  ${dim("Messages:")} ${s.messages.length}\n`);
+  process.stderr.write(
+    `  ${dim("Tokens:")}   ${s.metadata.totalTokens.toLocaleString()}\n`
+  );
+  process.stderr.write(`  ${dim("Tools:")}    ${s.metadata.totalTools}\n`);
+  process.stderr.write("\n");
+}
+
+function cmdModel(args: string, ctx: SlashCommandContext): void {
+  if (!args.trim()) {
+    process.stderr.write(
+      `${dim("Current model:")} ${bold(ctx.session.metadata.model)} ${dim(`(${ctx.session.metadata.provider})`)}\n`
+    );
+    process.stderr.write(`${dim("Usage:")} ${cyan("/model <model-name>")}\n`);
     return;
   }
 
-  console.log(`\n  ${c.primary("Recent Sessions")}\n`);
-
-  for (const sess of sessions) {
-    const date = new Date(sess.updatedAt);
-    const dateStr = date.toLocaleDateString();
-    const timeStr = date.toLocaleTimeString();
-    const msgCount = sess.messages.length;
-    const isCurrent = sess.id === session.getSessionId();
-    const marker = isCurrent ? c.success("*") : " ";
-
-    console.log(
-      `  ${marker} ${c.cyan(sess.id)} ${c.dim(`- ${dateStr} ${timeStr} (${msgCount} messages)`)}`
+  const model = args.trim();
+  const inferredProvider = inferProviderFromModel(model);
+  if (!inferredProvider) {
+    process.stderr.write(
+      `${red("✗")} Unknown model: ${bold(model)}. Use a Claude or Codex model name.\n`
     );
-
-    // Show preview of last message if exists
-    if (sess.messages.length > 0) {
-      const lastMsg = sess.messages[sess.messages.length - 1];
-      const preview = lastMsg.content.slice(0, 60).replace(/\n/g, " ");
-      console.log(
-        `      ${c.dim(preview + (lastMsg.content.length > 60 ? "..." : ""))}`
-      );
-    }
+    return;
   }
 
-  console.log(`\n  ${c.dim("Use --session <id> to resume a session")}\n`);
+  ctx.onModelChange(model);
+  ctx.onProviderChange(inferredProvider);
+  process.stderr.write(
+    `${green("✓")} Model switched to: ${bold(model)} ${dim(`(${inferredProvider})`)}\n`
+  );
+}
+
+function cmdProvider(args: string, ctx: SlashCommandContext): void {
+  if (!args.trim()) {
+    process.stderr.write(
+      `${dim("Current provider:")} ${bold(ctx.session.metadata.provider)}\n`
+    );
+    process.stderr.write(
+      `${dim("Usage:")} ${cyan("/provider claude|codex")}\n`
+    );
+    return;
+  }
+  const provider = args.trim() as AIProvider;
+  if (provider !== "claude" && provider !== "codex") {
+    process.stderr.write(
+      `${red("✗")} Invalid provider. Use: ${bold("claude")} or ${bold("codex")}\n`
+    );
+    return;
+  }
+  ctx.onProviderChange(provider);
+  process.stderr.write(
+    `${green("✓")} Provider switched to: ${bold(provider)}\n`
+  );
+}
+
+function cmdDiff(_args: string, ctx: SlashCommandContext): void {
+  try {
+    const diff = execSync("git diff", {
+      cwd: ctx.projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    if (diff.trim()) {
+      process.stdout.write(diff);
+    } else {
+      process.stderr.write(`${dim("No changes.")}\n`);
+    }
+  } catch {
+    process.stderr.write(`${red("✗")} Could not get diff.\n`);
+  }
+}
+
+function cmdUndo(_args: string, ctx: SlashCommandContext): void {
+  try {
+    // Check if there are unstaged changes
+    const status = execSync("git status --porcelain", {
+      cwd: ctx.projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+
+    if (!status) {
+      process.stderr.write(`${dim("No changes to undo.")}\n`);
+      return;
+    }
+
+    // Undo last change
+    execSync("git checkout .", {
+      cwd: ctx.projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    process.stderr.write(`${green("✓")} Reverted all unstaged changes.\n`);
+  } catch {
+    process.stderr.write(`${red("✗")} Could not undo changes.\n`);
+  }
+}
+
+function cmdSave(_args: string, ctx: SlashCommandContext): void {
+  ctx.onSave();
+  process.stderr.write(`${green("✓")} Session saved.\n`);
+}
+
+function cmdExit(_args: string, ctx: SlashCommandContext): void {
+  ctx.onExit();
 }

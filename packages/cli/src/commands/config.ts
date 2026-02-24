@@ -1,295 +1,148 @@
-import { createInterface } from "node:readline";
+/**
+ * `locus config` — View and update local settings.
+ *
+ * Usage:
+ *   locus config show                    — Display current config
+ *   locus config set ai.model gpt-5.3-codex   — Set a value
+ *   locus config get ai.model                 — Get a value
+ */
+
 import {
-  type LocusSettings,
-  maskSecret,
-  SettingsManager,
-  type TelegramSettings,
-} from "@locusai/commands";
-import { c } from "@locusai/sdk/node";
+  getNestedValue,
+  loadConfig,
+  updateConfigValue,
+} from "../core/config.js";
+import { bold, cyan, dim, gray, green, yellow } from "../display/terminal.js";
 
-function ask(question: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
-const TOP_LEVEL_KEYS = [
-  "apiKey",
-  "apiUrl",
-  "provider",
-  "model",
-  "workspaceId",
-] as const;
-
-const TELEGRAM_KEYS = [
-  "telegram.botToken",
-  "telegram.chatId",
-  "telegram.testMode",
-] as const;
-
-const ALL_KEYS = [...TOP_LEVEL_KEYS, ...TELEGRAM_KEYS] as const;
-
-function showConfigHelp(): void {
-  console.log(`
-  ${c.header(" CONFIG ")}
-    ${c.primary("locus config")} ${c.dim("<subcommand> [options]")}
-
-  ${c.header(" SUBCOMMANDS ")}
-    ${c.success("setup")}     Interactive configuration (or pass flags below)
-              ${c.dim("--api-key <KEY>   Locus API key (required)")}
-              ${c.dim("--api-url <URL>   API base URL (optional)")}
-              ${c.dim("--provider <P>    AI provider (optional)")}
-              ${c.dim("--model <M>       AI model (optional)")}
-    ${c.success("show")}      Show current settings
-    ${c.success("set")}       Set a config value
-              ${c.dim("locus config set <key> <value>")}
-              ${c.dim(`Keys: ${ALL_KEYS.join(", ")}`)}
-    ${c.success("remove")}    Remove all settings
-
-  ${c.header(" EXAMPLES ")}
-    ${c.dim("$")} ${c.primary("locus config setup")}
-    ${c.dim("$")} ${c.primary("locus config setup --api-key sk-xxx")}
-    ${c.dim("$")} ${c.primary("locus config show")}
-    ${c.dim("$")} ${c.primary("locus config set apiKey sk-new-key")}
-    ${c.dim("$")} ${c.primary("locus config set provider codex")}
-    ${c.dim("$")} ${c.primary("locus config set telegram.botToken 123:ABC")}
-    ${c.dim("$")} ${c.primary("locus config remove")}
-`);
-}
-
-async function setupCommand(
-  args: string[],
-  projectPath: string
+export async function configCommand(
+  cwd: string,
+  args: string[]
 ): Promise<void> {
-  let apiKey: string | undefined;
-  let apiUrl: string | undefined;
-  let provider: string | undefined;
-  let model: string | undefined;
+  const subcommand = args[0] ?? "show";
 
-  // Parse CLI flags for non-interactive use
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--api-key" && args[i + 1]) {
-      apiKey = args[++i]?.trim();
-    } else if (args[i] === "--api-url" && args[i + 1]) {
-      apiUrl = args[++i]?.trim();
-    } else if (args[i] === "--provider" && args[i + 1]) {
-      provider = args[++i]?.trim();
-    } else if (args[i] === "--model" && args[i + 1]) {
-      model = args[++i]?.trim();
-    }
-  }
-
-  // If no flags provided, run interactive mode
-  if (!apiKey && !apiUrl && !provider && !model) {
-    console.log(`\n  ${c.header(" LOCUS SETUP ")}\n`);
-    console.log(
-      `  ${c.dim("Configure your Locus settings. Press Enter to skip optional fields.")}\n`
-    );
-
-    while (!apiKey) {
-      apiKey = await ask(`  ${c.primary("API Key")} ${c.dim("(required)")}: `);
-      if (!apiKey) {
-        console.log(
-          `  ${c.error("✖")} API key is required. Get one from ${c.underline("Workspace Settings > API Keys")}`
-        );
-      }
-    }
-
-    provider = await ask(
-      `  ${c.primary("Provider")} ${c.dim("(optional, e.g. claude, codex)")}: `
-    );
-    model = await ask(
-      `  ${c.primary("Model")} ${c.dim("(optional, e.g. opus, sonnet)")}: `
-    );
-
-    // Convert empty strings to undefined
-    if (!provider) provider = undefined;
-    if (!model) model = undefined;
-  }
-
-  if (!apiKey) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.bold("Missing --api-key flag.")}\n` +
-        `  Get an API key from ${c.underline("Workspace Settings > API Keys")}\n`
-    );
-    process.exit(1);
-  }
-
-  const manager = new SettingsManager(projectPath);
-  const existing = manager.load();
-
-  const settings: LocusSettings = {
-    ...existing,
-    apiKey,
-  };
-
-  if (apiUrl) settings.apiUrl = apiUrl;
-  if (provider) settings.provider = provider;
-  if (model) settings.model = model;
-
-  manager.save(settings);
-
-  console.log(`
-  ${c.success("✔")} ${c.bold("Settings configured successfully!")}
-
-  ${c.bold("Saved to:")} ${c.dim(".locus/settings.json")}
-
-  ${c.bold("Configuration:")}
-    ${c.primary("API Key:")}   ${maskSecret(apiKey)}${apiUrl ? `\n    ${c.primary("API URL:")}   ${apiUrl}` : ""}${provider ? `\n    ${c.primary("Provider:")}  ${provider}` : ""}${model ? `\n    ${c.primary("Model:")}     ${model}` : ""}
-
-  ${c.bold("Next steps:")}
-    Run agents:  ${c.primary("locus run")}
-    Setup Telegram: ${c.primary("locus telegram setup")}
-`);
-}
-
-function showCommand(projectPath: string): void {
-  const manager = new SettingsManager(projectPath);
-  const settings = manager.load();
-
-  if (Object.keys(settings).length === 0) {
-    console.log(
-      `\n  ${c.dim("No settings found.")}\n` +
-        `  Run ${c.primary("locus config setup")} to configure.\n`
-    );
-    return;
-  }
-
-  console.log(`\n  ${c.header(" SETTINGS ")}`);
-  console.log(`  ${c.dim("File: .locus/settings.json")}\n`);
-
-  if (settings.apiKey) {
-    console.log(
-      `    ${c.primary("apiKey:")}       ${maskSecret(settings.apiKey)}`
-    );
-  }
-  if (settings.apiUrl) {
-    console.log(`    ${c.primary("apiUrl:")}       ${settings.apiUrl}`);
-  }
-  if (settings.provider) {
-    console.log(`    ${c.primary("provider:")}     ${settings.provider}`);
-  }
-  if (settings.model) {
-    console.log(`    ${c.primary("model:")}        ${settings.model}`);
-  }
-  if (settings.workspaceId) {
-    console.log(`    ${c.primary("workspaceId:")}  ${settings.workspaceId}`);
-  }
-  if (settings.telegram) {
-    const tg = settings.telegram;
-    console.log(`\n    ${c.header(" TELEGRAM ")}`);
-    if (tg.botToken) {
-      console.log(
-        `    ${c.primary("botToken:")}     ${maskSecret(tg.botToken)}`
+  switch (subcommand) {
+    case "show":
+      return showConfig(cwd);
+    case "set":
+      return setConfig(cwd, args.slice(1));
+    case "get":
+      return getConfig(cwd, args.slice(1));
+    default:
+      process.stderr.write(`Unknown config subcommand: ${bold(subcommand)}\n`);
+      process.stderr.write(`\nUsage:\n`);
+      process.stderr.write(
+        `  ${bold("locus config show")}              Display current config\n`
       );
-    }
-    if (tg.chatId) {
-      console.log(`    ${c.primary("chatId:")}       ${tg.chatId}`);
-    }
-    if (tg.testMode !== undefined) {
-      console.log(`    ${c.primary("testMode:")}     ${tg.testMode}`);
-    }
+      process.stderr.write(
+        `  ${bold("locus config set")} ${dim("<path> <value>")}  Set a value\n`
+      );
+      process.stderr.write(
+        `  ${bold("locus config get")} ${dim("<path>")}          Get a value\n`
+      );
+      process.exit(1);
   }
-
-  console.log("");
 }
 
-function setCommand(args: string[], projectPath: string): void {
-  const key = args[0]?.trim();
-  const value = args.slice(1).join(" ").trim();
+function showConfig(cwd: string): void {
+  const config = loadConfig(cwd);
 
-  if (!key || !value) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.bold("Usage:")} locus config set <key> <value>\n` +
-        `  ${c.dim(`Available keys: ${ALL_KEYS.join(", ")}`)}\n`
+  process.stderr.write(`\n${bold("Locus Configuration")}\n\n`);
+
+  const sections = [
+    {
+      title: "GitHub",
+      entries: [
+        ["Owner", config.github.owner],
+        ["Repo", config.github.repo],
+        ["Default Branch", config.github.defaultBranch],
+      ],
+    },
+    {
+      title: "AI",
+      entries: [
+        ["Provider", config.ai.provider],
+        ["Model", config.ai.model],
+      ],
+    },
+    {
+      title: "Agent",
+      entries: [
+        ["Max Parallel", String(config.agent.maxParallel)],
+        ["Auto Label", String(config.agent.autoLabel)],
+        ["Auto PR", String(config.agent.autoPR)],
+        ["Base Branch", config.agent.baseBranch],
+        ["Rebase Before Task", String(config.agent.rebaseBeforeTask)],
+      ],
+    },
+    {
+      title: "Sprint",
+      entries: [
+        ["Active", config.sprint.active ?? dim("(none)")],
+        ["Stop on Failure", String(config.sprint.stopOnFailure)],
+      ],
+    },
+    {
+      title: "Logging",
+      entries: [
+        ["Level", config.logging.level],
+        ["Max Files", String(config.logging.maxFiles)],
+        ["Max Total Size", `${config.logging.maxTotalSizeMB} MB`],
+      ],
+    },
+  ];
+
+  for (const section of sections) {
+    process.stderr.write(`  ${cyan(bold(section.title))}\n`);
+    for (const [key, value] of section.entries) {
+      process.stderr.write(`    ${gray(key.padEnd(20))} ${value}\n`);
+    }
+    process.stderr.write("\n");
+  }
+}
+
+function setConfig(cwd: string, args: string[]): void {
+  if (args.length < 2) {
+    process.stderr.write(
+      `Usage: ${bold("locus config set")} ${dim("<path> <value>")}\n`
     );
+    process.stderr.write(`\nExamples:\n`);
+    process.stderr.write(`  locus config set ai.model gpt-5.3-codex\n`);
+    process.stderr.write(`  locus config set ai.model claude-sonnet-4-6\n`);
+    process.stderr.write(`  locus config set agent.maxParallel 5\n`);
     process.exit(1);
   }
 
-  if (!(ALL_KEYS as readonly string[]).includes(key)) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.bold(`Unknown key: ${key}`)}\n` +
-        `  ${c.dim(`Available keys: ${ALL_KEYS.join(", ")}`)}\n`
-    );
-    process.exit(1);
-  }
+  const [path, ...valueParts] = args;
+  const value = valueParts.join(" ");
 
-  const manager = new SettingsManager(projectPath);
-  const settings = manager.load();
+  const config = updateConfigValue(cwd, path, value);
+  const actual = getNestedValue(config, path);
 
-  if (key.startsWith("telegram.")) {
-    const telegramKey = key.replace("telegram.", "") as keyof TelegramSettings;
-
-    if (!settings.telegram) {
-      settings.telegram = {};
-    }
-
-    if (telegramKey === "chatId") {
-      const num = Number(value);
-      if (Number.isNaN(num)) {
-        console.error(
-          `\n  ${c.error("✖")} ${c.bold(`${key} must be a number.`)}\n`
-        );
-        process.exit(1);
-      }
-      (settings.telegram as Record<string, unknown>)[telegramKey] = num;
-    } else if (telegramKey === "testMode") {
-      (settings.telegram as Record<string, unknown>)[telegramKey] =
-        value === "true" || value === "1";
-    } else {
-      (settings.telegram as Record<string, unknown>)[telegramKey] = value;
-    }
-  } else {
-    (settings as Record<string, unknown>)[key] = value;
-  }
-
-  manager.save(settings);
-
-  const displayValue =
-    key === "apiKey" || key === "telegram.botToken" ? maskSecret(value) : value;
-  console.log(
-    `\n  ${c.success("✔")} Set ${c.primary(key)} = ${displayValue}\n`
+  process.stderr.write(
+    `${green("✓")} Set ${bold(path)} = ${bold(String(actual))}\n`
   );
 }
 
-function removeCommand(projectPath: string): void {
-  const manager = new SettingsManager(projectPath);
-
-  if (!manager.exists()) {
-    console.log(`\n  ${c.dim("No settings found. Nothing to remove.")}\n`);
-    return;
+function getConfig(cwd: string, args: string[]): void {
+  if (args.length < 1) {
+    process.stderr.write(
+      `Usage: ${bold("locus config get")} ${dim("<path>")}\n`
+    );
+    process.exit(1);
   }
 
-  manager.remove();
-  console.log(`\n  ${c.success("✔")} ${c.bold("Settings removed.")}\n`);
-}
+  const [path] = args;
+  const config = loadConfig(cwd);
+  const value = getNestedValue(config, path);
 
-export async function configCommand(args: string[]): Promise<void> {
-  const projectPath = process.cwd();
-  const subcommand = args[0];
-  const subArgs = args.slice(1);
-
-  switch (subcommand) {
-    case "setup":
-      await setupCommand(subArgs, projectPath);
-      break;
-    case "show":
-      showCommand(projectPath);
-      break;
-    case "set":
-      setCommand(subArgs, projectPath);
-      break;
-    case "remove":
-      removeCommand(projectPath);
-      break;
-    default:
-      showConfigHelp();
+  if (value === undefined) {
+    process.stderr.write(`${yellow("⚠")} No value at path: ${bold(path)}\n`);
+    process.exit(1);
   }
+
+  // Output to stdout (for scripting)
+  process.stdout.write(
+    typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)
+  );
+  process.stdout.write("\n");
 }

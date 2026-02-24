@@ -7,11 +7,8 @@
   "files": [],
   "include": [],
   "references": [
+    { "path": "./apps/www" },
     { "path": "./packages/shared" },
-    { "path": "./packages/sdk" },
-    { "path": "./packages/commands" },
-    { "path": "./apps/api" },
-    { "path": "./apps/web" },
     { "path": "./packages/cli" },
     { "path": "./packages/vscode" }
   ],

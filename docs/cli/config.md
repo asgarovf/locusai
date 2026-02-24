@@ -1,5 +1,5 @@
 ---
-description: Manage Locus CLI settings — API key, provider, and model.
+description: Manage Locus CLI settings — API key and model (provider can be inferred from model).
 ---
 
 # config
@@ -21,15 +21,15 @@ locus config setup
 Or configure non-interactively with flags:
 
 ```bash
-locus config setup --api-key "locus_..." --provider claude
+locus config setup --api-key "locus_..." --model claude-sonnet-4-6
 ```
 
 | Flag | Description |
 |------|-------------|
 | `--api-key <KEY>` | Locus API key (required) |
 | `--api-url <URL>` | API base URL (optional) |
-| `--provider <P>` | AI provider: `claude` or `codex` |
-| `--model <M>` | Specific AI model name |
+| `--provider <P>` | AI provider: `claude` or `codex` (optional; inferred when model is set) |
+| `--model <M>` | Specific AI model name (recommended) |
 
 ---
 
@@ -66,8 +66,8 @@ Valid keys:
 |-----|-------------|
 | `apiKey` | Locus API key |
 | `apiUrl` | API base URL |
-| `provider` | AI provider (`claude` or `codex`) |
-| `model` | AI model name |
+| `provider` | AI provider (`claude` or `codex`; optional when `model` is set) |
+| `model` | AI model name (provider inferred automatically) |
 | `workspaceId` | Workspace ID (auto-resolved from API key) |
 | `telegram.botToken` | Telegram bot token |
 | `telegram.chatId` | Telegram chat ID |
@@ -76,8 +76,8 @@ Valid keys:
 **Examples:**
 
 ```bash
-locus config set provider codex
-locus config set model claude-sonnet-4-5-20250929
+locus config set model gpt-5.3-codex
+locus config set model claude-sonnet-4-6
 locus config set telegram.botToken "123456:ABC..."
 ```
 

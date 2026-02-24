@@ -86,24 +86,12 @@ packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
 packages/cli/bin/agent/
 packages/telegram/bin/
+packages/cli2/bin/
 
-# Locus AI - Session data (user-specific, can grow large)
-.locus/sessions/
-
-# Locus AI - Artifacts (local-only, user-specific)
-.locus/artifacts/
-
-# Locus AI - Review reports (generated per sprint)
-.locus/reviews/
-
-# Locus AI - Plans (generated per task)
-.locus/plans/
-
-# Locus AI - Discussions (AI discussion sessions)
-.locus/discussions/
-
-# Locus AI - Settings (contains API key, telegram config, etc.)
-.locus/settings.json
-
-# Locus AI - Configuration (contains project context, etc.)
+# Locus
 .locus/config.json
+.locus/run-state.json
+.locus/rate-limit.json
+.locus/sessions/
+.locus/logs/
+.locus/worktrees/

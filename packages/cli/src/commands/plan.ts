@@ -1,457 +1,573 @@
-import { existsSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
-import { parseArgs } from "node:util";
-import {
-  cancelPlan,
-  createCliLogger,
-  listPlans,
-  rejectPlan,
-  resolveAiSettings,
-  resolveApiContext,
-  showPlan,
-} from "@locusai/commands";
-import {
-  c,
-  createAiRunner,
-  getLocusPath,
-  LocusClient,
-  PlanManager,
-  PlanningMeeting,
-} from "@locusai/sdk/node";
-import { ConfigManager } from "../config-manager";
-import { requireInitialization, VERSION } from "../utils";
-
 /**
- * Normalise plan-ID arguments so `--approve plan -1771009897498` is
- * treated the same as `--approve plan-1771009897498`.
+ * `locus plan` — AI-powered sprint planning.
  *
- * Node's `parseArgs` splits `plan -<digits>` into separate tokens,
- * breaking the ID. This pre-processes the args array to merge them.
+ * Usage:
+ *   locus plan "Build a user auth system"          # AI creates issues + sprint
+ *   locus plan --from-issues --sprint "Sprint 2"   # Organize existing issues
+ *   locus plan --interactive "Improve API perf"    # Interactive clarification
  */
-function normalizePlanIdArgs(args: string[]): string[] {
-  const planIdFlags = new Set(["--approve", "--reject", "--cancel", "--show"]);
 
-  const result: string[] = [];
-  let i = 0;
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { runAI } from "../ai/run-ai.js";
+import { loadConfig } from "../core/config.js";
+import {
+  createIssue,
+  createMilestone,
+  ensureOrderLabel,
+  listIssues,
+  listMilestones,
+  reopenMilestone,
+  updateIssueLabels,
+} from "../core/github.js";
+import {
+  bold,
+  cyan,
+  dim,
+  green,
+  red,
+  stripAnsi,
+  yellow,
+} from "../display/terminal.js";
+import type { LocusConfig } from "../types.js";
 
-  while (i < args.length) {
-    if (
-      planIdFlags.has(args[i]) &&
-      i + 2 < args.length &&
-      args[i + 1] === "plan" &&
-      /^-\d+$/.test(args[i + 2])
-    ) {
-      // Merge: --approve plan -1234 → --approve plan-1234
-      result.push(args[i]);
-      result.push(`plan${args[i + 2]}`);
-      i += 3;
-    } else {
-      result.push(args[i]);
-      i++;
-    }
-  }
+// ─── Help ────────────────────────────────────────────────────────────────────
 
-  return result;
-}
+function printHelp(): void {
+  process.stderr.write(`
+${bold("locus plan")} — AI-powered sprint planning
 
-export async function planCommand(args: string[]): Promise<void> {
-  const normalizedArgs = normalizePlanIdArgs(args);
-  const { values, positionals } = parseArgs({
-    args: normalizedArgs,
-    options: {
-      approve: { type: "string" },
-      reject: { type: "string" },
-      cancel: { type: "string" },
-      feedback: { type: "string" },
-      list: { type: "boolean" },
-      show: { type: "string" },
-      model: { type: "string" },
-      provider: { type: "string" },
-      "reasoning-effort": { type: "string" },
-      "api-key": { type: "string" },
-      "api-url": { type: "string" },
-      workspace: { type: "string" },
-      dir: { type: "string" },
-    },
-    strict: false,
-    allowPositionals: true,
-  });
+${bold("Usage:")}
+  locus plan "<directive>"                 ${dim("# AI breaks down into issues")}
+  locus plan --from-issues --sprint <name> ${dim("# Organize existing issues")}
 
-  const projectPath = (values.dir as string) || process.cwd();
-  requireInitialization(projectPath, "plan");
+${bold("Options:")}
+  --sprint <name>     Assign issues to this sprint (creates if needed)
+  --from-issues       Organize existing open issues instead of creating new ones
+  --dry-run           Show plan without creating issues
 
-  const planManager = new PlanManager(projectPath);
+${bold("Examples:")}
+  locus plan "Build user authentication with OAuth"
+  locus plan "Improve API performance" --sprint "Sprint 3"
+  locus plan --from-issues --sprint "Sprint 2"
 
-  // ── List plans ──────────────────────────────────────────────
-  if (values.list) {
-    return renderPlanList(planManager);
-  }
-
-  // ── Show plan details ───────────────────────────────────────
-  if (values.show) {
-    const md = showPlan(planManager, values.show as string);
-    if (!md) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.red(`Plan not found: ${values.show}`)}\n`
-      );
-      process.exit(1);
-    }
-    console.log(`\n${md}\n`);
-    return;
-  }
-
-  // ── Cancel plan ─────────────────────────────────────────────
-  if (values.cancel) {
-    try {
-      cancelPlan(planManager, values.cancel as string);
-      console.log(`\n  ${c.success("✔")} ${c.dim("Plan cancelled.")}\n`);
-    } catch (error) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.red(
-          error instanceof Error ? error.message : String(error)
-        )}\n`
-      );
-      process.exit(1);
-    }
-    return;
-  }
-
-  // ── Reject plan ─────────────────────────────────────────────
-  if (values.reject) {
-    const feedback = values.feedback as string;
-    if (!feedback) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.red(
-          "--feedback is required when rejecting a plan"
-        )}\n`
-      );
-      console.error(
-        `  ${c.dim(
-          'Usage: locus plan --reject <plan-id> --feedback "your feedback"'
-        )}\n`
-      );
-      process.exit(1);
-    }
-    try {
-      const plan = rejectPlan(planManager, values.reject as string, feedback);
-      console.log(
-        `\n  ${c.warning("!")} ${c.bold("Plan rejected:")} ${plan.name}\n`
-      );
-      console.log(`  ${c.dim("Feedback saved:")} ${feedback}\n`);
-      console.log(
-        `  ${c.dim(
-          "Re-run the planning meeting with the same directive to incorporate feedback:"
-        )}`
-      );
-      console.log(`  ${c.cyan(`locus plan "${plan.directive}"`)}\n`);
-    } catch (error) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.red(
-          error instanceof Error ? error.message : String(error)
-        )}\n`
-      );
-      process.exit(1);
-    }
-    return;
-  }
-
-  // ── Approve plan (requires API) ─────────────────────────────
-  if (values.approve) {
-    const configManager = new ConfigManager(projectPath);
-    configManager.updateVersion(VERSION);
-
-    try {
-      const { client, workspaceId } = await resolveApiContext({
-        projectPath,
-        apiKey: values["api-key"] as string | undefined,
-        apiUrl: values["api-url"] as string | undefined,
-        workspaceId: values.workspace as string | undefined,
-      });
-      return await renderApprovePlan(
-        planManager,
-        values.approve as string,
-        client,
-        workspaceId
-      );
-    } catch (error) {
-      console.error(
-        `\n  ${c.error("✖")} ${c.red(
-          error instanceof Error ? error.message : String(error)
-        )}\n`
-      );
-      process.exit(1);
-    }
-  }
-
-  // ── Trigger new planning meeting ────────────────────────────
-  const directive = positionals.join(" ").trim();
-  if (!directive) {
-    showPlanHelp();
-    return;
-  }
-
-  const { provider, model } = resolveAiSettings({
-    projectPath,
-    provider: values.provider as string | undefined,
-    model: values.model as string | undefined,
-  });
-
-  const reasoningEffort = values["reasoning-effort"] as string | undefined;
-
-  const aiRunner = createAiRunner(provider, {
-    projectPath,
-    model,
-    reasoningEffort,
-  });
-
-  const log = createCliLogger();
-
-  console.log(
-    `\n  ${c.header(" PLANNING MEETING ")} ${c.bold(
-      "Starting async planning meeting..."
-    )}\n`
-  );
-  console.log(`  ${c.dim("Directive:")} ${c.bold(directive)}\n`);
-
-  // Check if there's a rejected plan with feedback for re-planning
-  const pendingPlans = planManager.list("rejected");
-  let feedback: string | undefined;
-  const latestRejected = pendingPlans.find(
-    (p) => p.directive === directive && p.feedback
-  );
-  if (latestRejected) {
-    feedback = latestRejected.feedback;
-    console.log(
-      `  ${c.info("ℹ")} ${c.dim(
-        "Re-planning with CEO feedback:"
-      )} ${feedback}\n`
-    );
-  }
-
-  const meeting = new PlanningMeeting({
-    projectPath,
-    aiRunner,
-    log,
-  });
-
-  try {
-    const result = await meeting.run(directive, feedback);
-
-    // Save the plan with proper slug name + markdown, then clean up the temp file
-    planManager.save(result.plan);
-
-    // Remove the temp file created by the AI agent (plan-<timestamp>.json)
-    const tempFile = join(
-      getLocusPath(projectPath, "plansDir"),
-      `${result.plan.id}.json`
-    );
-    if (existsSync(tempFile)) {
-      unlinkSync(tempFile);
-    }
-
-    console.log(
-      `\n  ${c.success("✔")} ${c.success("Planning meeting complete!")}\n`
-    );
-    console.log(
-      `  ${c.dim("Plan saved as:")} ${c.primary(result.plan.name)} ${c.dim(
-        `(${result.plan.id})`
-      )}\n`
-    );
-
-    // Display a summary
-    printPlanSummary(result.plan);
-
-    console.log(
-      `  ${c.dim("To review the full plan:")} ${c.cyan(
-        `locus plan --show ${result.plan.id}`
-      )}`
-    );
-    console.log(
-      `  ${c.dim("To approve:")} ${c.cyan(
-        `locus plan --approve ${result.plan.id}`
-      )}`
-    );
-    console.log(
-      `  ${c.dim("To reject:")} ${c.cyan(
-        `locus plan --reject ${result.plan.id} --feedback "..."`
-      )}`
-    );
-    console.log(
-      `  ${c.dim("To cancel:")} ${c.cyan(
-        `locus plan --cancel ${result.plan.id}`
-      )}\n`
-    );
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red("Planning meeting failed:")} ${
-        error instanceof Error ? error.message : String(error)
-      }\n`
-    );
-    process.exit(1);
-  }
-}
-
-// ── CLI rendering helpers ─────────────────────────────────────
-
-function renderPlanList(planManager: PlanManager): void {
-  const plans = listPlans(planManager);
-
-  if (plans.length === 0) {
-    console.log(`\n  ${c.dim("No plans found.")}\n`);
-    console.log(
-      `  ${c.dim("Create one with:")} ${c.cyan(
-        'locus plan "build user auth"'
-      )}\n`
-    );
-    return;
-  }
-
-  console.log(
-    `\n  ${c.header(" SPRINT PLANS ")} ${c.dim(`(${plans.length})`)}\n`
-  );
-
-  for (const plan of plans) {
-    const statusIcon =
-      plan.status === "pending"
-        ? c.warning("◯")
-        : plan.status === "approved"
-          ? c.success("✔")
-          : plan.status === "rejected"
-            ? c.error("✖")
-            : c.dim("⊘");
-
-    console.log(
-      `  ${statusIcon} ${c.bold(plan.name)} ${c.dim(
-        `[${plan.status}]`
-      )} ${c.dim(`— ${plan.taskCount} tasks`)}`
-    );
-    console.log(`    ${c.dim("ID:")} ${plan.id}`);
-    console.log(`    ${c.dim("Created:")} ${plan.createdAt}`);
-    if (plan.feedback) {
-      console.log(`    ${c.dim("Feedback:")} ${plan.feedback}`);
-    }
-    console.log("");
-  }
-}
-
-async function renderApprovePlan(
-  planManager: PlanManager,
-  idOrSlug: string,
-  client: LocusClient,
-  workspaceId: string
-): Promise<void> {
-  try {
-    console.log(
-      `\n  ${c.info("●")} ${c.bold("Approving plan and creating sprint...")}\n`
-    );
-
-    const { sprint, tasks } = await planManager.approve(
-      idOrSlug,
-      client,
-      workspaceId
-    );
-
-    console.log(
-      `  ${c.success("✔")} ${c.success("Sprint created:")} ${sprint.name}`
-    );
-    console.log(`  ${c.dim("Sprint ID:")} ${sprint.id}`);
-    console.log(`  ${c.dim("Tasks created:")} ${tasks.length}\n`);
-
-    for (const task of tasks) {
-      console.log(
-        `    ${c.dim("•")} ${task.title} ${c.dim(
-          `[${task.assigneeRole || "UNASSIGNED"}]`
-        )}`
-      );
-    }
-
-    console.log(`\n  ${c.dim("Start agents with:")} ${c.cyan("locus run")}\n`);
-  } catch (error) {
-    console.error(
-      `\n  ${c.error("✖")} ${c.red(
-        error instanceof Error ? error.message : String(error)
-      )}\n`
-    );
-    process.exit(1);
-  }
-}
-
-function printPlanSummary(plan: {
-  name: string;
-  goal: string;
-  tasks: { title: string; assigneeRole: string; complexity: number }[];
-  estimatedDays: number;
-  risks: { description: string; severity: string }[];
-}): void {
-  console.log(`  ${c.bold("Sprint:")} ${plan.name}`);
-  console.log(`  ${c.bold("Goal:")} ${plan.goal}`);
-  console.log(`  ${c.bold("Tasks:")} ${plan.tasks.length}`);
-  console.log(`  ${c.bold("Estimated:")} ${plan.estimatedDays} day(s)\n`);
-
-  for (const task of plan.tasks) {
-    const bar = "█".repeat(task.complexity) + "░".repeat(5 - task.complexity);
-    console.log(
-      `    ${c.dim("•")} ${task.title} ${c.dim(
-        `[${task.assigneeRole}]`
-      )} ${c.dim(bar)}`
-    );
-  }
-
-  if (plan.risks.length > 0) {
-    console.log(`\n  ${c.bold("Risks:")}`);
-    for (const risk of plan.risks) {
-      const icon =
-        risk.severity === "high"
-          ? c.error("▲")
-          : risk.severity === "medium"
-            ? c.warning("▲")
-            : c.dim("▲");
-      console.log(`    ${icon} ${risk.description}`);
-    }
-  }
-
-  console.log("");
-}
-
-function showPlanHelp(): void {
-  console.log(`
-  ${c.header(" LOCUS PLAN ")} ${c.dim("— Sprint Planning Meeting")}
-
-  ${c.bold("Usage:")}
-    ${c.cyan('locus plan "directive"')}          Trigger a planning meeting
-    ${c.cyan("locus plan --list")}                List all plans
-    ${c.cyan("locus plan --show <id>")}           Show plan details
-    ${c.cyan(
-      "locus plan --approve <id>"
-    )}        Approve plan (creates sprint + tasks)
-    ${c.cyan("locus plan --reject <id>")}         Reject plan with feedback
-    ${c.cyan("locus plan --cancel <id>")}         Cancel a plan
-
-  ${c.bold("Options:")}
-    ${c.dim("--api-key <key>")}    API key override (reads from settings.json)
-    ${c.dim(
-      "--api-url <url>"
-    )}    API base URL (default: https://api.locusai.dev/api)
-    ${c.dim("--workspace <id>")}   Workspace ID
-    ${c.dim("--model <model>")}    AI model (claude: opus, sonnet, haiku | codex: gpt-5.3-codex, gpt-5-codex-mini)
-    ${c.dim("--provider <p>")}     AI provider (claude, codex)
-    ${c.dim("--feedback <text>")}  CEO feedback when rejecting
-    ${c.dim("--dir <path>")}       Project directory
-
-  ${c.bold("Examples:")}
-    ${c.dim("# Start a planning meeting")}
-    ${c.cyan('locus plan "build user authentication with OAuth and email"')}
-
-    ${c.dim("# Approve the resulting plan")}
-    ${c.cyan("locus plan --approve plan-1234567890")}
-
-    ${c.dim("# Reject and re-plan")}
-    ${c.cyan(
-      'locus plan --reject plan-1234567890 --feedback "split auth into two tasks"'
-    )}
-    ${c.cyan('locus plan "build user authentication with OAuth and email"')}
-
-    ${c.dim("# Cancel a plan")}
-    ${c.cyan("locus plan --cancel plan-1234567890")}
 `);
+}
+
+// ─── Interfaces ──────────────────────────────────────────────────────────────
+
+interface PlannedIssue {
+  order: number;
+  title: string;
+  body: string;
+  priority: string;
+  type: string;
+  dependsOn: string;
+}
+
+interface ParsedPlanArgs {
+  sprintName: string | undefined;
+  fromIssues: boolean;
+  directive: string;
+  dryRun: boolean;
+  error: string | undefined;
+}
+
+function normalizeSprintName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+// ─── Command ─────────────────────────────────────────────────────────────────
+
+export async function planCommand(
+  projectRoot: string,
+  args: string[],
+  flags: { dryRun?: boolean; model?: string } = {}
+): Promise<void> {
+  // Parse args
+  if (args[0] === "help" || args.length === 0) {
+    printHelp();
+    return;
+  }
+
+  const parsedArgs = parsePlanArgs(args);
+  if (parsedArgs.error) {
+    process.stderr.write(`${red("✗")} ${parsedArgs.error}\n`);
+    process.stderr.write(
+      `  Usage: ${bold('locus plan "<directive>" --sprint "Sprint 1"')}\n`
+    );
+    return;
+  }
+
+  const config = loadConfig(projectRoot);
+  const { sprintName, fromIssues, directive } = parsedArgs;
+  flags.dryRun = flags.dryRun || parsedArgs.dryRun;
+
+  if (fromIssues) {
+    return handleFromIssues(projectRoot, config, sprintName, flags);
+  }
+
+  if (!directive) {
+    process.stderr.write(`${red("✗")} Please provide a planning directive.\n`);
+    process.stderr.write(
+      `  Example: ${bold('locus plan "Build user authentication"')}\n`
+    );
+    return;
+  }
+
+  return handleAIPlan(projectRoot, config, directive, sprintName, flags);
+}
+
+// ─── AI-Powered Planning ─────────────────────────────────────────────────────
+
+async function handleAIPlan(
+  projectRoot: string,
+  config: LocusConfig,
+  directive: string,
+  sprintName: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  process.stderr.write(`\n${bold("Planning:")} ${cyan(directive)}\n`);
+  if (sprintName) {
+    process.stderr.write(`  ${dim(`Sprint: ${sprintName}`)}\n`);
+  }
+  process.stderr.write("\n");
+
+  // Build context for AI
+  const context = buildPlanningContext(projectRoot, config, directive);
+
+  // Execute AI to generate the plan (with ESC interrupt support)
+  const aiResult = await runAI({
+    prompt: context,
+    provider: config.ai.provider,
+    model: flags.model ?? config.ai.model,
+    cwd: projectRoot,
+    activity: "sprint planning",
+  });
+
+  if (aiResult.interrupted) {
+    process.stderr.write(`\n${yellow("⚡")} Planning interrupted.\n`);
+    return;
+  }
+
+  if (!aiResult.success) {
+    process.stderr.write(
+      `\n${red("✗")} Planning failed: ${aiResult.error ?? "Unknown error"}\n`
+    );
+    return;
+  }
+
+  const output = sanitizePlanOutput(aiResult.output);
+
+  // Parse the AI output for structured issue data
+  const planned = parsePlanOutput(output);
+
+  if (planned.length === 0) {
+    process.stderr.write(
+      `\n${yellow("⚠")} Could not extract structured issues from plan.\n`
+    );
+    process.stderr.write(
+      `  The AI output is shown above. Create issues manually with ${bold("locus issue create")}.\n`
+    );
+    return;
+  }
+
+  // Display the plan
+  process.stderr.write(`\n${bold("Planned Issues:")}\n\n`);
+  process.stderr.write(
+    `  ${dim("Order")}  ${dim("Title".padEnd(45))}  ${dim("Priority")}   ${dim("Type")}\n`
+  );
+  for (const issue of planned) {
+    process.stderr.write(
+      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(45).slice(0, 45)}  ${issue.priority.padEnd(10)} ${issue.type}\n`
+    );
+  }
+  process.stderr.write("\n");
+
+  if (flags.dryRun) {
+    process.stderr.write(
+      `${yellow("⚠")} ${bold("Dry run")} — no issues created.\n\n`
+    );
+    return;
+  }
+
+  // Create the issues on GitHub
+  await createPlannedIssues(projectRoot, config, planned, sprintName);
+}
+
+// ─── From Existing Issues ────────────────────────────────────────────────────
+
+async function handleFromIssues(
+  projectRoot: string,
+  config: LocusConfig,
+  sprintName: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  if (!sprintName) {
+    process.stderr.write(
+      `${red("✗")} --from-issues requires --sprint <name>.\n`
+    );
+    return;
+  }
+
+  process.stderr.write(
+    `\n${bold("Organizing issues for:")} ${cyan(sprintName)}\n\n`
+  );
+
+  // Fetch existing issues in the sprint
+  const issues = listIssues(
+    { milestone: sprintName, state: "open" },
+    { cwd: projectRoot }
+  );
+
+  if (issues.length === 0) {
+    process.stderr.write(`${dim("No open issues in this sprint.")}\n`);
+    return;
+  }
+
+  // Build context for AI ordering
+  const issueDescriptions = issues
+    .map((i) => `#${i.number}: ${i.title}\n${i.body?.slice(0, 300) ?? ""}`)
+    .join("\n\n");
+
+  const prompt = `You are organizing GitHub issues for a sprint. Analyze these issues and suggest the optimal execution order.
+
+Issues:
+${issueDescriptions}
+
+For each issue, output a line in this format:
+ORDER: #<number> <reason for this position>
+
+Order them so that dependencies are respected (issues that produce code needed by later issues should come first).
+Start with foundational/setup tasks, then core features, then integration/testing.`;
+
+  const aiResult = await runAI({
+    prompt,
+    provider: config.ai.provider,
+    model: flags.model ?? config.ai.model,
+    cwd: projectRoot,
+    activity: "issue ordering",
+    silent: true,
+  });
+
+  if (aiResult.interrupted) {
+    process.stderr.write(`\n${yellow("⚡")} Analysis interrupted.\n`);
+    return;
+  }
+
+  if (!aiResult.success) {
+    process.stderr.write(`\n${red("✗")} Analysis failed: ${aiResult.error}\n`);
+    return;
+  }
+
+  const output = sanitizePlanOutput(aiResult.output);
+
+  // Parse ordering from output
+  const orderLines = output
+    .split("\n")
+    .filter((l) => l.match(/ORDER:\s*#?\d+/i));
+
+  if (orderLines.length === 0) {
+    process.stderr.write(
+      `${yellow("⚠")} Could not parse ordering from AI output.\n`
+    );
+    process.stderr.write(`AI output:\n${output.slice(0, 500)}\n`);
+    return;
+  }
+
+  process.stderr.write(`\n${bold("Suggested Order:")}\n\n`);
+
+  let order = 1;
+  for (const line of orderLines) {
+    const match = line.match(/#(\d+)/);
+    if (!match) continue;
+
+    const num = Number.parseInt(match[1], 10);
+    const issue = issues.find((i) => i.number === num);
+    if (!issue) continue;
+
+    process.stderr.write(
+      `  ${String(order).padStart(3)}. #${num}  ${issue.title}\n`
+    );
+
+    if (!flags.dryRun) {
+      // Ensure order label exists and assign it
+      ensureOrderLabel(order, { cwd: projectRoot });
+
+      // Remove any existing order labels
+      const existingOrder = issue.labels.filter((l) => l.startsWith("order:"));
+      if (existingOrder.length > 0) {
+        updateIssueLabels(num, [], existingOrder, { cwd: projectRoot });
+      }
+
+      // Add new order label
+      updateIssueLabels(num, [`order:${order}`], [], { cwd: projectRoot });
+    }
+
+    order++;
+  }
+
+  process.stderr.write("\n");
+  if (flags.dryRun) {
+    process.stderr.write(
+      `${yellow("⚠")} ${bold("Dry run")} — no labels updated.\n\n`
+    );
+  } else {
+    process.stderr.write(
+      `${green("✓")} Updated order labels for ${order - 1} issues.\n\n`
+    );
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildPlanningContext(
+  projectRoot: string,
+  config: LocusConfig,
+  directive: string
+): string {
+  const parts: string[] = [];
+
+  parts.push(
+    `You are a sprint planning assistant for the GitHub repository ${config.github.owner}/${config.github.repo}.`
+  );
+  parts.push("");
+  parts.push(`DIRECTIVE: ${directive}`);
+  parts.push("");
+
+  // Include LOCUS.md if it exists
+  const locusPath = join(projectRoot, "LOCUS.md");
+  if (existsSync(locusPath)) {
+    const content = readFileSync(locusPath, "utf-8");
+    parts.push("PROJECT CONTEXT (LOCUS.md):");
+    parts.push(content.slice(0, 3000));
+    parts.push("");
+  }
+
+  // Include LEARNINGS.md if it exists
+  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
+  if (existsSync(learningsPath)) {
+    const content = readFileSync(learningsPath, "utf-8");
+    parts.push("PAST LEARNINGS:");
+    parts.push(content.slice(0, 2000));
+    parts.push("");
+  }
+
+  parts.push("INSTRUCTIONS:");
+  parts.push(
+    "Break down the directive into specific, actionable GitHub issues."
+  );
+  parts.push("Each issue should be independently executable by an AI agent.");
+  parts.push(
+    "Order them so dependencies are respected (foundational tasks first)."
+  );
+  parts.push("");
+  parts.push("For EACH issue, output EXACTLY this format (one per issue):");
+  parts.push("");
+  parts.push("---ISSUE---");
+  parts.push("ORDER: <number>");
+  parts.push("TITLE: <concise issue title>");
+  parts.push("PRIORITY: <critical|high|medium|low>");
+  parts.push("TYPE: <feature|bug|chore|refactor|docs>");
+  parts.push("DEPENDS_ON: <comma-separated previous order numbers, or 'none'>");
+  parts.push("BODY:");
+  parts.push("<detailed issue description with acceptance criteria>");
+  parts.push("---END---");
+  parts.push("");
+  parts.push("Be specific in issue bodies. Include:");
+  parts.push("- What code/files should be created or modified");
+  parts.push("- Acceptance criteria (testable conditions)");
+  parts.push("- What previous tasks produce that this task needs");
+  parts.push("- Use valid GitHub Markdown only (no ANSI color/control codes)");
+
+  return parts.join("\n");
+}
+
+export function sanitizePlanOutput(output: string): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI/OSC cleanup requires matching control bytes
+  const ansiOscPattern = /\x1B\][^\x07]*(?:\x07|\x1B\\)/g;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI CSI cleanup requires matching control bytes
+  const ansiCsiPattern = /[\x1B\x9B][0-?]*[ -/]*[@-~]/g;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: sanitize non-printable control bytes from runner output
+  const controlCharsPattern = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g;
+
+  return stripAnsi(output)
+    .replace(ansiOscPattern, "")
+    .replace(ansiCsiPattern, "")
+    .replace(/\uFFFD\[[0-?]*[ -/]*[@-~]/g, "")
+    .replace(controlCharsPattern, "")
+    .replace(/\r\n?/g, "\n");
+}
+
+export function parsePlanArgs(args: string[]): ParsedPlanArgs {
+  let sprintName: string | undefined;
+  let fromIssues = false;
+  let dryRun = false;
+  const directiveParts: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--sprint") {
+      const next = args[i + 1];
+      if (!next || next.startsWith("--")) {
+        return {
+          sprintName: undefined,
+          fromIssues: false,
+          directive: "",
+          dryRun: false,
+          error:
+            '--sprint requires a sprint name (for example: --sprint "Sprint 1").',
+        };
+      }
+      sprintName = next;
+      i++;
+      continue;
+    }
+
+    if (arg === "--from-issues") {
+      fromIssues = true;
+      continue;
+    }
+
+    if (arg === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
+
+    directiveParts.push(arg);
+  }
+
+  return {
+    sprintName,
+    fromIssues,
+    directive: directiveParts.join(" ").trim(),
+    dryRun,
+    error: undefined,
+  };
+}
+
+export function parsePlanOutput(output: string): PlannedIssue[] {
+  const issues: PlannedIssue[] = [];
+  const cleanedOutput = sanitizePlanOutput(output);
+  const blocks = cleanedOutput.split("---ISSUE---").slice(1);
+
+  for (const block of blocks) {
+    const endIdx = block.indexOf("---END---");
+    const content = endIdx >= 0 ? block.slice(0, endIdx) : block;
+
+    const orderMatch = content.match(/ORDER:\s*(\d+)/i);
+    const titleMatch = content.match(/TITLE:\s*(.+)/i);
+    const priorityMatch = content.match(/PRIORITY:\s*(\w+)/i);
+    const typeMatch = content.match(/TYPE:\s*(\w+)/i);
+    const dependsMatch = content.match(/DEPENDS_ON:\s*(.+)/i);
+    const bodyMatch = content.match(/BODY:\s*([\s\S]*?)$/i);
+
+    if (!titleMatch) continue;
+
+    issues.push({
+      order: orderMatch
+        ? Number.parseInt(orderMatch[1], 10)
+        : issues.length + 1,
+      title: titleMatch[1].trim(),
+      body: bodyMatch ? bodyMatch[1].trim() : "",
+      priority: priorityMatch ? priorityMatch[1].toLowerCase() : "medium",
+      type: typeMatch ? typeMatch[1].toLowerCase() : "feature",
+      dependsOn: dependsMatch ? dependsMatch[1].trim() : "none",
+    });
+  }
+
+  return issues.sort((a, b) => a.order - b.order);
+}
+
+async function createPlannedIssues(
+  projectRoot: string,
+  config: LocusConfig,
+  planned: PlannedIssue[],
+  sprintName: string | undefined
+): Promise<void> {
+  let milestoneTitle = sprintName;
+
+  // Ensure sprint milestone exists if specified
+  if (milestoneTitle) {
+    const desiredTitle = milestoneTitle;
+    const milestones = listMilestones(
+      config.github.owner,
+      config.github.repo,
+      "all",
+      { cwd: projectRoot }
+    );
+    const matched = milestones.find(
+      (m) => normalizeSprintName(m.title) === normalizeSprintName(desiredTitle)
+    );
+    if (!matched) {
+      createMilestone(
+        config.github.owner,
+        config.github.repo,
+        milestoneTitle,
+        undefined,
+        undefined,
+        {
+          cwd: projectRoot,
+        }
+      );
+      process.stderr.write(
+        `${green("✓")} Created sprint: ${cyan(milestoneTitle)}\n`
+      );
+    } else {
+      milestoneTitle = matched.title;
+      if (matched.state === "closed") {
+        reopenMilestone(
+          config.github.owner,
+          config.github.repo,
+          matched.number,
+          {
+            cwd: projectRoot,
+          }
+        );
+        process.stderr.write(
+          `${green("✓")} Reopened sprint: ${cyan(milestoneTitle)}\n`
+        );
+      }
+    }
+  }
+
+  process.stderr.write(`\n${bold("Creating issues...")}\n\n`);
+
+  for (const issue of planned) {
+    const labels = [
+      `p:${issue.priority}`,
+      `type:${issue.type}`,
+      "locus:queued",
+      "agent:managed",
+    ];
+
+    try {
+      // Ensure order label exists
+      ensureOrderLabel(issue.order, { cwd: projectRoot });
+
+      // Create the issue
+      const issueNumber = createIssue(
+        issue.title,
+        issue.body,
+        labels,
+        milestoneTitle,
+        { cwd: projectRoot }
+      );
+
+      // Add order label
+      updateIssueLabels(issueNumber, [`order:${issue.order}`], [], {
+        cwd: projectRoot,
+      });
+
+      process.stderr.write(
+        `  ${green("✓")} #${issueNumber}  ${issue.title}  ${dim(`order:${issue.order}`)}\n`
+      );
+    } catch (e) {
+      process.stderr.write(`  ${red("✗")} Failed: ${issue.title} — ${e}\n`);
+    }
+  }
+
+  process.stderr.write(
+    `\n${green("✓")} Created ${planned.length} issues.${milestoneTitle ? ` Sprint: ${cyan(milestoneTitle)}` : ""}\n\n`
+  );
 }

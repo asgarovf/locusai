@@ -13,11 +13,9 @@
       "!**/build",
       "!**/out",
       "!**/packages/cli/bin",
-      "!**/packages/cli/public",
       "!**/coverage",
       "!**/*.min.js",
       "!**/*.min.css",
-      "!**/packages/telegram/bin",
       "!**/packages/vscode/dist"
     ]
   },

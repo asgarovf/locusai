@@ -1,101 +1,414 @@
 #!/usr/bin/env node
 
-import { c } from "@locusai/sdk/node";
-import {
-  artifactsCommand,
-  configCommand,
-  discussCommand,
-  docsCommand,
-  execCommand,
-  indexCommand,
-  initCommand,
-  planCommand,
-  reviewCommand,
-  runCommand,
-  showHelp,
-  telegramCommand,
-  upgradeCommand,
-  versionCommand,
-} from "./commands";
-import { printBanner } from "./utils";
+/**
+ * Locus V3 — GitHub-native AI engineering assistant.
+ *
+ * Entry point and command router.
+ */
 
-/** Check if --json-stream flag is present in raw argv. */
-const isJsonStream = process.argv.includes("--json-stream");
+import { join } from "node:path";
+import { isInitialized } from "./core/config.js";
+import { getGitRoot, isGitRepo } from "./core/context.js";
+import { initLogger } from "./core/logger.js";
+import { getRateLimiter } from "./core/rate-limiter.js";
+import { bold, cyan, dim, red } from "./display/terminal.js";
+import type { LogLevel } from "./types.js";
 
-async function main() {
-  const command = process.argv[2];
-  const args = process.argv.slice(3);
+// ─── Version ─────────────────────────────────────────────────────────────────
 
-  // When --json-stream is the first argument (invoked by the VSCode extension
-  // as `locus --json-stream --session-id <id> -- <prompt>`), route directly
-  // to exec with all original args so parseArgs can handle the flags.
-  if (command === "--json-stream") {
-    await execCommand([command, ...args]);
+const VERSION = "3.0.0";
+
+// ─── Argument Parsing ────────────────────────────────────────────────────────
+
+interface ParsedArgs {
+  command: string;
+  args: string[];
+  flags: {
+    debug: boolean;
+    help: boolean;
+    version: boolean;
+    jsonStream: boolean;
+    sessionId?: string;
+    follow: boolean;
+    level?: string;
+    clean: boolean;
+    lines?: number;
+    resume: boolean;
+    dryRun: boolean;
+    model?: string;
+    check: boolean;
+    targetVersion?: string;
+  };
+}
+
+function parseArgs(argv: string[]): ParsedArgs {
+  const rawArgs = argv.slice(2); // skip node + script
+
+  const flags: ParsedArgs["flags"] = {
+    debug: false,
+    help: false,
+    version: false,
+    jsonStream: false,
+    follow: false,
+    clean: false,
+    resume: false,
+    dryRun: false,
+    check: false,
+  };
+
+  const positional: string[] = [];
+  let i = 0;
+
+  while (i < rawArgs.length) {
+    const arg = rawArgs[i];
+
+    if (arg === "--") {
+      // Everything after -- is positional
+      positional.push(...rawArgs.slice(i + 1));
+      break;
+    }
+
+    switch (arg) {
+      case "--debug":
+      case "-d":
+        flags.debug = true;
+        break;
+      case "--help":
+      case "-h":
+        flags.help = true;
+        break;
+      case "--version":
+      case "-V":
+        flags.version = true;
+        break;
+      case "--json-stream":
+        flags.jsonStream = true;
+        break;
+      case "--session-id":
+      case "-s":
+        flags.sessionId = rawArgs[++i];
+        break;
+      case "--follow":
+      case "-f":
+        flags.follow = true;
+        break;
+      case "--level":
+        flags.level = rawArgs[++i];
+        break;
+      case "--clean":
+        flags.clean = true;
+        break;
+      case "--lines":
+      case "-n":
+        flags.lines = Number.parseInt(rawArgs[++i], 10);
+        break;
+      case "--resume":
+        flags.resume = true;
+        break;
+      case "--dry-run":
+        flags.dryRun = true;
+        break;
+      case "--model":
+      case "-m":
+        flags.model = rawArgs[++i];
+        break;
+      case "--check":
+        flags.check = true;
+        break;
+      case "--target-version":
+        flags.targetVersion = rawArgs[++i];
+        break;
+      default:
+        positional.push(arg);
+    }
+    i++;
+  }
+
+  const command = positional[0] ?? "";
+  const args = positional.slice(1);
+
+  return { command, args, flags };
+}
+
+// ─── Help ────────────────────────────────────────────────────────────────────
+
+function printHelp(): void {
+  process.stderr.write(`
+${bold("Locus")} ${dim(`v${VERSION}`)} — GitHub-native AI engineering assistant
+
+${bold("Usage:")}
+  locus <command> [options]
+
+${bold("Commands:")}
+  ${cyan("init")}              Initialize Locus in a GitHub repository
+  ${cyan("issue")} ${dim("(i)")}         Manage GitHub issues as work items
+  ${cyan("sprint")} ${dim("(s)")}        Manage sprints via GitHub Milestones
+  ${cyan("plan")}              AI-powered sprint planning
+  ${cyan("run")}               Execute issues using AI agents
+  ${cyan("exec")} ${dim("(e)")}          Interactive REPL / one-shot execution
+  ${cyan("review")}            AI-powered code review on PRs
+  ${cyan("iterate")}           Re-execute tasks with PR feedback
+  ${cyan("discuss")}           AI-powered architectural discussions
+  ${cyan("status")}            Dashboard view of current state
+  ${cyan("config")}            View and manage settings
+  ${cyan("logs")}              View, tail, and manage execution logs
+  ${cyan("upgrade")}           Check for and install updates
+
+${bold("Options:")}
+  ${dim("--debug, -d")}        Enable debug logging
+  ${dim("--help, -h")}         Show this help
+  ${dim("--version, -V")}      Show version
+
+${bold("Examples:")}
+  locus init                          ${dim("# Set up Locus in this repo")}
+  locus exec                          ${dim("# Start interactive REPL")}
+  locus issue create "Fix login bug"  ${dim("# Create a new issue")}
+  locus plan "Build auth system"      ${dim("# AI plans issues + sprint")}
+  locus run                           ${dim("# Execute active sprint")}
+  locus run 42 43                     ${dim("# Run issues in parallel")}
+
+`);
+}
+
+// ─── Command Aliases ─────────────────────────────────────────────────────────
+
+function resolveAlias(command: string): string {
+  const aliases: Record<string, string> = {
+    i: "issue",
+    s: "sprint",
+    e: "exec",
+  };
+  return aliases[command] ?? command;
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────
+
+async function main(): Promise<void> {
+  const parsed = parseArgs(process.argv);
+
+  // Handle --version
+  if (parsed.flags.version) {
+    process.stdout.write(`${VERSION}\n`);
+    process.exit(0);
+  }
+
+  // Handle --help with no command
+  if (parsed.flags.help && !parsed.command) {
+    printHelp();
+    process.exit(0);
+  }
+
+  // Resolve command aliases
+  const command = resolveAlias(parsed.command);
+
+  // Determine working directory and log level
+  const cwd = process.cwd();
+  const logLevel: LogLevel = parsed.flags.debug
+    ? "debug"
+    : ((process.env.LOCUS_LOG_LEVEL as LogLevel) ?? "normal");
+
+  // Initialize logger
+  let logDir: string | undefined;
+  if (isGitRepo(cwd)) {
+    try {
+      const root = getGitRoot(cwd);
+      if (isInitialized(root)) {
+        logDir = join(root, ".locus", "logs");
+        // Initialize rate limiter for projects
+        getRateLimiter(root);
+      }
+    } catch {
+      // Not critical
+    }
+  }
+
+  const logger = initLogger({
+    level: logLevel,
+    logDir: logLevel !== "silent" ? logDir : undefined,
+  });
+
+  logger.debug("CLI started", {
+    command,
+    args: parsed.args,
+    version: VERSION,
+    logLevel,
+  });
+
+  // Start non-blocking version check (24h cooldown, prints after command completes)
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op default
+  let printVersionNotice = () => {};
+  if (command !== "upgrade") {
+    const { startVersionCheck } = await import("./core/version-check.js");
+    printVersionNotice = startVersionCheck(VERSION);
+  }
+
+  // Commands that don't require initialization
+  if (!command) {
+    printHelp();
+    process.exit(0);
+  }
+
+  if (command === "init") {
+    const { initCommand } = await import("./commands/init.js");
+    await initCommand(cwd);
+    logger.destroy();
     return;
   }
 
-  // Skip banner for exec command or when in JSON stream mode
-  if (command !== "exec" && !isJsonStream) {
-    printBanner();
+  // All other commands require initialization
+  let projectRoot: string;
+  try {
+    projectRoot = getGitRoot(cwd);
+  } catch {
+    process.stderr.write(`${red("✗")} Not inside a git repository.\n`);
+    process.exit(1);
+    return;
   }
 
-  switch (command) {
-    case "run":
-      await runCommand(args);
-      break;
-    case "index":
-      await indexCommand(args);
-      break;
-    case "init":
-      await initCommand();
-      break;
-    case "exec":
-      await execCommand(args);
-      break;
-    case "artifacts":
-      await artifactsCommand(args);
-      break;
-    case "discuss":
-      await discussCommand(args);
-      break;
-    case "plan":
-      await planCommand(args);
-      break;
-    case "review":
-      await reviewCommand(args);
-      break;
-    case "config":
-      await configCommand(args);
-      break;
-    case "docs":
-      await docsCommand(args);
-      break;
-    case "telegram":
-      await telegramCommand(args);
-      break;
-    case "version":
-    case "--version":
-    case "-v":
-      versionCommand();
-      break;
-    case "upgrade":
-      await upgradeCommand();
-      break;
-    default:
-      showHelp();
+  if (!isInitialized(projectRoot)) {
+    process.stderr.write(
+      `${red("✗")} Locus is not initialized in this project.\n`
+    );
+    process.stderr.write(`  Run: ${bold("locus init")}\n`);
+    process.exit(1);
+    return;
   }
+
+  // Route to command handler
+  switch (command) {
+    case "config": {
+      const { configCommand } = await import("./commands/config.js");
+      await configCommand(projectRoot, parsed.args);
+      break;
+    }
+
+    case "logs": {
+      const { logsCommand } = await import("./commands/logs.js");
+      await logsCommand(projectRoot, {
+        follow: parsed.flags.follow,
+        level: parsed.flags.level as LogLevel | undefined,
+        clean: parsed.flags.clean,
+        lines: parsed.flags.lines,
+      });
+      break;
+    }
+
+    case "issue": {
+      const { issueCommand } = await import("./commands/issue.js");
+      const issueArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await issueCommand(projectRoot, issueArgs);
+      break;
+    }
+
+    case "sprint": {
+      const { sprintCommand } = await import("./commands/sprint.js");
+      const sprintArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await sprintCommand(projectRoot, sprintArgs);
+      break;
+    }
+
+    // ── Phase 3 commands ───────────────────────────────────────────────
+
+    case "exec": {
+      const { execCommand } = await import("./commands/exec.js");
+      const execArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await execCommand(projectRoot, execArgs, {
+        sessionId: parsed.flags.sessionId,
+        jsonStream: parsed.flags.jsonStream,
+      });
+      break;
+    }
+
+    case "run": {
+      const { runCommand } = await import("./commands/run.js");
+      const runArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await runCommand(projectRoot, runArgs, {
+        resume: parsed.flags.resume,
+        dryRun: parsed.flags.dryRun,
+        model: parsed.flags.model,
+      });
+      break;
+    }
+
+    // ── Phase 4 & 5 commands ──────────────────────────────────────────
+
+    case "status": {
+      const { statusCommand } = await import("./commands/status.js");
+      await statusCommand(projectRoot);
+      break;
+    }
+
+    case "plan": {
+      const { planCommand } = await import("./commands/plan.js");
+      const planArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await planCommand(projectRoot, planArgs, {
+        dryRun: parsed.flags.dryRun,
+        model: parsed.flags.model,
+      });
+      break;
+    }
+
+    case "review": {
+      const { reviewCommand } = await import("./commands/review.js");
+      const reviewArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await reviewCommand(projectRoot, reviewArgs, {
+        dryRun: parsed.flags.dryRun,
+        model: parsed.flags.model,
+      });
+      break;
+    }
+
+    case "iterate": {
+      const { iterateCommand } = await import("./commands/iterate.js");
+      const iterateArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await iterateCommand(projectRoot, iterateArgs, {
+        dryRun: parsed.flags.dryRun,
+        model: parsed.flags.model,
+      });
+      break;
+    }
+
+    case "discuss": {
+      const { discussCommand } = await import("./commands/discuss.js");
+      const discussArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await discussCommand(projectRoot, discussArgs, {
+        model: parsed.flags.model,
+      });
+      break;
+    }
+
+    // ── Phase 7 commands ────────────────────────────────────────────────
+
+    case "upgrade": {
+      const { upgradeCommand } = await import("./commands/upgrade.js");
+      await upgradeCommand(projectRoot, parsed.args, {
+        check: parsed.flags.check,
+        targetVersion: parsed.flags.targetVersion,
+        currentVersion: VERSION,
+      });
+      break;
+    }
+
+    default:
+      process.stderr.write(`${red("✗")} Unknown command: ${bold(command)}\n`);
+      process.stderr.write(
+        `  Run ${bold("locus --help")} for available commands.\n`
+      );
+      process.exit(1);
+  }
+
+  // Print version update notice (if available) after command completes
+  printVersionNotice();
+
+  logger.destroy();
 }
 
-main().catch((err) => {
-  if (isJsonStream) {
-    // In JSON stream mode, fatal errors are handled inside exec command.
-    // If we reach here, it means the error happened before the renderer
-    // was created. Emit a minimal error to stderr and exit.
-    process.stderr.write(
-      `${JSON.stringify({ fatal: true, error: err.message })}\n`
-    );
-    process.exit(1);
+// ─── Entry Point ─────────────────────────────────────────────────────────────
+
+main().catch((error) => {
+  process.stderr.write(`\n${red("Fatal error:")} ${error.message}\n`);
+  if (process.env.LOCUS_LOG_LEVEL === "debug") {
+    process.stderr.write(`\n${dim(error.stack)}\n`);
   }
-  console.error(`\n  ${c.error("✖ Fatal Error")} ${c.red(err.message)}`);
   process.exit(1);
 });

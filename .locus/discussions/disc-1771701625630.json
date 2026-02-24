@@ -1,0 +1,421 @@
+{
+  "id": "disc-1771701625630",
+  "title": "I am having trouble finding the impact for this project. Yes, it is really good project, helping the users to optimize their experience with building with AI Agents like Claude but there are problems. The learning curve is too much and it makes everyone to get to know with commands, features, and what can be done with the agents. This is the biggest problem. Even I sometimes forget the tools we have. Second is that I am not sure what it adds on top of Claude Code/Codex itself. We need to find something that makes our product special",
+  "topic": "I am having trouble finding the impact for this project. Yes, it is really good project, helping the users to optimize their experience with building with AI Agents like Claude but there are problems. The learning curve is too much and it makes everyone to get to know with commands, features, and what can be done with the agents. This is the biggest problem. Even I sometimes forget the tools we have. Second is that I am not sure what it adds on top of Claude Code/Codex itself. We need to find something that makes our product special",
+  "status": "active",
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Hey! I'm here to help you think through the positioning and impact of Locus. You've raised two really important challenges — the steep learning curve and the differentiation question against Claude Code/Codex directly.\n\nLet me start with the differentiation angle since it's the more existential one. Looking at what Locus does today — it wraps Claude and Codex CLIs, adds session management, a REPL with multi-line input, image detection, and an orchestration layer with plans, learnings, and artifacts — **who specifically has told you \"I wish Claude Code did X\" where X is something Locus already solves?** In other words, what's the concrete pain point you've seen users hit with raw Claude Code that made them reach for Locus instead?",
+      "timestamp": 1771701634176
+    },
+    {
+      "role": "user",
+      "content": "I want you to research them and then tell me. I want you to help me improving the product, or maybe even pivoting or focusing to something more special",
+      "timestamp": 1771701689885
+    },
+    {
+      "role": "assistant",
+      "content": "I've done a deep dive into both your codebase and the competitive landscape. Here's what I found:\n\n**What Locus genuinely has that nobody else does:**\n\nThe **discuss → insights → plan → execute → review** pipeline. No other tool in the market takes a natural conversation, extracts structured decisions/requirements, feeds them into AI-driven sprint planning, then executes tasks with those decisions as persistent context. Kiro comes closest with \"spec-driven development,\" but it requires you to manually write specification documents. Locus generates structured specs *from conversation* — that's a fundamentally different (and more natural) workflow.\n\n**What's already commoditized (and therefore NOT your moat):**\n\n- Wrapping Claude/Codex CLI (anyone can do this)\n- Session management and REPL (Claude Code already has `--continue`/`--resume`)\n- CLAUDE.md-style project context (Claude Code does this natively)\n- Git automation (GitHub Actions, Copilot Workspace, and even Cursor all do this)\n- Code review (Copilot, Cursor, Windsurf all have this)\n\n**The hard truth:** About 60-70% of Locus's current feature set is racing against features that Claude Code and Codex are building natively. The wrapping layer gets thinner every month.\n\n**But the market gap is real:** Developer trust in AI code dropped from 40% to 29% year-over-year. 65% cite missing context as the #1 problem. Only 17% say agents have improved *team* collaboration. The industry is building faster hammers while teams still can't coordinate which nails to hit.\n\nHere's my sharpest question for you: **Are your actual users (or target users) solo developers who want a better Claude Code wrapper, or are they teams who need to coordinate AI-driven development across multiple people?** Because the answer to that completely changes whether you should double down on the orchestration/planning/discussion layer (team play) or pivot toward something else entirely. Who's been using Locus, and what did they actually use it for?",
+      "timestamp": 1771703014671
+    },
+    {
+      "role": "user",
+      "content": "Actually I don't have too much users. As my point of view as a developer, it reallyspeeds up to the code execution especially with the telegram remote control where I can run tasks even when I am not at home. When I am at home, I am constanly using locus exec command, which is not very different than Claude Code or Codex itself. Therefore, it does not add too much value. Running a terminal agent on a server is also costly since I run it on AWS EC2 large instance because these tools require too much resource. Therefore, I am having trouble to find the impact in this project overall. I am not using Locus because it is a better wrapper, but the coordination, remote control, planning and discussions really help since they are built in",
+      "timestamp": 1771703224147
+    },
+    {
+      "role": "assistant",
+      "content": "That's a really honest assessment, and it actually clarifies a lot. Notice what you just told me: the parts of Locus you *actually reach for* are Telegram remote control, planning, and discussions — not the exec wrapper. That's your product talking to you through your own behavior. The local `locus exec` is a commodity, but **dispatching AI tasks asynchronously from your phone and coming back to structured results** — that's something Claude Code and Codex literally cannot do.\n\nThe cost problem is interesting though, because it points to a deployment model issue, not a product issue. If the unique value is \"AI dev tasks I can fire and forget from anywhere,\" the question becomes whether that has to run on a beefy EC2 instance or if there's a lighter-weight way to deliver it.\n\n**Here's what I want to understand:** When you use the Telegram remote control, what does a typical task look like? Is it \"fix this bug,\" \"implement this feature,\" or more like \"review this PR,\" \"plan the next sprint\" — what are you actually sending from your phone?",
+      "timestamp": 1771703247897
+    },
+    {
+      "role": "user",
+      "content": "You can check the telegram cli for the available tools, but mostly I go to telegram and use the plan command and then convert those plans to sprints, and then run them. It runs and creates the pull request, then I manually merge it and release. There is still manual part of it, which we are probably getting the value lost there. I want to be the CTO of the company and run agent that really helps me evolving products and continue working even when I am not controlling it",
+      "timestamp": 1771703413087
+    },
+    {
+      "role": "assistant",
+      "content": "That's a powerful vision — you essentially want to be a **hands-off CTO** where the agent is your engineering team. Plan from your phone, approve from your phone, and the system handles everything in between including merging and releasing. The manual merge/release step you described is exactly where the loop breaks — you go from fully async to suddenly needing to sit at a laptop.\n\nWhat's interesting is that this vision is fundamentally different from what every competitor is building. Claude Code, Cursor, Copilot — they all assume you're sitting at a keyboard coding alongside the AI. You're describing something closer to **managing an AI employee** — give it a task, it works, it ships, you just approve. That's a category of one right now.\n\nHere's what I want to drill into: **When the agent creates a PR and you go to manually merge it, what are you actually checking before you hit merge?** Are you reading every line of code, or are you mostly checking that tests pass and the description makes sense? Because the answer tells us whether \"auto-merge with your Telegram approval\" is viable, or whether there's a trust/review gap that needs to be solved first.",
+      "timestamp": 1771703434186
+    },
+    {
+      "role": "user",
+      "content": "I am generally checking the latest status of the web application, and manually run the application my environment to check whether it works. It does not matter, it is not a big issue, but the biggest issue is the continious development, which we are missing after some steps. For example, if I don't know prepare plans manually, no-one asks me whether this idea looks fine and whether we should implement this next and etc etc",
+      "timestamp": 1771707939246
+    },
+    {
+      "role": "assistant",
+      "content": "That's the sharpest insight yet. You're describing the difference between a **reactive tool** and a **proactive teammate**. Right now, Locus waits for you to tell it what to do. What you actually want is an agent that *comes to you* — \"Hey, based on the last three PRs we shipped, here's what I think we should build next\" or \"I noticed these tests are flaky, should I fix them?\" That's the missing loop: the agent should be initiating the conversation, not just responding to it.\n\nThis is a fundamentally different product category. Every AI dev tool today — Claude Code, Cursor, Copilot, Codex — is a **reactive instrument**. You described wanting an **autonomous engineering partner** that maintains its own backlog, proposes next steps, and keeps the product evolving even when you're not actively thinking about it.\n\nHere's my question: **If the agent pinged you on Telegram tomorrow morning with \"Based on our roadmap and recent changes, here are 3 things I'd suggest we tackle next — approve one or tell me something different,\" would that actually change how you work?** Or is there something else beyond just proposing tasks that \"continuous development\" means to you?",
+      "timestamp": 1771707962137
+    },
+    {
+      "role": "user",
+      "content": "I would not change how I work but I will feel that there is a support from the team of engineers actually doing something without me",
+      "timestamp": 1771708257867
+    },
+    {
+      "role": "assistant",
+      "content": "That's a really telling answer. You're not looking for a workflow change — you're looking for the **feeling of momentum**. The sense that your product is alive and evolving even when you step away. That's not a feature request, that's a fundamental emotional need of a solo founder — you want to stop being the single point of failure for your product's progress.\n\nThis actually reframes the entire product. You're not building a dev tool — you're building a **synthetic engineering team for solo founders**. The question then becomes: what does \"the team kept working while I was away\" actually look like when you open Telegram in the morning? Is it seeing completed PRs waiting for your approval, or is it more about seeing a feed of activity — \"analyzed codebase, found 3 issues, proposed fix for one, drafted plan for a new feature\" — like reading a team's Slack channel when you wake up?",
+      "timestamp": 1771708273395
+    },
+    {
+      "role": "user",
+      "content": "Both actually",
+      "timestamp": 1771708392963
+    },
+    {
+      "role": "assistant",
+      "content": "That confirms the full picture — you want both **deliverables** (PRs ready to merge) and **visibility** (a stream of activity that shows the system is alive and thinking). It's the same thing a CTO gets from a real engineering team: you see commits rolling in on Slack, you see PRs in your queue, and you know that even if you take a day off, the machine keeps moving.\n\nThis actually brings us to the hardest design question of this whole vision: **How much autonomy should the agent have before it checks in with you?** For example, should it be able to autonomously decide \"the test suite has 3 flaky tests, I'm going to fix them\" and just do it — or should every action, no matter how small, require your Telegram approval first? Where's the line between \"team that keeps working\" and \"team that goes rogue\"?",
+      "timestamp": 1771708406221
+    },
+    {
+      "role": "user",
+      "content": "The crucial stuff can require approvals but smaller things can be executed automatically",
+      "timestamp": 1771708445639
+    },
+    {
+      "role": "assistant",
+      "content": "That's the right instinct — a **tiered autonomy model**. It mirrors how real engineering teams work: a junior dev can fix a typo and merge it themselves, but a database migration needs the CTO's sign-off. The key design challenge is defining where the boundary sits. \"Crucial\" and \"small\" feel obvious intuitively, but the agent needs concrete rules.\n\n**What would be your instinct for classifying \"crucial\" — is it about the number of files changed, the type of change (new feature vs. fix), whether it touches certain parts of the codebase (like database or auth), or something else entirely?** For example, would you trust the agent to autonomously refactor a utility function but want approval before it adds a new API endpoint?",
+      "timestamp": 1771708459631
+    },
+    {
+      "role": "user",
+      "content": "Yeah kind of like this",
+      "timestamp": 1771708869581
+    },
+    {
+      "role": "assistant",
+      "content": "That's a solid mental model — and it maps well to how real teams operate. File count, change type (schema migration vs. CSS tweak), and which system boundaries are touched (auth, payments, database, public API) are all natural signals the agent could use to classify risk.\n\nWe've now mapped out a pretty clear vision: a proactive AI engineering partner with tiered autonomy that you manage from Telegram, producing both deliverables and an activity stream. That's compelling — but it's also a big jump from where Locus is today. \n\n**If you were going to build the smallest possible version of this \"always-on engineering partner\" to prove the concept works — the thing that would make you open Telegram in the morning and feel that momentum — what's the ONE capability it would need to have that it doesn't have today?**",
+      "timestamp": 1771708889785
+    },
+    {
+      "role": "user",
+      "content": "What do you mean? Can you give examples?",
+      "timestamp": 1771709177133
+    },
+    {
+      "role": "assistant",
+      "content": "Sure! Here's what I mean — if you could only build **one** of these to prove the concept, which would make you feel that momentum most:\n\n1. **Autonomous code health maintenance** — The agent runs on a schedule (e.g., nightly), scans your codebase for flaky tests, outdated dependencies, minor bugs, or TODO items, fixes the easy ones automatically, and sends you a Telegram summary: \"Fixed 2 flaky tests, updated 3 packages, found 1 potential bug in auth — want me to fix it?\"\n\n2. **Proactive next-step proposals** — After every merged PR, the agent analyzes what changed, looks at your existing plans/roadmap, and pings you: \"Based on what we just shipped, here are 3 things I'd suggest next\" — and you just reply with a number to kick it off.\n\n3. **Always-on activity feed** — The agent continuously monitors your repo, runs analyses, and posts a daily digest to Telegram: \"Today I reviewed 2 open PRs, found a performance issue in the API layer, drafted a plan for the notifications feature. Here's what needs your attention.\"\n\n4. **Fire-and-forget task execution** — You text the agent \"add dark mode to the settings page,\" walk away, and come back to a merged PR with a Telegram message: \"Done. Dark mode is live on staging. Here's what I changed.\"\n\nWhich of these — or what combination — would make you open Telegram and think \"my team has been working\"?",
+      "timestamp": 1771709191352
+    },
+    {
+      "role": "user",
+      "content": "I mean all of them should be part of the product. Just ONE does not make sense",
+      "timestamp": 1771709278577
+    },
+    {
+      "role": "assistant",
+      "content": "I hear you — and honestly, you're right that all four together is what creates the \"AI engineering team\" experience. Any single one in isolation is just another feature. It's the combination that produces the feeling of momentum. A team doesn't just fix bugs OR propose ideas OR ship code — it does all of them, and that's what makes it feel like a team.\n\nBut here's the practical reality: you can't build all four simultaneously, especially as a solo founder with limited users and real server costs. So the question isn't \"which one\" — it's **what's the right sequence to build them in so that each layer makes the next one more powerful?** \n\nFor example, if you build the autonomous code health maintenance first (nightly scans, auto-fixes), that gives you the activity feed for free — because every autonomous action generates a Telegram notification. Then proactive proposals become easier because the agent already has context from its nightly analysis. And fire-and-forget execution is already partially built via your existing Telegram → plan → sprint flow.\n\n**Does that sequencing feel right to you, or do you see a different order where one capability unlocks the others more naturally?**",
+      "timestamp": 1771709295635
+    },
+    {
+      "role": "user",
+      "content": "Yeah it makes sense to me",
+      "timestamp": 1771709758264
+    },
+    {
+      "role": "assistant",
+      "content": "Good — so the sequencing is: code health maintenance first (which gives you the activity feed naturally), then proactive proposals (leveraging the context from nightly analysis), and fire-and-forget execution builds on what you already have.\n\nBut here's the tension I want to flag: you mentioned earlier that running AI agents on EC2 is already costly with *on-demand* task execution. This \"always-on engineering partner\" vision requires the agent to run *continuously* — nightly scans, repo monitoring, proactive analysis. **That makes the cost problem significantly worse, not better.** A nightly cron job that spins up Claude to analyze your codebase, fix things, and propose next steps could easily burn through API credits fast.\n\n**How do you think about solving the cost problem for an always-on agent — do you see this as something that runs on a schedule (e.g., nightly batch), runs continuously on a server, or is there a lighter-weight architecture you've been considering?**",
+      "timestamp": 1771709778336
+    },
+    {
+      "role": "user",
+      "content": "It should always run on server - if you have a PC at home, you can also host there. This is the best setup",
+      "timestamp": 1771709816094
+    },
+    {
+      "role": "assistant",
+      "content": "That's a pragmatic approach — a home PC eliminates the EC2 cost entirely, and for a solo founder's projects, a machine sitting at home with a decent internet connection is more than enough. It also aligns well with the \"always-on\" feel since the machine is literally always there.\n\nBut this raises an important architectural question: **if the agent is running 24/7 on a home server, how should it decide *when* to act?** For example, should it run a full codebase analysis every night at 2 AM like a cron job, or should it be event-driven — reacting to things like a merged PR, a new GitHub issue, or a certain amount of time passing since the last activity? The difference matters because a cron-based approach is simpler but could waste API credits analyzing unchanged code, while an event-driven approach is smarter but more complex to build.",
+      "timestamp": 1771709827200
+    },
+    {
+      "role": "user",
+      "content": "We can start with cron based. Although cron based might spend the credits, incorrect event based architecture can also lead to a lot token consumption",
+      "timestamp": 1771709997342
+    },
+    {
+      "role": "assistant",
+      "content": "That's a smart call — a cron-based approach is predictable and debuggable, and you're right that a poorly designed event-driven system can actually be worse on token spend than a simple nightly run. You can always evolve to event-driven later once you understand the actual usage patterns from the cron data.\n\nNow here's a practical question that will shape the entire implementation: **When the agent runs its nightly cron job, what should it actually analyze and prioritize?** For example, should it scan for TODOs in the codebase, check for outdated dependencies, look for test failures, review open issues on GitHub, check code quality metrics — or should it be driven by a \"standing instructions\" document where you define what the agent should care about for each project?",
+      "timestamp": 1771710011091
+    },
+    {
+      "role": "user",
+      "content": "It should be done with whitelisting commands. As you said there are many things to do. The person who runs the agent on server/local computer should decide which features to active. By default all them will be on, or in setup, the user may choose which one to activate",
+      "timestamp": 1771710120310
+    },
+    {
+      "role": "assistant",
+      "content": "That's a solid approach — a whitelist-based feature activation system gives users control without overwhelming them. Defaulting everything to \"on\" is smart for getting started quickly, and a setup wizard lets power users fine-tune what the agent does autonomously.\n\nThis brings up an important question about **scope**: when the nightly cron runs and the agent has, say, 5 features enabled (dependency check, flaky test fix, TODO scan, code quality review, next-step proposal) — **should it run all of them in a single session and send one consolidated Telegram summary, or should each feature be an independent job that sends its own message?** The difference matters because a single consolidated report feels more like a \"morning standup\" from your team, while individual messages feel more like a busy Slack channel with updates trickling in throughout the night.",
+      "timestamp": 1771710133175
+    },
+    {
+      "role": "user",
+      "content": "Independent might be better because all of them would be difficult to manage",
+      "timestamp": 1771710164398
+    },
+    {
+      "role": "assistant",
+      "content": "That makes sense — independent jobs are easier to reason about, easier to retry if one fails, and let you respond to each finding individually on Telegram rather than parsing a massive report. It also means you can disable or adjust the schedule of individual features without affecting others.\n\nNow here's a question about the Telegram interaction model: when the agent sends you a finding — say \"Found 2 flaky tests, here are the details, should I fix them?\" — **what does the approval flow look like?** Do you just reply \"yes\" in the chat and the agent picks it up and runs, or do you envision something more structured like inline buttons (Fix / Skip / Show Details)?",
+      "timestamp": 1771710176416
+    },
+    {
+      "role": "user",
+      "content": "Inline buttons would make sense. Also we need to keep track of the things suggested because same things can be suggested twice in daily checks and if I skip something that should not be there again. Or when I see some message from the agent and don't replay for a day, it should not appear again next day",
+      "timestamp": 1771710249666
+    },
+    {
+      "role": "assistant",
+      "content": "That's a critical detail — suggestion deduplication and lifecycle management. Without it, the agent becomes annoying fast, like a colleague who keeps bringing up the same thing you already said no to. So each finding needs a state: **new → notified → acted on / skipped / expired**. Skipped items are permanently dismissed, and items you've seen but haven't responded to should have a TTL — if you don't reply within, say, 24 hours, they auto-expire and won't resurface.\n\nInline buttons are the right call for Telegram — they make the interaction feel lightweight and mobile-native. Something like `[Fix] [Skip] [Details]` keeps the cognitive load minimal.\n\nThis actually raises an interesting design question: **Where should this suggestion state be stored — locally on the server running the agent, or somewhere persistent like a database or even a simple JSON file synced to the repo?** The answer matters because if the agent's server restarts or you move it to a different machine, you don't want all your \"skip\" decisions to be lost and the agent to start resurfacing everything again.",
+      "timestamp": 1771710267284
+    },
+    {
+      "role": "user",
+      "content": "Hmm, database makes sense then. We already have an API service running on cloud",
+      "timestamp": 1771710300326
+    },
+    {
+      "role": "assistant",
+      "content": "That's a natural fit — using your existing cloud API for suggestion state means you get persistence, cross-device consistency, and you don't lose your \"skip\" history if the home server restarts or migrates. It also means the API becomes more than just a backend for the web app — it becomes the **coordination brain** that remembers what the agent has proposed, what you've approved, and what you've dismissed.\n\nThis actually opens up an interesting dimension: as a CTO, you'd likely be managing **multiple projects**, not just one. If the agent runs per-repo but the state lives in a shared cloud API, you could potentially get a unified Telegram feed across all your projects — \"Project A: fixed 2 tests. Project B: suggests adding caching to the API. Project C: no issues found.\" **Do you envision running this agent across multiple repos simultaneously, or is it primarily for one project at a time?**",
+      "timestamp": 1771710324421
+    },
+    {
+      "role": "user",
+      "content": "No, one project at a time would be better. For another repository, the multiple projects will be needed",
+      "timestamp": 1771710360051
+    },
+    {
+      "role": "assistant",
+      "content": "That makes sense — one agent instance per project, and if you want to cover multiple repos, you spin up additional instances. It keeps things simple and avoids cross-project confusion in the agent's context. Each project gets its own dedicated \"engineer\" rather than one overloaded generalist trying to juggle multiple codebases.\n\nThis actually brings us to an important positioning question. We've now mapped out a fairly complete vision: an always-on, self-hosted AI engineering partner that runs cron-based autonomous jobs per project, uses tiered autonomy with Telegram inline buttons for approvals, tracks suggestion state in your cloud API, and produces both deliverables and an activity stream. **Do you feel like we've covered enough ground on the product vision, or is there a dimension we haven't explored — like pricing/monetization, how you'd actually get this in front of other solo founders, or the technical architecture of the always-on agent itself?**",
+      "timestamp": 1771710374631
+    },
+    {
+      "role": "user",
+      "content": "No, I don't think there is more things to mention. The money will depend on the infra that user runs Locus (e.g servers on aws vs azure vs gcp vs local computer etc)",
+      "timestamp": 1771711001173
+    },
+    {
+      "role": "assistant",
+      "content": "That's a clean model — Locus is essentially \"bring your own compute,\" and the user's cost is driven by their infrastructure choice and AI API credits, not by Locus licensing. That keeps the barrier to adoption low since there's no SaaS fee on top of what they're already paying for Claude/OpenAI API access.\n\nI think we've covered substantial ground here and this feels like a natural stopping point. Let me suggest we wrap up with a summary of what we've crystallized:\n\n**Product identity:** Locus is an **always-on, self-hosted AI engineering partner** you manage from Telegram — not a CLI wrapper. It's positioned as \"an AI engineering team for solo founders/CTOs.\"\n\n**Core architecture decisions:**\n- Self-hosted (home PC or cloud), always-on server process\n- Cron-based autonomous jobs (MVP), evolving to event-driven later\n- One agent instance per project\n- Independent jobs per feature, each with its own Telegram notification\n- Cloud API stores suggestion state for persistence across restarts\n- Whitelist-based feature activation with all-on defaults\n\n**Key capabilities (in build order):**\n1. Autonomous code health maintenance (nightly scans, auto-fixes)\n2. Activity feed (generated naturally from #1)\n3. Proactive next-step proposals\n4. Fire-and-forget task execution (builds on existing infra)\n\n**Interaction model:** Telegram inline buttons with tiered autonomy — auto-execute low-risk tasks, require approval for high-impact changes. Suggestion deduplication with skip/expire lifecycle.\n\n**Would you like me to save this as a structured artifact so you can reference it during implementation?**",
+      "timestamp": 1771711023014
+    },
+    {
+      "role": "user",
+      "content": "Yes",
+      "timestamp": 1771711309760
+    },
+    {
+      "role": "assistant",
+      "content": "Done! I've saved the full product vision artifact at `.locus/artifacts/product-vision-always-on-ai-engineering-partner.md`. It covers:\n\n- **Product identity** — the repositioning from CLI wrapper to always-on AI engineering partner\n- **Strategic context** — what's commoditized vs. what's your moat\n- **Core capabilities** — all four phases in agreed build order\n- **Architecture decisions** — deployment, scheduling, tiered autonomy, job architecture, suggestion lifecycle, Telegram interaction, and cloud API role\n- **Key risks** — cost, commoditization, no user base, trust calibration\n- **Success criteria** — what \"working\" looks like\n\nThis should serve as a solid reference document as you move into implementation. The next logical step would be turning Phase 1 (autonomous code health maintenance) into a concrete technical plan — but that's for whenever you're ready to start building.",
+      "timestamp": 1771711414244
+    }
+  ],
+  "insights": [
+    {
+      "id": "ins-1771703014668-69krn",
+      "type": "learning",
+      "title": "Core differentiation is the discuss-to-execute pipeline",
+      "content": "Locus's unique value is the discussion → structured insights → sprint planning → context-enriched execution pipeline. No competitor turns natural conversation into spec-grounded task execution. This is the moat, not the CLI wrapper.",
+      "tags": ["strategy", "differentiation", "product"],
+      "createdAt": "2026-02-21T19:43:34.669Z"
+    },
+    {
+      "id": "ins-1771703014669-9dzsk",
+      "type": "concern",
+      "title": "60-70% of features are commoditizing",
+      "content": "Session management, REPL, project context injection (CLAUDE.md equivalent), git automation, and code review are all features that Claude Code and competitors are building natively. The wrapper layer gets thinner with each upstream release.",
+      "tags": ["strategy", "risk", "competitive"],
+      "createdAt": "2026-02-21T19:43:34.669Z"
+    },
+    {
+      "id": "ins-1771703014669-tet2u",
+      "type": "learning",
+      "title": "Market gap is team coordination not individual productivity",
+      "content": "70% of agent users say agents reduce individual task time but only 17% say they've improved team collaboration. Developer trust in AI code is declining (40% → 29%). The unsolved problem is team-level coordination and trust, not faster code generation.",
+      "tags": ["market", "opportunity", "teams"],
+      "createdAt": "2026-02-21T19:43:34.669Z"
+    },
+    {
+      "id": "ins-1771703247894-qkdaz",
+      "type": "learning",
+      "title": "User's own usage reveals true value prop",
+      "content": "The founder's actual usage pattern shows the unique value is NOT the local exec wrapper (which they admit is no different from Claude Code/Codex) but rather: (1) Telegram remote control for async task dispatch, (2) built-in planning/discussion workflows, and (3) coordination features. The product's real identity is in async/remote AI development, not local CLI enhancement.",
+      "tags": ["product-strategy", "user-behavior", "differentiation"],
+      "createdAt": "2026-02-21T19:47:27.894Z"
+    },
+    {
+      "id": "ins-1771703247894-sjqm0",
+      "type": "concern",
+      "title": "Server cost makes remote execution unsustainable",
+      "content": "Running terminal-based AI agents (Claude Code/Codex) on AWS EC2 requires large instances due to high resource consumption. This makes the remote execution value proposition expensive to deliver, creating a barrier to both personal use and potential user adoption.",
+      "tags": ["cost", "infrastructure", "scalability"],
+      "createdAt": "2026-02-21T19:47:27.894Z"
+    },
+    {
+      "id": "ins-1771703247894-z1cf1",
+      "type": "learning",
+      "title": "No significant user base yet",
+      "content": "The project currently has very few users. Product decisions should be based on founder's own pain points and market analysis rather than user feedback data, which doesn't exist at meaningful scale.",
+      "tags": ["traction", "early-stage"],
+      "createdAt": "2026-02-21T19:47:27.894Z"
+    },
+    {
+      "id": "ins-1771703434184-pawe6",
+      "type": "idea",
+      "title": "Autonomous agent loop: plan → execute → merge → release",
+      "content": "The founder's vision is to act as a CTO who dispatches work to AI agents and only makes high-level decisions. The current workflow breaks at the merge/release step, which still requires manual intervention at a laptop. Closing this loop (auto-merge on approval, auto-release) would complete the 'AI engineering team' value proposition.",
+      "tags": ["vision", "automation", "remote-control"],
+      "createdAt": "2026-02-21T19:50:34.184Z"
+    },
+    {
+      "id": "ins-1771703434184-ambau",
+      "type": "learning",
+      "title": "Product identity is 'AI engineering team you manage from your phone'",
+      "content": "The founder doesn't want a better CLI wrapper — they want to be a CTO who manages an AI dev team remotely. The product should be positioned as an autonomous development agent you oversee, not a tool you use hands-on. This reframes Locus from 'developer tool' to 'AI engineering team orchestrator'.",
+      "tags": ["positioning", "vision", "product-identity"],
+      "createdAt": "2026-02-21T19:50:34.184Z"
+    },
+    {
+      "id": "ins-1771707962135-6cjff",
+      "type": "learning",
+      "title": "The missing loop is proactive initiative, not just execution",
+      "content": "The core gap isn't auto-merge or better execution — it's that the agent never initiates. After completing a task, the system goes silent and waits. The founder wants an agent that proactively proposes next steps, identifies issues, and drives continuous product evolution. The current workflow is: human plans → agent executes. The desired workflow is: agent proposes → human approves → agent executes → agent proposes next.",
+      "tags": ["product-vision", "autonomous-agent", "continuous-development"],
+      "createdAt": "2026-02-21T21:06:02.135Z"
+    },
+    {
+      "id": "ins-1771707962135-rc3wt",
+      "type": "idea",
+      "title": "Proactive AI engineering partner as product category",
+      "content": "No current AI dev tool proactively initiates work. They all wait for human input. A product that maintains its own backlog, analyzes recent changes to suggest next steps, monitors code health, and pings the CTO via Telegram with proposals would be a category of one. This transforms the product from 'AI tool' to 'AI team member'.",
+      "tags": ["differentiation", "product-category", "proactive-agent"],
+      "createdAt": "2026-02-21T21:06:02.135Z"
+    },
+    {
+      "id": "ins-1771708273394-a0bvu",
+      "type": "learning",
+      "title": "Core need is momentum, not workflow optimization",
+      "content": "The founder's primary need isn't a better workflow or faster execution — it's the psychological and practical experience of having continuous product momentum without being the sole driver. The value proposition is emotional as much as functional: eliminating the 'single point of failure' feeling of solo development. The agent should create the experience of an engineering team that keeps shipping even when the founder steps away.",
+      "tags": ["product-vision", "emotional-value", "solo-founder"],
+      "createdAt": "2026-02-21T21:11:13.394Z"
+    },
+    {
+      "id": "ins-1771708406219-o3bwf",
+      "type": "requirement",
+      "title": "Dual output: deliverables + activity feed",
+      "content": "The agent needs to produce two types of output: (1) concrete deliverables like PRs ready for approval/merge, and (2) a continuous activity stream showing ongoing analysis, discoveries, and reasoning — similar to watching a team's Slack channel. Both are necessary to create the feeling of an active engineering team.",
+      "tags": ["product", "ux", "telegram", "momentum"],
+      "createdAt": "2026-02-21T21:13:26.219Z"
+    },
+    {
+      "id": "ins-1771708459630-b8jmn",
+      "type": "decision",
+      "title": "Tiered autonomy: auto-execute small tasks, require approval for critical ones",
+      "content": "The agent should operate on a tiered autonomy model where low-risk tasks (flaky test fixes, minor refactors, dependency updates, linting) can be executed and merged autonomously, while high-impact changes (new features, architecture changes, database migrations, public API changes) require explicit Telegram approval before proceeding. This mirrors real engineering team dynamics where junior tasks are self-managed but significant changes need CTO sign-off.",
+      "tags": ["autonomy", "architecture", "trust-model", "core-design"],
+      "createdAt": "2026-02-21T21:14:19.630Z"
+    },
+    {
+      "id": "ins-1771708889784-psgb0",
+      "type": "requirement",
+      "title": "Risk classification heuristics for autonomy tiers",
+      "content": "The autonomy boundary should be defined by concrete heuristics: type of change (new feature vs. bugfix vs. refactor), which system areas are affected (database, auth, public API = high risk; utilities, styling, tests = low risk), and potentially the scope of change (number of files, lines changed). This gives the agent clear rules for when to auto-execute vs. when to ask for Telegram approval.",
+      "tags": ["autonomy", "risk-classification", "architecture"],
+      "createdAt": "2026-02-21T21:21:29.784Z"
+    },
+    {
+      "id": "ins-1771709295635-4oaxs",
+      "type": "requirement",
+      "title": "All four autonomous capabilities are required together",
+      "content": "The founder views autonomous code health, proactive proposals, activity feed, and fire-and-forget execution as inseparable parts of one product experience. No single capability alone creates the 'AI engineering team' feeling — it's the combination that produces the sensation of continuous momentum. This means the MVP isn't one feature, it's a lightweight version of all four working together.",
+      "tags": ["product-scope", "mvp", "autonomous-agent"],
+      "createdAt": "2026-02-21T21:28:15.635Z"
+    },
+    {
+      "id": "ins-1771709778335-2udpc",
+      "type": "decision",
+      "title": "Build sequencing agreed: code health first",
+      "content": "The agreed build order is: (1) Autonomous code health maintenance (nightly scans, auto-fixes) which naturally generates the activity feed, (2) Proactive next-step proposals leveraging context from nightly analysis, (3) Fire-and-forget execution which builds on existing Telegram → plan → sprint flow. Each layer makes the next more powerful.",
+      "tags": ["sequencing", "roadmap", "architecture"],
+      "createdAt": "2026-02-21T21:36:18.335Z"
+    },
+    {
+      "id": "ins-1771709827199-bi4wm",
+      "type": "decision",
+      "title": "Self-hosted always-on deployment model",
+      "content": "The agent should run as an always-on server process, either on a cloud instance or a home PC. The founder prefers self-hosted deployment over scheduled/serverless approaches. This means the architecture needs to be designed for persistent, long-running operation with efficient resource usage during idle periods, not spin-up/spin-down patterns.",
+      "tags": ["architecture", "deployment", "cost"],
+      "createdAt": "2026-02-21T21:37:07.199Z"
+    },
+    {
+      "id": "ins-1771710011088-f0fj7",
+      "type": "decision",
+      "title": "Cron-based scheduling for MVP",
+      "content": "The always-on agent will use cron-based scheduling (e.g., nightly runs) rather than event-driven architecture for the initial implementation. Rationale: cron is simpler, more predictable, and easier to debug. Event-driven architecture risks higher token consumption if poorly designed. The system can evolve to event-driven later based on learned usage patterns from cron data.",
+      "tags": ["architecture", "scheduling", "mvp", "cost-management"],
+      "createdAt": "2026-02-21T21:40:11.088Z"
+    },
+    {
+      "id": "ins-1771710133174-ynb7s",
+      "type": "requirement",
+      "title": "Whitelist-based feature activation for autonomous agent",
+      "content": "The always-on agent's autonomous capabilities (code health scans, dependency updates, proactive proposals, etc.) should be controlled via a whitelist/opt-in configuration system. Users choose which features to activate during setup or configuration. Default behavior is all features enabled, but users can selectively disable features they don't want. This gives users control over what the agent does autonomously and helps manage token/API costs.",
+      "tags": ["configuration", "autonomy", "user-control", "setup"],
+      "createdAt": "2026-02-21T21:42:13.174Z"
+    },
+    {
+      "id": "ins-1771710176415-ddb2o",
+      "type": "decision",
+      "title": "Independent jobs per autonomous feature",
+      "content": "Each autonomous capability (dependency check, flaky test fix, TODO scan, code quality review, next-step proposal, etc.) should run as an independent job with its own Telegram notification rather than a single consolidated session. This makes each job easier to manage, retry, and individually configure. It also allows the user to respond to each finding independently.",
+      "tags": ["architecture", "scheduling", "telegram"],
+      "createdAt": "2026-02-21T21:42:56.415Z"
+    },
+    {
+      "id": "ins-1771710267282-nq9ub",
+      "type": "requirement",
+      "title": "Suggestion lifecycle and deduplication",
+      "content": "Each autonomous finding/suggestion must have a tracked lifecycle: new → notified → acted on / skipped / expired. Skipped items are permanently dismissed and never resurface. Items the user has seen (notified) but not responded to should auto-expire after a TTL (e.g., 24 hours) and not reappear in subsequent daily checks. This prevents the agent from becoming repetitive and annoying.",
+      "tags": ["telegram", "ux", "suggestion-management", "deduplication"],
+      "createdAt": "2026-02-21T21:44:27.282Z"
+    },
+    {
+      "id": "ins-1771710267282-md3eb",
+      "type": "requirement",
+      "title": "Telegram inline buttons for approval flow",
+      "content": "The Telegram interaction model should use inline buttons (e.g., Fix / Skip / Details) rather than text-based replies for approval flows. This makes mobile interaction lightweight and reduces friction for the CTO-style management workflow.",
+      "tags": ["telegram", "ux", "inline-buttons", "approval-flow"],
+      "createdAt": "2026-02-21T21:44:27.282Z"
+    },
+    {
+      "id": "ins-1771710324419-fyac3",
+      "type": "decision",
+      "title": "Cloud API as suggestion state store",
+      "content": "Suggestion lifecycle state (new/notified/acted on/skipped/expired) will be persisted in the existing cloud API database rather than locally on the agent's server. This ensures persistence across server restarts, cross-device consistency, and leverages existing infrastructure. The API evolves from a web app backend to a central coordination layer for autonomous agent activity.",
+      "tags": ["architecture", "persistence", "api"],
+      "createdAt": "2026-02-21T21:45:24.419Z"
+    },
+    {
+      "id": "ins-1771710374628-bbo0n",
+      "type": "decision",
+      "title": "One agent instance per project",
+      "content": "Each autonomous agent instance is scoped to a single repository/project. To manage multiple projects, the user deploys multiple agent instances. This keeps context clean and avoids cross-project interference. The cloud API can aggregate notifications across instances into a unified Telegram feed, but each agent operates independently on its own repo.",
+      "tags": ["architecture", "deployment", "multi-project"],
+      "createdAt": "2026-02-21T21:46:14.628Z"
+    },
+    {
+      "id": "ins-1771711023012-evp2w",
+      "type": "decision",
+      "title": "Bring-your-own-infrastructure pricing model",
+      "content": "Locus's cost to users is determined entirely by their chosen infrastructure (AWS, Azure, GCP, local PC) and AI API credits consumed. There is no separate Locus SaaS fee. This keeps adoption barriers low and aligns costs with actual usage. The product is self-hosted, so monetization (if any) would need to come from a different angle than recurring infrastructure charges.",
+      "tags": ["pricing", "monetization", "deployment"],
+      "createdAt": "2026-02-21T21:57:03.012Z"
+    }
+  ],
+  "createdAt": "2026-02-21T19:20:25.629Z",
+  "updatedAt": "2026-02-21T22:03:34.244Z",
+  "metadata": {
+    "model": "opus",
+    "provider": "claude"
+  }
+}

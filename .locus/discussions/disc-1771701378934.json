@@ -1,0 +1,20 @@
+{
+  "id": "disc-1771701378934",
+  "title": "hello",
+  "topic": "hello",
+  "status": "active",
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Hey! I'm your product strategy facilitator. I see you started a discussion with \"hello\" — looks like we're starting fresh without a specific topic in mind.\n\nWhat's on your mind today? Is there a feature, architectural decision, or product direction you'd like to think through?",
+      "timestamp": 1771701384307
+    }
+  ],
+  "insights": [],
+  "createdAt": "2026-02-21T19:16:18.933Z",
+  "updatedAt": "2026-02-21T19:16:24.307Z",
+  "metadata": {
+    "model": "opus",
+    "provider": "claude"
+  }
+}

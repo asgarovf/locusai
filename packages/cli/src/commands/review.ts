@@ -1,187 +1,292 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+/**
+ * `locus review` — AI-powered code review on pull requests.
+ *
+ * Usage:
+ *   locus review                    # Review all open agent:managed PRs
+ *   locus review 15                 # Review a specific PR
+ *   locus review 15 --focus "security,performance"
+ */
+
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseArgs } from "node:util";
-import {
-  createCliLogger,
-  resolveAiSettings,
-  resolveApiContext,
-} from "@locusai/commands";
-import {
-  c,
-  createAiRunner,
-  LOCUS_CONFIG,
-  PrService,
-  ReviewerWorker,
-  ReviewService,
-} from "@locusai/sdk/node";
-import { ConfigManager } from "../config-manager";
-import { requireInitialization, VERSION } from "../utils";
+import { runAI } from "../ai/run-ai.js";
+import { loadConfig } from "../core/config.js";
+import { getPRDiff, listPRs } from "../core/github.js";
+import { createTimer } from "../display/progress.js";
+import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
+import type { LocusConfig, PullRequest } from "../types.js";
 
-/**
- * `locus review` — review open Locus PRs on GitHub using AI.
- * `locus review local` — review staged changes locally (legacy behavior).
- */
-export async function reviewCommand(args: string[]): Promise<void> {
-  const subcommand = args[0];
+// ─── Help ────────────────────────────────────────────────────────────────────
 
-  if (subcommand === "local") {
-    return reviewLocalCommand(args.slice(1));
-  }
+function printHelp(): void {
+  process.stderr.write(`
+${bold("locus review")} — AI-powered code review
 
-  // Default: PR review via GitHub
-  return reviewPrsCommand(args);
+${bold("Usage:")}
+  locus review                           ${dim("# Review all open agent:managed PRs")}
+  locus review <pr-number>               ${dim("# Review a specific PR")}
+  locus review <pr-number> --focus <areas> ${dim("# Focus on specific areas")}
+
+${bold("Options:")}
+  --focus <areas>     Comma-separated review focus areas
+                      (e.g., "security,performance,testing")
+  --dry-run           Show what would be reviewed without posting
+
+${bold("Examples:")}
+  locus review
+  locus review 15
+  locus review 15 --focus "security,error-handling"
+
+`);
 }
 
-/**
- * Review open Locus PRs on GitHub.
- */
-async function reviewPrsCommand(args: string[]): Promise<void> {
-  const { values } = parseArgs({
-    args,
-    options: {
-      "api-key": { type: "string" },
-      workspace: { type: "string" },
-      model: { type: "string" },
-      provider: { type: "string" },
-      "api-url": { type: "string" },
-      dir: { type: "string" },
-    },
-    strict: false,
-  });
+// ─── Command ─────────────────────────────────────────────────────────────────
 
-  const projectPath = (values.dir as string) || process.cwd();
-  requireInitialization(projectPath, "review");
-  const configManager = new ConfigManager(projectPath);
-  configManager.updateVersion(VERSION);
+export async function reviewCommand(
+  projectRoot: string,
+  args: string[],
+  flags: { dryRun?: boolean; model?: string } = {}
+): Promise<void> {
+  if (args[0] === "help") {
+    printHelp();
+    return;
+  }
 
-  // Resolve API context using shared helper
-  let apiContext: Awaited<ReturnType<typeof resolveApiContext>>;
+  const config = loadConfig(projectRoot);
+  let prNumber: number | undefined;
+  let focus: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--focus" && args[i + 1]) {
+      focus = args[++i];
+    } else if (args[i] === "--dry-run") {
+      flags.dryRun = true;
+    } else if (/^\d+$/.test(args[i])) {
+      prNumber = Number.parseInt(args[i], 10);
+    }
+  }
+
+  if (prNumber) {
+    return reviewSinglePR(projectRoot, config, prNumber, focus, flags);
+  }
+
+  return reviewAllPRs(projectRoot, config, focus, flags);
+}
+
+// ─── Review All PRs ──────────────────────────────────────────────────────────
+
+async function reviewAllPRs(
+  projectRoot: string,
+  config: LocusConfig,
+  focus: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  process.stderr.write(`\n${bold("Reviewing agent-managed PRs...")}\n\n`);
+
+  const prs = listPRs(
+    { label: "agent:managed", state: "open" },
+    { cwd: projectRoot }
+  );
+
+  if (prs.length === 0) {
+    process.stderr.write(`${dim("No open agent:managed PRs found.")}\n\n`);
+    return;
+  }
+
+  process.stderr.write(`  Found ${cyan(String(prs.length))} open PRs\n\n`);
+
+  let reviewed = 0;
+  let failed = 0;
+
+  for (const pr of prs) {
+    const success = await reviewPR(projectRoot, config, pr, focus, flags);
+    if (success) reviewed++;
+    else failed++;
+  }
+
+  process.stderr.write(
+    `\n${bold("Review complete:")} ${green(`✓ ${reviewed}`)}${failed > 0 ? ` ${red(`✗ ${failed}`)}` : ""}\n\n`
+  );
+}
+
+// ─── Review Single PR ────────────────────────────────────────────────────────
+
+async function reviewSinglePR(
+  projectRoot: string,
+  config: LocusConfig,
+  prNumber: number,
+  focus: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  // Get PR info
+  let prInfo: PullRequest;
   try {
-    apiContext = await resolveApiContext({
-      projectPath,
-      apiKey: values["api-key"] as string | undefined,
-      apiUrl: values["api-url"] as string | undefined,
-      workspaceId: values.workspace as string | undefined,
-    });
-  } catch (error) {
-    console.error(
-      c.error(error instanceof Error ? error.message : String(error))
+    const result = execSync(
+      `gh pr view ${prNumber} --json number,title,body,state,headRefName,baseRefName,labels,url,createdAt`,
+      { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
     );
-    console.error(
-      c.dim("For local staged-changes review, use: locus review local")
-    );
-    process.exit(1);
-  }
-
-  const { provider, model } = resolveAiSettings({
-    projectPath,
-    provider: values.provider as string | undefined,
-    model: values.model as string | undefined,
-  });
-
-  // Check for unreviewed PRs first
-  const log = createCliLogger();
-
-  const prService = new PrService(projectPath, log);
-  const unreviewedPrs = prService.listUnreviewedLocusPrs();
-
-  if (unreviewedPrs.length === 0) {
-    console.log(`\n  ${c.dim("No unreviewed Locus PRs found.")}\n`);
+    const raw = JSON.parse(result);
+    prInfo = {
+      number: raw.number,
+      title: raw.title,
+      body: raw.body,
+      state: raw.state,
+      head: raw.headRefName,
+      base: raw.baseRefName,
+      labels: (raw.labels ?? []).map((l: { name: string }) => l.name),
+      url: raw.url,
+      createdAt: raw.createdAt,
+    };
+  } catch (e) {
+    process.stderr.write(`${red("✗")} Could not fetch PR #${prNumber}: ${e}\n`);
     return;
   }
 
-  console.log(
-    `\n  ${c.primary("🔍")} ${c.bold(`Found ${unreviewedPrs.length} unreviewed PR(s). Starting reviewer...`)}\n`
-  );
-
-  const agentId = `reviewer-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-  const reviewer = new ReviewerWorker({
-    agentId,
-    workspaceId: apiContext.workspaceId,
-    apiBase: apiContext.apiBase,
-    projectPath,
-    apiKey: apiContext.apiKey,
-    model,
-    provider,
-  });
-
-  // Handle graceful shutdown
-  let isShuttingDown = false;
-  const handleSignal = () => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-    console.log(
-      `\n${c.info("Received shutdown signal. Stopping reviewer...")}`
-    );
-    process.exit(0);
-  };
-
-  process.on("SIGINT", handleSignal);
-  process.on("SIGTERM", handleSignal);
-
-  await reviewer.run();
+  await reviewPR(projectRoot, config, prInfo, focus, flags);
 }
 
-/**
- * Review staged changes locally with AI (legacy `locus review` behavior).
- */
-async function reviewLocalCommand(args: string[]): Promise<void> {
-  const { values } = parseArgs({
-    args,
-    options: {
-      model: { type: "string" },
-      provider: { type: "string" },
-      dir: { type: "string" },
-    },
-    strict: false,
-  });
+// ─── Core Review Logic ───────────────────────────────────────────────────────
 
-  const projectPath = (values.dir as string) || process.cwd();
-  requireInitialization(projectPath, "review local");
+async function reviewPR(
+  projectRoot: string,
+  config: LocusConfig,
+  pr: PullRequest,
+  focus: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<boolean> {
+  const timer = createTimer();
 
-  const { provider, model } = resolveAiSettings({
-    projectPath,
-    provider: values.provider as string | undefined,
-    model: values.model as string | undefined,
-  });
-
-  const aiRunner = createAiRunner(provider, {
-    projectPath,
-    model,
-  });
-
-  const reviewService = new ReviewService({
-    aiRunner,
-    projectPath,
-    log: createCliLogger(),
-  });
-
-  console.log(
-    `\n  ${c.primary("🔍")} ${c.bold("Reviewing staged changes...")}\n`
+  process.stderr.write(
+    `${cyan("●")} Reviewing PR #${pr.number}: ${bold(pr.title)}\n`
   );
 
-  const report = await reviewService.reviewStagedChanges(null);
-
-  if (!report) {
-    console.log(`  ${c.dim("No changes to review.")}\n`);
-    return;
+  // Get PR diff
+  let diff: string;
+  try {
+    diff = getPRDiff(pr.number, { cwd: projectRoot });
+  } catch (e) {
+    process.stderr.write(`  ${red("✗")} Could not get diff: ${e}\n`);
+    return false;
   }
 
-  // Save the report
-  const reviewsDir = join(
-    projectPath,
-    LOCUS_CONFIG.dir,
-    LOCUS_CONFIG.reviewsDir
+  if (!diff.trim()) {
+    process.stderr.write(`  ${dim("No changes in diff — skipping.")}\n`);
+    return true;
+  }
+
+  // Build review prompt
+  const prompt = buildReviewPrompt(projectRoot, config, pr, diff, focus);
+
+  // Execute AI review (with ESC interrupt support)
+  const aiResult = await runAI({
+    prompt,
+    provider: config.ai.provider,
+    model: flags.model ?? config.ai.model,
+    cwd: projectRoot,
+    activity: `PR #${pr.number}`,
+  });
+
+  if (aiResult.interrupted) {
+    process.stderr.write(`  ${yellow("⚡")} Review interrupted.\n`);
+    return false;
+  }
+
+  if (!aiResult.success) {
+    process.stderr.write(`  ${red("✗")} Review failed: ${aiResult.error}\n`);
+    return false;
+  }
+
+  const output = aiResult.output;
+
+  // Post review as PR comment (if not dry run)
+  if (!flags.dryRun) {
+    try {
+      const reviewBody = `## 🤖 Locus AI Review\n\n${output.slice(0, 60000)}\n\n---\n_Reviewed by Locus AI (${config.ai.provider}/${flags.model ?? config.ai.model})_`;
+
+      execSync(
+        `gh pr comment ${pr.number} --body ${JSON.stringify(reviewBody)}`,
+        { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+      );
+
+      process.stderr.write(
+        `  ${green("✓")} Review posted ${dim(`(${timer.formatted()})`)}\n`
+      );
+    } catch (e) {
+      process.stderr.write(
+        `  ${yellow("⚠")} Review generated but could not post comment: ${e}\n`
+      );
+    }
+  } else {
+    process.stderr.write(
+      `  ${yellow("⚠")} ${bold("Dry run")} — review not posted.\n`
+    );
+  }
+
+  return true;
+}
+
+// ─── Prompt Builder ──────────────────────────────────────────────────────────
+
+function buildReviewPrompt(
+  projectRoot: string,
+  config: LocusConfig,
+  pr: PullRequest,
+  diff: string,
+  focus: string | undefined
+): string {
+  const parts: string[] = [];
+
+  parts.push(
+    `You are an expert code reviewer for the ${config.github.owner}/${config.github.repo} repository.`
   );
-  if (!existsSync(reviewsDir)) {
-    mkdirSync(reviewsDir, { recursive: true });
+  parts.push("");
+
+  // Include LOCUS.md for project context
+  const locusPath = join(projectRoot, "LOCUS.md");
+  if (existsSync(locusPath)) {
+    const content = readFileSync(locusPath, "utf-8");
+    parts.push("PROJECT CONTEXT:");
+    parts.push(content.slice(0, 2000));
+    parts.push("");
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const reportPath = join(reviewsDir, `review-${timestamp}.md`);
-  writeFileSync(reportPath, report, "utf-8");
+  parts.push(`PULL REQUEST #${pr.number}: ${pr.title}`);
+  parts.push(`Branch: ${pr.head} → ${pr.base}`);
+  if (pr.body) {
+    parts.push(`Description:\n${pr.body.slice(0, 1000)}`);
+  }
+  parts.push("");
+  parts.push("DIFF:");
+  parts.push(diff.slice(0, 50000));
+  parts.push("");
+  parts.push("REVIEW INSTRUCTIONS:");
+  parts.push("Provide a thorough code review. For each issue found, describe:");
+  parts.push("1. The file and approximate location");
+  parts.push("2. What the issue is");
+  parts.push("3. Why it matters");
+  parts.push("4. How to fix it");
+  parts.push("");
+  parts.push("Categories to check:");
+  parts.push("- Correctness: bugs, logic errors, edge cases");
+  parts.push("- Security: injection, XSS, auth issues, secret exposure");
+  parts.push(
+    "- Performance: N+1 queries, unnecessary allocations, missing caching"
+  );
+  parts.push("- Maintainability: naming, complexity, code organization");
+  parts.push("- Testing: missing tests, inadequate coverage");
 
-  console.log(`\n  ${c.success("✔")} ${c.success("Review complete!")}`);
-  console.log(`  ${c.dim("Report saved to:")} ${c.primary(reportPath)}\n`);
+  if (focus) {
+    parts.push("");
+    parts.push(`FOCUS AREAS: ${focus}`);
+    parts.push("Pay special attention to the above areas.");
+  }
+
+  parts.push("");
+  parts.push(
+    "End with an overall assessment: APPROVE, REQUEST_CHANGES, or COMMENT."
+  );
+  parts.push("Be constructive and specific. Praise good patterns too.");
+
+  return parts.join("\n");
 }
