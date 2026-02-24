@@ -9,7 +9,7 @@ import { runAI } from "../ai/run-ai.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
 import { bold, cyan, dim, green, red } from "../display/terminal.js";
-import type { AIProvider, LocusConfig, Session } from "../types.js";
+import type { LocusConfig, Session } from "../types.js";
 import { getAllCommandNames, handleSlashCommand } from "./commands.js";
 import {
   CombinedCompletion,
@@ -184,11 +184,6 @@ async function runInteractiveRepl(
         session.metadata.provider = inferredProvider;
       }
       persistReplModelSelection(projectRoot, config, model);
-      sessionManager.save(session);
-    },
-    onProviderChange: (provider: AIProvider) => {
-      currentProvider = provider;
-      session.metadata.provider = provider;
       sessionManager.save(session);
     },
     onSave: () => {

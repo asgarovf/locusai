@@ -6,7 +6,7 @@
 import { execSync } from "node:child_process";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { bold, cyan, dim, green, red } from "../display/terminal.js";
-import type { AIProvider, Session } from "../types.js";
+import type { Session } from "../types.js";
 
 export interface SlashCommandContext {
   projectRoot: string;
@@ -15,8 +15,6 @@ export interface SlashCommandContext {
   onReset: () => void;
   /** Callback to switch model. */
   onModelChange: (model: string) => void;
-  /** Callback to switch provider. */
-  onProviderChange: (provider: AIProvider) => void;
   /** Callback to force-save session. */
   onSave: () => void;
   /** Callback to exit the REPL. */
@@ -66,14 +64,8 @@ export function getSlashCommands(): SlashCommandDef[] {
     {
       name: "/model",
       aliases: ["/m"],
-      description: "Switch AI model",
+      description: "Switch AI model (provider inferred)",
       handler: cmdModel,
-    },
-    {
-      name: "/provider",
-      aliases: ["/p"],
-      description: "Switch AI provider",
-      handler: cmdProvider,
     },
     {
       name: "/diff",
@@ -208,32 +200,8 @@ function cmdModel(args: string, ctx: SlashCommandContext): void {
   }
 
   ctx.onModelChange(model);
-  ctx.onProviderChange(inferredProvider);
   process.stderr.write(
     `${green("✓")} Model switched to: ${bold(model)} ${dim(`(${inferredProvider})`)}\n`
-  );
-}
-
-function cmdProvider(args: string, ctx: SlashCommandContext): void {
-  if (!args.trim()) {
-    process.stderr.write(
-      `${dim("Current provider:")} ${bold(ctx.session.metadata.provider)}\n`
-    );
-    process.stderr.write(
-      `${dim("Usage:")} ${cyan("/provider claude|codex")}\n`
-    );
-    return;
-  }
-  const provider = args.trim() as AIProvider;
-  if (provider !== "claude" && provider !== "codex") {
-    process.stderr.write(
-      `${red("✗")} Invalid provider. Use: ${bold("claude")} or ${bold("codex")}\n`
-    );
-    return;
-  }
-  ctx.onProviderChange(provider);
-  process.stderr.write(
-    `${green("✓")} Provider switched to: ${bold(provider)}\n`
   );
 }
 

@@ -8,7 +8,9 @@ describe("repl slash commands", () => {
 
     expect(commands).not.toContain("/verbose");
     expect(commands).not.toContain("/compact");
+    expect(commands).not.toContain("/provider");
     expect(allNames).not.toContain("/v");
     expect(allNames).not.toContain("/c");
+    expect(allNames).not.toContain("/p");
   });
 });

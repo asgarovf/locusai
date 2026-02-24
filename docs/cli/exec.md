@@ -77,11 +77,12 @@ Inside the interactive REPL, the following slash commands are available:
 | `/history` | `/hist` | Show recent input history |
 | `/session` | `/sid` | Show current session info (ID, provider, tokens, messages) |
 | `/model` | `/m` | Switch AI model (e.g., `/model claude-sonnet-4-6`) |
-| `/provider` | `/p` | Switch AI provider (`claude` or `codex`) |
 | `/diff` | `/d` | Show cumulative `git diff` of all changes in the session |
 | `/undo` | `/u` | Revert all unstaged git changes |
 | `/save` | | Force-save the current session |
 | `/exit` | `/quit`, `/q` | Exit the REPL |
+
+Provider selection is inferred from the model you set with `/model` (for example, Claude models map to `claude`, Codex models map to `codex`).
 
 ---
 
