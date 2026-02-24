@@ -5,10 +5,7 @@
 
 import { execSync } from "node:child_process";
 import { inferProviderFromModel } from "../core/ai-models.js";
-import {
-  countDiffChanges,
-  renderDiff,
-} from "../display/diff-renderer.js";
+import { countDiffChanges, renderDiff } from "../display/diff-renderer.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Session } from "../types.js";
 
