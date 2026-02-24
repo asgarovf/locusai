@@ -62,11 +62,13 @@ function generateBranchName(issueNumber: number): string {
 /** Read the current branch name from an existing worktree directory. */
 function getWorktreeBranch(worktreePath: string): string | null {
   try {
-    return execSync("git branch --show-current", {
-      cwd: worktreePath,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim() || null;
+    return (
+      execSync("git branch --show-current", {
+        cwd: worktreePath,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim() || null
+    );
   } catch {
     return null;
   }
@@ -89,7 +91,8 @@ export function createWorktree(
   // If worktree already exists, return it (read actual branch from git)
   if (existsSync(worktreePath)) {
     log.verbose(`Worktree already exists for issue #${issueNumber}`);
-    const existingBranch = getWorktreeBranch(worktreePath) ?? `locus/issue-${issueNumber}`;
+    const existingBranch =
+      getWorktreeBranch(worktreePath) ?? `locus/issue-${issueNumber}`;
     return {
       issueNumber,
       path: worktreePath,

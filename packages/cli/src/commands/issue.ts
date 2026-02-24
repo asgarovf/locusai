@@ -250,9 +250,7 @@ async function issueCreate(
       `\n${dim("───────────────────────────────────────")}\n`
     );
     process.stderr.write(`${issueData.body.trim()}\n`);
-    process.stderr.write(
-      `${dim("───────────────────────────────────────")}\n`
-    );
+    process.stderr.write(`${dim("───────────────────────────────────────")}\n`);
   }
   process.stderr.write("\n");
 
@@ -311,7 +309,7 @@ function buildIssueCreationPrompt(userRequest: string): string {
     "You are a task planner for a software development team.",
     "Given a user request, create a well-structured GitHub issue.",
     "",
-    'Output ONLY a valid JSON object with exactly these fields:',
+    "Output ONLY a valid JSON object with exactly these fields:",
     '- "title": A concise, actionable issue title (max 80 characters)',
     '- "body": Detailed markdown description with context, acceptance criteria, and technical notes',
     '- "priority": One of: critical, high, medium, low',

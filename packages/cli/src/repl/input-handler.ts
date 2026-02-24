@@ -12,9 +12,9 @@
 import { dim, stripAnsi, yellow } from "../display/terminal.js";
 import {
   collectReferencedAttachments,
-  normalizeImagePlaceholders,
   type DetectedImage,
   type ImageAttachment,
+  normalizeImagePlaceholders,
 } from "./image-detect.js";
 
 export type InputResult =

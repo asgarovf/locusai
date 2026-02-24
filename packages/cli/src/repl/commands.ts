@@ -5,7 +5,11 @@
 
 import { execSync } from "node:child_process";
 import { inferProviderFromModel } from "../core/ai-models.js";
-import { bold, cyan, dim, green, red } from "../display/terminal.js";
+import {
+  countDiffChanges,
+  renderDiff,
+} from "../display/diff-renderer.js";
+import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Session } from "../types.js";
 
 export interface SlashCommandContext {
@@ -212,11 +216,36 @@ function cmdDiff(_args: string, ctx: SlashCommandContext): void {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
-    if (diff.trim()) {
-      process.stdout.write(diff);
-    } else {
+
+    if (!diff.trim()) {
       process.stderr.write(`${dim("No changes.")}\n`);
+      return;
     }
+
+    const { additions, deletions, files } = countDiffChanges(diff);
+    const filesLabel = files === 1 ? "file" : "files";
+
+    // Summary header
+    process.stderr.write("\n");
+    process.stderr.write(
+      `${bold("Changes:")}  ${cyan(`${files} ${filesLabel}`)}  ${green(`+${additions}`)}  ${red(`-${deletions}`)}\n`
+    );
+    process.stderr.write(`${dim("─".repeat(60))}\n`);
+
+    // Rendered diff
+    const lines = renderDiff(diff);
+    for (const line of lines) {
+      process.stderr.write(`${line}\n`);
+    }
+
+    // Footer
+    process.stderr.write(`${dim("─".repeat(60))}\n`);
+    process.stderr.write(
+      dim(
+        `${yellow("tip:")} use ${cyan("/undo")} to revert all unstaged changes\n`
+      )
+    );
+    process.stderr.write("\n");
   } catch {
     process.stderr.write(`${red("✗")} Could not get diff.\n`);
   }

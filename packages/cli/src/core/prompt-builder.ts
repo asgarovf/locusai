@@ -256,7 +256,7 @@ function buildRepoContext(projectRoot: string): string {
 function buildExecutionRules(config: LocusConfig): string {
   return `# Execution Rules
 
-1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`
+1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Always include a blank line followed by \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a trailer in every commit message.
 2. **Code quality:** Follow existing code style. Run linters/formatters if available.
 3. **Testing:** If test files exist for modified code, update them accordingly.
 4. **Do NOT:**

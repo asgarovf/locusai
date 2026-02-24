@@ -28,9 +28,7 @@ export function CallToAction() {
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
             <span className="font-sans">Your issues.</span>
             <br />
-            <span className="font-bold gradient-text-hero">
-              Shipped by AI.
-            </span>
+            <span className="font-bold gradient-text-hero">Shipped by AI.</span>
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto mb-8 text-sm md:text-base leading-relaxed">
             Locus is open source and free forever. No servers to deploy, no

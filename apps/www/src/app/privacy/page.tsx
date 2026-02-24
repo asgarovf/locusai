@@ -44,12 +44,12 @@ export default function PrivacyPolicyPage() {
                   1. Introduction
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Locus AI (&quot;Locus&quot;, &quot;we&quot;, &quot;us&quot;, or
-                  &quot;our&quot;) develops the Locus CLI tool and this website
-                  (locusai.dev). This Privacy Policy explains how we handle your
-                  information. Locus is a local-first, GitHub-native tool — it
-                  has no cloud backend, no user accounts, and no server-side data
-                  storage.
+                  Locus AI (&quot;Locus&quot;, &quot;we&quot;, &quot;us&quot;,
+                  or &quot;our&quot;) develops the Locus CLI tool and this
+                  website (locusai.dev). This Privacy Policy explains how we
+                  handle your information. Locus is a local-first, GitHub-native
+                  tool — it has no cloud backend, no user accounts, and no
+                  server-side data storage.
                 </p>
               </div>
 
@@ -127,8 +127,8 @@ export default function PrivacyPolicyPage() {
                     GitHub CLI (gh) directly from your machine.
                   </li>
                   <li>
-                    <strong className="text-white">Google Analytics</strong> — We
-                    use Google Analytics on this website for aggregated usage
+                    <strong className="text-white">Google Analytics</strong> —
+                    We use Google Analytics on this website for aggregated usage
                     statistics.
                   </li>
                 </ul>
@@ -165,8 +165,8 @@ export default function PrivacyPolicyPage() {
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   We may update this Privacy Policy from time to time. We will
-                  notify you of any material changes by posting the new policy on
-                  this page and updating the &quot;Last updated&quot; date.
+                  notify you of any material changes by posting the new policy
+                  on this page and updating the &quot;Last updated&quot; date.
                 </p>
               </div>
 

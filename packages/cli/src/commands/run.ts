@@ -17,7 +17,12 @@ import {
   checkForConflicts,
   printConflictReport,
 } from "../core/conflict.js";
-import { createPR, getIssue, listIssues, listMilestones } from "../core/github.js";
+import {
+  createPR,
+  getIssue,
+  listIssues,
+  listMilestones,
+} from "../core/github.js";
 import { getLogger } from "../core/logger.js";
 import { getRateLimiter } from "../core/rate-limiter.js";
 import {
@@ -722,7 +727,7 @@ function ensureTaskCommit(
       stdio: ["pipe", "pipe", "pipe"],
     });
 
-    const message = `chore: complete #${issueNumber} - ${issueTitle}`;
+    const message = `chore: complete #${issueNumber} - ${issueTitle}\n\nCo-Authored-By: LocusAgent <agent@locusai.team>`;
     execSync(`git commit -m ${JSON.stringify(message)}`, {
       cwd: projectRoot,
       encoding: "utf-8",

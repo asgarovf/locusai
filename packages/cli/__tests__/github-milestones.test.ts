@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 const originalPath = process.env.PATH ?? "";
 const packageDir = join(import.meta.dir, "..");
 

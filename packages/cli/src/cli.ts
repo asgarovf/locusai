@@ -6,8 +6,8 @@
  * Entry point and command router.
  */
 
-import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isInitialized } from "./core/config.js";
 import { getGitRoot, isGitRepo } from "./core/context.js";

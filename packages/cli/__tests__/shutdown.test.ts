@@ -2,12 +2,12 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RunState } from "../src/types.js";
 import {
   getNextTask,
   loadRunState,
   saveRunState,
 } from "../src/core/run-state.js";
+import type { RunState } from "../src/types.js";
 
 const testDir = join(tmpdir(), `locus-shutdown-test-${Date.now()}`);
 const INTERRUPT_ERROR = "Interrupted by user";

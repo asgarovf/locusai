@@ -6,8 +6,8 @@ import { join } from "node:path";
 import {
   cleanupStaleWorktrees,
   createWorktree,
-  getWorktreePath,
   getWorktreeAge,
+  getWorktreePath,
   hasWorktreeChanges,
   listWorktrees,
   removeWorktree,
@@ -47,7 +47,7 @@ afterEach(() => {
     });
     // Remove any extra worktrees
     for (const line of output.split("\n")) {
-      if (line.startsWith("worktree ") && !line.includes(TEST_DIR + "\n")) {
+      if (line.startsWith("worktree ") && !line.includes(`${TEST_DIR}\n`)) {
         const path = line.replace("worktree ", "").trim();
         if (path !== TEST_DIR) {
           try {

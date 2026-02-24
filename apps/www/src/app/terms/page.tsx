@@ -45,9 +45,10 @@ export default function TermsOfServicePage() {
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   By using the Locus AI CLI tool (&quot;Software&quot;),
-                  including the npm package, documentation, and this website, you
-                  agree to be bound by these Terms of Service (&quot;Terms&quot;).
-                  If you do not agree to these Terms, do not use the Software.
+                  including the npm package, documentation, and this website,
+                  you agree to be bound by these Terms of Service
+                  (&quot;Terms&quot;). If you do not agree to these Terms, do
+                  not use the Software.
                 </p>
               </div>
 
@@ -71,9 +72,9 @@ export default function TermsOfServicePage() {
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Locus does not require account registration. Authentication is
-                  handled via the GitHub CLI (gh auth login) and your AI provider
-                  credentials. You are responsible for securing your own GitHub
-                  tokens and AI provider API keys.
+                  handled via the GitHub CLI (gh auth login) and your AI
+                  provider credentials. You are responsible for securing your
+                  own GitHub tokens and AI provider API keys.
                 </p>
               </div>
 
@@ -110,10 +111,10 @@ export default function TermsOfServicePage() {
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   You retain all rights to your content, including source code,
-                  GitHub issues, and other materials. The Software processes your
-                  data locally on your machine. Your code is sent directly to
-                  your chosen AI provider (Anthropic or OpenAI) — Locus does not
-                  intermediate, store, or have access to this data.
+                  GitHub issues, and other materials. The Software processes
+                  your data locally on your machine. Your code is sent directly
+                  to your chosen AI provider (Anthropic or OpenAI) — Locus does
+                  not intermediate, store, or have access to this data.
                 </p>
               </div>
 
@@ -164,8 +165,8 @@ export default function TermsOfServicePage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   The Software is provided &quot;as is&quot; and &quot;as
                   available&quot; without warranties of any kind, either express
-                  or implied. To the fullest extent permitted by law, Locus shall
-                  not be liable for any indirect, incidental, special,
+                  or implied. To the fullest extent permitted by law, Locus
+                  shall not be liable for any indirect, incidental, special,
                   consequential, or punitive damages, including but not limited
                   to loss of profits, data, or business opportunities arising
                   from your use of the Software.
@@ -177,9 +178,9 @@ export default function TermsOfServicePage() {
                   10. Changes to These Terms
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  We may update these Terms from time to time. We will notify you
-                  of any material changes by posting the updated Terms on this
-                  page and updating the &quot;Last updated&quot; date.
+                  We may update these Terms from time to time. We will notify
+                  you of any material changes by posting the updated Terms on
+                  this page and updating the &quot;Last updated&quot; date.
                 </p>
               </div>
 
