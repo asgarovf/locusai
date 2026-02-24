@@ -7,6 +7,8 @@
  */
 
 import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { isInitialized } from "./core/config.js";
 import { getGitRoot, isGitRepo } from "./core/context.js";
 import { initLogger } from "./core/logger.js";
@@ -16,7 +18,29 @@ import type { LogLevel } from "./types.js";
 
 // ─── Version ─────────────────────────────────────────────────────────────────
 
-const VERSION = "3.0.0";
+function getCliVersion(): string {
+  const fallbackVersion = "0.0.0";
+  const packageJsonPath = join(
+    fileURLToPath(new URL(".", import.meta.url)),
+    "..",
+    "package.json"
+  );
+
+  if (!existsSync(packageJsonPath)) {
+    return fallbackVersion;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(packageJsonPath, "utf-8")) as {
+      version?: string;
+    };
+    return parsed.version ?? fallbackVersion;
+  } catch {
+    return fallbackVersion;
+  }
+}
+
+const VERSION = getCliVersion();
 
 // ─── Argument Parsing ────────────────────────────────────────────────────────
 

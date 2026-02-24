@@ -12,7 +12,7 @@ import { getLogger } from "../core/logger.js";
 import { Spinner } from "../display/progress.js";
 import { bold, cyan, dim, drawBox, green } from "../display/terminal.js";
 
-const PACKAGE_NAME = "@locusai/tui";
+const PACKAGE_NAME = "@locusai/cli";
 
 /** Compare two semver strings. Returns -1, 0, or 1. */
 export function compareSemver(a: string, b: string): number {
