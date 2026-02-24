@@ -34,7 +34,6 @@
   ],
   "author": "",
   "license": "MIT",
-  "private": true,
   "dependencies": {},
   "devDependencies": {
     "@types/bun": "latest",
