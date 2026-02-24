@@ -9,9 +9,6 @@
 # Usage (non-interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
 #     --repo "https://github.com/user/project.git" \
-#     --api-key "locus-api-key" \
-#     --telegram-token "bot123:ABC" \
-#     --telegram-chat-id "12345" \
 #     --gh-token "ghp_..." \
 #     --branch "main"
 #
@@ -55,9 +52,6 @@ fi
 
 REPO_URL=""
 BRANCH="main"
-API_KEY=""
-TELEGRAM_TOKEN=""
-TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
 PROJECT_DIR=""
 USER_HOME="$HOME"
@@ -73,9 +67,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)          REPO_URL="$2";          shift 2 ;;
     --branch)        BRANCH="$2";            shift 2 ;;
-    --api-key)       API_KEY="$2";           shift 2 ;;
-    --telegram-token) TELEGRAM_TOKEN="$2";   shift 2 ;;
-    --telegram-chat-id) TELEGRAM_CHAT_ID="$2"; shift 2 ;;
     --gh-token)      GH_TOKEN="$2";          shift 2 ;;
     --dir)           PROJECT_DIR="$2";       shift 2 ;;
     --help|-h)
@@ -88,10 +79,7 @@ while [[ $# -gt 0 ]]; do
       echo "    --repo <url>             Git repository HTTPS URL to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
-      echo "    --api-key <key>          Locus API key"
       echo "    --gh-token <token>       GitHub personal access token for gh CLI"
-      echo "    --telegram-token <token> Telegram bot token from @BotFather"
-      echo "    --telegram-chat-id <id>  Telegram chat ID for authorization"
       echo ""
       exit 0
       ;;
@@ -104,7 +92,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ─── Interactive Mode ────────────────────────────────────────────────────────
-# If no --repo was provided via flags, prompt the user interactively.
 
 if [[ -z "$REPO_URL" ]]; then
   echo ""
@@ -161,10 +148,7 @@ if [[ -z "$REPO_URL" ]]; then
 
   prompt REPO_URL          "Repository HTTPS URL (e.g. https://github.com/user/repo.git)" true
   prompt BRANCH            "Branch"               false  "main"
-  prompt API_KEY           "Locus API Key"        false
   prompt GH_TOKEN          "GitHub Token"         false
-  prompt TELEGRAM_TOKEN    "Telegram Bot Token"   false
-  prompt TELEGRAM_CHAT_ID  "Telegram Chat ID"     false
 
   if [[ "${INPUT_FD:-0}" -eq 3 ]]; then
     exec 3<&-
@@ -174,7 +158,6 @@ if [[ -z "$REPO_URL" ]]; then
 fi
 
 # ─── Validate Repository URL ─────────────────────────────────────────────────
-# Only HTTPS URLs are supported (SSH requires key setup which is not handled).
 
 if [[ "$REPO_URL" == git@* ]] || [[ "$REPO_URL" == ssh://* ]]; then
   error "SSH repository URLs are not supported. Please use an HTTPS URL."
@@ -188,7 +171,7 @@ echo ""
 echo -e "${BOLD}${CYAN}"
 echo "  ╔═══════════════════════════════════════════════╗"
 echo "  ║         Locus Environment Setup (macOS)       ║"
-echo "  ║         AI-Native Development Environment     ║"
+echo "  ║         GitHub-Native AI Sprint Execution     ║"
 echo "  ╚═══════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
@@ -196,9 +179,7 @@ info "Repository:     ${BOLD}${REPO_URL}${RESET}"
 info "Branch:         ${BOLD}${BRANCH}${RESET}"
 info "User:           ${BOLD}$(whoami)${RESET}"
 info "Shell config:   ${BOLD}${SHELL_RC}${RESET}"
-info "API Key:        ${BOLD}${API_KEY:+configured}${API_KEY:-not set}${RESET}"
 info "GH Token:       ${BOLD}${GH_TOKEN:+configured}${GH_TOKEN:-not set}${RESET}"
-info "Telegram:       ${BOLD}${TELEGRAM_TOKEN:+configured}${TELEGRAM_TOKEN:-not set}${RESET}"
 echo ""
 
 # ─── Step 1: Xcode Command Line Tools ────────────────────────────────────────
@@ -210,7 +191,6 @@ if xcode-select -p &>/dev/null; then
 else
   info "Installing Xcode Command Line Tools..."
   xcode-select --install 2>/dev/null || true
-  # Wait for installation to complete
   until xcode-select -p &>/dev/null; do
     sleep 5
   done
@@ -221,7 +201,6 @@ fi
 
 header "Git"
 
-# Git comes with Xcode CLT on macOS, so it should already be available
 if command -v git &>/dev/null; then
   success "Git already installed: $(git --version)"
 else
@@ -239,7 +218,6 @@ if command -v gh &>/dev/null; then
 else
   info "Installing GitHub CLI..."
 
-  # Detect architecture
   ARCH="$(uname -m)"
   if [[ "$ARCH" == "arm64" ]]; then
     GH_ARCH="macOS_arm64"
@@ -247,7 +225,6 @@ else
     GH_ARCH="macOS_amd64"
   fi
 
-  # Fetch latest release version from GitHub API
   GH_LATEST=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
   GH_TAR="gh_${GH_LATEST}_${GH_ARCH}.zip"
   GH_URL="https://github.com/cli/cli/releases/download/v${GH_LATEST}/${GH_TAR}"
@@ -269,7 +246,6 @@ if [[ -n "$GH_TOKEN" ]]; then
   echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com --git-protocol https
   if gh auth status --hostname github.com &>/dev/null; then
     success "GitHub CLI authenticated"
-    # Configure git credential helper so git clone/push use the gh token
     gh auth setup-git
     success "Git credential helper configured (via gh)"
   else
@@ -297,7 +273,6 @@ fi
 if [[ "$INSTALL_NODE" == "true" ]]; then
   info "Installing Node.js ${REQUIRED_NODE_MAJOR} via official installer..."
 
-  # Detect architecture for the official Node.js package
   ARCH="$(uname -m)"
   if [[ "$ARCH" == "arm64" ]]; then
     NODE_ARCH="arm64"
@@ -305,7 +280,6 @@ if [[ "$INSTALL_NODE" == "true" ]]; then
     NODE_ARCH="x64"
   fi
 
-  # Fetch the latest v22.x version from the Node.js dist index
   NODE_VERSION=$(curl -fsSL https://nodejs.org/dist/latest-v${REQUIRED_NODE_MAJOR}.x/ \
     | grep -oE "v${REQUIRED_NODE_MAJOR}\.[0-9]+\.[0-9]+" | head -1)
 
@@ -319,7 +293,6 @@ if [[ "$INSTALL_NODE" == "true" ]]; then
 
   NODE_EXTRACTED="${NODE_TMP}/node-${NODE_VERSION}-darwin-${NODE_ARCH}"
 
-  # Install to /usr/local (standard location on macOS)
   sudo cp -R "${NODE_EXTRACTED}/bin/"* /usr/local/bin/ 2>/dev/null || \
     cp -R "${NODE_EXTRACTED}/bin/"* /usr/local/bin/
   sudo cp -R "${NODE_EXTRACTED}/lib/"* /usr/local/lib/ 2>/dev/null || \
@@ -331,7 +304,6 @@ if [[ "$INSTALL_NODE" == "true" ]]; then
 
   rm -rf "$NODE_TMP"
 
-  # Ensure /usr/local/bin is on PATH
   if ! echo "$PATH" | grep -q '/usr/local/bin'; then
     export PATH="/usr/local/bin:$PATH"
     grep -q '/usr/local/bin' "$SHELL_RC" 2>/dev/null || \
@@ -353,7 +325,6 @@ else
   info "Installing Bun..."
   curl -fsSL https://bun.sh/install | bash > /dev/null 2>&1
 
-  # Ensure bun is on PATH
   BUN_PATH="$HOME/.bun/bin"
   if [[ -d "$BUN_PATH" ]]; then
     export PATH="$BUN_PATH:$PATH"
@@ -374,7 +345,6 @@ else
   info "Installing Claude Code via native installer..."
   curl -fsSL https://claude.ai/install.sh | bash > /dev/null 2>&1
 
-  # Ensure claude is on PATH for subsequent commands
   CLAUDE_PATH="$HOME/.local/bin"
   if [[ -d "$CLAUDE_PATH" ]]; then
     export PATH="$CLAUDE_PATH:$PATH"
@@ -401,23 +371,10 @@ else
   success "Locus CLI installed"
 fi
 
-# ─── Step 8: Locus Telegram Bot ─────────────────────────────────────────
-
-header "Locus Telegram Bot"
-
-if command -v locus-telegram &>/dev/null; then
-  success "Locus Telegram Bot already installed"
-else
-  info "Installing Locus Telegram Bot from npm..."
-  npm install -g @locusai/telegram > /dev/null 2>&1
-  success "Locus Telegram Bot installed"
-fi
-
-# ─── Step 9: Clone Repository ────────────────────────────────────────────────
+# ─── Step 8: Clone Repository ────────────────────────────────────────────────
 
 header "Repository"
 
-# Derive project directory from repo URL if not specified
 if [[ -z "$PROJECT_DIR" ]]; then
   REPO_NAME=$(basename "$REPO_URL" .git)
   PROJECT_DIR="$(pwd)/${REPO_NAME}"
@@ -444,23 +401,7 @@ else
   fi
 fi
 
-# ─── Step 10: Install Dependencies ───────────────────────────────────────────
-
-header "Dependencies"
-
-info "Installing project dependencies with Bun..."
-cd "$PROJECT_DIR" && bun install
-success "Dependencies installed"
-
-# ─── Step 11: Build Packages ─────────────────────────────────────────────────
-
-header "Build"
-
-info "Building packages (shared → sdk → cli → telegram)..."
-cd "$PROJECT_DIR" && bun run build
-success "Packages built"
-
-# ─── Step 12: Initialize Locus ───────────────────────────────────────────────
+# ─── Step 9: Initialize Locus ────────────────────────────────────────────────
 
 header "Locus Init"
 
@@ -468,92 +409,7 @@ info "Initializing Locus in project..."
 cd "$PROJECT_DIR" && locus init
 success "Locus initialized"
 
-# Configure API key if provided
-if [[ -n "$API_KEY" ]]; then
-  info "Configuring Locus API key..."
-  cd "$PROJECT_DIR" && locus config setup --api-key "$API_KEY"
-  success "Locus API key configured"
-fi
-
-# ─── Step 13: Telegram Bot Setup ─────────────────────────────────────────────
-
-header "Telegram Bot"
-
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  info "Configuring Telegram bot..."
-  cd "$PROJECT_DIR" && locus telegram setup --token "$TELEGRAM_TOKEN" --chat-id "$TELEGRAM_CHAT_ID"
-  success "Telegram bot configured"
-
-  # Create LaunchAgent plist for Telegram bot
-  info "Creating LaunchAgent for Telegram bot..."
-
-  TELEGRAM_BIN="$(which locus-telegram)"
-  LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
-  PLIST_FILE="${LAUNCH_AGENTS_DIR}/com.locus.telegram.plist"
-  LOG_DIR="$HOME/Library/Logs/locus"
-
-  mkdir -p "$LAUNCH_AGENTS_DIR"
-  mkdir -p "$LOG_DIR"
-
-  # Build environment keys for plist
-  ENV_KEYS="
-        <key>NODE_ENV</key>
-        <string>production</string>
-        <key>LOCUS_PROJECT_PATH</key>
-        <string>${PROJECT_DIR}</string>"
-
-  cat > "$PLIST_FILE" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.locus.telegram</string>
-
-    <key>ProgramArguments</key>
-    <array>
-        <string>${TELEGRAM_BIN}</string>
-    </array>
-
-    <key>WorkingDirectory</key>
-    <string>${PROJECT_DIR}</string>
-
-    <key>EnvironmentVariables</key>
-    <dict>${ENV_KEYS}
-    </dict>
-
-    <key>RunAtLoad</key>
-    <true/>
-
-    <key>KeepAlive</key>
-    <true/>
-
-    <key>StandardOutPath</key>
-    <string>${LOG_DIR}/telegram.log</string>
-
-    <key>StandardErrorPath</key>
-    <string>${LOG_DIR}/telegram.error.log</string>
-</dict>
-</plist>
-PLIST
-
-  # Load the LaunchAgent
-  launchctl unload "$PLIST_FILE" 2>/dev/null || true
-  launchctl load "$PLIST_FILE"
-
-  success "Telegram bot LaunchAgent created and loaded"
-  info "Manage with:"
-  info "  launchctl load   ~/Library/LaunchAgents/com.locus.telegram.plist"
-  info "  launchctl unload ~/Library/LaunchAgents/com.locus.telegram.plist"
-  info "View logs:"
-  info "  tail -f ~/Library/Logs/locus/telegram.log"
-  info "  tail -f ~/Library/Logs/locus/telegram.error.log"
-else
-  warn "Telegram not configured (missing --telegram-token or --telegram-chat-id)"
-  info "Configure later with: locus telegram setup"
-fi
-
-# ─── Step 14: Verify Installation ────────────────────────────────────────────
+# ─── Step 10: Verify Installation ────────────────────────────────────────────
 
 header "Verification"
 
@@ -578,13 +434,8 @@ check "Node.js 22+" "node -v | grep -qE 'v(2[2-9]|[3-9][0-9])'"
 check "Bun"         "command -v bun"
 check "Claude Code" "command -v claude"
 check "Locus CLI"   "command -v locus"
-check "Locus Telegram" "command -v locus-telegram"
 check "Repository"  "test -d '${PROJECT_DIR}/.git'"
 check "Locus Init"  "test -f '${PROJECT_DIR}/.locus/config.json'"
-
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  check "Telegram Bot" "launchctl list | grep -q com.locus.telegram"
-fi
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
 
@@ -607,22 +458,15 @@ fi
 echo ""
 echo -e "  ${BOLD}Quick Start:${RESET}"
 echo -e "    ${DIM}\$${RESET} cd ${PROJECT_DIR}"
-echo -e "    ${DIM}\$${RESET} locus run                    ${DIM}# Start AI agents${RESET}"
+echo -e "    ${DIM}\$${RESET} locus plan                     ${DIM}# AI sprint planning${RESET}"
+echo -e "    ${DIM}\$${RESET} locus run                      ${DIM}# Execute sprint tasks${RESET}"
 echo -e "    ${DIM}\$${RESET} locus exec \"describe this project\" ${DIM}# Quick AI query${RESET}"
 echo ""
 
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  echo -e "  ${BOLD}Telegram Bot:${RESET}"
-  echo -e "    ${DIM}\$${RESET} launchctl list | grep locus"
-  echo -e "    ${DIM}\$${RESET} tail -f ~/Library/Logs/locus/telegram.log"
-  echo ""
-fi
-
 echo -e "  ${BOLD}Useful Commands:${RESET}"
-echo -e "    ${DIM}\$${RESET} locus config show             ${DIM}# View configuration${RESET}"
-echo -e "    ${DIM}\$${RESET} locus telegram config          ${DIM}# View Telegram config${RESET}"
-echo -e "    ${DIM}\$${RESET} locus index                    ${DIM}# Index codebase for AI${RESET}"
-echo -e "    ${DIM}\$${RESET} locus plan                     ${DIM}# AI planning session${RESET}"
+echo -e "    ${DIM}\$${RESET} locus config show              ${DIM}# View configuration${RESET}"
+echo -e "    ${DIM}\$${RESET} locus status                   ${DIM}# View sprint status${RESET}"
+echo -e "    ${DIM}\$${RESET} locus review                   ${DIM}# AI code review${RESET}"
 echo ""
 
 echo -e "  ${BOLD}Agent CLI Setup:${RESET}"

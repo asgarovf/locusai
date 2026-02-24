@@ -1,12 +1,12 @@
 # Show HN Post Draft
 
-**Date:** 2026-02-20
+**Date:** 2026-02-24
 
 ## Post Details
 
 ### Title (max 80 chars)
 ```
-Show HN: Locus – Open-source AI project management where agents run on your machine
+Show HN: Locus – Open-source CLI that turns GitHub issues into shipped code
 ```
 
 ### URL
@@ -19,49 +19,49 @@ https://github.com/asgarovf/locusai
 ```
 Hi HN,
 
-I built Locus, an open-source (MIT) project management platform designed for engineering teams that want to use AI coding agents without sending their source code to third-party servers.
+I built Locus, an open-source (MIT) CLI tool that turns GitHub issues into shipped code using AI agents. No cloud, no accounts, no infrastructure — everything runs locally and uses GitHub as the backend.
 
-The core idea: plan sprints and manage tasks in a cloud dashboard, but all code execution happens locally on your infrastructure. Your source code never leaves your machine.
+The core idea: your GitHub issues and milestones ARE your project management system. Locus reads them, plans sprints, and dispatches AI agents to execute tasks autonomously.
 
 How it works:
 
-- `locus plan` — AI generates a sprint plan by analyzing your codebase. It uses multi-agent roles (Tech Lead, Architect, Sprint Organizer) to break down directives into structured tasks with complexity estimates and risk assessments. You can reject and iterate on plans before approving.
+- `locus plan` — AI analyzes your GitHub issues and generates a sprint plan. It uses multi-agent roles (Tech Lead, Architect, Sprint Organizer) to break directives into structured tasks with complexity estimates. You review and approve before anything runs.
 
-- `locus run` — An autonomous agent picks up tasks from the sprint, executes them sequentially on a single branch, auto-commits after each task, and opens a PR when the sprint is done. Supports both Claude and Codex as backends.
+- `locus run` — Autonomous agents pick up sprint tasks, execute them in parallel worktrees, auto-commit, and open PRs. Supports both Claude Code and OpenAI Codex as backends.
 
-- `locus review` — AI-powered code review that understands your full codebase, not just diffs. Detects bugs, security issues, and performance problems. Posts review comments directly to GitHub PRs.
+- `locus review` — AI-powered code review that understands your full codebase, not just diffs. Posts findings directly to GitHub PRs.
 
-- `locus discuss` — Have architectural discussions with AI that has full project context. Insights and decisions are automatically extracted and saved.
+- `locus exec` — Interactive REPL for ad-hoc AI tasks with full project context.
 
-- Telegram bot — Manage your agent remotely from your phone. Plan sprints, approve tasks, trigger runs, all from Telegram.
+- `locus discuss` — Architectural discussions with AI that persist decisions for future context.
 
-- VSCode extension — Chat with AI in your editor with full repo context.
+The entire system is GitHub-native. Issues are tasks. Milestones are sprints. Labels track execution state. PRs are deliverables. No database, no API server, no sign-up.
 
-The whole system is free, self-hostable, and works with your existing GitHub workflow. There's a one-command installation script for Ubuntu/Debian/macOS that sets up everything including the Telegram bot as a system service.
+Prerequisites are just the GitHub CLI (`gh`) and an AI agent CLI (Claude Code or Codex). Install with `npm install -g @locusai/cli`, run `locus init`, and you're shipping.
 
-Tech stack: TypeScript monorepo with NestJS API, Next.js dashboard, and a Bun-bundled CLI. The CLI uses worker threads to run agents and streams status updates in real-time.
+Tech: TypeScript CLI built with Commander.js and Bun. Uses `gh` for all GitHub operations, git worktrees for parallel execution, and streams real-time progress to the terminal.
 
-I'm a solo developer building this because I was frustrated with the disconnect between planning tools and actual code execution. Every AI coding tool I tried either required sending my code to external APIs or had no concept of project management — Locus tries to bridge that gap.
+I'm a solo developer who was frustrated with the disconnect between planning tools and code execution. Every AI tool I tried either required cloud infrastructure or had no concept of project management — Locus bridges that gap with zero additional services.
 
-Would love feedback on the approach and any features you'd want to see.
+Would love feedback on the approach.
 
 GitHub: https://github.com/asgarovf/locusai
-Docs: https://docs.locusai.dev
-Website: https://locusai.dev
+Docs: https://locusai.dev/docs
 ```
 
 ---
 
 ## Alternative Shorter Titles (pick your favorite)
 
-1. `Show HN: Locus – AI agents that plan and ship code without leaving your machine`
-2. `Show HN: Locus – Open-source AI sprint planning and autonomous code execution`
-3. `Show HN: Locus – Plan in the cloud, execute locally with AI coding agents`
-4. `Show HN: Locus – AI project management where your code never leaves your infra`
+1. `Show HN: Locus – GitHub-native CLI that plans sprints and ships code with AI agents`
+2. `Show HN: Locus – From GitHub issue to PR, autonomously`
+3. `Show HN: Locus – AI sprint execution that uses GitHub as its only backend`
+4. `Show HN: Locus – Open-source CLI where issues become PRs via AI agents`
 
 ## Notes
 
-- The title emphasizes both the open-source nature and the local execution differentiator — the two things HN cares about most.
-- The text follows HN conventions: starts with what it is, explains the architecture, lists concrete features with CLI examples, mentions the tech stack (HN loves this), includes personal motivation, and ends with a call for feedback.
-- URL points to GitHub rather than the marketing site — HN tends to prefer repos over landing pages for developer tools.
-- Kept under ~300 words for the text body which is the sweet spot for ShowHN engagement.
+- Title emphasizes the open-source nature and the zero-infrastructure differentiator.
+- Text follows HN conventions: what it is, architecture, concrete features with CLI examples, tech stack, personal motivation, call for feedback.
+- URL points to GitHub rather than the marketing site — HN prefers repos for developer tools.
+- Kept under ~300 words for the sweet spot of ShowHN engagement.
+- No cloud dashboard, no Telegram, no self-hosting mentioned — those are v2 concepts that no longer apply.

@@ -13,9 +13,6 @@
       # Or run directly with flags:
       .\setup-windows.ps1 `
         -Repo "https://github.com/user/project.git" `
-        -ApiKey "locus-api-key" `
-        -TelegramToken "bot123:ABC" `
-        -TelegramChatId "12345" `
         -GhToken "ghp_..." `
         -Branch "main"
 #>
@@ -23,9 +20,6 @@
 param(
     [string]$Repo = "",
     [string]$Branch = "main",
-    [string]$ApiKey = "",
-    [string]$TelegramToken = "",
-    [string]$TelegramChatId = "",
     [string]$GhToken = "",
     [string]$Dir = ""
 )
@@ -90,16 +84,12 @@ if (-not $Repo) {
 
     $Repo           = Read-Prompt -Label "Repository HTTPS URL (e.g. https://github.com/user/repo.git)" -Required $true
     $Branch         = Read-Prompt -Label "Branch" -Default "main"
-    $ApiKey         = Read-Prompt -Label "Locus API Key"
     $GhToken        = Read-Prompt -Label "GitHub Token"
-    $TelegramToken  = Read-Prompt -Label "Telegram Bot Token"
-    $TelegramChatId = Read-Prompt -Label "Telegram Chat ID"
 
     Write-Host ""
 }
 
 # ─── Validate Repository URL ─────────────────────────────────────────────────
-# Only HTTPS URLs are supported (SSH requires key setup which is not handled).
 
 if ($Repo -match "^git@" -or $Repo -match "^ssh://") {
     Write-Err "SSH repository URLs are not supported. Please use an HTTPS URL."
@@ -112,19 +102,15 @@ if ($Repo -match "^git@" -or $Repo -match "^ssh://") {
 Write-Host ""
 Write-Host "  +===============================================+" -ForegroundColor Cyan
 Write-Host "  |         Locus Environment Setup (Windows)     |" -ForegroundColor Cyan
-Write-Host "  |         AI-Native Development Environment     |" -ForegroundColor Cyan
+Write-Host "  |         GitHub-Native AI Sprint Execution     |" -ForegroundColor Cyan
 Write-Host "  +===============================================+" -ForegroundColor Cyan
 Write-Host ""
 
 Write-Info "Repository:     $Repo"
 Write-Info "Branch:         $Branch"
 Write-Info "User:           $env:USERNAME"
-$apiKeyStatus = if ($ApiKey) { "configured" } else { "not set" }
 $ghTokenStatus = if ($GhToken) { "configured" } else { "not set" }
-$telegramStatus = if ($TelegramToken) { "configured" } else { "not set" }
-Write-Info "API Key:        $apiKeyStatus"
 Write-Info "GH Token:       $ghTokenStatus"
-Write-Info "Telegram:       $telegramStatus"
 Write-Host ""
 
 # ─── Helper: Check if command exists ─────────────────────────────────────────
@@ -186,7 +172,6 @@ if ($GhToken -and (Test-Command "gh")) {
     $ghStatus = gh auth status --hostname github.com 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Success "GitHub CLI authenticated"
-        # Configure git credential helper so git clone/push use the gh token
         gh auth setup-git
         Write-Success "Git credential helper configured (via gh)"
     } else {
@@ -236,11 +221,9 @@ if (Test-Command "bun") {
     Write-Info "Installing Bun..."
     irm https://bun.sh/install.ps1 | iex
 
-    # Ensure bun is on PATH
     $bunPath = Join-Path $env:USERPROFILE ".bun\bin"
     if (Test-Path $bunPath) {
         $env:Path = "$bunPath;$env:Path"
-        # Add to user PATH permanently
         $currentUserPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
         if ($currentUserPath -notlike "*$bunPath*") {
             [System.Environment]::SetEnvironmentVariable("Path", "$bunPath;$currentUserPath", "User")
@@ -285,23 +268,10 @@ if (Test-Command "locus") {
     Write-Success "Locus CLI installed"
 }
 
-# ─── Step 7: Locus Telegram Bot ─────────────────────────────────────────────
-
-Write-Header "Locus Telegram Bot"
-
-if (Test-Command "locus-telegram") {
-    Write-Success "Locus Telegram Bot already installed"
-} else {
-    Write-Info "Installing Locus Telegram Bot from npm..."
-    npm install -g @locusai/telegram 2>$null
-    Write-Success "Locus Telegram Bot installed"
-}
-
-# ─── Step 8: Clone Repository ───────────────────────────────────────────────
+# ─── Step 7: Clone Repository ───────────────────────────────────────────────
 
 Write-Header "Repository"
 
-# Derive project directory from repo URL if not specified
 if (-not $Dir) {
     $repoName = [System.IO.Path]::GetFileNameWithoutExtension($Repo.TrimEnd('/').Split('/')[-1])
     $Dir = Join-Path (Get-Location) $repoName
@@ -333,27 +303,7 @@ if (Test-Path (Join-Path $Dir ".git")) {
     }
 }
 
-# ─── Step 9: Install Dependencies ───────────────────────────────────────────
-
-Write-Header "Dependencies"
-
-Write-Info "Installing project dependencies with Bun..."
-Push-Location $Dir
-bun install
-Pop-Location
-Write-Success "Dependencies installed"
-
-# ─── Step 10: Build Packages ────────────────────────────────────────────────
-
-Write-Header "Build"
-
-Write-Info "Building packages (shared -> sdk -> cli -> telegram)..."
-Push-Location $Dir
-bun run build
-Pop-Location
-Write-Success "Packages built"
-
-# ─── Step 11: Initialize Locus ──────────────────────────────────────────────
+# ─── Step 8: Initialize Locus ─────────────────────────────────────────────
 
 Write-Header "Locus Init"
 
@@ -363,75 +313,7 @@ locus init
 Pop-Location
 Write-Success "Locus initialized"
 
-# Configure API key if provided
-if ($ApiKey) {
-    Write-Info "Configuring Locus API key..."
-    Push-Location $Dir
-    locus config setup --api-key $ApiKey
-    Pop-Location
-    Write-Success "Locus API key configured"
-}
-
-# ─── Step 12: Telegram Bot Setup ────────────────────────────────────────────
-
-Write-Header "Telegram Bot"
-
-if ($TelegramToken -and $TelegramChatId) {
-    Write-Info "Configuring Telegram bot..."
-    Push-Location $Dir
-    locus telegram setup --token $TelegramToken --chat-id $TelegramChatId
-    Pop-Location
-    Write-Success "Telegram bot configured"
-
-    # Create Windows Scheduled Task for Telegram bot
-    Write-Info "Creating Scheduled Task for Telegram bot..."
-
-    $telegramBin = (Get-Command locus-telegram -ErrorAction SilentlyContinue).Source
-    if ($telegramBin) {
-        $taskName = "LocusTelegramBot"
-
-        # Remove existing task if present
-        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
-
-        $action = New-ScheduledTaskAction `
-            -Execute $telegramBin `
-            -WorkingDirectory $Dir
-
-        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-
-        $settings = New-ScheduledTaskSettingsSet `
-            -AllowStartIfOnBatteries `
-            -DontStopIfGoingOnBatteries `
-            -RestartCount 3 `
-            -RestartInterval (New-TimeSpan -Minutes 1) `
-            -ExecutionTimeLimit (New-TimeSpan -Days 365)
-
-        Register-ScheduledTask `
-            -TaskName $taskName `
-            -Action $action `
-            -Trigger $trigger `
-            -Settings $settings `
-            -Description "Locus Telegram Bot - AI-Native Development Environment" `
-            -RunLevel Limited
-
-        # Start the task now
-        Start-ScheduledTask -TaskName $taskName
-
-        Write-Success "Telegram bot Scheduled Task created and started"
-        Write-Info "Manage with:"
-        Write-Info "  schtasks /query /tn `"LocusTelegramBot`""
-        Write-Info "  schtasks /run   /tn `"LocusTelegramBot`""
-        Write-Info "  schtasks /end   /tn `"LocusTelegramBot`""
-    } else {
-        Write-Warn "Could not find locus-telegram binary for Scheduled Task creation."
-        Write-Warn "Start it manually with: locus telegram run"
-    }
-} else {
-    Write-Warn "Telegram not configured (missing -TelegramToken or -TelegramChatId)"
-    Write-Info "Configure later with: locus telegram setup"
-}
-
-# ─── Step 13: Verify Installation ───────────────────────────────────────────
+# ─── Step 9: Verify Installation ───────────────────────────────────────────
 
 Write-Header "Verification"
 
@@ -465,13 +347,8 @@ Test-Check "Node.js 22+"      { $v = [int]((node -v) -replace 'v(\d+)\..*', '$1'
 Test-Check "Bun"              { Test-Command "bun" }
 Test-Check "Claude Code"      { Test-Command "claude" }
 Test-Check "Locus CLI"        { Test-Command "locus" }
-Test-Check "Locus Telegram"   { Test-Command "locus-telegram" }
 Test-Check "Repository"       { Test-Path (Join-Path $Dir ".git") }
 Test-Check "Locus Init"       { Test-Path (Join-Path $Dir ".locus\config.json") }
-
-if ($TelegramToken -and $TelegramChatId) {
-    Test-Check "Telegram Bot" { (Get-ScheduledTask -TaskName "LocusTelegramBot" -ErrorAction SilentlyContinue).State -eq "Running" }
-}
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
 
@@ -493,21 +370,15 @@ if ($fails -eq 0) {
 Write-Host ""
 Write-Host "  Quick Start:" -ForegroundColor White
 Write-Host "    > cd $Dir" -ForegroundColor DarkGray
-Write-Host "    > locus run                    # Start AI agents" -ForegroundColor DarkGray
+Write-Host "    > locus plan                     # AI sprint planning" -ForegroundColor DarkGray
+Write-Host "    > locus run                      # Execute sprint tasks" -ForegroundColor DarkGray
 Write-Host "    > locus exec `"describe this project`" # Quick AI query" -ForegroundColor DarkGray
 Write-Host ""
 
-if ($TelegramToken -and $TelegramChatId) {
-    Write-Host "  Telegram Bot:" -ForegroundColor White
-    Write-Host "    > schtasks /query /tn `"LocusTelegramBot`"" -ForegroundColor DarkGray
-    Write-Host ""
-}
-
 Write-Host "  Useful Commands:" -ForegroundColor White
-Write-Host "    > locus config show             # View configuration" -ForegroundColor DarkGray
-Write-Host "    > locus telegram config          # View Telegram config" -ForegroundColor DarkGray
-Write-Host "    > locus index                    # Index codebase for AI" -ForegroundColor DarkGray
-Write-Host "    > locus plan                     # AI planning session" -ForegroundColor DarkGray
+Write-Host "    > locus config show              # View configuration" -ForegroundColor DarkGray
+Write-Host "    > locus status                   # View sprint status" -ForegroundColor DarkGray
+Write-Host "    > locus review                   # AI code review" -ForegroundColor DarkGray
 Write-Host ""
 
 Write-Host "  Agent CLI Setup:" -ForegroundColor White

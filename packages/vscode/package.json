@@ -1,7 +1,7 @@
 {
   "name": "locusai-vscode",
   "displayName": "Locus AI",
-  "description": "Locus AI — AI-native project management for VS Code",
+  "description": "Locus AI — GitHub-native AI sprint execution for VS Code",
   "version": "0.16.2",
   "publisher": "locusai",
   "private": true,

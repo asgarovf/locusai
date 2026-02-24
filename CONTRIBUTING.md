@@ -1,18 +1,15 @@
 # Contributing to Locus
 
-Thank you for your interest in contributing to Locus! Locus is built as a monorepo to provide an AI-native project management experience for engineering teams.
+Thank you for your interest in contributing to Locus! Locus is a GitHub-native AI sprint execution CLI that turns GitHub issues into shipped code.
 
-## 🏗 Repository Structure
+## Repository Structure
 
-- `apps/api`: The core engine (NestJS/TypeORM).
-- `apps/web`: The Next.js dashboard.
-- `apps/www`: The marketing and documentation website.
-- `apps/mcp`: The Model Context Protocol server for AI integration.
-- `packages/cli`: The unified entry point for users.
-- `packages/sdk`: The TypeScript SDK for programmatic API access.
-- `packages/shared`: Shared types and database schemas.
+- `packages/cli`: The unified CLI entry point (`@locusai/cli`)
+- `packages/shared`: Shared types and utilities
+- `packages/vscode`: The VS Code extension
+- `apps/www`: The marketing and documentation website
 
-## 🛠 Local Development Setup
+## Local Development Setup
 
 Locus requires [Bun](https://bun.sh) for development.
 
@@ -22,35 +19,32 @@ Locus requires [Bun](https://bun.sh) for development.
 bun install
 ```
 
-### 2. Workspace Setup
-1. Create a workspace on [app.locusai.dev](https://app.locusai.dev).
-2. Generate an API key from your workspace settings.
-3. Have a demo project directory ready on your local machine.
+### 2. Prerequisites
+- **GitHub CLI** (`gh`): Required for all GitHub operations. Install from [cli.github.com](https://cli.github.com)
+- **AI Agent CLI**: Either [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [OpenAI Codex](https://openai.com/index/codex/)
+- Authenticate with GitHub: `gh auth login`
 
 ### 3. Running CLI Commands
-Use the `--dir` argument to point the CLI to your local project:
 ```bash
-bun run cli <command> --dir /path/to/your/demo-project
+# Run the CLI from source
+bun run simulate <command>
+
+# Example: initialize Locus in a test project
+bun run simulate init --dir /path/to/test-project
 ```
 
-### 4. Testing with Local Backend
-To test the CLI against your local API server, use the `--api-url` argument:
-```bash
-# Start the local backend
-bun run dev
-
-# Run CLI commands against local backend
-bun run cli <command> --dir /path/to/your/demo-project --api-url http://localhost:8000
-```
-
-### 5. Building the CLI Bundle
-If you modify the CLI or the bundled logic, you need to rebuild the static assets:
+### 4. Building the CLI Bundle
+If you modify the CLI or shared packages, rebuild:
 ```bash
 bun run build:cli
 ```
-This generates single-file snapshots in `packages/cli/bin/`.
 
-## 🧪 Quality Standards
+### 5. Running the Website Locally
+```bash
+cd apps/www && bun run dev
+```
+
+## Quality Standards
 
 We use [Biome](https://biomejs.dev/) for linting and formatting.
 
@@ -65,7 +59,7 @@ bun run format
 bun run typecheck
 ```
 
-## 🚀 Submitting Changes
+## Submitting Changes
 
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feat/amazing-feature`).
@@ -73,7 +67,7 @@ bun run typecheck
 4. Push to the branch (`git push origin feat/amazing-feature`).
 5. Open a Pull Request.
 
-## 📦 Versioning and Releasing
+## Versioning and Releasing
 
 We use **Changesets** for version management.
 
@@ -96,8 +90,9 @@ bun run release
 
 ---
 
-## 🎨 Design Principles
+## Design Principles
 
-- **Cloud Planning, Local Execution**: Planning happens in the cloud; agents run securely on user machines.
-- **Agent-Centric**: Every feature should be exposed via MCP so AI agents can use it.
+- **GitHub-Native**: All state lives in GitHub (issues, milestones, PRs). No external databases or APIs.
+- **Zero Infrastructure**: No servers, no accounts, no cloud dashboard. Everything runs locally via the CLI.
+- **Agent-Centric**: Every feature should be accessible via CLI commands that AI agents can execute.
 - **Transparent**: Use human-readable formats (Markdown/JSON) where possible.

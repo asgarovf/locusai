@@ -2,23 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://locusai.dev/schemas/settings.schema.json",
   "title": "Locus Settings",
-  "description": "User settings for a Locus AI project (.locus/settings.json)",
+  "description": "Project settings for Locus CLI (.locus/settings.json)",
   "type": "object",
   "properties": {
     "$schema": {
       "type": "string",
       "description": "JSON Schema reference for editor validation and autocomplete"
-    },
-    "apiKey": {
-      "type": "string",
-      "description": "Locus API key for authentication",
-      "pattern": "^lk_[a-f0-9]+$"
-    },
-    "apiUrl": {
-      "type": "string",
-      "format": "uri",
-      "description": "Locus API base URL (defaults to https://api.locusai.dev/api)",
-      "examples": ["https://api.locusai.dev/api", "http://localhost:8000/api"]
     },
     "provider": {
       "type": "string",
@@ -47,31 +36,6 @@
         "gpt-5-codex",
         "codex-mini-latest"
       ]
-    },
-    "workspaceId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "The Locus workspace ID (overrides the value in config.json)"
-    },
-    "telegram": {
-      "type": "object",
-      "description": "Telegram bot integration settings",
-      "properties": {
-        "botToken": {
-          "type": "string",
-          "description": "Telegram bot token from @BotFather"
-        },
-        "chatId": {
-          "type": "number",
-          "description": "Telegram chat ID where the bot will send notifications"
-        },
-        "testMode": {
-          "type": "boolean",
-          "description": "Enable test mode (dry run without executing tasks)",
-          "default": false
-        }
-      },
-      "additionalProperties": false
     }
   },
   "allOf": [

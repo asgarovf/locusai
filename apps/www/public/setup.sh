@@ -9,9 +9,6 @@
 # Usage (non-interactive):
 #   curl -fsSL https://locusai.dev/install.sh | bash -s -- \
 #     --repo "https://github.com/user/project.git" \
-#     --api-key "locus-api-key" \
-#     --telegram-token "bot123:ABC" \
-#     --telegram-chat-id "12345" \
 #     --gh-token "ghp_..." \
 #     --branch "main"
 #
@@ -48,16 +45,11 @@ trim() {
 
 REPO_URL=""
 BRANCH="main"
-API_KEY=""
-TELEGRAM_TOKEN=""
-TELEGRAM_CHAT_ID=""
 GH_TOKEN=""
 PROJECT_DIR=""
-EXPLICIT_USER=""
 
 # ─── Privilege Helper ────────────────────────────────────────────────────────
 # Use sudo for system commands when not running as root.
-# If the user has passwordless sudo, this works seamlessly.
 
 if [[ "$(id -u)" -eq 0 ]]; then
   SUDO=""
@@ -69,11 +61,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)          REPO_URL="$2";          shift 2 ;;
     --branch)        BRANCH="$2";            shift 2 ;;
-    --api-key)       API_KEY="$2";           shift 2 ;;
-    --telegram-token) TELEGRAM_TOKEN="$2";   shift 2 ;;
-    --telegram-chat-id) TELEGRAM_CHAT_ID="$2"; shift 2 ;;
     --gh-token)      GH_TOKEN="$2";          shift 2 ;;
-    --user)          EXPLICIT_USER="$2";     shift 2 ;;
     --dir)           PROJECT_DIR="$2";       shift 2 ;;
     --help|-h)
       echo ""
@@ -84,12 +72,8 @@ while [[ $# -gt 0 ]]; do
       echo "  Options:"
       echo "    --repo <url>             Git repository HTTPS URL to clone (required)"
       echo "    --branch <name>          Branch to checkout (default: main)"
-      echo "    --user <username>        Run setup as this user (passed from install.sh)"
       echo "    --dir <path>             Directory to clone into (default: derived from repo)"
-      echo "    --api-key <key>          Locus API key"
       echo "    --gh-token <token>       GitHub personal access token for gh CLI"
-      echo "    --telegram-token <token> Telegram bot token from @BotFather"
-      echo "    --telegram-chat-id <id>  Telegram chat ID for authorization"
       echo ""
       exit 0
       ;;
@@ -102,7 +86,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ─── Interactive Mode ────────────────────────────────────────────────────────
-# If no --repo was provided via flags, prompt the user interactively.
 
 if [[ -z "$REPO_URL" ]]; then
   echo ""
@@ -159,10 +142,7 @@ if [[ -z "$REPO_URL" ]]; then
 
   prompt REPO_URL          "Repository HTTPS URL (e.g. https://github.com/user/repo.git)" true
   prompt BRANCH            "Branch"               false  "main"
-  prompt API_KEY           "Locus API Key"        false
   prompt GH_TOKEN          "GitHub Token"         false
-  prompt TELEGRAM_TOKEN    "Telegram Bot Token"   false
-  prompt TELEGRAM_CHAT_ID  "Telegram Chat ID"     false
 
   if [[ "${INPUT_FD:-0}" -eq 3 ]]; then
     exec 3<&-
@@ -172,7 +152,6 @@ if [[ -z "$REPO_URL" ]]; then
 fi
 
 # ─── Validate Repository URL ─────────────────────────────────────────────────
-# Only HTTPS URLs are supported (SSH requires key setup which is not handled).
 
 if [[ "$REPO_URL" == git@* ]] || [[ "$REPO_URL" == ssh://* ]]; then
   error "SSH repository URLs are not supported. Please use an HTTPS URL."
@@ -181,11 +160,8 @@ if [[ "$REPO_URL" == git@* ]] || [[ "$REPO_URL" == ssh://* ]]; then
 fi
 
 # ─── Resolve Setup User ──────────────────────────────────────────────────────
-# Priority: --user flag > SUDO_USER > current user
 
-if [[ -n "$EXPLICIT_USER" ]]; then
-  SETUP_USER="$EXPLICIT_USER"
-elif [[ -n "${SUDO_USER:-}" ]]; then
+if [[ -n "${SUDO_USER:-}" ]]; then
   SETUP_USER="$SUDO_USER"
 else
   SETUP_USER="$(whoami)"
@@ -193,38 +169,33 @@ fi
 
 USER_HOME=$(eval echo "~${SETUP_USER}")
 
+# ─── Helper: Run as setup user (not root) ─────────────────────────────────────
+
+run_as_user() {
+  if [[ "$(whoami)" == "$SETUP_USER" ]]; then
+    bash -c "$1"
+  elif [[ "$(id -u)" -eq 0 ]]; then
+    sudo -u "$SETUP_USER" bash -c "$1"
+  else
+    bash -c "$1"
+  fi
+}
+
 # ─── Banner ───────────────────────────────────────────────────────────────────
 
 echo ""
 echo -e "${BOLD}${CYAN}"
 echo "  ╔═══════════════════════════════════════════════╗"
 echo "  ║         Locus Environment Setup               ║"
-echo "  ║         AI-Native Development Environment     ║"
+echo "  ║         GitHub-Native AI Sprint Execution     ║"
 echo "  ╚═══════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
 info "Repository:     ${BOLD}${REPO_URL}${RESET}"
 info "Branch:         ${BOLD}${BRANCH}${RESET}"
 info "User:           ${BOLD}${SETUP_USER}${RESET}"
-info "API Key:        ${BOLD}${API_KEY:+configured}${API_KEY:-not set}${RESET}"
 info "GH Token:       ${BOLD}${GH_TOKEN:+configured}${GH_TOKEN:-not set}${RESET}"
-info "Telegram:       ${BOLD}${TELEGRAM_TOKEN:+configured}${TELEGRAM_TOKEN:-not set}${RESET}"
 echo ""
-
-# ─── Helper: Run as setup user (not root) ─────────────────────────────────────
-
-run_as_user() {
-  if [[ "$(whoami)" == "$SETUP_USER" ]]; then
-    # Already running as the target user
-    bash -c "$1"
-  elif [[ "$(id -u)" -eq 0 ]]; then
-    # Running as root — switch to the setup user
-    sudo -u "$SETUP_USER" bash -c "$1"
-  else
-    # Running as some other user — just run directly
-    bash -c "$1"
-  fi
-}
 
 # ─── Step 1: System Packages ─────────────────────────────────────────────────
 
@@ -285,7 +256,6 @@ if [[ -n "$GH_TOKEN" ]]; then
   run_as_user "echo '${GH_TOKEN}' | gh auth login --with-token --hostname github.com --git-protocol https"
   if run_as_user "gh auth status --hostname github.com" &>/dev/null; then
     success "GitHub CLI authenticated"
-    # Configure git credential helper so git clone/push use the gh token
     run_as_user "gh auth setup-git"
     success "Git credential helper configured (via gh)"
   else
@@ -328,11 +298,9 @@ if run_as_user "command -v bun" &>/dev/null; then
 else
   info "Installing Bun..."
   run_as_user 'curl -fsSL https://bun.sh/install | bash > /dev/null 2>&1'
-  # Ensure bun is on PATH for subsequent commands
   BUN_PATH="${USER_HOME}/.bun/bin"
   if [[ -d "$BUN_PATH" ]]; then
     export PATH="$BUN_PATH:$PATH"
-    # Add to user's bashrc if not already there
     run_as_user "grep -q '.bun/bin' ~/.bashrc 2>/dev/null || echo 'export PATH=\"\$HOME/.bun/bin:\$PATH\"' >> ~/.bashrc"
   fi
   success "Bun installed: $(run_as_user 'export PATH="$HOME/.bun/bin:$PATH" && bun --version')"
@@ -348,7 +316,6 @@ else
   info "Installing Claude Code via native installer..."
   run_as_user "curl -fsSL https://claude.ai/install.sh | bash" > /dev/null 2>&1
 
-  # Ensure claude is on PATH for subsequent commands
   CLAUDE_PATH="${USER_HOME}/.local/bin"
   if [[ -d "$CLAUDE_PATH" ]]; then
     export PATH="$CLAUDE_PATH:$PATH"
@@ -374,23 +341,10 @@ else
   success "Locus CLI installed"
 fi
 
-# ─── Step 8: Locus Telegram Bot ─────────────────────────────────────────
-
-header "Locus Telegram Bot"
-
-if command -v locus-telegram &>/dev/null; then
-  success "Locus Telegram Bot already installed"
-else
-  info "Installing Locus Telegram Bot from npm..."
-  $SUDO npm install -g @locusai/telegram > /dev/null 2>&1
-  success "Locus Telegram Bot installed"
-fi
-
-# ─── Step 9: Clone Repository ────────────────────────────────────────────────
+# ─── Step 8: Clone Repository ────────────────────────────────────────────────
 
 header "Repository"
 
-# Derive project directory from repo URL if not specified
 if [[ -z "$PROJECT_DIR" ]]; then
   REPO_NAME=$(basename "$REPO_URL" .git)
   PROJECT_DIR="${USER_HOME}/${REPO_NAME}"
@@ -417,23 +371,7 @@ else
   fi
 fi
 
-# ─── Step 10: Install Dependencies ───────────────────────────────────────────
-
-header "Dependencies"
-
-info "Installing project dependencies with Bun..."
-run_as_user "cd '${PROJECT_DIR}' && export PATH=\"\$HOME/.bun/bin:\$PATH\" && bun install"
-success "Dependencies installed"
-
-# ─── Step 11: Build Packages ─────────────────────────────────────────────────
-
-header "Build"
-
-info "Building packages (shared → sdk → cli → telegram)..."
-run_as_user "cd '${PROJECT_DIR}' && export PATH=\"\$HOME/.bun/bin:\$PATH\" && bun run build"
-success "Packages built"
-
-# ─── Step 12: Initialize Locus ───────────────────────────────────────────────
+# ─── Step 9: Initialize Locus ────────────────────────────────────────────────
 
 header "Locus Init"
 
@@ -441,66 +379,7 @@ info "Initializing Locus in project..."
 run_as_user "cd '${PROJECT_DIR}' && locus init"
 success "Locus initialized"
 
-# Configure API key if provided
-if [[ -n "$API_KEY" ]]; then
-  info "Configuring Locus API key..."
-  run_as_user "cd '${PROJECT_DIR}' && locus config setup --api-key '${API_KEY}'"
-  success "Locus API key configured"
-fi
-
-# ─── Step 13: Telegram Bot Setup ─────────────────────────────────────────────
-
-header "Telegram Bot"
-
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  info "Configuring Telegram bot..."
-  run_as_user "cd '${PROJECT_DIR}' && locus telegram setup --token '${TELEGRAM_TOKEN}' --chat-id '${TELEGRAM_CHAT_ID}'"
-
-  success "Telegram bot configured"
-
-  # Create systemd service for Telegram bot
-  info "Creating systemd service for Telegram bot..."
-
-  TELEGRAM_BIN="$(which locus-telegram)"
-  SERVICE_FILE="/etc/systemd/system/locus-telegram.service"
-
-  $SUDO tee "$SERVICE_FILE" > /dev/null <<UNIT
-[Unit]
-Description=Locus Telegram Bot
-After=network.target
-
-[Service]
-Type=simple
-User=${SETUP_USER}
-WorkingDirectory=${PROJECT_DIR}
-ExecStart=${TELEGRAM_BIN}
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=locus-telegram
-
-# Environment
-Environment=NODE_ENV=production
-Environment=LOCUS_PROJECT_PATH=${PROJECT_DIR}
-
-[Install]
-WantedBy=multi-user.target
-UNIT
-
-  $SUDO systemctl daemon-reload
-  $SUDO systemctl enable locus-telegram > /dev/null 2>&1
-  $SUDO systemctl start locus-telegram
-
-  success "Telegram bot service created and started"
-  info "Manage with: systemctl {start|stop|restart|status} locus-telegram"
-  info "View logs:   journalctl -u locus-telegram -f"
-else
-  warn "Telegram not configured (missing --telegram-token or --telegram-chat-id)"
-  info "Configure later with: locus telegram setup"
-fi
-
-# ─── Step 14: Verify Installation ────────────────────────────────────────────
+# ─── Step 10: Verify Installation ────────────────────────────────────────────
 
 header "Verification"
 
@@ -525,13 +404,8 @@ check "Node.js 22+" "node -v | grep -qE 'v(2[2-9]|[3-9][0-9])'"
 check "Bun"         "run_as_user 'command -v bun'"
 check "Claude Code"  "command -v claude"
 check "Locus CLI"   "command -v locus"
-check "Locus Telegram" "command -v locus-telegram"
 check "Repository"  "test -d '${PROJECT_DIR}/.git'"
 check "Locus Init"  "test -f '${PROJECT_DIR}/.locus/config.json'"
-
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  check "Telegram Bot" "systemctl is-active --quiet locus-telegram"
-fi
 
 # ─── Summary ──────────────────────────────────────────────────────────────────
 
@@ -553,29 +427,17 @@ else
 fi
 
 echo ""
-if [[ "$SETUP_USER" != "$(whoami)" && "$SETUP_USER" != "root" ]]; then
-  echo -e "  ${BOLD}SSH Login:${RESET}"
-  echo -e "    ${DIM}\$${RESET} ssh ${SETUP_USER}@<your-server-ip>"
-  echo ""
-fi
 echo -e "  ${BOLD}Quick Start:${RESET}"
 echo -e "    ${DIM}\$${RESET} cd ${PROJECT_DIR}"
-echo -e "    ${DIM}\$${RESET} locus run                    ${DIM}# Start AI agents${RESET}"
+echo -e "    ${DIM}\$${RESET} locus plan                     ${DIM}# AI sprint planning${RESET}"
+echo -e "    ${DIM}\$${RESET} locus run                      ${DIM}# Execute sprint tasks${RESET}"
 echo -e "    ${DIM}\$${RESET} locus exec \"describe this project\" ${DIM}# Quick AI query${RESET}"
 echo ""
 
-if [[ -n "$TELEGRAM_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  echo -e "  ${BOLD}Telegram Bot:${RESET}"
-  echo -e "    ${DIM}\$${RESET} systemctl status locus-telegram"
-  echo -e "    ${DIM}\$${RESET} journalctl -u locus-telegram -f"
-  echo ""
-fi
-
 echo -e "  ${BOLD}Useful Commands:${RESET}"
-echo -e "    ${DIM}\$${RESET} locus config show             ${DIM}# View configuration${RESET}"
-echo -e "    ${DIM}\$${RESET} locus telegram config          ${DIM}# View Telegram config${RESET}"
-echo -e "    ${DIM}\$${RESET} locus index                    ${DIM}# Index codebase for AI${RESET}"
-echo -e "    ${DIM}\$${RESET} locus plan                     ${DIM}# AI planning session${RESET}"
+echo -e "    ${DIM}\$${RESET} locus config show              ${DIM}# View configuration${RESET}"
+echo -e "    ${DIM}\$${RESET} locus status                   ${DIM}# View sprint status${RESET}"
+echo -e "    ${DIM}\$${RESET} locus review                   ${DIM}# AI code review${RESET}"
 echo ""
 
 echo -e "  ${BOLD}Agent CLI Setup:${RESET}"
