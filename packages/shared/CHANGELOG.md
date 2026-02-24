@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.17.0
+
+### Minor Changes
+
+- Github based workflow migration
+
 ## 0.16.2
 
 ### Patch Changes
