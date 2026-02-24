@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.17.3
+
+### Patch Changes
+
+- Issue branch creation improvements
+
 ## 0.17.2
 
 ### Patch Changes
