@@ -288,7 +288,12 @@ export function addIssueComment(
   body: string,
   options: GhOptions = {}
 ): void {
-  gh(`issue comment ${number} --body ${JSON.stringify(body)}`, options);
+  const cwd = options.cwd ?? process.cwd();
+  execFileSync("gh", ["issue", "comment", String(number), "--body", body], {
+    cwd,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "pipe"],
+  } satisfies ExecFileSyncOptionsWithStringEncoding);
 }
 
 // ─── Milestone Operations ────────────────────────────────────────────────────
