@@ -173,6 +173,7 @@ ${bold("Commands:")}
   ${cyan("review")}            AI-powered code review on PRs
   ${cyan("iterate")}           Re-execute tasks with PR feedback
   ${cyan("discuss")}           AI-powered architectural discussions
+  ${cyan("artifacts")}         View and manage AI-generated artifacts
   ${cyan("status")}            Dashboard view of current state
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
@@ -398,6 +399,13 @@ async function main(): Promise<void> {
       await discussCommand(projectRoot, discussArgs, {
         model: parsed.flags.model,
       });
+      break;
+    }
+
+    case "artifacts": {
+      const { artifactsCommand } = await import("./commands/artifacts.js");
+      const artifactsArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await artifactsCommand(projectRoot, artifactsArgs);
       break;
     }
 

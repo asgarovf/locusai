@@ -20,6 +20,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import { createTimer } from "../display/progress.js";
@@ -72,7 +73,7 @@ export async function discussCommand(
   args: string[],
   flags: { model?: string } = {}
 ): Promise<void> {
-  if (args[0] === "help" || args.length === 0) {
+  if (args[0] === "help") {
     printHelp();
     return;
   }
@@ -89,6 +90,16 @@ export async function discussCommand(
 
   if (subcommand === "delete") {
     return deleteDiscussion(projectRoot, args[1]);
+  }
+
+  if (args.length === 0) {
+    // Prompt for topic interactively
+    const topic = await promptForTopic();
+    if (!topic) {
+      printHelp();
+      return;
+    }
+    return startDiscussion(projectRoot, topic, flags);
   }
 
   // Everything else is treated as a discussion topic
@@ -191,6 +202,24 @@ function deleteDiscussion(projectRoot: string, id: string | undefined): void {
   process.stderr.write(
     `${green("✓")} Deleted discussion: ${match.replace(".md", "")}\n`
   );
+}
+
+// ─── Interactive Topic Prompt ────────────────────────────────────────────────
+
+async function promptForTopic(): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stderr,
+      terminal: true,
+    });
+    process.stderr.write(`${bold("Discussion topic:")} `);
+    rl.once("line", (line) => {
+      rl.close();
+      resolve(line.trim());
+    });
+    rl.once("close", () => resolve(""));
+  });
 }
 
 // ─── Start New Discussion ────────────────────────────────────────────────────
