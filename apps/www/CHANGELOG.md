@@ -1,5 +1,14 @@
 # @locusai/www
 
+## 0.17.5
+
+### Patch Changes
+
+- Discuss command improvements
+  Bring artifacts command back
+- Updated dependencies
+  - @locusai/shared@0.17.5
+
 ## 0.17.4
 
 ### Patch Changes

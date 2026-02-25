@@ -1,5 +1,12 @@
 # @locusai/shared
 
+## 0.17.5
+
+### Patch Changes
+
+- Discuss command improvements
+  Bring artifacts command back
+
 ## 0.17.4
 
 ### Patch Changes
