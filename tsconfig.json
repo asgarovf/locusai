@@ -10,7 +10,8 @@
     { "path": "./apps/www" },
     { "path": "./packages/shared" },
     { "path": "./packages/cli" },
-    { "path": "./packages/vscode" }
+    { "path": "./packages/vscode" },
+    { "path": "./packages/sdk" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }
