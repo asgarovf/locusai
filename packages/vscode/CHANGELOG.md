@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.9
+
+### Patch Changes
+
+- Discuss plan improvements
+- Updated dependencies
+  - @locusai/shared@0.17.9
+
 ## 0.17.8
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.17.9
+
+### Patch Changes
+
+- Discuss plan improvements
+
 ## 0.17.8
 
 ### Patch Changes
