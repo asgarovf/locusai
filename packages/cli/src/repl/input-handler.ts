@@ -913,6 +913,11 @@ export const __testUtils = {
  * Uses a dual-interrupt pattern:
  * - First ESC/Ctrl+C: calls onInterrupt() to abort the current operation
  * - Second ESC/Ctrl+C within 2s: calls onForceExit() to force quit
+ *
+ * Bracketed paste mode is enabled while listening so that Cmd+V paste events
+ * arrive as "\x1b[200~…\x1b[201~" rather than raw bytes. This prevents a
+ * lone \x1b byte at the start of pasted ANSI content from being mistaken for
+ * an ESC keypress and inadvertently aborting the execution.
  */
 export function listenForInterrupt(
   onInterrupt: () => void,
@@ -928,11 +933,19 @@ export function listenForInterrupt(
   stdin.setRawMode(true);
   stdin.resume();
 
+  // Enable bracketed paste so Cmd+V sends \x1b[200~…\x1b[201~, not raw bytes.
+  process.stderr.write(ENABLE_BRACKETED_PASTE);
+
   let interrupted = false;
   let interruptTime = 0;
 
   const handler = (data: Buffer) => {
     const seq = data.toString();
+
+    // Ignore bracketed paste sequences – these are Cmd+V paste events, not
+    // intentional interrupt signals.
+    if (seq.startsWith(PASTE_START) || seq === PASTE_END) return;
+
     if (seq === "\x1b" || seq === "\x03") {
       const now = Date.now();
 
@@ -957,6 +970,7 @@ export function listenForInterrupt(
 
   return () => {
     stdin.removeListener("data", handler);
+    process.stderr.write(DISABLE_BRACKETED_PASTE);
     if (wasRaw !== undefined && stdin.isTTY) {
       stdin.setRawMode(wasRaw);
     }
