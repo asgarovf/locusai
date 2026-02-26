@@ -2,7 +2,7 @@
   "name": "locusai-vscode",
   "displayName": "Locus AI",
   "description": "Locus AI — GitHub-native AI sprint execution for VS Code",
-  "version": "0.17.6",
+  "version": "0.17.7",
   "publisher": "locusai",
   "private": true,
   "license": "MIT",
@@ -163,7 +163,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@locusai/shared": "^0.17.6"
+    "@locusai/shared": "^0.17.7"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

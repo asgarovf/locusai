@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.17.7
+
+### Patch Changes
+
+- Plan & Discuss improvements
+- Updated dependencies
+  - @locusai/shared@0.17.7
+
 ## 0.17.6
 
 ### Patch Changes
