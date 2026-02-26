@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.10
+
+### Patch Changes
+
+- Plan approval with sprint
+- Updated dependencies
+  - @locusai/shared@0.17.10
+
 ## 0.17.9
 
 ### Patch Changes

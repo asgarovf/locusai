@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.17.10
+
+### Patch Changes
+
+- Plan approval with sprint
+
 ## 0.17.9
 
 ### Patch Changes
