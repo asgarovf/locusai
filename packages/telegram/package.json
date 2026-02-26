@@ -1,0 +1,39 @@
+{
+  "name": "locus-telegram",
+  "version": "1.0.0",
+  "description": "Remote-control your Locus agent from Telegram",
+  "type": "module",
+  "bin": {
+    "locus-telegram": "./bin/locus-telegram.js"
+  },
+  "locus": {
+    "displayName": "Telegram",
+    "description": "Remote-control your Locus agent from Telegram",
+    "commands": ["start", "stop", "status", "config"],
+    "version": "1.0.0"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outfile dist/index.js --target node",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": [
+    "locusai-package",
+    "locus",
+    "telegram",
+    "remote-control",
+    "bot",
+    "agent"
+  ],
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
