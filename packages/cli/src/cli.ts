@@ -62,6 +62,8 @@ interface ParsedArgs {
     model?: string;
     check: boolean;
     targetVersion?: string;
+    installVersion?: string;
+    upgrade: boolean;
   };
 }
 
@@ -78,6 +80,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     resume: false,
     dryRun: false,
     check: false,
+    upgrade: false,
   };
 
   const positional: string[] = [];
@@ -102,8 +105,24 @@ function parseArgs(argv: string[]): ParsedArgs {
         flags.help = true;
         break;
       case "--version":
-      case "-V":
-        flags.version = true;
+      case "-V": {
+        // If the next token looks like a version number (starts with a digit),
+        // treat it as a package version for `locus install`.  Otherwise show
+        // the CLI version as usual.
+        const nextToken = rawArgs[i + 1];
+        if (nextToken !== undefined && /^\d/.test(nextToken)) {
+          flags.installVersion = rawArgs[++i];
+        } else {
+          flags.version = true;
+        }
+        break;
+      }
+      case "-v":
+        flags.installVersion = rawArgs[++i];
+        break;
+      case "--upgrade":
+      case "-u":
+        flags.upgrade = true;
         break;
       case "--json-stream":
         flags.jsonStream = true;
@@ -177,6 +196,7 @@ ${bold("Commands:")}
   ${cyan("status")}            Dashboard view of current state
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
+  ${cyan("install")}           Install a community package
   ${cyan("upgrade")}           Check for and install updates
 
 ${bold("Options:")}
@@ -277,6 +297,20 @@ async function main(): Promise<void> {
   if (command === "init") {
     const { initCommand } = await import("./commands/init.js");
     await initCommand(cwd);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "install") {
+    const { installCommand } = await import("./commands/install.js");
+    const installFlags: Record<string, string> = {};
+    if (parsed.flags.installVersion) {
+      installFlags.version = parsed.flags.installVersion;
+    }
+    if (parsed.flags.upgrade) {
+      installFlags.upgrade = "true";
+    }
+    await installCommand(parsed.args, installFlags);
     logger.destroy();
     return;
   }
