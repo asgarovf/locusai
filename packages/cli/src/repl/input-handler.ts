@@ -17,11 +17,6 @@ import {
   normalizeImagePlaceholders,
 } from "./image-detect.js";
 
-interface PasteAttachment {
-  id: number;
-  content: string;
-}
-
 export type InputResult =
   | { type: "submit"; text: string; images: DetectedImage[] }
   | { type: "interrupt" }
@@ -170,8 +165,6 @@ export class InputHandler {
       let pasteBuffer = "";
       let imageAttachments: ImageAttachment[] = [];
       let nextImageId = 1;
-      let pasteAttachments: PasteAttachment[] = [];
-      let nextPasteId = 1;
 
       const history = this.getHistory();
       let historyIndex = -1;
@@ -226,16 +219,6 @@ export class InputHandler {
         const next =
           buffer.slice(0, cursor) + normalizedText + buffer.slice(cursor);
         cursor += normalizedText.length;
-        setBuffer(next);
-        preferredColumn = null;
-        resetHistoryNavigation();
-      };
-
-      // Insert raw text without image-path normalization (used for paste placeholders).
-      const insertRaw = (text: string) => {
-        if (!text) return;
-        const next = buffer.slice(0, cursor) + text + buffer.slice(cursor);
-        cursor += text.length;
         setBuffer(next);
         preferredColumn = null;
         resetHistoryNavigation();
@@ -342,8 +325,6 @@ export class InputHandler {
         setBuffer(history[historyIndex] ?? "");
         imageAttachments = [];
         nextImageId = 1;
-        pasteAttachments = [];
-        nextPasteId = 1;
         cursor = buffer.length;
         preferredColumn = null;
       };
@@ -356,16 +337,12 @@ export class InputHandler {
           setBuffer(history[historyIndex] ?? "");
           imageAttachments = [];
           nextImageId = 1;
-          pasteAttachments = [];
-          nextPasteId = 1;
         } else {
           historyIndex = -1;
           setBuffer(historyDraft);
           historyDraft = "";
           imageAttachments = [];
           nextImageId = 1;
-          pasteAttachments = [];
-          nextPasteId = 1;
         }
 
         cursor = buffer.length;
@@ -433,10 +410,8 @@ export class InputHandler {
         nextImageId = normalized.nextId;
         const images = collectReferencedAttachments(buffer, imageAttachments);
 
-        const finalText = expandPastePlaceholders(buffer, pasteAttachments);
-
         out.write("\r\n");
-        finish({ type: "submit", text: finalText, images });
+        finish({ type: "submit", text: buffer, images });
       };
 
       const clearBufferOrInterrupt = () => {
@@ -445,8 +420,6 @@ export class InputHandler {
           cursor = 0;
           imageAttachments = [];
           nextImageId = 1;
-          pasteAttachments = [];
-          nextPasteId = 1;
           preferredColumn = null;
           resetHistoryNavigation();
           render();
@@ -466,20 +439,12 @@ export class InputHandler {
 
       const maybeHeuristicPaste = (chunk: string): boolean => {
         if (chunk.includes(ESC)) return false;
-        const isImagePath = looksLikeImagePathChunk(chunk);
-        if (!looksLikePaste(chunk) && !isImagePath) {
+        if (!looksLikePaste(chunk) && !looksLikeImagePathChunk(chunk)) {
           return false;
         }
 
         const normalized = normalizeLineEndings(chunk);
-
-        if (!isImagePath && normalized.includes("\n")) {
-          const id = nextPasteId++;
-          pasteAttachments.push({ id, content: normalized });
-          insertRaw(buildPastePlaceholder(id, normalized));
-        } else {
-          insertText(normalized);
-        }
+        insertText(normalized);
         render();
         return true;
       };
@@ -607,16 +572,8 @@ export class InputHandler {
             pending = pending.slice(endIdx + PASTE_END.length);
             isPasting = false;
 
-            const pasteContent = normalizeLineEndings(pasteBuffer);
+            insertText(normalizeLineEndings(pasteBuffer));
             pasteBuffer = "";
-
-            if (pasteContent.includes("\n")) {
-              const id = nextPasteId++;
-              pasteAttachments.push({ id, content: pasteContent });
-              insertRaw(buildPastePlaceholder(id, pasteContent));
-            } else {
-              insertText(pasteContent);
-            }
             render();
             continue;
           }
@@ -813,22 +770,6 @@ function looksLikePaste(chunk: string): boolean {
     }
   }
   return chunk.includes("\n") || chunk.includes("\r");
-}
-
-function buildPastePlaceholder(id: number, content: string): string {
-  const lines = content.split("\n");
-  const lineCount = content.endsWith("\n") ? lines.length - 1 : lines.length;
-  return `[Pasted text #${id} +${lineCount} lines]`;
-}
-
-function expandPastePlaceholders(
-  text: string,
-  attachments: PasteAttachment[]
-): string {
-  return text.replace(/\[Pasted text #(\d+) \+\d+ lines\]/g, (_, idStr) => {
-    const id = parseInt(idStr, 10);
-    return attachments.find((a) => a.id === id)?.content ?? "";
-  });
 }
 
 function looksLikeImagePathChunk(chunk: string): boolean {
