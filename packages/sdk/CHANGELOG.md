@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.1.3
+
+### Patch Changes
+
+- Image detection
+
 ## 0.1.2
 
 ### Patch Changes

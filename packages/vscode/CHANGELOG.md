@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.13
+
+### Patch Changes
+
+- Image detection
+- Updated dependencies
+  - @locusai/shared@0.17.13
+
 ## 0.17.12
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.17.13
+
+### Patch Changes
+
+- Image detection
+
 ## 0.17.12
 
 ### Patch Changes
