@@ -2,14 +2,21 @@
  * `locus plan` — AI-powered sprint planning.
  *
  * Usage:
- *   locus plan "Build a user auth system"          # AI creates issues + sprint
+ *   locus plan "Build a user auth system"          # AI creates plan file in .locus/plans/
+ *   locus plan approve <id>                         # Create GitHub issues from a saved plan
+ *   locus plan list                                 # List saved plans
+ *   locus plan show <id>                            # Show a saved plan
  *   locus plan --from-issues --sprint "Sprint 2"   # Organize existing issues
- *   locus plan --interactive "Improve API perf"    # Interactive clarification
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
-import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import {
   createIssue,
@@ -38,7 +45,10 @@ function printHelp(): void {
 ${bold("locus plan")} — AI-powered sprint planning
 
 ${bold("Usage:")}
-  locus plan "<directive>"                 ${dim("# AI breaks down into issues")}
+  locus plan "<directive>"                 ${dim("# AI creates a plan file")}
+  locus plan approve <id>                  ${dim("# Create GitHub issues from saved plan")}
+  locus plan list                          ${dim("# List saved plans")}
+  locus plan show <id>                     ${dim("# Show a saved plan")}
   locus plan --from-issues --sprint <name> ${dim("# Organize existing issues")}
 
 ${bold("Options:")}
@@ -49,6 +59,8 @@ ${bold("Options:")}
 ${bold("Examples:")}
   locus plan "Build user authentication with OAuth"
   locus plan "Improve API performance" --sprint "Sprint 3"
+  locus plan approve abc123
+  locus plan list
   locus plan --from-issues --sprint "Sprint 2"
 
 `);
@@ -65,6 +77,14 @@ interface PlannedIssue {
   dependsOn: string;
 }
 
+interface PlanFile {
+  id: string;
+  directive: string;
+  sprint: string | null;
+  createdAt: string;
+  issues: PlannedIssue[];
+}
+
 interface ParsedPlanArgs {
   sprintName: string | undefined;
   fromIssues: boolean;
@@ -75,6 +95,40 @@ interface ParsedPlanArgs {
 
 function normalizeSprintName(name: string): string {
   return name.trim().toLowerCase();
+}
+
+// ─── Plans Directory ─────────────────────────────────────────────────────────
+
+function getPlansDir(projectRoot: string): string {
+  return join(projectRoot, ".locus", "plans");
+}
+
+function ensurePlansDir(projectRoot: string): string {
+  const dir = getPlansDir(projectRoot);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
+function generateId(): string {
+  return `${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function loadPlanFile(projectRoot: string, id: string): PlanFile | null {
+  const dir = getPlansDir(projectRoot);
+  if (!existsSync(dir)) return null;
+
+  const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  const match = files.find((f) => f.startsWith(id));
+  if (!match) return null;
+
+  try {
+    const content = readFileSync(join(dir, match), "utf-8");
+    return JSON.parse(content) as PlanFile;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Command ─────────────────────────────────────────────────────────────────
@@ -88,6 +142,19 @@ export async function planCommand(
   if (args[0] === "help" || args.length === 0) {
     printHelp();
     return;
+  }
+
+  // Subcommands
+  if (args[0] === "list") {
+    return handleListPlans(projectRoot);
+  }
+
+  if (args[0] === "show") {
+    return handleShowPlan(projectRoot, args[1]);
+  }
+
+  if (args[0] === "approve") {
+    return handleApprovePlan(projectRoot, args[1], flags);
   }
 
   const parsedArgs = parsePlanArgs(args);
@@ -118,68 +185,133 @@ export async function planCommand(
   return handleAIPlan(projectRoot, config, directive, sprintName, flags);
 }
 
-// ─── AI-Powered Planning ─────────────────────────────────────────────────────
+// ─── List Plans ──────────────────────────────────────────────────────────────
 
-async function handleAIPlan(
+function handleListPlans(projectRoot: string): void {
+  const dir = getPlansDir(projectRoot);
+
+  if (!existsSync(dir)) {
+    process.stderr.write(`${dim("No saved plans yet.")}\n`);
+    return;
+  }
+
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .reverse();
+
+  if (files.length === 0) {
+    process.stderr.write(`${dim("No saved plans yet.")}\n`);
+    return;
+  }
+
+  process.stderr.write(`\n${bold("Saved Plans:")}\n\n`);
+
+  for (const file of files) {
+    const id = file.replace(".json", "");
+    try {
+      const content = readFileSync(join(dir, file), "utf-8");
+      const plan = JSON.parse(content) as PlanFile;
+      const date = plan.createdAt ? plan.createdAt.slice(0, 10) : "";
+      const issueCount = Array.isArray(plan.issues) ? plan.issues.length : 0;
+      process.stderr.write(
+        `  ${cyan(id.slice(0, 12))}  ${plan.directive.slice(0, 55)}  ${dim(`${issueCount} issues`)}  ${dim(date)}\n`
+      );
+    } catch {
+      process.stderr.write(
+        `  ${cyan(id.slice(0, 12))}  ${dim("(unreadable)")}\n`
+      );
+    }
+  }
+
+  process.stderr.write("\n");
+  process.stderr.write(
+    `  Approve a plan: ${bold("locus plan approve <id>")}\n\n`
+  );
+}
+
+// ─── Show Plan ────────────────────────────────────────────────────────────────
+
+function handleShowPlan(projectRoot: string, id: string | undefined): void {
+  if (!id) {
+    process.stderr.write(`${red("✗")} Please provide a plan ID.\n`);
+    process.stderr.write(`  Usage: ${bold("locus plan show <id>")}\n`);
+    return;
+  }
+
+  const plan = loadPlanFile(projectRoot, id);
+  if (!plan) {
+    process.stderr.write(`${red("✗")} Plan "${id}" not found.\n`);
+    process.stderr.write(`  List plans with: ${bold("locus plan list")}\n`);
+    return;
+  }
+
+  process.stderr.write(`\n${bold("Plan:")} ${cyan(plan.directive)}\n`);
+  process.stderr.write(`  ${dim(`ID: ${plan.id}`)}\n`);
+  if (plan.sprint) {
+    process.stderr.write(`  ${dim(`Sprint: ${plan.sprint}`)}\n`);
+  }
+  process.stderr.write(`  ${dim(`Created: ${plan.createdAt.slice(0, 10)}`)}\n`);
+  process.stderr.write("\n");
+  process.stderr.write(
+    `  ${dim("Order")}  ${dim("Title".padEnd(50))}  ${dim("Priority")}   ${dim("Type")}\n`
+  );
+
+  for (const issue of plan.issues) {
+    process.stderr.write(
+      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(50).slice(0, 50)}  ${issue.priority.padEnd(10)} ${issue.type}\n`
+    );
+  }
+
+  process.stderr.write("\n");
+  process.stderr.write(
+    `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)}`)}\n\n`
+  );
+}
+
+// ─── Approve Plan ─────────────────────────────────────────────────────────────
+
+async function handleApprovePlan(
   projectRoot: string,
-  config: LocusConfig,
-  directive: string,
-  sprintName: string | undefined,
-  flags: { dryRun?: boolean; model?: string }
+  id: string | undefined,
+  flags: { dryRun?: boolean }
 ): Promise<void> {
-  process.stderr.write(`\n${bold("Planning:")} ${cyan(directive)}\n`);
-  if (sprintName) {
-    process.stderr.write(`  ${dim(`Sprint: ${sprintName}`)}\n`);
+  if (!id) {
+    process.stderr.write(`${red("✗")} Please provide a plan ID.\n`);
+    process.stderr.write(`  Usage: ${bold("locus plan approve <id>")}\n`);
+    process.stderr.write(`  List plans with: ${bold("locus plan list")}\n`);
+    return;
+  }
+
+  const plan = loadPlanFile(projectRoot, id);
+  if (!plan) {
+    process.stderr.write(`${red("✗")} Plan "${id}" not found.\n`);
+    process.stderr.write(`  List plans with: ${bold("locus plan list")}\n`);
+    return;
+  }
+
+  if (!Array.isArray(plan.issues) || plan.issues.length === 0) {
+    process.stderr.write(`${red("✗")} Plan "${id}" has no issues.\n`);
+    return;
+  }
+
+  const config = loadConfig(projectRoot);
+
+  process.stderr.write(
+    `\n${bold("Approving plan:")} ${cyan(plan.directive)}\n`
+  );
+  if (plan.sprint) {
+    process.stderr.write(`  ${dim(`Sprint: ${plan.sprint}`)}\n`);
   }
   process.stderr.write("\n");
 
-  // Build context for AI
-  const context = buildPlanningContext(projectRoot, config, directive);
-
-  // Execute AI to generate the plan (with ESC interrupt support)
-  const aiResult = await runAI({
-    prompt: context,
-    provider: config.ai.provider,
-    model: flags.model ?? config.ai.model,
-    cwd: projectRoot,
-    activity: "sprint planning",
-  });
-
-  if (aiResult.interrupted) {
-    process.stderr.write(`\n${yellow("⚡")} Planning interrupted.\n`);
-    return;
-  }
-
-  if (!aiResult.success) {
-    process.stderr.write(
-      `\n${red("✗")} Planning failed: ${aiResult.error ?? "Unknown error"}\n`
-    );
-    return;
-  }
-
-  const output = sanitizePlanOutput(aiResult.output);
-
-  // Parse the AI output for structured issue data
-  const planned = parsePlanOutput(output);
-
-  if (planned.length === 0) {
-    process.stderr.write(
-      `\n${yellow("⚠")} Could not extract structured issues from plan.\n`
-    );
-    process.stderr.write(
-      `  The AI output is shown above. Create issues manually with ${bold("locus issue create")}.\n`
-    );
-    return;
-  }
-
-  // Display the plan
-  process.stderr.write(`\n${bold("Planned Issues:")}\n\n`);
+  // Display issue summary
   process.stderr.write(
-    `  ${dim("Order")}  ${dim("Title".padEnd(45))}  ${dim("Priority")}   ${dim("Type")}\n`
+    `  ${dim("Order")}  ${dim("Title".padEnd(50))}  ${dim("Priority")}   ${dim("Type")}\n`
   );
-  for (const issue of planned) {
+  for (const issue of plan.issues) {
     process.stderr.write(
-      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(45).slice(0, 45)}  ${issue.priority.padEnd(10)} ${issue.type}\n`
+      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(50).slice(0, 50)}  ${issue.priority.padEnd(10)} ${issue.type}\n`
     );
   }
   process.stderr.write("\n");
@@ -191,8 +323,106 @@ async function handleAIPlan(
     return;
   }
 
-  // Create the issues on GitHub
-  await createPlannedIssues(projectRoot, config, planned, sprintName);
+  await createPlannedIssues(
+    projectRoot,
+    config,
+    plan.issues,
+    plan.sprint ?? undefined
+  );
+}
+
+// ─── AI-Powered Planning ─────────────────────────────────────────────────────
+
+async function handleAIPlan(
+  projectRoot: string,
+  config: LocusConfig,
+  directive: string,
+  sprintName: string | undefined,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  const id = generateId();
+  const plansDir = ensurePlansDir(projectRoot);
+  const planPath = join(plansDir, `${id}.json`);
+  const planPathRelative = `.locus/plans/${id}.json`;
+
+  process.stderr.write(`\n${bold("Planning:")} ${cyan(directive)}\n`);
+  if (sprintName) {
+    process.stderr.write(`  ${dim(`Sprint: ${sprintName}`)}\n`);
+  }
+  process.stderr.write("\n");
+
+  const prompt = buildPlanningPrompt(
+    projectRoot,
+    config,
+    directive,
+    sprintName,
+    id,
+    planPathRelative
+  );
+
+  const { execCommand } = await import("./exec.js");
+  await execCommand(projectRoot, [prompt], {});
+
+  // Check if the plan file was created by the AI agent
+  if (!existsSync(planPath)) {
+    process.stderr.write(
+      `\n${yellow("⚠")} Plan file was not created at ${bold(planPathRelative)}.\n`
+    );
+    process.stderr.write(
+      `  Try again or create issues manually with ${bold("locus issue create")}.\n`
+    );
+    return;
+  }
+
+  // Parse and validate the plan file
+  let plan: PlanFile;
+  try {
+    const content = readFileSync(planPath, "utf-8");
+    plan = JSON.parse(content) as PlanFile;
+  } catch {
+    process.stderr.write(
+      `\n${red("✗")} Plan file at ${bold(planPathRelative)} is not valid JSON.\n`
+    );
+    return;
+  }
+
+  if (!Array.isArray(plan.issues) || plan.issues.length === 0) {
+    process.stderr.write(`\n${yellow("⚠")} Plan file has no issues.\n`);
+    return;
+  }
+
+  // Ensure metadata fields are set
+  if (!plan.id) plan.id = id;
+  if (!plan.directive) plan.directive = directive;
+  if (!plan.sprint && sprintName) plan.sprint = sprintName;
+  if (!plan.createdAt) plan.createdAt = new Date().toISOString();
+  writeFileSync(planPath, JSON.stringify(plan, null, 2), "utf-8");
+
+  // Show summary
+  process.stderr.write(`\n${bold("Plan saved:")} ${cyan(id)}\n\n`);
+  process.stderr.write(
+    `  ${dim("Order")}  ${dim("Title".padEnd(50))}  ${dim("Priority")}   ${dim("Type")}\n`
+  );
+  for (const issue of plan.issues) {
+    process.stderr.write(
+      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(50).slice(0, 50)}  ${(issue.priority ?? "medium").padEnd(10)} ${issue.type ?? "feature"}\n`
+    );
+  }
+  process.stderr.write("\n");
+
+  if (flags.dryRun) {
+    process.stderr.write(
+      `${yellow("⚠")} ${bold("Dry run")} — no issues created.\n`
+    );
+    process.stderr.write(
+      `  Approve later with: ${bold(`locus plan approve ${id.slice(0, 8)}`)}\n\n`
+    );
+    return;
+  }
+
+  process.stderr.write(
+    `  To create these issues: ${bold(`locus plan approve ${id.slice(0, 8)}`)}\n\n`
+  );
 }
 
 // ─── From Existing Issues ────────────────────────────────────────────────────
@@ -230,6 +460,7 @@ async function handleFromIssues(
     .map((i) => `#${i.number}: ${i.title}\n${i.body?.slice(0, 300) ?? ""}`)
     .join("\n\n");
 
+  const { runAI } = await import("../ai/run-ai.js");
   const prompt = `You are organizing GitHub issues for a sprint. Analyze these issues and suggest the optimal execution order.
 
 Issues:
@@ -321,10 +552,13 @@ Start with foundational/setup tasks, then core features, then integration/testin
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildPlanningContext(
+function buildPlanningPrompt(
   projectRoot: string,
   config: LocusConfig,
-  directive: string
+  directive: string,
+  sprintName: string | undefined,
+  id: string,
+  planPathRelative: string
 ): string {
   const parts: string[] = [];
 
@@ -333,6 +567,9 @@ function buildPlanningContext(
   );
   parts.push("");
   parts.push(`DIRECTIVE: ${directive}`);
+  if (sprintName) {
+    parts.push(`SPRINT: ${sprintName}`);
+  }
   parts.push("");
 
   // Include LOCUS.md if it exists
@@ -353,32 +590,49 @@ function buildPlanningContext(
     parts.push("");
   }
 
-  parts.push("INSTRUCTIONS:");
+  parts.push("TASK:");
   parts.push(
-    "Break down the directive into specific, actionable GitHub issues."
-  );
-  parts.push("Each issue should be independently executable by an AI agent.");
-  parts.push(
-    "Order them so dependencies are respected (foundational tasks first)."
+    `Break down the directive into specific, actionable GitHub issues and write them to the file: ${planPathRelative}`
   );
   parts.push("");
-  parts.push("For EACH issue, output EXACTLY this format (one per issue):");
+  parts.push(
+    `Write ONLY a valid JSON file to ${planPathRelative} with this exact structure:`
+  );
   parts.push("");
-  parts.push("---ISSUE---");
-  parts.push("ORDER: <number>");
-  parts.push("TITLE: <concise issue title>");
-  parts.push("PRIORITY: <critical|high|medium|low>");
-  parts.push("TYPE: <feature|bug|chore|refactor|docs>");
-  parts.push("DEPENDS_ON: <comma-separated previous order numbers, or 'none'>");
-  parts.push("BODY:");
-  parts.push("<detailed issue description with acceptance criteria>");
-  parts.push("---END---");
+  parts.push("```json");
+  parts.push("{");
+  parts.push(`  "id": "${id}",`);
+  parts.push(`  "directive": ${JSON.stringify(directive)},`);
+  parts.push(
+    `  "sprint": ${sprintName ? JSON.stringify(sprintName) : "null"},`
+  );
+  parts.push(`  "createdAt": "${new Date().toISOString()}",`);
+  parts.push('  "issues": [');
+  parts.push("    {");
+  parts.push('      "order": 1,');
+  parts.push('      "title": "concise issue title",');
+  parts.push(
+    '      "body": "detailed markdown body with acceptance criteria",'
+  );
+  parts.push('      "priority": "critical|high|medium|low",');
+  parts.push('      "type": "feature|bug|chore|refactor|docs",');
+  parts.push('      "dependsOn": "none or comma-separated order numbers"');
+  parts.push("    }");
+  parts.push("  ]");
+  parts.push("}");
+  parts.push("```");
   parts.push("");
-  parts.push("Be specific in issue bodies. Include:");
-  parts.push("- What code/files should be created or modified");
-  parts.push("- Acceptance criteria (testable conditions)");
-  parts.push("- What previous tasks produce that this task needs");
-  parts.push("- Use valid GitHub Markdown only (no ANSI color/control codes)");
+  parts.push("Requirements for the issues:");
+  parts.push("- Break the directive into 3-10 specific, actionable issues");
+  parts.push("- Each issue must be independently executable by an AI agent");
+  parts.push(
+    "- Order them so dependencies are respected (foundational tasks first)"
+  );
+  parts.push("- Write detailed issue bodies with clear acceptance criteria");
+  parts.push("- Use valid GitHub Markdown only in issue bodies");
+  parts.push(
+    "- Create the file using the Write tool — do not print the JSON to the terminal"
+  );
 
   return parts.join("\n");
 }

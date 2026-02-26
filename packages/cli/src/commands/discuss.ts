@@ -8,6 +8,7 @@
  *   locus discuss "Should we use Redis or in-memory caching?"
  *   locus discuss list
  *   locus discuss show <id>
+ *   locus discuss plan <id>
  *   locus discuss delete <id>
  */
 
@@ -26,6 +27,7 @@ import { loadConfig } from "../core/config.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { LocusConfig } from "../types.js";
+import { planCommand } from "./plan.js";
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +39,7 @@ ${bold("Usage:")}
   locus discuss "<topic>"          ${dim("# Start a new discussion")}
   locus discuss list               ${dim("# List all discussions")}
   locus discuss show <id>          ${dim("# Show a discussion")}
+  locus discuss plan <id>          ${dim("# Convert discussion to a plan")}
   locus discuss delete <id>        ${dim("# Delete a discussion")}
 
 ${bold("Examples:")}
@@ -44,6 +47,7 @@ ${bold("Examples:")}
   locus discuss "Monorepo vs polyrepo for our microservices"
   locus discuss list
   locus discuss show abc123
+  locus discuss plan abc123
 
 `);
 }
@@ -86,6 +90,10 @@ export async function discussCommand(
 
   if (subcommand === "show") {
     return showDiscussion(projectRoot, args[1]);
+  }
+
+  if (subcommand === "plan") {
+    return convertDiscussionToPlan(projectRoot, args[1]);
   }
 
   if (subcommand === "delete") {
@@ -204,6 +212,49 @@ function deleteDiscussion(projectRoot: string, id: string | undefined): void {
   );
 }
 
+// ─── Convert Discussion to Plan ──────────────────────────────────────────────
+
+async function convertDiscussionToPlan(
+  projectRoot: string,
+  id: string | undefined
+): Promise<void> {
+  if (!id) {
+    process.stderr.write(`${red("✗")} Please provide a discussion ID.\n`);
+    process.stderr.write(
+      `  Usage: ${bold("locus discuss plan <id>")}\n`
+    );
+    return;
+  }
+
+  const dir = getDiscussionsDir(projectRoot);
+  if (!existsSync(dir)) {
+    process.stderr.write(`${red("✗")} No discussions found.\n`);
+    return;
+  }
+
+  const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
+  const match = files.find((f) => f.startsWith(id));
+
+  if (!match) {
+    process.stderr.write(`${red("✗")} Discussion "${id}" not found.\n`);
+    return;
+  }
+
+  const content = readFileSync(join(dir, match), "utf-8");
+
+  process.stderr.write(
+    `\n${bold("Converting discussion to plan:")} ${cyan(id)}\n\n`
+  );
+
+  await planCommand(
+    projectRoot,
+    [
+      `Create a detailed, actionable implementation plan based on this discussion document:\n\n${content.slice(0, 8000)}`,
+    ],
+    {}
+  );
+}
+
 // ─── Interactive Topic Prompt ────────────────────────────────────────────────
 
 async function promptForTopic(): Promise<string> {
@@ -222,7 +273,60 @@ async function promptForTopic(): Promise<string> {
   });
 }
 
+// ─── Interactive Answer Prompt ───────────────────────────────────────────────
+
+async function promptForAnswers(): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stderr,
+      terminal: true,
+    });
+
+    const lines: string[] = [];
+
+    rl.on("line", (line) => {
+      // Empty line after content = end of input
+      if (line.trim() === "" && lines.length > 0) {
+        rl.close();
+        resolve(lines.join("\n").trim());
+      } else {
+        lines.push(line);
+      }
+    });
+
+    rl.once("close", () => resolve(lines.join("\n").trim()));
+  });
+}
+
+// ─── Conversation Types ───────────────────────────────────────────────────────
+
+interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+// ─── Detect Response Type ─────────────────────────────────────────────────────
+
+/**
+ * Returns true if the response looks like a questions-asking response
+ * (not yet a final analysis document).
+ *
+ * Heuristic: a final analysis starts with a markdown heading (#) or
+ * has no question marks at all. Questions always have multiple "?" marks.
+ */
+function isQuestionsResponse(output: string): boolean {
+  const trimmed = output.trimStart();
+  // Markdown document → final analysis
+  if (trimmed.startsWith("#")) return false;
+  // Count question marks — final analysis usually has few standalone questions
+  const questionMarks = (trimmed.match(/\?/g) ?? []).length;
+  return questionMarks >= 2;
+}
+
 // ─── Start New Discussion ────────────────────────────────────────────────────
+
+const MAX_DISCUSSION_ROUNDS = 5;
 
 async function startDiscussion(
   projectRoot: string,
@@ -235,37 +339,99 @@ async function startDiscussion(
 
   process.stderr.write(`\n${bold("Discussion:")} ${cyan(topic)}\n\n`);
 
-  // Build prompt
-  const prompt = buildDiscussionPrompt(projectRoot, config, topic);
+  const conversation: ConversationTurn[] = [];
+  let finalAnalysis = "";
 
-  // Execute AI (with ESC interrupt support)
-  const aiResult = await runAI({
-    prompt,
-    provider: config.ai.provider,
-    model: flags.model ?? config.ai.model,
-    cwd: projectRoot,
-    activity: "discussion",
-  });
-
-  if (aiResult.interrupted) {
-    process.stderr.write(`\n${yellow("⚡")} Discussion interrupted.\n`);
-    // Still save partial output if there is any
-    if (!aiResult.output.trim()) return;
-  }
-
-  if (!aiResult.success && !aiResult.interrupted) {
-    process.stderr.write(
-      `\n${red("✗")} Discussion failed: ${aiResult.error}\n`
+  for (let round = 0; round < MAX_DISCUSSION_ROUNDS; round++) {
+    const isFinalRound = round === MAX_DISCUSSION_ROUNDS - 1;
+    const prompt = buildDiscussionPrompt(
+      projectRoot,
+      config,
+      topic,
+      conversation,
+      isFinalRound
     );
-    return;
+
+    const aiResult = await runAI({
+      prompt,
+      provider: config.ai.provider,
+      model: flags.model ?? config.ai.model,
+      cwd: projectRoot,
+      activity: "discussion",
+    });
+
+    if (aiResult.interrupted) {
+      process.stderr.write(`\n${yellow("⚡")} Discussion interrupted.\n`);
+      if (!aiResult.output.trim()) return;
+      finalAnalysis = aiResult.output.trim();
+      break;
+    }
+
+    if (!aiResult.success && !aiResult.interrupted) {
+      process.stderr.write(
+        `\n${red("✗")} Discussion failed: ${aiResult.error}\n`
+      );
+      return;
+    }
+
+    const response = aiResult.output.trim();
+    conversation.push({ role: "assistant", content: response });
+
+    // Detect if this is the final analysis or more questions
+    if (!isQuestionsResponse(response) || isFinalRound) {
+      finalAnalysis = response;
+      break;
+    }
+
+    // AI asked questions — prompt the user for answers
+    process.stderr.write(
+      `\n${dim("─".repeat(50))}\n${bold("Your answers:")} ${dim("(press Enter on an empty line when done)")}\n`
+    );
+
+    const answers = await promptForAnswers();
+
+    if (!answers.trim()) {
+      // User skipped — push them toward analysis
+      conversation.push({
+        role: "user",
+        content:
+          "Please proceed with your analysis based on the information available.",
+      });
+    } else {
+      conversation.push({ role: "user", content: answers });
+    }
+
+    process.stderr.write(`\n`);
   }
 
-  const output = aiResult.output;
+  if (!finalAnalysis) return;
 
-  // Save the discussion
+  // ── Save discussion ─────────────────────────────────────────────────────────
+
   const dir = ensureDiscussionsDir(projectRoot);
   const date = new Date().toISOString().slice(0, 10);
-  const markdown = `# ${topic}\n\n**Date:** ${date}\n**Provider:** ${config.ai.provider} / ${flags.model ?? config.ai.model}\n\n---\n\n${output}\n`;
+
+  const transcript = conversation
+    .map((turn) => {
+      const label = turn.role === "user" ? "You" : "AI";
+      return `**${label}:**\n\n${turn.content}`;
+    })
+    .join("\n\n---\n\n");
+
+  const markdown = [
+    `# ${topic}`,
+    ``,
+    `**Date:** ${date}`,
+    `**Provider:** ${config.ai.provider} / ${flags.model ?? config.ai.model}`,
+    ``,
+    `---`,
+    ``,
+    finalAnalysis,
+    ``,
+    ...(conversation.length > 1
+      ? [`---`, ``, `## Discussion Transcript`, ``, transcript, ``]
+      : []),
+  ].join("\n");
 
   writeFileSync(join(dir, `${id}.md`), markdown, "utf-8");
 
@@ -273,7 +439,10 @@ async function startDiscussion(
     `\n${green("✓")} Discussion saved: ${cyan(id)} ${dim(`(${timer.formatted()})`)}\n`
   );
   process.stderr.write(
-    `  View with: ${bold(`locus discuss show ${id.slice(0, 8)}`)}\n\n`
+    `  View with: ${bold(`locus discuss show ${id.slice(0, 8)}`)}\n`
+  );
+  process.stderr.write(
+    `  Plan with: ${bold(`locus discuss plan ${id.slice(0, 8)}`)}\n\n`
   );
 }
 
@@ -282,12 +451,14 @@ async function startDiscussion(
 function buildDiscussionPrompt(
   projectRoot: string,
   config: LocusConfig,
-  topic: string
+  topic: string,
+  conversation: ConversationTurn[],
+  forceFinal: boolean
 ): string {
   const parts: string[] = [];
 
   parts.push(
-    `You are a senior software architect helping make decisions for the ${config.github.owner}/${config.github.repo} project.`
+    `You are a senior software architect and consultant for the ${config.github.owner}/${config.github.repo} project.`
   );
   parts.push("");
 
@@ -309,18 +480,58 @@ function buildDiscussionPrompt(
     parts.push("");
   }
 
-  parts.push(`TOPIC: ${topic}`);
+  parts.push(`DISCUSSION TOPIC: ${topic}`);
   parts.push("");
-  parts.push("Please provide a thorough analysis covering:");
-  parts.push("1. **Context**: Restate the problem/question and why it matters");
-  parts.push("2. **Options**: List all viable approaches with pros/cons");
-  parts.push("3. **Recommendation**: Your recommended approach with reasoning");
-  parts.push("4. **Trade-offs**: What we gain and what we sacrifice");
-  parts.push("5. **Implementation Notes**: Key technical considerations");
-  parts.push("6. **Decision**: A clear, actionable conclusion");
-  parts.push("");
-  parts.push("Be specific to this project's codebase and constraints.");
-  parts.push("Reference specific files or patterns where relevant.");
+
+  if (conversation.length === 0) {
+    // First round: gather information
+    parts.push(
+      "Before providing recommendations, you need to ask targeted clarifying questions."
+    );
+    parts.push("");
+    parts.push(
+      "Ask 3-5 focused questions that will significantly improve the quality of your analysis."
+    );
+    parts.push(
+      "Format as a numbered list. Be specific and focused on the most important unknowns."
+    );
+    parts.push("Do NOT provide any analysis yet — questions only.");
+  } else {
+    // Include conversation history
+    parts.push("CONVERSATION SO FAR:");
+    parts.push("");
+    for (const turn of conversation) {
+      if (turn.role === "user") {
+        parts.push(`USER: ${turn.content}`);
+      } else {
+        parts.push(`ASSISTANT: ${turn.content}`);
+      }
+      parts.push("");
+    }
+
+    if (forceFinal) {
+      parts.push(
+        "Based on everything discussed, provide your complete analysis and recommendations now."
+      );
+      parts.push(
+        "Format as a thorough markdown document with a clear title (# Heading), sections, trade-offs, and actionable recommendations."
+      );
+    } else {
+      parts.push("Review the information gathered so far.");
+      parts.push("");
+      parts.push(
+        "If you have enough information to make a thorough recommendation:"
+      );
+      parts.push(
+        "  → Provide a complete analysis as a markdown document with a title (# Heading), sections, trade-offs, and concrete recommendations."
+      );
+      parts.push("");
+      parts.push("If you still need key information to give a good answer:");
+      parts.push(
+        "  → Ask 2-3 more focused follow-up questions (numbered list only, no analysis yet)."
+      );
+    }
+  }
 
   return parts.join("\n");
 }

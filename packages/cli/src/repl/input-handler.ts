@@ -66,6 +66,12 @@ const SEQ_END_O = "\x1bOF";
 const SEQ_DELETE = `${CSI}3~`;
 const SEQ_WORD_LEFT = `${CSI}1;5D`;
 const SEQ_WORD_RIGHT = `${CSI}1;5C`;
+const SEQ_SHIFT_LEFT = `${CSI}1;2D`;
+const SEQ_SHIFT_RIGHT = `${CSI}1;2C`;
+const SEQ_META_LEFT = `${CSI}1;9D`;
+const SEQ_META_RIGHT = `${CSI}1;9C`;
+const SEQ_META_SHIFT_LEFT = `${CSI}1;10D`;
+const SEQ_META_SHIFT_RIGHT = `${CSI}1;10C`;
 
 const SEQ_SHIFT_ENTER_CSI_U = `${CSI}13;2u`;
 const SEQ_SHIFT_ENTER_MODIFY = `${CSI}27;2;13~`;
@@ -81,6 +87,12 @@ const CONTROL_SEQUENCES = [
   SEQ_ALT_ENTER,
   SEQ_WORD_LEFT,
   SEQ_WORD_RIGHT,
+  SEQ_META_SHIFT_LEFT,
+  SEQ_META_SHIFT_RIGHT,
+  SEQ_META_LEFT,
+  SEQ_META_RIGHT,
+  SEQ_SHIFT_LEFT,
+  SEQ_SHIFT_RIGHT,
   SEQ_DELETE,
   SEQ_HOME_1,
   SEQ_END_4,
@@ -504,11 +516,17 @@ export class InputHandler {
             render();
             return;
           case SEQ_WORD_LEFT:
+          case SEQ_SHIFT_LEFT:
+          case SEQ_META_LEFT:
+          case SEQ_META_SHIFT_LEFT:
           case "\x1bb":
             moveWordLeft();
             render();
             return;
           case SEQ_WORD_RIGHT:
+          case SEQ_SHIFT_RIGHT:
+          case SEQ_META_RIGHT:
+          case SEQ_META_SHIFT_RIGHT:
           case "\x1bf":
             moveWordRight();
             render();
@@ -531,7 +549,8 @@ export class InputHandler {
             render();
             return;
           default:
-            if (seq.charCodeAt(0) >= 32 || seq.length > 1) {
+            // Only insert printable characters; ignore unrecognised ESC sequences.
+            if (seq.charCodeAt(0) >= 32) {
               insertText(seq);
               render();
             }
