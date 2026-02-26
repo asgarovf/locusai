@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.17.6
+
+### Patch Changes
+
+- Github issue comment improvements
+
 ## 0.17.5
 
 ### Patch Changes
