@@ -394,8 +394,8 @@ export function createPR(
   base: string,
   options: GhOptions = {}
 ): number {
-  const result = gh(
-    `pr create --title ${JSON.stringify(title)} --body ${JSON.stringify(body)} --head ${JSON.stringify(head)} --base ${JSON.stringify(base)}`,
+  const result = ghExec(
+    ["pr", "create", "--title", title, "--body", body, "--head", head, "--base", base],
     options
   );
 

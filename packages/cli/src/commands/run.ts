@@ -342,13 +342,28 @@ async function handleSprintRun(
         issue: t.issue,
         title: issues.find((i) => i.number === t.issue)?.title,
       }));
-    await createSprintPR(
+    const prNumber = await createSprintPR(
       projectRoot,
       config,
       sprintName,
       branchName,
       completedTasks
     );
+
+    if (prNumber !== undefined) {
+      try {
+        execSync(`git checkout ${config.agent.baseBranch}`, {
+          cwd: projectRoot,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+        process.stderr.write(
+          `  ${dim(`Checked out ${config.agent.baseBranch}`)}\n`
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
   }
 
   if (stats.failed === 0) {
@@ -671,13 +686,28 @@ async function handleResume(
     const completedTasks = state.tasks
       .filter((t) => t.status === "done")
       .map((t) => ({ issue: t.issue }));
-    await createSprintPR(
+    const prNumber = await createSprintPR(
       projectRoot,
       config,
       state.sprint,
       state.branch,
       completedTasks
     );
+
+    if (prNumber !== undefined) {
+      try {
+        execSync(`git checkout ${config.agent.baseBranch}`, {
+          cwd: projectRoot,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+        process.stderr.write(
+          `  ${dim(`Checked out ${config.agent.baseBranch}`)}\n`
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
   }
 
   if (finalStats.failed === 0) {
