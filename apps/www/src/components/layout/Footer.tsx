@@ -105,6 +105,14 @@ export function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <Link
+                  href="/packages"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Packages
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="https://docs.locusai.dev"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >

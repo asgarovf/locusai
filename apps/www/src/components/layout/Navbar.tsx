@@ -44,6 +44,12 @@ export function Navbar() {
           >
             CLI Reference
           </Link>
+          <Link
+            href="/packages"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.03]"
+          >
+            Packages
+          </Link>
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
@@ -103,6 +109,13 @@ export function Navbar() {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                 >
                   CLI Reference
+                </Link>
+                <Link
+                  href="/packages"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                >
+                  Packages
                 </Link>
                 <Link
                   href="https://github.com/asgarovf/locusai"
