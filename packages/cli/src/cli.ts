@@ -197,6 +197,7 @@ ${bold("Commands:")}
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
   ${cyan("install")}           Install a community package
+  ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
   ${cyan("upgrade")}           Check for and install updates
 
 ${bold("Options:")}
@@ -311,6 +312,13 @@ async function main(): Promise<void> {
       installFlags.upgrade = "true";
     }
     await installCommand(parsed.args, installFlags);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "pkg") {
+    const { pkgCommand } = await import("./commands/pkg.js");
+    await pkgCommand(parsed.args, {});
     logger.destroy();
     return;
   }
