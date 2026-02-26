@@ -395,18 +395,7 @@ export function createPR(
   options: GhOptions = {}
 ): number {
   const result = ghExec(
-    [
-      "pr",
-      "create",
-      "--title",
-      title,
-      "--body",
-      body,
-      "--head",
-      head,
-      "--base",
-      base,
-    ],
+    ["pr", "create", "--title", title, "--body", body, "--head", head, "--base", base],
     options
   );
 
