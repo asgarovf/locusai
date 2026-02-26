@@ -47,7 +47,7 @@ ${bold("locus plan")} — AI-powered sprint planning
 
 ${bold("Usage:")}
   locus plan "<directive>"                 ${dim("# AI creates a plan file")}
-  locus plan approve <id>                  ${dim("# Create GitHub issues from saved plan")}
+  locus plan approve <id> [--sprint <name>] ${dim("# Create GitHub issues from saved plan")}
   locus plan list                          ${dim("# List saved plans")}
   locus plan show <id>                     ${dim("# Show a saved plan")}
   locus plan --from-issues --sprint <name> ${dim("# Organize existing issues")}
@@ -61,6 +61,7 @@ ${bold("Examples:")}
   locus plan "Build user authentication with OAuth"
   locus plan "Improve API performance" --sprint "Sprint 3"
   locus plan approve abc123
+  locus plan approve abc123 --sprint "Sprint 3"
   locus plan list
   locus plan --from-issues --sprint "Sprint 2"
 
@@ -155,7 +156,13 @@ export async function planCommand(
   }
 
   if (args[0] === "approve") {
-    return handleApprovePlan(projectRoot, args[1], flags);
+    const approveArgs = parsePlanArgs(args.slice(2));
+    return handleApprovePlan(
+      projectRoot,
+      args[1],
+      { ...flags, dryRun: flags.dryRun || approveArgs.dryRun },
+      approveArgs.sprintName
+    );
   }
 
   const parsedArgs = parsePlanArgs(args);
@@ -266,7 +273,7 @@ function handleShowPlan(projectRoot: string, id: string | undefined): void {
 
   process.stderr.write("\n");
   process.stderr.write(
-    `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)}`)}\n\n`
+    `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)}`)}  ${dim("(--sprint <name> to assign to a sprint)")}\n\n`
   );
 }
 
@@ -275,7 +282,8 @@ function handleShowPlan(projectRoot: string, id: string | undefined): void {
 async function handleApprovePlan(
   projectRoot: string,
   id: string | undefined,
-  flags: { dryRun?: boolean }
+  flags: { dryRun?: boolean },
+  sprintOverride?: string
 ): Promise<void> {
   if (!id) {
     process.stderr.write(`${red("✗")} Please provide a plan ID.\n`);
@@ -297,12 +305,11 @@ async function handleApprovePlan(
   }
 
   const config = loadConfig(projectRoot);
+  const sprintName = sprintOverride ?? plan.sprint ?? undefined;
 
-  process.stderr.write(
-    `\n${bold("Approving plan:")} ${cyan(plan.directive)}\n`
-  );
-  if (plan.sprint) {
-    process.stderr.write(`  ${dim(`Sprint: ${plan.sprint}`)}\n`);
+  process.stderr.write(`\n${bold("Approving plan:")}\n`);
+  if (sprintName) {
+    process.stderr.write(`  ${dim(`Sprint: ${sprintName}`)}\n`);
   }
   process.stderr.write("\n");
 
@@ -324,12 +331,7 @@ async function handleApprovePlan(
     return;
   }
 
-  await createPlannedIssues(
-    projectRoot,
-    config,
-    plan.issues,
-    plan.sprint ?? undefined
-  );
+  await createPlannedIssues(projectRoot, config, plan.issues, sprintName);
 }
 
 // ─── AI-Powered Planning ─────────────────────────────────────────────────────
