@@ -234,7 +234,7 @@ function handleListPlans(projectRoot: string): void {
 
   process.stderr.write("\n");
   process.stderr.write(
-    `  Approve a plan: ${bold("locus plan approve <id>")}\n\n`
+    `  Approve a plan: ${bold("locus plan approve <id> --sprint <name>")}\n\n`
   );
 }
 
