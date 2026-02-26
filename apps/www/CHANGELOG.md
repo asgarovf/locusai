@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.17.12
+
+### Patch Changes
+
+- Input handler improvements
+- Updated dependencies
+  - @locusai/shared@0.17.12
+
 ## 0.17.11
 
 ### Patch Changes
