@@ -12,7 +12,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { bold, cyan, dim, green, red } from "../display/terminal.js";
+import { bold, cyan, dim, red } from "../display/terminal.js";
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -129,9 +129,7 @@ export async function artifactsCommand(
     case "view": {
       const name = args.slice(1).join(" ").trim();
       if (!name) {
-        process.stderr.write(
-          `${red("✗")} Please provide an artifact name.\n`
-        );
+        process.stderr.write(`${red("✗")} Please provide an artifact name.\n`);
         process.stderr.write(
           `  Usage: ${bold("locus artifacts show <name>")}\n`
         );
@@ -144,9 +142,7 @@ export async function artifactsCommand(
     case "plan": {
       const name = args.slice(1).join(" ").trim();
       if (!name) {
-        process.stderr.write(
-          `${red("✗")} Please provide an artifact name.\n`
-        );
+        process.stderr.write(`${red("✗")} Please provide an artifact name.\n`);
         process.stderr.write(
           `  Usage: ${bold("locus artifacts plan <name>")}\n`
         );
@@ -214,9 +210,7 @@ function showArtifact(projectRoot: string, name: string): void {
     }
 
     if (matches.length > 1) {
-      process.stderr.write(
-        `${red("✗")} Multiple artifacts match "${name}":\n`
-      );
+      process.stderr.write(`${red("✗")} Multiple artifacts match "${name}":\n`);
       for (const m of matches) {
         process.stderr.write(`  ${cyan(m.name)}\n`);
       }
@@ -243,10 +237,7 @@ function printArtifact(info: ArtifactInfo, content: string): void {
 
 // ─── Plan ─────────────────────────────────────────────────────────────────────
 
-async function convertToPlan(
-  projectRoot: string,
-  name: string
-): Promise<void> {
+async function convertToPlan(projectRoot: string, name: string): Promise<void> {
   const result = readArtifact(projectRoot, name);
 
   if (!result) {
@@ -281,7 +272,11 @@ async function runPlanConversion(
     `\n${bold("Converting artifact to plan:")} ${cyan(artifactName)}\n\n`
   );
 
-  await execCommand(projectRoot, [`Create a plan according to ${artifactName}`], {});
+  await execCommand(
+    projectRoot,
+    [`Create a plan according to ${artifactName}`],
+    {}
+  );
 }
 
 // Re-export utilities for use elsewhere

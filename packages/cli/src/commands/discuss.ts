@@ -215,9 +215,7 @@ async function convertDiscussionToPlan(
 ): Promise<void> {
   if (!id) {
     process.stderr.write(`${red("✗")} Please provide a discussion ID.\n`);
-    process.stderr.write(
-      `  Usage: ${bold("locus discuss plan <id>")}\n`
-    );
+    process.stderr.write(`  Usage: ${bold("locus discuss plan <id>")}\n`);
     return;
   }
 
@@ -237,14 +235,14 @@ async function convertDiscussionToPlan(
 
   const content = readFileSync(join(dir, match), "utf-8");
 
-  process.stderr.write(
-    `\n${bold("Converting discussion to plan:")} ${cyan(id)}\n\n`
-  );
+  // Extract discussion title for a readable directive
+  const titleMatch = content.match(/^#\s+(.+)/m);
+  const discussionTitle = titleMatch ? titleMatch[1].trim() : id;
 
   await planCommand(
     projectRoot,
     [
-      `Create a detailed, actionable implementation plan based on this discussion document:\n\n${content.slice(0, 8000)}`,
+      `Create implementation plan from discussion: "${discussionTitle}"\n\nDISCUSSION CONTENT:\n${content.slice(0, 8000)}`,
     ],
     {}
   );

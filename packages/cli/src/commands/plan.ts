@@ -17,6 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
+import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import {
   createIssue,
@@ -345,7 +346,9 @@ async function handleAIPlan(
   const planPath = join(plansDir, `${id}.json`);
   const planPathRelative = `.locus/plans/${id}.json`;
 
-  process.stderr.write(`\n${bold("Planning:")} ${cyan(directive)}\n`);
+  // Show only the first line of directive (may contain embedded content on subsequent lines)
+  const displayDirective = directive;
+  process.stderr.write(`\n${bold("Planning:")} ${cyan(displayDirective)}\n`);
   if (sprintName) {
     process.stderr.write(`  ${dim(`Sprint: ${sprintName}`)}\n`);
   }
@@ -360,8 +363,23 @@ async function handleAIPlan(
     planPathRelative
   );
 
-  const { execCommand } = await import("./exec.js");
-  await execCommand(projectRoot, [prompt], {});
+  const aiResult = await runAI({
+    prompt,
+    provider: config.ai.provider,
+    model: flags.model ?? config.ai.model,
+    cwd: projectRoot,
+    activity: "planning",
+  });
+
+  if (aiResult.interrupted) {
+    process.stderr.write(`\n${yellow("⚡")} Planning interrupted.\n`);
+    return;
+  }
+
+  if (!aiResult.success) {
+    process.stderr.write(`\n${red("✗")} Planning failed: ${aiResult.error}\n`);
+    return;
+  }
 
   // Check if the plan file was created by the AI agent
   if (!existsSync(planPath)) {
