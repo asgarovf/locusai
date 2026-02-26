@@ -62,6 +62,9 @@ interface ParsedArgs {
     model?: string;
     check: boolean;
     targetVersion?: string;
+    installVersion?: string;
+    upgrade: boolean;
+    list: boolean;
   };
 }
 
@@ -78,6 +81,8 @@ function parseArgs(argv: string[]): ParsedArgs {
     resume: false,
     dryRun: false,
     check: false,
+    upgrade: false,
+    list: false,
   };
 
   const positional: string[] = [];
@@ -102,8 +107,28 @@ function parseArgs(argv: string[]): ParsedArgs {
         flags.help = true;
         break;
       case "--version":
-      case "-V":
-        flags.version = true;
+      case "-V": {
+        // If the next token looks like a version number (starts with a digit),
+        // treat it as a package version for `locus install`.  Otherwise show
+        // the CLI version as usual.
+        const nextToken = rawArgs[i + 1];
+        if (nextToken !== undefined && /^\d/.test(nextToken)) {
+          flags.installVersion = rawArgs[++i];
+        } else {
+          flags.version = true;
+        }
+        break;
+      }
+      case "-v":
+        flags.installVersion = rawArgs[++i];
+        break;
+      case "--upgrade":
+      case "-u":
+        flags.upgrade = true;
+        break;
+      case "--list":
+      case "-l":
+        flags.list = true;
         break;
       case "--json-stream":
         flags.jsonStream = true;
@@ -177,6 +202,10 @@ ${bold("Commands:")}
   ${cyan("status")}            Dashboard view of current state
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
+  ${cyan("install")}           Install a community package
+  ${cyan("uninstall")}         Remove an installed package
+  ${cyan("packages")}          Manage installed packages (list, outdated)
+  ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
   ${cyan("upgrade")}           Check for and install updates
 
 ${bold("Options:")}
@@ -277,6 +306,48 @@ async function main(): Promise<void> {
   if (command === "init") {
     const { initCommand } = await import("./commands/init.js");
     await initCommand(cwd);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "install") {
+    // `locus install --list` is a discoverability alias for `locus packages list`
+    if (parsed.flags.list) {
+      const { packagesCommand } = await import("./commands/packages.js");
+      await packagesCommand(["list"], {});
+      logger.destroy();
+      return;
+    }
+    const { installCommand } = await import("./commands/install.js");
+    const installFlags: Record<string, string> = {};
+    if (parsed.flags.installVersion) {
+      installFlags.version = parsed.flags.installVersion;
+    }
+    if (parsed.flags.upgrade) {
+      installFlags.upgrade = "true";
+    }
+    await installCommand(parsed.args, installFlags);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "uninstall") {
+    const { uninstallCommand } = await import("./commands/uninstall.js");
+    await uninstallCommand(parsed.args, {});
+    logger.destroy();
+    return;
+  }
+
+  if (command === "packages") {
+    const { packagesCommand } = await import("./commands/packages.js");
+    await packagesCommand(parsed.args, {});
+    logger.destroy();
+    return;
+  }
+
+  if (command === "pkg") {
+    const { pkgCommand } = await import("./commands/pkg.js");
+    await pkgCommand(parsed.args, {});
     logger.destroy();
     return;
   }

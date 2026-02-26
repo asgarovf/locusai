@@ -85,7 +85,6 @@ pids
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map
 packages/cli/bin/agent/
-packages/telegram/bin/
 packages/cli2/bin/
 
 # Locus
