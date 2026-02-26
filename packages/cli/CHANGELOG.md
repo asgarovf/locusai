@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.17.11
+
+### Patch Changes
+
+- Input handler fixes
+
 ## 0.17.10
 
 ### Patch Changes
