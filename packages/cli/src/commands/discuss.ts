@@ -21,11 +21,11 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { createInterface } from "node:readline";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
+import { InputHandler } from "../repl/input-handler.js";
 import type { LocusConfig } from "../types.js";
 import { planCommand } from "./plan.js";
 
@@ -101,13 +101,8 @@ export async function discussCommand(
   }
 
   if (args.length === 0) {
-    // Prompt for topic interactively
-    const topic = await promptForTopic();
-    if (!topic) {
-      printHelp();
-      return;
-    }
-    return startDiscussion(projectRoot, topic, flags);
+    printHelp();
+    return;
   }
 
   // Everything else is treated as a discussion topic
@@ -255,48 +250,21 @@ async function convertDiscussionToPlan(
   );
 }
 
-// ─── Interactive Topic Prompt ────────────────────────────────────────────────
-
-async function promptForTopic(): Promise<string> {
-  return new Promise((resolve) => {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stderr,
-      terminal: true,
-    });
-    process.stderr.write(`${bold("Discussion topic:")} `);
-    rl.once("line", (line) => {
-      rl.close();
-      resolve(line.trim());
-    });
-    rl.once("close", () => resolve(""));
-  });
-}
-
 // ─── Interactive Answer Prompt ───────────────────────────────────────────────
 
 async function promptForAnswers(): Promise<string> {
-  return new Promise((resolve) => {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stderr,
-      terminal: true,
-    });
-
-    const lines: string[] = [];
-
-    rl.on("line", (line) => {
-      // Empty line after content = end of input
-      if (line.trim() === "" && lines.length > 0) {
-        rl.close();
-        resolve(lines.join("\n").trim());
-      } else {
-        lines.push(line);
-      }
-    });
-
-    rl.once("close", () => resolve(lines.join("\n").trim()));
+  const input = new InputHandler({
+    prompt: `${cyan("you")} ${dim(">")} `,
   });
+
+  const result = await input.readline();
+
+  if (result.type === "submit") {
+    return result.text.trim();
+  }
+
+  // Interrupted or exited
+  return "";
 }
 
 // ─── Conversation Types ───────────────────────────────────────────────────────
@@ -385,7 +353,7 @@ async function startDiscussion(
 
     // AI asked questions — prompt the user for answers
     process.stderr.write(
-      `\n${dim("─".repeat(50))}\n${bold("Your answers:")} ${dim("(press Enter on an empty line when done)")}\n`
+      `\n${dim("─".repeat(50))}\n${bold("Your answers:")} ${dim("(Shift+Enter for newlines, Enter to submit)")}\n\n`
     );
 
     const answers = await promptForAnswers();
