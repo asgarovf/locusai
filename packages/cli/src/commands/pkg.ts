@@ -17,7 +17,7 @@ import {
 
 // ─── List installed packages ──────────────────────────────────────────────────
 
-function listInstalledPackages(): void {
+export function listInstalledPackages(): void {
   const registry = loadRegistry();
   const entries = Object.values(registry.packages);
 

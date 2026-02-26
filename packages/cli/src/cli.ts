@@ -64,6 +64,7 @@ interface ParsedArgs {
     targetVersion?: string;
     installVersion?: string;
     upgrade: boolean;
+    list: boolean;
   };
 }
 
@@ -81,6 +82,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     dryRun: false,
     check: false,
     upgrade: false,
+    list: false,
   };
 
   const positional: string[] = [];
@@ -123,6 +125,10 @@ function parseArgs(argv: string[]): ParsedArgs {
       case "--upgrade":
       case "-u":
         flags.upgrade = true;
+        break;
+      case "--list":
+      case "-l":
+        flags.list = true;
         break;
       case "--json-stream":
         flags.jsonStream = true;
@@ -197,6 +203,8 @@ ${bold("Commands:")}
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
   ${cyan("install")}           Install a community package
+  ${cyan("uninstall")}         Remove an installed package
+  ${cyan("packages")}          Manage installed packages (list, outdated)
   ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
   ${cyan("upgrade")}           Check for and install updates
 
@@ -303,6 +311,13 @@ async function main(): Promise<void> {
   }
 
   if (command === "install") {
+    // `locus install --list` is a discoverability alias for `locus packages list`
+    if (parsed.flags.list) {
+      const { packagesCommand } = await import("./commands/packages.js");
+      await packagesCommand(["list"], {});
+      logger.destroy();
+      return;
+    }
     const { installCommand } = await import("./commands/install.js");
     const installFlags: Record<string, string> = {};
     if (parsed.flags.installVersion) {
@@ -312,6 +327,20 @@ async function main(): Promise<void> {
       installFlags.upgrade = "true";
     }
     await installCommand(parsed.args, installFlags);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "uninstall") {
+    const { uninstallCommand } = await import("./commands/uninstall.js");
+    await uninstallCommand(parsed.args, {});
+    logger.destroy();
+    return;
+  }
+
+  if (command === "packages") {
+    const { packagesCommand } = await import("./commands/packages.js");
+    await packagesCommand(parsed.args, {});
     logger.destroy();
     return;
   }
