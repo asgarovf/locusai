@@ -30,9 +30,7 @@ export async function uninstallCommand(
   const rawArg = args[0];
 
   if (!rawArg) {
-    process.stderr.write(
-      `${red("✗")} Usage: locus uninstall <package>\n`
-    );
+    process.stderr.write(`${red("✗")} Usage: locus uninstall <package>\n`);
     process.exit(1);
     return;
   }
@@ -59,7 +57,9 @@ export async function uninstallCommand(
   // ── Run npm uninstall ──────────────────────────────────────────────────────
   const packagesDir = getPackagesDir();
 
-  process.stderr.write(`\n  Uninstalling ${bold(cyan(packageName))} ${dim(`v${version}`)}...\n\n`);
+  process.stderr.write(
+    `\n  Uninstalling ${bold(cyan(packageName))} ${dim(`v${version}`)}...\n\n`
+  );
 
   const result = spawnSync("npm", ["uninstall", packageName], {
     cwd: packagesDir,

@@ -10,10 +10,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
-import {
-  loadRegistry,
-  normalizePackageName,
-} from "../packages/registry.js";
+import { loadRegistry, normalizePackageName } from "../packages/registry.js";
 
 // ─── List installed packages ──────────────────────────────────────────────────
 
@@ -78,7 +75,9 @@ function spawnPackageBinary(
 
     child.on("error", (err) => {
       process.removeListener("SIGINT", onSigint);
-      process.stderr.write(`${red("✗")} Failed to spawn binary: ${err.message}\n`);
+      process.stderr.write(
+        `${red("✗")} Failed to spawn binary: ${err.message}\n`
+      );
       resolve(1);
     });
 
@@ -124,9 +123,7 @@ export async function pkgCommand(
     process.stderr.write(
       `${red("✗")} Package ${bold(`'${packageInput}'`)} is not installed.\n`
     );
-    process.stderr.write(
-      `  Run: ${bold(`locus install ${packageInput}`)}\n`
-    );
+    process.stderr.write(`  Run: ${bold(`locus install ${packageInput}`)}\n`);
     process.exit(1);
     return;
   }

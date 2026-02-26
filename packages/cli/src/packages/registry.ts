@@ -101,12 +101,7 @@ export function saveRegistry(registry: LocusPackageRegistry): void {
  */
 export function resolvePackageBinary(packageName: string): string | null {
   const fullName = normalizePackageName(packageName);
-  const binPath = join(
-    getPackagesDir(),
-    "node_modules",
-    ".bin",
-    fullName
-  );
+  const binPath = join(getPackagesDir(), "node_modules", ".bin", fullName);
   return existsSync(binPath) ? binPath : null;
 }
 

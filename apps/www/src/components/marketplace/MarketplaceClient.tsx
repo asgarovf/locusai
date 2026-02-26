@@ -336,9 +336,8 @@ export function MarketplaceClient({ packages }: { packages: PackageData[] }) {
             <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-8">
               Packages must include a{" "}
               <code className="font-mono text-xs">&quot;locus&quot;</code> field
-              in{" "}
-              <code className="font-mono text-xs">package.json</code> for full
-              CLI integration.
+              in <code className="font-mono text-xs">package.json</code> for
+              full CLI integration.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link

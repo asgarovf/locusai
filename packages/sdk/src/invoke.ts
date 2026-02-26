@@ -5,8 +5,8 @@
  * have `@locusai/cli` installed globally (or the binary otherwise available).
  */
 
-import { spawn, spawnSync } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 /** Result returned by {@link invokeLocus}. */
 export interface LocusInvokeResult {
@@ -75,10 +75,7 @@ export function invokeLocus(
  * @param cwd   - Working directory for the child process. Defaults to
  *                `process.cwd()`.
  */
-export function invokeLocusStream(
-  args: string[],
-  cwd?: string
-): ChildProcess {
+export function invokeLocusStream(args: string[], cwd?: string): ChildProcess {
   return spawn("locus", args, {
     cwd: cwd ?? process.cwd(),
     stdio: ["inherit", "pipe", "pipe"],

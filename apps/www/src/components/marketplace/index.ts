@@ -1,2 +1,2 @@
+export type { LocusPackageManifest, PackageData } from "./MarketplaceClient";
 export { MarketplaceClient } from "./MarketplaceClient";
-export type { PackageData, LocusPackageManifest } from "./MarketplaceClient";

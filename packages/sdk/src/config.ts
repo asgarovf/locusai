@@ -50,7 +50,11 @@ function readJsonFile(filePath: string): Record<string, unknown> | null {
   try {
     const raw = readFileSync(filePath, "utf-8");
     const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
       return parsed as Record<string, unknown>;
     }
     return null;
@@ -111,10 +115,7 @@ export function readLocusConfig(cwd?: string): LocusConfig {
   const projectRaw = readJsonFile(projectPath) ?? {};
 
   const merged = deepMerge(
-    deepMerge(
-      DEFAULT_CONFIG as unknown as Record<string, unknown>,
-      globalRaw
-    ),
+    deepMerge(DEFAULT_CONFIG as unknown as Record<string, unknown>, globalRaw),
     projectRaw
   );
 

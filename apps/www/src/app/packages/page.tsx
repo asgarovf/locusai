@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Footer, Navbar } from "@/components/layout";
 import {
+  type LocusPackageManifest,
   MarketplaceClient,
   type PackageData,
-  type LocusPackageManifest,
 } from "@/components/marketplace";
 
 export const metadata: Metadata = {
@@ -75,7 +75,8 @@ async function fetchMarketplacePackages(): Promise<PackageData[]> {
 
     if (!searchRes.ok) return [];
 
-    const searchData: NpmSearchResult = await searchRes.json() as NpmSearchResult;
+    const searchData: NpmSearchResult =
+      (await searchRes.json()) as NpmSearchResult;
 
     // 2. Fetch full metadata + weekly downloads for each package in parallel
     const packages: PackageData[] = await Promise.all(
@@ -86,18 +87,14 @@ async function fetchMarketplacePackages(): Promise<PackageData[]> {
           fetch(`https://registry.npmjs.org/${encoded}/latest`, {
             next: { revalidate: 3600 },
           }),
-          fetch(
-            `https://api.npmjs.org/downloads/point/last-week/${encoded}`,
-            { next: { revalidate: 3600 } }
-          ),
+          fetch(`https://api.npmjs.org/downloads/point/last-week/${encoded}`, {
+            next: { revalidate: 3600 },
+          }),
         ]);
 
         // Parse `locus` manifest field from full package metadata
         let locusManifest: LocusPackageManifest | undefined;
-        if (
-          metaResult.status === "fulfilled" &&
-          metaResult.value.ok
-        ) {
+        if (metaResult.status === "fulfilled" && metaResult.value.ok) {
           try {
             const meta = (await metaResult.value.json()) as {
               locus?: LocusPackageManifest;
@@ -131,8 +128,7 @@ async function fetchMarketplacePackages(): Promise<PackageData[]> {
         return {
           name: pkg.name,
           version: pkg.version,
-          description:
-            locusManifest?.description || pkg.description || "",
+          description: locusManifest?.description || pkg.description || "",
           date: pkg.date,
           publisher: { username: pkg.publisher.username },
           links: {

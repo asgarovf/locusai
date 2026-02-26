@@ -11,8 +11,7 @@
     { "path": "./packages/shared" },
     { "path": "./packages/cli" },
     { "path": "./packages/vscode" },
-    { "path": "./packages/sdk" },
-    { "path": "./packages/telegram" }
+    { "path": "./packages/sdk" }
   ],
   "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
 }
