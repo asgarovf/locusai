@@ -71,8 +71,11 @@ export function detectImages(input: string): DetectedImage[] {
   }
 
   // Pattern 2: macOS escaped spaces (word\ word.ext)
+  // NOTE: Use alternation (?:[^\s"'\\]|\\ )+ instead of nested quantifiers
+  // (?:[^\s"'\\]+(?:\\[ ])?)+  to avoid catastrophic backtracking in V8/Node.js
+  // on long inputs like URLs that don't end with an image extension.
   const escapedPattern =
-    /(?:\/|~\/|\.\/)?(?:[^\s"'\\]+(?:\\[ ])?)+\.(?:png|jpg|jpeg|gif|webp|bmp|svg|tiff?)/gi;
+    /(?:\/|~\/|\.\/)?(?:[^\s"'\\]|\\ )+\.(?:png|jpg|jpeg|gif|webp|bmp|svg|tiff?)/gi;
   for (const match of input.matchAll(escapedPattern)) {
     if (!match[0]) continue;
     const path = match[0].replace(/\\ /g, " ");
