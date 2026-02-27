@@ -6,6 +6,7 @@ import type { AgentRunner, AIProvider } from "../types.js";
 import { ClaudeRunner } from "./claude.js";
 import { SandboxedClaudeRunner } from "./claude-sandbox.js";
 import { CodexRunner } from "./codex.js";
+import { SandboxedCodexRunner } from "./codex-sandbox.js";
 
 /** Create an AI runner for the given provider. */
 export function createRunner(
@@ -16,7 +17,7 @@ export function createRunner(
     case "claude":
       return sandboxed ? new SandboxedClaudeRunner() : new ClaudeRunner();
     case "codex":
-      return new CodexRunner();
+      return sandboxed ? new SandboxedCodexRunner() : new CodexRunner();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
@@ -31,7 +32,7 @@ export async function createRunnerAsync(
     case "claude":
       return sandboxed ? new SandboxedClaudeRunner() : new ClaudeRunner();
     case "codex":
-      return new CodexRunner();
+      return sandboxed ? new SandboxedCodexRunner() : new CodexRunner();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
