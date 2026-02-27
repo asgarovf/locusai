@@ -217,6 +217,8 @@ export interface AgentOptions {
   sprintContext?: string;
   /** Skip per-task PR creation (used for sprint runs where a single sprint PR is created instead). */
   skipPR?: boolean;
+  /** Run the AI agent inside a Docker sandbox for isolation. */
+  sandboxed?: boolean;
 }
 
 export interface AgentResult {

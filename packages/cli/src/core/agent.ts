@@ -116,6 +116,7 @@ export async function executeIssue(
     model,
     cwd: options.worktreePath ?? projectRoot,
     activity: `issue #${issueNumber}`,
+    sandboxed: options.sandboxed,
   });
 
   const output = aiResult.output;

@@ -32,6 +32,8 @@ export interface RunAIOptions {
   noInterrupt?: boolean;
   /** Enable verbose output (thinking blocks, tool details). */
   verbose?: boolean;
+  /** Run the AI agent inside a Docker sandbox for isolation. */
+  sandboxed?: boolean;
 }
 
 export interface RunAIResult {
@@ -100,8 +102,8 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       activity: options.activity,
     });
 
-    // Create runner
-    runner = await createRunnerAsync(resolvedProvider);
+    // Create runner (sandboxed if requested)
+    runner = await createRunnerAsync(resolvedProvider, options.sandboxed);
 
     // Check availability
     const available = await runner.isAvailable();

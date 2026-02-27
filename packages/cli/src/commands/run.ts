@@ -37,7 +37,11 @@ import {
   markTaskInProgress,
   saveRunState,
 } from "../core/run-state.js";
-import { detectSandboxSupport, resolveSandboxMode } from "../core/sandbox.js";
+import {
+  cleanupStaleSandboxes,
+  detectSandboxSupport,
+  resolveSandboxMode,
+} from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
 import {
   cleanupStaleWorktrees,
@@ -73,6 +77,7 @@ export async function runCommand(
   try {
     // Resolve sandbox mode (CLI flags override config)
     const sandboxMode = resolveSandboxMode(config.sandbox, flags);
+    let sandboxed = false;
 
     if (sandboxMode !== "disabled") {
       const status = await detectSandboxSupport();
@@ -86,10 +91,13 @@ export async function runCommand(
           );
           process.exit(1);
         }
-        // Auto mode: warn and continue
+        // Auto mode: warn and continue unsandboxed
         process.stderr.write(
           `${yellow("⚠")} Docker sandbox not available: ${status.reason}. Running unsandboxed.\n`
         );
+      } else {
+        // Docker sandbox available — use it
+        sandboxed = true;
       }
     } else if (flags.noSandbox) {
       process.stderr.write(
@@ -97,9 +105,19 @@ export async function runCommand(
       );
     }
 
+    // Clean up stale sandboxes from previous crashes
+    if (sandboxed) {
+      const staleCleaned = await cleanupStaleSandboxes();
+      if (staleCleaned > 0) {
+        process.stderr.write(
+          `  ${dim(`Cleaned up ${staleCleaned} stale sandbox${staleCleaned === 1 ? "" : "es"}.`)}\n`
+        );
+      }
+    }
+
     // Resume mode
     if (flags.resume) {
-      return handleResume(projectRoot, config);
+      return handleResume(projectRoot, config, sandboxed);
     }
 
     // Parse issue numbers from args
@@ -107,16 +125,28 @@ export async function runCommand(
 
     if (issueNumbers.length === 0) {
       // No issue numbers — run active sprint
-      return handleSprintRun(projectRoot, config, flags);
+      return handleSprintRun(projectRoot, config, flags, sandboxed);
     }
 
     if (issueNumbers.length === 1) {
       // Single issue — standalone execution
-      return handleSingleIssue(projectRoot, config, issueNumbers[0], flags);
+      return handleSingleIssue(
+        projectRoot,
+        config,
+        issueNumbers[0],
+        flags,
+        sandboxed
+      );
     }
 
     // Multiple issues — parallel execution
-    return handleParallelRun(projectRoot, config, issueNumbers, flags);
+    return handleParallelRun(
+      projectRoot,
+      config,
+      issueNumbers,
+      flags,
+      sandboxed
+    );
   } finally {
     cleanupShutdown();
   }
@@ -127,7 +157,8 @@ export async function runCommand(
 async function handleSprintRun(
   projectRoot: string,
   config: LocusConfig,
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
 
@@ -332,6 +363,7 @@ async function handleSprintRun(
       dryRun: flags.dryRun,
       sprintContext,
       skipPR: true,
+      sandboxed,
     });
 
     if (result.success) {
@@ -410,7 +442,8 @@ async function handleSingleIssue(
   projectRoot: string,
   config: LocusConfig,
   issueNumber: number,
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   // Check if issue is in a sprint — sprint issues run on the sprint branch, not worktrees
   let isSprintIssue = false;
@@ -431,6 +464,7 @@ async function handleSingleIssue(
       provider: config.ai.provider,
       model: flags.model ?? config.ai.model,
       dryRun: flags.dryRun,
+      sandboxed,
     });
     return;
   }
@@ -465,6 +499,7 @@ async function handleSingleIssue(
     provider: config.ai.provider,
     model: flags.model ?? config.ai.model,
     dryRun: flags.dryRun,
+    sandboxed,
   });
 
   // Clean up worktree on success, preserve on failure for debugging
@@ -486,7 +521,8 @@ async function handleParallelRun(
   projectRoot: string,
   config: LocusConfig,
   issueNumbers: number[],
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
   const maxConcurrent = config.agent.maxParallel;
@@ -562,6 +598,7 @@ async function handleParallelRun(
         provider: config.ai.provider,
         model: flags.model ?? config.ai.model,
         dryRun: flags.dryRun,
+        sandboxed,
       });
 
       if (result.success) {
@@ -614,7 +651,8 @@ async function handleParallelRun(
 
 async function handleResume(
   projectRoot: string,
-  config: LocusConfig
+  config: LocusConfig,
+  sandboxed: boolean
 ): Promise<void> {
   const state = loadRunState(projectRoot);
   if (!state) {
@@ -678,6 +716,7 @@ async function handleResume(
       model: config.ai.model,
       // Sprint runs use a single sprint-level PR created at the end
       skipPR: isSprintRun,
+      sandboxed,
     });
 
     if (result.success) {
