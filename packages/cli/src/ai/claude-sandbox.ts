@@ -1,87 +1,64 @@
 /**
- * Claude Code subprocess runner.
- * Spawns `claude` CLI with --dangerously-skip-permissions for full-auto mode.
+ * Sandboxed Claude Code runner.
+ * Wraps Claude execution inside a Docker sandbox microVM for hypervisor-level isolation.
+ * Delegates to `docker sandbox run` instead of spawning `claude` directly.
  */
 
-import { type ChildProcess, execSync, spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { getLogger } from "../core/logger.js";
 import type { AgentRunner, RunnerOptions, RunnerResult } from "../types.js";
+import { buildClaudeArgs, ClaudeRunner } from "./claude.js";
 
-/** Build Claude CLI arguments from runner options. Shared by ClaudeRunner and SandboxedClaudeRunner. */
-export function buildClaudeArgs(options: {
-  model?: string;
-  verbose?: boolean;
-}): string[] {
-  const args = [
-    "--print",
-    "--dangerously-skip-permissions",
-    "--no-session-persistence",
-  ];
-
-  if (options.model) {
-    args.push("--model", options.model);
-  }
-
-  if (options.verbose) {
-    // stream-json gives real-time tool call events; --print requires
-    // --verbose when using stream-json output format.
-    args.push("--verbose", "--output-format", "stream-json");
-  }
-
-  return args;
-}
-
-export class ClaudeRunner implements AgentRunner {
-  name = "claude";
+export class SandboxedClaudeRunner implements AgentRunner {
+  name = "claude-sandboxed";
   private process: ChildProcess | null = null;
   private aborted = false;
+  private sandboxName: string | null = null;
 
+  /** Delegate to ClaudeRunner — checks host `claude` CLI availability. */
   async isAvailable(): Promise<boolean> {
-    try {
-      execSync("claude --version", {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-      return true;
-    } catch {
-      return false;
-    }
+    const delegate = new ClaudeRunner();
+    return delegate.isAvailable();
   }
 
+  /** Delegate to ClaudeRunner — returns host `claude` CLI version. */
   async getVersion(): Promise<string> {
-    try {
-      const output = execSync("claude --version", {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-      // Output format varies: "claude 1.0.0" or just version number
-      return output.replace(/^claude\s*/i, "");
-    } catch {
-      return "unknown";
-    }
+    const delegate = new ClaudeRunner();
+    return delegate.getVersion();
   }
 
   async execute(options: RunnerOptions): Promise<RunnerResult> {
     const log = getLogger();
     this.aborted = false;
 
-    const args = buildClaudeArgs(options);
+    const claudeArgs = buildClaudeArgs(options);
+    const activityId = options.cwd.split("/").pop() ?? "run";
+    this.sandboxName = `locus-${activityId}-${Date.now()}`;
 
-    log.debug("Spawning claude", { args: args.join(" "), cwd: options.cwd });
+    const dockerArgs = [
+      "sandbox",
+      "run",
+      "--name",
+      this.sandboxName,
+      "claude",
+      options.cwd, // workspace path for Docker to sync
+      "--", // separator
+      ...claudeArgs,
+    ];
+
+    log.debug("Spawning sandboxed claude", {
+      sandboxName: this.sandboxName,
+      args: dockerArgs.join(" "),
+      cwd: options.cwd,
+    });
 
     return new Promise<RunnerResult>((resolve) => {
       let output = "";
       let errorOutput = "";
 
-      // Remove Claude Code env vars to prevent nested session detection
-      const env = { ...process.env };
-      delete env.CLAUDECODE;
-      delete env.CLAUDE_CODE;
-
-      this.process = spawn("claude", args, {
-        cwd: options.cwd,
+      this.process = spawn("docker", dockerArgs, {
         stdio: ["pipe", "pipe", "pipe"],
-        env,
+        env: process.env, // Docker proxy handles credential injection
       });
 
       if (options.verbose) {
@@ -137,7 +114,7 @@ export class ClaudeRunner implements AgentRunner {
       this.process.stderr?.on("data", (chunk: Buffer) => {
         const text = chunk.toString();
         errorOutput += text;
-        log.debug("claude stderr", { text: text.slice(0, 500) });
+        log.debug("sandboxed claude stderr", { text: text.slice(0, 500) });
       });
 
       this.process.on("close", (code) => {
@@ -163,7 +140,7 @@ export class ClaudeRunner implements AgentRunner {
           resolve({
             success: false,
             output,
-            error: errorOutput || `claude exited with code ${code}`,
+            error: errorOutput || `sandboxed claude exited with code ${code}`,
             exitCode: code ?? 1,
           });
         }
@@ -174,7 +151,7 @@ export class ClaudeRunner implements AgentRunner {
         resolve({
           success: false,
           output,
-          error: `Failed to spawn claude: ${err.message}`,
+          error: `Failed to spawn docker sandbox: ${err.message}`,
           exitCode: 1,
         });
       });
@@ -199,7 +176,9 @@ export class ClaudeRunner implements AgentRunner {
 
     this.aborted = true;
     const log = getLogger();
-    log.debug("Aborting claude process");
+    log.debug("Aborting sandboxed claude process", {
+      sandboxName: this.sandboxName,
+    });
 
     // Graceful SIGTERM first
     this.process.kill("SIGTERM");
@@ -207,15 +186,19 @@ export class ClaudeRunner implements AgentRunner {
     // Force kill after 3 seconds
     const forceKillTimer = setTimeout(() => {
       if (this.process) {
-        log.debug("Force killing claude process");
+        log.debug("Force killing sandboxed claude process");
         this.process.kill("SIGKILL");
       }
     }, 3000);
 
-    // Allow process to exit without waiting for this timer
     if (forceKillTimer.unref) {
       forceKillTimer.unref();
     }
+  }
+
+  /** Get the current sandbox name (for external cleanup/registry). */
+  getSandboxName(): string | null {
+    return this.sandboxName;
   }
 }
 
