@@ -5,6 +5,8 @@
  */
 
 import { execFile } from "node:child_process";
+import { createInterface } from "node:readline";
+import { bold, dim, red, yellow } from "../display/terminal.js";
 import type { SandboxConfig } from "../types.js";
 import { getLogger } from "./logger.js";
 
@@ -215,4 +217,87 @@ export function resolveSandboxMode(
   }
 
   return "auto";
+}
+
+// ─── Safety Warning ──────────────────────────────────────────────────────────
+
+/**
+ * Display a sandbox safety warning based on the resolved mode and detection status.
+ *
+ * - **disabled** (explicit `--no-sandbox`): Interactive confirmation — waits for
+ *   Enter before proceeding. Skipped when stdin is not a TTY (CI/piped input).
+ * - **auto** with Docker unavailable: Non-blocking warning — prints and continues.
+ * - **required** with Docker unavailable: Fatal error — exits with code 1.
+ *
+ * Returns `true` if execution should use sandbox, `false` otherwise.
+ */
+export async function displaySandboxWarning(
+  mode: SandboxMode,
+  status: SandboxStatus
+): Promise<boolean> {
+  // Case 3: Required mode, Docker unavailable
+  if (mode === "required" && !status.available) {
+    process.stderr.write(
+      `\n${red("✖")}  Docker sandbox required but not available: ${bold(status.reason ?? "Docker Desktop 4.58+ with sandbox support required")}\n`
+    );
+    process.stderr.write(
+      `   Install Docker Desktop 4.58+ or remove --sandbox=require to continue.\n\n`
+    );
+    process.exit(1);
+  }
+
+  // Case 1: Explicit opt-out (--no-sandbox)
+  if (mode === "disabled") {
+    process.stderr.write(
+      `\n${yellow("⚠")}  ${bold("WARNING:")} Running without sandbox. The AI agent will have unrestricted\n`
+    );
+    process.stderr.write(
+      `   access to your filesystem, network, and environment variables.\n`
+    );
+
+    // Interactive confirmation — skip in non-interactive environments
+    if (process.stdin.isTTY) {
+      process.stderr.write(
+        `   Press ${bold("Enter")} to continue or ${bold("Ctrl+C")} to abort.\n`
+      );
+      await waitForEnter();
+    }
+
+    process.stderr.write("\n");
+    return false;
+  }
+
+  // Case 2: Auto mode, Docker unavailable
+  if (mode === "auto" && !status.available) {
+    process.stderr.write(
+      `\n${yellow("⚠")}  Docker sandbox not available. Install Docker Desktop 4.58+ for secure execution.\n`
+    );
+    process.stderr.write(
+      `   Running without sandbox. Use ${dim("--no-sandbox")} to suppress this warning.\n\n`
+    );
+    return false;
+  }
+
+  // Docker available — sandbox will be used
+  return true;
+}
+
+/** Wait for the user to press Enter. Resolves immediately if stdin is not a TTY. */
+function waitForEnter(): Promise<void> {
+  return new Promise((resolve) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stderr,
+    });
+
+    rl.once("line", () => {
+      rl.close();
+      resolve();
+    });
+
+    // Also resolve on close (e.g. Ctrl+C sends SIGINT which closes readline)
+    rl.once("close", () => {
+      resolve();
+    });
+  });
 }

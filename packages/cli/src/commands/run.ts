@@ -40,6 +40,7 @@ import {
 import {
   cleanupStaleSandboxes,
   detectSandboxSupport,
+  displaySandboxWarning,
   resolveSandboxMode,
 } from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
