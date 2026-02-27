@@ -37,6 +37,11 @@ import {
   markTaskInProgress,
   saveRunState,
 } from "../core/run-state.js";
+import {
+  cleanupStaleSandboxes,
+  detectSandboxSupport,
+  resolveSandboxMode,
+} from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
 import {
   cleanupStaleWorktrees,
@@ -51,11 +56,59 @@ import {
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Issue, LocusConfig } from "../types.js";
 
+// ─── Help ────────────────────────────────────────────────────────────────────
+
+function printRunHelp(): void {
+  process.stderr.write(`
+${bold("locus run")} — Execute issues using AI agents
+
+${bold("Usage:")}
+  locus run                           ${dim("# Run active sprint (sequential)")}
+  locus run <issue>                   ${dim("# Run single issue (worktree)")}
+  locus run <issue> <issue> ...       ${dim("# Run multiple issues (parallel)")}
+  locus run --resume                  ${dim("# Resume interrupted run")}
+
+${bold("Options:")}
+  --resume              Resume a previously interrupted run
+  --dry-run             Show what would happen without executing
+  --model <name>        Override the AI model for this run
+  --no-sandbox          Disable Docker sandbox isolation
+  --sandbox=require     Require Docker sandbox (fail if unavailable)
+
+${bold("Sandbox:")}
+  By default, agents run inside Docker Desktop sandboxes (4.58+) for
+  hypervisor-level isolation. If Docker is not available, agents run
+  unsandboxed with a warning.
+
+${bold("Examples:")}
+  locus run                           ${dim("# Execute active sprint")}
+  locus run 42                        ${dim("# Run single issue")}
+  locus run 42 43 44                  ${dim("# Run issues in parallel")}
+  locus run --resume                  ${dim("# Resume after failure")}
+  locus run 42 --no-sandbox           ${dim("# Run without sandbox")}
+  locus run 42 --sandbox=require      ${dim("# Require sandbox")}
+
+`);
+}
+
+// ─── Command ─────────────────────────────────────────────────────────────────
+
 export async function runCommand(
   projectRoot: string,
   args: string[],
-  flags: { resume?: boolean; dryRun?: boolean; model?: string } = {}
+  flags: {
+    resume?: boolean;
+    dryRun?: boolean;
+    model?: string;
+    sandbox?: string;
+    noSandbox?: boolean;
+  } = {}
 ): Promise<void> {
+  if (args[0] === "help") {
+    printRunHelp();
+    return;
+  }
+
   const config = loadConfig(projectRoot);
   const _log = getLogger();
   const cleanupShutdown = registerShutdownHandlers({
@@ -64,9 +117,49 @@ export async function runCommand(
   });
 
   try {
+    // Resolve sandbox mode (CLI flags override config)
+    const sandboxMode = resolveSandboxMode(config.sandbox, flags);
+    let sandboxed = false;
+
+    if (sandboxMode !== "disabled") {
+      const status = await detectSandboxSupport();
+      if (!status.available) {
+        if (sandboxMode === "required") {
+          process.stderr.write(
+            `${red("✗")} Docker sandbox required but not available: ${status.reason}\n`
+          );
+          process.stderr.write(
+            `  Install Docker Desktop 4.58+ or remove --sandbox=require to continue.\n`
+          );
+          process.exit(1);
+        }
+        // Auto mode: warn and continue unsandboxed
+        process.stderr.write(
+          `${yellow("⚠")} Docker sandbox not available: ${status.reason}. Running unsandboxed.\n`
+        );
+      } else {
+        // Docker sandbox available — use it
+        sandboxed = true;
+      }
+    } else if (flags.noSandbox) {
+      process.stderr.write(
+        `${yellow("⚠")} Running without sandbox. The AI agent will have unrestricted access to your filesystem, network, and environment variables.\n`
+      );
+    }
+
+    // Clean up stale sandboxes from previous crashes
+    if (sandboxed) {
+      const staleCleaned = await cleanupStaleSandboxes();
+      if (staleCleaned > 0) {
+        process.stderr.write(
+          `  ${dim(`Cleaned up ${staleCleaned} stale sandbox${staleCleaned === 1 ? "" : "es"}.`)}\n`
+        );
+      }
+    }
+
     // Resume mode
     if (flags.resume) {
-      return handleResume(projectRoot, config);
+      return handleResume(projectRoot, config, sandboxed);
     }
 
     // Parse issue numbers from args
@@ -74,16 +167,28 @@ export async function runCommand(
 
     if (issueNumbers.length === 0) {
       // No issue numbers — run active sprint
-      return handleSprintRun(projectRoot, config, flags);
+      return handleSprintRun(projectRoot, config, flags, sandboxed);
     }
 
     if (issueNumbers.length === 1) {
       // Single issue — standalone execution
-      return handleSingleIssue(projectRoot, config, issueNumbers[0], flags);
+      return handleSingleIssue(
+        projectRoot,
+        config,
+        issueNumbers[0],
+        flags,
+        sandboxed
+      );
     }
 
     // Multiple issues — parallel execution
-    return handleParallelRun(projectRoot, config, issueNumbers, flags);
+    return handleParallelRun(
+      projectRoot,
+      config,
+      issueNumbers,
+      flags,
+      sandboxed
+    );
   } finally {
     cleanupShutdown();
   }
@@ -94,7 +199,8 @@ export async function runCommand(
 async function handleSprintRun(
   projectRoot: string,
   config: LocusConfig,
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
 
@@ -299,6 +405,8 @@ async function handleSprintRun(
       dryRun: flags.dryRun,
       sprintContext,
       skipPR: true,
+      sandboxed,
+      sandboxName: config.sandbox.name,
     });
 
     if (result.success) {
@@ -377,7 +485,8 @@ async function handleSingleIssue(
   projectRoot: string,
   config: LocusConfig,
   issueNumber: number,
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   // Check if issue is in a sprint — sprint issues run on the sprint branch, not worktrees
   let isSprintIssue = false;
@@ -398,6 +507,8 @@ async function handleSingleIssue(
       provider: config.ai.provider,
       model: flags.model ?? config.ai.model,
       dryRun: flags.dryRun,
+      sandboxed,
+      sandboxName: config.sandbox.name,
     });
     return;
   }
@@ -432,6 +543,8 @@ async function handleSingleIssue(
     provider: config.ai.provider,
     model: flags.model ?? config.ai.model,
     dryRun: flags.dryRun,
+    sandboxed,
+    sandboxName: config.sandbox.name,
   });
 
   // Clean up worktree on success, preserve on failure for debugging
@@ -453,7 +566,8 @@ async function handleParallelRun(
   projectRoot: string,
   config: LocusConfig,
   issueNumbers: number[],
-  flags: { dryRun?: boolean; model?: string }
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
   const maxConcurrent = config.agent.maxParallel;
@@ -529,6 +643,8 @@ async function handleParallelRun(
         provider: config.ai.provider,
         model: flags.model ?? config.ai.model,
         dryRun: flags.dryRun,
+        sandboxed,
+        sandboxName: config.sandbox.name,
       });
 
       if (result.success) {
@@ -544,10 +660,25 @@ async function handleParallelRun(
       }
       saveRunState(projectRoot, state);
 
-      results.push({ issue: issueNumber, success: result.success });
+      return { issue: issueNumber, success: result.success };
     });
 
-    await Promise.all(promises);
+    // Use Promise.allSettled to ensure all sandboxes are cleaned up even if
+    // some tasks throw unexpected errors (sandbox cleanup happens in runner
+    // finally blocks, but allSettled guarantees we process all outcomes).
+    const settled = await Promise.allSettled(promises);
+    for (const outcome of settled) {
+      if (outcome.status === "fulfilled") {
+        results.push(outcome.value);
+      } else {
+        // Task promise rejected unexpectedly — extract issue number from batch
+        // position and record as failed
+        const idx = settled.indexOf(outcome);
+        const issueNumber = batch[idx];
+        log.warn(`Parallel task #${issueNumber} threw: ${outcome.reason}`);
+        results.push({ issue: issueNumber, success: false });
+      }
+    }
   }
 
   // Summary
@@ -581,7 +712,8 @@ async function handleParallelRun(
 
 async function handleResume(
   projectRoot: string,
-  config: LocusConfig
+  config: LocusConfig,
+  sandboxed: boolean
 ): Promise<void> {
   const state = loadRunState(projectRoot);
   if (!state) {
@@ -645,6 +777,8 @@ async function handleResume(
       model: config.ai.model,
       // Sprint runs use a single sprint-level PR created at the end
       skipPR: isSprintRun,
+      sandboxed,
+      sandboxName: config.sandbox.name,
     });
 
     if (result.success) {

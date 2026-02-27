@@ -21,6 +21,7 @@
 * [GitHub-Native Workflows](concepts/github-native-workflows.md)
 * [Execution Model (Technical)](concepts/execution-model.md)
 * [Sprints & Issues](concepts/sprints-and-issues.md)
+* [Security & Sandboxing](concepts/security-sandboxing.md)
 * [Your First Sprint (Detailed)](getting-started/first-sprint.md)
 
 ## CLI Reference

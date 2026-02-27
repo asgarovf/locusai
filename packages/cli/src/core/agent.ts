@@ -116,6 +116,8 @@ export async function executeIssue(
     model,
     cwd: options.worktreePath ?? projectRoot,
     activity: `issue #${issueNumber}`,
+    sandboxed: options.sandboxed,
+    sandboxName: options.sandboxName,
   });
 
   const output = aiResult.output;
@@ -267,6 +269,8 @@ export async function iterateOnPR(
     model: config.ai.model,
     cwd: projectRoot,
     activity: `iterating on PR #${prNumber}`,
+    sandboxed: config.sandbox.enabled,
+    sandboxName: config.sandbox.name,
   });
 
   if (aiResult.interrupted) {

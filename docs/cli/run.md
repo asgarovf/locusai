@@ -21,6 +21,8 @@ locus run [issue-numbers...] [options]
 | `--resume` | Resume a previously interrupted run (sprint or parallel) |
 | `--dry-run` | Show what would happen without executing agents or making changes |
 | `--model <name>` | Override the AI model for this run |
+| `--no-sandbox` | Disable Docker sandbox isolation (shows safety warning) |
+| `--sandbox=require` | Require Docker sandbox — fail if unavailable |
 
 ---
 
@@ -106,6 +108,23 @@ The run state file is cleared when all tasks complete successfully.
 
 ---
 
+## Sandbox Isolation
+
+By default, Locus runs AI agents inside **Docker Desktop sandboxes** when Docker Desktop 4.58+ is available. Each sandbox is a lightweight microVM with hypervisor-level isolation — the agent runs in a separate kernel and cannot directly access your host filesystem, network, or credentials.
+
+| Scenario | Behavior |
+|----------|----------|
+| Docker 4.58+ installed | Sandbox used automatically |
+| Docker not available | Warning printed, runs unsandboxed |
+| `--no-sandbox` | Sandbox disabled, interactive safety warning shown |
+| `--sandbox=require` | Sandbox required — exits with error if unavailable |
+
+For parallel runs, each issue gets its own isolated sandbox. Sandboxes are automatically cleaned up on completion, failure, or interrupt (SIGINT/SIGTERM).
+
+See also: [Security & Sandboxing](../concepts/security-sandboxing.md)
+
+---
+
 ## Examples
 
 ```bash
@@ -126,6 +145,12 @@ locus run --resume
 
 # Run with a different model
 locus run --model claude-sonnet-4-6
+
+# Disable sandbox
+locus run 42 --no-sandbox
+
+# Require sandbox (fail if Docker unavailable)
+locus run 42 --sandbox=require
 ```
 
 ---

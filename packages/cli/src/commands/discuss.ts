@@ -324,6 +324,8 @@ async function startDiscussion(
       model: flags.model ?? config.ai.model,
       cwd: projectRoot,
       activity: "discussion",
+      sandboxed: config.sandbox.enabled,
+      sandboxName: config.sandbox.name,
     });
 
     if (aiResult.interrupted) {

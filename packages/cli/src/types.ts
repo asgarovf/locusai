@@ -7,6 +7,7 @@ export interface LocusConfig {
   agent: AgentConfig;
   sprint: SprintConfig;
   logging: LoggingConfig;
+  sandbox: SandboxConfig;
 }
 
 export interface GitHubConfig {
@@ -42,6 +43,14 @@ export interface LoggingConfig {
 }
 
 export type LogLevel = "silent" | "normal" | "verbose" | "debug";
+
+export interface SandboxConfig {
+  enabled: boolean;
+  /** Name of the user-managed persistent sandbox (set by `locus sandbox`). */
+  name?: string;
+  extraWorkspaces: string[];
+  readOnlyPaths: string[];
+}
 
 // ─── GitHub Data ─────────────────────────────────────────────────────────────
 
@@ -187,8 +196,12 @@ export interface RunnerOptions {
   onOutput?: (chunk: string) => void;
   /** Called with a short description when the AI invokes a tool (verbose mode only). */
   onToolActivity?: (summary: string) => void;
+  /** Called when the runner's status changes (e.g., "Syncing sandbox...", "Thinking..."). */
+  onStatusChange?: (message: string) => void;
   signal?: AbortSignal;
   verbose?: boolean;
+  /** Activity label (e.g., "issue #42") — used for sandbox naming in parallel runs. */
+  activity?: string;
 }
 
 export interface RunnerResult {
@@ -210,6 +223,10 @@ export interface AgentOptions {
   sprintContext?: string;
   /** Skip per-task PR creation (used for sprint runs where a single sprint PR is created instead). */
   skipPR?: boolean;
+  /** Run the AI agent inside a Docker sandbox for isolation. */
+  sandboxed?: boolean;
+  /** Name of a user-managed sandbox to exec into (from `locus sandbox`). */
+  sandboxName?: string;
 }
 
 export interface AgentResult {

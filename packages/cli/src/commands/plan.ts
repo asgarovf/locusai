@@ -114,7 +114,7 @@ function ensurePlansDir(projectRoot: string): string {
 }
 
 function generateId(): string {
-  return `${Math.random().toString(36).slice(2, 8)}`;
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function loadPlanFile(projectRoot: string, id: string): PlanFile | null {
@@ -371,6 +371,8 @@ async function handleAIPlan(
     model: flags.model ?? config.ai.model,
     cwd: projectRoot,
     activity: "planning",
+    sandboxed: config.sandbox.enabled,
+    sandboxName: config.sandbox.name,
   });
 
   if (aiResult.interrupted) {
@@ -499,6 +501,8 @@ Start with foundational/setup tasks, then core features, then integration/testin
     cwd: projectRoot,
     activity: "issue ordering",
     silent: true,
+    sandboxed: config.sandbox.enabled,
+    sandboxName: config.sandbox.name,
   });
 
   if (aiResult.interrupted) {

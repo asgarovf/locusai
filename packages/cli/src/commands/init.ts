@@ -8,9 +8,10 @@
  * 4. Generate config.json with detected values
  * 5. Generate LOCUS.md template
  * 6. Generate LEARNINGS.md
- * 7. Create GitHub labels if they don't exist
- * 8. Update .gitignore
- * 9. Print success message with next steps
+ * 7. Generate .sandboxignore
+ * 8. Create GitHub labels if they don't exist
+ * 9. Update .gitignore
+ * 10. Print success message with next steps
  *
  * Idempotent: re-running updates config without overwriting user content.
  */
@@ -143,6 +144,33 @@ Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mista
 ## Development Workflow
 
 <!-- How to run, test, build, and deploy the project -->
+`;
+
+const SANDBOXIGNORE_TEMPLATE = `# Files and directories to exclude from sandbox environments.
+# Patterns follow .gitignore syntax (one per line, # for comments).
+# These files will be removed from the sandbox after creation.
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account*.json
+
+# Cloud provider configs
+.aws/
+.gcp/
+.azure/
+
+# Docker secrets
+docker-compose.override.yml
 `;
 
 const LEARNINGS_MD_TEMPLATE = `# Learnings
@@ -287,7 +315,20 @@ export async function initCommand(cwd: string): Promise<void> {
     );
   }
 
-  // 8. Create GitHub labels
+  // 8. Generate .sandboxignore (only if not exists)
+  const sandboxIgnorePath = join(cwd, ".sandboxignore");
+  if (!existsSync(sandboxIgnorePath)) {
+    writeFileSync(sandboxIgnorePath, SANDBOXIGNORE_TEMPLATE, "utf-8");
+    process.stderr.write(
+      `${green("✓")} Generated .sandboxignore\n`
+    );
+  } else {
+    process.stderr.write(
+      `${dim("○")} .sandboxignore already exists (preserved)\n`
+    );
+  }
+
+  // 9. Create GitHub labels
   process.stderr.write(`${cyan("●")} Creating GitHub labels...`);
   try {
     ensureLabels(ALL_LABELS, { cwd });
@@ -300,7 +341,7 @@ export async function initCommand(cwd: string): Promise<void> {
     );
   }
 
-  // 9. Update .gitignore
+  // 10. Update .gitignore
   const gitignorePath = join(cwd, ".gitignore");
   let gitignoreContent = "";
   if (existsSync(gitignorePath)) {
@@ -319,7 +360,7 @@ export async function initCommand(cwd: string): Promise<void> {
     process.stderr.write(`${dim("○")} .gitignore already configured\n`);
   }
 
-  // 10. Print next steps
+  // 11. Print next steps
   process.stderr.write(`\n${bold(green("Locus initialized!"))}\n\n`);
   process.stderr.write(`${bold("Next steps:")}\n`);
   process.stderr.write(
@@ -333,6 +374,27 @@ export async function initCommand(cwd: string): Promise<void> {
   );
   process.stderr.write(
     `  ${gray("4.")} Start coding:  ${bold("locus exec")}\n`
+  );
+
+  // 12. Sandbox tutorial
+  process.stderr.write(`\n${bold("Sandbox mode")} ${dim("(recommended)")}\n`);
+  process.stderr.write(
+    `  Run AI agents in an isolated Docker sandbox for safety.\n\n`
+  );
+  process.stderr.write(
+    `  ${gray("1.")} ${cyan("locus sandbox")}          ${dim("Create the sandbox environment")}\n`
+  );
+  process.stderr.write(
+    `  ${gray("2.")} ${cyan("locus sandbox claude")}   ${dim("Login to Claude inside the sandbox")}\n`
+  );
+  process.stderr.write(
+    `  ${gray("3.")} ${cyan("locus exec")}             ${dim("All commands now run sandboxed")}\n`
+  );
+  process.stderr.write(
+    `\n  ${dim("Using Codex? Run")} ${cyan("locus sandbox codex")} ${dim("instead of step 2.")}\n`
+  );
+  process.stderr.write(
+    `  ${dim("Learn more:")} ${cyan("locus sandbox help")}\n`
   );
   process.stderr.write("\n");
 

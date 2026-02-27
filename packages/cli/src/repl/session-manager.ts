@@ -3,7 +3,6 @@
  * Sessions are persisted as JSON files in .locus/sessions/.
  */
 
-import { randomBytes } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -229,8 +228,7 @@ export class SessionManager {
   }
 
   private generateId(): string {
-    // 6-byte random hex (12 chars) — similar to short git hashes
-    return randomBytes(6).toString("hex");
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   private getSessionPath(sessionId: string): string {

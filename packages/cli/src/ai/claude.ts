@@ -7,6 +7,29 @@ import { type ChildProcess, execSync, spawn } from "node:child_process";
 import { getLogger } from "../core/logger.js";
 import type { AgentRunner, RunnerOptions, RunnerResult } from "../types.js";
 
+/** Build Claude CLI arguments from runner options. Shared by ClaudeRunner and SandboxedClaudeRunner. */
+export function buildClaudeArgs(options: {
+  model?: string;
+  verbose?: boolean;
+}): string[] {
+  const args = [
+    "--dangerously-skip-permissions",
+    "--no-session-persistence",
+  ];
+
+  if (options.model) {
+    args.push("--model", options.model);
+  }
+
+  if (options.verbose) {
+    // stream-json gives real-time tool call events; --print requires
+    // --verbose when using stream-json output format.
+    args.push("--verbose", "--output-format", "stream-json");
+  }
+
+  return args;
+}
+
 export class ClaudeRunner implements AgentRunner {
   name = "claude";
   private process: ChildProcess | null = null;
@@ -41,21 +64,7 @@ export class ClaudeRunner implements AgentRunner {
     const log = getLogger();
     this.aborted = false;
 
-    const args = [
-      "--print",
-      "--dangerously-skip-permissions",
-      "--no-session-persistence",
-    ];
-
-    if (options.model) {
-      args.push("--model", options.model);
-    }
-
-    if (options.verbose) {
-      // stream-json gives real-time tool call events; --print requires
-      // --verbose when using stream-json output format.
-      args.push("--verbose", "--output-format", "stream-json");
-    }
+    const args = ["--print", ...buildClaudeArgs(options)];
 
     log.debug("Spawning claude", { args: args.join(" "), cwd: options.cwd });
 

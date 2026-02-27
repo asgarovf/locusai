@@ -36,6 +36,7 @@ Sections displayed:
 | **Agent** | `maxParallel`, `autoLabel`, `autoPR`, `baseBranch`, `rebaseBeforeTask` |
 | **Sprint** | `active`, `stopOnFailure` |
 | **Logging** | `level`, `maxFiles`, `maxTotalSizeMB` |
+| **Sandbox** | `enabled`, `extraWorkspaces`, `readOnlyPaths` |
 
 ### set
 
@@ -55,6 +56,7 @@ locus config set agent.baseBranch develop
 locus config set agent.rebaseBeforeTask false
 locus config set sprint.stopOnFailure false
 locus config set logging.level debug
+locus config set sandbox.enabled false
 ```
 
 ### get
@@ -96,6 +98,9 @@ For nested objects, the output is formatted as JSON.
 | `logging.level` | string | `"normal"` | Log level: `silent`, `normal`, `verbose`, `debug` |
 | `logging.maxFiles` | number | `10` | Maximum number of log files to keep |
 | `logging.maxTotalSizeMB` | number | `50` | Maximum total log size in MB |
+| `sandbox.enabled` | boolean | `true` | Enable Docker sandbox isolation by default |
+| `sandbox.extraWorkspaces` | string[] | `[]` | Additional workspace paths to sync into sandbox |
+| `sandbox.readOnlyPaths` | string[] | `[]` | Paths mounted as read-only in sandbox |
 
 ---
 
