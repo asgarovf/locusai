@@ -131,4 +131,6 @@ Outcome: one runbook for both providers, with GitHub-native planning/execution/r
 - [AI Providers (technical reference)](ai-providers.md)
 - [How Locus Works](how-it-works.md)
 - [GitHub-Native Workflows](github-native-workflows.md)
-- [Execution Model](execution-model.md)
+- [Built-In Tools](../cli/overview.md)
+- [Auto-Approval Mode](auto-approval-mode.md)
+- [Execution Model (technical reference)](execution-model.md)

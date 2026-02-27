@@ -139,7 +139,7 @@ export function Hero({ version }: HeroProps) {
           </Link>
           <span className="text-border">/</span>
           <Link
-            href="https://docs.locusai.dev/concepts/execution-model"
+            href="https://docs.locusai.dev/concepts/auto-approval-mode"
             className="hover:text-white transition-colors"
           >
             Auto-approval

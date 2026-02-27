@@ -1,118 +1,107 @@
 ---
-description: Complete reference for all Locus v3 CLI commands, global options, and common workflows.
+description: Built-in tool inventory for Locus, with categorized commands and practical workflows that extend raw provider CLIs.
 ---
 
-# CLI Overview
+# Built-In Tools
 
-Locus is a GitHub-native AI engineering CLI. All project state lives in GitHub (issues, milestones, PRs, labels) while Locus orchestrates AI agents to plan, execute, review, and iterate on your codebase.
+Locus adds an operational toolchain on top of provider CLIs (Claude/Codex): planning, GitHub-native execution, review loops, status visibility, logging, and package extensibility.
 
-## Usage
+Inventory date: **February 27, 2026**  
+Locus CLI version: **0.17.14** (`packages/cli/package.json`)
+
+## Why Built-In Tools (vs Raw Provider CLIs)
+
+Raw provider CLIs can generate code, but they do not natively manage your GitHub workflow end to end.
+
+Locus built-in tools add:
+
+- GitHub task lifecycle control (`issue`, `sprint`, `plan`, `run`)
+- Delivery automation (`autoLabel`, `autoPR`, `run --resume`)
+- Structured quality loops (`review`, `iterate`)
+- Operational visibility (`status`, `logs`, `artifacts`)
+
+## Tool Inventory
+
+### 1) Setup and Configuration
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus init`](init.md) | Initialize `.locus/`, verify `gh`, and seed label schema | `locus init` |
+| [`locus config`](config.md) | Read/write project settings (model, automation, execution behavior) | `locus config set ai.model gpt-5.3-codex` |
+| [`locus upgrade`](upgrade.md) | Check and install newer CLI versions | `locus upgrade --check` |
+
+### 2) Work Modeling in GitHub
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus issue`](issue.md) | Create/manage GitHub issues as execution units | `locus issue create "Add webhook signature validation" --sprint "Sprint 8"` |
+| [`locus sprint`](sprint.md) | Create/activate/manage sprint milestones | `locus sprint active "Sprint 8"` |
+| [`locus plan`](plan.md) | Generate plan files, review, and approve into GitHub issues | `locus plan "Build billing retries" --sprint "Sprint 8"` then `locus plan approve <id>` |
+
+### 3) Execution, Review, and Iteration
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus run`](run.md) | Execute active sprint or standalone issue set | `locus run --resume` |
+| [`locus review`](review.md) | AI review for open `agent:managed` PRs | `locus review` |
+| [`locus iterate`](iterate.md) | Apply PR feedback in loop | `locus iterate --pr 42` |
+| [`locus status`](status.md) | Operational dashboard for sprint/issues/PRs | `locus status` |
+| [`locus logs`](logs.md) | Tail and inspect run logs for failures/debugging | `locus logs --follow` |
+
+### 4) Interactive and Analysis Tools
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus exec`](exec.md) | Interactive or one-shot coding session | `locus exec "Add retry guard to webhook handler"` |
+| [`locus discuss`](discuss.md) | Architecture discussion and planning prompts | `locus discuss "Should we split webhook processing into a queue worker?"` |
+| `locus artifacts` | Inspect and convert AI-generated artifacts in `.locus/artifacts/` | `locus artifacts plan webhook-reliability-prd` |
+
+### 5) Package Ecosystem Tools
+
+| Tool | Purpose | Example |
+|---|---|---|
+| `locus install` | Install community package from npm | `locus install telegram` |
+| `locus uninstall` | Remove installed package | `locus uninstall telegram` |
+| `locus packages` | List installed packages / check outdated | `locus packages outdated` |
+| `locus pkg` | Run package-provided commands | `locus pkg telegram start` |
+
+## Practical Workflows Where Built-In Tools Win
+
+### Workflow A: Issue-to-PR Delivery with Recovery
 
 ```bash
-locus <command> [options]
+locus sprint active "Sprint 8"
+locus run
+locus review
+locus iterate --sprint
+locus run --resume
 ```
 
----
+Why this beats raw provider CLI usage:
 
-## Commands
+- Keeps task state in GitHub labels/issues/PRs
+- Recovers from interruption without re-running completed tasks
+- Preserves one team workflow across Claude/Codex model switching
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| [`init`](init.md) | | Initialize Locus in a GitHub repository |
-| [`issue`](issue.md) | `i` | Manage GitHub issues as work items |
-| [`sprint`](sprint.md) | `s` | Manage sprints via GitHub Milestones |
-| [`plan`](plan.md) | | AI-powered sprint planning |
-| [`run`](run.md) | | Execute issues using AI agents |
-| [`exec`](exec.md) | `e` | Interactive REPL or one-shot execution |
-| [`review`](review.md) | | AI-powered code review on PRs |
-| [`iterate`](iterate.md) | | Re-execute tasks with PR feedback |
-| [`discuss`](discuss.md) | | AI-powered architectural discussions |
-| [`status`](status.md) | | Dashboard view of current project state |
-| [`config`](config.md) | | View and manage settings |
-| [`logs`](logs.md) | | View, tail, and manage execution logs |
-| [`upgrade`](upgrade.md) | | Check for and install updates |
-
----
-
-## Global Options
-
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--help` | `-h` | Show help message |
-| `--version` | `-V` | Print installed version |
-| `--debug` | `-d` | Enable debug-level logging |
-| `--model` | `-m` | Override AI model for the command |
-| `--dry-run` | | Preview what the command would do without side effects |
-| `--resume` | | Resume a previously interrupted sprint or parallel run |
-
----
-
-## Getting Started
+### Workflow B: Plan Approval Before Execution
 
 ```bash
-# 1. Initialize Locus in your repo
-locus init
-
-# 2. Edit the generated project context file
-vim .locus/LOCUS.md
-
-# 3. Create issues manually or let AI plan them
-locus plan "Build user authentication with OAuth"
-
-# 4. Run the active sprint
+locus plan "Add SSO login and role-based access"
+locus plan list
+locus plan show <id>
+locus plan approve <id> --sprint "Sprint 9"
 locus run
 ```
 
----
+Why this beats raw provider CLI usage:
 
-## Common Workflows
+- Separates planning from execution with an approval gate
+- Converts approved plan into ordered GitHub work automatically
+- Keeps execution order explicit via `order:N` labels
 
-### Sprint execution (sequential, single branch)
+## Related Docs
 
-```bash
-locus sprint active "Sprint 1"
-locus run
-```
-
-### Run a single issue in a worktree
-
-```bash
-locus run 42
-```
-
-### Run multiple issues in parallel (worktrees)
-
-```bash
-locus run 42 43 44
-```
-
-### Interactive AI coding session
-
-```bash
-locus exec
-```
-
-### One-shot AI execution
-
-```bash
-locus exec "Add error handling to the payment endpoint"
-```
-
-### AI code review
-
-```bash
-locus review          # All open agent PRs
-locus review 15       # Specific PR
-```
-
-### Iterate on PR feedback
-
-```bash
-locus iterate --pr 15
-```
-
-### Check project status
-
-```bash
-locus status
-```
+- [Auto-Approval Mode](../concepts/auto-approval-mode.md)
+- [Execution Model (Technical)](../concepts/execution-model.md)
+- [GitHub-Native Workflows](../concepts/github-native-workflows.md)
+- [Unified Interface Across AI Clients](../concepts/unified-interface.md)

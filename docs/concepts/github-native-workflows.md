@@ -239,6 +239,8 @@ locus run --resume
 
 - [GitHub as Backend](github-backend.md)
 - [How Locus Works](how-it-works.md)
+- [Built-In Tools](../cli/overview.md)
+- [Auto-Approval Mode](auto-approval-mode.md)
 - [locus plan](../cli/plan.md)
 - [locus run](../cli/run.md)
 - [locus review](../cli/review.md)

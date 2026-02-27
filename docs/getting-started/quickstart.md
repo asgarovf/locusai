@@ -93,8 +93,8 @@ Expected outcome:
 Deep dives:
 
 - [How Locus Works](../concepts/how-it-works.md)
-- [Execution Model](../concepts/execution-model.md)
-- [CLI Overview](../cli/overview.md)
+- [Built-In Tools](../cli/overview.md)
+- [Execution Model (Technical)](../concepts/execution-model.md)
 
 ## Step 5: Enable Auto-Approval Settings and Resume
 
@@ -112,7 +112,10 @@ Expected outcome:
 - Interrupted execution resumes from the next unfinished task
 - Completed tasks are not re-executed
 
-Deep dive: [Execution Model](../concepts/execution-model.md)
+Deep dives:
+
+- [Auto-Approval Mode](../concepts/auto-approval-mode.md)
+- [Execution Model (Technical)](../concepts/execution-model.md)
 
 ## Complete Command Block
 
@@ -141,5 +144,6 @@ locus run --resume
 2. [Unified Interface Across AI Clients](../concepts/unified-interface.md)
 3. [GitHub as Backend](../concepts/github-backend.md)
 4. [GitHub-Native Workflows](../concepts/github-native-workflows.md)
-5. [Execution Model](../concepts/execution-model.md)
-6. [CLI Overview](../cli/overview.md)
+5. [Built-In Tools](../cli/overview.md)
+6. [Auto-Approval Mode](../concepts/auto-approval-mode.md)
+7. [Execution Model (Technical)](../concepts/execution-model.md)

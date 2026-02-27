@@ -53,7 +53,7 @@ const features: Feature[] = [
       "Set agent.autoPR and agent.autoLabel, then use locus run --resume to continue failed execution without restarting completed work.",
     icon: Zap,
     color: "text-emerald",
-    docsHref: "https://docs.locusai.dev/concepts/execution-model",
+    docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
   },
 ];
 

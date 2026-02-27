@@ -108,7 +108,7 @@ const steps: SequenceStep[] = [
     title: "Enable full-auto execution with resumable delivery",
     description:
       "Turn on automation settings to auto-label issues and auto-create PRs. Failed runs can resume from the last unfinished step instead of restarting.",
-    docsHref: "https://docs.locusai.dev/concepts/execution-model",
+    docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
     docsLabel: "Full-auto execution model",
     terminalTitle: "autoPR + autoLabel + run --resume",
     lines: [

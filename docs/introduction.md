@@ -36,7 +36,7 @@ You can reach a working flow by following only those two pages.
 1. [Unified interface across multiple AI clients](concepts/unified-interface.md) - switch models/providers without changing workflow.
 2. [GitHub-native workflows as operational memory](concepts/github-backend.md) - issues, milestones, labels, and PRs are the data plane.
 3. [Built-in orchestration tools beyond provider CLIs](cli/overview.md) - use `plan`, `run`, `review`, `iterate`, `status`, and `logs`.
-4. [Automation via auto-approval mode](concepts/execution-model.md) - full-auto execution patterns with resumable runs.
+4. [Automation via auto-approval mode](concepts/auto-approval-mode.md) - full-auto execution patterns with safeguards and resumable runs.
 
 ## What You Will Learn Next
 
@@ -52,4 +52,5 @@ After that, continue with:
 1. [How Locus Works](concepts/how-it-works.md)
 2. [GitHub-Native Workflows](concepts/github-native-workflows.md)
 3. [Sprints and Issues](concepts/sprints-and-issues.md)
-4. [CLI Overview](cli/overview.md)
+4. [Built-In Tools](cli/overview.md)
+5. [Auto-Approval Mode](concepts/auto-approval-mode.md)
