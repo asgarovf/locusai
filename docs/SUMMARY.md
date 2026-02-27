@@ -1,20 +1,27 @@
 # Table of contents
 
-* [Introduction](introduction.md)
+## Start Here
 
-## Getting Started
-
+* [Documentation Home](introduction.md)
 * [Installation](getting-started/installation.md)
+* [Quickstart](getting-started/quickstart.md)
 * [Initialization](getting-started/initialization.md)
-* [Your First Sprint](getting-started/first-sprint.md)
 
-## Core Concepts
+## Core Strengths
+
+* [Unified Interface Across AI Clients](concepts/unified-interface.md)
+* [GitHub-Native Operational Memory](concepts/github-backend.md)
+* [Built-In Orchestration Tools](cli/overview.md)
+* [Auto-Approval Mode](concepts/auto-approval-mode.md)
+
+## Workflow Deep Dives
 
 * [How Locus Works](concepts/how-it-works.md)
-* [GitHub as Backend](concepts/github-backend.md)
+* [AI Providers (Technical Reference)](concepts/ai-providers.md)
+* [GitHub-Native Workflows](concepts/github-native-workflows.md)
+* [Execution Model (Technical)](concepts/execution-model.md)
 * [Sprints & Issues](concepts/sprints-and-issues.md)
-* [Execution Model](concepts/execution-model.md)
-* [AI Providers](concepts/ai-providers.md)
+* [Your First Sprint (Detailed)](getting-started/first-sprint.md)
 
 ## CLI Reference
 
@@ -32,3 +39,9 @@
 * [locus config](cli/config.md)
 * [locus logs](cli/logs.md)
 * [locus upgrade](cli/upgrade.md)
+
+## Content
+
+* [Positioning Brief](content/positioning-brief.md)
+* [Landing/Docs Consistency Audit (2026-02-27)](content/landing-docs-consistency-audit-2026-02-27.md)
+* [Release Content Checklist](content/release-content-checklist.md)

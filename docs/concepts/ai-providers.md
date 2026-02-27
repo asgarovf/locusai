@@ -4,6 +4,10 @@ description: How to configure AI providers and models in Locus -- Claude (Anthro
 
 # AI Providers
 
+{% hint style="info" %}
+For the workflow-focused deep dive, start with [Unified Interface Across AI Clients](unified-interface.md).
+{% endhint %}
+
 ## Overview
 
 Locus does not include an AI model. It is an orchestrator that delegates code generation to external AI CLIs. Two providers are supported:

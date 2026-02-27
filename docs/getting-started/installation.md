@@ -169,7 +169,8 @@ npx @locusai/cli plan "Build a REST API"
 
 ## Next Steps
 
-Once installed, initialize Locus in your repository:
+Once installed, follow the guided onboarding path:
 
-1. [Initialize your project](initialization.md) -- Run `locus init` to set up the `.locus/` directory and GitHub labels
-2. [Run your first sprint](first-sprint.md) -- Plan, execute, review, and iterate
+1. [Quickstart](quickstart.md) -- complete one full issue-to-PR workflow with expected outcomes
+2. [Initialization](initialization.md) -- deep dive into what `locus init` creates and configures
+3. [Your First Sprint (Detailed)](first-sprint.md) -- expanded walkthrough with advanced options

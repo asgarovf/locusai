@@ -6,6 +6,10 @@ description: End-to-end walkthrough of planning, executing, reviewing, and itera
 
 This guide walks through the full Locus workflow: **plan, run, review, iterate**. By the end, you will have GitHub issues created from a high-level goal, AI-generated pull requests, code reviews, and automated iteration on feedback.
 
+{% hint style="info" %}
+If you want the fastest first-run path, start with [Quickstart](quickstart.md) first, then return here for deeper options.
+{% endhint %}
+
 ---
 
 ## Overview

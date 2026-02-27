@@ -171,3 +171,9 @@ After initialization, Locus creates a `.locus/` directory in your project root:
 ```
 
 Sensitive files (`config.json`, `run-state.json`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed to your repository so the entire team benefits from the accumulated context.
+
+## Related Docs
+
+- [Built-In Tools](../cli/overview.md)
+- [Auto-Approval Mode](auto-approval-mode.md)
+- [Execution Model (Technical)](execution-model.md)

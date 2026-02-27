@@ -4,6 +4,10 @@ description: How Locus executes tasks -- sprint mode, standalone mode, run state
 
 # Execution Model
 
+{% hint style="info" %}
+For operator guidance on safeguards, boundaries, and rollback in high-automation runs, see [Auto-Approval Mode](auto-approval-mode.md).
+{% endhint %}
+
 ## Overview
 
 Locus supports two execution modes:
@@ -35,7 +39,7 @@ locus run
 
 4. Before each task (except the first), Locus provides **sprint context** -- the cumulative diff from the base branch -- so the AI agent knows what previous tasks changed and can build upon that work.
 
-5. A PR is created for each completed task.
+5. Execution state is persisted continuously, and PR creation is handled automatically when `agent.autoPR` is enabled (sprint-level PR for sprint runs, issue PRs for standalone runs).
 
 ### Why Sequential
 
@@ -227,15 +231,16 @@ After you resolve the conflicts manually, `locus run --resume` continues executi
 
 ## PR Creation
 
-When a task completes successfully and `agent.autoPR` is enabled (default), Locus:
+When execution produces completed work and `agent.autoPR` is enabled (default), Locus creates PRs automatically:
 
 1. Checks if there are changes to push (compares the current branch against `origin/<baseBranch>`)
 2. Pushes the branch to origin
-3. Creates a PR via `gh pr create` with:
-   - **Title:** `<issue title> (#<issue number>)`
-   - **Body:** `Closes #<issue number>` followed by an automated-by-Locus footer
-   - **Base:** The configured base branch (e.g., `main`)
-   - **Head:** The current branch
+3. Creates a PR via `gh pr create`:
+   - **Standalone issue runs:** title like `<issue title> (#<issue number>)`, body includes `Closes #<issue number>`
+   - **Sprint runs:** title like `Sprint: <sprint name>`, body includes `Closes #<issue>` lines for completed tasks
+   - **Base/Head:** base is your configured base branch (for example `main`), head is the run branch
+
+In sprint runs, Locus opens a single sprint-level PR that references all completed issues. In standalone issue runs, it opens issue-level PRs.
 
 The `Closes #N` syntax ensures GitHub automatically closes the issue when the PR is merged.
 
@@ -282,3 +287,9 @@ These config values control execution behavior:
 | `agent.rebaseBeforeTask`   | `true`     | Check for base branch drift between tasks        |
 | `sprint.stopOnFailure`     | `true`     | Stop sprint execution when a task fails          |
 | `sprint.active`            | `null`     | Name of the currently active sprint              |
+
+## Related Docs
+
+- [Auto-Approval Mode](auto-approval-mode.md)
+- [Built-In Tools](../cli/overview.md)
+- [locus run](../cli/run.md)

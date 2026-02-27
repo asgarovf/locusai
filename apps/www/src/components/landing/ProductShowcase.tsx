@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Terminal } from "lucide-react";
+import { ArrowRight, Terminal } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface TerminalLine {
@@ -10,219 +11,123 @@ interface TerminalLine {
   prefix?: string;
 }
 
-interface Product {
+interface SequenceStep {
+  step: string;
   label: string;
-  labelColor: string;
   title: string;
   description: string;
+  docsHref: string;
+  docsLabel: string;
   terminalTitle: string;
   lines: TerminalLine[];
 }
 
-const products: Product[] = [
+const steps: SequenceStep[] = [
   {
-    label: "Sprint Execution",
-    labelColor: "text-cyan",
-    title: "AI agents that execute your sprint, task by task",
+    step: "01",
+    label: "Choose Your AI Client",
+    title: "Select Claude or Codex without changing your workflow",
     description:
-      "Run your active sprint and watch AI agents claim tasks, write code, run tests, commit, and push — in order. Each task builds on the previous one. Failed runs resume exactly where they left off.",
-    terminalTitle: "locus run",
+      "Set the model, then keep using the same Locus command surface. One interface across Claude and Codex means teams switch providers without rewriting process.",
+    docsHref: "https://docs.locusai.dev/concepts/unified-interface",
+    docsLabel: "Unified interface deep dive",
+    terminalTitle: "locus config set ai.model",
     lines: [
       {
-        text: "locus run",
+        text: "locus config set ai.model claude-sonnet-4-6",
         color: "text-foreground",
         prefix: "$ ",
       },
+      { text: "ai.model updated", color: "text-violet" },
+      { text: "", color: "" },
+      { text: "locus run", color: "text-foreground", prefix: "$ " },
+      { text: "Running sprint with Claude client...", color: "text-violet" },
       { text: "", color: "" },
       {
-        text: "Sprint 1 — 4 tasks on branch locus/sprint-1",
-        color: "text-cyan",
-      },
-      { text: "", color: "" },
-      {
-        text: "  [1/4] Implement user auth              done",
-        color: "text-emerald",
-      },
-      {
-        text: "  [2/4] Add database migrations           done",
-        color: "text-emerald",
-      },
-      {
-        text: "  [3/4] Create API endpoints              done",
-        color: "text-emerald",
-      },
-      {
-        text: "  [4/4] Write integration tests           done",
-        color: "text-emerald",
-      },
-      { text: "", color: "" },
-      {
-        text: "  All tasks completed. 4 PRs created.",
-        color: "text-cyan",
-      },
-    ],
-  },
-  {
-    label: "AI Planning",
-    labelColor: "text-violet",
-    title: "Describe a goal, get a structured sprint",
-    description:
-      "Tell Locus what you want to build. The AI analyzes your codebase, breaks your goal into GitHub issues with priority labels, type labels, and execution order — then creates them in a milestone.",
-    terminalTitle: "locus plan",
-    lines: [
-      {
-        text: 'locus plan "Build authentication with OAuth and JWT"',
+        text: "locus config set ai.model gpt-5.3-codex",
         color: "text-foreground",
         prefix: "$ ",
       },
-      { text: "", color: "" },
-      {
-        text: "  Planning with AI agent...",
-        color: "text-violet",
-      },
-      {
-        text: "  Analyzing codebase structure...",
-        color: "text-violet",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Created Sprint: Authentication",
-        color: "text-emerald",
-      },
-      {
-        text: "  #21  p:high    type:feature  order:1  Setup OAuth providers",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  #22  p:high    type:feature  order:2  JWT token service",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  #23  p:medium  type:feature  order:3  Auth middleware",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  #24  p:medium  type:chore    order:4  Auth tests",
-        color: "text-muted-foreground",
-      },
+      { text: "ai.model updated", color: "text-emerald" },
     ],
   },
   {
-    label: "Interactive REPL",
-    labelColor: "text-emerald",
-    title: "A full-featured AI terminal for your codebase",
+    step: "02",
+    label: "Run Through One Interface",
+    title: "Plan, execute, review, and iterate in the same CLI",
     description:
-      "Start an interactive session with full project context. Streaming markdown, syntax highlighting, session persistence, tab completion, and slash commands. Resume any session later.",
-    terminalTitle: "locus exec",
+      "Use built-in orchestration commands for delivery loops. This goes beyond raw provider CLIs by combining planning, execution, review, and iteration workflows.",
+    docsHref: "https://docs.locusai.dev/concepts/how-it-works",
+    docsLabel: "End-to-end Locus workflow",
+    terminalTitle: "locus plan + run + review + iterate",
     lines: [
       {
-        text: "locus exec",
+        text: 'locus plan "Add billing portal"',
         color: "text-foreground",
         prefix: "$ ",
       },
+      { text: "Created sprint milestone with ordered issues", color: "text-cyan" },
       { text: "", color: "" },
-      {
-        text: "  Locus REPL v3 — type /help for commands",
-        color: "text-emerald",
-      },
-      { text: "", color: "" },
-      {
-        text: '  > "Add rate limiting to the API endpoints"',
-        color: "text-foreground",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Reading src/middleware/...",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  Writing src/middleware/rate-limit.ts...",
-        color: "text-muted-foreground",
-      },
-      {
-        text: "  Editing src/app.ts...",
-        color: "text-muted-foreground",
-      },
-      { text: "", color: "" },
-      {
-        text: "  Done. 2 files created, 1 file modified.",
-        color: "text-emerald",
-      },
-    ],
-  },
-  {
-    label: "Code Review",
-    labelColor: "text-amber",
-    title: "AI-powered review for every pull request",
-    description:
-      "Review open PRs with AI analysis. Posts inline comments on GitHub. Catches bugs, security issues, and style violations. Iterate on feedback until the code is ready to merge.",
-    terminalTitle: "locus review",
-    lines: [
+      { text: "locus run", color: "text-foreground", prefix: "$ " },
+      { text: "Executing sprint tasks and opening PRs", color: "text-cyan" },
       { text: "locus review", color: "text-foreground", prefix: "$ " },
-      { text: "", color: "" },
-      {
-        text: "  Reviewing 2 open PRs...",
-        color: "text-amber",
-      },
-      { text: "", color: "" },
-      {
-        text: "  PR #18 — Add user authentication",
-        color: "text-foreground",
-      },
-      {
-        text: "    3 comments posted",
-        color: "text-muted-foreground",
-      },
-      { text: "", color: "" },
-      {
-        text: "  PR #19 — Add database migrations",
-        color: "text-foreground",
-      },
-      {
-        text: "    No issues found",
-        color: "text-emerald",
-      },
+      { text: "Posted inline review comments on PR #42", color: "text-amber" },
+      { text: "locus iterate 42", color: "text-foreground", prefix: "$ " },
     ],
   },
   {
-    label: "Issue Management",
-    labelColor: "text-rose",
-    title: "Full control over issues and sprints from the CLI",
+    step: "03",
+    label: "Persist in GitHub-Native Data",
+    title: "Keep execution state in issues, milestones, labels, and PRs",
     description:
-      "Create, list, and manage GitHub issues and sprints without leaving your terminal. Assign priorities, types, sprints, and reorder task execution with a single command.",
-    terminalTitle: "locus sprint + locus issue",
+      "GitHub is the system of record. Work items stay in issues and milestones, delivery artifacts stay in PRs, and operational status stays visible to the whole team.",
+    docsHref: "https://docs.locusai.dev/concepts/github-backend",
+    docsLabel: "GitHub as operational memory",
+    terminalTitle: "locus issue + sprint + status",
     lines: [
       {
-        text: 'locus sprint show "Sprint 1"',
+        text: 'locus issue create "Add billing webhook handler"',
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      { text: "Created issue #83 with labels p:high type:feature", color: "text-cyan" },
+      { text: "", color: "" },
+      {
+        text: 'locus sprint create "Sprint 6"',
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      { text: "Assigned issue #83 to Sprint 6 milestone", color: "text-cyan" },
+      { text: "locus status", color: "text-foreground", prefix: "$ " },
+      { text: "Sprint 6 progress: 3/5 done, 2 queued", color: "text-muted-foreground" },
+    ],
+  },
+  {
+    step: "04",
+    label: "Automate with Auto-Approval",
+    title: "Enable full-auto execution with resumable delivery",
+    description:
+      "Turn on automation settings to auto-label issues and auto-create PRs. Failed runs can resume from the last unfinished step instead of restarting.",
+    docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
+    docsLabel: "Full-auto execution model",
+    terminalTitle: "autoPR + autoLabel + run --resume",
+    lines: [
+      {
+        text: "locus config set agent.autoPR true",
+        color: "text-foreground",
+        prefix: "$ ",
+      },
+      {
+        text: "locus config set agent.autoLabel true",
         color: "text-foreground",
         prefix: "$ ",
       },
       { text: "", color: "" },
-      {
-        text: "  Sprint 1 — 75% complete",
-        color: "text-rose",
-      },
-      {
-        text: "  ████████████░░░░  3/4 tasks done",
-        color: "text-muted-foreground",
-      },
-      { text: "", color: "" },
-      {
-        text: "  #12  order:1  done     Setup OAuth",
-        color: "text-emerald",
-      },
-      {
-        text: "  #13  order:2  done     JWT service",
-        color: "text-emerald",
-      },
-      {
-        text: "  #14  order:3  done     Auth middleware",
-        color: "text-emerald",
-      },
-      {
-        text: "  #15  order:4  queued   Auth tests",
-        color: "text-muted-foreground",
-      },
+      { text: "locus run", color: "text-foreground", prefix: "$ " },
+      { text: "Auto-labeling issues and opening PRs", color: "text-emerald" },
+      { text: "Run interrupted on task 4/6", color: "text-amber" },
+      { text: "locus run --resume", color: "text-foreground", prefix: "$ " },
+      { text: "Resumed from task 4/6", color: "text-emerald" },
     ],
   },
 ];
@@ -236,7 +141,6 @@ function MiniTerminal({
 }) {
   return (
     <div className="rounded-xl border border-border/40 bg-[#040406] overflow-hidden font-mono text-[11px] md:text-[12.5px] leading-relaxed w-full">
-      {/* Title bar */}
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-border/20 bg-[#080810]">
         <div className="flex gap-1.5">
           <div className="w-2 h-2 rounded-full bg-rose/50" />
@@ -248,7 +152,6 @@ function MiniTerminal({
           {title}
         </div>
       </div>
-      {/* Lines */}
       <div className="p-4 md:p-5">
         {lines.map((line, i) => (
           <div
@@ -279,63 +182,55 @@ export function ProductShowcase() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-20"
+          className="text-center mb-16"
         >
           <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-4">
-            How it works
+            How It Works
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-            Plan, execute, review, iterate
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
+            Choose AI client, run one interface, persist in GitHub, automate.
           </h2>
+          <p className="text-muted-foreground max-w-3xl mx-auto text-sm md:text-base leading-relaxed">
+            The sequence is always the same on mobile and desktop: pick Claude
+            or Codex, execute with built-in Locus commands, keep state in
+            GitHub-native objects, then enable auto-approval for full-auto runs.
+          </p>
         </motion.div>
 
-        <div className="flex flex-col gap-24 md:gap-32">
-          {products.map((product, i) => {
-            const isReversed = i % 2 !== 0;
-
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{
-                  duration: 0.7,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className={cn(
-                  "grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center",
-                  isReversed && "md:[direction:rtl]"
-                )}
-              >
-                {/* Text side */}
-                <div className={cn(isReversed && "md:[direction:ltr]")}>
-                  <p
-                    className={cn(
-                      "text-xs font-semibold tracking-[0.15em] uppercase mb-4",
-                      product.labelColor
-                    )}
-                  >
-                    {product.label}
+        <div className="flex flex-col gap-8 md:gap-10">
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.step}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.65, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-2xl border border-border/30 bg-[#060609] p-6 md:p-8"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 items-start">
+                <div>
+                  <p className="text-xs font-semibold tracking-[0.15em] uppercase text-violet mb-3">
+                    Step {step.step}: {step.label}
                   </p>
                   <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-4 leading-tight">
-                    {product.title}
+                    {step.title}
                   </h3>
-                  <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    {product.description}
+                  <p className="text-[15px] text-muted-foreground leading-relaxed mb-4">
+                    {step.description}
                   </p>
+                  <Link
+                    href={step.docsHref}
+                    className="inline-flex items-center gap-1.5 text-sm text-violet hover:underline"
+                  >
+                    {step.docsLabel}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
 
-                {/* Terminal side */}
-                <div className={cn(isReversed && "md:[direction:ltr]")}>
-                  <MiniTerminal
-                    title={product.terminalTitle}
-                    lines={product.lines}
-                  />
-                </div>
-              </motion.div>
-            );
-          })}
+                <MiniTerminal title={step.terminalTitle} lines={step.lines} />
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

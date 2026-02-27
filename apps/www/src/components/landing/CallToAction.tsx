@@ -8,13 +8,8 @@ import { CopyCommand } from "./CopyCommand";
 export function CallToAction() {
   return (
     <section className="py-32 relative overflow-hidden">
-      {/* Colorful mesh background */}
       <div className="mesh-gradient-cta absolute inset-0" />
-
-      {/* Glow line at top */}
       <div className="absolute top-0 left-0 right-0 glow-line-multi" />
-
-      {/* Floating orbs */}
       <div className="orb orb-violet w-[300px] h-[300px] top-10 left-[20%] opacity-10" />
       <div className="orb orb-cyan w-[250px] h-[250px] bottom-10 right-[20%] opacity-[0.06]" />
 
@@ -26,13 +21,15 @@ export function CallToAction() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            <span className="font-sans">Your issues.</span>
+            <span className="font-sans">Ship with one interface.</span>
             <br />
-            <span className="font-bold gradient-text-hero">Shipped by AI.</span>
+            <span className="font-bold gradient-text-hero">
+              Scale with full-auto delivery.
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-md mx-auto mb-8 text-sm md:text-base leading-relaxed">
-            Locus is open source and free forever. No servers to deploy, no
-            accounts to create. Just install and go.
+          <p className="text-muted-foreground max-w-xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+            Start with installation docs, then run your first GitHub-native
+            sprint with built-in planning, execution, review, and iteration.
           </p>
 
           <div className="max-w-md mx-auto mb-8">
@@ -41,18 +38,47 @@ export function CallToAction() {
 
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
             <Link
-              href="https://docs.locusai.dev"
+              href="https://docs.locusai.dev/getting-started/installation"
               className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
             >
               Get Started
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href="https://github.com/asgarovf/locusai"
-              target="_blank"
+              href="https://docs.locusai.dev/concepts/how-it-works"
               className="inline-flex items-center gap-2 text-sm font-medium text-white px-7 py-3 rounded-xl border border-border/60 hover:bg-white/[0.06] hover:border-border transition-colors"
             >
-              View on GitHub
+              Read Docs
+            </Link>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+            <Link
+              href="https://docs.locusai.dev/concepts/github-native-workflows"
+              className="hover:text-white transition-colors"
+            >
+              GitHub-native workflows
+            </Link>
+            <span className="text-border">/</span>
+            <Link
+              href="https://docs.locusai.dev/cli/run"
+              className="hover:text-white transition-colors"
+            >
+              locus run guide
+            </Link>
+            <span className="text-border">/</span>
+            <Link
+              href="https://docs.locusai.dev/cli/review"
+              className="hover:text-white transition-colors"
+            >
+              locus review guide
+            </Link>
+            <span className="text-border">/</span>
+            <Link
+              href="https://docs.locusai.dev/cli/iterate"
+              className="hover:text-white transition-colors"
+            >
+              locus iterate guide
             </Link>
           </div>
         </motion.div>

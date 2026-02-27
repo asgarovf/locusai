@@ -106,14 +106,14 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Tool logos */}
-        <SupportedTools />
-
-        {/* Why Locus - feature grid */}
+        {/* Why Locus - four core strengths */}
         <FeatureGrid />
 
         {/* How it works - product showcase */}
         <ProductShowcase />
+
+        {/* Tool logos */}
+        <SupportedTools />
 
         {/* Final CTA */}
         <CallToAction />
