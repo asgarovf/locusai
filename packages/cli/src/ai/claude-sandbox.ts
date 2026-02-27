@@ -36,8 +36,7 @@ export class SandboxedClaudeRunner implements AgentRunner {
     this.aborted = false;
 
     const claudeArgs = buildClaudeArgs(options);
-    const activityId = options.cwd.split("/").pop() ?? "run";
-    this.sandboxName = `locus-${activityId}-${Date.now()}`;
+    this.sandboxName = buildSandboxName(options);
 
     // Register with shutdown handler so SIGINT/SIGTERM cleans up this sandbox
     registerActiveSandbox(this.sandboxName);
@@ -148,8 +147,7 @@ export class SandboxedClaudeRunner implements AgentRunner {
             resolve({
               success: false,
               output,
-              error:
-                errorOutput || `sandboxed claude exited with code ${code}`,
+              error: errorOutput || `sandboxed claude exited with code ${code}`,
               exitCode: code ?? 1,
             });
           }
@@ -221,6 +219,27 @@ export class SandboxedClaudeRunner implements AgentRunner {
   getSandboxName(): string | null {
     return this.sandboxName;
   }
+}
+
+/**
+ * Build a sandbox name from runner options.
+ * For issue runs (activity like "issue #42"), produces: locus-issue-42-<timestamp>
+ * Fallback: locus-<last-path-segment>-<timestamp>
+ */
+function buildSandboxName(options: { cwd: string; activity?: string }): string {
+  const ts = Date.now();
+
+  // Extract issue number from activity label (e.g., "issue #42")
+  if (options.activity) {
+    const match = options.activity.match(/issue\s*#(\d+)/i);
+    if (match) {
+      return `locus-issue-${match[1]}-${ts}`;
+    }
+  }
+
+  // Fallback to cwd-based naming
+  const segment = options.cwd.split("/").pop() ?? "run";
+  return `locus-${segment}-${ts}`;
 }
 
 // ─── stream-json event types (subset used for verbose mode) ─────────────────

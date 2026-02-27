@@ -131,6 +131,7 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       cwd: options.cwd,
       signal: abortController.signal,
       verbose: options.verbose,
+      activity: options.activity,
       onOutput: (chunk) => {
         if (wasAborted) return;
         if (!hasOutput) {

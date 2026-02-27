@@ -614,10 +614,25 @@ async function handleParallelRun(
       }
       saveRunState(projectRoot, state);
 
-      results.push({ issue: issueNumber, success: result.success });
+      return { issue: issueNumber, success: result.success };
     });
 
-    await Promise.all(promises);
+    // Use Promise.allSettled to ensure all sandboxes are cleaned up even if
+    // some tasks throw unexpected errors (sandbox cleanup happens in runner
+    // finally blocks, but allSettled guarantees we process all outcomes).
+    const settled = await Promise.allSettled(promises);
+    for (const outcome of settled) {
+      if (outcome.status === "fulfilled") {
+        results.push(outcome.value);
+      } else {
+        // Task promise rejected unexpectedly — extract issue number from batch
+        // position and record as failed
+        const idx = settled.indexOf(outcome);
+        const issueNumber = batch[idx];
+        log.warn(`Parallel task #${issueNumber} threw: ${outcome.reason}`);
+        results.push({ issue: issueNumber, success: false });
+      }
+    }
   }
 
   // Summary

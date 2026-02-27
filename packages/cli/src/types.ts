@@ -196,6 +196,8 @@ export interface RunnerOptions {
   onToolActivity?: (summary: string) => void;
   signal?: AbortSignal;
   verbose?: boolean;
+  /** Activity label (e.g., "issue #42") — used for sandbox naming in parallel runs. */
+  activity?: string;
 }
 
 export interface RunnerResult {
