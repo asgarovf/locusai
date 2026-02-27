@@ -441,7 +441,7 @@ async function handleAIPlan(
   }
 
   process.stderr.write(
-    `  To create these issues: ${bold(`locus plan approve ${id.slice(0, 8)}`)}\n\n`
+    `  To create these issues: ${bold(`locus plan approve ${id.slice(0, 8)} --sprint <sprint name>`)}\n\n`
   );
 }
 

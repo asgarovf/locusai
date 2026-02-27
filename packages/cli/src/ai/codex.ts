@@ -92,7 +92,7 @@ export class CodexRunner implements AgentRunner {
             const { type, item } = event;
 
             if (type === "item.started" && item?.type === "command_execution") {
-              const cmd = (item.command ?? "").slice(0, 80);
+              const cmd = (item.command ?? "").split("\n")[0].slice(0, 80);
               options.onToolActivity?.(`running: ${cmd}`);
             } else if (
               type === "item.completed" &&
