@@ -7,6 +7,7 @@ export interface LocusConfig {
   agent: AgentConfig;
   sprint: SprintConfig;
   logging: LoggingConfig;
+  sandbox: SandboxConfig;
 }
 
 export interface GitHubConfig {
@@ -42,6 +43,12 @@ export interface LoggingConfig {
 }
 
 export type LogLevel = "silent" | "normal" | "verbose" | "debug";
+
+export interface SandboxConfig {
+  enabled: boolean;
+  extraWorkspaces: string[];
+  readOnlyPaths: string[];
+}
 
 // ─── GitHub Data ─────────────────────────────────────────────────────────────
 

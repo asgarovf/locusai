@@ -11,7 +11,7 @@ import { getLogger } from "./logger.js";
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
 export const DEFAULT_CONFIG: LocusConfig = {
-  version: "3.0.0",
+  version: "3.1.0",
   github: {
     owner: "",
     repo: "",
@@ -37,21 +37,29 @@ export const DEFAULT_CONFIG: LocusConfig = {
     maxFiles: 20,
     maxTotalSizeMB: 50,
   },
+  sandbox: {
+    enabled: true,
+    extraWorkspaces: [],
+    readOnlyPaths: [],
+  },
 };
 
 // ─── Config Migrations ───────────────────────────────────────────────────────
 
 const migrations: ConfigMigration[] = [
-  // Future migrations go here. Example:
-  // {
-  //   from: "3.0",
-  //   to: "3.1.0",
-  //   migrate: (config) => {
-  //     config.logging ??= { level: "normal", maxFiles: 20, maxTotalSizeMB: 50 };
-  //     config.version = "3.1.0";
-  //     return config;
-  //   },
-  // },
+  {
+    from: "3.0",
+    to: "3.1.0",
+    migrate: (config) => {
+      config.sandbox ??= {
+        enabled: true,
+        extraWorkspaces: [],
+        readOnlyPaths: [],
+      };
+      config.version = "3.1.0";
+      return config;
+    },
+  },
 ];
 
 /** Apply config migrations in order from current version to latest. */
