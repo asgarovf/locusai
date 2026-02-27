@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.18.0
+
+### Minor Changes
+
+- Sandboxing
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/shared@0.18.0
+
 ## 0.17.16
 
 ### Patch Changes

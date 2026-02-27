@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.18.0
+
+### Minor Changes
+
+- Sandboxing
+
 ## 0.17.16
 
 ### Patch Changes
