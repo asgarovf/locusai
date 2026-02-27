@@ -45,7 +45,7 @@ Expected outcome:
 - You can switch provider/model by changing `ai.model`
 - The same Locus commands (`plan`, `run`, `review`, `iterate`) continue to work
 
-Deep dive: [AI Providers](../concepts/ai-providers.md)
+Deep dive: [Unified Interface Across AI Clients](../concepts/unified-interface.md)
 
 ## Step 3: Plan GitHub-Native Work
 
@@ -138,7 +138,7 @@ locus run --resume
 ## Where to Go Next
 
 1. [How Locus Works](../concepts/how-it-works.md)
-2. [AI Providers](../concepts/ai-providers.md)
+2. [Unified Interface Across AI Clients](../concepts/unified-interface.md)
 3. [GitHub as Backend](../concepts/github-backend.md)
 4. [GitHub-Native Workflows](../concepts/github-native-workflows.md)
 5. [Execution Model](../concepts/execution-model.md)

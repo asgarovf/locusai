@@ -125,10 +125,10 @@ export function Hero({ version }: HeroProps) {
           className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground"
         >
           <Link
-            href="https://docs.locusai.dev/concepts/ai-providers"
+            href="https://docs.locusai.dev/concepts/unified-interface"
             className="hover:text-white transition-colors"
           >
-            AI providers
+            Unified interface
           </Link>
           <span className="text-border">/</span>
           <Link

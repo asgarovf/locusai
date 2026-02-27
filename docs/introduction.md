@@ -33,7 +33,7 @@ You can reach a working flow by following only those two pages.
 
 ## Four Core Strengths
 
-1. [Unified interface across multiple AI clients](concepts/ai-providers.md) - switch models/providers without changing workflow.
+1. [Unified interface across multiple AI clients](concepts/unified-interface.md) - switch models/providers without changing workflow.
 2. [GitHub-native workflows as operational memory](concepts/github-backend.md) - issues, milestones, labels, and PRs are the data plane.
 3. [Built-in orchestration tools beyond provider CLIs](cli/overview.md) - use `plan`, `run`, `review`, `iterate`, `status`, and `logs`.
 4. [Automation via auto-approval mode](concepts/execution-model.md) - full-auto execution patterns with resumable runs.

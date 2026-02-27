@@ -29,8 +29,8 @@ const steps: SequenceStep[] = [
     title: "Select Claude or Codex without changing your workflow",
     description:
       "Set the model, then keep using the same Locus command surface. One interface across Claude and Codex means teams switch providers without rewriting process.",
-    docsHref: "https://docs.locusai.dev/concepts/ai-providers",
-    docsLabel: "AI provider model selection",
+    docsHref: "https://docs.locusai.dev/concepts/unified-interface",
+    docsLabel: "Unified interface deep dive",
     terminalTitle: "locus config set ai.model",
     lines: [
       {

@@ -23,7 +23,7 @@ const features: Feature[] = [
       "Switch ai.model between claude-sonnet-4-6 and gpt-5.3-codex while keeping the same run, review, and iterate commands.",
     icon: Bot,
     color: "text-violet",
-    docsHref: "https://docs.locusai.dev/concepts/ai-providers",
+    docsHref: "https://docs.locusai.dev/concepts/unified-interface",
   },
   {
     title: "GitHub as Operational Memory",

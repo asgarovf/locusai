@@ -9,7 +9,7 @@
 
 ## Core Strengths
 
-* [Unified Interface Across AI Clients](concepts/ai-providers.md)
+* [Unified Interface Across AI Clients](concepts/unified-interface.md)
 * [GitHub-Native Operational Memory](concepts/github-backend.md)
 * [Built-In Orchestration Tools](cli/overview.md)
 * [Auto-Approval Execution Model](concepts/execution-model.md)
@@ -17,6 +17,7 @@
 ## Workflow Deep Dives
 
 * [How Locus Works](concepts/how-it-works.md)
+* [AI Providers (Technical Reference)](concepts/ai-providers.md)
 * [GitHub-Native Workflows](concepts/github-native-workflows.md)
 * [Sprints & Issues](concepts/sprints-and-issues.md)
 * [Your First Sprint (Detailed)](getting-started/first-sprint.md)
