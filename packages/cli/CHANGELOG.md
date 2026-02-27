@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.17.16
+
+### Patch Changes
+
+- Committing improvements
+
 ## 0.17.15
 
 ### Patch Changes
