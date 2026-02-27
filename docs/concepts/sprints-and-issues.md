@@ -204,7 +204,7 @@ During execution, Locus:
 - Picks up tasks in order, updating labels from `locus:queued` to `locus:in-progress`
 - Passes sprint context (diff from previous tasks) to the AI agent
 - Marks tasks as `locus:done` or `locus:failed` upon completion
-- Creates a PR for each completed task
+- Creates PRs automatically when `agent.autoPR` is enabled (one sprint-level PR for sprint runs, issue-level PRs for standalone runs)
 - Persists progress to `run-state.json` for resume capability
 
 ### 4. Close

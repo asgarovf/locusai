@@ -43,3 +43,5 @@
 ## Content
 
 * [Positioning Brief](content/positioning-brief.md)
+* [Landing/Docs Consistency Audit (2026-02-27)](content/landing-docs-consistency-audit-2026-02-27.md)
+* [Release Content Checklist](content/release-content-checklist.md)
