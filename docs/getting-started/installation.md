@@ -1,5 +1,5 @@
 ---
-description: Install the Locus CLI, GitHub CLI, and configure your AI provider.
+description: Install the Locus CLI, GitHub CLI, and an AI provider CLI (Claude Code or Codex).
 ---
 
 # Installation
@@ -113,27 +113,29 @@ Locus checks for `gh` authentication every time you run `locus init`. If authent
 
 ---
 
-## Set Up an AI Provider
+## Set Up an AI Provider CLI
 
-Locus delegates code generation and analysis to an external AI agent. You need at least one provider configured.
+Locus delegates code generation and analysis to an external AI CLI tool. You need at least one installed and authenticated.
 
-### Option A: Claude Code (Anthropic)
+### Option A: Claude Code (Anthropic) -- default
 
-Install Claude Code following the [official documentation](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview), then set your API key:
+Install Claude Code by following the [official installation guide](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview):
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
+npm install -g @anthropic-ai/claude-code
 ```
 
-Add the export to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) to persist it.
+After installation, launch `claude` once to complete the authentication flow. Claude Code manages its own API credentials -- no manual API key setup is required.
 
 ### Option B: Codex (OpenAI)
 
-Install Codex following the [official documentation](https://openai.com/index/introducing-codex/), then set your API key:
+Install Codex by following the [official installation guide](https://openai.com/index/introducing-codex/):
 
 ```bash
-export OPENAI_API_KEY="sk-..."
+npm install -g @openai/codex
 ```
+
+After installation, launch `codex` once to complete the authentication flow. Codex manages its own API credentials -- no manual API key setup is required.
 
 ### Switching Providers
 

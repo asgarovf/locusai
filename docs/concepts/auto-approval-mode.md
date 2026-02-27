@@ -11,9 +11,6 @@ Auto-approval mode is the high-automation operating style in Locus:
 - Locus can auto-create PRs after successful execution (`agent.autoPR`)
 - Interrupted runs can resume from saved run state (`locus run --resume`)
 
-Date: **February 27, 2026**  
-Reference version: **0.17.14**
-
 ## Prerequisites
 
 Before enabling auto-approval operations, confirm all of the following:
