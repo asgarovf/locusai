@@ -1,6 +1,6 @@
 {
   "name": "@locusai/shared",
-  "version": "0.17.14",
+  "version": "0.17.15",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

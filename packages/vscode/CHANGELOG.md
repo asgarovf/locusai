@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.15
+
+### Patch Changes
+
+- codex improvements
+- Updated dependencies
+  - @locusai/shared@0.17.15
+
 ## 0.17.14
 
 ### Patch Changes
