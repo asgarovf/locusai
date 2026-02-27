@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- Streaming for verbose outputs
+
 ## 0.1.3
 
 ### Patch Changes

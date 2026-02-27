@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.17.14
+
+### Patch Changes
+
+- Streaming for verbose outputs
+
 ## 0.17.13
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.14
+
+### Patch Changes
+
+- Streaming for verbose outputs
+- Updated dependencies
+  - @locusai/shared@0.17.14
+
 ## 0.17.13
 
 ### Patch Changes
