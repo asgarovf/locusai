@@ -39,9 +39,3 @@
 * [locus config](cli/config.md)
 * [locus logs](cli/logs.md)
 * [locus upgrade](cli/upgrade.md)
-
-## Content
-
-* [Positioning Brief](content/positioning-brief.md)
-* [Landing/Docs Consistency Audit (2026-02-27)](content/landing-docs-consistency-audit-2026-02-27.md)
-* [Release Content Checklist](content/release-content-checklist.md)
