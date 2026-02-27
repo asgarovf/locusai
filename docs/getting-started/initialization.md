@@ -93,7 +93,7 @@ The generated `.locus/config.json` contains all CLI settings:
 
 ```json
 {
-  "version": "3.0.0",
+  "version": "0.18.0",
   "github": {
     "owner": "your-org",
     "repo": "your-project",

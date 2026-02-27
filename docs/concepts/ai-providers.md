@@ -165,7 +165,7 @@ The AI configuration lives in `.locus/config.json`:
 
 ```json
 {
-  "version": "3.0.0",
+  "version": "0.18.0",
   "ai": {
     "provider": "claude",
     "model": "claude-sonnet-4-6"
