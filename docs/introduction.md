@@ -8,6 +8,8 @@ description: GitHub-native AI engineering CLI. Turn issues into shipped code.
 
 No servers. No database. No accounts. Just `npm install -g @locusai/cli` and go.
 
+For canonical landing/docs language, use the [Positioning Brief](content/positioning-brief.md).
+
 ## What Locus Does
 
 1. **Plan** — Describe what you want to build. AI analyzes your codebase and creates structured GitHub issues with priority, type, and execution order.

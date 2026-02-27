@@ -2,6 +2,10 @@
 
 * [Introduction](introduction.md)
 
+## Content
+
+* [Positioning Brief](content/positioning-brief.md)
+
 ## Getting Started
 
 * [Installation](getting-started/installation.md)
