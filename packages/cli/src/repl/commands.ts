@@ -20,6 +20,12 @@ export interface SlashCommandContext {
   onSave: () => void;
   /** Callback to exit the REPL. */
   onExit: () => void;
+  /** Callback to retrieve input history entries. */
+  getHistory: () => string[];
+  /** Toggle verbose mode (streams stderr from runners). */
+  onVerboseToggle: () => void;
+  /** Whether verbose mode is currently active. */
+  getVerbose: () => boolean;
 }
 
 export interface SlashCommandDef {
@@ -85,6 +91,12 @@ export function getSlashCommands(): SlashCommandDef[] {
       aliases: [],
       description: "Force-save current session",
       handler: cmdSave,
+    },
+    {
+      name: "/verbose",
+      aliases: ["/v"],
+      description: "Toggle verbose mode (show agent stderr streams)",
+      handler: cmdVerbose,
     },
     {
       name: "/exit",
@@ -154,11 +166,25 @@ function cmdReset(_args: string, ctx: SlashCommandContext): void {
   process.stderr.write(`${green("✓")} Conversation context reset.\n`);
 }
 
-function cmdHistory(_args: string, _ctx: SlashCommandContext): void {
-  // History is displayed by the REPL orchestrator
+function cmdHistory(_args: string, ctx: SlashCommandContext): void {
+  const entries = ctx.getHistory();
+  if (entries.length === 0) {
+    process.stderr.write(`${dim("No input history.")}\n`);
+    return;
+  }
   process.stderr.write(
-    `${dim("Recent input history is shown above the prompt.")}\n`
+    `\n${bold("Input History:")} ${dim(`(${entries.length} entries)`)}\n\n`
   );
+  const display = entries.slice(0, 50);
+  for (let i = 0; i < display.length; i++) {
+    const num = dim(`${String(i + 1).padStart(3)}.`);
+    const entry = display[i].replace(/\n/g, dim("↵"));
+    process.stderr.write(`  ${num} ${entry}\n`);
+  }
+  if (entries.length > 50) {
+    process.stderr.write(`\n  ${dim(`… and ${entries.length - 50} more`)}\n`);
+  }
+  process.stderr.write("\n");
 }
 
 function cmdSession(_args: string, ctx: SlashCommandContext): void {
@@ -277,6 +303,14 @@ function cmdUndo(_args: string, ctx: SlashCommandContext): void {
 function cmdSave(_args: string, ctx: SlashCommandContext): void {
   ctx.onSave();
   process.stderr.write(`${green("✓")} Session saved.\n`);
+}
+
+function cmdVerbose(_args: string, ctx: SlashCommandContext): void {
+  ctx.onVerboseToggle();
+  const isOn = ctx.getVerbose();
+  process.stderr.write(
+    `${isOn ? green("✓") : dim("○")} Verbose mode ${isOn ? bold("on") : "off"} — agent streams ${isOn ? "visible" : "hidden"}.\n`
+  );
 }
 
 function cmdExit(_args: string, ctx: SlashCommandContext): void {

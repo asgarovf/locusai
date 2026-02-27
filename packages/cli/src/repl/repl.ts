@@ -154,9 +154,6 @@ async function runInteractiveRepl(
     onTab: (text) => completion.complete(text),
   });
 
-  // Enable terminal protocols (bracketed paste, kitty keyboard)
-  input.enableProtocols();
-
   // Print welcome
   printWelcome(session);
 
@@ -164,6 +161,7 @@ async function runInteractiveRepl(
   let currentProvider =
     inferProviderFromModel(config.ai.model) || config.ai.provider;
   let currentModel = config.ai.model;
+  let verbose = true;
 
   // Slash command context
   const slashCtx = {
@@ -192,6 +190,11 @@ async function runInteractiveRepl(
     onExit: () => {
       shouldExit = true;
     },
+    getHistory: () => history.getEntries(),
+    onVerboseToggle: () => {
+      verbose = !verbose;
+    },
+    getVerbose: () => verbose,
   };
 
   // Main loop
@@ -232,13 +235,18 @@ async function runInteractiveRepl(
         // Execute AI turn
         input.lock();
         try {
-          const response = await executeAITurn(fullPrompt, session, {
-            ...options,
-            config: {
-              ...config,
-              ai: { provider: currentProvider, model: currentModel },
+          const response = await executeAITurn(
+            fullPrompt,
+            session,
+            {
+              ...options,
+              config: {
+                ...config,
+                ai: { provider: currentProvider, model: currentModel },
+              },
             },
-          });
+            verbose
+          );
 
           // Add assistant message
           sessionManager.addMessage(session, {
@@ -268,8 +276,6 @@ async function runInteractiveRepl(
     }
   }
 
-  // Disable terminal protocols before exit
-  input.disableProtocols();
   const shouldPersistOnExit =
     session.messages.length > 0 || sessionManager.isPersisted(session);
 
@@ -293,7 +299,8 @@ async function runInteractiveRepl(
 async function executeAITurn(
   prompt: string,
   session: Session,
-  options: ReplOptions
+  options: ReplOptions,
+  verbose = false
 ): Promise<string> {
   const { config, projectRoot } = options;
 
@@ -302,6 +309,7 @@ async function executeAITurn(
     provider: config.ai.provider,
     model: config.ai.model,
     cwd: projectRoot,
+    verbose,
   });
 
   if (aiResult.interrupted) {

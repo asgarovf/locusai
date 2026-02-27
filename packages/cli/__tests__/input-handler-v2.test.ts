@@ -55,20 +55,6 @@ describe("InputHandler — constructor options", () => {
   });
 });
 
-describe("InputHandler — protocol methods", () => {
-  test("enableProtocols does not throw", () => {
-    const handler = new InputHandler({ prompt: "> " });
-    // No-op in readline-based implementation
-    expect(() => handler.enableProtocols()).not.toThrow();
-  });
-
-  test("disableProtocols does not throw", () => {
-    const handler = new InputHandler({ prompt: "> " });
-    // No-op in readline-based implementation
-    expect(() => handler.disableProtocols()).not.toThrow();
-  });
-});
-
 describe("InputHandler — multiline cursor rendering", () => {
   test("keeps cursor on the targeted logical line instead of forcing it to the last line", () => {
     const prompt = "locus > ";

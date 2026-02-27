@@ -128,6 +128,7 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       model: options.model,
       cwd: options.cwd,
       signal: abortController.signal,
+      verbose: options.verbose,
       onOutput: (chunk) => {
         if (wasAborted) return;
         if (!hasOutput) {
@@ -137,6 +138,17 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
         renderer?.push(chunk);
         output += chunk;
       },
+      onToolActivity: (() => {
+        let lastActivityTime = 0;
+        return (summary: string) => {
+          if (wasAborted) return;
+          const now = Date.now();
+          if (now - lastActivityTime >= 2000) {
+            lastActivityTime = now;
+            indicator.setActivity(summary);
+          }
+        };
+      })(),
     });
 
     // Stop renderer and indicator

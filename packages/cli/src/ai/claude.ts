@@ -51,6 +51,12 @@ export class ClaudeRunner implements AgentRunner {
       args.push("--model", options.model);
     }
 
+    if (options.verbose) {
+      // stream-json gives real-time tool call events; --print requires
+      // --verbose when using stream-json output format.
+      args.push("--verbose", "--output-format", "stream-json");
+    }
+
     log.debug("Spawning claude", { args: args.join(" "), cwd: options.cwd });
 
     return new Promise<RunnerResult>((resolve) => {
@@ -68,11 +74,55 @@ export class ClaudeRunner implements AgentRunner {
         env,
       });
 
-      this.process.stdout?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
-        output += text;
-        options.onOutput?.(text);
-      });
+      if (options.verbose) {
+        // JSON stream mode: parse NDJSON events to extract tool calls and
+        // the final text response separately.
+        let lineBuffer = "";
+        const seenToolIds = new Set<string>();
+
+        this.process.stdout?.on("data", (chunk: Buffer) => {
+          lineBuffer += chunk.toString();
+          const lines = lineBuffer.split("\n");
+          lineBuffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line) as ClaudeStreamEvent;
+
+              if (event.type === "assistant" && event.message?.content) {
+                for (const item of event.message.content) {
+                  if (
+                    item.type === "tool_use" &&
+                    item.id &&
+                    !seenToolIds.has(item.id)
+                  ) {
+                    seenToolIds.add(item.id);
+                    options.onToolActivity?.(
+                      formatToolCall(item.name ?? "", item.input ?? {})
+                    );
+                  }
+                }
+              } else if (event.type === "result") {
+                const text = event.result ?? "";
+                output = text;
+                options.onOutput?.(text);
+              }
+            } catch {
+              const newLine = `${line}\n`;
+
+              output += newLine;
+              options.onOutput?.(newLine);
+            }
+          }
+        });
+      } else {
+        this.process.stdout?.on("data", (chunk: Buffer) => {
+          const text = chunk.toString();
+          output += text;
+          options.onOutput?.(text);
+        });
+      }
 
       this.process.stderr?.on("data", (chunk: Buffer) => {
         const text = chunk.toString();
@@ -156,5 +206,50 @@ export class ClaudeRunner implements AgentRunner {
     if (forceKillTimer.unref) {
       forceKillTimer.unref();
     }
+  }
+}
+
+// ─── stream-json event types (subset used for verbose mode) ─────────────────
+
+interface ClaudeStreamEvent {
+  type: string;
+  message?: {
+    content?: Array<{
+      type: string;
+      id?: string;
+      name?: string;
+      input?: Record<string, unknown>;
+    }>;
+  };
+  /** Final text result (type: "result"). */
+  result?: string;
+  is_error?: boolean;
+}
+
+function formatToolCall(name: string, input: Record<string, unknown>): string {
+  switch (name) {
+    case "Read":
+      return `reading ${input.file_path ?? ""}`;
+    case "Write":
+      return `writing ${input.file_path ?? ""}`;
+    case "Edit":
+    case "MultiEdit":
+      return `editing ${input.file_path ?? ""}`;
+    case "Bash":
+      return `running: ${String(input.command ?? "").slice(0, 60)}`;
+    case "Glob":
+      return `glob ${input.pattern ?? ""}`;
+    case "Grep":
+      return `grep ${input.pattern ?? ""}`;
+    case "LS":
+      return `ls ${input.path ?? ""}`;
+    case "WebFetch":
+      return `fetching ${String(input.url ?? "").slice(0, 50)}`;
+    case "WebSearch":
+      return `searching: ${input.query ?? ""}`;
+    case "Task":
+      return `spawning agent`;
+    default:
+      return name;
   }
 }

@@ -8,7 +8,7 @@ import { getLogger } from "../core/logger.js";
 import type { AgentRunner, RunnerOptions, RunnerResult } from "../types.js";
 
 export function buildCodexArgs(model?: string): string[] {
-  const args = ["exec", "--full-auto", "--skip-git-repo-check"];
+  const args = ["exec", "--full-auto", "--skip-git-repo-check", "--json"];
 
   if (model) {
     args.push("--model", model);
@@ -56,7 +56,7 @@ export class CodexRunner implements AgentRunner {
     log.debug("Spawning codex", { args: args.join(" "), cwd: options.cwd });
 
     return new Promise<RunnerResult>((resolve) => {
-      let output = "";
+      let rawOutput = "";
       let errorOutput = "";
 
       this.process = spawn("codex", args, {
@@ -65,10 +65,70 @@ export class CodexRunner implements AgentRunner {
         env: { ...process.env },
       });
 
+      // Buffer agent_message items; flush to onOutput only on turn.completed
+      // so the indicator stays alive while tools are running.
+      let agentMessages: string[] = [];
+
+      const flushAgentMessages = () => {
+        if (agentMessages.length > 0) {
+          options.onOutput?.(agentMessages.join("\n\n"));
+          agentMessages = [];
+        }
+      };
+
+      let lineBuffer = "";
       this.process.stdout?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
-        output += text;
-        options.onOutput?.(text);
+        lineBuffer += chunk.toString();
+        const lines = lineBuffer.split("\n");
+        lineBuffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          rawOutput += `${line}\n`;
+          log.debug("codex stdout line", { line });
+
+          try {
+            const event = JSON.parse(line) as CodexEvent;
+            const { type, item } = event;
+
+            if (type === "item.started" && item?.type === "command_execution") {
+              const cmd = (item.command ?? "").slice(0, 80);
+              options.onToolActivity?.(`running: ${cmd}`);
+            } else if (
+              type === "item.completed" &&
+              item?.type === "command_execution"
+            ) {
+              const code = item.exit_code;
+              options.onToolActivity?.(code === 0 ? "done" : `exit ${code}`);
+            } else if (
+              type === "item.completed" &&
+              item?.type === "reasoning"
+            ) {
+              const text = (item.text ?? "")
+                .trim()
+                .replace(/\*\*([^*]+)\*\*/g, "$1")
+                .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "$1");
+              if (text) options.onToolActivity?.(text);
+            } else if (
+              type === "item.completed" &&
+              item?.type === "agent_message"
+            ) {
+              const text = item.text ?? "";
+              if (text) {
+                agentMessages.push(text);
+                // Show a preview in the spinner while waiting for turn.completed
+                options.onToolActivity?.(text.split("\n")[0].slice(0, 80));
+              }
+            } else if (type === "turn.completed") {
+              flushAgentMessages();
+            }
+          } catch {
+            // Non-JSON line — pass through as output
+            const newLine = `${line}\n`;
+            rawOutput += newLine;
+            options.onOutput?.(newLine);
+          }
+        }
       });
 
       this.process.stderr?.on("data", (chunk: Buffer) => {
@@ -79,11 +139,12 @@ export class CodexRunner implements AgentRunner {
 
       this.process.on("close", (code) => {
         this.process = null;
+        flushAgentMessages();
 
         if (this.aborted) {
           resolve({
             success: false,
-            output,
+            output: rawOutput,
             error: "Aborted by user",
             exitCode: code ?? 143,
           });
@@ -93,13 +154,13 @@ export class CodexRunner implements AgentRunner {
         if (code === 0) {
           resolve({
             success: true,
-            output,
+            output: rawOutput,
             exitCode: 0,
           });
         } else {
           resolve({
             success: false,
-            output,
+            output: rawOutput,
             error: errorOutput || `codex exited with code ${code}`,
             exitCode: code ?? 1,
           });
@@ -110,7 +171,7 @@ export class CodexRunner implements AgentRunner {
         this.process = null;
         resolve({
           success: false,
-          output,
+          output: rawOutput,
           error: `Failed to spawn codex: ${err.message}`,
           exitCode: 1,
         });
@@ -150,4 +211,23 @@ export class CodexRunner implements AgentRunner {
       forceKillTimer.unref();
     }
   }
+}
+
+// ─── Codex JSONL event types ─────────────────────────────────────────────────
+
+interface CodexItem {
+  id?: string;
+  type?: string;
+  text?: string;
+  command?: string;
+  aggregated_output?: string;
+  exit_code?: number | null;
+  status?: string;
+}
+
+interface CodexEvent {
+  type: string;
+  item?: CodexItem;
+  thread_id?: string;
+  usage?: Record<string, number>;
 }

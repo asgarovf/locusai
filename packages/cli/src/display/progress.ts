@@ -2,7 +2,7 @@
  * Progress bars, spinners, and elapsed time utilities.
  */
 
-import { bold, clearLine, cyan, dim, green, red, yellow } from "./terminal.js";
+import { bold, cyan, dim, green, red, yellow } from "./terminal.js";
 
 // ─── Progress Bar ───────────────────────────────────────────────────────────
 
@@ -55,9 +55,9 @@ export class Spinner {
     this.frame = 0;
 
     this.timer = setInterval(() => {
+      if (!process.stderr.isTTY) return;
       const char = cyan(SPINNER_FRAMES[this.frame % SPINNER_FRAMES.length]);
-      clearLine();
-      process.stderr.write(`${char} ${this.message}`);
+      process.stderr.write(`\x1b[2K\r${char} ${this.message}`);
       this.frame++;
     }, 80);
 
@@ -77,7 +77,9 @@ export class Spinner {
       clearInterval(this.timer);
       this.timer = null;
     }
-    clearLine();
+    if (process.stderr.isTTY) {
+      process.stderr.write("\x1b[2K\r");
+    }
     if (finalMessage) {
       process.stderr.write(`${finalMessage}\n`);
     }

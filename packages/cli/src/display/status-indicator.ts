@@ -3,14 +3,7 @@
  * True-color shimmer for supported terminals, braille fallback otherwise.
  */
 
-import {
-  clearLine,
-  cyan,
-  dim,
-  getCapabilities,
-  hideCursor,
-  showCursor,
-} from "./terminal.js";
+import { cyan, dim, getCapabilities, truncate, visualWidth } from "./terminal.js";
 
 export interface StatusIndicatorOptions {
   /** Activity description, e.g., "editing src/app.ts". */
@@ -36,7 +29,9 @@ export class StatusIndicator {
     this.activity = options?.activity ?? "";
     this.frame = 0;
 
-    hideCursor();
+    if (process.stderr.isTTY) {
+      process.stderr.write("\x1b[?25l"); // hide cursor
+    }
 
     this.timer = setInterval(() => {
       this.render(message);
@@ -55,8 +50,9 @@ export class StatusIndicator {
       clearInterval(this.timer);
       this.timer = null;
     }
-    clearLine();
-    showCursor();
+    if (process.stderr.isTTY) {
+      process.stderr.write("\x1b[2K\r\x1b[?25h"); // clear line + show cursor
+    }
   }
 
   /** Check if the indicator is currently active. */
@@ -86,15 +82,21 @@ export class StatusIndicator {
 
     line += ` ${dim("— esc to interrupt")}`;
 
-    // Truncate to terminal width
-    const maxWidth = caps.columns - 1;
-    if (line.length > maxWidth + 50) {
-      // Rough truncation accounting for ANSI codes
-      line = line.slice(0, maxWidth + 50);
+    // Use stderr columns — stdout columns may differ in piped environments.
+    // Proper visual width check (strips ANSI codes) prevents line wrapping,
+    // which would break the \x1b[2K\r overwrite and cause stacked output.
+    const cols =
+      (process.stderr as NodeJS.WriteStream).columns ??
+      process.stdout.columns ??
+      80;
+    if (visualWidth(line) > cols - 1) {
+      line = truncate(line, cols - 1);
     }
 
-    clearLine();
-    process.stderr.write(line);
+    if (!process.stderr.isTTY) return;
+    // Write clear + frame atomically to the same stream — avoids cross-stream
+    // ordering issues between stdout (clearLine) and stderr (spinner content).
+    process.stderr.write("\x1b[2K\r" + line);
   }
 
   /**

@@ -4,4 +4,4 @@ This file captures important lessons, decisions, and corrections made during dev
 It is read by AI agents before every task to avoid repeating mistakes and to follow established patterns.
 
 <!-- Add learnings below this line. Format: - **[Category]**: Description -->
-- **[Patterns]**: `packages/cli/src/commands/run.ts` must register `registerShutdownHandlers()` for the full run lifecycle; signal-based interrupts (`Ctrl+C`/`SIGINT`) should persist `in_progress` tasks as `failed` with `Interrupted by user` so run-state matches explicit user stop intent and remains resumable.
+- **[User Preferences]**: Do not record low-level implementation details or one-time fixes in learnings. Focus on architectural decisions, package ownership, and explicit user preference overrides — entries that help any future agent on any task, not just the current one.

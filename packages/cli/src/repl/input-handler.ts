@@ -138,16 +138,6 @@ export class InputHandler {
     return this.locked;
   }
 
-  // Kept for compatibility with REPL orchestration.
-  enableProtocols(): void {
-    // No-op: protocol toggles are scoped to each readline() call.
-  }
-
-  // Kept for compatibility with REPL orchestration.
-  disableProtocols(): void {
-    // No-op: protocol toggles are scoped to each readline() call.
-  }
-
   async readline(): Promise<InputResult> {
     await this.waitUntilUnlocked();
 

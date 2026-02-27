@@ -185,7 +185,10 @@ export interface RunnerOptions {
   model?: string;
   cwd: string;
   onOutput?: (chunk: string) => void;
+  /** Called with a short description when the AI invokes a tool (verbose mode only). */
+  onToolActivity?: (summary: string) => void;
   signal?: AbortSignal;
+  verbose?: boolean;
 }
 
 export interface RunnerResult {

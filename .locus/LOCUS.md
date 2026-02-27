@@ -45,26 +45,42 @@ When a task produces knowledge, analysis, or research output rather than (or in 
 
 Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mistakes.
 
-**When to update:**
-- User corrects your approach or provides guidance
-- You discover a better pattern while working
-- A decision prevents future confusion (e.g., "use X not Y because Z")
-- You encounter and solve a tricky problem
+**The quality bar:** Ask yourself — "Would a new agent working on a completely different task benefit from knowing this?" If yes, record it. If it only matters for the current task or file, skip it.
 
-**What to record:**
-- Architectural decisions and their rationale
-- Preferred libraries, tools, or patterns for this project
-- Common pitfalls and how to avoid them
-- Project-specific conventions or user preferences
-- Solutions to non-obvious problems
+**When to update:**
+- User corrects your approach, rejects a choice, or states a preference explicitly
+- You discover where something lives architecturally (e.g., which package owns shared types)
+- A structural or design decision would not be obvious from reading the code
+- You encounter a non-obvious constraint that applies project-wide
+
+**What to record (high-value):**
+- Where things live: package ownership, shared utilities, config locations
+- Architectural decisions and their rationale ("we use X not Y because Z")
+- Explicit user preference overrides — when the user corrects or rejects an approach
+- Project-wide conventions that aren't visible from a single file
+
+**What NOT to record (low-value):**
+- One-time fixes or workarounds specific to a single file or function
+- Implementation details that are obvious from reading the code
+- Startup sequences, signal handlers, or local patterns — unless they represent a project-wide rule
+- Anything the next agent could discover in 30 seconds by reading the relevant file
+
+**Good examples:**
+- `[Architecture]`: Shared types for all packages live in `@locusai/shared` — never redefine them locally in CLI or API packages.
+- `[User Preferences]`: User prefers not to track low-level interrupt/signal handling patterns in learnings — focus on architectural and decision-level entries.
+- `[Packages]`: Validation uses Zod throughout — do not introduce a second validation library.
+
+**Bad examples (do not write these):**
+- `[Patterns]`: `run.ts` must call `registerShutdownHandlers()` at startup. ← too local, obvious from the file.
+- `[Debugging]`: Fixed a regex bug in `image-detect.ts`. ← one-time fix, irrelevant to future tasks.
 
 **Format (append-only, never delete):**
 
 """
-- **[Category]**: Concise description (1-2 lines max). *Context if needed.*
+- **[Category]**: Concise description (1-2 lines max). *Rationale if non-obvious.*
 """
 
-**Categories:** Architecture, Dependencies, Patterns, Debugging, Performance, Security, DevOps, User Preferences
+**Categories:** Architecture, Packages, User Preferences, Conventions, Debugging
 
 ## Error Handling
 
