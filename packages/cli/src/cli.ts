@@ -65,6 +65,8 @@ interface ParsedArgs {
     installVersion?: string;
     upgrade: boolean;
     list: boolean;
+    noSandbox: boolean;
+    sandbox?: string;
   };
 }
 
@@ -83,6 +85,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     check: false,
     upgrade: false,
     list: false,
+    noSandbox: false,
   };
 
   const positional: string[] = [];
@@ -167,7 +170,15 @@ function parseArgs(argv: string[]): ParsedArgs {
       case "--target-version":
         flags.targetVersion = rawArgs[++i];
         break;
+      case "--no-sandbox":
+        flags.noSandbox = true;
+        break;
       default:
+        // Handle --sandbox=<value> (e.g. --sandbox=require)
+        if (arg.startsWith("--sandbox=")) {
+          flags.sandbox = arg.slice("--sandbox=".length);
+          break;
+        }
         positional.push(arg);
     }
     i++;
@@ -423,6 +434,8 @@ async function main(): Promise<void> {
         resume: parsed.flags.resume,
         dryRun: parsed.flags.dryRun,
         model: parsed.flags.model,
+        sandbox: parsed.flags.sandbox,
+        noSandbox: parsed.flags.noSandbox,
       });
       break;
     }

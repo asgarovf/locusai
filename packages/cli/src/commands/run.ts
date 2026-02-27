@@ -37,6 +37,7 @@ import {
   markTaskInProgress,
   saveRunState,
 } from "../core/run-state.js";
+import { detectSandboxSupport, resolveSandboxMode } from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
 import {
   cleanupStaleWorktrees,
@@ -54,7 +55,13 @@ import type { Issue, LocusConfig } from "../types.js";
 export async function runCommand(
   projectRoot: string,
   args: string[],
-  flags: { resume?: boolean; dryRun?: boolean; model?: string } = {}
+  flags: {
+    resume?: boolean;
+    dryRun?: boolean;
+    model?: string;
+    sandbox?: string;
+    noSandbox?: boolean;
+  } = {}
 ): Promise<void> {
   const config = loadConfig(projectRoot);
   const _log = getLogger();
@@ -64,6 +71,32 @@ export async function runCommand(
   });
 
   try {
+    // Resolve sandbox mode (CLI flags override config)
+    const sandboxMode = resolveSandboxMode(config.sandbox, flags);
+
+    if (sandboxMode !== "disabled") {
+      const status = await detectSandboxSupport();
+      if (!status.available) {
+        if (sandboxMode === "required") {
+          process.stderr.write(
+            `${red("✗")} Docker sandbox required but not available: ${status.reason}\n`
+          );
+          process.stderr.write(
+            `  Install Docker Desktop 4.58+ or remove --sandbox=require to continue.\n`
+          );
+          process.exit(1);
+        }
+        // Auto mode: warn and continue
+        process.stderr.write(
+          `${yellow("⚠")} Docker sandbox not available: ${status.reason}. Running unsandboxed.\n`
+        );
+      }
+    } else if (flags.noSandbox) {
+      process.stderr.write(
+        `${yellow("⚠")} Running without sandbox. The AI agent will have unrestricted access to your filesystem, network, and environment variables.\n`
+      );
+    }
+
     // Resume mode
     if (flags.resume) {
       return handleResume(projectRoot, config);

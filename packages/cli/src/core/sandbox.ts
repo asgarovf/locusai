@@ -1,10 +1,11 @@
 /**
- * Docker sandbox availability detection.
+ * Docker sandbox availability detection and mode resolution.
  * Detects whether Docker Desktop with sandbox support (4.58+) is available.
  * Result is cached for the lifetime of the process.
  */
 
 import { execFile } from "node:child_process";
+import type { SandboxConfig } from "../types.js";
 import { getLogger } from "./logger.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -13,6 +14,8 @@ export interface SandboxStatus {
   available: boolean;
   reason?: string;
 }
+
+export type SandboxMode = "auto" | "disabled" | "required";
 
 // ─── Detection ───────────────────────────────────────────────────────────────
 
@@ -111,4 +114,40 @@ function runDetection(): Promise<SandboxStatus> {
       }
     });
   });
+}
+
+// ─── Mode Resolution ─────────────────────────────────────────────────────────
+
+/**
+ * Resolve the final sandbox mode from config and CLI flags.
+ * CLI flags override config values.
+ *
+ * Priority: --no-sandbox > --sandbox=require > config.sandbox.enabled
+ *
+ * Throws if --sandbox has an invalid value.
+ */
+export function resolveSandboxMode(
+  config: SandboxConfig,
+  flags: { sandbox?: string; noSandbox?: boolean }
+): SandboxMode {
+  // CLI flags take precedence
+  if (flags.noSandbox) {
+    return "disabled";
+  }
+
+  if (flags.sandbox !== undefined) {
+    if (flags.sandbox === "require") {
+      return "required";
+    }
+    throw new Error(
+      `Invalid --sandbox value: "${flags.sandbox}". Valid values: require`
+    );
+  }
+
+  // Fall back to config
+  if (!config.enabled) {
+    return "disabled";
+  }
+
+  return "auto";
 }
