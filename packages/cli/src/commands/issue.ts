@@ -190,6 +190,8 @@ async function issueCreate(
     cwd: projectRoot,
     silent: true,
     activity: "generating issue",
+    sandboxed: config.sandbox.enabled,
+    sandboxName: config.sandbox.name,
   });
 
   if (!aiResult.success && !aiResult.interrupted) {

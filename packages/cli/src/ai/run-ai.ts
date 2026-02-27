@@ -13,7 +13,7 @@ import { StreamRenderer } from "../display/stream-renderer.js";
 import { dim, red, yellow } from "../display/terminal.js";
 import { listenForInterrupt } from "../repl/input-handler.js";
 import type { AgentRunner, RunnerResult } from "../types.js";
-import { createRunnerAsync } from "./runner.js";
+import { createRunnerAsync, createUserManagedSandboxRunner } from "./runner.js";
 
 export interface RunAIOptions {
   /** The prompt to send to the AI. */
@@ -34,6 +34,13 @@ export interface RunAIOptions {
   verbose?: boolean;
   /** Run the AI agent inside a Docker sandbox for isolation. */
   sandboxed?: boolean;
+  /** Name of a user-managed sandbox to exec into (from `locus sandbox`). */
+  sandboxName?: string;
+  /**
+   * Pre-created runner instance to reuse (e.g., a persistent sandboxed runner).
+   * When provided, `createRunnerAsync` is skipped and this runner is used directly.
+   */
+  runner?: AgentRunner;
 }
 
 export interface RunAIResult {
@@ -47,6 +54,68 @@ export interface RunAIResult {
   interrupted: boolean;
   /** Exit code from the runner. */
   exitCode: number;
+}
+
+function normalizeErrorMessage(error: string | undefined): string | undefined {
+  if (!error) return undefined;
+  const trimmed = error.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function stripAnsi(text: string): string {
+  return text.replace(
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: Standard ANSI escape sequence matcher
+    /\u001B\[[0-9;]*[A-Za-z]/g,
+    ""
+  );
+}
+
+function extractErrorFromStructuredLine(line: string): string | undefined {
+  try {
+    const parsed = JSON.parse(line) as Record<string, unknown>;
+    const candidateValues = [
+      parsed.error,
+      parsed.message,
+      parsed.text,
+      typeof parsed.item === "object" && parsed.item
+        ? (parsed.item as Record<string, unknown>).error
+        : undefined,
+      typeof parsed.item === "object" && parsed.item
+        ? (parsed.item as Record<string, unknown>).message
+        : undefined,
+      typeof parsed.item === "object" && parsed.item
+        ? (parsed.item as Record<string, unknown>).text
+        : undefined,
+    ];
+
+    for (const value of candidateValues) {
+      if (typeof value !== "string") continue;
+      const normalized = normalizeErrorMessage(stripAnsi(value));
+      if (normalized) return normalized;
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractErrorFromOutput(output: string): string | undefined {
+  if (!output) return undefined;
+
+  const lines = output.split("\n");
+  for (let index = lines.length - 1; index >= 0; index--) {
+    const rawLine = lines[index] ?? "";
+    const line = normalizeErrorMessage(stripAnsi(rawLine));
+    if (!line) continue;
+
+    const structured = extractErrorFromStructuredLine(line);
+    if (structured) return structured.slice(0, 500);
+
+    return line.slice(0, 500);
+  }
+
+  return undefined;
 }
 
 /**
@@ -102,8 +171,14 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       activity: options.activity,
     });
 
-    // Create runner (sandboxed if requested)
-    runner = await createRunnerAsync(resolvedProvider, options.sandboxed);
+    // Create runner (sandboxed if requested), or reuse a provided one
+    if (options.runner) {
+      runner = options.runner;
+    } else if (options.sandboxName) {
+      runner = createUserManagedSandboxRunner(resolvedProvider, options.sandboxName);
+    } else {
+      runner = await createRunnerAsync(resolvedProvider, options.sandboxed ?? true);
+    }
 
     // Check availability
     const available = await runner.isAvailable();
@@ -141,6 +216,9 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
         renderer?.push(chunk);
         output += chunk;
       },
+      onStatusChange: (message) => {
+        indicator.setMessage(message);
+      },
       onToolActivity: (() => {
         let lastActivityTime = 0;
         return (summary: string) => {
@@ -168,10 +246,16 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       };
     }
 
+    const normalizedRunnerError = normalizeErrorMessage(result.error);
+    const extractedOutputError = extractErrorFromOutput(result.output);
+    const fallbackError = `${runner.name} failed with exit code ${result.exitCode}.`;
+
     return {
       success: result.success,
       output,
-      error: result.error,
+      error: result.success
+        ? undefined
+        : (normalizedRunnerError ?? extractedOutputError ?? fallbackError),
       interrupted: false,
       exitCode: result.exitCode,
     };
@@ -179,10 +263,15 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
     indicator.stop();
     renderer?.stop();
 
+    const normalizedCaughtError = normalizeErrorMessage(
+      e instanceof Error ? e.message : String(e)
+    );
+    const fallbackError = `${resolvedProvider} runner failed unexpectedly.`;
+
     return {
       success: false,
       output,
-      error: e instanceof Error ? e.message : String(e),
+      error: normalizedCaughtError ?? fallbackError,
       interrupted: wasAborted,
       exitCode: 1,
     };

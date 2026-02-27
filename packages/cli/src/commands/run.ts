@@ -406,6 +406,7 @@ async function handleSprintRun(
       sprintContext,
       skipPR: true,
       sandboxed,
+      sandboxName: config.sandbox.name,
     });
 
     if (result.success) {
@@ -507,6 +508,7 @@ async function handleSingleIssue(
       model: flags.model ?? config.ai.model,
       dryRun: flags.dryRun,
       sandboxed,
+      sandboxName: config.sandbox.name,
     });
     return;
   }
@@ -542,6 +544,7 @@ async function handleSingleIssue(
     model: flags.model ?? config.ai.model,
     dryRun: flags.dryRun,
     sandboxed,
+    sandboxName: config.sandbox.name,
   });
 
   // Clean up worktree on success, preserve on failure for debugging
@@ -641,6 +644,7 @@ async function handleParallelRun(
         model: flags.model ?? config.ai.model,
         dryRun: flags.dryRun,
         sandboxed,
+        sandboxName: config.sandbox.name,
       });
 
       if (result.success) {
@@ -774,6 +778,7 @@ async function handleResume(
       // Sprint runs use a single sprint-level PR created at the end
       skipPR: isSprintRun,
       sandboxed,
+      sandboxName: config.sandbox.name,
     });
 
     if (result.success) {

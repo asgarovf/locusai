@@ -217,6 +217,7 @@ ${bold("Commands:")}
   ${cyan("uninstall")}         Remove an installed package
   ${cyan("packages")}          Manage installed packages (list, outdated)
   ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
+  ${cyan("sandbox")}           Manage Docker sandbox lifecycle
   ${cyan("upgrade")}           Check for and install updates
 
 ${bold("Options:")}
@@ -234,6 +235,8 @@ ${bold("Examples:")}
   locus run 42 43                     ${dim("# Run issues in parallel")}
   locus run 42 --no-sandbox           ${dim("# Run without sandbox")}
   locus run 42 --sandbox=require      ${dim("# Require Docker sandbox")}
+  locus sandbox                       ${dim("# Create Docker sandbox")}
+  locus sandbox claude                ${dim("# Login to Claude in sandbox")}
 
 `);
 }
@@ -372,7 +375,6 @@ async function main(): Promise<void> {
   } catch {
     process.stderr.write(`${red("✗")} Not inside a git repository.\n`);
     process.exit(1);
-    return;
   }
 
   if (!isInitialized(projectRoot)) {
@@ -381,7 +383,6 @@ async function main(): Promise<void> {
     );
     process.stderr.write(`  Run: ${bold("locus init")}\n`);
     process.exit(1);
-    return;
   }
 
   // Route to command handler
@@ -493,6 +494,13 @@ async function main(): Promise<void> {
       const { artifactsCommand } = await import("./commands/artifacts.js");
       const artifactsArgs = parsed.flags.help ? ["help"] : parsed.args;
       await artifactsCommand(projectRoot, artifactsArgs);
+      break;
+    }
+
+    case "sandbox": {
+      const { sandboxCommand } = await import("./commands/sandbox.js");
+      const sandboxArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await sandboxCommand(projectRoot, sandboxArgs);
       break;
     }
 

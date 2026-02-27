@@ -2,64 +2,83 @@
   <img src="https://raw.githubusercontent.com/asgarovf/locusai/master/assets/logo.png" alt="Locus" width="200" />
 </p>
 
+<h3 align="center">GitHub-native AI engineering CLI</h3>
+
 <p align="center">
-  <a href="https://github.com/asgarovf/locusai/stargazers"><img src="https://img.shields.io/github/stars/asgarovf/locusai?style=flat&color=blue" alt="GitHub Stars" /></a>
-  <a href="https://github.com/asgarovf/locusai/blob/master/LICENSE"><img src="https://img.shields.io/github/license/asgarovf/locusai?style=flat&color=blue" alt="License" /></a>
-  <a href="https://github.com/asgarovf/locusai"><img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+  Turn GitHub issues into shipped code — plan sprints, execute tasks with AI agents, and iterate on feedback.
 </p>
 
 <p align="center">
+  <a href="https://github.com/asgarovf/locusai/stargazers"><img src="https://img.shields.io/github/stars/asgarovf/locusai?style=flat&color=blue" alt="GitHub Stars" /></a>
   <a href="https://www.npmjs.com/package/@locusai/cli"><img src="https://img.shields.io/npm/v/@locusai/cli?label=%40locusai%2Fcli&color=blue" alt="@locusai/cli" /></a>
+  <a href="https://github.com/asgarovf/locusai/blob/master/LICENSE"><img src="https://img.shields.io/github/license/asgarovf/locusai?style=flat&color=blue" alt="License" /></a>
   <a href="https://docs.locusai.dev"><img src="https://img.shields.io/badge/docs-locusai.dev-blue" alt="Documentation" /></a>
 </p>
 
-**Locus is a GitHub-native AI engineering CLI.** Turn GitHub issues into shipped code — plan sprints, execute tasks with AI agents, and iterate on feedback. All native to GitHub.
+<p align="center">
+  <a href="https://docs.locusai.dev">Documentation</a> &middot; <a href="https://docs.locusai.dev/getting-started/quickstart">Quick Start</a> &middot; <a href="#cli-reference">CLI Reference</a> &middot; <a href="https://github.com/asgarovf/locusai/issues">Issues</a>
+</p>
+
+---
 
 > GitHub Issues are tasks. Milestones are sprints. Labels track status. Pull Requests are deliverables. **No servers. No database. No accounts.**
 
-Read the [full documentation](https://docs.locusai.dev) to learn more.
-
 > [!WARNING]
-> **Active Development**: Locus is in early alpha and under active development. Expect breaking changes and evolving APIs.
+> **Active Development**: Locus is in early alpha. Expect breaking changes and evolving APIs.
+
+## Why Locus?
+
+AI coding agents are powerful — but they're point solutions. You still need to break down work, sequence tasks, track state, review output, and iterate on feedback. Locus wraps that entire loop into a single CLI that uses GitHub as its backend.
+
+- **Unified AI interface** — Switch between [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) and [Codex](https://openai.com/index/introducing-codex/) without changing your workflow
+- **End-to-end orchestration** — Plan, execute, review, and iterate in one tool
+- **GitHub-native** — No new accounts, no dashboards, no vendor lock-in. Everything lives in Issues, Milestones, Labels, and PRs
+- **Safe by default** — Docker sandbox isolation keeps AI agents in a separate kernel, away from your host
 
 ## Quick Start
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org) 18+
+- [GitHub CLI](https://cli.github.com) (`gh`) — authenticated via `gh auth login`
+- An AI provider CLI: [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [Codex](https://openai.com/index/introducing-codex/)
+- *(Optional)* [Docker Desktop](https://www.docker.com/products/docker-desktop/) 4.58+ for sandbox isolation
+
+### Install and run
+
 ```bash
-# Install
+# Install globally
 npm install -g @locusai/cli
 
 # Initialize in your GitHub repo
 locus init
 
-# Plan a sprint with AI
+# Plan a sprint from a goal
 locus plan "Build user authentication with OAuth"
 
-# Execute the sprint
+# Execute the sprint — agents write code, push commits, open PRs
 locus run
 
-# Review the PRs
+# Review the PRs with AI
 locus review
+
+# Agents address feedback and update the PRs
+locus iterate
 ```
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org) 18+
-- [GitHub CLI](https://cli.github.com) (`gh`) — installed and authenticated via `gh auth login`
-- An AI provider: [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [Codex](https://openai.com/index/introducing-codex/)
 
 ## How It Works
 
 ```
-locus plan "your goal"      →  AI creates GitHub Issues with order labels
-locus run                   →  Agents execute tasks sequentially, push code, create PRs
-locus review                →  AI reviews PRs, posts inline comments
-locus iterate               →  Agents address review feedback until merged
+locus plan "your goal"    →  AI breaks the goal into GitHub Issues with execution order
+locus run                 →  Agents execute tasks sequentially, push code, create PRs
+locus review              →  AI reviews PRs, posts inline comments on GitHub
+locus iterate             →  Agents address review feedback until ready to merge
 ```
 
 **GitHub IS the backend:**
 
-| Concept | GitHub Equivalent |
-|---------|-------------------|
+| Concept | GitHub Primitive |
+|---------|-----------------|
 | Task | Issue |
 | Sprint | Milestone |
 | Status | Labels (`locus:queued`, `locus:in-progress`, `locus:done`, `locus:failed`) |
@@ -67,90 +86,153 @@ locus iterate               →  Agents address review feedback until merged
 | Execution Order | Labels (`order:1`, `order:2`, ...) |
 | Deliverable | Pull Request |
 
-## Key Features
+## Features
 
-- **Zero Infrastructure** — No server, no database, no API. GitHub is your entire backend. Single auth via `gh auth login`.
-- **Sprint Execution** — Sequential task execution on a single branch. Each task builds on the last. Resume from failures automatically.
-- **AI Sprint Planning** — Describe a goal in plain English. AI creates structured GitHub issues with priority, type, and execution order.
-- **Parallel Worktrees** — Run standalone issues in parallel using git worktrees. Up to 3 concurrent agents by default.
-- **Interactive REPL** — Full-featured terminal with streaming markdown, session persistence, tab completion, and slash commands.
-- **AI Code Review** — Review PRs with AI-powered analysis. Posts inline comments on GitHub.
-- **Iterate on Feedback** — Agents re-execute tasks with PR review comments as context until the code is ready to merge.
-- **AI-Agnostic** — Works with Claude (Anthropic) and Codex (OpenAI). Switch providers per-command.
-- **Recoverable** — Failed runs resume where they left off via `--resume`. No re-executing completed work.
-- **Docker Sandbox** — Hypervisor-level isolation via Docker Desktop sandboxes. AI agents run in a separate kernel with no direct access to your host filesystem or credentials.
+### Sprint execution
+Sequential task execution on a single branch. Each task builds on the previous one's output. Resume interrupted runs with `--resume` — no re-executing completed work.
 
-## CLI Commands
+### AI sprint planning
+Describe a goal in plain English. AI decomposes it into structured GitHub issues with priority, type, and execution order — ready for `locus run`.
+
+### Parallel worktrees
+Run standalone issues concurrently using git worktrees. Each issue gets its own isolated branch. Up to 3 concurrent agents by default (configurable via `agent.maxParallel`).
+
+### Interactive REPL
+Full-featured terminal with streaming markdown, session persistence, tab completion, and slash commands. Use `locus exec` for interactive mode or `locus exec "prompt"` for one-shot execution.
+
+### AI code review
+Review pull requests with AI-powered analysis. Posts inline comments directly on GitHub with actionable suggestions.
+
+### Iterate on feedback
+Agents re-execute tasks with PR review comments as context, updating code until it's ready to merge. Close the loop without manual intervention.
+
+### Docker sandbox isolation
+Hypervisor-level isolation via Docker Desktop sandboxes. AI agents run in a separate microVM kernel with no direct access to your host filesystem, network, or credentials. Enabled automatically when Docker 4.58+ is available.
+
+### Extensible packages
+Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk).
+
+## CLI Reference
+
+### Setup & Configuration
 
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `locus init` | | Initialize project with `.locus/` structure and GitHub labels |
+| `locus config` | | View and manage settings |
+| `locus upgrade` | | Self-upgrade to latest version |
+
+### Work Modeling
+
+| Command | Alias | Description |
+|---------|-------|-------------|
 | `locus issue` | `locus i` | Create, list, show, label, and close GitHub issues |
 | `locus sprint` | `locus s` | Create, list, show, activate, reorder, and close sprints |
 | `locus plan` | | AI-powered sprint planning from a goal description |
+
+### Execution & Review
+
+| Command | Alias | Description |
+|---------|-------|-------------|
 | `locus run` | | Execute sprint tasks or standalone issues with AI agents |
 | `locus exec` | `locus e` | Interactive REPL or one-shot prompt execution |
 | `locus review` | | AI code review on pull requests |
 | `locus iterate` | | Re-execute tasks with PR feedback context |
 | `locus discuss` | | AI-powered architectural discussions |
+
+### Visibility
+
+| Command | Alias | Description |
+|---------|-------|-------------|
 | `locus status` | | Dashboard view of project state |
-| `locus config` | | View and manage settings |
 | `locus logs` | | View, tail, and manage execution logs |
-| `locus upgrade` | | Self-upgrade to latest version |
+| `locus artifacts` | | View and manage AI-generated artifacts |
+
+### Packages
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `locus install` | | Install a community package from npm |
+| `locus uninstall` | | Remove an installed package |
+| `locus packages` | | List installed packages |
+| `locus pkg <name>` | | Run a package-provided command |
+
+### Sandbox Management
+
+| Command | Description |
+|---------|-------------|
+| `locus sandbox` | Create a persistent Docker sandbox |
+| `locus sandbox claude` | Authenticate Claude inside the sandbox |
+| `locus sandbox codex` | Authenticate Codex inside the sandbox |
+| `locus sandbox rm` | Destroy the sandbox |
+| `locus sandbox status` | Show current sandbox state |
+
+## Workflows
+
+### Sprint: plan, execute, review, iterate
+
+```bash
+locus plan "Add SSO login and role-based access"
+locus run
+locus review
+locus iterate --sprint
+```
+
+### Parallel standalone issues
+
+```bash
+# Run 3 independent issues concurrently
+locus run 42 43 44
+```
+
+### Resume a failed run
+
+```bash
+# Pick up where it left off — completed tasks are skipped
+locus run --resume
+```
+
+### Interactive coding session
+
+```bash
+# Start a REPL session
+locus exec
+
+# Or one-shot
+locus exec "Refactor the auth middleware to use JWT"
+```
 
 ## Project Structure
 
-After `locus init`, your project has:
+After `locus init`, your project gets a `.locus/` directory:
 
 ```
-your-project/
-├── .locus/
-│   ├── config.json              # Project settings (auto-detected)
-│   ├── run-state.json           # Execution state (for recovery)
-│   ├── LOCUS.md                 # Agent instructions & project context
-│   ├── LEARNINGS.md             # Accumulated lessons from past runs
-│   ├── sessions/                # REPL session history
-│   ├── discussions/             # AI discussion archives
-│   ├── artifacts/               # AI-generated reports
-│   ├── plans/                   # Planning documents
-│   ├── logs/                    # Execution logs (NDJSON)
-│   └── worktrees/               # Git worktrees for parallel execution
+.locus/
+├── config.json        # Project settings (auto-detected)
+├── run-state.json     # Execution state for recovery
+├── LOCUS.md           # Agent instructions & project context
+├── LEARNINGS.md       # Accumulated lessons from past runs
+├── sessions/          # REPL session history
+├── discussions/       # AI discussion archives
+├── artifacts/         # AI-generated reports
+├── plans/             # Planning documents
+├── logs/              # Execution logs (NDJSON)
+└── worktrees/         # Git worktrees for parallel execution
 ```
 
 ## Security & Sandboxing
 
 Locus supports running AI agents inside **Docker Desktop sandboxes** — lightweight microVMs that provide hypervisor-level isolation. Each sandbox runs a separate kernel, so the AI agent cannot directly access your host filesystem, network, or environment variables.
 
-### Prerequisites
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) **4.58+** with sandbox support enabled
-
-### Default Behavior
-
-When Docker Desktop 4.58+ is installed, Locus **automatically** runs agents inside a sandbox. If Docker is not available, Locus falls back to unsandboxed execution with a warning.
-
-### CLI Flags
+When Docker Desktop 4.58+ is installed, Locus **automatically** runs agents inside a sandbox. If Docker is not available, it falls back to unsandboxed execution with a warning.
 
 | Flag | Behavior |
 |------|----------|
 | *(default)* | Use sandbox if Docker is available; warn and fall back if not |
 | `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
-| `--sandbox=require` | Require sandbox — fail with an error if Docker sandbox is unavailable |
+| `--sandbox=require` | Require sandbox — fail if Docker sandbox is unavailable |
 
-```bash
-# Run with sandbox (default when Docker is available)
-locus run 42
-
-# Explicitly disable sandbox
-locus run 42 --no-sandbox
-
-# Require sandbox — fail if unavailable
-locus run 42 --sandbox=require
-```
-
-### Configuration
-
-Control sandbox behavior in `.locus/config.json`:
+Configure sandbox behavior in `.locus/config.json`:
 
 ```json
 {
@@ -162,27 +244,15 @@ Control sandbox behavior in `.locus/config.json`:
 }
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `sandbox.enabled` | boolean | `true` | Enable sandbox by default |
-| `sandbox.extraWorkspaces` | string[] | `[]` | Additional paths to sync into the sandbox |
-| `sandbox.readOnlyPaths` | string[] | `[]` | Paths mounted as read-only inside the sandbox |
+## VS Code Extension
 
-CLI flags (`--no-sandbox`, `--sandbox=require`) override the `sandbox.enabled` config value.
+Locus includes a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=locusai.locus) with an integrated chat interface for running tasks directly from your editor.
 
-### Troubleshooting
-
-**"Docker sandbox not available"**
-Install or upgrade to [Docker Desktop 4.58+](https://www.docker.com/products/docker-desktop/). Ensure Docker is running and the `docker sandbox ls` command works.
-
-**Sandbox performance**
-Each sandbox is a lightweight microVM. For parallel runs (`locus run 42 43 44`), each issue gets its own sandbox. Resource usage scales with `agent.maxParallel`. Reduce concurrency if your machine is constrained.
-
-**File sync delays**
-Docker sandboxes use bidirectional file sync between your host workspace and the sandbox. There may be slight latency for very large files or high-frequency writes.
-
-**Network restrictions**
-Outbound network traffic from the sandbox goes through Docker's network proxy. Most API calls (GitHub, AI providers) work transparently. Custom proxy configurations may require additional Docker Desktop settings.
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+L` | Open Locus chat |
+| `Ctrl+Shift+E` | Explain selected code |
+| `Ctrl+Shift+N` | New session |
 
 ## Development
 
@@ -190,11 +260,24 @@ Outbound network traffic from the sandbox goes through Docker's network proxy. M
 # Install dependencies
 bun install
 
-# Quick check
+# Run the CLI in dev mode
+bun run simulate <command>
+
+# Lint and typecheck
 bun run lint && bun run typecheck
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed development instructions.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architecture details, and release process.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@locusai/cli`](./packages/cli) | Main CLI |
+| [`@locusai/shared`](./packages/shared) | Shared types and utilities |
+| [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
+| [`locus-vscode`](./packages/vscode) | VS Code extension |
+| [`@locusai/www`](./apps/www) | Documentation website |
 
 ## License
 

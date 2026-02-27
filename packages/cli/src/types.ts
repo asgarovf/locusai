@@ -46,6 +46,8 @@ export type LogLevel = "silent" | "normal" | "verbose" | "debug";
 
 export interface SandboxConfig {
   enabled: boolean;
+  /** Name of the user-managed persistent sandbox (set by `locus sandbox`). */
+  name?: string;
   extraWorkspaces: string[];
   readOnlyPaths: string[];
 }
@@ -194,6 +196,8 @@ export interface RunnerOptions {
   onOutput?: (chunk: string) => void;
   /** Called with a short description when the AI invokes a tool (verbose mode only). */
   onToolActivity?: (summary: string) => void;
+  /** Called when the runner's status changes (e.g., "Syncing sandbox...", "Thinking..."). */
+  onStatusChange?: (message: string) => void;
   signal?: AbortSignal;
   verbose?: boolean;
   /** Activity label (e.g., "issue #42") — used for sandbox naming in parallel runs. */
@@ -221,6 +225,8 @@ export interface AgentOptions {
   skipPR?: boolean;
   /** Run the AI agent inside a Docker sandbox for isolation. */
   sandboxed?: boolean;
+  /** Name of a user-managed sandbox to exec into (from `locus sandbox`). */
+  sandboxName?: string;
 }
 
 export interface AgentResult {

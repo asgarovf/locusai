@@ -1,0 +1,25 @@
+# Files and directories to exclude from sandbox environments.
+# Patterns follow .gitignore syntax (one per line, # for comments).
+# These files will be removed from the sandbox after creation.
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account*.json
+
+# Cloud provider configs
+.aws/
+.gcp/
+.azure/
+
+# Docker secrets
+docker-compose.override.yml

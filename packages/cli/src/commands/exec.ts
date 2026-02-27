@@ -11,7 +11,7 @@
  *   locus exec --json-stream          # NDJSON mode for VSCode extension
  */
 
-import { createRunnerAsync } from "../ai/runner.js";
+import { createRunnerAsync, createUserManagedSandboxRunner } from "../ai/runner.js";
 import { loadConfig } from "../core/config.js";
 import { getLogger } from "../core/logger.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
@@ -182,7 +182,9 @@ async function handleJsonStream(
 
   try {
     const fullPrompt = buildReplPrompt(prompt, projectRoot, config);
-    const runner = await createRunnerAsync(config.ai.provider);
+    const runner = config.sandbox.name
+      ? createUserManagedSandboxRunner(config.ai.provider, config.sandbox.name)
+      : await createRunnerAsync(config.ai.provider, config.sandbox.enabled);
 
     const available = await runner.isAvailable();
     if (!available) {

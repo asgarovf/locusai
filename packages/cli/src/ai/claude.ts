@@ -13,7 +13,6 @@ export function buildClaudeArgs(options: {
   verbose?: boolean;
 }): string[] {
   const args = [
-    "--print",
     "--dangerously-skip-permissions",
     "--no-session-persistence",
   ];
@@ -65,7 +64,7 @@ export class ClaudeRunner implements AgentRunner {
     const log = getLogger();
     this.aborted = false;
 
-    const args = buildClaudeArgs(options);
+    const args = ["--print", ...buildClaudeArgs(options)];
 
     log.debug("Spawning claude", { args: args.join(" "), cwd: options.cwd });
 

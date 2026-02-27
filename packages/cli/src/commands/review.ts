@@ -185,6 +185,8 @@ async function reviewPR(
     model: flags.model ?? config.ai.model,
     cwd: projectRoot,
     activity: `PR #${pr.number}`,
+    sandboxed: config.sandbox.enabled,
+    sandboxName: config.sandbox.name,
   });
 
   if (aiResult.interrupted) {

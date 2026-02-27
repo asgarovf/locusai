@@ -1,9 +1,2 @@
+bin/
 
-
-# Locus
-.locus/config.json
-.locus/run-state.json
-.locus/rate-limit.json
-.locus/sessions/
-.locus/logs/
-.locus/worktrees/

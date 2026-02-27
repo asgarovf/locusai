@@ -15,6 +15,7 @@ export class StatusIndicator {
   private startTime: number = 0;
   private activity: string = "";
   private frame: number = 0;
+  private message: string = "";
 
   // Braille spinner frames (fallback)
   private static BRAILLE = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -27,14 +28,19 @@ export class StatusIndicator {
     this.stop(); // Clear any existing indicator
     this.startTime = Date.now();
     this.activity = options?.activity ?? "";
+    this.message = message;
     this.frame = 0;
 
     if (process.stderr.isTTY) {
       process.stderr.write("\x1b[?25l"); // hide cursor
     }
 
+    // Render immediately so the user sees feedback before any blocking work
+    this.render();
+    this.frame++;
+
     this.timer = setInterval(() => {
-      this.render(message);
+      this.render();
       this.frame++;
     }, 80);
   }
@@ -42,6 +48,13 @@ export class StatusIndicator {
   /** Update the activity text without restarting. */
   setActivity(activity: string): void {
     this.activity = activity;
+  }
+
+  /** Update the main message without restarting (preserves elapsed timer). */
+  setMessage(message: string): void {
+    this.message = message;
+    // Render immediately so the change is visible before any blocking work
+    if (this.timer) this.render();
   }
 
   /** Stop and clear the indicator. */
@@ -60,7 +73,8 @@ export class StatusIndicator {
     return this.timer !== null;
   }
 
-  private render(message: string): void {
+  private render(): void {
+    const message = this.message;
     const caps = getCapabilities();
     const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
     const elapsedStr = `${elapsed}s`;
@@ -96,7 +110,7 @@ export class StatusIndicator {
     if (!process.stderr.isTTY) return;
     // Write clear + frame atomically to the same stream — avoids cross-stream
     // ordering issues between stdout (clearLine) and stderr (spinner content).
-    process.stderr.write("\x1b[2K\r" + line);
+    process.stderr.write(`\x1b[2K\r${line}`);
   }
 
   /**

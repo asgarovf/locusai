@@ -1,11 +1,20 @@
 /**
  * Sandboxed Codex runner.
  * Wraps Codex execution inside a Docker sandbox microVM for hypervisor-level isolation.
- * Delegates to `docker sandbox run` instead of spawning `codex` directly.
+ *
+ * Supports two modes:
+ * - **Ephemeral** (default): creates a sandbox per execute() call and removes it after.
+ * - **Persistent**: reuses a single sandbox across multiple execute() calls.
+ *   The first call uses `docker sandbox run` to create it; subsequent calls
+ *   use `docker sandbox exec`. Call `destroy()` to remove the sandbox when done.
+ *
+ * Docker sandbox only ships with `claude` pre-installed. This runner creates
+ * the sandbox with `claude` as the base agent and then installs `codex` inside.
  */
 
 import { type ChildProcess, execSync, spawn } from "node:child_process";
 import { getLogger } from "../core/logger.js";
+import { enforceSandboxIgnore } from "../core/sandbox-ignore.js";
 import {
   registerActiveSandbox,
   unregisterActiveSandbox,
@@ -38,6 +47,35 @@ export class SandboxedCodexRunner implements AgentRunner {
   private aborted = false;
   private sandboxName: string | null = null;
 
+  // ─── Persistent sandbox support ───────────────────────────────────────────
+  private persistent: boolean;
+  private sandboxCreated = false;
+  /** When true, the sandbox is user-managed (created by `locus sandbox`). Never destroy it. */
+  private userManaged = false;
+  /** Track whether codex has been installed in this sandbox to avoid repeated checks. */
+  private codexInstalled = false;
+
+  /**
+   * @param persistentName  If provided, enables persistent mode.
+   *   The sandbox with this name is created on the first execute() call
+   *   and reused for all subsequent calls. Call destroy() to clean up.
+   * @param userManaged  If true, the sandbox was created externally by
+   *   `locus sandbox` and already exists. We only exec into it, never
+   *   create or destroy it.
+   */
+  constructor(persistentName?: string, userManaged = false) {
+    if (persistentName) {
+      this.persistent = true;
+      this.sandboxName = persistentName;
+      this.userManaged = userManaged;
+      if (userManaged) {
+        this.sandboxCreated = true;
+      }
+    } else {
+      this.persistent = false;
+    }
+  }
+
   /** Delegate to CodexRunner — checks host `codex` CLI availability. */
   async isAvailable(): Promise<boolean> {
     const delegate = new CodexRunner();
@@ -55,24 +93,95 @@ export class SandboxedCodexRunner implements AgentRunner {
     this.aborted = false;
 
     const codexArgs = buildCodexArgs(options.model);
-    this.sandboxName = buildSandboxName(options);
 
-    // Register with shutdown handler so SIGINT/SIGTERM cleans up this sandbox
-    registerActiveSandbox(this.sandboxName);
+    let dockerArgs: string[];
 
-    const dockerArgs = [
-      "sandbox",
-      "run",
-      "--name",
-      this.sandboxName,
-      "codex",
-      options.cwd, // workspace path for Docker to sync
-      "--", // separator
-      ...codexArgs,
-    ];
+    if (this.persistent && !this.sandboxName) {
+      throw new Error("Sandbox name is required");
+    }
+
+    if (
+      this.persistent &&
+      this.sandboxCreated &&
+      (await this.isSandboxRunning())
+    ) {
+      // ── Persistent mode: sandbox already exists → docker sandbox exec ──
+      const name = this.sandboxName;
+
+      if (!name) {
+        throw new Error("Sandbox name is required");
+      }
+
+      options.onStatusChange?.("Syncing sandbox...");
+      await enforceSandboxIgnore(name, options.cwd);
+
+      // Ensure codex is installed in the sandbox
+      if (!this.codexInstalled) {
+        options.onStatusChange?.("Checking codex...");
+        await this.ensureCodexInstalled(name);
+        this.codexInstalled = true;
+      }
+
+      options.onStatusChange?.("Thinking...");
+
+      // Use -i to keep stdin open so we can pipe the prompt to codex.
+      dockerArgs = [
+        "sandbox",
+        "exec",
+        "-i",
+        "-w",
+        options.cwd,
+        name,
+        "codex",
+        ...codexArgs,
+      ];
+    } else {
+      // ── First call (persistent) or ephemeral mode ──
+      // Docker sandbox only ships with `claude` pre-installed.
+      // Create the sandbox with `claude` as the base agent, then install codex.
+      if (!this.persistent) {
+        this.sandboxName = buildSandboxName(options);
+      }
+
+      const name = this.sandboxName;
+
+      if (!name) {
+        throw new Error("Sandbox name is required");
+      }
+
+      registerActiveSandbox(name);
+
+      // Step 1: Create sandbox with claude as the base agent
+      options.onStatusChange?.("Creating sandbox...");
+      await this.createSandboxWithClaude(name, options.cwd);
+
+      // Step 2: Install codex
+      options.onStatusChange?.("Installing codex...");
+      await this.ensureCodexInstalled(name);
+      this.codexInstalled = true;
+
+      // Step 3: Enforce sandbox ignore
+      options.onStatusChange?.("Syncing sandbox...");
+      await enforceSandboxIgnore(name, options.cwd);
+
+      options.onStatusChange?.("Thinking...");
+
+      dockerArgs = [
+        "sandbox",
+        "exec",
+        "-i",
+        "-w",
+        options.cwd,
+        name,
+        "codex",
+        ...codexArgs,
+      ];
+    }
 
     log.debug("Spawning sandboxed codex", {
       sandboxName: this.sandboxName,
+      persistent: this.persistent,
+      reusing: this.persistent && this.sandboxCreated,
       args: dockerArgs.join(" "),
       cwd: options.cwd,
     });
@@ -86,6 +195,14 @@ export class SandboxedCodexRunner implements AgentRunner {
           stdio: ["pipe", "pipe", "pipe"],
           env: process.env, // Docker proxy handles credential injection
         });
+
+        // If this is a persistent sandbox run (first call), mark as created
+        // once the process spawns successfully.
+        if (this.persistent && !this.sandboxCreated) {
+          this.process.on("spawn", () => {
+            this.sandboxCreated = true;
+          });
+        }
 
         // Buffer agent_message items; flush to onOutput only on turn.completed
         // so the indicator stays alive while tools are running.
@@ -113,7 +230,10 @@ export class SandboxedCodexRunner implements AgentRunner {
               const event = JSON.parse(line) as CodexEvent;
               const { type, item } = event;
 
-              if (type === "item.started" && item?.type === "command_execution") {
+              if (
+                type === "item.started" &&
+                item?.type === "command_execution"
+              ) {
                 const cmd = (item.command ?? "").split("\n")[0].slice(0, 80);
                 options.onToolActivity?.(`running: ${cmd}`);
               } else if (
@@ -191,6 +311,10 @@ export class SandboxedCodexRunner implements AgentRunner {
 
         this.process.on("error", (err) => {
           this.process = null;
+          // Spawn failed — sandbox was NOT created
+          if (this.persistent && !this.sandboxCreated) {
+            // Keep sandboxCreated as false so next call retries with `run`
+          }
           resolve({
             success: false,
             output: rawOutput,
@@ -213,28 +337,76 @@ export class SandboxedCodexRunner implements AgentRunner {
         this.process.stdin?.end();
       });
     } finally {
-      this.cleanupSandbox();
+      // Only clean up sandbox in ephemeral mode
+      if (!this.persistent) {
+        this.cleanupSandbox();
+      }
     }
   }
 
   abort(): void {
-    if (!this.sandboxName) return;
-
     this.aborted = true;
     const log = getLogger();
-    log.debug("Aborting sandboxed codex process", {
-      sandboxName: this.sandboxName,
-    });
 
-    // docker sandbox rm kills the VM and reclaims resources
-    try {
-      execSync(`docker sandbox rm ${this.sandboxName}`, { timeout: 10000 });
-    } catch {
-      // Sandbox may already be stopped — that's fine
+    if (this.persistent) {
+      // Persistent mode: kill the local docker exec process
+      // but keep the sandbox alive for future prompts.
+      log.debug("Aborting sandboxed codex (persistent — keeping sandbox)", {
+        sandboxName: this.sandboxName,
+      });
+      if (this.process) {
+        this.process.kill("SIGTERM");
+        const timer = setTimeout(() => {
+          if (this.process) {
+            this.process.kill("SIGKILL");
+          }
+        }, 3000);
+        if (timer.unref) timer.unref();
+      }
+    } else {
+      // Ephemeral mode: remove the sandbox entirely
+      if (!this.sandboxName) return;
+      log.debug("Aborting sandboxed codex (ephemeral — removing sandbox)", {
+        sandboxName: this.sandboxName,
+      });
+      try {
+        execSync(`docker sandbox rm ${this.sandboxName}`, { timeout: 60_000 });
+      } catch {
+        // Sandbox may already be stopped — that's fine
+      }
     }
   }
 
-  /** Remove the Docker sandbox and unregister from the shutdown handler. */
+  /**
+   * Remove the persistent sandbox and unregister from shutdown handler.
+   * Call this when the REPL session ends.
+   * No-op in ephemeral mode (cleanup happens automatically).
+   * No-op for user-managed sandboxes (lifecycle controlled by `locus sandbox rm`).
+   */
+  destroy(): void {
+    if (!this.sandboxName) return;
+
+    // User-managed sandboxes are never destroyed by the runner
+    if (this.userManaged) {
+      unregisterActiveSandbox(this.sandboxName);
+      return;
+    }
+
+    const log = getLogger();
+    log.debug("Destroying sandbox", { sandboxName: this.sandboxName });
+
+    try {
+      execSync(`docker sandbox rm ${this.sandboxName}`, { timeout: 60_000 });
+    } catch {
+      // Already removed — that's fine
+    }
+
+    unregisterActiveSandbox(this.sandboxName);
+    this.sandboxName = null;
+    this.sandboxCreated = false;
+  }
+
+  /** Remove the Docker sandbox and unregister from the shutdown handler. (Ephemeral mode only.) */
   private cleanupSandbox(): void {
     if (!this.sandboxName) return;
 
@@ -242,13 +414,74 @@ export class SandboxedCodexRunner implements AgentRunner {
     log.debug("Cleaning up sandbox", { sandboxName: this.sandboxName });
 
     try {
-      execSync(`docker sandbox rm ${this.sandboxName}`, { timeout: 10000 });
+      execSync(`docker sandbox rm ${this.sandboxName}`, {
+        timeout: 60_000,
+      });
     } catch {
       // Already removed (e.g. by abort) — that's fine
     }
 
     unregisterActiveSandbox(this.sandboxName);
     this.sandboxName = null;
+  }
+
+  /** Check if the sandbox is actually running (via `docker sandbox ls`). */
+  private async isSandboxRunning(): Promise<boolean> {
+    if (!this.sandboxName) return false;
+    try {
+      const { promisify } = await import("node:util");
+      const { exec } = await import("node:child_process");
+      const execAsync = promisify(exec);
+      const { stdout } = await execAsync("docker sandbox ls", {
+        timeout: 5000,
+      });
+      return stdout.includes(this.sandboxName);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Create a sandbox using `claude` as the base agent.
+   * Docker sandbox only ships `claude` — we install `codex` separately.
+   */
+  private async createSandboxWithClaude(
+    name: string,
+    cwd: string
+  ): Promise<void> {
+    const { promisify } = await import("node:util");
+    const { exec } = await import("node:child_process");
+    const execAsync = promisify(exec);
+
+    try {
+      await execAsync(
+        `docker sandbox run --name ${name} claude ${cwd} -- --version`,
+        { timeout: 120_000 }
+      );
+    } catch {
+      // claude --version exits quickly; non-zero exit is OK as long as the sandbox was created
+    }
+  }
+
+  /**
+   * Ensure `codex` CLI is installed inside the sandbox.
+   * No-op if already installed.
+   */
+  private async ensureCodexInstalled(name: string): Promise<void> {
+    const { promisify } = await import("node:util");
+    const { exec } = await import("node:child_process");
+    const execAsync = promisify(exec);
+
+    try {
+      await execAsync(`docker sandbox exec ${name} which codex`, {
+        timeout: 5000,
+      });
+    } catch {
+      await execAsync(
+        `docker sandbox exec ${name} npm install -g @openai/codex`,
+        { timeout: 120_000 }
+      );
+    }
   }
 
   /** Get the current sandbox name (for external cleanup/registry). */
