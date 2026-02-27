@@ -256,7 +256,7 @@ function buildRepoContext(projectRoot: string): string {
 function buildExecutionRules(config: LocusConfig): string {
   return `# Execution Rules
 
-1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Always include a blank line followed by \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a trailer in every commit message.
+1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Every commit message MUST be multi-line: the first line is the title, then a blank line, then \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a Git trailer. Use \`git commit -m "<title>" -m "Co-Authored-By: LocusAgent <agent@locusai.team>"\` (two separate -m flags) to ensure the trailer is on its own line.
 2. **Code quality:** Follow existing code style. Run linters/formatters if available.
 3. **Testing:** If test files exist for modified code, update them accordingly.
 4. **Do NOT:**

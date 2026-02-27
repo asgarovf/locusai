@@ -758,7 +758,8 @@ function ensureTaskCommit(
     });
 
     const message = `chore: complete #${issueNumber} - ${issueTitle}\n\nCo-Authored-By: LocusAgent <agent@locusai.team>`;
-    execSync(`git commit -m ${JSON.stringify(message)}`, {
+    execSync(`git commit -F -`, {
+      input: message,
       cwd: projectRoot,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
