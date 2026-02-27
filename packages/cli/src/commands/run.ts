@@ -40,7 +40,6 @@ import {
 import {
   cleanupStaleSandboxes,
   detectSandboxSupport,
-  displaySandboxWarning,
   resolveSandboxMode,
 } from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
@@ -57,6 +56,43 @@ import {
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Issue, LocusConfig } from "../types.js";
 
+// ─── Help ────────────────────────────────────────────────────────────────────
+
+function printRunHelp(): void {
+  process.stderr.write(`
+${bold("locus run")} — Execute issues using AI agents
+
+${bold("Usage:")}
+  locus run                           ${dim("# Run active sprint (sequential)")}
+  locus run <issue>                   ${dim("# Run single issue (worktree)")}
+  locus run <issue> <issue> ...       ${dim("# Run multiple issues (parallel)")}
+  locus run --resume                  ${dim("# Resume interrupted run")}
+
+${bold("Options:")}
+  --resume              Resume a previously interrupted run
+  --dry-run             Show what would happen without executing
+  --model <name>        Override the AI model for this run
+  --no-sandbox          Disable Docker sandbox isolation
+  --sandbox=require     Require Docker sandbox (fail if unavailable)
+
+${bold("Sandbox:")}
+  By default, agents run inside Docker Desktop sandboxes (4.58+) for
+  hypervisor-level isolation. If Docker is not available, agents run
+  unsandboxed with a warning.
+
+${bold("Examples:")}
+  locus run                           ${dim("# Execute active sprint")}
+  locus run 42                        ${dim("# Run single issue")}
+  locus run 42 43 44                  ${dim("# Run issues in parallel")}
+  locus run --resume                  ${dim("# Resume after failure")}
+  locus run 42 --no-sandbox           ${dim("# Run without sandbox")}
+  locus run 42 --sandbox=require      ${dim("# Require sandbox")}
+
+`);
+}
+
+// ─── Command ─────────────────────────────────────────────────────────────────
+
 export async function runCommand(
   projectRoot: string,
   args: string[],
@@ -68,6 +104,11 @@ export async function runCommand(
     noSandbox?: boolean;
   } = {}
 ): Promise<void> {
+  if (args[0] === "help") {
+    printRunHelp();
+    return;
+  }
+
   const config = loadConfig(projectRoot);
   const _log = getLogger();
   const cleanupShutdown = registerShutdownHandlers({

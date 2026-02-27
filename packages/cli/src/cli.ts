@@ -232,6 +232,8 @@ ${bold("Examples:")}
   locus plan approve <id>             ${dim("# Create issues from saved plan")}
   locus run                           ${dim("# Execute active sprint")}
   locus run 42 43                     ${dim("# Run issues in parallel")}
+  locus run 42 --no-sandbox           ${dim("# Run without sandbox")}
+  locus run 42 --sandbox=require      ${dim("# Require Docker sandbox")}
 
 `);
 }

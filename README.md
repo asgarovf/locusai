@@ -78,6 +78,7 @@ locus iterate               →  Agents address review feedback until merged
 - **Iterate on Feedback** — Agents re-execute tasks with PR review comments as context until the code is ready to merge.
 - **AI-Agnostic** — Works with Claude (Anthropic) and Codex (OpenAI). Switch providers per-command.
 - **Recoverable** — Failed runs resume where they left off via `--resume`. No re-executing completed work.
+- **Docker Sandbox** — Hypervisor-level isolation via Docker Desktop sandboxes. AI agents run in a separate kernel with no direct access to your host filesystem or credentials.
 
 ## CLI Commands
 
@@ -115,6 +116,73 @@ your-project/
 │   ├── logs/                    # Execution logs (NDJSON)
 │   └── worktrees/               # Git worktrees for parallel execution
 ```
+
+## Security & Sandboxing
+
+Locus supports running AI agents inside **Docker Desktop sandboxes** — lightweight microVMs that provide hypervisor-level isolation. Each sandbox runs a separate kernel, so the AI agent cannot directly access your host filesystem, network, or environment variables.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) **4.58+** with sandbox support enabled
+
+### Default Behavior
+
+When Docker Desktop 4.58+ is installed, Locus **automatically** runs agents inside a sandbox. If Docker is not available, Locus falls back to unsandboxed execution with a warning.
+
+### CLI Flags
+
+| Flag | Behavior |
+|------|----------|
+| *(default)* | Use sandbox if Docker is available; warn and fall back if not |
+| `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
+| `--sandbox=require` | Require sandbox — fail with an error if Docker sandbox is unavailable |
+
+```bash
+# Run with sandbox (default when Docker is available)
+locus run 42
+
+# Explicitly disable sandbox
+locus run 42 --no-sandbox
+
+# Require sandbox — fail if unavailable
+locus run 42 --sandbox=require
+```
+
+### Configuration
+
+Control sandbox behavior in `.locus/config.json`:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "extraWorkspaces": ["/path/to/shared/libs"],
+    "readOnlyPaths": ["/path/to/configs"]
+  }
+}
+```
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `sandbox.enabled` | boolean | `true` | Enable sandbox by default |
+| `sandbox.extraWorkspaces` | string[] | `[]` | Additional paths to sync into the sandbox |
+| `sandbox.readOnlyPaths` | string[] | `[]` | Paths mounted as read-only inside the sandbox |
+
+CLI flags (`--no-sandbox`, `--sandbox=require`) override the `sandbox.enabled` config value.
+
+### Troubleshooting
+
+**"Docker sandbox not available"**
+Install or upgrade to [Docker Desktop 4.58+](https://www.docker.com/products/docker-desktop/). Ensure Docker is running and the `docker sandbox ls` command works.
+
+**Sandbox performance**
+Each sandbox is a lightweight microVM. For parallel runs (`locus run 42 43 44`), each issue gets its own sandbox. Resource usage scales with `agent.maxParallel`. Reduce concurrency if your machine is constrained.
+
+**File sync delays**
+Docker sandboxes use bidirectional file sync between your host workspace and the sandbox. There may be slight latency for very large files or high-frequency writes.
+
+**Network restrictions**
+Outbound network traffic from the sandbox goes through Docker's network proxy. Most API calls (GitHub, AI providers) work transparently. Custom proxy configurations may require additional Docker Desktop settings.
 
 ## Development
 
