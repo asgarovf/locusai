@@ -140,5 +140,6 @@ locus run --resume
 1. [How Locus Works](../concepts/how-it-works.md)
 2. [AI Providers](../concepts/ai-providers.md)
 3. [GitHub as Backend](../concepts/github-backend.md)
-4. [Execution Model](../concepts/execution-model.md)
-5. [CLI Overview](../cli/overview.md)
+4. [GitHub-Native Workflows](../concepts/github-native-workflows.md)
+5. [Execution Model](../concepts/execution-model.md)
+6. [CLI Overview](../cli/overview.md)

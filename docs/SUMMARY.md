@@ -17,6 +17,7 @@
 ## Workflow Deep Dives
 
 * [How Locus Works](concepts/how-it-works.md)
+* [GitHub-Native Workflows](concepts/github-native-workflows.md)
 * [Sprints & Issues](concepts/sprints-and-issues.md)
 * [Your First Sprint (Detailed)](getting-started/first-sprint.md)
 

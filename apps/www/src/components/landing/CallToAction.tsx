@@ -54,6 +54,13 @@ export function CallToAction() {
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
             <Link
+              href="https://docs.locusai.dev/concepts/github-native-workflows"
+              className="hover:text-white transition-colors"
+            >
+              GitHub-native workflows
+            </Link>
+            <span className="text-border">/</span>
+            <Link
               href="https://docs.locusai.dev/cli/run"
               className="hover:text-white transition-colors"
             >

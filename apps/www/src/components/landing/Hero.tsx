@@ -132,7 +132,7 @@ export function Hero({ version }: HeroProps) {
           </Link>
           <span className="text-border">/</span>
           <Link
-            href="https://docs.locusai.dev/concepts/github-backend"
+            href="https://docs.locusai.dev/concepts/github-native-workflows"
             className="hover:text-white transition-colors"
           >
             GitHub-native workflows

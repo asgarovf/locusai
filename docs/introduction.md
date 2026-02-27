@@ -50,5 +50,6 @@ The [Quickstart](getting-started/quickstart.md) walks through:
 After that, continue with:
 
 1. [How Locus Works](concepts/how-it-works.md)
-2. [Sprints and Issues](concepts/sprints-and-issues.md)
-3. [CLI Overview](cli/overview.md)
+2. [GitHub-Native Workflows](concepts/github-native-workflows.md)
+3. [Sprints and Issues](concepts/sprints-and-issues.md)
+4. [CLI Overview](cli/overview.md)
