@@ -116,6 +116,71 @@ function runDetection(): Promise<SandboxStatus> {
   });
 }
 
+// ─── Stale Sandbox Cleanup ────────────────────────────────────────────────────
+
+/**
+ * Find and remove orphaned `locus-*` Docker sandboxes.
+ * Called at startup to clean up sandboxes leaked by previous crashes.
+ * Returns the number of sandboxes removed.
+ */
+export async function cleanupStaleSandboxes(): Promise<number> {
+  const log = getLogger();
+
+  try {
+    const { stdout } = await execFileAsync("docker", ["sandbox", "ls"], {
+      timeout: TIMEOUT_MS,
+    });
+
+    // Parse sandbox names from `docker sandbox ls` output.
+    // Each line after the header contains a sandbox name as the first column.
+    const lines = stdout.trim().split("\n");
+    if (lines.length <= 1) return 0; // Only header or empty
+
+    const staleNames: string[] = [];
+    for (const line of lines.slice(1)) {
+      const name = line.trim().split(/\s+/)[0];
+      if (name?.startsWith("locus-")) {
+        staleNames.push(name);
+      }
+    }
+
+    if (staleNames.length === 0) return 0;
+
+    log.verbose(`Found ${staleNames.length} stale sandbox(es) to clean up`);
+
+    let cleaned = 0;
+    for (const name of staleNames) {
+      try {
+        await execFileAsync("docker", ["sandbox", "rm", name], {
+          timeout: 10000,
+        });
+        log.debug(`Removed stale sandbox: ${name}`);
+        cleaned++;
+      } catch {
+        log.debug(`Failed to remove stale sandbox: ${name}`);
+      }
+    }
+
+    return cleaned;
+  } catch {
+    // docker sandbox ls failed — sandbox support not available, nothing to clean
+    return 0;
+  }
+}
+
+function execFileAsync(
+  file: string,
+  args: string[],
+  options: { timeout: number }
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, options, (error, stdout, stderr) => {
+      if (error) reject(error);
+      else resolve({ stdout: stdout ?? "", stderr: stderr ?? "" });
+    });
+  });
+}
+
 // ─── Mode Resolution ─────────────────────────────────────────────────────────
 
 /**
