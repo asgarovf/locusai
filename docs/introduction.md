@@ -4,70 +4,51 @@ description: GitHub-native AI engineering CLI. Turn issues into shipped code.
 
 # Introduction
 
-**Locus** is a CLI tool that turns GitHub issues into shipped code using AI agents. It uses GitHub as its entire backend — Issues are tasks, Milestones are sprints, Labels track status, and Pull Requests are deliverables.
-
-No servers. No database. No accounts. Just `npm install -g @locusai/cli` and go.
+Locus is the unified AI engineering interface for GitHub teams: one CLI to plan, execute, review, and automate delivery across Claude and Codex.
 
 For canonical landing/docs language, use the [Positioning Brief](content/positioning-brief.md).
 
-## What Locus Does
+## Start Here
 
-1. **Plan** — Describe what you want to build. AI analyzes your codebase and creates structured GitHub issues with priority, type, and execution order.
-2. **Execute** — Run `locus run` and AI agents claim tasks, write code, run tests, commit, and push — creating a PR for each task.
-3. **Review** — AI reviews pull requests and posts inline comments on GitHub.
-4. **Iterate** — Address PR feedback automatically. The agent re-executes with review comments as context until the code is ready to merge.
+If you are new to Locus, follow these pages in order:
 
-## Key Features
+1. [Installation](getting-started/installation.md) - install Locus, `gh`, and one AI provider CLI.
+2. [Quickstart](getting-started/quickstart.md) - run one complete end-to-end workflow with expected outcomes.
 
-- **GitHub IS the backend** — No custom API, no database. Everything is stored on GitHub.
-- **Zero infrastructure** — No server to deploy, no accounts to create. Single auth via `gh auth login`.
-- **Sprint execution** — Sequential task execution on a single branch. Each task builds on the last.
-- **Parallel worktrees** — Run standalone issues in parallel using git worktrees.
-- **AI sprint planning** — Describe a goal, get structured GitHub issues with execution order.
-- **Interactive REPL** — Full-featured terminal with streaming, sessions, tab completion, and slash commands.
-- **AI code review** — Review PRs with AI analysis and inline comments.
-- **AI-agnostic** — Works with Claude (Anthropic) and Codex (OpenAI).
-- **Recoverable** — Failed runs resume where they left off. No re-executing completed work.
-- **Open source** — MIT licensed, free forever.
+You can reach a working flow by following only those two pages.
 
-## Quick Start
+## Who This Is For
 
-```bash
-# Install
-npm install -g @locusai/cli
+- Engineering teams already using GitHub Issues, Milestones, labels, and PRs as their delivery workflow.
+- Teams that want one operational interface across Claude and Codex instead of provider-specific process.
+- Developers who want built-in planning, execution, review, iteration, and status workflows in one CLI.
+- Teams that want full-auto execution patterns with GitHub-native auditability.
 
-# Initialize in your repo
-locus init
+## What Locus Is Not
 
-# Plan a sprint
-locus plan "Build user authentication with OAuth"
+- Not a replacement for GitHub. GitHub is the system of record.
+- Not a hosted SaaS backend. Locus runs locally and uses `gh` for GitHub operations.
+- Not "just model access". Locus provides orchestration workflows on top of provider CLIs.
+- Not one-click magic. Automation is explicit and configurable (`autoLabel`, `autoPR`, `run --resume`).
 
-# Execute the sprint
-locus run
+## Four Core Strengths
 
-# Review the PRs
-locus review
-```
+1. [Unified interface across multiple AI clients](concepts/ai-providers.md) - switch models/providers without changing workflow.
+2. [GitHub-native workflows as operational memory](concepts/github-backend.md) - issues, milestones, labels, and PRs are the data plane.
+3. [Built-in orchestration tools beyond provider CLIs](cli/overview.md) - use `plan`, `run`, `review`, `iterate`, `status`, and `logs`.
+4. [Automation via auto-approval mode](concepts/execution-model.md) - full-auto execution patterns with resumable runs.
 
-## Prerequisites
+## What You Will Learn Next
 
-- [Node.js](https://nodejs.org) 18 or later
-- [GitHub CLI](https://cli.github.com) (`gh`) installed and authenticated
-- A GitHub repository
-- An AI provider CLI: [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [Codex](https://openai.com/index/introducing-codex/)
+The [Quickstart](getting-started/quickstart.md) walks through:
 
-## How It's Different
+1. Switching between Claude and Codex using the same command surface.
+2. Creating and executing GitHub-native sprint work.
+3. Running built-in `plan -> run -> review -> iterate` workflows.
+4. Enabling automation settings and resuming interrupted execution.
 
-Unlike traditional project management tools, Locus doesn't have its own backend. Your GitHub repository **is** the project management system:
+After that, continue with:
 
-| Concept | GitHub Equivalent |
-|---------|-------------------|
-| Task | GitHub Issue |
-| Sprint | GitHub Milestone |
-| Status | GitHub Labels (`locus:queued`, `locus:in-progress`, `locus:done`) |
-| Priority | GitHub Labels (`p:critical`, `p:high`, `p:medium`, `p:low`) |
-| Type | GitHub Labels (`type:feature`, `type:bug`, `type:chore`, etc.) |
-| Execution Order | GitHub Labels (`order:1`, `order:2`, ...) |
-| Deliverable | Pull Request |
-
-Anyone with access to the GitHub repository can see the project state — no special dashboard required.
+1. [How Locus Works](concepts/how-it-works.md)
+2. [Sprints and Issues](concepts/sprints-and-issues.md)
+3. [CLI Overview](cli/overview.md)

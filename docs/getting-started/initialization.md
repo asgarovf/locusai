@@ -244,4 +244,5 @@ Re-run `locus init` after upgrading the CLI to ensure your project structure mat
 
 Your repository is now set up. Continue to:
 
-* [Your First Sprint](first-sprint.md) -- Plan tasks, execute them with AI, review the results, and iterate
+* [Quickstart](quickstart.md) -- run the fastest end-to-end path from plan to PR
+* [Your First Sprint (Detailed)](first-sprint.md) -- expanded workflow with advanced options
