@@ -32,7 +32,7 @@ Out of scope risks you still need to manage:
 
 | Condition | Behavior | Security Impact |
 |-----------|----------|-----------------|
-| Docker sandbox available | Runs in sandbox automatically | Isolated execution with workspace sync controls |
+| Docker sandbox available and provider sandboxes configured (`locus sandbox`) | Runs in sandbox | Isolated execution with workspace sync controls |
 | Docker unavailable (default auto mode) | Warns and runs unsandboxed | Agent has host-level access; lower security |
 | `--sandbox=require` | Fails if sandbox unavailable | Prevents accidental insecure fallback |
 | `--no-sandbox` | Runs unsandboxed after warning | Explicitly bypasses isolation |
@@ -187,21 +187,11 @@ locus run 42 --sandbox=require
 
 ## Parallel Execution and Lifecycle
 
-When running multiple issues in parallel (`locus run 42 43 44`), each issue gets its own isolated sandbox:
+Locus uses provider-specific persistent sandboxes created by `locus sandbox`.
 
-```text
-locus run 42 43 44
-  -> sandbox "locus-issue-42-<ts>" -> agent executes issue 42
-  -> sandbox "locus-issue-43-<ts>" -> agent executes issue 43
-  -> sandbox "locus-issue-44-<ts>" -> agent executes issue 44
-```
-
-Sandboxes are automatically managed:
-
-1. Created at the start of each agent execution.
-2. Cleaned up after execution (success or failure).
-3. Removed on interruption (SIGINT/SIGTERM).
-4. Stale `locus-*` sandboxes are cleaned up at the start of new runs.
+- `locus run`, `locus exec`, `locus review`, and `locus iterate` execute through the configured provider sandbox.
+- Parallel issue runs can share the same provider sandbox while operating on separate worktrees.
+- Provider sandboxes persist across commands and sessions until removed with `locus sandbox rm`.
 
 ## Troubleshooting
 

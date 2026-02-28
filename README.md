@@ -165,10 +165,10 @@ Install community packages via `locus install <package>`. Build your own with th
 
 | Command | Description |
 |---------|-------------|
-| `locus sandbox` | Create a persistent Docker sandbox |
-| `locus sandbox claude` | Authenticate Claude inside the sandbox |
-| `locus sandbox codex` | Authenticate Codex inside the sandbox |
-| `locus sandbox rm` | Destroy the sandbox |
+| `locus sandbox` | Create provider sandboxes (Claude + Codex) and enable sandbox mode |
+| `locus sandbox claude` | Authenticate Claude inside its sandbox |
+| `locus sandbox codex` | Authenticate Codex inside its sandbox |
+| `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
 | `locus sandbox status` | Show current sandbox state |
 
 ## Workflows
@@ -228,7 +228,7 @@ After `locus init`, your project gets a `.locus/` directory:
 
 Locus supports running AI agents inside **Docker Desktop sandboxes** (4.58+) with one interface for Claude and Codex. Sandbox mode isolates execution from your host and enforces sync controls with `.sandboxignore`.
 
-When Docker Desktop 4.58+ is installed, Locus **automatically** runs agents inside a sandbox. If Docker is not available, it falls back to unsandboxed execution with a warning.
+Sandbox execution requires provider sandboxes configured via `locus sandbox`. In default auto mode, Locus uses sandboxing when Docker is available and provider sandboxes are configured; if Docker is unavailable, it warns and can fall back to unsandboxed execution.
 
 Security defaults and controls:
 
@@ -239,7 +239,7 @@ Security defaults and controls:
 
 | Flag | Behavior |
 |------|----------|
-| *(default)* | Use sandbox if Docker is available; warn and fall back if not |
+| *(default)* | Use sandbox when configured and available; warn and fall back if Docker is unavailable |
 | `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
 | `--sandbox=require` | Require sandbox — fail if Docker sandbox is unavailable |
 

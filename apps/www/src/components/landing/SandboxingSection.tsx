@@ -83,7 +83,7 @@ export function SandboxingSection() {
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href="https://docs.locusai.dev/getting-started/installation"
+              href="https://docs.locusai.dev/getting-started/sandboxing-setup"
               className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/[0.05] transition-colors"
             >
               Setup with Docker
