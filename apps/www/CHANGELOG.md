@@ -1,5 +1,14 @@
 # @locusai/www
 
+## 0.18.1
+
+### Patch Changes
+
+- Screenshot paste support
+  Sandboxing improvements
+- Updated dependencies
+  - @locusai/shared@0.18.1
+
 ## 0.18.0
 
 ### Minor Changes

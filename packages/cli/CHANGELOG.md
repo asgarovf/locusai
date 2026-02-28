@@ -1,5 +1,12 @@
 # @locusai/cli
 
+## 0.18.1
+
+### Patch Changes
+
+- Screenshot paste support
+  Sandboxing improvements
+
 ## 0.18.0
 
 ### Minor Changes

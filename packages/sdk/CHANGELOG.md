@@ -1,5 +1,12 @@
 # @locusai/sdk
 
+## 0.18.1
+
+### Patch Changes
+
+- Screenshot paste support
+  Sandboxing improvements
+
 ## 0.2.0
 
 ### Minor Changes
