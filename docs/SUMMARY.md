@@ -1,6 +1,6 @@
 # Table of contents
 
-## Start Here
+## Getting Started
 
 * [Documentation Home](introduction.md)
 * [Installation](getting-started/installation.md)

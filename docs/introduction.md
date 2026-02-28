@@ -8,7 +8,7 @@ Locus is the unified AI engineering interface for GitHub teams: one CLI to plan,
 
 For canonical landing/docs language, use the [Positioning Brief](content/positioning-brief.md).
 
-## Start Here
+## Getting Started
 
 If you are new to Locus, follow these pages in order:
 
