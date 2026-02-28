@@ -16,7 +16,6 @@ import {
   createUserManagedSandboxRunner,
 } from "../ai/runner.js";
 import { loadConfig } from "../core/config.js";
-import { getLogger } from "../core/logger.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
 import { getProviderSandboxName } from "../core/sandbox.js";
 import { JsonStream } from "../display/json-stream.js";
@@ -33,7 +32,6 @@ export async function execCommand(
   } = {}
 ): Promise<void> {
   const config = loadConfig(projectRoot);
-  const _log = getLogger();
 
   // Session management subcommands
   if (args[0] === "sessions") {
@@ -198,7 +196,7 @@ async function handleJsonStream(
 
     if (!runner) {
       stream.emitError(
-        `Sandbox for provider \"${config.ai.provider}\" is not configured. Run locus sandbox.`,
+        `Sandbox for provider "${config.ai.provider}" is not configured. Run locus sandbox.`,
         false
       );
       return;
