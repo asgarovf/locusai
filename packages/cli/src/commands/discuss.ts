@@ -426,80 +426,69 @@ function buildDiscussionPrompt(
   const parts: string[] = [];
 
   parts.push(
-    `You are a senior software architect and consultant for the ${config.github.owner}/${config.github.repo} project.`
+    `<role>\nYou are a senior software architect and consultant for the ${config.github.owner}/${config.github.repo} project.\n</role>`
   );
-  parts.push("");
 
   // Include LOCUS.md for project context
-  const locusPath = join(projectRoot, "LOCUS.md");
+  const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push("PROJECT CONTEXT:");
-    parts.push(content.slice(0, 3000));
-    parts.push("");
+    parts.push(`<project-context>\n${content.slice(0, 3000)}\n</project-context>`);
   }
 
   // Include LEARNINGS.md
   const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
   if (existsSync(learningsPath)) {
     const content = readFileSync(learningsPath, "utf-8");
-    parts.push("PAST LEARNINGS:");
-    parts.push(content.slice(0, 2000));
-    parts.push("");
+    parts.push(`<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`);
   }
 
-  parts.push(`DISCUSSION TOPIC: ${topic}`);
-  parts.push("");
+  parts.push(`<discussion-topic>\n${topic}\n</discussion-topic>`);
 
   if (conversation.length === 0) {
     // First round: gather information
     parts.push(
-      "Before providing recommendations, you need to ask targeted clarifying questions."
+      `<instructions>
+Before providing recommendations, you need to ask targeted clarifying questions.
+
+Ask 3-5 focused questions that will significantly improve the quality of your analysis.
+Format as a numbered list. Be specific and focused on the most important unknowns.
+Do NOT provide any analysis yet — questions only.
+</instructions>`
     );
-    parts.push("");
-    parts.push(
-      "Ask 3-5 focused questions that will significantly improve the quality of your analysis."
-    );
-    parts.push(
-      "Format as a numbered list. Be specific and focused on the most important unknowns."
-    );
-    parts.push("Do NOT provide any analysis yet — questions only.");
   } else {
     // Include conversation history
-    parts.push("CONVERSATION SO FAR:");
-    parts.push("");
+    const historyLines: string[] = [];
     for (const turn of conversation) {
       if (turn.role === "user") {
-        parts.push(`USER: ${turn.content}`);
+        historyLines.push(`USER: ${turn.content}`);
       } else {
-        parts.push(`ASSISTANT: ${turn.content}`);
+        historyLines.push(`ASSISTANT: ${turn.content}`);
       }
-      parts.push("");
     }
+    parts.push(`<conversation-history>\n${historyLines.join("\n\n")}\n</conversation-history>`);
 
     if (forceFinal) {
       parts.push(
-        "Based on everything discussed, provide your complete analysis and recommendations now."
-      );
-      parts.push(
-        "Format as a thorough markdown document with a clear title (# Heading), sections, trade-offs, and actionable recommendations."
+        `<instructions>
+Based on everything discussed, provide your complete analysis and recommendations now.
+Format as a thorough markdown document with a clear title (# Heading), sections, trade-offs, and actionable recommendations.
+</instructions>`
       );
     } else {
-      parts.push("Review the information gathered so far.");
-      parts.push("");
       parts.push(
-        "If you have enough information to make a thorough recommendation:"
-      );
-      parts.push(
-        "  → Provide a complete analysis as a markdown document with a title (# Heading), sections, trade-offs, and concrete recommendations."
-      );
-      parts.push("");
-      parts.push("If you still need key information to give a good answer:");
-      parts.push(
-        "  → Ask 2-3 more focused follow-up questions (numbered list only, no analysis yet)."
+        `<instructions>
+Review the information gathered so far.
+
+If you have enough information to make a thorough recommendation:
+  → Provide a complete analysis as a markdown document with a title (# Heading), sections, trade-offs, and concrete recommendations.
+
+If you still need key information to give a good answer:
+  → Ask 2-3 more focused follow-up questions (numbered list only, no analysis yet).
+</instructions>`
       );
     }
   }
 
-  return parts.join("\n");
+  return parts.join("\n\n");
 }

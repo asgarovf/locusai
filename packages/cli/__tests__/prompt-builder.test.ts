@@ -65,7 +65,7 @@ describe("prompt-builder", () => {
         config: mockConfig,
         projectRoot: TEST_DIR,
       });
-      expect(prompt).toContain("#42");
+      expect(prompt).toContain('number="42"');
     });
 
     it("includes labels", () => {
@@ -84,7 +84,7 @@ describe("prompt-builder", () => {
         config: mockConfig,
         projectRoot: TEST_DIR,
       });
-      expect(prompt).toContain("Execution Rules");
+      expect(prompt).toContain("<execution-rules>");
       expect(prompt).toContain("conventional commits");
     });
 
@@ -97,7 +97,7 @@ describe("prompt-builder", () => {
         sprintPosition: "2 of 5",
         sprintContext: "+added some code",
       });
-      expect(prompt).toContain("Sprint Context");
+      expect(prompt).toContain("<sprint-context>");
       expect(prompt).toContain("Sprint 1");
       expect(prompt).toContain("2 of 5");
       expect(prompt).toContain("+added some code");
@@ -105,7 +105,7 @@ describe("prompt-builder", () => {
 
     it("includes LOCUS.md when present", () => {
       writeFileSync(
-        join(TEST_DIR, "LOCUS.md"),
+        join(TEST_DIR, ".locus", "LOCUS.md"),
         "# Project Rules\nUse TypeScript."
       );
       const prompt = buildExecutionPrompt({
@@ -151,7 +151,7 @@ describe("prompt-builder", () => {
         prComments: [],
         prNumber: 99,
       });
-      expect(prompt).toContain("PR #99");
+      expect(prompt).toContain('<pr-context number="99">');
       expect(prompt).toContain("+function newFeature() {}");
     });
 
@@ -191,7 +191,7 @@ describe("prompt-builder", () => {
     });
 
     it("includes LOCUS.md context", () => {
-      writeFileSync(join(TEST_DIR, "LOCUS.md"), "# My Project\nBe concise.");
+      writeFileSync(join(TEST_DIR, ".locus", "LOCUS.md"), "# My Project\nBe concise.");
       const prompt = buildReplPrompt("hello", TEST_DIR, mockConfig);
       expect(prompt).toContain("My Project");
       expect(prompt).toContain("Be concise");

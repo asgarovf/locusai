@@ -483,16 +483,21 @@ async function handleFromIssues(
     .join("\n\n");
 
   const { runAI } = await import("../ai/run-ai.js");
-  const prompt = `You are organizing GitHub issues for a sprint. Analyze these issues and suggest the optimal execution order.
+  const prompt = `<role>
+You are organizing GitHub issues for a sprint. Analyze these issues and suggest the optimal execution order.
+</role>
 
-Issues:
+<issues>
 ${issueDescriptions}
+</issues>
 
+<instructions>
 For each issue, output a line in this format:
 ORDER: #<number> <reason for this position>
 
 Order them so that dependencies are respected (issues that produce code needed by later issues should come first).
-Start with foundational/setup tasks, then core features, then integration/testing.`;
+Start with foundational/setup tasks, then core features, then integration/testing.
+</instructions>`;
 
   const aiResult = await runAI({
     prompt,
@@ -587,78 +592,60 @@ function buildPlanningPrompt(
   const parts: string[] = [];
 
   parts.push(
-    `You are a sprint planning assistant for the GitHub repository ${config.github.owner}/${config.github.repo}.`
+    `<role>\nYou are a sprint planning assistant for the GitHub repository ${config.github.owner}/${config.github.repo}.\n</role>`
   );
-  parts.push("");
-  parts.push(`DIRECTIVE: ${directive}`);
-  if (sprintName) {
-    parts.push(`SPRINT: ${sprintName}`);
-  }
-  parts.push("");
+
+  parts.push(`<directive>\n${directive}${sprintName ? `\n\n**Sprint:** ${sprintName}` : ""}\n</directive>`);
 
   // Include LOCUS.md if it exists
-  const locusPath = join(projectRoot, "LOCUS.md");
+  const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push("PROJECT CONTEXT (LOCUS.md):");
-    parts.push(content.slice(0, 3000));
-    parts.push("");
+    parts.push(`<project-context>\n${content.slice(0, 3000)}\n</project-context>`);
   }
 
   // Include LEARNINGS.md if it exists
   const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
   if (existsSync(learningsPath)) {
     const content = readFileSync(learningsPath, "utf-8");
-    parts.push("PAST LEARNINGS:");
-    parts.push(content.slice(0, 2000));
-    parts.push("");
+    parts.push(`<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`);
   }
 
-  parts.push("TASK:");
-  parts.push(
-    `Break down the directive into specific, actionable GitHub issues and write them to the file: ${planPathRelative}`
-  );
-  parts.push("");
-  parts.push(
-    `Write ONLY a valid JSON file to ${planPathRelative} with this exact structure:`
-  );
-  parts.push("");
-  parts.push("```json");
-  parts.push("{");
-  parts.push(`  "id": "${id}",`);
-  parts.push(`  "directive": ${JSON.stringify(directive)},`);
-  parts.push(
-    `  "sprint": ${sprintName ? JSON.stringify(sprintName) : "null"},`
-  );
-  parts.push(`  "createdAt": "${new Date().toISOString()}",`);
-  parts.push('  "issues": [');
-  parts.push("    {");
-  parts.push('      "order": 1,');
-  parts.push('      "title": "concise issue title",');
-  parts.push(
-    '      "body": "detailed markdown body with acceptance criteria",'
-  );
-  parts.push('      "priority": "critical|high|medium|low",');
-  parts.push('      "type": "feature|bug|chore|refactor|docs",');
-  parts.push('      "dependsOn": "none or comma-separated order numbers"');
-  parts.push("    }");
-  parts.push("  ]");
-  parts.push("}");
-  parts.push("```");
-  parts.push("");
-  parts.push("Requirements for the issues:");
-  parts.push("- Break the directive into 3-10 specific, actionable issues");
-  parts.push("- Each issue must be independently executable by an AI agent");
-  parts.push(
-    "- Order them so dependencies are respected (foundational tasks first)"
-  );
-  parts.push("- Write detailed issue bodies with clear acceptance criteria");
-  parts.push("- Use valid GitHub Markdown only in issue bodies");
-  parts.push(
-    "- Create the file using the Write tool — do not print the JSON to the terminal"
-  );
+  parts.push(`<task>
+Break down the directive into specific, actionable GitHub issues and write them to the file: ${planPathRelative}
 
-  return parts.join("\n");
+Write ONLY a valid JSON file to ${planPathRelative} with this exact structure:
+
+\`\`\`json
+{
+  "id": "${id}",
+  "directive": ${JSON.stringify(directive)},
+  "sprint": ${sprintName ? JSON.stringify(sprintName) : "null"},
+  "createdAt": "${new Date().toISOString()}",
+  "issues": [
+    {
+      "order": 1,
+      "title": "concise issue title",
+      "body": "detailed markdown body with acceptance criteria",
+      "priority": "critical|high|medium|low",
+      "type": "feature|bug|chore|refactor|docs",
+      "dependsOn": "none or comma-separated order numbers"
+    }
+  ]
+}
+\`\`\`
+</task>`);
+
+  parts.push(`<requirements>
+- Break the directive into 3-10 specific, actionable issues
+- Each issue must be independently executable by an AI agent
+- Order them so dependencies are respected (foundational tasks first)
+- Write detailed issue bodies with clear acceptance criteria
+- Use valid GitHub Markdown only in issue bodies
+- Create the file using the Write tool — do not print the JSON to the terminal
+</requirements>`);
+
+  return parts.join("\n\n");
 }
 
 export function sanitizePlanOutput(output: string): string {

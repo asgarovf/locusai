@@ -7,6 +7,7 @@
  *   show    — Show issue details
  *   label   — Bulk-assign issues to a sprint or add labels
  *   close   — Close an issue
+ *   delete  — Permanently delete one or more issues
  */
 
 import { createInterface } from "node:readline";
@@ -14,6 +15,7 @@ import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import {
   createIssue,
+  deleteIssue,
   getIssue,
   gh,
   listIssues,
@@ -144,6 +146,10 @@ export async function issueCommand(
       break;
     case "close":
       await issueClose(projectRoot, parsed);
+      break;
+    case "delete":
+    case "rm":
+      await issueDelete(projectRoot, parsed);
       break;
     default:
       // If subcommand looks like a number, treat it as `show <number>`
@@ -307,20 +313,26 @@ async function issueCreate(
 // ─── Issue Creation Helpers ───────────────────────────────────────────────────
 
 function buildIssueCreationPrompt(userRequest: string): string {
-  return [
-    "You are a task planner for a software development team.",
-    "Given a user request, create a well-structured GitHub issue.",
-    "",
-    "Output ONLY a valid JSON object with exactly these fields:",
-    '- "title": A concise, actionable issue title (max 80 characters)',
-    '- "body": Detailed markdown description with context, acceptance criteria, and technical notes',
-    '- "priority": One of: critical, high, medium, low',
-    '- "type": One of: feature, bug, chore, refactor, docs',
-    "",
-    `User request: ${userRequest}`,
-    "",
-    "Output ONLY the JSON object. No explanations, no code execution, no other text.",
-  ].join("\n");
+  return `<role>
+You are a task planner for a software development team.
+Given a user request, create a well-structured GitHub issue.
+</role>
+
+<output-format>
+Output ONLY a valid JSON object with exactly these fields:
+- "title": A concise, actionable issue title (max 80 characters)
+- "body": Detailed markdown description with context, acceptance criteria, and technical notes
+- "priority": One of: critical, high, medium, low
+- "type": One of: feature, bug, chore, refactor, docs
+</output-format>
+
+<user-request>
+${userRequest}
+</user-request>
+
+<constraints>
+Output ONLY the JSON object. No explanations, no code execution, no other text.
+</constraints>`;
 }
 
 function extractJSON(text: string): string {
@@ -652,6 +664,61 @@ async function issueClose(
   }
 }
 
+async function issueDelete(
+  projectRoot: string,
+  parsed: IssueArgs
+): Promise<void> {
+  const issueNumbers = parsed.positional
+    .filter((a) => /^\d+$/.test(a))
+    .map(Number);
+
+  if (issueNumbers.length === 0) {
+    process.stderr.write(`${red("✗")} No issue numbers provided.\n`);
+    process.stderr.write(
+      `  Usage: ${bold("locus issue delete <number...>")}\n`
+    );
+    process.exit(1);
+  }
+
+  // Confirmation prompt
+  const label =
+    issueNumbers.length === 1
+      ? `issue #${issueNumbers[0]}`
+      : `${issueNumbers.length} issues (#${issueNumbers.join(", #")})`;
+
+  process.stderr.write(
+    `${yellow("⚠")} This will ${bold("permanently delete")} ${label}.\n`
+  );
+
+  const answer = await askQuestion(
+    `${cyan("?")} Are you sure? ${dim("[y/N]")} `
+  );
+  if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
+    process.stderr.write(`${yellow("○")} Cancelled.\n`);
+    return;
+  }
+
+  let failed = 0;
+  for (const num of issueNumbers) {
+    process.stderr.write(`${cyan("●")} Deleting issue #${num}...`);
+    try {
+      deleteIssue(num, { cwd: projectRoot });
+      process.stderr.write(`\r${green("✓")} Deleted issue #${num}\n`);
+    } catch (e) {
+      process.stderr.write(
+        `\r${red("✗")} #${num}: ${(e as Error).message}\n`
+      );
+      failed++;
+    }
+  }
+
+  if (issueNumbers.length > 1 && failed === 0) {
+    process.stderr.write(
+      `\n${green("✓")} All ${issueNumbers.length} issues deleted.\n`
+    );
+  }
+}
+
 // ─── Formatting Helpers ──────────────────────────────────────────────────────
 
 function formatPriority(labels: string[]): string {
@@ -750,6 +817,7 @@ ${bold("Subcommands:")}
   ${cyan("show")}          Show issue details
   ${cyan("label")}         Bulk-update labels / sprint assignment
   ${cyan("close")}         Close an issue
+  ${cyan("delete")} ${dim("(rm)")}  Permanently delete issues (bulk)
 
 ${bold("Create options:")}
   ${dim("--sprint, -s")}   Assign to sprint (milestone)
@@ -771,6 +839,7 @@ ${bold("Examples:")}
   locus issue show 42
   locus issue label 42 43 --sprint "Sprint 2"
   locus issue close 42
+  locus issue delete 42 43 44
 
 `);
 }

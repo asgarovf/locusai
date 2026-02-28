@@ -240,55 +240,47 @@ function buildReviewPrompt(
   const parts: string[] = [];
 
   parts.push(
-    `You are an expert code reviewer for the ${config.github.owner}/${config.github.repo} repository.`
+    `<role>\nYou are an expert code reviewer for the ${config.github.owner}/${config.github.repo} repository.\n</role>`
   );
-  parts.push("");
 
   // Include LOCUS.md for project context
-  const locusPath = join(projectRoot, "LOCUS.md");
+  const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push("PROJECT CONTEXT:");
-    parts.push(content.slice(0, 2000));
-    parts.push("");
+    parts.push(`<project-context>\n${content.slice(0, 2000)}\n</project-context>`);
   }
 
-  parts.push(`PULL REQUEST #${pr.number}: ${pr.title}`);
-  parts.push(`Branch: ${pr.head} → ${pr.base}`);
+  const prMeta = [`Branch: ${pr.head} → ${pr.base}`];
   if (pr.body) {
-    parts.push(`Description:\n${pr.body.slice(0, 1000)}`);
+    prMeta.push(`Description:\n${pr.body.slice(0, 1000)}`);
   }
-  parts.push("");
-  parts.push("DIFF:");
-  parts.push(diff.slice(0, 50000));
-  parts.push("");
-  parts.push("REVIEW INSTRUCTIONS:");
-  parts.push("Provide a thorough code review. For each issue found, describe:");
-  parts.push("1. The file and approximate location");
-  parts.push("2. What the issue is");
-  parts.push("3. Why it matters");
-  parts.push("4. How to fix it");
-  parts.push("");
-  parts.push("Categories to check:");
-  parts.push("- Correctness: bugs, logic errors, edge cases");
-  parts.push("- Security: injection, XSS, auth issues, secret exposure");
   parts.push(
-    "- Performance: N+1 queries, unnecessary allocations, missing caching"
+    `<pull-request number="${pr.number}" title="${pr.title}">\n${prMeta.join("\n")}\n</pull-request>`
   );
-  parts.push("- Maintainability: naming, complexity, code organization");
-  parts.push("- Testing: missing tests, inadequate coverage");
+
+  parts.push(`<diff>\n${diff.slice(0, 50000)}\n</diff>`);
+
+  let instructions = `Provide a thorough code review. For each issue found, describe:
+1. The file and approximate location
+2. What the issue is
+3. Why it matters
+4. How to fix it
+
+Categories to check:
+- Correctness: bugs, logic errors, edge cases
+- Security: injection, XSS, auth issues, secret exposure
+- Performance: N+1 queries, unnecessary allocations, missing caching
+- Maintainability: naming, complexity, code organization
+- Testing: missing tests, inadequate coverage`;
 
   if (focus) {
-    parts.push("");
-    parts.push(`FOCUS AREAS: ${focus}`);
-    parts.push("Pay special attention to the above areas.");
+    instructions += `\n\n**Focus areas:** ${focus}\nPay special attention to the above areas.`;
   }
 
-  parts.push("");
-  parts.push(
-    "End with an overall assessment: APPROVE, REQUEST_CHANGES, or COMMENT."
-  );
-  parts.push("Be constructive and specific. Praise good patterns too.");
+  instructions += `\n\nEnd with an overall assessment: APPROVE, REQUEST_CHANGES, or COMMENT.
+Be constructive and specific. Praise good patterns too.`;
 
-  return parts.join("\n");
+  parts.push(`<review-instructions>\n${instructions}\n</review-instructions>`);
+
+  return parts.join("\n\n");
 }

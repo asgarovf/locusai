@@ -11,7 +11,10 @@
  *   locus exec --json-stream          # NDJSON mode for VSCode extension
  */
 
-import { createRunnerAsync, createUserManagedSandboxRunner } from "../ai/runner.js";
+import {
+  createRunnerAsync,
+  createUserManagedSandboxRunner,
+} from "../ai/runner.js";
 import { loadConfig } from "../core/config.js";
 import { getLogger } from "../core/logger.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";

@@ -88,14 +88,14 @@ export function buildReplPrompt(
   const sections: string[] = [];
 
   // System context (lighter — just LOCUS.md + learnings)
-  const locusmd = readFileSafe(join(projectRoot, "LOCUS.md"));
+  const locusmd = readFileSafe(join(projectRoot, ".locus", "LOCUS.md"));
   if (locusmd) {
-    sections.push(`# Project Instructions\n\n${locusmd}`);
+    sections.push(`<project-instructions>\n${locusmd}\n</project-instructions>`);
   }
 
   const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
   if (learnings) {
-    sections.push(`# Past Learnings\n\n${learnings}`);
+    sections.push(`<past-learnings>\n${learnings}\n</past-learnings>`);
   }
 
   // Previous conversation history (last 10 exchanges for context)
@@ -104,11 +104,11 @@ export function buildReplPrompt(
     const historyLines = recent.map(
       (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
     );
-    sections.push(`# Previous Conversation\n\n${historyLines.join("\n\n")}`);
+    sections.push(`<previous-conversation>\n${historyLines.join("\n\n")}\n</previous-conversation>`);
   }
 
   // User's current message
-  sections.push(`# Current Request\n\n${userMessage}`);
+  sections.push(`<current-request>\n${userMessage}\n</current-request>`);
 
   return sections.join("\n\n---\n\n");
 }
@@ -116,18 +116,18 @@ export function buildReplPrompt(
 // ─── Section Builders ───────────────────────────────────────────────────────
 
 function buildSystemContext(projectRoot: string): string {
-  const parts: string[] = ["# System Context"];
+  const parts: string[] = [];
 
   // LOCUS.md — primary project instructions
-  const locusmd = readFileSafe(join(projectRoot, "LOCUS.md"));
+  const locusmd = readFileSafe(join(projectRoot, ".locus", "LOCUS.md"));
   if (locusmd) {
-    parts.push(`## Project Instructions (LOCUS.md)\n\n${locusmd}`);
+    parts.push(`<project-instructions>\n${locusmd}\n</project-instructions>`);
   }
 
   // LEARNINGS.md — accumulated knowledge
   const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
   if (learnings) {
-    parts.push(`## Past Learnings\n\n${learnings}`);
+    parts.push(`<past-learnings>\n${learnings}\n</past-learnings>`);
   }
 
   // Discussion insights (if any)
@@ -140,8 +140,9 @@ function buildSystemContext(projectRoot: string): string {
       for (const file of files) {
         const content = readFileSafe(join(discussionsDir, file));
         if (content) {
+          const name = file.replace(".md", "");
           parts.push(
-            `## Discussion: ${file.replace(".md", "")}\n\n${content.slice(0, 2000)}`
+            `<discussion name="${name}">\n${content.slice(0, 2000)}\n</discussion>`
           );
         }
       }
@@ -150,35 +151,34 @@ function buildSystemContext(projectRoot: string): string {
     }
   }
 
-  return parts.join("\n\n");
+  return `<system-context>\n${parts.join("\n\n")}\n</system-context>`;
 }
 
 function buildTaskContext(issue: Issue, comments?: string[]): string {
-  const parts: string[] = [
-    `# Task Context`,
-    ``,
-    `## Issue #${issue.number}: ${issue.title}`,
-    ``,
-    issue.body || "_No description provided._",
-  ];
+  const parts: string[] = [];
+
+  const issueParts: string[] = [issue.body || "_No description provided._"];
 
   // Labels
   const labels = issue.labels.filter(
     (l) => l.startsWith("p:") || l.startsWith("type:")
   );
   if (labels.length > 0) {
-    parts.push(`\n**Labels:** ${labels.join(", ")}`);
+    issueParts.push(`**Labels:** ${labels.join(", ")}`);
   }
+
+  parts.push(
+    `<issue number="${issue.number}" title="${issue.title}">\n${issueParts.join("\n\n")}\n</issue>`
+  );
 
   // Issue comments (conversation)
   if (comments && comments.length > 0) {
-    parts.push(`\n## Issue Comments\n`);
-    for (const comment of comments) {
-      parts.push(comment);
-    }
+    parts.push(
+      `<issue-comments>\n${comments.join("\n")}\n</issue-comments>`
+    );
   }
 
-  return parts.join("\n");
+  return `<task-context>\n${parts.join("\n\n")}\n</task-context>`;
 }
 
 function buildSprintContext(
@@ -186,7 +186,7 @@ function buildSprintContext(
   position?: string,
   diffSummary?: string
 ): string {
-  const parts: string[] = ["# Sprint Context"];
+  const parts: string[] = [];
 
   if (sprintName) {
     parts.push(`**Sprint:** ${sprintName}`);
@@ -197,19 +197,19 @@ function buildSprintContext(
 
   if (diffSummary) {
     parts.push(
-      `\n## Changes from Previous Tasks\n\nThe following changes have already been made by earlier tasks in this sprint:\n\n\`\`\`diff\n${diffSummary}\n\`\`\``
+      `<previous-changes>\nThe following changes have already been made by earlier tasks in this sprint:\n\n\`\`\`diff\n${diffSummary}\n\`\`\`\n</previous-changes>`
     );
   }
 
   parts.push(
-    `\n**Important:** Build upon the changes from previous tasks. Do not revert or undo their work.`
+    `**Important:** Build upon the changes from previous tasks. Do not revert or undo their work.`
   );
 
-  return parts.join("\n");
+  return `<sprint-context>\n${parts.join("\n\n")}\n</sprint-context>`;
 }
 
 function buildRepoContext(projectRoot: string): string {
-  const parts: string[] = ["# Repository Context"];
+  const parts: string[] = [];
 
   // File tree (top-level + one level deep, excluding common directories)
   try {
@@ -218,7 +218,7 @@ function buildRepoContext(projectRoot: string): string {
       { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
     ).trim();
     if (tree) {
-      parts.push(`## File Tree\n\n\`\`\`\n${tree}\n\`\`\``);
+      parts.push(`<file-tree>\n\`\`\`\n${tree}\n\`\`\`\n</file-tree>`);
     }
   } catch {
     // Ignore
@@ -232,7 +232,7 @@ function buildRepoContext(projectRoot: string): string {
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
     if (gitLog) {
-      parts.push(`## Recent Commits\n\n\`\`\`\n${gitLog}\n\`\`\``);
+      parts.push(`<recent-commits>\n\`\`\`\n${gitLog}\n\`\`\`\n</recent-commits>`);
     }
   } catch {
     // Ignore
@@ -250,12 +250,11 @@ function buildRepoContext(projectRoot: string): string {
     // Ignore
   }
 
-  return parts.join("\n\n");
+  return `<repository-context>\n${parts.join("\n\n")}\n</repository-context>`;
 }
 
 function buildExecutionRules(config: LocusConfig): string {
-  return `# Execution Rules
-
+  return `<execution-rules>
 1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Every commit message MUST be multi-line: the first line is the title, then a blank line, then \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a Git trailer. Use \`git commit -m "<title>" -m "Co-Authored-By: LocusAgent <agent@locusai.team>"\` (two separate -m flags) to ensure the trailer is on its own line.
 2. **Code quality:** Follow existing code style. Run linters/formatters if available.
 3. **Testing:** If test files exist for modified code, update them accordingly.
@@ -267,7 +266,8 @@ function buildExecutionRules(config: LocusConfig): string {
 5. **Base branch:** ${config.agent.baseBranch}
 6. **Provider:** ${config.ai.provider} / ${config.ai.model}
 
-When you are done, provide a brief summary of what you changed and why.`;
+When you are done, provide a brief summary of what you changed and why.
+</execution-rules>`;
 }
 
 function buildPRContext(
@@ -276,33 +276,26 @@ function buildPRContext(
   comments: string[]
 ): string {
   const parts: string[] = [
-    `# Current State — PR #${prNumber}`,
-    ``,
-    `## PR Diff`,
-    ``,
-    "```diff",
-    diff.slice(0, 10000), // Truncate very large diffs
-    "```",
+    `<pr-diff>\n\`\`\`diff\n${diff.slice(0, 10000)}\n\`\`\`\n</pr-diff>`,
   ];
 
   if (comments.length > 0) {
-    parts.push(`\n## Review Comments\n`);
-    for (const comment of comments) {
-      parts.push(comment);
-    }
+    parts.push(
+      `<review-comments>\n${comments.join("\n")}\n</review-comments>`
+    );
   }
 
-  return parts.join("\n");
+  return `<pr-context number="${prNumber}">\n${parts.join("\n\n")}\n</pr-context>`;
 }
 
 function buildFeedbackInstructions(): string {
-  return `# Instructions
-
+  return `<instructions>
 1. Address ALL review feedback from the comments above.
 2. Make targeted changes — do NOT rewrite code from scratch.
 3. If a reviewer comment is unclear, make your best judgment and note your interpretation.
 4. Push changes to the same branch — do NOT create a new PR.
-5. When done, summarize what you changed in response to each comment.`;
+5. When done, summarize what you changed in response to each comment.
+</instructions>`;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

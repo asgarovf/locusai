@@ -283,6 +283,13 @@ export function updateIssueLabels(
   gh(args, options);
 }
 
+export function deleteIssue(
+  number: number,
+  options: GhOptions = {}
+): void {
+  gh(`issue delete ${number} --yes`, options);
+}
+
 export function addIssueComment(
   number: number,
   body: string,
