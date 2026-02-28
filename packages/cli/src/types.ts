@@ -44,10 +44,15 @@ export interface LoggingConfig {
 
 export type LogLevel = "silent" | "normal" | "verbose" | "debug";
 
+export interface ProviderSandboxes {
+  claude?: string;
+  codex?: string;
+}
+
 export interface SandboxConfig {
   enabled: boolean;
-  /** Name of the user-managed persistent sandbox (set by `locus sandbox`). */
-  name?: string;
+  /** User-managed persistent sandbox names per provider (set by `locus sandbox`). */
+  providers: ProviderSandboxes;
   extraWorkspaces: string[];
   readOnlyPaths: string[];
 }
@@ -318,14 +323,6 @@ export interface LogEntry {
   level: LogLevel;
   msg: string;
   [key: string]: unknown;
-}
-
-// ─── Config Migration ────────────────────────────────────────────────────────
-
-export interface ConfigMigration {
-  from: string;
-  to: string;
-  migrate: (config: Record<string, unknown>) => Record<string, unknown>;
 }
 
 // ─── Command Result ──────────────────────────────────────────────────────────

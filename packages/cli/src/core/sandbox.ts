@@ -7,7 +7,8 @@
 import { execFile } from "node:child_process";
 import { createInterface } from "node:readline";
 import { bold, dim, red, yellow } from "../display/terminal.js";
-import type { SandboxConfig } from "../types.js";
+import type { AIProvider, SandboxConfig } from "../types.js";
+import { inferProviderFromModel } from "./ai-models.js";
 import { getLogger } from "./logger.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -18,6 +19,22 @@ export interface SandboxStatus {
 }
 
 export type SandboxMode = "auto" | "disabled" | "required";
+
+export function getProviderSandboxName(
+  config: SandboxConfig,
+  provider: AIProvider
+): string | undefined {
+  return config.providers[provider];
+}
+
+export function getModelSandboxName(
+  config: SandboxConfig,
+  model: string,
+  fallbackProvider: AIProvider
+): string | undefined {
+  const provider = inferProviderFromModel(model) ?? fallbackProvider;
+  return getProviderSandboxName(config, provider);
+}
 
 // ─── Detection ───────────────────────────────────────────────────────────────
 

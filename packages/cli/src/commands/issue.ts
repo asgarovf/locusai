@@ -22,6 +22,7 @@ import {
   updateIssueLabels,
 } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
+import { getModelSandboxName } from "../core/sandbox.js";
 import { type Column, renderDetails, renderTable } from "../display/table.js";
 import {
   blue,
@@ -197,7 +198,11 @@ async function issueCreate(
     silent: true,
     activity: "generating issue",
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      config.ai.model,
+      config.ai.provider
+    ),
   });
 
   if (!aiResult.success && !aiResult.interrupted) {

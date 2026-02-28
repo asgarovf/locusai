@@ -5,15 +5,12 @@
  */
 
 import { execSync } from "node:child_process";
-import {
-  buildPersistentSandboxName,
-  SandboxedClaudeRunner,
-} from "../ai/claude-sandbox.js";
 import { runAI } from "../ai/run-ai.js";
 import { createUserManagedSandboxRunner } from "../ai/runner.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
-import { bold, cyan, dim, green, red } from "../display/terminal.js";
+import { getModelSandboxName, getProviderSandboxName } from "../core/sandbox.js";
+import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { AgentRunner, LocusConfig, Session } from "../types.js";
 import { getAllCommandNames, handleSlashCommand } from "./commands.js";
 import {
@@ -150,24 +147,20 @@ async function runInteractiveRepl(
 
   // ── Persistent sandbox: create once, reuse for all REPL turns ──────────
   let sandboxRunner: AgentRunner | null = null;
-  if (config.sandbox.enabled && config.sandbox.name) {
-    // User-managed sandbox (created by `locus sandbox`)
+  if (config.sandbox.enabled) {
     const provider =
       inferProviderFromModel(config.ai.model) || config.ai.provider;
-    sandboxRunner = createUserManagedSandboxRunner(
-      provider,
-      config.sandbox.name
-    );
-    process.stderr.write(
-      `${dim("Using sandbox")} ${dim(config.sandbox.name)}\n`
-    );
-  } else if (config.sandbox.enabled) {
-    // Auto-managed persistent sandbox (legacy)
-    const sandboxName = buildPersistentSandboxName(projectRoot);
-    sandboxRunner = new SandboxedClaudeRunner(sandboxName);
-    process.stderr.write(
-      `${dim("Sandbox mode: prompts will share sandbox")} ${dim(sandboxName)}\n`
-    );
+    const sandboxName = getProviderSandboxName(config.sandbox, provider);
+    if (sandboxName) {
+      sandboxRunner = createUserManagedSandboxRunner(provider, sandboxName);
+      process.stderr.write(
+        `${dim("Using")} ${dim(provider)} ${dim("sandbox")} ${dim(sandboxName)}\n`
+      );
+    } else {
+      process.stderr.write(
+        `${yellow("⚠")} ${dim(`No sandbox configured for ${provider}. Run locus sandbox.`)}\n`
+      );
+    }
   }
 
   // Initialize input handler
@@ -212,14 +205,25 @@ async function runInteractiveRepl(
         session.metadata.provider = inferredProvider;
 
         // Recreate sandbox runner when provider changes
-        if (providerChanged && config.sandbox.enabled && config.sandbox.name) {
-          sandboxRunner = createUserManagedSandboxRunner(
-            inferredProvider,
-            config.sandbox.name
+        if (providerChanged && config.sandbox.enabled) {
+          const sandboxName = getProviderSandboxName(
+            config.sandbox,
+            inferredProvider
           );
-          process.stderr.write(
-            `${dim("Switched sandbox agent to")} ${dim(inferredProvider)}\n`
-          );
+          if (sandboxName) {
+            sandboxRunner = createUserManagedSandboxRunner(
+              inferredProvider,
+              sandboxName
+            );
+            process.stderr.write(
+              `${dim("Switched sandbox agent to")} ${dim(inferredProvider)} ${dim(`(${sandboxName})`)}\n`
+            );
+          } else {
+            sandboxRunner = null;
+            process.stderr.write(
+              `${yellow("⚠")} ${dim(`No sandbox configured for ${inferredProvider}. Run locus sandbox.`)}\n`
+            );
+          }
         }
       }
       persistReplModelSelection(projectRoot, config, model);
@@ -319,13 +323,6 @@ async function runInteractiveRepl(
     }
   }
 
-  // ── Destroy persistent sandbox on REPL exit ───────────────────────────
-  // User-managed sandboxes are never destroyed here (lifecycle controlled by `locus sandbox rm`)
-  if (sandboxRunner && "destroy" in sandboxRunner) {
-    const runner = sandboxRunner as SandboxedClaudeRunner;
-    runner.destroy();
-  }
-
   const shouldPersistOnExit =
     session.messages.length > 0 || sessionManager.isPersisted(session);
 
@@ -354,6 +351,11 @@ async function executeAITurn(
   runner?: AgentRunner
 ): Promise<string> {
   const { config, projectRoot } = options;
+  const sandboxName = getModelSandboxName(
+    config.sandbox,
+    config.ai.model,
+    config.ai.provider
+  );
 
   const aiResult = await runAI({
     prompt,
@@ -362,7 +364,7 @@ async function executeAITurn(
     cwd: projectRoot,
     verbose,
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName,
     runner,
   });
 

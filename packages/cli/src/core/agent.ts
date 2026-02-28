@@ -25,6 +25,7 @@ import {
 } from "./github.js";
 import { getLogger } from "./logger.js";
 import { buildExecutionPrompt, buildFeedbackPrompt } from "./prompt-builder.js";
+import { getModelSandboxName } from "./sandbox.js";
 
 /**
  * Execute a single issue using the AI agent.
@@ -270,7 +271,11 @@ export async function iterateOnPR(
     cwd: projectRoot,
     activity: `iterating on PR #${prNumber}`,
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      config.ai.model,
+      config.ai.provider
+    ),
   });
 
   if (aiResult.interrupted) {

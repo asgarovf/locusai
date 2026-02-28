@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import { getPRDiff, listPRs } from "../core/github.js";
+import { getModelSandboxName } from "../core/sandbox.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { LocusConfig, PullRequest } from "../types.js";
@@ -186,7 +187,11 @@ async function reviewPR(
     cwd: projectRoot,
     activity: `PR #${pr.number}`,
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    ),
   });
 
   if (aiResult.interrupted) {

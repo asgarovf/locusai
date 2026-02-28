@@ -13,11 +13,17 @@ export function createRunner(
   provider: AIProvider,
   sandboxed?: boolean
 ): AgentRunner {
+  if (sandboxed) {
+    throw new Error(
+      "Sandboxed runner creation requires a provider sandbox name. Use createUserManagedSandboxRunner()."
+    );
+  }
+
   switch (provider) {
     case "claude":
-      return sandboxed ? new SandboxedClaudeRunner() : new ClaudeRunner();
+      return new ClaudeRunner();
     case "codex":
-      return sandboxed ? new SandboxedCodexRunner() : new CodexRunner();
+      return new CodexRunner();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
@@ -28,11 +34,17 @@ export async function createRunnerAsync(
   provider: AIProvider,
   sandboxed: boolean
 ): Promise<AgentRunner> {
+  if (sandboxed) {
+    throw new Error(
+      "Sandboxed runner creation requires a provider sandbox name. Use createUserManagedSandboxRunner()."
+    );
+  }
+
   switch (provider) {
     case "claude":
-      return sandboxed ? new SandboxedClaudeRunner() : new ClaudeRunner();
+      return new ClaudeRunner();
     case "codex":
-      return sandboxed ? new SandboxedCodexRunner() : new CodexRunner();
+      return new CodexRunner();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
@@ -48,9 +60,9 @@ export function createUserManagedSandboxRunner(
 ): AgentRunner {
   switch (provider) {
     case "claude":
-      return new SandboxedClaudeRunner(sandboxName, true);
+      return new SandboxedClaudeRunner(sandboxName);
     case "codex":
-      return new SandboxedCodexRunner(sandboxName, true);
+      return new SandboxedCodexRunner(sandboxName);
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }

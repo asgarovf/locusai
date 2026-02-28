@@ -18,6 +18,7 @@ import {
 import { loadConfig } from "../core/config.js";
 import { getLogger } from "../core/logger.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
+import { getProviderSandboxName } from "../core/sandbox.js";
 import { JsonStream } from "../display/json-stream.js";
 import { bold, cyan, dim, green, red } from "../display/terminal.js";
 import { startRepl } from "../repl/repl.js";
@@ -185,9 +186,23 @@ async function handleJsonStream(
 
   try {
     const fullPrompt = buildReplPrompt(prompt, projectRoot, config);
-    const runner = config.sandbox.name
-      ? createUserManagedSandboxRunner(config.ai.provider, config.sandbox.name)
-      : await createRunnerAsync(config.ai.provider, config.sandbox.enabled);
+    const sandboxName = getProviderSandboxName(
+      config.sandbox,
+      config.ai.provider
+    );
+    const runner = config.sandbox.enabled
+      ? sandboxName
+        ? createUserManagedSandboxRunner(config.ai.provider, sandboxName)
+        : null
+      : await createRunnerAsync(config.ai.provider, false);
+
+    if (!runner) {
+      stream.emitError(
+        `Sandbox for provider \"${config.ai.provider}\" is not configured. Run locus sandbox.`,
+        false
+      );
+      return;
+    }
 
     const available = await runner.isAvailable();
     if (!available) {

@@ -10,6 +10,7 @@
  */
 
 import { execSync } from "node:child_process";
+import { inferProviderFromModel } from "../core/ai-models.js";
 import { executeIssue } from "../core/agent.js";
 import { loadConfig } from "../core/config.js";
 import {
@@ -39,6 +40,7 @@ import {
 } from "../core/run-state.js";
 import {
   detectSandboxSupport,
+  getModelSandboxName,
   resolveSandboxMode,
 } from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
@@ -54,6 +56,16 @@ import {
 } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Issue, LocusConfig } from "../types.js";
+
+function resolveExecutionContext(
+  config: LocusConfig,
+  modelOverride?: string
+): { provider: "claude" | "codex"; model: string; sandboxName?: string } {
+  const model = modelOverride ?? config.ai.model;
+  const provider = inferProviderFromModel(model) ?? config.ai.provider;
+  const sandboxName = getModelSandboxName(config.sandbox, model, provider);
+  return { provider, model, sandboxName };
+}
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -194,6 +206,7 @@ async function handleSprintRun(
   sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
+  const execution = resolveExecutionContext(config, flags.model);
 
   // Check for active sprint
   if (!config.sprint.active) {
@@ -389,17 +402,15 @@ async function handleSprintRun(
     saveRunState(projectRoot, state);
 
     // Execute (skip per-task PR — a single sprint PR is created after all tasks).
-    // Sprint tasks always use ephemeral sandboxes (one per task) so the workspace
-    // is fully resynced from the host after each commit. User-managed sandboxes
-    // (config.sandbox.name) are only used in interactive/single-issue commands.
     const result = await executeIssue(projectRoot, {
       issueNumber: task.issue,
-      provider: config.ai.provider,
-      model: flags.model ?? config.ai.model,
+      provider: execution.provider,
+      model: execution.model,
       dryRun: flags.dryRun,
       sprintContext,
       skipPR: true,
       sandboxed,
+      sandboxName: execution.sandboxName,
     });
 
     if (result.success) {
@@ -408,9 +419,8 @@ async function handleSprintRun(
         const issueTitle = issue?.title ?? "";
         ensureTaskCommit(projectRoot, task.issue, issueTitle);
 
-        // In sandboxed mode, the ephemeral sandbox was destroyed on task
-        // completion. The next task will create a fresh sandbox that syncs
-        // the latest committed state from the host.
+        // Sandbox sync is bidirectional with the host workspace, so each task
+        // sees the latest committed state.
         if (sandboxed && i < state.tasks.length - 1) {
           process.stderr.write(
             `  ${dim("↻ Sandbox will resync on next task")}\n`
@@ -490,6 +500,8 @@ async function handleSingleIssue(
   flags: { dryRun?: boolean; model?: string },
   sandboxed: boolean
 ): Promise<void> {
+  const execution = resolveExecutionContext(config, flags.model);
+
   // Check if issue is in a sprint — sprint issues run on the sprint branch, not worktrees
   let isSprintIssue = false;
   try {
@@ -506,11 +518,11 @@ async function handleSingleIssue(
 
     await executeIssue(projectRoot, {
       issueNumber,
-      provider: config.ai.provider,
-      model: flags.model ?? config.ai.model,
+      provider: execution.provider,
+      model: execution.model,
       dryRun: flags.dryRun,
       sandboxed,
-      sandboxName: config.sandbox.name,
+      sandboxName: execution.sandboxName,
     });
     return;
   }
@@ -542,11 +554,11 @@ async function handleSingleIssue(
   const result = await executeIssue(projectRoot, {
     issueNumber,
     worktreePath,
-    provider: config.ai.provider,
-    model: flags.model ?? config.ai.model,
+    provider: execution.provider,
+    model: execution.model,
     dryRun: flags.dryRun,
     sandboxed,
-    sandboxName: config.sandbox.name,
+    sandboxName: execution.sandboxName,
   });
 
   // Clean up worktree on success, preserve on failure for debugging
@@ -572,6 +584,7 @@ async function handleParallelRun(
   sandboxed: boolean
 ): Promise<void> {
   const log = getLogger();
+  const execution = resolveExecutionContext(config, flags.model);
   const maxConcurrent = config.agent.maxParallel;
   process.stderr.write(
     `\n${bold("Running")} ${cyan(`${issueNumbers.length} issues`)} ${dim(`(max ${maxConcurrent} parallel, worktrees)`)}\n\n`
@@ -642,11 +655,11 @@ async function handleParallelRun(
       const result = await executeIssue(projectRoot, {
         issueNumber,
         worktreePath,
-        provider: config.ai.provider,
-        model: flags.model ?? config.ai.model,
+        provider: execution.provider,
+        model: execution.model,
         dryRun: flags.dryRun,
         sandboxed,
-        sandboxName: config.sandbox.name,
+        sandboxName: execution.sandboxName,
       });
 
       if (result.success) {
@@ -717,6 +730,7 @@ async function handleResume(
   config: LocusConfig,
   sandboxed: boolean
 ): Promise<void> {
+  const execution = resolveExecutionContext(config);
   const state = loadRunState(projectRoot);
   if (!state) {
     process.stderr.write(
@@ -773,16 +787,13 @@ async function handleResume(
     markTaskInProgress(state, task.issue);
     saveRunState(projectRoot, state);
 
-    // Sprint tasks use ephemeral sandboxes (one per task) to guarantee a
-    // clean workspace resync after each commit. Non-sprint resumed tasks
-    // can use the user-managed sandbox if configured.
     const result = await executeIssue(projectRoot, {
       issueNumber: task.issue,
-      provider: config.ai.provider,
-      model: config.ai.model,
+      provider: execution.provider,
+      model: execution.model,
       skipPR: isSprintRun,
       sandboxed,
-      sandboxName: isSprintRun ? undefined : config.sandbox.name,
+      sandboxName: execution.sandboxName,
     });
 
     if (result.success) {
@@ -797,7 +808,7 @@ async function handleResume(
         }
         ensureTaskCommit(projectRoot, task.issue, issueTitle);
 
-        // Ephemeral sandbox was destroyed — next task will resync
+        // Sandbox sync is bidirectional with the host workspace.
         if (sandboxed) {
           process.stderr.write(
             `  ${dim("↻ Sandbox will resync on next task")}\n`

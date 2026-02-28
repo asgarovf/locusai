@@ -23,6 +23,7 @@ import {
 import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
+import { getModelSandboxName } from "../core/sandbox.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import { InputHandler } from "../repl/input-handler.js";
@@ -325,7 +326,11 @@ async function startDiscussion(
       cwd: projectRoot,
       activity: "discussion",
       sandboxed: config.sandbox.enabled,
-      sandboxName: config.sandbox.name,
+      sandboxName: getModelSandboxName(
+        config.sandbox,
+        flags.model ?? config.ai.model,
+        config.ai.provider
+      ),
     });
 
     if (aiResult.interrupted) {

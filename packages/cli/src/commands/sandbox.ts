@@ -2,18 +2,26 @@
  * `locus sandbox` — Manage Docker sandbox lifecycle.
  *
  * Usage:
- *   locus sandbox                    # Create a persistent sandbox and enable sandbox mode
- *   locus sandbox claude             # Run claude interactively in the sandbox (for login)
- *   locus sandbox codex              # Run codex interactively in the sandbox (for login)
- *   locus sandbox rm                 # Destroy the sandbox and disable sandbox mode
+ *   locus sandbox                    # Create provider sandboxes and enable sandbox mode
+ *   locus sandbox claude             # Run claude interactively in the claude sandbox (for login)
+ *   locus sandbox codex              # Run codex interactively in the codex sandbox (for login)
+ *   locus sandbox rm                 # Destroy provider sandboxes and disable sandbox mode
  *   locus sandbox status             # Show current sandbox state
  */
 
 import { execSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { basename } from "node:path";
 import { loadConfig, saveConfig } from "../core/config.js";
-import { detectSandboxSupport } from "../core/sandbox.js";
+import {
+  detectSandboxSupport,
+  getProviderSandboxName,
+} from "../core/sandbox.js";
 import { enforceSandboxIgnore } from "../core/sandbox-ignore.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
+import type { AIProvider, ProviderSandboxes } from "../types.js";
+
+const PROVIDERS: AIProvider[] = ["claude", "codex"];
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -22,16 +30,17 @@ function printSandboxHelp(): void {
 ${bold("locus sandbox")} — Manage Docker sandbox lifecycle
 
 ${bold("Usage:")}
-  locus sandbox                     ${dim("# Create sandbox and enable sandbox mode")}
+  locus sandbox                     ${dim("# Create claude/codex sandboxes and enable sandbox mode")}
   locus sandbox claude              ${dim("# Run claude interactively (for login)")}
   locus sandbox codex               ${dim("# Run codex interactively (for login)")}
-  locus sandbox rm                  ${dim("# Destroy sandbox and disable sandbox mode")}
+  locus sandbox rm                  ${dim("# Destroy all provider sandboxes and disable sandbox mode")}
   locus sandbox status              ${dim("# Show current sandbox state")}
 
 ${bold("Flow:")}
-  1. ${cyan("locus sandbox")}          Create the sandbox environment
-  2. ${cyan("locus sandbox claude")}   Login to Claude inside the sandbox
-  3. ${cyan("locus exec")}             All commands now run inside the sandbox
+  1. ${cyan("locus sandbox")}          Create provider sandboxes
+  2. ${cyan("locus sandbox claude")}   Login Claude inside its sandbox
+  3. ${cyan("locus sandbox codex")}    Login Codex inside its sandbox
+  4. ${cyan("locus exec")}/${cyan("locus run")}      Commands resync + execute in provider sandbox
 
 `);
 }
@@ -72,25 +81,6 @@ export async function sandboxCommand(
 async function handleCreate(projectRoot: string): Promise<void> {
   const config = loadConfig(projectRoot);
 
-  // Check if there's already a sandbox
-  if (config.sandbox.name) {
-    const alive = isSandboxAlive(config.sandbox.name);
-    if (alive) {
-      process.stderr.write(
-        `${green("✓")} Sandbox already exists: ${bold(config.sandbox.name)}\n`
-      );
-      process.stderr.write(
-        `  Run ${cyan("locus sandbox claude")} or ${cyan("locus sandbox codex")} to login.\n`
-      );
-      return;
-    }
-    // Sandbox name exists in config but the actual sandbox is gone — clean up
-    process.stderr.write(
-      `${yellow("⚠")} Previous sandbox ${dim(config.sandbox.name)} is no longer running. Creating a new one.\n`
-    );
-  }
-
-  // Check Docker sandbox support
   const status = await detectSandboxSupport();
   if (!status.available) {
     process.stderr.write(
@@ -102,21 +92,55 @@ async function handleCreate(projectRoot: string): Promise<void> {
     return;
   }
 
-  // Reserve a sandbox name — the actual Docker sandbox is created by
-  // `locus sandbox claude/codex` which uses `docker sandbox run` with
-  // the workspace path so files are properly synced into the VM.
-  const segment = projectRoot.split("/").pop() ?? "sandbox";
-  const sandboxName = `locus-${segment}-${Date.now()}`;
+  const sandboxNames = buildProviderSandboxNames(projectRoot);
+  const readySandboxes: ProviderSandboxes = {};
+  let failed = false;
+
+  for (const provider of PROVIDERS) {
+    const name = sandboxNames[provider];
+
+    if (isSandboxAlive(name)) {
+      process.stderr.write(
+        `${green("✓")} ${provider} sandbox ready: ${bold(name)}\n`
+      );
+      readySandboxes[provider] = name;
+      continue;
+    }
+
+    process.stderr.write(
+      `Creating ${bold(provider)} sandbox ${dim(name)} with workspace ${dim(projectRoot)}...\n`
+    );
+
+    const created = await createProviderSandbox(provider, name, projectRoot);
+    if (!created) {
+      process.stderr.write(
+        `${red("✗")} Failed to create ${provider} sandbox (${name}).\n`
+      );
+      failed = true;
+      continue;
+    }
+
+    process.stderr.write(
+      `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
+    );
+    readySandboxes[provider] = name;
+  }
 
   config.sandbox.enabled = true;
-  config.sandbox.name = sandboxName;
+  config.sandbox.providers = readySandboxes;
   saveConfig(projectRoot, config);
 
+  if (failed) {
+    process.stderr.write(
+      `\n${yellow("⚠")} Some sandboxes failed to create. Re-run ${cyan("locus sandbox")} after resolving Docker issues.\n`
+    );
+  }
+
   process.stderr.write(
-    `${green("✓")} Sandbox name reserved: ${bold(sandboxName)}\n`
+    `\n${green("✓")} Sandbox mode enabled with provider-specific sandboxes.\n`
   );
   process.stderr.write(
-    `  Next: run ${cyan("locus sandbox claude")} or ${cyan("locus sandbox codex")} to create the sandbox and login.\n`
+    `  Next: run ${cyan("locus sandbox claude")} and ${cyan("locus sandbox codex")} to authenticate both providers.\n`
   );
 }
 
@@ -124,100 +148,45 @@ async function handleCreate(projectRoot: string): Promise<void> {
 
 async function handleAgentLogin(
   projectRoot: string,
-  agent: "claude" | "codex"
+  agent: AIProvider
 ): Promise<void> {
   const config = loadConfig(projectRoot);
+  const sandboxName = getProviderSandboxName(config.sandbox, agent);
 
-  // Auto-create sandbox name if user went straight to `locus sandbox claude`
-  if (!config.sandbox.name) {
-    const status = await detectSandboxSupport();
-    if (!status.available) {
-      process.stderr.write(
-        `${red("✗")} Docker sandbox not available: ${status.reason}\n`
-      );
-      process.stderr.write(
-        `  Install Docker Desktop 4.58+ with sandbox support.\n`
-      );
-      return;
-    }
-
-    const segment = projectRoot.split("/").pop() ?? "sandbox";
-    config.sandbox.name = `locus-${segment}-${Date.now()}`;
-    config.sandbox.enabled = true;
-    saveConfig(projectRoot, config);
+  if (!sandboxName) {
+    process.stderr.write(
+      `${red("✗")} No ${agent} sandbox configured. Run ${cyan("locus sandbox")} first.\n`
+    );
+    return;
   }
 
-  const sandboxName = config.sandbox.name;
-  const alive = isSandboxAlive(sandboxName);
-
-  let dockerArgs: string[];
-
-  if (alive) {
-    // Sandbox already exists — exec into it
-    if (agent === "codex") {
-      await ensureCodexInSandbox(sandboxName);
-    }
-    process.stderr.write(`Connecting to sandbox ${dim(sandboxName)}...\n`);
-    process.stderr.write(`${dim("Login and then exit when ready.")}\n\n`);
-    dockerArgs = [
-      "sandbox",
-      "exec",
-      "-it",
-      "-w",
-      projectRoot,
-      sandboxName,
-      agent,
-    ];
-  } else if (agent === "codex") {
-    // Codex: Docker sandbox only ships with `claude` pre-installed.
-    // Create the sandbox with `claude` as the base agent, then install codex.
+  if (!isSandboxAlive(sandboxName)) {
     process.stderr.write(
-      `Creating sandbox ${bold(sandboxName)} with workspace ${dim(projectRoot)}...\n`
+      `${red("✗")} ${agent} sandbox is not running: ${dim(sandboxName)}\n`
     );
+    process.stderr.write(
+      `  Recreate it with ${cyan("locus sandbox")}.\n`
+    );
+    return;
+  }
 
-    try {
-      execSync(
-        `docker sandbox run --name ${sandboxName} claude ${projectRoot} -- --version`,
-        { stdio: ["pipe", "pipe", "pipe"], timeout: 120_000 }
-      );
-    } catch {
-      // claude --version exits quickly; non-zero exit is OK as long as sandbox was created
-    }
-
-    if (!isSandboxAlive(sandboxName)) {
-      process.stderr.write(`${red("✗")} Failed to create sandbox.\n`);
-      return;
-    }
-
+  if (agent === "codex") {
     await ensureCodexInSandbox(sandboxName);
-
-    process.stderr.write(`${dim("Login and then exit when ready.")}\n\n`);
-    dockerArgs = [
-      "sandbox",
-      "exec",
-      "-it",
-      "-w",
-      projectRoot,
-      sandboxName,
-      "codex",
-    ];
-  } else {
-    // Claude: create sandbox interactively (existing behavior)
-    process.stderr.write(
-      `Creating sandbox ${bold(sandboxName)} with workspace ${dim(projectRoot)}...\n`
-    );
-    process.stderr.write(`${dim("Login and then exit when ready.")}\n\n`);
-    dockerArgs = ["sandbox", "run", "--name", sandboxName, agent, projectRoot];
   }
 
-  const child = spawn("docker", dockerArgs, {
-    stdio: "inherit", // Forward stdin/stdout/stderr for interactive login
-  });
+  process.stderr.write(`Connecting to ${agent} sandbox ${dim(sandboxName)}...\n`);
+  process.stderr.write(`${dim("Login and then exit when ready.")}\n\n`);
+
+  const child = spawn(
+    "docker",
+    ["sandbox", "exec", "-it", "-w", projectRoot, sandboxName, agent],
+    {
+      stdio: "inherit",
+    }
+  );
 
   await new Promise<void>((resolve) => {
     child.on("close", async (code) => {
-      // Enforce .sandboxignore after login to remove sensitive files
-      // before any subsequent agent exec calls.
       await enforceSandboxIgnore(sandboxName, projectRoot);
 
       if (code === 0) {
@@ -245,31 +214,41 @@ async function handleAgentLogin(
 function handleRemove(projectRoot: string): void {
   const config = loadConfig(projectRoot);
 
-  if (!config.sandbox.name) {
-    process.stderr.write(`${dim("No sandbox to remove.")}\n`);
+  const names = Array.from(
+    new Set(
+      Object.values(config.sandbox.providers).filter(
+        (value): value is string => typeof value === "string" && value.length > 0
+      )
+    )
+  );
+
+  if (names.length === 0) {
+    config.sandbox.enabled = false;
+    config.sandbox.providers = {};
+    saveConfig(projectRoot, config);
+    process.stderr.write(`${dim("No sandboxes to remove. Sandbox mode disabled.")}\n`);
     return;
   }
 
-  const sandboxName = config.sandbox.name;
-  process.stderr.write(`Removing sandbox ${bold(sandboxName)}...\n`);
-
-  try {
-    execSync(`docker sandbox rm ${sandboxName}`, {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-      timeout: 15000,
-    });
-  } catch {
-    // May already be removed
+  for (const sandboxName of names) {
+    process.stderr.write(`Removing sandbox ${bold(sandboxName)}...\n`);
+    try {
+      execSync(`docker sandbox rm ${sandboxName}`, {
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 15000,
+      });
+    } catch {
+      // Best-effort remove (sandbox may already be stopped/removed).
+    }
   }
 
-  // Update config
-  config.sandbox.name = undefined;
+  config.sandbox.providers = {};
   config.sandbox.enabled = false;
   saveConfig(projectRoot, config);
 
   process.stderr.write(
-    `${green("✓")} Sandbox removed. Sandbox mode disabled.\n`
+    `${green("✓")} Provider sandboxes removed. Sandbox mode disabled.\n`
   );
 }
 
@@ -282,27 +261,79 @@ function handleStatus(projectRoot: string): void {
   process.stderr.write(
     `  ${dim("Enabled:")}  ${config.sandbox.enabled ? green("yes") : red("no")}\n`
   );
-  process.stderr.write(
-    `  ${dim("Name:")}     ${config.sandbox.name ? bold(config.sandbox.name) : dim("(none)")}\n`
-  );
 
-  if (config.sandbox.name) {
-    const alive = isSandboxAlive(config.sandbox.name);
+  for (const provider of PROVIDERS) {
+    const name = config.sandbox.providers[provider];
     process.stderr.write(
-      `  ${dim("Running:")}  ${alive ? green("yes") : red("no")}\n`
+      `  ${dim(`${provider}:`).padEnd(15)}${name ? bold(name) : dim("(not configured)")}\n`
     );
 
-    if (!alive) {
+    if (name) {
+      const alive = isSandboxAlive(name);
       process.stderr.write(
-        `\n  ${yellow("⚠")} Sandbox is not running. Run ${bold("locus sandbox")} to create a new one.\n`
+        `  ${dim(`${provider} running:`).padEnd(15)}${alive ? green("yes") : red("no")}\n`
       );
     }
+  }
+
+  if (!config.sandbox.providers.claude || !config.sandbox.providers.codex) {
+    process.stderr.write(
+      `\n  ${yellow("⚠")} Provider sandboxes are incomplete. Run ${bold("locus sandbox")}.\n`
+    );
   }
 
   process.stderr.write("\n");
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildProviderSandboxNames(projectRoot: string): Record<AIProvider, string> {
+  const segment = sanitizeSegment(basename(projectRoot));
+  const hash = createHash("sha1").update(projectRoot).digest("hex").slice(0, 8);
+
+  return {
+    claude: `locus-${segment}-claude-${hash}`,
+    codex: `locus-${segment}-codex-${hash}`,
+  };
+}
+
+function sanitizeSegment(input: string): string {
+  const cleaned = input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return cleaned || "workspace";
+}
+
+async function createProviderSandbox(
+  provider: AIProvider,
+  sandboxName: string,
+  projectRoot: string
+): Promise<boolean> {
+  try {
+    execSync(
+      `docker sandbox run --name ${sandboxName} claude ${projectRoot} -- --version`,
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 120_000,
+      }
+    );
+  } catch {
+    // claude --version exits quickly; non-zero exit is acceptable if sandbox exists
+  }
+
+  if (!isSandboxAlive(sandboxName)) {
+    return false;
+  }
+
+  if (provider === "codex") {
+    await ensureCodexInSandbox(sandboxName);
+  }
+
+  await enforceSandboxIgnore(sandboxName, projectRoot);
+  return true;
+}
 
 /**
  * Ensure the `codex` CLI is installed inside the sandbox.

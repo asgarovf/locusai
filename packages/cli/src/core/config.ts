@@ -4,14 +4,13 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { ConfigMigration, LocusConfig } from "../types.js";
+import type { LocusConfig } from "../types.js";
 import { inferProviderFromModel } from "./ai-models.js";
-import { getLogger } from "./logger.js";
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
 export const DEFAULT_CONFIG: LocusConfig = {
-  version: "3.1.0",
+  version: "3.2.0",
   github: {
     owner: "",
     repo: "",
@@ -39,49 +38,11 @@ export const DEFAULT_CONFIG: LocusConfig = {
   },
   sandbox: {
     enabled: true,
+    providers: {},
     extraWorkspaces: [],
     readOnlyPaths: [],
   },
 };
-
-// ─── Config Migrations ───────────────────────────────────────────────────────
-
-const migrations: ConfigMigration[] = [
-  {
-    from: "3.0",
-    to: "3.1.0",
-    migrate: (config) => {
-      config.sandbox ??= {
-        enabled: true,
-        extraWorkspaces: [],
-        readOnlyPaths: [],
-      };
-      config.version = "3.1.0";
-      return config;
-    },
-  },
-];
-
-/** Apply config migrations in order from current version to latest. */
-function applyMigrations(
-  config: Record<string, unknown>
-): Record<string, unknown> {
-  const currentVersion = (config.version as string) ?? "3.0.0";
-  let migrated = { ...config };
-  let version = currentVersion;
-
-  for (const migration of migrations) {
-    if (version.startsWith(migration.from)) {
-      migrated = migration.migrate(migrated);
-      version = migration.to;
-      getLogger().info(
-        `Migrated config from ${migration.from} → ${migration.to}`
-      );
-    }
-  }
-
-  return migrated;
-}
 
 // ─── Config Operations ───────────────────────────────────────────────────────
 
@@ -107,14 +68,9 @@ export function loadConfig(projectRoot: string): LocusConfig {
     throw new Error(`Failed to parse config at ${configPath}: ${e}`);
   }
 
-  // Apply migrations if version is old
-  const migrated = applyMigrations(raw);
-
   // Merge with defaults (deep merge for nested objects)
-  const config = deepMerge(
-    DEFAULT_CONFIG,
-    migrated as Partial<LocusConfig>
-  ) as LocusConfig;
+  const config = deepMerge(DEFAULT_CONFIG, raw) as LocusConfig;
+
   const inferredProvider = inferProviderFromModel(config.ai.model);
   if (inferredProvider) {
     config.ai.provider = inferredProvider;

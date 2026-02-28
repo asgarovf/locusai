@@ -381,20 +381,18 @@ export async function initCommand(cwd: string): Promise<void> {
     `  Run AI agents in an isolated Docker sandbox for safety.\n\n`
   );
   process.stderr.write(
-    `  ${gray("1.")} ${cyan("locus sandbox")}          ${dim("Create the sandbox environment")}\n`
+    `  ${gray("1.")} ${cyan("locus sandbox")}          ${dim("Create claude/codex sandboxes")}\n`
   );
   process.stderr.write(
     `  ${gray("2.")} ${cyan("locus sandbox claude")}   ${dim("Login to Claude inside the sandbox")}\n`
   );
   process.stderr.write(
-    `  ${gray("3.")} ${cyan("locus exec")}             ${dim("All commands now run sandboxed")}\n`
+    `  ${gray("3.")} ${cyan("locus sandbox codex")}    ${dim("Login to Codex inside the sandbox")}\n`
   );
   process.stderr.write(
-    `\n  ${dim("Using Codex? Run")} ${cyan("locus sandbox codex")} ${dim("instead of step 2.")}\n`
+    `  ${gray("4.")} ${cyan("locus exec")}             ${dim("All commands now run sandboxed")}\n`
   );
-  process.stderr.write(
-    `  ${dim("Learn more:")} ${cyan("locus sandbox help")}\n`
-  );
+  process.stderr.write(`  ${dim("Learn more:")} ${cyan("locus sandbox help")}\n`);
   process.stderr.write("\n");
 
   log.info("Locus initialized", {

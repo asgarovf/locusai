@@ -174,10 +174,22 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
     // Create runner (sandboxed if requested), or reuse a provided one
     if (options.runner) {
       runner = options.runner;
-    } else if (options.sandboxName) {
+    } else if (options.sandboxed ?? true) {
+      if (!options.sandboxName) {
+        indicator.stop();
+        return {
+          success: false,
+          output: "",
+          error:
+            `Sandbox for provider "${resolvedProvider}" is not configured. ` +
+            `Run "locus sandbox" and authenticate via "locus sandbox ${resolvedProvider}".`,
+          interrupted: false,
+          exitCode: 1,
+        };
+      }
       runner = createUserManagedSandboxRunner(resolvedProvider, options.sandboxName);
     } else {
-      runner = await createRunnerAsync(resolvedProvider, options.sandboxed ?? true);
+      runner = await createRunnerAsync(resolvedProvider, false);
     }
 
     // Check availability

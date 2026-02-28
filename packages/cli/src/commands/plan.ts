@@ -37,6 +37,7 @@ import {
   stripAnsi,
   yellow,
 } from "../display/terminal.js";
+import { getModelSandboxName } from "../core/sandbox.js";
 import type { LocusConfig } from "../types.js";
 
 // ─── Help ────────────────────────────────────────────────────────────────────
@@ -372,7 +373,11 @@ async function handleAIPlan(
     cwd: projectRoot,
     activity: "planning",
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    ),
   });
 
   if (aiResult.interrupted) {
@@ -507,7 +512,11 @@ Start with foundational/setup tasks, then core features, then integration/testin
     activity: "issue ordering",
     silent: true,
     sandboxed: config.sandbox.enabled,
-    sandboxName: config.sandbox.name,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    ),
   });
 
   if (aiResult.interrupted) {
