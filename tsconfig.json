@@ -11,7 +11,8 @@
     { "path": "./packages/shared" },
     { "path": "./packages/cli" },
     { "path": "./packages/vscode" },
-    { "path": "./packages/sdk" }
+    { "path": "./packages/sdk" },
+    { "path": "./packages/mcp" }
   ],
-  "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public"]
+  "exclude": ["node_modules", "packages/cli/bin", "packages/cli/public", "packages/mcp/bin"]
 }

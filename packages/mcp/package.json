@@ -1,0 +1,40 @@
+{
+  "name": "@locusai/mcp",
+  "version": "0.18.0",
+  "description": "MCP (Model Context Protocol) server for Locus — use Locus as a Claude Code plugin",
+  "type": "module",
+  "bin": {
+    "locus-mcp": "./bin/locus-mcp.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outfile bin/locus-mcp.js --target node",
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write ."
+  },
+  "files": [
+    "bin",
+    "package.json",
+    "README.md"
+  ],
+  "keywords": [
+    "locus",
+    "mcp",
+    "claude",
+    "plugin",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
