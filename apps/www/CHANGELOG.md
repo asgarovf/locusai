@@ -1,5 +1,16 @@
 # @locusai/www
 
+## 0.19.0
+
+### Minor Changes
+
+- New sandboxing architecture
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/shared@0.19.0
+
 ## 0.18.2
 
 ### Patch Changes

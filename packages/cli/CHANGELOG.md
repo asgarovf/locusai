@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.19.0
+
+### Minor Changes
+
+- New sandboxing architecture
+
 ## 0.18.2
 
 ### Patch Changes
