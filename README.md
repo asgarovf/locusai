@@ -66,7 +66,7 @@ locus review
 locus iterate
 ```
 
-For Docker-first sandbox setup (including `locus sandbox`, `locus sandbox claude`, and `locus sandbox codex`), see:
+For Docker-first sandbox setup and operations (create/auth/install/exec/shell/logs), see:
 - [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
 - [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
@@ -168,6 +168,10 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus sandbox` | Create provider sandboxes (Claude + Codex) and enable sandbox mode |
 | `locus sandbox claude` | Authenticate Claude inside its sandbox |
 | `locus sandbox codex` | Authenticate Codex inside its sandbox |
+| `locus sandbox install <pkg>` | Install global npm package(s) in provider sandbox(s) |
+| `locus sandbox exec <provider> -- <cmd...>` | Run a command inside a provider sandbox |
+| `locus sandbox shell <provider>` | Open an interactive shell in a provider sandbox |
+| `locus sandbox logs <provider>` | Show provider sandbox logs |
 | `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
 | `locus sandbox status` | Show current sandbox state |
 

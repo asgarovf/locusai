@@ -121,7 +121,7 @@ Locus runs `locus run` through provider sandboxes created by `locus sandbox`. Th
 
 Provider sandboxes are persistent and reused across runs until explicitly removed with `locus sandbox rm`.
 
-See also: [Security & Sandboxing](../concepts/security-sandboxing.md)
+See also: [locus sandbox](sandbox.md) and [Security & Sandboxing](../concepts/security-sandboxing.md)
 
 ---
 

@@ -5,6 +5,9 @@
  *   locus sandbox                    # Create provider sandboxes and enable sandbox mode
  *   locus sandbox claude             # Run claude interactively in the claude sandbox (for login)
  *   locus sandbox codex              # Run codex interactively in the codex sandbox (for login)
+ *   locus sandbox install bun        # Install a global package in sandbox(es)
+ *   locus sandbox shell codex        # Open interactive shell in sandbox
+ *   locus sandbox logs codex         # Show sandbox logs
  *   locus sandbox rm                 # Destroy provider sandboxes and disable sandbox mode
  *   locus sandbox status             # Show current sandbox state
  */
@@ -22,6 +25,7 @@ import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { AIProvider, ProviderSandboxes } from "../types.js";
 
 const PROVIDERS: AIProvider[] = ["claude", "codex"];
+type ProviderTarget = AIProvider | "all";
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +37,10 @@ ${bold("Usage:")}
   locus sandbox                     ${dim("# Create claude/codex sandboxes and enable sandbox mode")}
   locus sandbox claude              ${dim("# Run claude interactively (for login)")}
   locus sandbox codex               ${dim("# Run codex interactively (for login)")}
+  locus sandbox install <pkg>       ${dim("# npm install -g package(s) in sandbox(es)")}
+  locus sandbox exec <provider> -- <cmd...> ${dim("# Run one command inside provider sandbox")}
+  locus sandbox shell <provider>    ${dim("# Open interactive shell in provider sandbox")}
+  locus sandbox logs <provider>     ${dim("# Show provider sandbox logs")}
   locus sandbox rm                  ${dim("# Destroy all provider sandboxes and disable sandbox mode")}
   locus sandbox status              ${dim("# Show current sandbox state")}
 
@@ -40,7 +48,7 @@ ${bold("Flow:")}
   1. ${cyan("locus sandbox")}          Create provider sandboxes
   2. ${cyan("locus sandbox claude")}   Login Claude inside its sandbox
   3. ${cyan("locus sandbox codex")}    Login Codex inside its sandbox
-  4. ${cyan("locus exec")}/${cyan("locus run")}      Commands resync + execute in provider sandbox
+  4. ${cyan("locus sandbox install bun")}  Install extra tools (optional)
 
 `);
 }
@@ -60,6 +68,14 @@ export async function sandboxCommand(
     case "claude":
     case "codex":
       return handleAgentLogin(projectRoot, subcommand);
+    case "install":
+      return handleInstall(projectRoot, args.slice(1));
+    case "exec":
+      return handleExec(projectRoot, args.slice(1));
+    case "shell":
+      return handleShell(projectRoot, args.slice(1));
+    case "logs":
+      return handleLogs(projectRoot, args.slice(1));
     case "rm":
       return handleRemove(projectRoot);
     case "status":
@@ -71,7 +87,7 @@ export async function sandboxCommand(
         `${red("✗")} Unknown sandbox subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${cyan("claude")}, ${cyan("codex")}, ${cyan("rm")}, ${cyan("status")}\n`
+        `  Available: ${cyan("claude")}, ${cyan("codex")}, ${cyan("install")}, ${cyan("exec")}, ${cyan("shell")}, ${cyan("logs")}, ${cyan("rm")}, ${cyan("status")}\n`
       );
   }
 }
@@ -164,9 +180,7 @@ async function handleAgentLogin(
     process.stderr.write(
       `${red("✗")} ${agent} sandbox is not running: ${dim(sandboxName)}\n`
     );
-    process.stderr.write(
-      `  Recreate it with ${cyan("locus sandbox")}.\n`
-    );
+    process.stderr.write(`  Recreate it with ${cyan("locus sandbox")}.\n`);
     return;
   }
 
@@ -174,7 +188,9 @@ async function handleAgentLogin(
     await ensureCodexInSandbox(sandboxName);
   }
 
-  process.stderr.write(`Connecting to ${agent} sandbox ${dim(sandboxName)}...\n`);
+  process.stderr.write(
+    `Connecting to ${agent} sandbox ${dim(sandboxName)}...\n`
+  );
   process.stderr.write(`${dim("Login and then exit when ready.")}\n\n`);
 
   const child = spawn(
@@ -217,7 +233,8 @@ function handleRemove(projectRoot: string): void {
   const names = Array.from(
     new Set(
       Object.values(config.sandbox.providers).filter(
-        (value): value is string => typeof value === "string" && value.length > 0
+        (value): value is string =>
+          typeof value === "string" && value.length > 0
       )
     )
   );
@@ -226,7 +243,9 @@ function handleRemove(projectRoot: string): void {
     config.sandbox.enabled = false;
     config.sandbox.providers = {};
     saveConfig(projectRoot, config);
-    process.stderr.write(`${dim("No sandboxes to remove. Sandbox mode disabled.")}\n`);
+    process.stderr.write(
+      `${dim("No sandboxes to remove. Sandbox mode disabled.")}\n`
+    );
     return;
   }
 
@@ -285,9 +304,331 @@ function handleStatus(projectRoot: string): void {
   process.stderr.write("\n");
 }
 
+// ─── Install Packages ───────────────────────────────────────────────────────
+
+export function parseSandboxInstallArgs(args: string[]): {
+  provider: ProviderTarget;
+  packages: string[];
+  error?: string;
+} {
+  const packages: string[] = [];
+  let provider: ProviderTarget = "all";
+
+  for (let i = 0; i < args.length; i++) {
+    const token = args[i];
+    if (token === "--provider") {
+      const value = args[i + 1];
+      if (!value) {
+        return {
+          provider,
+          packages,
+          error:
+            "Missing value for --provider (expected claude, codex, or all).",
+        };
+      }
+      if (value !== "claude" && value !== "codex" && value !== "all") {
+        return {
+          provider,
+          packages,
+          error: `Invalid provider "${value}". Expected claude, codex, or all.`,
+        };
+      }
+      provider = value;
+      i++;
+      continue;
+    }
+
+    if (token.startsWith("--provider=")) {
+      const value = token.slice("--provider=".length);
+      if (value !== "claude" && value !== "codex" && value !== "all") {
+        return {
+          provider,
+          packages,
+          error: `Invalid provider "${value}". Expected claude, codex, or all.`,
+        };
+      }
+      provider = value;
+      continue;
+    }
+
+    if (token.startsWith("-")) {
+      return {
+        provider,
+        packages,
+        error: `Unknown option "${token}".`,
+      };
+    }
+
+    packages.push(token);
+  }
+
+  if (packages.length === 0) {
+    return {
+      provider,
+      packages,
+      error:
+        "Usage: locus sandbox install <package...> [--provider claude|codex|all]",
+    };
+  }
+
+  return { provider, packages };
+}
+
+async function handleInstall(
+  projectRoot: string,
+  args: string[]
+): Promise<void> {
+  const parsed = parseSandboxInstallArgs(args);
+  if (parsed.error) {
+    process.stderr.write(`${red("✗")} ${parsed.error}\n`);
+    return;
+  }
+
+  const config = loadConfig(projectRoot);
+  const targets = getTargetProviders(config.sandbox.providers, parsed.provider);
+  if (targets.length === 0) {
+    process.stderr.write(
+      `${red("✗")} No provider sandboxes are configured. Run ${cyan("locus sandbox")} first.\n`
+    );
+    return;
+  }
+
+  let anySucceeded = false;
+  let anyFailed = false;
+
+  for (const provider of targets) {
+    const sandboxName = config.sandbox.providers[provider];
+    if (!sandboxName) {
+      process.stderr.write(
+        `${yellow("⚠")} ${provider} sandbox is not configured. Run ${cyan("locus sandbox")} first.\n`
+      );
+      anyFailed = true;
+      continue;
+    }
+
+    if (!isSandboxAlive(sandboxName)) {
+      process.stderr.write(
+        `${yellow("⚠")} ${provider} sandbox is not running: ${dim(sandboxName)}\n`
+      );
+      anyFailed = true;
+      continue;
+    }
+
+    process.stderr.write(
+      `Installing ${bold(parsed.packages.join(", "))} in ${provider} sandbox ${dim(sandboxName)}...\n`
+    );
+    const ok = await runInteractiveCommand("docker", [
+      "sandbox",
+      "exec",
+      sandboxName,
+      "npm",
+      "install",
+      "-g",
+      ...parsed.packages,
+    ]);
+    if (ok) {
+      anySucceeded = true;
+      process.stderr.write(
+        `${green("✓")} Installed package(s) in ${provider} sandbox.\n`
+      );
+    } else {
+      anyFailed = true;
+      process.stderr.write(
+        `${red("✗")} Failed to install package(s) in ${provider} sandbox.\n`
+      );
+    }
+  }
+
+  if (!anySucceeded && anyFailed) {
+    process.stderr.write(
+      `${yellow("⚠")} No package installs completed successfully.\n`
+    );
+  }
+}
+
+// ─── Exec / Shell / Logs ────────────────────────────────────────────────────
+
+export function parseSandboxExecArgs(args: string[]): {
+  provider?: AIProvider;
+  command: string[];
+  error?: string;
+} {
+  if (args.length === 0) {
+    return {
+      command: [],
+      error: "Usage: locus sandbox exec <provider> -- <command...>",
+    };
+  }
+
+  const provider = args[0];
+  if (provider !== "claude" && provider !== "codex") {
+    return {
+      command: [],
+      error: `Invalid provider "${provider}". Expected claude or codex.`,
+    };
+  }
+
+  const separatorIndex = args.indexOf("--");
+  const command =
+    separatorIndex >= 0 ? args.slice(separatorIndex + 1) : args.slice(1);
+
+  if (command.length === 0) {
+    return {
+      provider,
+      command: [],
+      error:
+        "Missing command. Example: locus sandbox exec codex -- bun --version",
+    };
+  }
+
+  return { provider, command };
+}
+
+async function handleExec(projectRoot: string, args: string[]): Promise<void> {
+  const parsed = parseSandboxExecArgs(args);
+  if (parsed.error || !parsed.provider) {
+    process.stderr.write(`${red("✗")} ${parsed.error}\n`);
+    return;
+  }
+
+  const sandboxName = getActiveProviderSandbox(projectRoot, parsed.provider);
+  if (!sandboxName) {
+    return;
+  }
+
+  await runInteractiveCommand("docker", [
+    "sandbox",
+    "exec",
+    "-w",
+    projectRoot,
+    sandboxName,
+    ...parsed.command,
+  ]);
+}
+
+async function handleShell(projectRoot: string, args: string[]): Promise<void> {
+  const provider = args[0];
+  if (provider !== "claude" && provider !== "codex") {
+    process.stderr.write(
+      `${red("✗")} Usage: locus sandbox shell <provider>  (provider: claude|codex)\n`
+    );
+    return;
+  }
+
+  const sandboxName = getActiveProviderSandbox(projectRoot, provider);
+  if (!sandboxName) {
+    return;
+  }
+
+  process.stderr.write(
+    `Opening shell in ${provider} sandbox ${dim(sandboxName)}...\n`
+  );
+  await runInteractiveCommand("docker", [
+    "sandbox",
+    "exec",
+    "-it",
+    "-w",
+    projectRoot,
+    sandboxName,
+    "sh",
+  ]);
+}
+
+export function parseSandboxLogsArgs(args: string[]): {
+  provider?: AIProvider;
+  follow: boolean;
+  tail?: number;
+  error?: string;
+} {
+  if (args.length === 0) {
+    return {
+      follow: false,
+      error: "Usage: locus sandbox logs <provider> [--follow] [--tail <lines>]",
+    };
+  }
+
+  const provider = args[0];
+  if (provider !== "claude" && provider !== "codex") {
+    return {
+      follow: false,
+      error: `Invalid provider "${provider}". Expected claude or codex.`,
+    };
+  }
+
+  let follow = false;
+  let tail: number | undefined;
+
+  for (let i = 1; i < args.length; i++) {
+    const token = args[i];
+    if (token === "--follow" || token === "-f") {
+      follow = true;
+      continue;
+    }
+
+    if (token === "--tail") {
+      const value = args[i + 1];
+      if (!value) {
+        return { provider, follow, tail, error: "Missing value for --tail." };
+      }
+      const parsedTail = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsedTail) || parsedTail < 0) {
+        return { provider, follow, tail, error: "Invalid --tail value." };
+      }
+      tail = parsedTail;
+      i++;
+      continue;
+    }
+
+    if (token.startsWith("--tail=")) {
+      const value = token.slice("--tail=".length);
+      const parsedTail = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsedTail) || parsedTail < 0) {
+        return { provider, follow, tail, error: "Invalid --tail value." };
+      }
+      tail = parsedTail;
+      continue;
+    }
+
+    return {
+      provider,
+      follow,
+      tail,
+      error: `Unknown option "${token}".`,
+    };
+  }
+
+  return { provider, follow, tail };
+}
+
+async function handleLogs(projectRoot: string, args: string[]): Promise<void> {
+  const parsed = parseSandboxLogsArgs(args);
+  if (parsed.error || !parsed.provider) {
+    process.stderr.write(`${red("✗")} ${parsed.error}\n`);
+    return;
+  }
+
+  const sandboxName = getActiveProviderSandbox(projectRoot, parsed.provider);
+  if (!sandboxName) {
+    return;
+  }
+
+  const dockerArgs = ["sandbox", "logs"];
+  if (parsed.follow) {
+    dockerArgs.push("--follow");
+  }
+  if (parsed.tail !== undefined) {
+    dockerArgs.push("--tail", String(parsed.tail));
+  }
+  dockerArgs.push(sandboxName);
+
+  await runInteractiveCommand("docker", dockerArgs);
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildProviderSandboxNames(projectRoot: string): Record<AIProvider, string> {
+function buildProviderSandboxNames(
+  projectRoot: string
+): Record<AIProvider, string> {
   const segment = sanitizeSegment(basename(projectRoot));
   const hash = createHash("sha1").update(projectRoot).digest("hex").slice(0, 8);
 
@@ -304,6 +645,49 @@ function sanitizeSegment(input: string): string {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
   return cleaned || "workspace";
+}
+
+function getTargetProviders(
+  sandboxes: ProviderSandboxes,
+  provider: ProviderTarget
+): AIProvider[] {
+  if (provider === "claude" || provider === "codex") {
+    return [provider];
+  }
+  return PROVIDERS.filter((name) => Boolean(sandboxes[name]));
+}
+
+function getActiveProviderSandbox(
+  projectRoot: string,
+  provider: AIProvider
+): string | null {
+  const config = loadConfig(projectRoot);
+  const sandboxName = config.sandbox.providers[provider];
+  if (!sandboxName) {
+    process.stderr.write(
+      `${red("✗")} No ${provider} sandbox configured. Run ${cyan("locus sandbox")} first.\n`
+    );
+    return null;
+  }
+  if (!isSandboxAlive(sandboxName)) {
+    process.stderr.write(
+      `${red("✗")} ${provider} sandbox is not running: ${dim(sandboxName)}\n`
+    );
+    process.stderr.write(`  Recreate it with ${cyan("locus sandbox")}.\n`);
+    return null;
+  }
+  return sandboxName;
+}
+
+function runInteractiveCommand(
+  command: string,
+  args: string[]
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { stdio: "inherit" });
+    child.on("close", (code) => resolve(code === 0));
+    child.on("error", () => resolve(false));
+  });
 }
 
 async function createProviderSandbox(

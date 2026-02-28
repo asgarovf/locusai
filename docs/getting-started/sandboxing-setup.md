@@ -105,6 +105,34 @@ Expected outcome:
 - You switch providers only by changing `ai.model`.
 - The sandboxing layer stays the same (Docker sandbox + workspace sync + `.sandboxignore` enforcement).
 
+## Optional: Install Extra Tools Inside Sandbox
+
+If your workflow needs additional CLIs inside provider sandboxes (for example `bun`), install them globally:
+
+```bash
+# Install in all configured provider sandboxes
+locus sandbox install bun
+
+# Install only in codex sandbox
+locus sandbox install bun --provider codex
+```
+
+You can then verify or use tools directly in the sandbox:
+
+```bash
+locus sandbox exec codex -- bun --version
+```
+
+Use interactive access and logs when debugging sandbox behavior:
+
+```bash
+# Open shell inside a sandbox
+locus sandbox shell codex
+
+# View sandbox logs
+locus sandbox logs codex --follow
+```
+
 ## Unified Interface: Claude and Codex on One Sandboxing Layer
 
 Locus keeps a single command interface across providers:
@@ -163,5 +191,6 @@ Fixes:
 ## Next References
 
 1. [Security & Sandboxing](../concepts/security-sandboxing.md)
-2. [locus run](../cli/run.md)
-3. [locus exec](../cli/exec.md)
+2. [locus sandbox](../cli/sandbox.md)
+3. [locus run](../cli/run.md)
+4. [locus exec](../cli/exec.md)

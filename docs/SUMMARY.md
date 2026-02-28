@@ -33,6 +33,7 @@
 * [locus sprint](cli/sprint.md)
 * [locus plan](cli/plan.md)
 * [locus run](cli/run.md)
+* [locus sandbox](cli/sandbox.md)
 * [locus exec](cli/exec.md)
 * [locus review](cli/review.md)
 * [locus iterate](cli/iterate.md)

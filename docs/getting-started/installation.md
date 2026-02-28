@@ -161,6 +161,7 @@ For isolated execution (recommended), set up Docker-first sandboxing after insta
 1. Verify Docker (`docker info`, `docker sandbox ls`)
 2. Create provider sandboxes (`locus sandbox`)
 3. Authenticate inside sandboxes (`locus sandbox claude`, `locus sandbox codex`)
+4. Optional operations: install tools (`locus sandbox install bun`), run commands (`locus sandbox exec codex -- bun --version`), open shell (`locus sandbox shell codex`), and view logs (`locus sandbox logs codex --follow`)
 
 Full guide: [Sandboxing Setup (Docker-First)](sandboxing-setup.md)
 
