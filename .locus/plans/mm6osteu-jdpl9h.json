@@ -1,0 +1,56 @@
+{
+  "id": "mm6osteu-jdpl9h",
+  "directive": "We need to work on improving the docs and landing page with important feature we added related to sandboxing. We need to make sure the docs and landing page correctly emphasizes the fully supported sandboxing support for both claude and codex in a unified interface. We need to talk about the importantce of sandboxing, how to set it up, dependence on docker, prevention of .env files to be exposed to the AI models, automatic synchronization, .sandboxignore and other important stuff across landing page, docs, and related README.files",
+  "sprint": null,
+  "createdAt": "2026-02-28T19:01:13.831Z",
+  "issues": [
+    {
+      "order": 1,
+      "title": "Define unified sandboxing messaging and content map",
+      "body": "## Summary\nCreate a single source of truth for how sandboxing is described across marketing and technical docs, with explicit Claude + Codex parity in the unified Locus interface.\n\n## Scope\n- Inventory current landing page, docs, and README messaging related to sandboxing.\n- Identify conflicting or missing statements about model support, Docker dependency, sync behavior, and secret protection.\n- Produce a content map that assigns each topic to specific surfaces (landing, docs, README).\n\n## Deliverables\n- Messaging brief with approved terminology and key claims.\n- Section-level mapping for where each sandboxing topic will live.\n\n## Acceptance Criteria\n- [ ] A documented messaging brief exists and explicitly states sandboxing support for both Claude and Codex in one interface.\n- [ ] The brief includes required topics: why sandboxing matters, Docker requirement, `.env` protection, `.sandboxignore`, and automatic synchronization.\n- [ ] A publish plan maps each topic to exact file targets for landing page, docs, and README updates.",
+      "priority": "critical",
+      "type": "docs",
+      "dependsOn": "none"
+    },
+    {
+      "order": 2,
+      "title": "Add high-visibility sandboxing section to landing page",
+      "body": "## Summary\nUpdate the landing page to prominently communicate that sandboxing is fully supported for Claude and Codex, emphasizing security and operational benefits.\n\n## Scope\n- Add or revise hero/feature sections with unified-model sandboxing value proposition.\n- Include concise explanation of isolation model, Docker-based execution, and automatic synchronization workflow.\n- Add CTA links to detailed sandboxing documentation.\n\n## Deliverables\n- Landing page copy and layout updates.\n- Cross-links from landing page to relevant docs sections.\n\n## Acceptance Criteria\n- [ ] Landing page clearly states full sandboxing support for both Claude and Codex in a unified interface.\n- [ ] Copy includes user-facing value of sandboxing (safety, reproducibility, controlled execution).\n- [ ] Docker dependency and automatic synchronization are described at a high level.\n- [ ] At least one clear CTA navigates to setup/security documentation.",
+      "priority": "high",
+      "type": "feature",
+      "dependsOn": "1"
+    },
+    {
+      "order": 3,
+      "title": "Create sandboxing setup docs with Docker-first workflow",
+      "body": "## Summary\nPublish end-to-end setup documentation for sandboxing, centered on Docker requirements and first-run experience across Claude and Codex.\n\n## Scope\n- Document prerequisites (Docker installation, daemon status, platform caveats).\n- Provide step-by-step setup, verification, and troubleshooting.\n- Explain how users choose Claude or Codex while using the same sandboxing layer.\n\n## Deliverables\n- New or updated sandbox setup guide in docs.\n- Troubleshooting section for common Docker/sandbox startup failures.\n\n## Acceptance Criteria\n- [ ] Docs include a complete setup flow from prerequisites to successful sandbox run.\n- [ ] Docker dependency is explicit, including how to verify Docker is available.\n- [ ] Guide explains unified interface behavior when switching between Claude and Codex.\n- [ ] Troubleshooting covers at least startup failure, permission issue, and sync issue cases.",
+      "priority": "critical",
+      "type": "docs",
+      "dependsOn": "1"
+    },
+    {
+      "order": 4,
+      "title": "Document sandbox security model and secret/file protection",
+      "body": "## Summary\nAdd dedicated security documentation for how sandboxing prevents sensitive data leakage, including `.env` handling and `.sandboxignore` behavior.\n\n## Scope\n- Explain threat model and default protections for local files and secrets.\n- Document how `.env` files are excluded or protected from model exposure.\n- Define `.sandboxignore` syntax, precedence, and practical examples.\n- Clarify automatic synchronization boundaries (what syncs, when, and what is excluded).\n\n## Deliverables\n- Security-focused docs page or section.\n- Copy-reviewed examples of safe/unsafe patterns and recommended defaults.\n\n## Acceptance Criteria\n- [ ] Docs explicitly state how `.env` and comparable secret files are protected from model context exposure.\n- [ ] `.sandboxignore` usage includes examples for common secret/config directories.\n- [ ] Automatic synchronization behavior is documented with inclusion/exclusion rules.\n- [ ] Security guidance includes at least one best-practice checklist for teams.",
+      "priority": "critical",
+      "type": "docs",
+      "dependsOn": "3"
+    },
+    {
+      "order": 5,
+      "title": "Align README files with new sandboxing positioning",
+      "body": "## Summary\nUpdate root and relevant subproject README files so quick-start and feature summaries match the new sandboxing narrative and docs links.\n\n## Scope\n- Update feature bullets to include Claude + Codex sandbox parity.\n- Add concise setup notes about Docker dependency and where to find full setup docs.\n- Add security callouts for `.env` protection, `.sandboxignore`, and sync controls.\n\n## Deliverables\n- Consistent README updates across repository surfaces where sandboxing is mentioned.\n- Verified links to landing page and docs sections.\n\n## Acceptance Criteria\n- [ ] All sandboxing mentions in README files use consistent terminology from the messaging brief.\n- [ ] README quick-start sections mention Docker requirement and link to setup docs.\n- [ ] README security notes mention `.env` protection and `.sandboxignore`.\n- [ ] No stale or contradictory sandboxing claims remain in README content.",
+      "priority": "high",
+      "type": "docs",
+      "dependsOn": "1,3,4"
+    },
+    {
+      "order": 6,
+      "title": "Run docs and landing consistency QA for sandboxing content",
+      "body": "## Summary\nPerform a final consistency and quality pass to ensure the landing page, docs, and READMEs present a coherent, accurate sandboxing story.\n\n## Scope\n- Validate cross-page consistency of claims and terminology.\n- Check internal links, anchors, and navigation paths from landing to docs.\n- Verify examples and setup instructions are still accurate and runnable.\n\n## Deliverables\n- QA checklist with pass/fail status and required follow-up edits.\n- Final sign-off that sandboxing messaging is complete and non-contradictory.\n\n## Acceptance Criteria\n- [ ] Terminology and claims are consistent across landing page, docs, and README files.\n- [ ] All sandboxing-related links resolve correctly.\n- [ ] Setup/security instructions are validated against current behavior.\n- [ ] Final QA notes document any residual gaps and owners (or explicitly state none).",
+      "priority": "medium",
+      "type": "chore",
+      "dependsOn": "2,3,4,5"
+    }
+  ]
+}
