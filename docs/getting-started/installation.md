@@ -59,7 +59,7 @@ locus --version
 You should see output like:
 
 ```
-3.0.0
+0.19.1
 ```
 
 ---

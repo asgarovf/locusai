@@ -15,7 +15,7 @@ import type { LocusConfig } from "./types.js";
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG: LocusConfig = {
-  version: "3.0.0",
+  version: "0.19.1",
   github: {
     owner: "",
     repo: "",

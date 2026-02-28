@@ -36,7 +36,7 @@ export type AIProvider = "claude" | "codex";
 
 /** Shape of the project-level `.locus/config.json`. */
 export interface LocusConfig {
-  /** Config schema version, e.g. `"3.0.0"`. */
+  /** Config schema version, e.g. `"0.19.1"`. */
   version: string;
   /** GitHub repository settings. */
   github: {
