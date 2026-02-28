@@ -20,6 +20,7 @@ Each sandbox is a full microVM with:
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) **4.58+** with sandbox support
 - Verify with: `docker sandbox ls`
+- Setup guide: [Sandboxing Setup (Docker-First)](../getting-started/sandboxing-setup.md)
 
 ## Default Behavior
 
@@ -98,6 +99,8 @@ Sandboxes are automatically managed:
 4. **Stale cleanup** — orphaned `locus-*` sandboxes from previous crashes are removed at the start of each run
 
 ## Troubleshooting
+
+For full first-run troubleshooting (startup, permissions, and sync), see [Sandboxing Setup (Docker-First)](../getting-started/sandboxing-setup.md).
 
 ### "Docker sandbox not available"
 

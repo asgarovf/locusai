@@ -6,13 +6,14 @@ description: Install the Locus CLI, GitHub CLI, and an AI provider CLI (Claude C
 
 ## Prerequisites
 
-Locus requires three things on your machine before you can start:
+Locus requires three baseline tools, plus Docker Desktop if you want sandboxed execution:
 
 | Requirement | Minimum Version | Purpose |
 |-------------|-----------------|---------|
 | [Node.js](https://nodejs.org) | 18+ | Runtime for the CLI |
 | [GitHub CLI](https://cli.github.com) (`gh`) | Latest | All GitHub operations (issues, PRs, milestones) |
 | AI Provider CLI | Latest | Task execution and code generation |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | 4.58+ | Required for Locus sandbox isolation (`docker sandbox`) |
 
 You need **one** of the following AI provider CLIs installed:
 
@@ -150,6 +151,18 @@ locus config set ai.model claude-sonnet-4-6
 ```
 
 The provider is inferred automatically from the model name -- no need to set it separately.
+
+---
+
+## Optional but Recommended: Enable Sandboxing
+
+For isolated execution (recommended), set up Docker-first sandboxing after installation:
+
+1. Verify Docker (`docker info`, `docker sandbox ls`)
+2. Create provider sandboxes (`locus sandbox`)
+3. Authenticate inside sandboxes (`locus sandbox claude`, `locus sandbox codex`)
+
+Full guide: [Sandboxing Setup (Docker-First)](sandboxing-setup.md)
 
 ---
 
