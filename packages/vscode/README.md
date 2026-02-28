@@ -50,6 +50,7 @@ Watch the AI agent work in real time. The chat panel displays tool calls (file r
 - **Locus CLI** — Install with `npm install -g @locusai/cli`
 - **GitHub CLI** (`gh`) — Install from [cli.github.com](https://cli.github.com) and authenticate with `gh auth login`
 - **AI Agent CLI** — Either [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [OpenAI Codex](https://openai.com/index/codex/)
+- **Docker Desktop 4.58+** *(recommended)* — Required if you want sandboxed execution via `docker sandbox`
 - **VS Code 1.85+**
 
 ## Configuration
@@ -66,15 +67,25 @@ Watch the AI agent work in real time. The chat panel displays tool calls (file r
 2. Install the Locus CLI: `npm install -g @locusai/cli`
 3. Install and authenticate GitHub CLI: `gh auth login`
 4. Initialize your project: `locus init`
-5. Open the chat panel with `Cmd+Shift+L` and start a conversation
+5. (Recommended) Set up Docker sandboxing: [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
+6. Open the chat panel with `Cmd+Shift+L` and start a conversation
 
 ## Privacy & Security
 
 Locus is fully local and GitHub-native. All AI agents run on your machine, and project state is stored in GitHub (issues, milestones, PRs). No cloud servers, no accounts, no data leaves your infrastructure.
 
+For safer execution, Locus supports Docker-backed sandboxing for both Claude and Codex in the same interface:
+
+- `.env` and other secret patterns are excluded by default via `.sandboxignore`.
+- `.sandboxignore` controls what is kept out of sandbox-visible workspace sync.
+- `--sandbox=require` can enforce sandbox usage for sensitive workflows.
+
 ## Links
 
-- [Documentation](https://locusai.dev/docs)
+- [Landing Page](https://locusai.dev)
+- [Documentation](https://docs.locusai.dev)
+- [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
+- [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 - [GitHub](https://github.com/asgarovf/locusai)
 - [Changelog](CHANGELOG.md)
 - [Report an Issue](https://github.com/asgarovf/locusai/issues)
