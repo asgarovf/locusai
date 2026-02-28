@@ -318,10 +318,7 @@ function requiresSandboxSync(
  */
 async function prepareSandbox(): Promise<void> {
   const { Spinner } = await import("./display/progress.js");
-  const {
-    detectSandboxSupport,
-    cleanupStaleSandboxes,
-  } = await import("./core/sandbox.js");
+  const { detectSandboxSupport } = await import("./core/sandbox.js");
 
   const spinner = new Spinner();
   spinner.start("Preparing sandbox...");
@@ -329,15 +326,7 @@ async function prepareSandbox(): Promise<void> {
   const status = await detectSandboxSupport();
 
   if (status.available) {
-    spinner.update("Cleaning up stale sandboxes...");
-    const cleaned = await cleanupStaleSandboxes();
-    if (cleaned > 0) {
-      spinner.succeed(
-        `Sandbox ready (cleaned ${cleaned} stale sandbox${cleaned === 1 ? "" : "es"})`
-      );
-    } else {
-      spinner.succeed("Sandbox ready");
-    }
+    spinner.succeed("Sandbox ready");
   } else {
     spinner.warn(`Sandbox not available: ${status.reason}`);
   }

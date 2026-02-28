@@ -25,6 +25,7 @@ import {
   buildImageContext,
   collectReferencedAttachments,
   normalizeImagePlaceholders,
+  relocateImages,
 } from "./image-detect.js";
 import { InputHandler } from "./input-handler.js";
 import { InputHistory } from "./input-history.js";
@@ -109,6 +110,7 @@ async function executeOneShotPrompt(
   const normalized = normalizeImagePlaceholders(prompt);
   const text = normalized.text;
   const images = collectReferencedAttachments(text, normalized.attachments);
+  relocateImages(images, projectRoot);
   const imageContext = buildImageContext(images);
 
   // Build prompt (include conversation history for context)
@@ -254,6 +256,7 @@ async function runInteractiveRepl(
         // Add to input history
         history.add(text);
 
+        relocateImages(result.images, projectRoot);
         const imageContext = buildImageContext(result.images);
 
         // Build prompt (include conversation history for context)

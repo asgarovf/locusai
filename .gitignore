@@ -99,3 +99,4 @@ packages/cli2/bin/
 .locus/worktrees/
 .locus/artifacts/
 .locus/discussions/
+.locus/tmp/

@@ -49,7 +49,14 @@ export function detectImages(input: string): DetectedImage[] {
   const detected: DetectedImage[] = [];
   const byResolved = new Map<string, DetectedImage>();
 
-  for (const line of input.split("\n")) {
+  // Strip existing image placeholders so we don't re-detect display names
+  // inside already-normalized ![Screenshot: ...](locus://screenshot-N) markers.
+  const sanitized = input.replace(
+    /!\[Screenshot:[^\]]*\]\(locus:\/\/screenshot-\d+\)/g,
+    ""
+  );
+
+  for (const line of sanitized.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     const unquoted = stripQuotes(trimmed);
@@ -65,7 +72,7 @@ export function detectImages(input: string): DetectedImage[] {
 
   // Pattern 1: Quoted paths
   const quotedPattern = /["']([^"']+\.(?:png|jpg|jpeg|gif|webp|bmp|svg))["']/gi;
-  for (const match of input.matchAll(quotedPattern)) {
+  for (const match of sanitized.matchAll(quotedPattern)) {
     if (!match[0] || !match[1]) continue;
     addIfImage(match[1], match[0], detected, byResolved);
   }
@@ -76,7 +83,7 @@ export function detectImages(input: string): DetectedImage[] {
   // on long inputs like URLs that don't end with an image extension.
   const escapedPattern =
     /(?:\/|~\/|\.\/)?(?:[^\s"'\\]|\\ )+\.(?:png|jpg|jpeg|gif|webp|bmp|svg|tiff?)/gi;
-  for (const match of input.matchAll(escapedPattern)) {
+  for (const match of sanitized.matchAll(escapedPattern)) {
     if (!match[0]) continue;
     const path = match[0].replace(/\\ /g, " ");
     addIfImage(path, match[0], detected, byResolved);
@@ -85,7 +92,7 @@ export function detectImages(input: string): DetectedImage[] {
   // Pattern 3: Regular paths (no spaces)
   const plainPattern =
     /(?:\/|~\/|\.\/)[^\s"']+\.(?:png|jpg|jpeg|gif|webp|bmp|svg|tiff?)/gi;
-  for (const match of input.matchAll(plainPattern)) {
+  for (const match of sanitized.matchAll(plainPattern)) {
     if (!match[0]) continue;
     addIfImage(match[0], match[0], detected, byResolved);
   }
@@ -172,6 +179,32 @@ export function collectReferencedAttachments(
 
   const selected = attachments.filter((attachment) => ids.has(attachment.id));
   return dedupeByResolvedPath(selected);
+}
+
+/**
+ * Relocate image stable copies into a directory inside the project root.
+ * This ensures images are accessible when the AI runs inside a Docker sandbox
+ * (which only syncs the workspace directory, not the OS temp directory).
+ */
+export function relocateImages(
+  images: DetectedImage[],
+  projectRoot: string
+): void {
+  const targetDir = join(projectRoot, ".locus", "tmp", "images");
+
+  for (const img of images) {
+    if (!img.exists) continue;
+    try {
+      if (!existsSync(targetDir)) {
+        mkdirSync(targetDir, { recursive: true });
+      }
+      const dest = join(targetDir, basename(img.stablePath));
+      copyFileSync(img.stablePath, dest);
+      img.stablePath = dest;
+    } catch {
+      // Keep original path if copy fails
+    }
+  }
 }
 
 // ─── Internal ───────────────────────────────────────────────────────────────

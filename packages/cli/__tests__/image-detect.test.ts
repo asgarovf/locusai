@@ -48,6 +48,13 @@ describe("image-detect", () => {
       expect(result.length).toBe(0);
     });
 
+    it("does not re-detect paths inside existing placeholders", () => {
+      const result = detectImages(
+        "![Screenshot: clipboard-123.png](locus://screenshot-1) some text"
+      );
+      expect(result.length).toBe(0);
+    });
+
     it("handles various image extensions", () => {
       for (const ext of ["png", "jpg", "jpeg", "gif", "webp", "svg"]) {
         const result = detectImages(`/tmp/image.${ext}`);
@@ -117,6 +124,22 @@ describe("image-detect", () => {
       expect(normalized.text).toContain("(locus://screenshot-1)");
       expect(normalized.text).not.toContain("/tmp/screenshot.png");
       expect(normalized.attachments.length).toBe(1);
+    });
+
+    it("does not nest placeholders when called again on already-normalized text", () => {
+      const first = normalizeImagePlaceholders(
+        "Check /tmp/clipboard-123.png"
+      );
+      expect(first.text).toContain("![Screenshot: clipboard-123.png](locus://screenshot-1)");
+
+      // Simulate submit() calling normalizeImagePlaceholders again on the buffer
+      const second = normalizeImagePlaceholders(
+        first.text,
+        first.attachments,
+        first.nextId
+      );
+      expect(second.text).toBe(first.text);
+      expect(second.attachments.length).toBe(first.attachments.length);
     });
   });
 

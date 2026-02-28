@@ -193,6 +193,7 @@ const GITIGNORE_ENTRIES = [
   ".locus/worktrees/",
   ".locus/artifacts/",
   ".locus/discussions/",
+  ".locus/tmp/",
 ];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
@@ -319,9 +320,7 @@ export async function initCommand(cwd: string): Promise<void> {
   const sandboxIgnorePath = join(cwd, ".sandboxignore");
   if (!existsSync(sandboxIgnorePath)) {
     writeFileSync(sandboxIgnorePath, SANDBOXIGNORE_TEMPLATE, "utf-8");
-    process.stderr.write(
-      `${green("✓")} Generated .sandboxignore\n`
-    );
+    process.stderr.write(`${green("✓")} Generated .sandboxignore\n`);
   } else {
     process.stderr.write(
       `${dim("○")} .sandboxignore already exists (preserved)\n`

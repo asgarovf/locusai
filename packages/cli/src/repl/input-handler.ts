@@ -10,6 +10,7 @@
  */
 
 import { dim, stripAnsi, yellow } from "../display/terminal.js";
+import { readClipboardImage } from "./clipboard.js";
 import {
   collectReferencedAttachments,
   type DetectedImage,
@@ -561,6 +562,17 @@ export class InputHandler {
             pasteBuffer += pending.slice(0, endIdx);
             pending = pending.slice(endIdx + PASTE_END.length);
             isPasting = false;
+
+            // Empty paste may indicate CMD+V with image data in clipboard.
+            if (pasteBuffer.trim() === "") {
+              const clipboardImagePath = readClipboardImage();
+              if (clipboardImagePath) {
+                insertText(clipboardImagePath);
+                pasteBuffer = "";
+                render();
+                continue;
+              }
+            }
 
             insertText(normalizeLineEndings(pasteBuffer));
             pasteBuffer = "";
