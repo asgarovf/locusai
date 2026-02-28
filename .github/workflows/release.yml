@@ -46,10 +46,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-vscode:
-    name: Publish VSCode Extension
-    needs: release
-    if: needs.release.outputs.published == 'true'
-    uses: ./.github/workflows/publish-vscode.yml
-    secrets: inherit
-
