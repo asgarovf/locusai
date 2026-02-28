@@ -6,6 +6,7 @@ import {
   FeatureGrid,
   Hero,
   ProductShowcase,
+  SandboxingSection,
   SupportedTools,
   TerminalDemo,
 } from "@/components/landing";
@@ -128,6 +129,9 @@ export default async function Home() {
 
         {/* Why Locus - four core strengths */}
         <FeatureGrid />
+
+        {/* Sandboxing section */}
+        <SandboxingSection />
 
         {/* How it works - product showcase */}
         <ProductShowcase />

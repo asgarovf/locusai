@@ -6,5 +6,6 @@ export * from "./FAQ";
 export * from "./FeatureGrid";
 export * from "./Hero";
 export * from "./ProductShowcase";
+export * from "./SandboxingSection";
 export * from "./SupportedTools";
 export * from "./TerminalDemo";
