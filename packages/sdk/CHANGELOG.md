@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.19.2
+
+### Patch Changes
+
+- Docs improvements
+
 ## 0.19.1
 
 ### Patch Changes
