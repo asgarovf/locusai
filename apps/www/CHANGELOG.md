@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.19.1
+
+### Patch Changes
+
+- Sandbox improvements
+- Updated dependencies
+  - @locusai/shared@0.19.1
+
 ## 0.19.0
 
 ### Minor Changes
