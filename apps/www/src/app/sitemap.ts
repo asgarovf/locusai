@@ -6,33 +6,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
+      lastModified: new Date("2026-02-28"),
     },
     {
-      url: `${baseUrl}/packages`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
+      url: `${baseUrl}/about`,
+      lastModified: new Date("2026-02-28"),
     },
     {
       url: `${baseUrl}/security`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
+      lastModified: new Date("2026-02-01"),
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date("2026-02-28"),
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
+      lastModified: new Date("2026-01-15"),
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
+      lastModified: new Date("2026-01-15"),
     },
   ];
 

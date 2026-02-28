@@ -26,8 +26,8 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <Image src="/logo.png" alt="Locus" width={90} height={33} />
+        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="Locus - Home">
+          <Image src="/logo.png" alt="Locus" width={90} height={33} loading="eager" fetchPriority="high" />
         </Link>
 
         {/* Desktop nav */}
@@ -56,7 +56,8 @@ export function Navbar() {
           <Link
             href="https://github.com/asgarovf/locusai"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
+            aria-label="Locus on GitHub"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-2 rounded-lg hover:bg-white/[0.03]"
           >
             <GithubIcon className="h-4 w-4" />
@@ -73,7 +74,8 @@ export function Navbar() {
         {/* Mobile hamburger */}
         <button
           type="button"
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          className="md:hidden p-3 -mr-1 text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? (
@@ -99,29 +101,30 @@ export function Navbar() {
                 <Link
                   href="https://docs.locusai.dev"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                 >
                   Docs
                 </Link>
                 <Link
                   href="https://docs.locusai.dev/cli/overview"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                 >
                   CLI Reference
                 </Link>
                 <Link
                   href="/packages"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                 >
                   Packages
                 </Link>
                 <Link
                   href="https://github.com/asgarovf/locusai"
                   target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                 >
                   GitHub
                 </Link>
@@ -130,14 +133,15 @@ export function Navbar() {
                   <Link
                     href="https://github.com/asgarovf/locusai"
                     target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    rel="noopener noreferrer"
+                    aria-label="Locus on GitHub"
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground p-2"
                   >
                     <GithubIcon className="h-4 w-4" />
                   </Link>
                   <Link
                     href="https://docs.locusai.dev/getting-started/installation"
-                    className="text-sm font-medium bg-white text-background px-4 py-2 rounded-lg hover:bg-white/85 transition-colors ml-auto"
+                    className="text-sm font-medium bg-white text-background px-4 py-2.5 rounded-lg hover:bg-white/85 transition-colors ml-auto"
                   >
                     Get Started
                   </Link>

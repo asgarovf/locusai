@@ -168,7 +168,7 @@ function PackageCard({ pkg }: { pkg: PackageData }) {
           <Link
             href={pkg.links.npm}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="View on npm"
           >
@@ -343,7 +343,7 @@ export function MarketplaceClient({ packages }: { packages: PackageData[] }) {
               <Link
                 href="https://github.com/asgarovf/locusai/blob/master/packages/sdk/PACKAGE_GUIDE.md"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
               >
                 Read the Package Guide
@@ -352,7 +352,7 @@ export function MarketplaceClient({ packages }: { packages: PackageData[] }) {
               <Link
                 href="https://www.npmjs.com/search?q=keywords:locusai-package"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Browse on npm

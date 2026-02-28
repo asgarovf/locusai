@@ -1,0 +1,194 @@
+# Locus AI — Full Documentation for LLMs
+
+> Locus is an open-source CLI tool that provides a unified interface for AI-powered software engineering across Claude and Codex. It uses GitHub issues, milestones, and PRs as its operational backend, enabling teams to plan sprints, execute tasks with AI agents, and iterate on feedback without switching tools.
+
+## Product Overview
+
+Locus is the unified AI engineering CLI for GitHub teams. It provides one interface to plan, execute, review, and automate software delivery across Claude and Codex — all GitHub-native.
+
+AI coding agents are powerful, but they work in isolation. They generate code without knowing your sprint context, create PRs without linking to issues, and require different tooling for each provider. Locus solves this by providing a single CLI interface that works across Claude and Codex while keeping all execution state in GitHub-native objects: issues, milestones, labels, and pull requests.
+
+### Key Facts
+- Open source under MIT License, free forever
+- Install: `npm install -g @locusai/cli`
+- Requires: Node.js 18+, GitHub CLI (gh)
+- Repository: https://github.com/asgarovf/locusai
+- npm package: @locusai/cli
+- Category: Developer Tools / AI Engineering CLI
+- Operating Systems: Linux, macOS, Windows
+
+## Core Capabilities
+
+### 1. Unified Interface Across Multiple AI Clients
+
+Locus lets you run the same workflow across Claude and Codex by switching models, not tooling. You can switch `ai.model` between `claude-sonnet-4-6` and `gpt-5.3-codex` while keeping the same `run`, `review`, and `iterate` commands.
+
+Example:
+```
+locus config set ai.model claude-sonnet-4-6
+locus run
+# Later, switch to Codex:
+locus config set ai.model gpt-5.3-codex
+locus run
+```
+
+This means teams can evaluate different AI providers without changing their delivery process, scripts, or CI/CD integration.
+
+### 2. GitHub as Operational Memory
+
+Issues, milestones, labels, and PRs become your execution database and audit trail. Every task Locus executes is tied to a GitHub issue. Sprint planning creates milestones. Execution creates PRs linked to issues. All state is visible in GitHub's native UI.
+
+Example:
+```
+locus issue create "Add billing webhook handler"
+# Creates issue #83 with labels p:high type:feature
+
+locus sprint create "Sprint 6"
+# Assigns issue #83 to Sprint 6 milestone
+
+locus status
+# Sprint 6 progress: 3/5 done, 2 queued
+```
+
+### 3. Built-In Orchestration Tools
+
+Locus provides planning, execution, review, iteration, and status commands that go beyond raw provider CLIs. Instead of manually prompting AI agents, you use structured commands that handle the full delivery lifecycle.
+
+Commands:
+- `locus plan` — Break down a feature description into ordered GitHub issues in a sprint milestone
+- `locus run` — Execute sprint tasks with AI agents, creating PRs for each
+- `locus review` — Post inline review comments on generated PRs
+- `locus iterate` — Apply review feedback and push updated code
+- `locus status` — Check sprint progress across all issues
+- `locus logs` — View execution logs for debugging
+
+### 4. Auto-Approval Automation
+
+Execute in full-auto mode with automatic labels, PR creation, and resumable runs. Set `agent.autoPR` and `agent.autoLabel`, then use `locus run --resume` to continue failed execution without restarting completed work.
+
+Example:
+```
+locus config set agent.autoPR true
+locus config set agent.autoLabel true
+
+locus run
+# Auto-labeling issues and opening PRs
+# Run interrupted on task 4/6
+
+locus run --resume
+# Resumed from task 4/6
+```
+
+## CLI Reference
+
+### Configuration
+```
+locus config set <key> <value>   # Set a configuration value
+locus config get <key>           # Get a configuration value
+locus config list                # List all configuration values
+```
+
+Key configuration options:
+- `ai.model` — The AI model to use (e.g., claude-sonnet-4-6, gpt-5.3-codex)
+- `agent.autoPR` — Automatically create PRs (true/false)
+- `agent.autoLabel` — Automatically label issues (true/false)
+
+### Sprint Planning
+```
+locus plan "<description>"       # Create a sprint plan from a description
+locus sprint create "<name>"     # Create a sprint milestone
+locus sprint list                # List all sprints
+```
+
+### Execution
+```
+locus run                        # Execute the current sprint
+locus run --resume               # Resume a failed/interrupted run
+```
+
+### Review & Iteration
+```
+locus review                     # Review generated PRs
+locus iterate <pr-number>        # Iterate on a specific PR based on feedback
+```
+
+### Status & Monitoring
+```
+locus status                     # Check sprint progress
+locus logs                       # View execution logs
+```
+
+## How It Works — Step by Step
+
+### Step 1: Choose Your AI Client
+Set the model, then keep using the same Locus command surface. One interface across Claude and Codex means teams switch providers without rewriting process.
+
+### Step 2: Run Through One Interface
+Use built-in orchestration commands for delivery loops. This goes beyond raw provider CLIs by combining planning, execution, review, and iteration workflows.
+
+### Step 3: Persist in GitHub-Native Data
+GitHub is the system of record. Work items stay in issues and milestones, delivery artifacts stay in PRs, and operational status stays visible to the whole team.
+
+### Step 4: Automate with Auto-Approval
+Turn on automation settings to auto-label issues and auto-create PRs. Failed runs can resume from the last unfinished step instead of restarting.
+
+## Architecture
+
+Locus is a local-first CLI with zero server-side components:
+- **Runtime**: Node.js 18+
+- **Backend**: GitHub (via GitHub CLI)
+- **AI Providers**: Anthropic Claude, OpenAI Codex (via their respective APIs)
+- **Version Control**: Git with worktree support for parallel execution
+- **Data Storage**: All state lives in GitHub objects (issues, milestones, labels, PRs)
+- **Privacy**: No telemetry, no data collection, no proprietary servers
+
+## What Locus Is NOT
+- Not a hosted service — runs entirely on your machine
+- Not a code editor or IDE — it is a CLI tool
+- Not a replacement for GitHub — it uses GitHub as its backend
+- Not an AI model provider — it orchestrates existing providers (Claude, Codex)
+- No proprietary servers — your code and prompts never leave your machine
+
+## Comparison with Alternatives
+
+### Locus vs. Claude Code (standalone)
+Claude Code is Anthropic's CLI for interacting with Claude. Locus builds on top of it by adding sprint planning, GitHub-native state management, multi-model support, and orchestration commands. If you only use Claude, Claude Code alone works. If you want structured delivery workflows or multi-model support, Locus adds that layer.
+
+### Locus vs. Codex CLI (standalone)
+Similar to Claude Code, Codex CLI is OpenAI's standalone tool. Locus provides the same orchestration benefits: sprint planning, GitHub-native state, and the ability to switch to Claude without changing your workflow.
+
+### Locus vs. Cursor / AI IDEs
+Cursor and similar AI IDEs are editor-based tools. Locus is a CLI tool that works alongside any editor. If your team uses different editors, Locus provides a shared delivery interface that doesn't depend on IDE choice.
+
+## Frequently Asked Questions
+
+**What is Locus?**
+Locus is an open-source CLI tool that provides a unified interface for AI-powered software engineering across Claude and Codex. It uses GitHub as its operational backend.
+
+**Is Locus free?**
+Yes. Locus is free and open source under the MIT license. You need your own API keys for Claude or Codex.
+
+**Does Locus send my code to its servers?**
+No. Locus runs entirely on your machine. It communicates directly with GitHub and your chosen AI provider. There are no Locus servers.
+
+**What AI models does Locus support?**
+Locus supports Claude (via Anthropic) and Codex (via OpenAI). You can switch between models with a single config command.
+
+**Do I need both Claude and Codex?**
+No. You can use Locus with just one provider. The unified interface means you can add or switch providers later without changing your workflow.
+
+**How do I install Locus?**
+Run `npm install -g @locusai/cli`. You need Node.js 18+ and GitHub CLI installed.
+
+## Links
+- Homepage: https://locusai.dev
+- Documentation: https://docs.locusai.dev
+- Getting Started: https://docs.locusai.dev/getting-started/installation
+- CLI Reference: https://docs.locusai.dev/cli/overview
+- GitHub: https://github.com/asgarovf/locusai
+- npm: https://www.npmjs.com/package/@locusai/cli
+- About: https://locusai.dev/about
+- Contact: https://locusai.dev/contact
+- Privacy Policy: https://locusai.dev/privacy
+- Terms of Service: https://locusai.dev/terms
+- Security: https://locusai.dev/security

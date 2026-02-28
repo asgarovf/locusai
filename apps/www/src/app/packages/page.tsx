@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   openGraph: {
     url: "https://locusai.dev/packages",
   },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────

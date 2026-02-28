@@ -12,6 +12,7 @@ interface Feature {
   icon: LucideIcon;
   color: string;
   docsHref: string;
+  docsLabel: string;
 }
 
 const features: Feature[] = [
@@ -24,6 +25,7 @@ const features: Feature[] = [
     icon: Bot,
     color: "text-violet",
     docsHref: "https://docs.locusai.dev/concepts/unified-interface",
+    docsLabel: "Unified interface docs",
   },
   {
     title: "GitHub as Operational Memory",
@@ -34,6 +36,7 @@ const features: Feature[] = [
     icon: Github,
     color: "text-cyan",
     docsHref: "https://docs.locusai.dev/concepts/github-backend",
+    docsLabel: "GitHub backend docs",
   },
   {
     title: "Built-In Orchestration Tools",
@@ -44,6 +47,7 @@ const features: Feature[] = [
     icon: Wrench,
     color: "text-amber",
     docsHref: "https://docs.locusai.dev/cli/overview",
+    docsLabel: "CLI overview docs",
   },
   {
     title: "Auto-Approval Automation",
@@ -54,6 +58,7 @@ const features: Feature[] = [
     icon: Zap,
     color: "text-emerald",
     docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
+    docsLabel: "Auto-approval docs",
   },
 ];
 
@@ -133,7 +138,7 @@ export function FeatureGrid() {
                 href={feature.docsHref}
                 className="inline-flex items-center gap-1.5 text-xs text-violet mt-4 hover:underline"
               >
-                Evidence in docs
+                {feature.docsLabel}
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </motion.div>

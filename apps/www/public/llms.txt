@@ -1,0 +1,47 @@
+# Locus AI
+
+> Locus is an open-source CLI tool that provides a unified interface for AI-powered software engineering across Claude and Codex. It uses GitHub issues, milestones, and PRs as its operational backend, enabling teams to plan sprints, execute tasks with AI agents, and iterate on feedback without switching tools.
+
+## Key Facts
+- Open source (MIT License), free forever
+- Install: npm install -g @locusai/cli
+- Requires: Node.js 18+, GitHub CLI (gh)
+- Repository: https://github.com/asgarovf/locusai
+- Category: Developer Tools / AI Engineering CLI
+
+## Core Capabilities
+- Unified interface across Claude and Codex — switch models, not tooling
+- GitHub as operational memory — issues, milestones, labels, and PRs are the execution database
+- Built-in orchestration: plan, run, review, iterate, and status commands
+- Auto-approval mode with automatic PR creation, labeling, and resumable execution
+- Git worktree isolation for parallel task execution
+
+## How It Works
+1. Configure your AI model: `locus config set ai.model claude-sonnet-4-6`
+2. Plan a sprint from a description: `locus plan "Add billing portal"`
+3. Execute tasks with AI agents: `locus run`
+4. Review generated PRs: `locus review`
+5. Iterate on feedback: `locus iterate 42`
+6. Check sprint status: `locus status`
+
+## What Locus Is NOT
+- Not a hosted service — runs entirely on your machine
+- Not a code editor or IDE — it is a CLI tool
+- Not a replacement for GitHub — it uses GitHub as its backend
+- No proprietary servers — your code and prompts never leave your machine
+
+## Documentation
+- Docs: https://docs.locusai.dev
+- Getting Started: https://docs.locusai.dev/getting-started/installation
+- CLI Reference: https://docs.locusai.dev/cli/overview
+- How It Works: https://docs.locusai.dev/concepts/how-it-works
+- Unified Interface: https://docs.locusai.dev/concepts/unified-interface
+- GitHub Backend: https://docs.locusai.dev/concepts/github-backend
+- Auto-Approval Mode: https://docs.locusai.dev/concepts/auto-approval-mode
+
+## Links
+- Homepage: https://locusai.dev
+- GitHub: https://github.com/asgarovf/locusai
+- npm: https://www.npmjs.com/package/@locusai/cli
+- About: https://locusai.dev/about
+- Contact: https://locusai.dev/contact

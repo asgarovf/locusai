@@ -81,6 +81,9 @@ pids
 # VS Code extension packaging
 *.vsix
 
+# SEO Analysis
+screenshots/
+
 # package builds
 packages/cli/bin/locus.js
 packages/cli/bin/locus.js.map

@@ -7,13 +7,15 @@
  * - GitHub PRs (agent-managed PRs)
  * - Worktrees (active parallel agents)
  * - Run state (in-progress execution)
+ *
+ * This command does NOT interact with the AI and never triggers sandbox sync.
  */
 
 import { loadConfig } from "../core/config.js";
 import { listIssues, listMilestones, listPRs } from "../core/github.js";
 import { getRunStats, loadRunState } from "../core/run-state.js";
 import { listWorktrees } from "../core/worktree.js";
-import { progressBar } from "../display/progress.js";
+import { progressBar, Spinner } from "../display/progress.js";
 import {
   bold,
   cyan,
@@ -26,6 +28,11 @@ import {
 
 export async function statusCommand(projectRoot: string): Promise<void> {
   const config = loadConfig(projectRoot);
+
+  // Show a spinner while fetching data from GitHub (network calls can be slow)
+  const spinner = new Spinner();
+  spinner.start("Fetching project status...");
+
   const lines: string[] = [];
 
   // ─── Repo Info ───────────────────────────────────────────────────────
@@ -164,6 +171,7 @@ export async function statusCommand(projectRoot: string): Promise<void> {
   }
 
   // ─── Render ──────────────────────────────────────────────────────────
+  spinner.stop();
   lines.push("");
 
   process.stderr.write(`\n${drawBox(lines, { title: "Locus Status" })}\n`);

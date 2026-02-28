@@ -25,6 +25,7 @@ export function Footer() {
             <Link
               href="https://github.com/asgarovf/locusai"
               target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <GithubIcon className="h-3.5 w-3.5" />
@@ -131,6 +132,7 @@ export function Footer() {
                 <Link
                   href="https://www.npmjs.com/package/@locusai/cli"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   npm
@@ -157,6 +159,7 @@ export function Footer() {
                 <Link
                   href="https://github.com/asgarovf/locusai"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   GitHub
@@ -166,6 +169,7 @@ export function Footer() {
                 <Link
                   href="https://github.com/asgarovf/locusai/issues"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Issues
@@ -175,9 +179,26 @@ export function Footer() {
                 <Link
                   href="https://github.com/asgarovf/locusai/blob/master/CONTRIBUTING.md"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Contributing
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Contact
                 </Link>
               </li>
               <li>

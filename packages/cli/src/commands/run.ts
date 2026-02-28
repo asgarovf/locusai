@@ -38,7 +38,6 @@ import {
   saveRunState,
 } from "../core/run-state.js";
 import {
-  cleanupStaleSandboxes,
   detectSandboxSupport,
   resolveSandboxMode,
 } from "../core/sandbox.js";
@@ -147,15 +146,7 @@ export async function runCommand(
       );
     }
 
-    // Clean up stale sandboxes from previous crashes
-    if (sandboxed) {
-      const staleCleaned = await cleanupStaleSandboxes();
-      if (staleCleaned > 0) {
-        process.stderr.write(
-          `  ${dim(`Cleaned up ${staleCleaned} stale sandbox${staleCleaned === 1 ? "" : "es"}.`)}\n`
-        );
-      }
-    }
+    // Note: stale sandbox cleanup is handled centrally in cli.ts prepareSandbox()
 
     // Resume mode
     if (flags.resume) {
@@ -397,7 +388,10 @@ async function handleSprintRun(
     markTaskInProgress(state, task.issue);
     saveRunState(projectRoot, state);
 
-    // Execute (skip per-task PR — a single sprint PR is created after all tasks)
+    // Execute (skip per-task PR — a single sprint PR is created after all tasks).
+    // Sprint tasks always use ephemeral sandboxes (one per task) so the workspace
+    // is fully resynced from the host after each commit. User-managed sandboxes
+    // (config.sandbox.name) are only used in interactive/single-issue commands.
     const result = await executeIssue(projectRoot, {
       issueNumber: task.issue,
       provider: config.ai.provider,
@@ -406,7 +400,6 @@ async function handleSprintRun(
       sprintContext,
       skipPR: true,
       sandboxed,
-      sandboxName: config.sandbox.name,
     });
 
     if (result.success) {
@@ -414,6 +407,15 @@ async function handleSprintRun(
       if (!flags.dryRun) {
         const issueTitle = issue?.title ?? "";
         ensureTaskCommit(projectRoot, task.issue, issueTitle);
+
+        // In sandboxed mode, the ephemeral sandbox was destroyed on task
+        // completion. The next task will create a fresh sandbox that syncs
+        // the latest committed state from the host.
+        if (sandboxed && i < state.tasks.length - 1) {
+          process.stderr.write(
+            `  ${dim("↻ Sandbox will resync on next task")}\n`
+          );
+        }
       }
       markTaskDone(state, task.issue, result.prNumber);
     } else {
@@ -771,14 +773,16 @@ async function handleResume(
     markTaskInProgress(state, task.issue);
     saveRunState(projectRoot, state);
 
+    // Sprint tasks use ephemeral sandboxes (one per task) to guarantee a
+    // clean workspace resync after each commit. Non-sprint resumed tasks
+    // can use the user-managed sandbox if configured.
     const result = await executeIssue(projectRoot, {
       issueNumber: task.issue,
       provider: config.ai.provider,
       model: config.ai.model,
-      // Sprint runs use a single sprint-level PR created at the end
       skipPR: isSprintRun,
       sandboxed,
-      sandboxName: config.sandbox.name,
+      sandboxName: isSprintRun ? undefined : config.sandbox.name,
     });
 
     if (result.success) {
@@ -792,6 +796,13 @@ async function handleResume(
           // Non-fatal
         }
         ensureTaskCommit(projectRoot, task.issue, issueTitle);
+
+        // Ephemeral sandbox was destroyed — next task will resync
+        if (sandboxed) {
+          process.stderr.write(
+            `  ${dim("↻ Sandbox will resync on next task")}\n`
+          );
+        }
       }
       markTaskDone(state, task.issue, result.prNumber);
     } else {

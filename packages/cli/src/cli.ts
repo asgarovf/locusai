@@ -9,7 +9,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isInitialized } from "./core/config.js";
+import { isInitialized, loadConfig } from "./core/config.js";
 import { getGitRoot, isGitRepo } from "./core/context.js";
 import { initLogger } from "./core/logger.js";
 import { getRateLimiter } from "./core/rate-limiter.js";
@@ -252,6 +252,97 @@ function resolveAlias(command: string): string {
   return aliases[command] ?? command;
 }
 
+// ─── Sandbox Sync ────────────────────────────────────────────────────────────
+
+/**
+ * Determine whether a command will interact with the AI and therefore
+ * requires sandbox preparation (detection + stale cleanup).
+ *
+ * Only these commands need sandbox sync:
+ * - issue create  (AI generates issue details)
+ * - plan          (AI generates plan, --from-issues orders issues)
+ * - run           (AI executes issues)
+ * - exec          (AI REPL / one-shot)
+ * - review        (AI reviews PRs)
+ * - iterate       (AI iterates on PR feedback)
+ * - discuss       (AI-powered discussions, including discuss plan)
+ * - config set    (write operation — sandbox may need re-sync)
+ */
+function requiresSandboxSync(
+  command: string,
+  args: string[],
+  flags: { noSandbox: boolean; help: boolean }
+): boolean {
+  // --no-sandbox explicitly disables sandbox
+  if (flags.noSandbox) return false;
+
+  // --help never needs sandbox
+  if (flags.help) return false;
+
+  switch (command) {
+    case "run":
+    case "review":
+    case "iterate":
+      return true;
+
+    case "exec":
+      // "sessions" subcommand doesn't interact with AI
+      return args[0] !== "sessions" && args[0] !== "help";
+
+    case "issue":
+      return args[0] === "create";
+
+    case "plan":
+      // list, show, approve, help don't use AI
+      if (args.length === 0) return false;
+      return !["list", "show", "approve", "help"].includes(args[0]);
+
+    case "discuss":
+      // list, show, delete, help don't use AI (discuss plan does → calls planCommand)
+      if (args.length === 0) return false;
+      return !["list", "show", "delete", "help"].includes(args[0]);
+
+    case "config":
+      return args[0] === "set";
+
+    default:
+      return false;
+  }
+}
+
+/**
+ * Prepare sandbox for AI commands: detect Docker sandbox support and
+ * clean up any stale sandboxes from previous crashes.
+ * Shows a spinner during the operation.
+ * Result is cached — subsequent calls to detectSandboxSupport() are instant.
+ */
+async function prepareSandbox(): Promise<void> {
+  const { Spinner } = await import("./display/progress.js");
+  const {
+    detectSandboxSupport,
+    cleanupStaleSandboxes,
+  } = await import("./core/sandbox.js");
+
+  const spinner = new Spinner();
+  spinner.start("Preparing sandbox...");
+
+  const status = await detectSandboxSupport();
+
+  if (status.available) {
+    spinner.update("Cleaning up stale sandboxes...");
+    const cleaned = await cleanupStaleSandboxes();
+    if (cleaned > 0) {
+      spinner.succeed(
+        `Sandbox ready (cleaned ${cleaned} stale sandbox${cleaned === 1 ? "" : "es"})`
+      );
+    } else {
+      spinner.succeed("Sandbox ready");
+    }
+  } else {
+    spinner.warn(`Sandbox not available: ${status.reason}`);
+  }
+}
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -383,6 +474,17 @@ async function main(): Promise<void> {
     );
     process.stderr.write(`  Run: ${bold("locus init")}\n`);
     process.exit(1);
+  }
+
+  // ── Sandbox preparation ────────────────────────────────────────────────
+  // Only prepare sandbox for commands that interact with the AI.
+  // Non-AI commands (status, logs, config show, sprint, artifacts, etc.)
+  // skip sandbox entirely — no detection, no cleanup, no delay.
+  if (requiresSandboxSync(command, parsed.args, parsed.flags)) {
+    const config = loadConfig(projectRoot);
+    if (config.sandbox.enabled) {
+      await prepareSandbox();
+    }
   }
 
   // Route to command handler

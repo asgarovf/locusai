@@ -242,6 +242,22 @@ html {
   opacity: 0;
 }
 
+/* Hero heading animation — CSS-only to avoid LCP penalty from JS opacity:0 */
+@keyframes heroHeadingIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-heading {
+  animation: heroHeadingIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
 /* Stagger delays */
 .delay-100 {
   animation-delay: 100ms;

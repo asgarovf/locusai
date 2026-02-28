@@ -193,6 +193,7 @@ export default function TermsOfServicePage() {
                   <Link
                     href="https://github.com/asgarovf/locusai/issues"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-violet hover:underline"
                   >
                     GitHub Issues

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import {
   CallToAction,
+  Definition,
+  FAQ,
   FeatureGrid,
   Hero,
   ProductShowcase,
@@ -15,24 +17,38 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "Locus",
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "Linux, macOS, Windows",
-  url: "https://locusai.dev",
-  description:
-    "GitHub-native AI engineering CLI. Turn GitHub issues into shipped code with AI agents. Plan sprints, execute tasks, and iterate on feedback.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  author: {
-    "@id": "https://locusai.dev/#organization",
-  },
-};
+function buildSoftwareJsonLd(version: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": "https://locusai.dev/#software",
+    name: "Locus",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Linux, macOS, Windows",
+    url: "https://locusai.dev",
+    downloadUrl: "https://www.npmjs.com/package/@locusai/cli",
+    license: "https://opensource.org/licenses/MIT",
+    isAccessibleForFree: true,
+    softwareVersion: version,
+    description:
+      "GitHub-native AI engineering CLI. Turn GitHub issues into shipped code with AI agents. Plan sprints, execute tasks, and iterate on feedback.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    author: {
+      "@type": "Organization",
+      name: "Locus AI",
+      url: "https://locusai.dev",
+      "@id": "https://locusai.dev/#organization",
+    },
+    potentialAction: {
+      "@type": "InstallAction",
+      target: "https://www.npmjs.com/package/@locusai/cli",
+    },
+  };
+}
 
 async function getNpmVersion(): Promise<string> {
   try {
@@ -49,12 +65,13 @@ async function getNpmVersion(): Promise<string> {
 
 export default async function Home() {
   const version = await getNpmVersion();
+  const softwareJsonLd = buildSoftwareJsonLd(version);
 
   return (
     <div className="flex min-h-screen flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
       />
       <Navbar />
       <main className="flex-1">
@@ -106,6 +123,9 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* Definition paragraph for AI citability */}
+        <Definition />
+
         {/* Why Locus - four core strengths */}
         <FeatureGrid />
 
@@ -114,6 +134,9 @@ export default async function Home() {
 
         {/* Tool logos */}
         <SupportedTools />
+
+        {/* FAQ for question-based queries */}
+        <FAQ />
 
         {/* Final CTA */}
         <CallToAction />

@@ -179,6 +179,7 @@ export default function SecurityPage() {
               <Link
                 href="https://github.com/asgarovf/locusai/issues"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
               >
                 Report on GitHub
@@ -187,6 +188,7 @@ export default function SecurityPage() {
               <Link
                 href="https://github.com/asgarovf/locusai"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 View source code

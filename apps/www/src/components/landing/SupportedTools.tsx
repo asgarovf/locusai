@@ -65,6 +65,7 @@ export function SupportedTools() {
             key={tool.name}
             href={tool.href}
             target="_blank"
+            rel="noopener noreferrer"
             className="group flex flex-col items-center gap-3 rounded-xl border border-border/20 bg-white/[0.02] px-4 py-5 hover:border-border/40 hover:bg-white/[0.04] transition-all duration-300"
           >
             <div

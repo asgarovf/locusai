@@ -91,7 +91,10 @@ const jsonLd = {
         "@type": "ImageObject",
         url: "https://locusai.dev/logo.png",
       },
-      sameAs: ["https://github.com/asgarovf/locusai"],
+      sameAs: [
+        "https://github.com/asgarovf/locusai",
+        "https://www.npmjs.com/package/@locusai/cli",
+      ],
     },
     {
       "@type": "WebSite",
@@ -100,6 +103,20 @@ const jsonLd = {
       name: "Locus",
       publisher: {
         "@id": "https://locusai.dev/#organization",
+      },
+      description:
+        "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://locusai.dev/#webpage",
+      url: "https://locusai.dev",
+      name: "Locus | GitHub-Native AI Engineering",
+      isPartOf: {
+        "@id": "https://locusai.dev/#website",
+      },
+      about: {
+        "@id": "https://locusai.dev/#software",
       },
       description:
         "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
@@ -119,6 +136,10 @@ export default function RootLayout({
       className={`${dmSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
       <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://widget.whelp.co" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://widget.whelp.co" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
