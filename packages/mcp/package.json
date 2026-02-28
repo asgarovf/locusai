@@ -15,6 +15,8 @@
   },
   "files": [
     "bin",
+    "skills",
+    "scripts",
     "package.json",
     "README.md"
   ],
