@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.18.2
+
+### Patch Changes
+
+- Prompt building fixes
+- Updated dependencies
+  - @locusai/shared@0.18.2
+
 ## 0.18.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.18.2
+
+### Patch Changes
+
+- Prompt building fixes
+
 ## 0.18.1
 
 ### Patch Changes
