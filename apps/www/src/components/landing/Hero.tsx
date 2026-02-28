@@ -52,7 +52,7 @@ export function Hero({ version }: HeroProps) {
           className="text-base md:text-lg text-muted-foreground max-w-2xl mb-8 leading-relaxed"
         >
           Plan, execute, review, and iterate in GitHub-native workflows, with
-          full-auto execution when your team wants speed.
+          full sandboxing support for Claude and Codex when Docker is available.
         </motion.p>
 
         <motion.div
@@ -83,7 +83,16 @@ export function Hero({ version }: HeroProps) {
           >
             GitHub CLI
           </Link>
-          , and{" "}
+          ,{" "}
+          <Link
+            href="https://www.docker.com/products/docker-desktop/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-violet hover:underline"
+          >
+            Docker Desktop 4.58+
+          </Link>{" "}
+          for sandboxing, and{" "}
           <Link
             href="https://docs.locusai.dev/getting-started/installation"
             className="text-violet hover:underline"
@@ -107,10 +116,10 @@ export function Hero({ version }: HeroProps) {
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           <Link
-            href="https://docs.locusai.dev/concepts/how-it-works"
+            href="https://docs.locusai.dev/concepts/security-sandboxing"
             className="inline-flex items-center gap-2 text-sm font-medium text-white px-7 py-3 rounded-xl border border-border/60 hover:bg-white/[0.06] hover:border-border transition-colors"
           >
-            Read Docs
+            Sandboxing Docs
           </Link>
         </motion.div>
 
@@ -139,6 +148,13 @@ export function Hero({ version }: HeroProps) {
             className="hover:text-white transition-colors"
           >
             Auto-approval
+          </Link>
+          <span className="text-border">/</span>
+          <Link
+            href="https://docs.locusai.dev/concepts/security-sandboxing"
+            className="hover:text-white transition-colors"
+          >
+            Security sandboxing
           </Link>
         </motion.div>
       </div>

@@ -4,7 +4,7 @@ description: Built-in tool inventory for Locus, with categorized commands and pr
 
 # Built-In Tools
 
-Locus adds an operational toolchain on top of provider CLIs (Claude/Codex): planning, GitHub-native execution, review loops, status visibility, logging, and package extensibility.
+Locus adds an operational toolchain on top of provider CLIs (Claude/Codex): planning, GitHub-native execution, review loops, status visibility, logging, sandbox lifecycle management, and package extensibility.
 
 Inventory date: **February 27, 2026**  
 Locus CLI version: **0.17.14** (`packages/cli/package.json`)
@@ -65,6 +65,12 @@ Locus built-in tools add:
 | `locus packages` | List installed packages / check outdated | `locus packages outdated` |
 | `locus pkg` | Run package-provided commands | `locus pkg telegram start` |
 
+### 6) Sandbox Management Tools
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus sandbox`](sandbox.md) | Create/manage provider sandboxes, auth sessions, package installs, shell access, and logs | `locus sandbox install bun --provider codex` |
+
 ## Practical Workflows Where Built-In Tools Win
 
 ### Workflow A: Issue-to-PR Delivery with Recovery
@@ -104,4 +110,5 @@ Why this beats raw provider CLI usage:
 - [Auto-Approval Mode](../concepts/auto-approval-mode.md)
 - [Execution Model (Technical)](../concepts/execution-model.md)
 - [GitHub-Native Workflows](../concepts/github-native-workflows.md)
+- [Sandboxing Setup (Docker-First)](../getting-started/sandboxing-setup.md)
 - [Unified Interface Across AI Clients](../concepts/unified-interface.md)

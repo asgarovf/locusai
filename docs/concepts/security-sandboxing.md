@@ -1,33 +1,170 @@
 ---
-description: Docker sandbox isolation for AI agent execution — architecture, configuration, and troubleshooting.
+description: Security model for Docker sandbox isolation in Locus, including `.env` protection, `.sandboxignore` behavior, and sync boundaries.
 ---
 
 # Security & Sandboxing
 
-Locus can run AI agents inside **Docker Desktop sandboxes** — lightweight microVMs that provide hypervisor-level isolation. This is the recommended way to run AI agents, and it is enabled by default when Docker Desktop 4.58+ is installed.
+Locus can run AI agents inside **Docker Desktop sandboxes** (Docker 4.58+). This page focuses on the security model: what is protected by default, what is not, and how to configure file exclusions safely.
 
-## What Sandboxing Provides
+## Threat Model
 
-Each sandbox is a full microVM with:
+Sandboxing is designed to reduce accidental data exposure during AI execution.
 
-- **Separate kernel** — the agent runs in its own Linux kernel, isolated from your host OS
-- **Filesystem isolation** — only the project workspace is synced into the sandbox via bidirectional file sync
-- **Credential protection** — host environment variables, SSH keys, and credentials are not exposed to the agent
-- **Network proxy** — outbound traffic goes through Docker's network proxy, preventing direct host network access
-- **Resource limits** — each sandbox is a bounded microVM with its own resource allocation
+Primary risks this model addresses:
+
+- AI agent reads host secrets from local files.
+- AI agent accesses host-level credentials or system paths.
+- Sensitive files are unintentionally included in model context during code operations.
+
+Out of scope risks you still need to manage:
+
+- Running with `--no-sandbox` (or unsandboxed fallback in auto mode) removes sandbox protections.
+- Secrets committed to tracked repository files are still visible in the synced workspace.
+- Misconfigured `.sandboxignore` rules can re-include sensitive files.
 
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) **4.58+** with sandbox support
 - Verify with: `docker sandbox ls`
+- Setup guide: [Sandboxing Setup (Docker-First)](../getting-started/sandboxing-setup.md)
 
-## Default Behavior
+## Default Security Behavior
 
-| Docker Status | Locus Behavior |
-|---------------|----------------|
-| Docker 4.58+ installed and running | Agents run inside sandboxes automatically |
-| Docker not installed or outdated | Warning printed, agents run unsandboxed |
-| Docker not responding | Warning printed, agents run unsandboxed |
+| Condition | Behavior | Security Impact |
+|-----------|----------|-----------------|
+| Docker sandbox available and provider sandboxes configured (`locus sandbox`) | Runs in sandbox | Isolated execution with workspace sync controls |
+| Docker unavailable (default auto mode) | Warns and runs unsandboxed | Agent has host-level access; lower security |
+| `--sandbox=require` | Fails if sandbox unavailable | Prevents accidental insecure fallback |
+| `--no-sandbox` | Runs unsandboxed after warning | Explicitly bypasses isolation |
+
+## `.env` and Secret File Protection
+
+When you run `locus init`, Locus generates a default `.sandboxignore` with secret-focused exclusions, including:
+
+```text
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account*.json
+.aws/
+.gcp/
+.azure/
+```
+
+What this means in practice:
+
+- `.env` and `.env.*` are excluded from sandbox execution by default.
+- `!.env.example` is intentionally re-included for template/documentation use.
+- Cloud credential directories and common key/cert files are excluded by default.
+
+Important caveat:
+
+- These protections depend on `.sandboxignore` rules staying intact. If your team removes or weakens these patterns, sensitive files can be synced and exposed to agent actions.
+
+## `.sandboxignore` Syntax and Precedence
+
+Locus uses `.gitignore`-style pattern rules in `.sandboxignore`.
+
+Supported rule forms:
+
+- `# comment` for comments.
+- `pattern` to exclude matching files.
+- `dir/` to exclude matching directories.
+- `!pattern` to negate a previous exclusion (re-include matches).
+
+Precedence behavior:
+
+- Patterns are evaluated as exclusions plus negated exceptions.
+- Negation rules (`!`) are treated as keep rules against broader exclusion patterns.
+- If no positive exclusion patterns exist, nothing is removed.
+
+Example:
+
+```text
+# Exclude all env files
+.env.*
+
+# But keep public sample env
+!.env.example
+
+# Exclude full secrets directory
+secrets/
+```
+
+## Practical `.sandboxignore` Examples
+
+Use these as a starting baseline for most teams:
+
+```text
+# Environment and local config
+.env
+.env.*
+!.env.example
+
+# Secret material
+*.pem
+*.key
+*.p12
+*.pfx
+*.kubeconfig
+
+# Cloud and infra credentials
+.aws/
+.gcp/
+.azure/
+.terraform/
+
+# Local runtime state
+*.sqlite
+*.db
+```
+
+Unsafe patterns to avoid:
+
+- `!.env` (re-includes production/local env files)
+- `!*.pem` (re-includes private keys)
+- Removing cloud credential directory exclusions without compensating controls
+
+## Automatic Sync Boundaries
+
+Locus sync behavior in sandbox mode:
+
+- **Workspace scope:** the active project workspace is synced between host and sandbox.
+- **Direction:** sync is bidirectional (changes from sandboxed execution come back to your workspace).
+- **Timing:** sync occurs during sandboxed command execution and `.sandboxignore` is enforced before agent execution steps.
+- **Exclusions:** files matching `.sandboxignore` patterns are removed from sandbox-visible workspace content.
+
+What does *not* sync by default:
+
+- Files excluded by `.sandboxignore`.
+- Host paths outside the configured workspace scope.
+
+## Safe vs Unsafe Patterns
+
+| Pattern | Example | Risk Level |
+|--------|---------|------------|
+| Safe | Keep `.env`, keys, and cloud credential dirs excluded in `.sandboxignore` | Low |
+| Safe | Use `--sandbox=require` in CI and production automation | Low |
+| Unsafe | Use auto mode in environments where Docker may not be running | Medium |
+| Unsafe | Run with `--no-sandbox` for normal development workflows | High |
+| Unsafe | Store real credentials in tracked repo files | High |
+
+## Team Security Checklist
+
+Use this checklist before rolling out sandboxed AI workflows:
+
+- Docker Desktop 4.58+ is installed and `docker sandbox ls` succeeds on contributor machines.
+- CI and critical automations use `--sandbox=require` to block insecure fallback.
+- `.sandboxignore` is version-controlled and includes `.env`, credential files, and cloud config directories.
+- `.env.example` contains placeholders only (no real secrets).
+- Real secrets are stored in secret managers or local-only files, never tracked source files.
+- Team reviews `.sandboxignore` changes in PRs as security-sensitive changes.
 
 ## CLI Flags
 
@@ -44,66 +181,27 @@ locus run 42
 # Explicitly opt out
 locus run 42 --no-sandbox
 
-# Require sandbox (e.g., in CI)
+# Require sandbox (recommended for CI)
 locus run 42 --sandbox=require
 ```
 
-## Configuration
+## Parallel Execution and Lifecycle
 
-Add or modify the `sandbox` section in `.locus/config.json`:
+Locus uses provider-specific persistent sandboxes created by `locus sandbox`.
 
-```json
-{
-  "sandbox": {
-    "enabled": true,
-    "extraWorkspaces": ["/path/to/shared/libs"],
-    "readOnlyPaths": ["/path/to/configs"]
-  }
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `enabled` | boolean | `true` | Enable sandbox by default. Set to `false` to disable. |
-| `extraWorkspaces` | string[] | `[]` | Additional host paths synced into the sandbox workspace. |
-| `readOnlyPaths` | string[] | `[]` | Host paths mounted as read-only inside the sandbox. |
-
-CLI flags override config: `--no-sandbox` overrides `enabled: true`, and `--sandbox=require` enforces sandboxing regardless of config.
-
-```bash
-# Disable sandbox via config
-locus config set sandbox.enabled false
-```
-
-## Parallel Execution
-
-When running multiple issues in parallel (`locus run 42 43 44`), each issue gets its own isolated sandbox:
-
-```
-locus run 42 43 44
-  → sandbox "locus-issue-42-<ts>" → agent executes issue 42
-  → sandbox "locus-issue-43-<ts>" → agent executes issue 43
-  → sandbox "locus-issue-44-<ts>" → agent executes issue 44
-```
-
-Each sandbox has its own kernel, synced workspace (the git worktree), and network proxy. The `agent.maxParallel` config limits how many sandboxes run concurrently.
-
-## Lifecycle & Cleanup
-
-Sandboxes are automatically managed:
-
-1. **Created** at the start of each agent execution
-2. **Cleaned up** in the `finally` block after execution (success or failure)
-3. **Aborted** via `docker sandbox rm` when the user interrupts (SIGINT/SIGTERM)
-4. **Stale cleanup** — orphaned `locus-*` sandboxes from previous crashes are removed at the start of each run
+- `locus run`, `locus exec`, `locus review`, and `locus iterate` execute through the configured provider sandbox.
+- Parallel issue runs can share the same provider sandbox while operating on separate worktrees.
+- Provider sandboxes persist across commands and sessions until removed with `locus sandbox rm`.
 
 ## Troubleshooting
 
+For full setup and operational troubleshooting (startup, permissions, and sync), see [Sandboxing Setup (Docker-First)](../getting-started/sandboxing-setup.md).
+
 ### "Docker sandbox not available"
 
-Docker Desktop is either not installed or the version is below 4.58.
+Docker Desktop is missing or below 4.58.
 
-**Fix:** Install or upgrade [Docker Desktop](https://www.docker.com/products/docker-desktop/) to 4.58+. Verify with:
+**Fix:** Upgrade Docker Desktop and verify:
 
 ```bash
 docker sandbox ls
@@ -111,27 +209,14 @@ docker sandbox ls
 
 ### "Docker is not responding"
 
-Docker Desktop is installed but the daemon is not running or not responding within 5 seconds.
+Docker Desktop is installed but daemon is unavailable.
 
-**Fix:** Start Docker Desktop and wait for it to initialize. Check `docker info` to verify the daemon is running.
-
-### Sandbox performance
-
-Each sandbox is a lightweight microVM. Resource usage scales with the number of concurrent sandboxes:
-
-- **Single run:** One sandbox — minimal overhead
-- **Parallel run:** One sandbox per issue — resource usage proportional to `agent.maxParallel`
-
-If your machine is resource-constrained, reduce `agent.maxParallel`:
+**Fix:** Start Docker Desktop, wait for full initialization, then run:
 
 ```bash
-locus config set agent.maxParallel 2
+docker info
 ```
 
 ### File sync delays
 
-Docker sandboxes use bidirectional file sync between your host workspace and the sandbox. For most projects this is transparent, but very large files or high-frequency writes may experience slight latency.
-
-### Network restrictions
-
-Outbound traffic from the sandbox goes through Docker's network proxy. API calls to GitHub, Anthropic, and OpenAI work transparently. If you use a corporate proxy or VPN, you may need to configure Docker Desktop's proxy settings.
+Large files or high-frequency writes can cause visible sync latency. Re-run after writes settle and keep large generated artifacts out of active loops.

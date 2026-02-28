@@ -110,18 +110,18 @@ The run state file is cleared when all tasks complete successfully.
 
 ## Sandbox Isolation
 
-By default, Locus runs AI agents inside **Docker Desktop sandboxes** when Docker Desktop 4.58+ is available. Each sandbox is a lightweight microVM with hypervisor-level isolation — the agent runs in a separate kernel and cannot directly access your host filesystem, network, or credentials.
+Locus runs `locus run` through provider sandboxes created by `locus sandbox`. This uses Docker Desktop sandboxes (4.58+) with the same isolation model for Claude and Codex.
 
 | Scenario | Behavior |
 |----------|----------|
-| Docker 4.58+ installed | Sandbox used automatically |
+| Docker 4.58+ installed and provider sandboxes configured | Sandbox used |
 | Docker not available | Warning printed, runs unsandboxed |
 | `--no-sandbox` | Sandbox disabled, interactive safety warning shown |
 | `--sandbox=require` | Sandbox required — exits with error if unavailable |
 
-For parallel runs, each issue gets its own isolated sandbox. Sandboxes are automatically cleaned up on completion, failure, or interrupt (SIGINT/SIGTERM).
+Provider sandboxes are persistent and reused across runs until explicitly removed with `locus sandbox rm`.
 
-See also: [Security & Sandboxing](../concepts/security-sandboxing.md)
+See also: [locus sandbox](sandbox.md) and [Security & Sandboxing](../concepts/security-sandboxing.md)
 
 ---
 

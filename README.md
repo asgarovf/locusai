@@ -33,7 +33,7 @@ AI coding agents are powerful — but they're point solutions. You still need to
 - **Unified AI interface** — Switch between [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) and [Codex](https://openai.com/index/introducing-codex/) without changing your workflow
 - **End-to-end orchestration** — Plan, execute, review, and iterate in one tool
 - **GitHub-native** — No new accounts, no dashboards, no vendor lock-in. Everything lives in Issues, Milestones, Labels, and PRs
-- **Safe by default** — Docker sandbox isolation keeps AI agents in a separate kernel, away from your host
+- **Unified sandboxing layer** — Run Claude and Codex through the same Docker-backed sandbox interface
 
 ## Quick Start
 
@@ -42,7 +42,7 @@ AI coding agents are powerful — but they're point solutions. You still need to
 - [Node.js](https://nodejs.org) 18+
 - [GitHub CLI](https://cli.github.com) (`gh`) — authenticated via `gh auth login`
 - An AI provider CLI: [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) or [Codex](https://openai.com/index/introducing-codex/)
-- *(Optional)* [Docker Desktop](https://www.docker.com/products/docker-desktop/) 4.58+ for sandbox isolation
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) 4.58+ for sandboxed execution (`docker sandbox`)
 
 ### Install and run
 
@@ -65,6 +65,10 @@ locus review
 # Agents address feedback and update the PRs
 locus iterate
 ```
+
+For Docker-first sandbox setup and operations (create/auth/install/exec/shell/logs), see:
+- [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
+- [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
 ## How It Works
 
@@ -107,7 +111,7 @@ Review pull requests with AI-powered analysis. Posts inline comments directly on
 Agents re-execute tasks with PR review comments as context, updating code until it's ready to merge. Close the loop without manual intervention.
 
 ### Docker sandbox isolation
-Hypervisor-level isolation via Docker Desktop sandboxes. AI agents run in a separate microVM kernel with no direct access to your host filesystem, network, or credentials. Enabled automatically when Docker 4.58+ is available.
+Claude and Codex use the same Docker-backed sandboxing layer. Locus syncs your workspace into sandbox execution while enforcing `.sandboxignore` exclusions to keep sensitive files controlled.
 
 ### Extensible packages
 Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk).
@@ -161,10 +165,14 @@ Install community packages via `locus install <package>`. Build your own with th
 
 | Command | Description |
 |---------|-------------|
-| `locus sandbox` | Create a persistent Docker sandbox |
-| `locus sandbox claude` | Authenticate Claude inside the sandbox |
-| `locus sandbox codex` | Authenticate Codex inside the sandbox |
-| `locus sandbox rm` | Destroy the sandbox |
+| `locus sandbox` | Create provider sandboxes (Claude + Codex) and enable sandbox mode |
+| `locus sandbox claude` | Authenticate Claude inside its sandbox |
+| `locus sandbox codex` | Authenticate Codex inside its sandbox |
+| `locus sandbox install <pkg>` | Install global npm package(s) in provider sandbox(s) |
+| `locus sandbox exec <provider> -- <cmd...>` | Run a command inside a provider sandbox |
+| `locus sandbox shell <provider>` | Open an interactive shell in a provider sandbox |
+| `locus sandbox logs <provider>` | Show provider sandbox logs |
+| `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
 | `locus sandbox status` | Show current sandbox state |
 
 ## Workflows
@@ -222,13 +230,20 @@ After `locus init`, your project gets a `.locus/` directory:
 
 ## Security & Sandboxing
 
-Locus supports running AI agents inside **Docker Desktop sandboxes** — lightweight microVMs that provide hypervisor-level isolation. Each sandbox runs a separate kernel, so the AI agent cannot directly access your host filesystem, network, or environment variables.
+Locus supports running AI agents inside **Docker Desktop sandboxes** (4.58+) with one interface for Claude and Codex. Sandbox mode isolates execution from your host and enforces sync controls with `.sandboxignore`.
 
-When Docker Desktop 4.58+ is installed, Locus **automatically** runs agents inside a sandbox. If Docker is not available, it falls back to unsandboxed execution with a warning.
+Sandbox execution requires provider sandboxes configured via `locus sandbox`. In default auto mode, Locus uses sandboxing when Docker is available and provider sandboxes are configured; if Docker is unavailable, it warns and can fall back to unsandboxed execution.
+
+Security defaults and controls:
+
+- `.env` and common secret patterns are excluded from sandbox sync by default via `.sandboxignore` (created by `locus init`).
+- `.sandboxignore` defines what is excluded from sandbox-visible workspace content.
+- Use `--sandbox=require` in CI or critical automation to prevent insecure fallback.
+- Workspace sync is bidirectional for included files; excluded files stay out of sandbox execution.
 
 | Flag | Behavior |
 |------|----------|
-| *(default)* | Use sandbox if Docker is available; warn and fall back if not |
+| *(default)* | Use sandbox when configured and available; warn and fall back if Docker is unavailable |
 | `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
 | `--sandbox=require` | Require sandbox — fail if Docker sandbox is unavailable |
 
@@ -243,6 +258,11 @@ Configure sandbox behavior in `.locus/config.json`:
   }
 }
 ```
+
+Full setup and security details:
+
+- [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
+- [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
 ## VS Code Extension
 
