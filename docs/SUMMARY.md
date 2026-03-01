@@ -6,7 +6,6 @@
 * [Installation](getting-started/installation.md)
 * [Sandboxing Setup (Docker-First)](getting-started/sandboxing-setup.md)
 * [Quickstart](getting-started/quickstart.md)
-* [Initialization](getting-started/initialization.md)
 
 ## Core Strengths
 
@@ -18,12 +17,10 @@
 ## Workflow Deep Dives
 
 * [How Locus Works](concepts/how-it-works.md)
-* [AI Providers (Technical Reference)](concepts/ai-providers.md)
+* [Execution Model](concepts/execution-model.md)
 * [GitHub-Native Workflows](concepts/github-native-workflows.md)
-* [Execution Model (Technical)](concepts/execution-model.md)
 * [Sprints & Issues](concepts/sprints-and-issues.md)
 * [Security & Sandboxing](concepts/security-sandboxing.md)
-* [Your First Sprint (Detailed)](getting-started/first-sprint.md)
 
 ## CLI Reference
 

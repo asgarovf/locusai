@@ -4,10 +4,6 @@ description: How Locus executes tasks -- sprint mode, standalone mode, run state
 
 # Execution Model
 
-{% hint style="info" %}
-For operator guidance on safeguards, boundaries, and rollback in high-automation runs, see [Auto-Approval Mode](auto-approval-mode.md).
-{% endhint %}
-
 ## Overview
 
 Locus supports two execution modes:
@@ -21,129 +17,125 @@ The mode is determined automatically based on how you invoke `locus run`.
 
 ## Sprint Mode (Sequential)
 
-Sprint mode is activated when you run `locus run` with an active sprint and no issue numbers.
+Sprint mode activates when you run `locus run` with an active sprint and no issue numbers.
 
 ```bash
-# Set active sprint and run
 locus sprint active "Sprint 1"
 locus run
 ```
 
 ### How It Works
 
-1. Locus creates (or checks out) a branch named `locus/sprint-<name>`, derived from the sprint title. For example, sprint "Sprint 1" produces branch `locus/sprint-sprint-1`.
+```mermaid
+sequenceDiagram
+    participant L as Locus CLI
+    participant GH as GitHub
+    participant AI as AI Agent
+    participant Git as Git
 
-2. Issues are fetched from the milestone and sorted by their `order:N` labels.
+    L->>GH: Fetch sprint issues (ordered by order:N)
+    L->>Git: Create/checkout locus/sprint-<name>
 
-3. Each task is executed sequentially on this single branch. After task N completes, task N+1 begins on the same branch with all of task N's changes already present.
+    loop For each task in order
+        L->>GH: Label issue as locus:in-progress
+        L->>AI: Send prompt (issue + context + sprint diff)
+        AI->>Git: Make code changes
+        AI-->>L: Stream output
+        L->>GH: Label issue as locus:done
+        L->>L: Save run state
+    end
 
-4. Before each task (except the first), Locus provides **sprint context** -- the cumulative diff from the base branch -- so the AI agent knows what previous tasks changed and can build upon that work.
+    L->>Git: Push branch
+    L->>GH: Create sprint PR
+```
 
-5. Execution state is persisted continuously, and PR creation is handled automatically when `agent.autoPR` is enabled (sprint-level PR for sprint runs, issue PRs for standalone runs).
+1. Locus creates (or checks out) a branch named `locus/sprint-<name>`.
+2. Issues are fetched from the milestone and sorted by `order:N` labels.
+3. Each task executes sequentially on this single branch. After task N completes, task N+1 begins with all of task N's changes already present.
+4. Before each task (except the first), Locus provides **sprint context** -- the cumulative diff from the base branch -- so the AI agent knows what previous tasks changed.
+5. Run state is persisted continuously for resume support.
 
 ### Why Sequential
 
-Sprint tasks are designed to build on each other. Task 2 may depend on files created by task 1. Running them on a single branch in order ensures each task sees the full state of all previous work without merge conflicts between tasks.
+Sprint tasks build on each other. Task 2 may depend on files created by task 1. Running them on a single branch in order ensures each task sees the full state of all previous work.
 
 ### Sprint Branch Naming
-
-The branch name follows the pattern:
 
 ```
 locus/sprint-<normalized-sprint-name>
 ```
 
-The sprint name is lowercased and spaces are replaced with hyphens. For example:
-
-| Sprint Name       | Branch                          |
-|--------------------|---------------------------------|
-| Sprint 1           | `locus/sprint-sprint-1`         |
-| Auth Feature       | `locus/sprint-auth-feature`     |
-| v2.0 Migration     | `locus/sprint-v2.0-migration`   |
+| Sprint Name | Branch |
+|---|---|
+| Sprint 1 | `locus/sprint-sprint-1` |
+| Auth Feature | `locus/sprint-auth-feature` |
+| v2.0 Migration | `locus/sprint-v2.0-migration` |
 
 ---
 
 ## Standalone Mode (Parallel)
 
-Standalone mode is activated when you pass one or more issue numbers to `locus run`.
+Standalone mode activates when you pass one or more issue numbers to `locus run`.
 
-### Single Issue
+### How It Works
 
-```bash
-locus run 42
+```mermaid
+graph TB
+    subgraph "locus run 42 43 44"
+        A[Issue #42] --> W1[Worktree: .locus/worktrees/issue-42<br>Branch: locus/issue-42]
+        B[Issue #43] --> W2[Worktree: .locus/worktrees/issue-43<br>Branch: locus/issue-43]
+        C[Issue #44] --> W3[Worktree: .locus/worktrees/issue-44<br>Branch: locus/issue-44]
+    end
+
+    W1 --> PR1[PR for #42]
+    W2 --> PR2[PR for #43]
+    W3 --> PR3[PR for #44]
 ```
 
-A single standalone issue runs in a git worktree at `.locus/worktrees/issue-42` on a branch named `locus/issue-42`. The worktree is branched from the configured base branch (typically `main`).
-
-After execution:
-- On success, the worktree is cleaned up automatically
-- On failure, the worktree is preserved for debugging
-
-### Multiple Issues (Parallel)
-
 ```bash
+# Single issue -- isolated worktree
+locus run 42
+
+# Multiple issues -- parallel worktrees
 locus run 42 43 44
 ```
 
-Multiple standalone issues run in parallel, each in its own git worktree. Concurrency is controlled by the `agent.maxParallel` config setting (default: 3).
-
-Issues are processed in batches. If you have 6 issues and `maxParallel` is 3, the first 3 run concurrently, then the next 3 start after the first batch completes.
-
-### Worktree Layout
-
-```
-.locus/worktrees/
-  issue-42/     # Branch: locus/issue-42
-  issue-43/     # Branch: locus/issue-43
-  issue-44/     # Branch: locus/issue-44
-```
-
-Each worktree is a full checkout of the repository at the base branch. The AI agent works inside the worktree directory, making changes independently of the main working tree.
+- Each issue runs in its own git worktree at `.locus/worktrees/issue-<N>`
+- Each worktree gets its own branch: `locus/issue-<N>`
+- Concurrency is controlled by `agent.maxParallel` (default: 3)
+- On success, worktrees are cleaned up automatically
+- On failure, worktrees are preserved for debugging
 
 ### Restrictions
 
-Sprint issues (those assigned to a milestone) cannot be run in parallel. If you attempt to pass sprint issue numbers to `locus run`, it will reject the request and direct you to use sprint mode instead.
+Sprint issues (those assigned to a milestone) cannot be run in parallel. Use sprint mode instead.
 
 ---
 
 ## Task Lifecycle
 
-Each task moves through the following statuses during execution:
-
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> in_progress: locus run picks up task
+    in_progress --> done: AI completes successfully
+    in_progress --> failed: AI encounters error
+    failed --> in_progress: locus run --resume
+    done --> [*]
 ```
-pending --> in_progress --> done
-                       \-> failed
-```
 
-### Pending
-
-The task is queued for execution. Its GitHub label is `locus:queued`.
-
-### In Progress
-
-The task is currently being executed by an AI agent. Locus updates the GitHub label to `locus:in-progress` and removes `locus:queued` and `locus:failed` (in case of retry).
-
-### Done
-
-The AI agent completed the task successfully. Locus:
-- Updates the label to `locus:done`
-- Creates a PR (if `agent.autoPR` is enabled)
-- Posts a summary comment on the issue with duration and PR number
-
-### Failed
-
-The AI agent encountered an error. Locus:
-- Updates the label to `locus:failed`
-- Posts an error comment on the issue with the failure message and duration
-- In sprint mode with `sprint.stopOnFailure` enabled (default), stops the sprint
+| Status | GitHub Label | What Happens |
+|---|---|---|
+| Pending | `locus:queued` | Task is waiting for execution |
+| In Progress | `locus:in-progress` | AI agent is currently working |
+| Done | `locus:done` | PR created, summary comment posted on issue |
+| Failed | `locus:failed` | Error comment posted, sprint stops (if `stopOnFailure`) |
 
 ---
 
-## Run State Persistence
+## Run State & Resume
 
-Locus tracks execution progress in `.locus/run-state.json`. This file is written after every task status change, providing a checkpoint that survives process interruption.
-
-### Run State Structure
+Locus tracks execution progress in `.locus/run-state.json`:
 
 ```json
 {
@@ -151,96 +143,57 @@ Locus tracks execution progress in `.locus/run-state.json`. This file is written
   "type": "sprint",
   "sprint": "Sprint 1",
   "branch": "locus/sprint-sprint-1",
-  "startedAt": "2026-02-24T10:30:00.000Z",
   "tasks": [
-    { "issue": 15, "order": 1, "status": "done", "pr": 20, "completedAt": "..." },
-    { "issue": 16, "order": 2, "status": "failed", "failedAt": "...", "error": "..." },
+    { "issue": 15, "order": 1, "status": "done", "pr": 20 },
+    { "issue": 16, "order": 2, "status": "failed", "error": "..." },
     { "issue": 17, "order": 3, "status": "pending" }
   ]
 }
 ```
 
-The run state is automatically deleted when all tasks complete successfully.
-
----
-
-## Resume from Failures
-
-The `--resume` flag picks up where a previous run left off:
+Resume from failures:
 
 ```bash
 locus run --resume
 ```
 
-Resume mode:
-
-1. Loads the existing run state from `.locus/run-state.json`
+1. Loads existing run state
 2. For sprint runs, checks out the sprint branch
-3. Finds the first failed task (for retry) or the next pending task
-4. Resets failed tasks to pending and re-executes them
+3. Finds the first failed task (for retry) or next pending task
+4. Resets failed tasks to pending and re-executes
 5. Continues through remaining pending tasks
 
-If `sprint.stopOnFailure` is enabled and a retried task fails again, the sprint stops and you can resume again after addressing the issue.
+The run state is automatically deleted when all tasks complete successfully.
 
 ---
 
-## Conflict Handling and Rebase
+## Conflict Handling
 
-During sprint execution, the base branch may advance (e.g., someone merges a PR to `main`). Locus detects this and handles it automatically.
+During sprint execution, the base branch may advance. Locus detects this and handles it automatically.
 
-### Detection
-
-Before each task (starting from the second task), if `agent.rebaseBeforeTask` is enabled (default), Locus:
-
-1. Fetches the latest base branch from origin
-2. Finds the merge base between the sprint branch and the remote base
-3. Checks if the base branch has new commits since the merge base
-4. Identifies overlapping files (files changed in both branches)
-
-### Auto-Rebase
-
-If the base branch advanced but there are no file-level conflicts, Locus automatically rebases the sprint branch onto the latest base:
-
-```
-Base branch advanced (3 new commits) -- auto-rebasing...
+```mermaid
+flowchart TD
+    A[Before each task] --> B{Base branch advanced?}
+    B -->|No| C[Continue execution]
+    B -->|Yes| D{File conflicts?}
+    D -->|No| E[Auto-rebase sprint branch]
+    E --> C
+    D -->|Yes| F[Stop sprint with conflict details]
+    F --> G["Manual resolve + locus run --resume"]
 ```
 
-### Conflict Resolution
-
-If overlapping files are detected (both the sprint branch and base branch modified the same files), Locus stops the sprint and provides instructions:
-
-```
-Merge conflict detected
-
-  Base branch origin/main has 3 new commits
-  The following files were modified in both branches:
-
-    - src/auth/login.ts
-    - src/middleware/auth.ts
-
-  To resolve:
-    1. git rebase origin/main
-    2. Resolve conflicts in the listed files
-    3. git rebase --continue
-    4. locus run --resume to continue the sprint
-```
-
-After you resolve the conflicts manually, `locus run --resume` continues execution from where it stopped.
+If `agent.rebaseBeforeTask` is enabled (default):
+- **No conflicts:** Locus auto-rebases the sprint branch onto the latest base
+- **Conflicts detected:** Sprint stops with a list of conflicting files and instructions to resolve manually
 
 ---
 
 ## PR Creation
 
-When execution produces completed work and `agent.autoPR` is enabled (default), Locus creates PRs automatically:
+When `agent.autoPR` is enabled (default), Locus creates PRs automatically:
 
-1. Checks if there are changes to push (compares the current branch against `origin/<baseBranch>`)
-2. Pushes the branch to origin
-3. Creates a PR via `gh pr create`:
-   - **Standalone issue runs:** title like `<issue title> (#<issue number>)`, body includes `Closes #<issue number>`
-   - **Sprint runs:** title like `Sprint: <sprint name>`, body includes `Closes #<issue>` lines for completed tasks
-   - **Base/Head:** base is your configured base branch (for example `main`), head is the run branch
-
-In sprint runs, Locus opens a single sprint-level PR that references all completed issues. In standalone issue runs, it opens issue-level PRs.
+- **Sprint runs:** Single sprint-level PR referencing all completed issues (`Closes #N`)
+- **Standalone runs:** One PR per issue
 
 The `Closes #N` syntax ensures GitHub automatically closes the issue when the PR is merged.
 
@@ -248,48 +201,41 @@ The `Closes #N` syntax ensures GitHub automatically closes the issue when the PR
 
 ## Dry Run
 
-The `--dry-run` flag simulates execution without making any changes:
+Preview execution without making changes:
 
 ```bash
 locus run --dry-run
 ```
 
-In dry-run mode, Locus:
-- Fetches issues and displays the execution plan
-- Shows provider, model, and prompt length for each task
-- Does not create branches, run AI agents, update labels, or create PRs
-
-This is useful for verifying sprint configuration and task ordering before committing to a full run.
+Fetches issues, displays the execution plan (provider, model, prompt length), but does not create branches, run agents, update labels, or create PRs.
 
 ---
 
 ## Interruption
 
-Pressing **ESC** or **Ctrl+C** during execution triggers a graceful interruption:
+Pressing **ESC** or **Ctrl+C** during execution triggers graceful interruption:
 
-- First press: sends SIGTERM to the running AI process, preserves partial output, and stops execution
-- Second press within 2 seconds: force-exits immediately
+- First press: sends SIGTERM, preserves partial output, saves run state
+- Second press within 2 seconds: force-exits
 
-The run state is saved before the process exits, so `locus run --resume` can pick up where the interruption occurred.
+Run state is saved so `locus run --resume` can pick up where interruption occurred.
 
 ---
 
 ## Configuration Reference
 
-These config values control execution behavior:
-
-| Config Path                | Default    | Description                                     |
-|----------------------------|------------|-------------------------------------------------|
-| `agent.maxParallel`        | `3`        | Max concurrent tasks in parallel mode            |
-| `agent.autoLabel`          | `true`     | Automatically update issue labels during execution |
-| `agent.autoPR`             | `true`     | Automatically create PRs for completed tasks     |
-| `agent.baseBranch`         | `main`     | Base branch for PRs and worktree creation        |
-| `agent.rebaseBeforeTask`   | `true`     | Check for base branch drift between tasks        |
-| `sprint.stopOnFailure`     | `true`     | Stop sprint execution when a task fails          |
-| `sprint.active`            | `null`     | Name of the currently active sprint              |
+| Config Path | Default | Description |
+|---|---|---|
+| `agent.maxParallel` | `3` | Max concurrent tasks in parallel mode |
+| `agent.autoLabel` | `true` | Auto-update issue labels during execution |
+| `agent.autoPR` | `true` | Auto-create PRs for completed tasks |
+| `agent.baseBranch` | `main` | Base branch for PRs and worktree creation |
+| `agent.rebaseBeforeTask` | `true` | Check for base branch drift between tasks |
+| `sprint.stopOnFailure` | `true` | Stop sprint execution when a task fails |
+| `sprint.active` | `null` | Name of the currently active sprint |
 
 ## Related Docs
 
+- [How Locus Works](how-it-works.md)
 - [Auto-Approval Mode](auto-approval-mode.md)
-- [Built-In Tools](../cli/overview.md)
 - [locus run](../cli/run.md)

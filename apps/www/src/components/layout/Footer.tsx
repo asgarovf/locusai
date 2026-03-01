@@ -95,6 +95,22 @@ export function Footer() {
                   locus sprint
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="https://docs.locusai.dev/cli/sandbox"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
+                >
+                  locus sandbox
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://docs.locusai.dev/cli/iterate"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono text-xs"
+                >
+                  locus iterate
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -136,6 +152,14 @@ export function Footer() {
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   npm
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://docs.locusai.dev/getting-started/sandboxing-setup"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sandboxing Setup
                 </Link>
               </li>
               <li>

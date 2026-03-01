@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface FAQItem {
@@ -32,7 +32,8 @@ const faqs: FAQItem[] = [
       "Locus supports Claude (via Anthropic) and Codex (via OpenAI). You can switch between models with a single config command: locus config set ai.model <model-name>. The unified interface means your workflow stays the same regardless of provider.",
   },
   {
-    question: "How is Locus different from using Claude Code or Codex CLI directly?",
+    question:
+      "How is Locus different from using Claude Code or Codex CLI directly?",
     answer:
       "Claude Code and Codex CLI are standalone tools for their respective providers. Locus builds on top of them by adding sprint planning, GitHub-native state management, multi-model support, and orchestration commands (plan, run, review, iterate). If you want structured delivery workflows or the ability to switch providers without changing your process, Locus adds that layer.",
   },
@@ -43,7 +44,15 @@ const faqs: FAQItem[] = [
   },
 ];
 
-function FAQAccordionItem({ item, isOpen, onToggle }: { item: FAQItem; isOpen: boolean; onToggle: () => void }) {
+function FAQAccordionItem({
+  item,
+  isOpen,
+  onToggle,
+}: {
+  item: FAQItem;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
   return (
     <div className="border-b border-border/20 last:border-b-0">
       <button

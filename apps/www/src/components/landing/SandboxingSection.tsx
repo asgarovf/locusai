@@ -74,7 +74,7 @@ export function SandboxingSection() {
             ))}
           </div>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-7 flex flex-wrap justify-center items-center gap-3 mx-auto">
             <Link
               href="https://docs.locusai.dev/concepts/security-sandboxing"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-background hover:bg-white/85 transition-colors"

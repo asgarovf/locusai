@@ -1,7 +1,6 @@
 export * from "./BrandingElements";
 export * from "./CallToAction";
 export * from "./CopyCommand";
-export * from "./Definition";
 export * from "./FAQ";
 export * from "./FeatureGrid";
 export * from "./Hero";

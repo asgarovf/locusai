@@ -6,9 +6,6 @@ description: Built-in tool inventory for Locus, with categorized commands and pr
 
 Locus adds an operational toolchain on top of provider CLIs (Claude/Codex): planning, GitHub-native execution, review loops, status visibility, logging, sandbox lifecycle management, and package extensibility.
 
-Inventory date: **February 27, 2026**  
-Locus CLI version: **0.17.14** (`packages/cli/package.json`)
-
 ## Why Built-In Tools (vs Raw Provider CLIs)
 
 Raw provider CLIs can generate code, but they do not natively manage your GitHub workflow end to end.

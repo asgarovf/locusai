@@ -1,161 +1,145 @@
 ---
-description: Practical GitHub-native workflows for operating Locus through issues, milestones, labels, and pull requests.
+description: End-to-end GitHub-native workflows -- from issue creation to merged PR.
 ---
 
 # GitHub-Native Workflows
 
 Locus uses GitHub as an operational layer, not just a code host. Issues, Milestones, Labels, and Pull Requests carry planning and execution state that your whole team can inspect.
 
-Use this guide when you want practical, end-to-end command sequences with clear GitHub-side outcomes.
+---
 
-## Prerequisites
+## Workflow Overview
 
-- A git repository with a GitHub remote
-- [GitHub CLI](https://cli.github.com) installed and authenticated (`gh auth login`)
-- Locus installed (`npm install -g @locusai/cli`)
-- Repository initialized with Locus (`locus init`)
-- An AI provider CLI configured (Claude or Codex)
-
-## Common Setup
-
-Run this once per repository before the scenarios:
-
-```bash
-cd /path/to/your-repo
-locus init
-locus config set ai.model claude-sonnet-4-6
+```mermaid
+graph TD
+    A[Create Issues] --> B[Organize Sprint]
+    B --> C[Execute with AI]
+    C --> D[Review PRs]
+    D --> E{Feedback?}
+    E -->|Yes| F[Iterate]
+    F --> D
+    E -->|No| G[Merge & Close Sprint]
 ```
-
-Expected outcome:
-
-- `.locus/` is created and configured
-- GitHub labels are created/verified (`locus:*`, `p:*`, `type:*`, `agent:managed`)
-- Locus can read/write issues, milestones, and PR data via `gh`
 
 ---
 
-## Scenario 1: Issue-Driven Execution (Issue -> Sprint -> PR)
+## Scenario 1: Issue-Driven Delivery
 
-This is the core delivery loop when you already know the task.
-
-### Setup
-
-- Run the [Common Setup](#common-setup) section above
-- Start on a clean working tree before execution
-
-### Commands
+The core delivery loop when you already know the task.
 
 ```bash
+# Create sprint and issue
 locus sprint create "Sprint 1"
 locus sprint active "Sprint 1"
 locus issue create "Add /health endpoint with tests" --sprint "Sprint 1"
-locus issue list --sprint "Sprint 1" --status queued
+
+# Execute
 locus run
+
+# Review and iterate
+locus review
+locus iterate --sprint
+
+# Check progress
 locus status
 ```
 
-### Expected Output
+**GitHub state after execution:**
 
-- `locus sprint create` prints a created sprint confirmation
-- `locus issue create` prints a created issue number (for example `#83`) after confirmation
-- `locus run` prints sprint task progress and creates PRs for completed tasks
-- `locus status` shows sprint progress plus open `agent:managed` PRs
+```mermaid
+graph LR
+    M[Milestone: Sprint 1] --> I1[Issue #83<br>locus:done]
+    I1 --> PR1[PR #84<br>Closes #83]
+```
 
-### GitHub State Sync
-
-- Milestone created/used: `Sprint 1`
-- Issue created under that milestone
-- Labels used/updated during execution: `locus:queued`, `locus:in-progress`, `locus:in-review`, `locus:done`/`locus:failed`
-- Deliverable created as a GitHub PR
+- Milestone `Sprint 1` tracks completion percentage
+- Issue labels update: `locus:queued` → `locus:in-progress` → `locus:done`
+- PR created with `Closes #83` so merging auto-closes the issue
 
 ---
 
-## Scenario 2: Repo-Backed Planning Artifacts (Plan File -> Approved GitHub Work)
+## Scenario 2: AI-Powered Planning
 
-Use this when you want AI planning with a review step before creating GitHub issues.
-
-### Setup
-
-- Run the [Common Setup](#common-setup) section above
-- Pick a sprint name that will hold newly approved work (for example, `Sprint 2`)
-
-### Commands
+Let AI break down a high-level goal before execution.
 
 ```bash
+# Generate plan
 locus plan "Build billing webhook ingestion with retries" --sprint "Sprint 2"
-locus plan list
-locus plan show <plan-id>
-locus plan approve <plan-id> --sprint "Sprint 2"
+
+# Review what was created
 locus sprint show "Sprint 2"
+
+# Execute when ready
+locus sprint active "Sprint 2"
+locus run
 ```
 
-### Expected Output
+**What happens:**
 
-- `locus plan` saves a plan file ID (for example `abc123`) and prints approval instructions
-- `locus plan list` shows saved plans from `.locus/plans/`
-- `locus plan show <plan-id>` prints ordered planned issues
-- `locus plan approve ...` creates GitHub issues with labels and execution order
-- `locus sprint show "Sprint 2"` shows tasks ordered by `order:N`
+```mermaid
+sequenceDiagram
+    participant User
+    participant Locus
+    participant AI
+    participant GitHub
 
-### GitHub State Sync
+    User->>Locus: locus plan "Build billing..."
+    Locus->>AI: Analyze codebase + generate plan
+    AI-->>Locus: Ordered task list
+    Locus->>User: Show plan for approval
+    User->>Locus: Approve
+    Locus->>GitHub: Create milestone + issues with labels
+```
 
-- Before approval: planning data is local in `.locus/plans/<plan-id>.json`
-- After approval: planned tasks become GitHub Issues, attached to a Milestone, with labels like `p:*`, `type:*`, `locus:queued`, `agent:managed`, `order:N`
-- Team-visible sprint scope now lives in GitHub
+- AI reads `LOCUS.md`, file tree, and recent git history
+- Generates ordered issues with priority, type, and execution sequence
+- Issues are created on GitHub with labels: `p:*`, `type:*`, `locus:queued`, `agent:managed`, `order:N`
 
 ---
 
-## Scenario 3: Collaborative Review Loop (PR Feedback -> Iteration)
+## Scenario 3: Review and Iteration Loop
 
-Use this when PR feedback is coming from teammates and you want Locus to apply fixes in-loop.
-
-### Setup
-
-- Have at least one open `agent:managed` PR (for example, from `locus run`)
-- Ensure the PR has feedback comments to iterate on
-
-### Commands
+When PR feedback needs to be addressed by AI.
 
 ```bash
+# List open agent PRs
 gh pr list --label agent:managed --state open
-gh pr comment <pr-number> --body "Please strengthen error handling and add tests."
-locus iterate --pr <pr-number>
-locus review <pr-number>
-locus status
+
+# Post review feedback (or let AI review)
+locus review 15
+
+# Iterate on the feedback
+locus iterate --pr 15
+
+# Review again until satisfied
+locus review 15
 ```
 
-### Expected Output
+**What happens:**
 
-- `gh pr comment` creates a visible review comment on the target PR
-- `locus iterate --pr <pr-number>` applies feedback-driven updates on that PR branch
-- `locus review <pr-number>` posts a fresh AI review pass after iteration
-- `locus status` reports current sprint health and open PRs
+```mermaid
+sequenceDiagram
+    participant Human as Human / AI Review
+    participant Locus
+    participant AI as AI Agent
+    participant GitHub
 
-### GitHub State Sync
+    Human->>GitHub: Post review comments on PR
+    Locus->>GitHub: Read PR diff + review comments
+    Locus->>AI: Send feedback context
+    AI->>GitHub: Push fixes to PR branch
+    Human->>GitHub: Review updated PR
+```
 
 - Review feedback is persisted as GitHub PR comments
-- Iteration updates PR branches and commits
-- Label/status lifecycle stays visible on issues and PRs for async team coordination
+- Iteration updates PR branches with targeted fixes
+- Label/status lifecycle stays visible for async team coordination
 
 ---
 
-## Limitations of GitHub-Native Operation
-
-- Requires working `gh` auth in the environment where Locus runs
-- GitHub API availability and rate limits can delay operations
-- Locus depends on repository permissions for issue/PR/milestone writes
-- `locus run` sprint mode requires an active sprint (`locus sprint active "..."`)
-- Planning has a two-step flow: `locus plan` (save) then `locus plan approve` (create GitHub issues)
-
-## Troubleshooting GitHub Integration
+## Troubleshooting
 
 ### `gh` is not installed or not authenticated
-
-Symptoms:
-
-- `locus init` fails early with GitHub CLI/auth errors
-
-Recovery:
 
 ```bash
 gh --version
@@ -164,12 +148,6 @@ locus init
 ```
 
 ### Not in a git repository (or missing GitHub remote)
-
-Symptoms:
-
-- `locus init` reports "Not a git repository" or cannot detect owner/repo
-
-Recovery:
 
 ```bash
 git status
@@ -180,56 +158,15 @@ locus init
 
 ### `locus run` says no active sprint
 
-Symptoms:
-
-- Run exits with guidance to set an active sprint
-
-Recovery:
-
 ```bash
 locus sprint list
 locus sprint active "Sprint 1"
 locus run
 ```
 
-### Sprint exists on GitHub but does not resolve
-
-Symptoms:
-
-- `locus sprint active` or `locus run` cannot find the sprint
-
-Recovery:
-
-```bash
-locus sprint list --all
-# Re-open/create as needed, then set active
-locus sprint active "Sprint 1"
-```
-
-### Permission failures when creating issues/PRs/milestones
-
-Symptoms:
-
-- Command fails with GitHub permission errors
-
-Recovery:
-
-```bash
-gh auth status
-# Ensure token/account has repo write permissions
-# Then retry the failed locus command
-```
-
 ### Rate limit or transient API failures
 
-Symptoms:
-
-- Slowdowns or failures around GitHub API calls
-
-Recovery:
-
-- Wait for GitHub rate limit reset window, then rerun command
-- For interrupted sprint execution, continue from saved state:
+Wait for GitHub rate limit reset window, then rerun. For interrupted sprints:
 
 ```bash
 locus run --resume
@@ -239,9 +176,5 @@ locus run --resume
 
 - [GitHub as Backend](github-backend.md)
 - [How Locus Works](how-it-works.md)
+- [Sprints and Issues](sprints-and-issues.md)
 - [Built-In Tools](../cli/overview.md)
-- [Auto-Approval Mode](auto-approval-mode.md)
-- [locus plan](../cli/plan.md)
-- [locus run](../cli/run.md)
-- [locus review](../cli/review.md)
-- [locus iterate](../cli/iterate.md)

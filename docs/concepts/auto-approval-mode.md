@@ -1,5 +1,5 @@
 ---
-description: Operator guide for running Locus in auto-approval mode, including safeguards, boundaries, automation scenarios, and rollback steps.
+description: Running Locus in full-auto mode with Docker sandbox isolation, safety controls, and resumable execution.
 ---
 
 # Auto-Approval Mode
@@ -7,166 +7,175 @@ description: Operator guide for running Locus in auto-approval mode, including s
 Auto-approval mode is the high-automation operating style in Locus:
 
 - Provider execution runs in full-auto mode (`claude --dangerously-skip-permissions` or `codex exec --full-auto`)
-- Locus can auto-manage issue lifecycle labels (`agent.autoLabel`)
-- Locus can auto-create PRs after successful execution (`agent.autoPR`)
-- Interrupted runs can resume from saved run state (`locus run --resume`)
+- Issue lifecycle labels are auto-managed (`agent.autoLabel`)
+- PRs are auto-created after successful execution (`agent.autoPR`)
+- Interrupted runs resume from saved state (`locus run --resume`)
 
-## Prerequisites
+---
 
-Before enabling auto-approval operations, confirm all of the following:
+## Sandboxing: Safe Full-Auto Execution
 
-- Repository is initialized (`locus init`)
-- `gh` is authenticated with write access (`gh auth status`)
-- Claude or Codex CLI is installed and authenticated
-- Team branch protection is configured (required checks/reviewers)
-- Working tree is clean before starting an automated run
-- Sprint scope is explicit (`locus sprint show "<name>"`)
+Full-auto mode gives AI agents unrestricted access to your codebase. **Docker sandbox isolation** is the key safety mechanism that makes this safe for teams.
 
-## Behavior and Safety Controls
+### What Sandboxing Protects
 
-| Control | Default | What It Protects | Operator Action |
-|---|---|---|---|
-| `agent.autoLabel` | `true` | Keeps GitHub status labels in sync during execution | `locus config set agent.autoLabel true` |
-| `agent.autoPR` | `true` | Automatically creates PRs for successful execution | `locus config set agent.autoPR true` |
-| `sprint.stopOnFailure` | `true` | Stops sprint runs on first failure instead of cascading | `locus config set sprint.stopOnFailure true` |
-| `agent.rebaseBeforeTask` | `true` | Detects base-branch drift/conflicts between sprint tasks | `locus config set agent.rebaseBeforeTask true` |
-| `agent.maxParallel` | `3` | Bounds concurrent standalone issue execution | `locus config set agent.maxParallel 2` |
-| `--dry-run` | off | Preview execution without writes | `locus run --dry-run` |
-| `--resume` | off | Continue from failed/interrupted checkpoint | `locus run --resume` |
+```mermaid
+graph LR
+    A[AI Agent] -->|runs inside| B[Docker Sandbox]
+    B -->|synced workspace| C[Your Codebase]
+    B -.->|blocked by .sandboxignore| D[".env files<br>API keys<br>Cloud credentials<br>Private keys"]
+```
 
-## Recommended Operating Boundaries
+When sandboxed:
+- AI agents execute inside an isolated Docker container
+- Only files allowed by `.sandboxignore` rules are visible to the agent
+- `.env`, `*.pem`, `*.key`, cloud credential directories are excluded by default
+- Agents cannot access host-level paths, credentials, or system resources
 
-Use auto-approval mode when:
+### Running with Required Sandbox
 
-- Tasks are well-scoped and acceptance criteria are explicit
+For maximum safety, require sandboxing so execution fails if Docker is unavailable:
+
+```bash
+locus run --sandbox=require
+```
+
+This is recommended for CI environments and team workflows where accidental unsandboxed execution should be prevented.
+
+### Sandbox Modes
+
+| Mode | Flag | Behavior |
+|------|------|----------|
+| Auto (default) | *(no flag)* | Use sandbox if available, warn and fall back if not |
+| Required | `--sandbox=require` | Fail if sandbox is unavailable |
+| Disabled | `--no-sandbox` | Run unsandboxed (shows safety warning) |
+
+Full setup guide: [Sandboxing Setup](../getting-started/sandboxing-setup.md)
+
+---
+
+## Safety Controls
+
+| Control | Default | Purpose |
+|---|---|---|
+| `agent.autoLabel` | `true` | Keep GitHub status labels in sync during execution |
+| `agent.autoPR` | `true` | Automatically create PRs for successful tasks |
+| `sprint.stopOnFailure` | `true` | Stop sprint on first failure instead of cascading |
+| `agent.rebaseBeforeTask` | `true` | Detect base-branch drift/conflicts between tasks |
+| `agent.maxParallel` | `3` | Bound concurrent standalone issue execution |
+| `--dry-run` | off | Preview execution without writes |
+| `--resume` | off | Continue from failed/interrupted checkpoint |
+
+---
+
+## When to Use Auto-Approval
+
+**Use auto-approval when:**
+
+- Tasks are well-scoped with explicit acceptance criteria
 - Strong CI and branch protections are enforced
-- The team is comfortable with AI-generated PRs and review throughput
+- Docker sandboxing is enabled
+- The team is comfortable with AI-generated PRs
 
-Prefer manual approval when:
+**Prefer manual approval when:**
 
 - Changes touch auth, payments, migrations, or production-critical paths
 - Requirements are ambiguous or expected to change during execution
 - A one-off issue needs human checkpoints before any PR is opened
 
-## Automation Scenario 1: Sprint Autopilot with Resume
+---
 
-Use this for milestone-based execution with automatic PR creation.
-
-### Setup
+## Scenario 1: Sprint Autopilot with Resume
 
 ```bash
+# Setup
 locus sprint active "Sprint 8"
 locus config set agent.autoLabel true
 locus config set agent.autoPR true
-locus config set sprint.stopOnFailure true
-```
 
-### Run
+# Run with sandbox enforcement
+locus run --sandbox=require
 
-```bash
-locus run
-```
-
-### If Interrupted or Failed
-
-```bash
+# If interrupted or failed
 locus logs --level error --lines 200
 locus run --resume
 ```
 
-### Expected Outcome
+**What happens:**
+- Task labels update automatically (`queued → in-progress → done/failed`)
+- Sprint halts on failure (by default), then resumes from checkpoint
+- PRs are created automatically for successful tasks
+- All execution is sandboxed
 
-- Task status labels are updated automatically (`queued -> in-progress -> done/failed`)
-- Sprint execution halts on failure (by default), then resumes from checkpoint
-- A sprint-level PR is created when successful work is ready and `agent.autoPR=true`
+---
 
-## Automation Scenario 2: Parallel Standalone Backlog Sweep
-
-Use this for independent issues that can run concurrently.
-
-### Setup
+## Scenario 2: Parallel Backlog Sweep
 
 ```bash
+# Setup
 locus config set agent.maxParallel 2
-locus config set agent.autoLabel true
-locus config set agent.autoPR true
-```
 
-### Run
-
-```bash
+# Run independent issues in parallel
 locus run 141 142 143 144
 locus status
-```
 
-### Failure Handling
-
-```bash
-locus logs --level error --lines 200
-# Re-run only failed issue numbers
+# Re-run only failed issues
 locus run 142 144
 ```
 
-### Expected Outcome
-
+**What happens:**
 - Independent issues execute in bounded parallel batches
+- Each issue gets its own git worktree and branch
 - Successful tasks open PRs automatically
-- Failed tasks remain visible via `locus:failed` labels and logs for targeted retry
+- Failed tasks remain visible via `locus:failed` labels
 
-## Manual-Approval Profile (When You Need Human Gates)
+---
 
-If you need tighter control, disable PR automation and run with explicit checkpoints:
+## Manual-Approval Profile
+
+If you need tighter control, disable PR automation:
 
 ```bash
 locus config set agent.autoPR false
-locus config set agent.autoLabel true
-locus run --dry-run
-locus run
+locus run --dry-run     # Preview first
+locus run               # Execute
+# Review changes manually, open PRs yourself
 ```
 
-Then review changes manually and open PRs yourself.
+---
 
-## Risk and Safety Checklist
+## Safety Checklist
 
-Use this checklist before any auto-approval run:
+Before any auto-approval run:
 
+- [ ] Docker sandboxing is set up (`locus sandbox status`)
 - [ ] Active sprint or issue list is correct
 - [ ] Branch protections and required CI checks are enabled
 - [ ] `agent.maxParallel` matches repo/CI capacity
-- [ ] `sprint.stopOnFailure` remains enabled for sprint runs
-- [ ] You have an owner on-call to inspect failures and resume
-- [ ] `locus logs` path is known for troubleshooting
+- [ ] `sprint.stopOnFailure` is enabled for sprint runs
+- [ ] `.sandboxignore` includes `.env`, credential files, and cloud config directories
 
-## Rollback Instructions
+---
 
-If auto-approval behavior is too risky for the current work, roll back to manual control:
+## Rollback
 
-1. Stop execution (`Ctrl+C`) and inspect status.
-2. Disable auto PR creation:
+If auto-approval is too risky for the current work:
 
-```bash
-locus config set agent.autoPR false
-```
-
-3. Verify remaining queued/failed work:
-
-```bash
-locus status
-locus logs --level error --lines 200
-```
-
-4. Close or re-scope open automation PRs as needed:
+1. Stop execution (`Ctrl+C`)
+2. Disable auto PR: `locus config set agent.autoPR false`
+3. Check status: `locus status` and `locus logs --level error --lines 200`
+4. Close automation PRs if needed:
 
 ```bash
 gh pr list --label agent:managed --state open
-gh pr close <pr-number> --comment "Closing auto-run PR during rollback to manual approval mode"
+gh pr close <pr-number> --comment "Rolling back to manual mode"
 ```
 
-5. Continue with manual gating (`locus run --dry-run`, targeted `locus run <issue>`, manual PR open/review).
+5. Continue with manual gating (`locus run --dry-run`, targeted `locus run <issue>`)
 
 ## Related Docs
 
+- [Sandboxing Setup](../getting-started/sandboxing-setup.md)
+- [Security & Sandboxing](security-sandboxing.md)
 - [Built-In Tools](../cli/overview.md)
-- [Execution Model (Technical)](execution-model.md)
-- [GitHub-Native Workflows](github-native-workflows.md)
-- [Quickstart](../getting-started/quickstart.md)
+- [Execution Model](execution-model.md)

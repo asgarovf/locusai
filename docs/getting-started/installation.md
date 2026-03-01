@@ -6,14 +6,14 @@ description: Install the Locus CLI, GitHub CLI, and an AI provider CLI (Claude C
 
 ## Prerequisites
 
-Locus requires three baseline tools, plus Docker Desktop if you want sandboxed execution:
+Locus requires three baseline tools, plus Docker Desktop for sandboxed execution:
 
 | Requirement | Minimum Version | Purpose |
 |-------------|-----------------|---------|
 | [Node.js](https://nodejs.org) | 18+ | Runtime for the CLI |
 | [GitHub CLI](https://cli.github.com) (`gh`) | Latest | All GitHub operations (issues, PRs, milestones) |
 | AI Provider CLI | Latest | Task execution and code generation |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | 4.58+ | Required for Locus sandbox isolation (`docker sandbox`) |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | 4.58+ | Sandbox isolation for safe AI execution (`docker sandbox`) |
 
 You need **one** of the following AI provider CLIs installed:
 
@@ -54,12 +54,6 @@ Verify the installation:
 
 ```bash
 locus --version
-```
-
-You should see output like:
-
-```
-0.19.1
 ```
 
 ---
@@ -154,16 +148,31 @@ The provider is inferred automatically from the model name -- no need to set it 
 
 ---
 
-## Optional but Recommended: Enable Sandboxing
+## Set Up Sandboxing (Recommended)
 
-For isolated execution (recommended), set up Docker-first sandboxing after installation:
+Locus can run AI agents inside Docker sandboxes for isolated, safe execution. This prevents agents from accessing host secrets, credentials, and system paths.
 
-1. Verify Docker (`docker info`, `docker sandbox ls`)
-2. Create provider sandboxes (`locus sandbox`)
-3. Authenticate inside sandboxes (`locus sandbox claude`, `locus sandbox codex`)
-4. Optional operations: install tools (`locus sandbox install bun`), run commands (`locus sandbox exec codex -- bun --version`), open shell (`locus sandbox shell codex`), and view logs (`locus sandbox logs codex --follow`)
+**Why sandboxing matters:** AI agents in full-auto mode have unrestricted access to your filesystem. Docker sandboxing ensures they only see what you allow via `.sandboxignore` rules, keeping `.env` files, API keys, and cloud credentials out of reach.
+
+To set up sandboxing:
+
+```bash
+# 1. Verify Docker is available
+docker sandbox ls
+
+# 2. Create provider sandboxes
+locus sandbox
+
+# 3. Authenticate inside each sandbox
+locus sandbox claude
+locus sandbox codex
+```
 
 Full guide: [Sandboxing Setup (Docker-First)](sandboxing-setup.md)
+
+{% hint style="warning" %}
+Without sandboxing, AI agents run with full access to your host filesystem. For teams and production use, sandboxing is strongly recommended.
+{% endhint %}
 
 ---
 
@@ -185,8 +194,5 @@ npx @locusai/cli plan "Build a REST API"
 
 ## Next Steps
 
-Once installed, follow the guided onboarding path:
-
-1. [Quickstart](quickstart.md) -- complete one full issue-to-PR workflow with expected outcomes
-2. [Initialization](initialization.md) -- deep dive into what `locus init` creates and configures
-3. [Your First Sprint (Detailed)](first-sprint.md) -- expanded walkthrough with advanced options
+1. [Sandboxing Setup](sandboxing-setup.md) -- set up Docker sandbox isolation
+2. [Quickstart](quickstart.md) -- complete one full issue-to-PR workflow

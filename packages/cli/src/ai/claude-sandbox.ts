@@ -127,7 +127,6 @@ export class SandboxedClaudeRunner implements AgentRunner {
         const text = chunk.toString();
         errorOutput += text;
         log.debug("sandboxed claude stderr", { text: text.slice(0, 500) });
-        options.onOutput?.(text);
       });
 
       this.process.on("close", (code) => {

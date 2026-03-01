@@ -4,8 +4,6 @@ description: High-level overview of how Locus orchestrates AI agents to ship cod
 
 # How Locus Works
 
-## Overview
-
 Locus is a GitHub-native AI engineering CLI. It turns GitHub Issues into code changes by orchestrating AI agents that read your codebase, implement tasks, and open pull requests -- all through the tools you already use.
 
 There is no custom backend, no dashboard, and no separate account. GitHub **is** the backend. Authentication is handled entirely by the GitHub CLI (`gh auth login`).
@@ -16,8 +14,12 @@ There is no custom backend, no dashboard, and no separate account. GitHub **is**
 
 Every Locus workflow follows a four-stage pipeline:
 
-```
-Plan --> Execute --> Review --> Iterate
+```mermaid
+graph LR
+    A[Plan] --> B[Execute]
+    B --> C[Review]
+    C --> D[Iterate]
+    D -.->|repeat if needed| C
 ```
 
 ### 1. Plan
@@ -53,10 +55,9 @@ The agent reads the issue description, your project instructions (`LOCUS.md`), a
 
 ### 3. Review
 
-Each completed task produces a pull request on GitHub. You review the PR using GitHub's standard review tools -- inline comments, suggestions, approvals.
+Each completed task produces a pull request on GitHub. AI reviews the PR and posts inline feedback.
 
 ```bash
-# Open the review interface
 locus review
 ```
 
@@ -65,7 +66,6 @@ locus review
 If a PR needs changes, Locus reads the review comments and sends them back to the AI agent for a targeted follow-up pass.
 
 ```bash
-# Address PR feedback
 locus iterate 15
 ```
 
@@ -73,44 +73,54 @@ The agent receives the PR diff and all review comments, then makes focused chang
 
 ---
 
-## GitHub-Native Architecture
+## Architecture
 
-Locus uses GitHub as its entire data layer:
+```mermaid
+graph TB
+    subgraph "Your Machine"
+        CLI[Locus CLI]
+        AI_Claude[Claude CLI]
+        AI_Codex[Codex CLI]
+        Sandbox[Docker Sandbox]
+    end
 
-| Concept       | GitHub Primitive   |
-|---------------|--------------------|
-| Tasks         | Issues             |
-| Sprints       | Milestones         |
-| Metadata      | Labels             |
-| Deliverables  | Pull Requests      |
-| Auth          | `gh auth login`    |
+    subgraph "GitHub"
+        Issues[Issues]
+        Milestones[Milestones]
+        Labels[Labels]
+        PRs[Pull Requests]
+    end
 
-There is no database, no API server, and no cloud service. Every operation is a `gh` CLI call that reads from or writes to your GitHub repository.
-
----
-
-## Authentication
-
-Locus delegates all authentication to the GitHub CLI. If you can run `gh issue list`, you can use Locus. No API keys are stored locally by Locus itself (AI provider keys are managed separately via environment variables).
-
-```bash
-# One-time setup
-gh auth login
-locus init
+    CLI -->|orchestrates| AI_Claude
+    CLI -->|orchestrates| AI_Codex
+    CLI -->|optional isolation| Sandbox
+    Sandbox -->|runs| AI_Claude
+    Sandbox -->|runs| AI_Codex
+    CLI -->|reads/writes via gh| Issues
+    CLI -->|reads/writes via gh| Milestones
+    CLI -->|reads/writes via gh| Labels
+    CLI -->|reads/writes via gh| PRs
 ```
 
-The `locus init` command detects your repository from the git remote, creates the `.locus/` configuration directory, and sets up GitHub labels.
+**Key points:**
+- Locus does not contain an AI model. It orchestrates external AI CLIs (Claude or Codex).
+- All state lives in GitHub -- issues, milestones, labels, and PRs.
+- Docker sandboxes provide optional isolation for safe execution.
+- The `gh` CLI handles all GitHub API communication.
 
 ---
 
-## AI Agents as Execution Engines
+## GitHub-Native Data Model
 
-Locus does not contain an AI model. It is an orchestrator that delegates code generation to external AI CLIs:
+| Locus Concept | GitHub Primitive |
+|---------------|------------------|
+| Tasks | Issues |
+| Sprints | Milestones |
+| Metadata | Labels |
+| Deliverables | Pull Requests |
+| Auth | `gh auth login` |
 
-- **Claude** (Anthropic) -- via the `claude` CLI in print mode with `--dangerously-skip-permissions`
-- **Codex** (OpenAI) -- via the `codex` CLI in `exec --full-auto` mode
-
-The agent receives a structured prompt via stdin, works in the specified directory, and streams output back to Locus. Locus handles the surrounding lifecycle: branch management, label updates, PR creation, conflict detection, and run state tracking.
+There is no database, no API server, and no cloud service. Every operation is a `gh` CLI call.
 
 ---
 
@@ -118,39 +128,51 @@ The agent receives a structured prompt via stdin, works in the specified directo
 
 Before every task, Locus assembles a prompt from multiple sources:
 
-| Source                 | Purpose                                              |
-|------------------------|------------------------------------------------------|
-| `LOCUS.md`             | Project instructions, conventions, architecture      |
-| `.locus/LEARNINGS.md`  | Accumulated corrections and patterns                 |
-| Issue body + comments  | Task requirements and discussion                     |
-| Sprint diff            | Changes from previous tasks (sprint mode only)       |
-| Repository file tree   | Structural awareness                                 |
-| Recent git log         | Understanding of recent work                         |
+```mermaid
+graph LR
+    A[LOCUS.md<br>Project instructions] --> P[Prompt Builder]
+    B[LEARNINGS.md<br>Accumulated patterns] --> P
+    C[Issue body + comments<br>Task requirements] --> P
+    D[Sprint diff<br>Previous task changes] --> P
+    E[File tree<br>Repo structure] --> P
+    P --> F[AI Agent]
+```
+
+| Source | Purpose |
+|--------|---------|
+| `LOCUS.md` | Project instructions, conventions, architecture |
+| `.locus/LEARNINGS.md` | Accumulated corrections and patterns |
+| Issue body + comments | Task requirements and discussion |
+| Sprint diff | Changes from previous tasks (sprint mode only) |
+| Repository file tree | Structural awareness |
 
 **LOCUS.md** is the primary file you edit to teach the AI about your project. It lives at the repository root and is read before every execution.
 
-**LEARNINGS.md** captures lessons learned during development -- patterns to follow, mistakes to avoid, project-specific gotchas. It grows over time and prevents the AI from repeating errors.
+**LEARNINGS.md** captures lessons learned during development -- patterns to follow, mistakes to avoid. It grows over time and prevents the AI from repeating errors.
 
 ---
 
 ## Recovery Model
 
-Locus persists execution state to `.locus/run-state.json` so that interrupted or failed runs can be resumed without re-executing completed tasks.
+Locus persists execution state to `.locus/run-state.json` so that interrupted or failed runs can be resumed:
 
-The run state tracks:
-- Run ID and type (sprint or parallel)
-- Sprint name and branch (for sprint runs)
-- Per-task status: `pending`, `in_progress`, `done`, or `failed`
-- Timestamps, PR numbers, and error messages
+```mermaid
+graph LR
+    A[Run starts] --> B[Task 1: done]
+    B --> C[Task 2: failed]
+    C --> D[State saved]
+    D --> E["locus run --resume"]
+    E --> F[Task 2: retry]
+    F --> G[Task 3: continue]
+```
 
 If a task fails or the process is interrupted:
 
 ```bash
-# Resume from where it left off
 locus run --resume
 ```
 
-Resume mode picks up at the first failed or pending task. Failed tasks are retried, and completed tasks are skipped. On full success, the run state file is automatically cleaned up.
+Resume mode picks up at the first failed or pending task. Completed tasks are skipped. On full success, the run state file is cleaned up.
 
 ---
 
@@ -165,15 +187,15 @@ After initialization, Locus creates a `.locus/` directory in your project root:
   LOCUS.md             # Project instructions for AI agents
   LEARNINGS.md         # Accumulated learnings
   logs/                # Execution logs
-  sessions/            # Session history
-  discussions/         # Discussion artifacts
+  sessions/            # REPL session history
   worktrees/           # Git worktrees for parallel execution
 ```
 
-Sensitive files (`config.json`, `run-state.json`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed to your repository so the entire team benefits from the accumulated context.
+Sensitive files (`config.json`, `run-state.json`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed so the entire team benefits from accumulated context.
 
 ## Related Docs
 
+- [Execution Model](execution-model.md)
+- [Sprints and Issues](sprints-and-issues.md)
 - [Built-In Tools](../cli/overview.md)
 - [Auto-Approval Mode](auto-approval-mode.md)
-- [Execution Model (Technical)](execution-model.md)

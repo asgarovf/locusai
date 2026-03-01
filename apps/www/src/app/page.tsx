@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
   CallToAction,
-  Definition,
   FAQ,
   FeatureGrid,
   Hero,
@@ -123,9 +122,6 @@ export default async function Home() {
             </div>
           </div>
         </div>
-
-        {/* Definition paragraph for AI citability */}
-        <Definition />
 
         {/* Why Locus - four core strengths */}
         <FeatureGrid />
