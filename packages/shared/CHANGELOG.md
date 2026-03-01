@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.20.1
+
+### Patch Changes
+
+- Claude runner on error handler
+
 ## 0.20.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.1
+
+### Patch Changes
+
+- Claude runner on error handler
+- Updated dependencies
+  - @locusai/shared@0.20.1
+
 ## 0.20.0
 
 ### Minor Changes
