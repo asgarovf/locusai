@@ -10,8 +10,8 @@
  */
 
 import { execSync } from "node:child_process";
-import { inferProviderFromModel } from "../core/ai-models.js";
 import { executeIssue } from "../core/agent.js";
+import { inferProviderFromModel } from "../core/ai-models.js";
 import { loadConfig } from "../core/config.js";
 import {
   attemptRebase,

@@ -187,7 +187,10 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
           exitCode: 1,
         };
       }
-      runner = createUserManagedSandboxRunner(resolvedProvider, options.sandboxName);
+      runner = createUserManagedSandboxRunner(
+        resolvedProvider,
+        options.sandboxName
+      );
     } else {
       runner = await createRunnerAsync(resolvedProvider, false);
     }

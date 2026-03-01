@@ -26,8 +26,19 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="Locus - Home">
-          <Image src="/logo.png" alt="Locus" width={90} height={33} loading="eager" fetchPriority="high" />
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 shrink-0"
+          aria-label="Locus - Home"
+        >
+          <Image
+            src="/logo.png"
+            alt="Locus"
+            width={90}
+            height={33}
+            loading="eager"
+            fetchPriority="high"
+          />
         </Link>
 
         {/* Desktop nav */}

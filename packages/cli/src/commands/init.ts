@@ -427,7 +427,9 @@ export async function initCommand(cwd: string): Promise<void> {
   process.stderr.write(
     `  ${gray("4.")} ${cyan("locus exec")}             ${dim("All commands now run sandboxed")}\n`
   );
-  process.stderr.write(`  ${dim("Learn more:")} ${cyan("locus sandbox help")}\n`);
+  process.stderr.write(
+    `  ${dim("Learn more:")} ${cyan("locus sandbox help")}\n`
+  );
   process.stderr.write("\n");
 
   log.info("Locus initialized", {

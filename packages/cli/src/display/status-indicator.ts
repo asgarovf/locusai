@@ -3,7 +3,13 @@
  * True-color shimmer for supported terminals, braille fallback otherwise.
  */
 
-import { cyan, dim, getCapabilities, truncate, visualWidth } from "./terminal.js";
+import {
+  cyan,
+  dim,
+  getCapabilities,
+  truncate,
+  visualWidth,
+} from "./terminal.js";
 
 export interface StatusIndicatorOptions {
   /** Activity description, e.g., "editing src/app.ts". */

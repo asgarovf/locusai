@@ -38,7 +38,9 @@ export function Hero({ version }: HeroProps) {
         </motion.p>
 
         <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.05] tracking-tight mb-5 max-w-4xl animate-hero-heading">
-          <span className="font-sans font-bold text-white">From issue to PR</span>
+          <span className="font-sans font-bold text-white">
+            From issue to PR
+          </span>
           <br />
           <span className="font-bold gradient-text-hero">
             with one interface across Claude and Codex.

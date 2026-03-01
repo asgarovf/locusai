@@ -66,7 +66,10 @@ const steps: SequenceStep[] = [
         color: "text-foreground",
         prefix: "$ ",
       },
-      { text: "Created sprint milestone with ordered issues", color: "text-cyan" },
+      {
+        text: "Created sprint milestone with ordered issues",
+        color: "text-cyan",
+      },
       { text: "", color: "" },
       { text: "locus run", color: "text-foreground", prefix: "$ " },
       { text: "Executing sprint tasks and opening PRs", color: "text-cyan" },
@@ -90,7 +93,10 @@ const steps: SequenceStep[] = [
         color: "text-foreground",
         prefix: "$ ",
       },
-      { text: "Created issue #83 with labels p:high type:feature", color: "text-cyan" },
+      {
+        text: "Created issue #83 with labels p:high type:feature",
+        color: "text-cyan",
+      },
       { text: "", color: "" },
       {
         text: 'locus sprint create "Sprint 6"',
@@ -99,7 +105,10 @@ const steps: SequenceStep[] = [
       },
       { text: "Assigned issue #83 to Sprint 6 milestone", color: "text-cyan" },
       { text: "locus status", color: "text-foreground", prefix: "$ " },
-      { text: "Sprint 6 progress: 3/5 done, 2 queued", color: "text-muted-foreground" },
+      {
+        text: "Sprint 6 progress: 3/5 done, 2 queued",
+        color: "text-muted-foreground",
+      },
     ],
   },
   {
@@ -204,7 +213,11 @@ export function ProductShowcase() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.65, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.65,
+                delay: i * 0.05,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="rounded-2xl border border-border/30 bg-[#060609] p-6 md:p-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 items-start">

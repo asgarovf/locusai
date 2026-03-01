@@ -438,14 +438,18 @@ function buildDiscussionPrompt(
   const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push(`<project-context>\n${content.slice(0, 3000)}\n</project-context>`);
+    parts.push(
+      `<project-context>\n${content.slice(0, 3000)}\n</project-context>`
+    );
   }
 
   // Include LEARNINGS.md
   const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
   if (existsSync(learningsPath)) {
     const content = readFileSync(learningsPath, "utf-8");
-    parts.push(`<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`);
+    parts.push(
+      `<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`
+    );
   }
 
   parts.push(`<discussion-topic>\n${topic}\n</discussion-topic>`);
@@ -471,7 +475,9 @@ Do NOT provide any analysis yet — questions only.
         historyLines.push(`ASSISTANT: ${turn.content}`);
       }
     }
-    parts.push(`<conversation-history>\n${historyLines.join("\n\n")}\n</conversation-history>`);
+    parts.push(
+      `<conversation-history>\n${historyLines.join("\n\n")}\n</conversation-history>`
+    );
 
     if (forceFinal) {
       parts.push(

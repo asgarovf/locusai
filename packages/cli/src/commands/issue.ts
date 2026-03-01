@@ -710,9 +710,7 @@ async function issueDelete(
       deleteIssue(num, { cwd: projectRoot });
       process.stderr.write(`\r${green("✓")} Deleted issue #${num}\n`);
     } catch (e) {
-      process.stderr.write(
-        `\r${red("✗")} #${num}: ${(e as Error).message}\n`
-      );
+      process.stderr.write(`\r${red("✗")} #${num}: ${(e as Error).message}\n`);
       failed++;
     }
   }

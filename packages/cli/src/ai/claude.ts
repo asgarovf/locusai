@@ -12,10 +12,7 @@ export function buildClaudeArgs(options: {
   model?: string;
   verbose?: boolean;
 }): string[] {
-  const args = [
-    "--dangerously-skip-permissions",
-    "--no-session-persistence",
-  ];
+  const args = ["--dangerously-skip-permissions", "--no-session-persistence"];
 
   if (options.model) {
     args.push("--model", options.model);

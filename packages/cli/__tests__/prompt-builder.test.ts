@@ -191,7 +191,10 @@ describe("prompt-builder", () => {
     });
 
     it("includes LOCUS.md context", () => {
-      writeFileSync(join(TEST_DIR, ".locus", "LOCUS.md"), "# My Project\nBe concise.");
+      writeFileSync(
+        join(TEST_DIR, ".locus", "LOCUS.md"),
+        "# My Project\nBe concise."
+      );
       const prompt = buildReplPrompt("hello", TEST_DIR, mockConfig);
       expect(prompt).toContain("My Project");
       expect(prompt).toContain("Be concise");

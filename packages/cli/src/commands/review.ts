@@ -252,7 +252,9 @@ function buildReviewPrompt(
   const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push(`<project-context>\n${content.slice(0, 2000)}\n</project-context>`);
+    parts.push(
+      `<project-context>\n${content.slice(0, 2000)}\n</project-context>`
+    );
   }
 
   const prMeta = [`Branch: ${pr.head} → ${pr.base}`];

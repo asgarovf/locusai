@@ -90,7 +90,9 @@ export function buildReplPrompt(
   // System context (lighter — just LOCUS.md + learnings)
   const locusmd = readFileSafe(join(projectRoot, ".locus", "LOCUS.md"));
   if (locusmd) {
-    sections.push(`<project-instructions>\n${locusmd}\n</project-instructions>`);
+    sections.push(
+      `<project-instructions>\n${locusmd}\n</project-instructions>`
+    );
   }
 
   const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
@@ -104,7 +106,9 @@ export function buildReplPrompt(
     const historyLines = recent.map(
       (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
     );
-    sections.push(`<previous-conversation>\n${historyLines.join("\n\n")}\n</previous-conversation>`);
+    sections.push(
+      `<previous-conversation>\n${historyLines.join("\n\n")}\n</previous-conversation>`
+    );
   }
 
   // User's current message
@@ -173,9 +177,7 @@ function buildTaskContext(issue: Issue, comments?: string[]): string {
 
   // Issue comments (conversation)
   if (comments && comments.length > 0) {
-    parts.push(
-      `<issue-comments>\n${comments.join("\n")}\n</issue-comments>`
-    );
+    parts.push(`<issue-comments>\n${comments.join("\n")}\n</issue-comments>`);
   }
 
   return `<task-context>\n${parts.join("\n\n")}\n</task-context>`;
@@ -232,7 +234,9 @@ function buildRepoContext(projectRoot: string): string {
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
     if (gitLog) {
-      parts.push(`<recent-commits>\n\`\`\`\n${gitLog}\n\`\`\`\n</recent-commits>`);
+      parts.push(
+        `<recent-commits>\n\`\`\`\n${gitLog}\n\`\`\`\n</recent-commits>`
+      );
     }
   } catch {
     // Ignore
@@ -280,9 +284,7 @@ function buildPRContext(
   ];
 
   if (comments.length > 0) {
-    parts.push(
-      `<review-comments>\n${comments.join("\n")}\n</review-comments>`
-    );
+    parts.push(`<review-comments>\n${comments.join("\n")}\n</review-comments>`);
   }
 
   return `<pr-context number="${prNumber}">\n${parts.join("\n\n")}\n</pr-context>`;

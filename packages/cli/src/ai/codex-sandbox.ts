@@ -128,7 +128,10 @@ export class SandboxedCodexRunner implements AgentRunner {
             ) {
               const code = item.exit_code;
               options.onToolActivity?.(code === 0 ? "done" : `exit ${code}`);
-            } else if (type === "item.completed" && item?.type === "reasoning") {
+            } else if (
+              type === "item.completed" &&
+              item?.type === "reasoning"
+            ) {
               const text = (item.text ?? "")
                 .trim()
                 .replace(/\*\*([^*]+)\*\*/g, "$1")
@@ -245,9 +248,12 @@ export class SandboxedCodexRunner implements AgentRunner {
         timeout: 5000,
       });
     } catch {
-      await execAsync(`docker sandbox exec ${name} npm install -g @openai/codex`, {
-        timeout: 120_000,
-      });
+      await execAsync(
+        `docker sandbox exec ${name} npm install -g @openai/codex`,
+        {
+          timeout: 120_000,
+        }
+      );
     }
   }
 }

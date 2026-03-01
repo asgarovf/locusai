@@ -101,9 +101,9 @@ export function FeatureGrid() {
             automation.
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-            Locus is the unified AI engineering interface for GitHub teams:
-            one CLI to plan, execute, review, and automate delivery across
-            Claude and Codex.
+            Locus is the unified AI engineering interface for GitHub teams: one
+            CLI to plan, execute, review, and automate delivery across Claude
+            and Codex.
           </p>
         </motion.div>
 

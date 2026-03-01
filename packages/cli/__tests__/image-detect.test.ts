@@ -127,10 +127,10 @@ describe("image-detect", () => {
     });
 
     it("does not nest placeholders when called again on already-normalized text", () => {
-      const first = normalizeImagePlaceholders(
-        "Check /tmp/clipboard-123.png"
+      const first = normalizeImagePlaceholders("Check /tmp/clipboard-123.png");
+      expect(first.text).toContain(
+        "![Screenshot: clipboard-123.png](locus://screenshot-1)"
       );
-      expect(first.text).toContain("![Screenshot: clipboard-123.png](locus://screenshot-1)");
 
       // Simulate submit() calling normalizeImagePlaceholders again on the buffer
       const second = normalizeImagePlaceholders(

@@ -73,7 +73,10 @@ export class StreamRenderer {
     }
 
     // Drop trailing empty lines from the queue
-    while (this.lineQueue.length > 0 && this.lineQueue[this.lineQueue.length - 1]?.trim() === "") {
+    while (
+      this.lineQueue.length > 0 &&
+      this.lineQueue[this.lineQueue.length - 1]?.trim() === ""
+    ) {
       this.lineQueue.pop();
     }
 

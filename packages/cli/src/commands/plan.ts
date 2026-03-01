@@ -28,6 +28,7 @@ import {
   reopenMilestone,
   updateIssueLabels,
 } from "../core/github.js";
+import { getModelSandboxName } from "../core/sandbox.js";
 import {
   bold,
   cyan,
@@ -37,7 +38,6 @@ import {
   stripAnsi,
   yellow,
 } from "../display/terminal.js";
-import { getModelSandboxName } from "../core/sandbox.js";
 import type { LocusConfig } from "../types.js";
 
 // ─── Help ────────────────────────────────────────────────────────────────────
@@ -604,20 +604,26 @@ function buildPlanningPrompt(
     `<role>\nYou are a sprint planning assistant for the GitHub repository ${config.github.owner}/${config.github.repo}.\n</role>`
   );
 
-  parts.push(`<directive>\n${directive}${sprintName ? `\n\n**Sprint:** ${sprintName}` : ""}\n</directive>`);
+  parts.push(
+    `<directive>\n${directive}${sprintName ? `\n\n**Sprint:** ${sprintName}` : ""}\n</directive>`
+  );
 
   // Include LOCUS.md if it exists
   const locusPath = join(projectRoot, ".locus", "LOCUS.md");
   if (existsSync(locusPath)) {
     const content = readFileSync(locusPath, "utf-8");
-    parts.push(`<project-context>\n${content.slice(0, 3000)}\n</project-context>`);
+    parts.push(
+      `<project-context>\n${content.slice(0, 3000)}\n</project-context>`
+    );
   }
 
   // Include LEARNINGS.md if it exists
   const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
   if (existsSync(learningsPath)) {
     const content = readFileSync(learningsPath, "utf-8");
-    parts.push(`<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`);
+    parts.push(
+      `<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`
+    );
   }
 
   parts.push(`<task>
