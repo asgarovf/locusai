@@ -115,12 +115,12 @@ async function promptProviderSelection(): Promise<AIProvider | null> {
 
   return new Promise<AIProvider | null>((resolve) => {
     rl.question("Enter choice (1-2): ", (answer) => {
-      rl.close();
       const trimmed = answer.trim().toLowerCase();
 
       // Accept provider name directly
       if (trimmed === "claude" || trimmed === "codex") {
         resolve(trimmed);
+        rl.close();
         return;
       }
 
@@ -128,11 +128,13 @@ async function promptProviderSelection(): Promise<AIProvider | null> {
       const num = Number.parseInt(trimmed, 10);
       if (num >= 1 && num <= PROVIDERS.length) {
         resolve(PROVIDERS[num - 1]);
+        rl.close();
         return;
       }
 
       process.stderr.write(`${red("✗")} Invalid selection.\n`);
       resolve(null);
+      rl.close();
     });
 
     rl.on("close", () => resolve(null));
