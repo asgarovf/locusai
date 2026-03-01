@@ -1,5 +1,11 @@
 # @locusai/shared
 
+## 0.20.3
+
+### Patch Changes
+
+- Single sandbox setup flow
+
 ## 0.20.2
 
 ### Patch Changes
