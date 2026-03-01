@@ -224,6 +224,7 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
         if (!hasOutput) {
           hasOutput = true;
           indicator.stop();
+          if (!options.silent) process.stdout.write("\n");
         }
         renderer?.push(chunk);
         output += chunk;
@@ -247,6 +248,11 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
     // Stop renderer and indicator
     renderer?.stop();
     indicator.stop();
+
+    // Add spacing after AI output
+    if (hasOutput && !wasAborted && renderer) {
+      process.stdout.write("\n");
+    }
 
     if (wasAborted) {
       return {

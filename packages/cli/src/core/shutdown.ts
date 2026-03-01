@@ -2,11 +2,10 @@
  * Graceful shutdown handling.
  *
  * Captures SIGINT/SIGTERM during sprint/parallel execution,
- * saves run state, cleans up active Docker sandboxes,
- * and provides recovery instructions.
+ * saves run state, and provides recovery instructions.
+ * Docker sandboxes are intentionally preserved across sessions.
  */
 
-import { execSync } from "node:child_process";
 import type { RunState } from "../types.js";
 import { saveRunState } from "./run-state.js";
 
@@ -20,32 +19,6 @@ let shutdownRegistered = false;
 let shutdownContext: ShutdownContext | null = null;
 let interruptCount = 0;
 let interruptTimer: ReturnType<typeof setTimeout> | null = null;
-
-// ─── Active Sandbox Registry ─────────────────────────────────────────────────
-
-const activeSandboxes = new Set<string>();
-
-/** Register a sandbox name so it can be cleaned up on shutdown. */
-export function registerActiveSandbox(name: string): void {
-  activeSandboxes.add(name);
-}
-
-/** Unregister a sandbox (e.g. after normal cleanup). */
-export function unregisterActiveSandbox(name: string): void {
-  activeSandboxes.delete(name);
-}
-
-/** Clean up all registered sandboxes. Called during shutdown. */
-function cleanupActiveSandboxes(): void {
-  for (const name of activeSandboxes) {
-    try {
-      execSync(`docker sandbox rm ${name}`, { timeout: 10000 });
-    } catch {
-      // Sandbox may already be stopped — that's fine
-    }
-  }
-  activeSandboxes.clear();
-}
 
 /**
  * Register graceful shutdown handlers for a run.
@@ -88,9 +61,6 @@ export function registerShutdownHandlers(ctx: ShutdownContext): () => void {
       }
     }
 
-    // Clean up any active Docker sandboxes before exiting
-    cleanupActiveSandboxes();
-
     shutdownContext?.onShutdown?.();
 
     // Reset interrupt count after 2 seconds
@@ -130,7 +100,6 @@ export function resetShutdownState(): void {
   shutdownRegistered = false;
   shutdownContext = null;
   interruptCount = 0;
-  activeSandboxes.clear();
   if (interruptTimer) {
     clearTimeout(interruptTimer);
     interruptTimer = null;

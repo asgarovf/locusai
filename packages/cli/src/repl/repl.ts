@@ -9,8 +9,11 @@ import { runAI } from "../ai/run-ai.js";
 import { createUserManagedSandboxRunner } from "../ai/runner.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
-import { getModelSandboxName, getProviderSandboxName } from "../core/sandbox.js";
-import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
+import {
+  getModelSandboxName,
+  getProviderSandboxName,
+} from "../core/sandbox.js";
+import { bold, cyan, dim, drawBox, green, red, yellow } from "../display/terminal.js";
 import type { AgentRunner, LocusConfig, Session } from "../types.js";
 import { getAllCommandNames, handleSlashCommand } from "./commands.js";
 import {
@@ -390,14 +393,17 @@ async function executeAITurn(
 
 function printWelcome(session: Session): void {
   process.stderr.write("\n");
-  process.stderr.write(
-    `${bold("Locus")} ${dim("REPL")} — session ${dim(session.id)}\n`
+  const banner = drawBox(
+    [
+      ` ${bold("Locus")} ${dim("REPL")}`,
+      ` ${dim("Provider:")} ${session.metadata.provider} ${dim("/")} ${session.metadata.model}`,
+      ` ${dim("Session:")}  ${dim(session.id)}`,
+    ],
+    { width: 52 }
   );
+  process.stderr.write(`${dim(banner)}\n`);
   process.stderr.write(
-    `${dim(`Provider: ${session.metadata.provider} / ${session.metadata.model}`)}\n`
-  );
-  process.stderr.write(
-    `${dim("Type /help for commands, Shift+Enter for newline, Ctrl+C twice to exit")}\n`
+    `  ${dim("Type /help for commands, Shift+Enter for newline, Ctrl+C twice to exit")}\n`
   );
   process.stderr.write("\n");
 }

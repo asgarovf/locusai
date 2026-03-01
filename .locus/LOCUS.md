@@ -1,13 +1,26 @@
 ## Planning First
 
-Complex tasks must be planned before writing code. Create ".locus/plans/<task-name>.md" with:
+**Before writing any code** for complex or multi-step tasks, you **must** create a plan file at `.locus/plans/<task-name>.md`. Do NOT skip this step — write the plan file to disk first, then execute.
+
+**Plan file structure:**
 - **Goal**: What we're trying to achieve and why
 - **Approach**: Step-by-step strategy with technical decisions
 - **Affected files**: List of files to create/modify/delete
 - **Acceptance criteria**: Specific, testable conditions for completion
 - **Dependencies**: Required packages, APIs, or external services
 
-Delete the planning .md files after successful execution.
+**When to plan:**
+- Tasks that touch 3+ files
+- New features or architectural changes
+- Tasks with ambiguous requirements that need decomposition
+- Any task where multiple approaches exist
+
+**When you can skip planning:**
+- Single-file bug fixes with obvious root cause
+- Typo corrections, comment updates, or trivial changes
+- Tasks with very specific, step-by-step instructions already provided
+
+Delete the planning `.md` files after successful execution.
 
 ## Code Quality
 
@@ -16,6 +29,26 @@ Delete the planning .md files after successful execution.
 - **Never commit secrets**: No API keys, passwords, or credentials in code. Use environment variables or secret management
 - **Test as you go**: If tests exist, run relevant ones. If breaking changes occur, update tests accordingly
 - **Comment complex logic**: Explain *why*, not *what*. Focus on business logic and non-obvious decisions
+
+## Parallel Execution with Subagents
+
+Use the **Task tool** to launch subagents for parallelizing independent work. Subagents run autonomously and return results when done.
+
+**When to use subagents:**
+- **Codebase exploration**: Use `subagent_type: "Explore"` to search for files, patterns, or understand architecture across multiple locations simultaneously
+- **Independent research**: Launch multiple explore agents in parallel when you need to understand different parts of the codebase at once
+- **Complex multi-area changes**: When a task touches unrelated areas, use explore agents to gather context from each area in parallel before making changes
+
+**How to use:**
+- Specify `subagent_type` — use `"Explore"` for codebase research, `"general-purpose"` for multi-step autonomous tasks
+- Launch multiple agents in a **single message** to run them concurrently
+- Provide clear, detailed prompts so agents can work autonomously
+- Do NOT duplicate work — if you delegate research to a subagent, wait for results instead of searching yourself
+
+**When NOT to use subagents:**
+- Simple, directed searches (use Glob or Grep directly)
+- Reading a specific known file (use Read directly)
+- Tasks that require sequential steps where each depends on the previous
 
 ## Artifacts
 

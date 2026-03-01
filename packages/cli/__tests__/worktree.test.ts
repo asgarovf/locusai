@@ -91,7 +91,7 @@ describe("createWorktree", () => {
     const result = createWorktree(TEST_DIR, 42, "main");
 
     expect(result.issueNumber).toBe(42);
-    expect(result.branch).toBe("locus/issue-42");
+    expect(result.branch).toMatch(/^locus\/issue-42-[a-z0-9]+$/);
     expect(result.status).toBe("active");
     expect(existsSync(result.path)).toBe(true);
 

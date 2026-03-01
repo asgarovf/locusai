@@ -28,6 +28,8 @@ export class StreamRenderer {
   private renderTimer: ReturnType<typeof setInterval> | null = null;
   private catchUpMode: boolean = false;
   private totalLinesRendered: number = 0;
+  private isFirstLine: boolean = true;
+  private hasContent: boolean = false;
   private onRender: (line: string) => void;
 
   constructor(onRender?: (line: string) => void) {
@@ -47,6 +49,13 @@ export class StreamRenderer {
   push(text: string): void {
     this.buffer += text;
 
+    // Trim leading newlines before any real content arrives
+    if (!this.hasContent) {
+      this.buffer = this.buffer.replace(/^\n+/, "");
+      if (this.buffer.length === 0) return;
+      this.hasContent = true;
+    }
+
     // Extract complete lines (newline-gated)
     const lines = this.buffer.split("\n");
     this.buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
@@ -63,6 +72,11 @@ export class StreamRenderer {
       this.renderTimer = null;
     }
 
+    // Drop trailing empty lines from the queue
+    while (this.lineQueue.length > 0 && this.lineQueue[this.lineQueue.length - 1]?.trim() === "") {
+      this.lineQueue.pop();
+    }
+
     // Flush remaining queue
     while (this.lineQueue.length > 0) {
       const line = this.lineQueue.shift();
@@ -72,8 +86,8 @@ export class StreamRenderer {
     // Flush any remaining buffer content
     if (this.buffer.trim()) {
       this.renderLine(this.buffer);
-      this.buffer = "";
     }
+    this.buffer = "";
 
     // Reset state
     this.inTable = false;
@@ -110,7 +124,9 @@ export class StreamRenderer {
   }
 
   private renderLine(raw: string): void {
-    const formatted = this.formatMarkdown(raw);
+    const prefix = this.isFirstLine ? `${dim("●")} ` : "  ";
+    if (this.isFirstLine) this.isFirstLine = false;
+    const formatted = `${prefix}${this.formatMarkdown(raw)}`;
     beginSync();
     this.onRender(formatted);
     endSync();
@@ -199,7 +215,7 @@ export class StreamRenderer {
     result = result.replace(/~~([^~]+)~~/g, (_, content) => dim(content));
 
     // Inline code: `text`
-    result = result.replace(/`([^`]+)`/g, (_, content) => cyan(content));
+    result = result.replace(/`([^`]+)`/g, (_, content) => bold(cyan(content)));
 
     return result;
   }

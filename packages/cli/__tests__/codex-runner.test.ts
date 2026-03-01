@@ -7,6 +7,7 @@ describe("buildCodexArgs", () => {
       "exec",
       "--full-auto",
       "--skip-git-repo-check",
+      "--json",
       "-",
     ]);
   });

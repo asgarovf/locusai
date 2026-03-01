@@ -5,6 +5,7 @@
  *   locus sandbox                    # Create provider sandboxes and enable sandbox mode
  *   locus sandbox claude             # Run claude interactively in the claude sandbox (for login)
  *   locus sandbox codex              # Run codex interactively in the codex sandbox (for login)
+ *   locus sandbox setup               # Re-run dependency install in sandbox(es)
  *   locus sandbox install bun        # Install a global package in sandbox(es)
  *   locus sandbox shell codex        # Open interactive shell in sandbox
  *   locus sandbox logs codex         # Show sandbox logs
@@ -14,7 +15,8 @@
 
 import { execSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { basename } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { loadConfig, saveConfig } from "../core/config.js";
 import {
   detectSandboxSupport,
@@ -37,15 +39,15 @@ ${bold("Usage:")}
   locus sandbox                     ${dim("# Create claude/codex sandboxes and enable sandbox mode")}
   locus sandbox claude              ${dim("# Run claude interactively (for login)")}
   locus sandbox codex               ${dim("# Run codex interactively (for login)")}
+  locus sandbox setup               ${dim("# Re-run dependency install in sandbox(es)")}
   locus sandbox install <pkg>       ${dim("# npm install -g package(s) in sandbox(es)")}
-  locus sandbox exec <provider> -- <cmd...> ${dim("# Run one command inside provider sandbox")}
   locus sandbox shell <provider>    ${dim("# Open interactive shell in provider sandbox")}
   locus sandbox logs <provider>     ${dim("# Show provider sandbox logs")}
   locus sandbox rm                  ${dim("# Destroy all provider sandboxes and disable sandbox mode")}
   locus sandbox status              ${dim("# Show current sandbox state")}
 
 ${bold("Flow:")}
-  1. ${cyan("locus sandbox")}          Create provider sandboxes
+  1. ${cyan("locus sandbox")}          Create sandboxes (auto-installs dependencies)
   2. ${cyan("locus sandbox claude")}   Login Claude inside its sandbox
   3. ${cyan("locus sandbox codex")}    Login Codex inside its sandbox
   4. ${cyan("locus sandbox install bun")}  Install extra tools (optional)
@@ -68,10 +70,10 @@ export async function sandboxCommand(
     case "claude":
     case "codex":
       return handleAgentLogin(projectRoot, subcommand);
+    case "setup":
+      return handleSetup(projectRoot);
     case "install":
       return handleInstall(projectRoot, args.slice(1));
-    case "exec":
-      return handleExec(projectRoot, args.slice(1));
     case "shell":
       return handleShell(projectRoot, args.slice(1));
     case "logs":
@@ -87,7 +89,7 @@ export async function sandboxCommand(
         `${red("✗")} Unknown sandbox subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${cyan("claude")}, ${cyan("codex")}, ${cyan("install")}, ${cyan("exec")}, ${cyan("shell")}, ${cyan("logs")}, ${cyan("rm")}, ${cyan("status")}\n`
+        `  Available: ${cyan("claude")}, ${cyan("codex")}, ${cyan("setup")}, ${cyan("install")}, ${cyan("exec")}, ${cyan("shell")}, ${cyan("logs")}, ${cyan("rm")}, ${cyan("status")}\n`
       );
   }
 }
@@ -110,41 +112,67 @@ async function handleCreate(projectRoot: string): Promise<void> {
 
   const sandboxNames = buildProviderSandboxNames(projectRoot);
   const readySandboxes: ProviderSandboxes = {};
+  const newlyCreated = new Set<string>();
   let failed = false;
 
-  for (const provider of PROVIDERS) {
-    const name = sandboxNames[provider];
+  // Create sandboxes in parallel
+  const createResults = await Promise.all(
+    PROVIDERS.map(async (provider) => {
+      const name = sandboxNames[provider];
 
-    if (isSandboxAlive(name)) {
+      if (isSandboxAlive(name)) {
+        process.stderr.write(
+          `${green("✓")} ${provider} sandbox ready: ${bold(name)}\n`
+        );
+        return { provider, name, created: false, existed: true };
+      }
+
       process.stderr.write(
-        `${green("✓")} ${provider} sandbox ready: ${bold(name)}\n`
+        `Creating ${bold(provider)} sandbox ${dim(name)} with workspace ${dim(projectRoot)}...\n`
       );
-      readySandboxes[provider] = name;
-      continue;
-    }
 
-    process.stderr.write(
-      `Creating ${bold(provider)} sandbox ${dim(name)} with workspace ${dim(projectRoot)}...\n`
-    );
+      const created = await createProviderSandbox(provider, name, projectRoot);
+      if (!created) {
+        process.stderr.write(
+          `${red("✗")} Failed to create ${provider} sandbox (${name}).\n`
+        );
+        return { provider, name, created: false, existed: false };
+      }
 
-    const created = await createProviderSandbox(provider, name, projectRoot);
-    if (!created) {
       process.stderr.write(
-        `${red("✗")} Failed to create ${provider} sandbox (${name}).\n`
+        `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
       );
+      return { provider, name, created: true, existed: false };
+    })
+  );
+
+  for (const result of createResults) {
+    if (result.created || result.existed) {
+      readySandboxes[result.provider] = result.name;
+      if (result.created) newlyCreated.add(result.name);
+    } else {
       failed = true;
-      continue;
     }
-
-    process.stderr.write(
-      `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
-    );
-    readySandboxes[provider] = name;
   }
 
   config.sandbox.enabled = true;
   config.sandbox.providers = readySandboxes;
   saveConfig(projectRoot, config);
+
+  // Install project dependencies in newly created sandboxes (in parallel)
+  await Promise.all(
+    PROVIDERS.filter((provider) => {
+      const sandboxName = readySandboxes[provider];
+      return sandboxName && newlyCreated.has(sandboxName);
+    }).map((provider) =>
+      runSandboxSetup(
+        readySandboxes[provider] as Required<
+          typeof readySandboxes
+        >[typeof provider],
+        projectRoot
+      )
+    )
+  );
 
   if (failed) {
     process.stderr.write(
@@ -484,28 +512,6 @@ export function parseSandboxExecArgs(args: string[]): {
   return { provider, command };
 }
 
-async function handleExec(projectRoot: string, args: string[]): Promise<void> {
-  const parsed = parseSandboxExecArgs(args);
-  if (parsed.error || !parsed.provider) {
-    process.stderr.write(`${red("✗")} ${parsed.error}\n`);
-    return;
-  }
-
-  const sandboxName = getActiveProviderSandbox(projectRoot, parsed.provider);
-  if (!sandboxName) {
-    return;
-  }
-
-  await runInteractiveCommand("docker", [
-    "sandbox",
-    "exec",
-    "-w",
-    projectRoot,
-    sandboxName,
-    ...parsed.command,
-  ]);
-}
-
 async function handleShell(projectRoot: string, args: string[]): Promise<void> {
   const provider = args[0];
   if (provider !== "claude" && provider !== "codex") {
@@ -624,6 +630,150 @@ async function handleLogs(projectRoot: string, args: string[]): Promise<void> {
   await runInteractiveCommand("docker", dockerArgs);
 }
 
+// ─── Setup ───────────────────────────────────────────────────────────────────
+
+type PackageManager = "bun" | "npm" | "yarn" | "pnpm";
+
+function detectPackageManager(projectRoot: string): PackageManager {
+  // 1. Check packageManager field in package.json
+  try {
+    const raw = readFileSync(join(projectRoot, "package.json"), "utf-8");
+    const pkgJson = JSON.parse(raw);
+    if (typeof pkgJson.packageManager === "string") {
+      const name = pkgJson.packageManager.split("@")[0];
+      if (
+        name === "bun" ||
+        name === "npm" ||
+        name === "yarn" ||
+        name === "pnpm"
+      ) {
+        return name;
+      }
+    }
+  } catch {
+    // package.json not found or unparsable — fall through to lockfile detection
+  }
+
+  // 2. Fallback: detect from lockfiles
+  if (
+    existsSync(join(projectRoot, "bun.lock")) ||
+    existsSync(join(projectRoot, "bun.lockb"))
+  ) {
+    return "bun";
+  }
+  if (existsSync(join(projectRoot, "yarn.lock"))) {
+    return "yarn";
+  }
+  if (existsSync(join(projectRoot, "pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+
+  return "npm";
+}
+
+function getInstallCommand(pm: PackageManager): string[] {
+  // No --frozen-lockfile: the sandbox runs Linux while the host lockfile
+  // reflects macOS binaries, so platform-specific deps must be re-resolved.
+  switch (pm) {
+    case "bun":
+      return ["bun", "install"];
+    case "yarn":
+      return ["yarn", "install"];
+    case "pnpm":
+      return ["pnpm", "install"];
+    case "npm":
+      return ["npm", "install"];
+  }
+}
+
+async function runSandboxSetup(
+  sandboxName: string,
+  projectRoot: string
+): Promise<boolean> {
+  const pm = detectPackageManager(projectRoot);
+
+  // npm is always available in the sandbox; other PMs need to be installed first
+  if (pm !== "npm") {
+    await ensurePackageManagerInSandbox(sandboxName, pm);
+  }
+
+  const installCmd = getInstallCommand(pm);
+
+  process.stderr.write(
+    `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
+  );
+
+  const installOk = await runInteractiveCommand("docker", [
+    "sandbox",
+    "exec",
+    "-w",
+    projectRoot,
+    sandboxName,
+    ...installCmd,
+  ]);
+
+  if (!installOk) {
+    process.stderr.write(
+      `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
+    );
+    return false;
+  }
+
+  process.stderr.write(
+    `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
+  );
+
+  // Run optional setup hook
+  const setupScript = join(projectRoot, ".locus", "sandbox-setup.sh");
+  if (existsSync(setupScript)) {
+    process.stderr.write(
+      `Running ${bold(".locus/sandbox-setup.sh")} in sandbox ${dim(sandboxName)}...\n`
+    );
+    const hookOk = await runInteractiveCommand("docker", [
+      "sandbox",
+      "exec",
+      "-w",
+      projectRoot,
+      sandboxName,
+      "sh",
+      setupScript,
+    ]);
+    if (!hookOk) {
+      process.stderr.write(
+        `${yellow("⚠")} Setup hook failed in sandbox ${dim(sandboxName)}.\n`
+      );
+    }
+  }
+
+  return true;
+}
+
+async function handleSetup(projectRoot: string): Promise<void> {
+  const config = loadConfig(projectRoot);
+  const providers = config.sandbox.providers;
+
+  if (!providers.claude && !providers.codex) {
+    process.stderr.write(
+      `${red("✗")} No sandboxes configured. Run ${cyan("locus sandbox")} first.\n`
+    );
+    return;
+  }
+
+  for (const provider of PROVIDERS) {
+    const sandboxName = providers[provider];
+    if (!sandboxName) continue;
+
+    if (!isSandboxAlive(sandboxName)) {
+      process.stderr.write(
+        `${yellow("⚠")} ${provider} sandbox is not running: ${dim(sandboxName)}\n`
+      );
+      continue;
+    }
+
+    await runSandboxSetup(sandboxName, projectRoot);
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildProviderSandboxNames(
@@ -697,14 +847,14 @@ async function createProviderSandbox(
 ): Promise<boolean> {
   try {
     execSync(
-      `docker sandbox run --name ${sandboxName} claude ${projectRoot} -- --version`,
+      `docker sandbox create --name ${sandboxName} claude ${projectRoot}`,
       {
         stdio: ["pipe", "pipe", "pipe"],
         timeout: 120_000,
       }
     );
   } catch {
-    // claude --version exits quickly; non-zero exit is acceptable if sandbox exists
+    // Creation may fail if sandbox already exists — check below
   }
 
   if (!isSandboxAlive(sandboxName)) {
@@ -717,6 +867,35 @@ async function createProviderSandbox(
 
   await enforceSandboxIgnore(sandboxName, projectRoot);
   return true;
+}
+
+/**
+ * Ensure the detected package manager binary is available inside the sandbox.
+ * Docker sandbox only ships with npm; bun/yarn/pnpm must be installed globally.
+ */
+async function ensurePackageManagerInSandbox(
+  sandboxName: string,
+  pm: PackageManager
+): Promise<void> {
+  try {
+    execSync(`docker sandbox exec ${sandboxName} which ${pm}`, {
+      stdio: ["pipe", "pipe", "pipe"],
+      timeout: 5000,
+    });
+  } catch {
+    const npmPkg = pm === "bun" ? "bun" : pm === "yarn" ? "yarn" : "pnpm";
+    process.stderr.write(`Installing ${bold(pm)} in sandbox...\n`);
+    try {
+      execSync(`docker sandbox exec ${sandboxName} npm install -g ${npmPkg}`, {
+        stdio: "inherit",
+        timeout: 120_000,
+      });
+    } catch {
+      process.stderr.write(
+        `${yellow("⚠")} Failed to install ${pm} in sandbox. Dependency install may fail.\n`
+      );
+    }
+  }
 }
 
 /**

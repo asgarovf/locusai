@@ -24,7 +24,8 @@ import type { LocusPackageRegistry } from "./types.js";
  * Creates the directory and seeds a `package.json` if neither exists yet.
  */
 export function getPackagesDir(): string {
-  const dir = join(homedir(), ".locus", "packages");
+  const home = process.env.HOME || homedir();
+  const dir = join(home, ".locus", "packages");
 
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });

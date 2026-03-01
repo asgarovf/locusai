@@ -100,6 +100,7 @@ export const bgRed = wrap("\x1b[41m", "\x1b[49m");
 export const bgGreen = wrap("\x1b[42m", "\x1b[49m");
 export const bgYellow = wrap("\x1b[43m", "\x1b[49m");
 export const bgBlue = wrap("\x1b[44m", "\x1b[49m");
+export const bgGray = wrap("\x1b[100m", "\x1b[49m");
 
 // ─── ANSI Utilities ──────────────────────────────────────────────────────────
 

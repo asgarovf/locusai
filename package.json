@@ -14,15 +14,12 @@
     "jest-cli": "29.7.0",
     "jest-config": "29.7.0",
     "ts-jest": "29.1.2",
-    "turbo": "^2.7.5",
     "typescript": "^5.8.3"
   },
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
+    "lint": "biome lint",
+    "typecheck": "tsc -b --noEmit",
+    "test": "bun test",
     "format": "biome check --write --formatter-enabled=true --assist-enabled=true ",
     "build:cli": "bun run build && cd packages/cli && bun run build",
     "version": "changeset version",
@@ -30,7 +27,7 @@
     "build:packages": "bun run build:shared && bun run build:cli-only",
     "build:shared": "cd packages/shared && bun run build",
     "build:cli-only": "cd packages/cli && bun run build",
-    "clean": "turbo clean && rm -rf bun.lock",
+    "clean": "rm -rf bun.lock",
     "simulate": "bun run packages/cli/src/cli.ts"
   },
   "type": "module",

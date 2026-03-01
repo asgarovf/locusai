@@ -64,7 +64,6 @@ Thumbs.db
 *.iml
 
 # Cache
-.turbo
 .cache
 .eslintcache
 
