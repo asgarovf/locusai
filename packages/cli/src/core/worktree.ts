@@ -74,11 +74,30 @@ function getWorktreeBranch(worktreePath: string): string | null {
   }
 }
 
+// ─── Submodule Helpers ───────────────────────────────────────────────────────
+
+/** Check if the repository uses git submodules. */
+function hasSubmodules(projectRoot: string): boolean {
+  return existsSync(join(projectRoot, ".gitmodules"));
+}
+
+/** Initialize and update submodules in a worktree directory. */
+function initSubmodules(worktreePath: string): void {
+  const log = getLogger();
+  try {
+    git("submodule update --init --recursive", worktreePath);
+    log.info("Initialized submodules in worktree", { path: worktreePath });
+  } catch (e) {
+    log.warn(`Failed to initialize submodules in worktree: ${e}`);
+  }
+}
+
 // ─── Worktree Lifecycle ──────────────────────────────────────────────────────
 
 /**
  * Create a new git worktree for an issue.
  * Creates `.locus/worktrees/issue-<N>` with branch `locus/issue-<N>-<random>` based on `baseBranch`.
+ * If the repo uses submodules, they are initialized in the new worktree.
  */
 export function createWorktree(
   projectRoot: string,
@@ -108,6 +127,11 @@ export function createWorktree(
     `worktree add ${JSON.stringify(worktreePath)} -b ${branch} ${baseBranch}`,
     projectRoot
   );
+
+  // Initialize submodules if the repo uses them
+  if (hasSubmodules(projectRoot)) {
+    initSubmodules(worktreePath);
+  }
 
   log.info(`Created worktree for issue #${issueNumber}`, {
     path: worktreePath,
@@ -250,6 +274,8 @@ export function cleanupStaleWorktrees(projectRoot: string): number {
 
 /**
  * Push a worktree branch to origin and return the branch name.
+ * If the repo has submodules, pushes with --recurse-submodules=on-demand
+ * so that submodule commits referenced by the parent are also pushed.
  */
 export function pushWorktreeBranch(
   projectRoot: string,
@@ -266,7 +292,11 @@ export function pushWorktreeBranch(
     throw new Error(`Could not determine branch for worktree #${issueNumber}`);
   }
 
-  git(`push -u origin ${branch}`, worktreePath);
+  const pushCmd = hasSubmodules(projectRoot)
+    ? `push --recurse-submodules=on-demand -u origin ${branch}`
+    : `push -u origin ${branch}`;
+
+  git(pushCmd, worktreePath);
   return branch;
 }
 

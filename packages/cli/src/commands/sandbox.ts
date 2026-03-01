@@ -633,6 +633,24 @@ async function handleLogs(projectRoot: string, args: string[]): Promise<void> {
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
 type PackageManager = "bun" | "npm" | "yarn" | "pnpm";
+type ProjectType = "node" | "rust" | "python" | "go" | "unknown";
+
+/**
+ * Detect the primary project type from marker files in the project root.
+ * Returns the first match in priority order.
+ */
+function detectProjectType(projectRoot: string): ProjectType {
+  if (existsSync(join(projectRoot, "package.json"))) return "node";
+  if (existsSync(join(projectRoot, "Cargo.toml"))) return "rust";
+  if (
+    existsSync(join(projectRoot, "pyproject.toml")) ||
+    existsSync(join(projectRoot, "setup.py")) ||
+    existsSync(join(projectRoot, "requirements.txt"))
+  )
+    return "python";
+  if (existsSync(join(projectRoot, "go.mod"))) return "go";
+  return "unknown";
+}
 
 function detectPackageManager(projectRoot: string): PackageManager {
   // 1. Check packageManager field in package.json
@@ -686,44 +704,144 @@ function getInstallCommand(pm: PackageManager): string[] {
   }
 }
 
+/**
+ * Run project-type-specific dependency installation inside the sandbox.
+ * Returns true if dependencies were installed (or none needed), false on failure.
+ */
+async function installProjectDeps(
+  sandboxName: string,
+  projectRoot: string,
+  projectType: ProjectType
+): Promise<boolean> {
+  switch (projectType) {
+    case "node": {
+      const pm = detectPackageManager(projectRoot);
+
+      // npm is always available in the sandbox; other PMs need to be installed first
+      if (pm !== "npm") {
+        await ensurePackageManagerInSandbox(sandboxName, pm);
+      }
+
+      const installCmd = getInstallCommand(pm);
+
+      process.stderr.write(
+        `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
+      );
+
+      const installOk = await runInteractiveCommand("docker", [
+        "sandbox",
+        "exec",
+        "-w",
+        projectRoot,
+        sandboxName,
+        ...installCmd,
+      ]);
+
+      if (!installOk) {
+        process.stderr.write(
+          `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
+        );
+        return false;
+      }
+
+      process.stderr.write(
+        `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
+      );
+      return true;
+    }
+
+    case "rust": {
+      // Ensure rustup/cargo are available; the Docker sandbox may not have them
+      const hasRust = await runInteractiveCommand("docker", [
+        "sandbox",
+        "exec",
+        sandboxName,
+        "sh",
+        "-c",
+        "command -v cargo",
+      ]);
+
+      if (!hasRust) {
+        process.stderr.write(
+          `Installing Rust toolchain in sandbox ${dim(sandboxName)}...\n`
+        );
+        const rustInstallOk = await runInteractiveCommand("docker", [
+          "sandbox",
+          "exec",
+          sandboxName,
+          "sh",
+          "-c",
+          "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && . $HOME/.cargo/env",
+        ]);
+        if (!rustInstallOk) {
+          process.stderr.write(
+            `${red("✗")} Failed to install Rust toolchain in sandbox ${dim(sandboxName)}.\n`
+          );
+          return false;
+        }
+      }
+
+      process.stderr.write(
+        `\nFetching Rust dependencies (${bold("cargo fetch")}) in sandbox ${dim(sandboxName)}...\n`
+      );
+
+      const cargoOk = await runInteractiveCommand("docker", [
+        "sandbox",
+        "exec",
+        "-w",
+        projectRoot,
+        sandboxName,
+        "sh",
+        "-c",
+        ". $HOME/.cargo/env 2>/dev/null; cargo fetch",
+      ]);
+
+      if (!cargoOk) {
+        process.stderr.write(
+          `${yellow("⚠")} cargo fetch failed in sandbox ${dim(sandboxName)}. Build may still work.\n`
+        );
+        // Non-fatal — cargo build will fetch dependencies on first build
+      } else {
+        process.stderr.write(
+          `${green("✓")} Rust dependencies fetched in sandbox ${dim(sandboxName)}.\n`
+        );
+      }
+      return true;
+    }
+
+    case "python":
+    case "go":
+    case "unknown": {
+      // No automatic dependency install — rely on .locus/sandbox-setup.sh hook
+      process.stderr.write(
+        `\n${dim(`Detected ${projectType === "unknown" ? "non-standard" : projectType} project — skipping automatic dependency install.`)}\n`
+      );
+      if (!existsSync(join(projectRoot, ".locus", "sandbox-setup.sh"))) {
+        process.stderr.write(
+          `  ${dim("Tip:")} Create ${bold(".locus/sandbox-setup.sh")} to run custom setup commands in the sandbox.\n`
+        );
+      }
+      return true;
+    }
+  }
+}
+
 async function runSandboxSetup(
   sandboxName: string,
   projectRoot: string
 ): Promise<boolean> {
-  const pm = detectPackageManager(projectRoot);
-
-  // npm is always available in the sandbox; other PMs need to be installed first
-  if (pm !== "npm") {
-    await ensurePackageManagerInSandbox(sandboxName, pm);
-  }
-
-  const installCmd = getInstallCommand(pm);
+  const projectType = detectProjectType(projectRoot);
 
   process.stderr.write(
-    `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
+    `\n${dim(`Detected project type: ${bold(projectType)}`)}\n`
   );
 
-  const installOk = await runInteractiveCommand("docker", [
-    "sandbox",
-    "exec",
-    "-w",
-    projectRoot,
-    sandboxName,
-    ...installCmd,
-  ]);
-
-  if (!installOk) {
-    process.stderr.write(
-      `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
-    );
+  const depsOk = await installProjectDeps(sandboxName, projectRoot, projectType);
+  if (!depsOk) {
     return false;
   }
 
-  process.stderr.write(
-    `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
-  );
-
-  // Run optional setup hook
+  // Run optional setup hook (runs for ALL project types)
   const setupScript = join(projectRoot, ".locus", "sandbox-setup.sh");
   if (existsSync(setupScript)) {
     process.stderr.write(

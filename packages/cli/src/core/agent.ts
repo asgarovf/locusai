@@ -5,6 +5,8 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
@@ -326,8 +328,11 @@ async function createIssuePR(
       return undefined;
     }
 
-    // Push branch
-    execSync(`git push -u origin ${currentBranch}`, {
+    // Push branch (with submodule support if applicable)
+    const pushCmd = existsSync(join(projectRoot, ".gitmodules"))
+      ? `git push --recurse-submodules=on-demand -u origin ${currentBranch}`
+      : `git push -u origin ${currentBranch}`;
+    execSync(pushCmd, {
       cwd: projectRoot,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],

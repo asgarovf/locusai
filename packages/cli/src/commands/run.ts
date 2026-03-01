@@ -10,6 +10,8 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { executeIssue } from "../core/agent.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { loadConfig } from "../core/config.js";
@@ -892,6 +894,10 @@ function getOrder(issue: Issue): number | null {
 /**
  * Safety-net commit: if the AI left uncommitted changes after a task,
  * stage and commit them so the sprint branch stays clean per task.
+ *
+ * When the repo uses submodules, only non-submodule files are staged
+ * to avoid accidentally committing submodule pointer changes that
+ * cannot be pushed to the parent repo's branch.
  */
 function ensureTaskCommit(
   projectRoot: string,
@@ -907,11 +913,74 @@ function ensureTaskCommit(
 
     if (!status) return;
 
-    execSync("git add -A", {
-      cwd: projectRoot,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    const useSubmoduleSafeAdd = existsSync(join(projectRoot, ".gitmodules"));
+
+    if (useSubmoduleSafeAdd) {
+      // Stage only non-submodule changes to avoid committing submodule pointer
+      // diffs that would require pushing to the submodule's remote first.
+      const lines = status.split("\n").filter(Boolean);
+      const filesToAdd: string[] = [];
+
+      // Get list of submodule paths
+      let submodulePaths: string[] = [];
+      try {
+        const submoduleStatus = execSync(
+          "git submodule status --recursive",
+          {
+            cwd: projectRoot,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          }
+        ).trim();
+        submodulePaths = submoduleStatus
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => line.trim().split(/\s+/)[1])
+          .filter(Boolean);
+      } catch {
+        // If submodule status fails, fall back to git add -A
+      }
+
+      if (submodulePaths.length > 0) {
+        for (const line of lines) {
+          // git status --porcelain format: XY <path> or XY <path> -> <path>
+          const filePath = line.slice(3).split(" -> ").pop()?.trim();
+          if (!filePath) continue;
+
+          // Skip if the file path is a submodule
+          const isSubmodule = submodulePaths.some(
+            (sp) => filePath === sp || filePath.startsWith(`${sp}/`)
+          );
+          if (!isSubmodule) {
+            filesToAdd.push(filePath);
+          }
+        }
+
+        if (filesToAdd.length === 0) return;
+
+        // Stage non-submodule files individually
+        for (const file of filesToAdd) {
+          execSync(`git add -- ${JSON.stringify(file)}`, {
+            cwd: projectRoot,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          });
+        }
+      } else {
+        // No submodule paths detected — fall back to git add -A
+        execSync("git add -A", {
+          cwd: projectRoot,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      }
+    } else {
+      execSync("git add -A", {
+        cwd: projectRoot,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    }
 
     const message = `chore: complete #${issueNumber} - ${issueTitle}\n\nCo-Authored-By: LocusAgent <agent@locusai.team>`;
     execSync(`git commit -F -`, {
@@ -956,7 +1025,10 @@ async function createSprintPR(
       return undefined;
     }
 
-    execSync(`git push -u origin ${branchName}`, {
+    const pushCmd = existsSync(join(projectRoot, ".gitmodules"))
+      ? `git push --recurse-submodules=on-demand -u origin ${branchName}`
+      : `git push -u origin ${branchName}`;
+    execSync(pushCmd, {
       cwd: projectRoot,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
