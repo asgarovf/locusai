@@ -10,6 +10,7 @@ import { createUserManagedSandboxRunner } from "../ai/runner.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
 import {
+  checkProviderSandboxMismatch,
   getModelSandboxName,
   getProviderSandboxName,
 } from "../core/sandbox.js";
@@ -168,8 +169,13 @@ async function runInteractiveRepl(
         `${dim("Using")} ${dim(provider)} ${dim("sandbox")} ${dim(sandboxName)}\n`
       );
     } else {
+      const mismatch = checkProviderSandboxMismatch(
+        config.sandbox,
+        config.ai.model,
+        config.ai.provider
+      );
       process.stderr.write(
-        `${yellow("⚠")} ${dim(`No sandbox configured for ${provider}. Run locus sandbox.`)}\n`
+        `${yellow("⚠")} ${dim(mismatch ?? `No sandbox configured for ${provider}. Run locus sandbox.`)}\n`
       );
     }
   }
@@ -231,8 +237,13 @@ async function runInteractiveRepl(
             );
           } else {
             sandboxRunner = null;
+            const mismatch = checkProviderSandboxMismatch(
+              config.sandbox,
+              model,
+              config.ai.provider
+            );
             process.stderr.write(
-              `${yellow("⚠")} ${dim(`No sandbox configured for ${inferredProvider}. Run locus sandbox.`)}\n`
+              `${yellow("⚠")} ${dim(mismatch ?? `No sandbox configured for ${inferredProvider}. Run locus sandbox.`)}\n`
             );
           }
         }

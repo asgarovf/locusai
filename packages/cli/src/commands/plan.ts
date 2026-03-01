@@ -28,7 +28,10 @@ import {
   reopenMilestone,
   updateIssueLabels,
 } from "../core/github.js";
-import { getModelSandboxName } from "../core/sandbox.js";
+import {
+  checkProviderSandboxMismatch,
+  getModelSandboxName,
+} from "../core/sandbox.js";
 import {
   bold,
   cyan,
@@ -357,6 +360,19 @@ async function handleAIPlan(
   }
   process.stderr.write("\n");
 
+  // Check for provider/sandbox mismatch before AI execution
+  if (config.sandbox.enabled) {
+    const mismatch = checkProviderSandboxMismatch(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    );
+    if (mismatch) {
+      process.stderr.write(`${red("✗")} ${mismatch}\n`);
+      return;
+    }
+  }
+
   const prompt = buildPlanningPrompt(
     projectRoot,
     config,
@@ -480,6 +496,19 @@ async function handleFromIssues(
   if (issues.length === 0) {
     process.stderr.write(`${dim("No open issues in this sprint.")}\n`);
     return;
+  }
+
+  // Check for provider/sandbox mismatch before AI execution
+  if (config.sandbox.enabled) {
+    const mismatch = checkProviderSandboxMismatch(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    );
+    if (mismatch) {
+      process.stderr.write(`${red("✗")} ${mismatch}\n`);
+      return;
+    }
   }
 
   // Build context for AI ordering

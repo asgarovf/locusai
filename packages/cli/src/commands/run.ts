@@ -39,6 +39,7 @@ import {
   saveRunState,
 } from "../core/run-state.js";
 import {
+  checkProviderSandboxMismatch,
   detectSandboxSupport,
   getModelSandboxName,
   resolveSandboxMode,
@@ -164,6 +165,20 @@ export async function runCommand(
     }
 
     // Note: stale sandbox cleanup is handled centrally in cli.ts prepareSandbox()
+
+    // Check for provider/sandbox mismatch when sandbox is active
+    if (sandboxed) {
+      const model = flags.model ?? config.ai.model;
+      const mismatch = checkProviderSandboxMismatch(
+        config.sandbox,
+        model,
+        config.ai.provider
+      );
+      if (mismatch) {
+        process.stderr.write(`${red("✗")} ${mismatch}\n`);
+        return;
+      }
+    }
 
     // Resume mode
     if (flags.resume) {

@@ -2,10 +2,10 @@
  * `locus sandbox` — Manage Docker sandbox lifecycle.
  *
  * Usage:
- *   locus sandbox                    # Create provider sandboxes and enable sandbox mode
+ *   locus sandbox                    # Prompt for a provider and create its sandbox
  *   locus sandbox claude             # Run claude interactively in the claude sandbox (for login)
  *   locus sandbox codex              # Run codex interactively in the codex sandbox (for login)
- *   locus sandbox setup               # Re-run dependency install in sandbox(es)
+ *   locus sandbox setup              # Re-run dependency install in sandbox(es)
  *   locus sandbox install bun        # Install a global package in sandbox(es)
  *   locus sandbox shell codex        # Open interactive shell in sandbox
  *   locus sandbox logs codex         # Show sandbox logs
@@ -17,6 +17,7 @@ import { execSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { createInterface } from "node:readline";
 import { loadConfig, saveConfig } from "../core/config.js";
 import {
   detectProjectEcosystem,
@@ -40,7 +41,7 @@ function printSandboxHelp(): void {
 ${bold("locus sandbox")} — Manage Docker sandbox lifecycle
 
 ${bold("Usage:")}
-  locus sandbox                     ${dim("# Create claude/codex sandboxes and enable sandbox mode")}
+  locus sandbox                     ${dim("# Select a provider and create its sandbox")}
   locus sandbox claude              ${dim("# Run claude interactively (for login)")}
   locus sandbox codex               ${dim("# Run codex interactively (for login)")}
   locus sandbox setup               ${dim("# Re-run dependency install in sandbox(es)")}
@@ -51,10 +52,10 @@ ${bold("Usage:")}
   locus sandbox status              ${dim("# Show current sandbox state")}
 
 ${bold("Flow:")}
-  1. ${cyan("locus sandbox")}          Create sandboxes (auto-installs dependencies)
-  2. ${cyan("locus sandbox claude")}   Login Claude inside its sandbox
-  3. ${cyan("locus sandbox codex")}    Login Codex inside its sandbox
-  4. ${cyan("locus sandbox install bun")}  Install extra tools (optional)
+  1. ${cyan("locus sandbox")}              Select a provider and create its sandbox
+  2. ${cyan("locus sandbox <provider>")}   Login to the provider inside its sandbox
+  3. ${cyan("locus sandbox install bun")}  Install extra tools (optional)
+  4. Run ${cyan("locus sandbox")} again to add another provider (optional)
 
 `);
 }
@@ -100,6 +101,44 @@ export async function sandboxCommand(
 
 // ─── Create ──────────────────────────────────────────────────────────────────
 
+async function promptProviderSelection(): Promise<AIProvider | null> {
+  process.stderr.write(`\n${bold("Select a provider to create a sandbox for:")}\n\n`);
+  for (let i = 0; i < PROVIDERS.length; i++) {
+    process.stderr.write(`  ${bold(String(i + 1))}. ${PROVIDERS[i]}\n`);
+  }
+  process.stderr.write("\n");
+
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stderr,
+  });
+
+  return new Promise<AIProvider | null>((resolve) => {
+    rl.question("Enter choice (1-2): ", (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+
+      // Accept provider name directly
+      if (trimmed === "claude" || trimmed === "codex") {
+        resolve(trimmed);
+        return;
+      }
+
+      // Accept number
+      const num = Number.parseInt(trimmed, 10);
+      if (num >= 1 && num <= PROVIDERS.length) {
+        resolve(PROVIDERS[num - 1]);
+        return;
+      }
+
+      process.stderr.write(`${red("✗")} Invalid selection.\n`);
+      resolve(null);
+    });
+
+    rl.on("close", () => resolve(null));
+  });
+}
+
 async function handleCreate(projectRoot: string): Promise<void> {
   const config = loadConfig(projectRoot);
 
@@ -114,81 +153,61 @@ async function handleCreate(projectRoot: string): Promise<void> {
     return;
   }
 
+  const provider = await promptProviderSelection();
+  if (!provider) return;
+
   const sandboxNames = buildProviderSandboxNames(projectRoot);
-  const readySandboxes: ProviderSandboxes = {};
-  const newlyCreated = new Set<string>();
-  let failed = false;
+  const name = sandboxNames[provider];
 
-  // Create sandboxes in parallel
-  const createResults = await Promise.all(
-    PROVIDERS.map(async (provider) => {
-      const name = sandboxNames[provider];
+  // Preserve existing config for other providers
+  const readySandboxes: ProviderSandboxes = { ...config.sandbox.providers };
 
-      if (isSandboxAlive(name)) {
-        process.stderr.write(
-          `${green("✓")} ${provider} sandbox ready: ${bold(name)}\n`
-        );
-        return { provider, name, created: false, existed: true };
-      }
-
-      process.stderr.write(
-        `Creating ${bold(provider)} sandbox ${dim(name)} with workspace ${dim(projectRoot)}...\n`
-      );
-
-      const created = await createProviderSandbox(provider, name, projectRoot);
-      if (!created) {
-        process.stderr.write(
-          `${red("✗")} Failed to create ${provider} sandbox (${name}).\n`
-        );
-        return { provider, name, created: false, existed: false };
-      }
-
-      process.stderr.write(
-        `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
-      );
-      return { provider, name, created: true, existed: false };
-    })
-  );
-
-  for (const result of createResults) {
-    if (result.created || result.existed) {
-      readySandboxes[result.provider] = result.name;
-      if (result.created) newlyCreated.add(result.name);
-    } else {
-      failed = true;
-    }
+  if (isSandboxAlive(name)) {
+    process.stderr.write(
+      `${green("✓")} ${provider} sandbox already exists: ${bold(name)}\n`
+    );
+    readySandboxes[provider] = name;
+    config.sandbox.enabled = true;
+    config.sandbox.providers = readySandboxes;
+    saveConfig(projectRoot, config);
+    process.stderr.write(
+      `  Next: run ${cyan(`locus sandbox ${provider}`)} to authenticate.\n`
+    );
+    return;
   }
 
+  process.stderr.write(
+    `Creating ${bold(provider)} sandbox ${dim(name)} with workspace ${dim(projectRoot)}...\n`
+  );
+
+  const created = await createProviderSandbox(provider, name, projectRoot);
+  if (!created) {
+    process.stderr.write(
+      `${red("✗")} Failed to create ${provider} sandbox (${name}).\n`
+    );
+    process.stderr.write(
+      `  Re-run ${cyan("locus sandbox")} after resolving Docker issues.\n`
+    );
+    return;
+  }
+
+  process.stderr.write(
+    `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
+  );
+
+  readySandboxes[provider] = name;
   config.sandbox.enabled = true;
   config.sandbox.providers = readySandboxes;
   saveConfig(projectRoot, config);
 
-  // Install project dependencies in newly created sandboxes (in parallel)
-  await Promise.all(
-    PROVIDERS.filter((provider) => {
-      const sandboxName = readySandboxes[provider];
-      return sandboxName && newlyCreated.has(sandboxName);
-    }).map((provider) =>
-      runSandboxSetup(
-        readySandboxes[provider] as Required<
-          typeof readySandboxes
-        >[typeof provider],
-        projectRoot
-      )
-    )
-  );
-
-  if (failed) {
-    process.stderr.write(
-      `\n${yellow("⚠")} Some sandboxes failed to create. Re-run ${cyan("locus sandbox")} after resolving Docker issues.\n`
-    );
-  }
+  // Install project dependencies in the newly created sandbox
+  await runSandboxSetup(name, projectRoot);
 
   process.stderr.write(
-    `\n${green("✓")} Sandbox mode enabled with provider-specific sandboxes.\n`
+    `\n${green("✓")} Sandbox mode enabled for ${bold(provider)}.\n`
   );
   process.stderr.write(
-    `  Next: run ${cyan("locus sandbox claude")} and ${cyan("locus sandbox codex")} to authenticate both providers.\n`
+    `  Next: run ${cyan(`locus sandbox ${provider}`)} to authenticate.\n`
   );
 }
 
@@ -327,9 +346,9 @@ function handleStatus(projectRoot: string): void {
     }
   }
 
-  if (!config.sandbox.providers.claude || !config.sandbox.providers.codex) {
+  if (!config.sandbox.providers.claude && !config.sandbox.providers.codex) {
     process.stderr.write(
-      `\n  ${yellow("⚠")} Provider sandboxes are incomplete. Run ${bold("locus sandbox")}.\n`
+      `\n  ${yellow("⚠")} No provider sandboxes configured. Run ${bold("locus sandbox")} to create one.\n`
     );
   }
 

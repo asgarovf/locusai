@@ -181,8 +181,9 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
           success: false,
           output: "",
           error:
-            `Sandbox for provider "${resolvedProvider}" is not configured. ` +
-            `Run "locus sandbox" and authenticate via "locus sandbox ${resolvedProvider}".`,
+            `No sandbox configured for "${resolvedProvider}". ` +
+            `Run "locus sandbox" and select "${resolvedProvider}" to create its sandbox, ` +
+            `then authenticate via "locus sandbox ${resolvedProvider}".`,
           interrupted: false,
           exitCode: 1,
         };

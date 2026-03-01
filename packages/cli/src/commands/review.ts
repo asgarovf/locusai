@@ -13,7 +13,10 @@ import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
 import { getPRDiff, listPRs } from "../core/github.js";
-import { getModelSandboxName } from "../core/sandbox.js";
+import {
+  checkProviderSandboxMismatch,
+  getModelSandboxName,
+} from "../core/sandbox.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { LocusConfig, PullRequest } from "../types.js";
@@ -65,6 +68,19 @@ export async function reviewCommand(
       flags.dryRun = true;
     } else if (/^\d+$/.test(args[i])) {
       prNumber = Number.parseInt(args[i], 10);
+    }
+  }
+
+  // Check for provider/sandbox mismatch before AI execution
+  if (config.sandbox.enabled) {
+    const mismatch = checkProviderSandboxMismatch(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    );
+    if (mismatch) {
+      process.stderr.write(`${red("✗")} ${mismatch}\n`);
+      return;
     }
   }
 

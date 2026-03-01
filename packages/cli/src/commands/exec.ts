@@ -17,7 +17,10 @@ import {
 } from "../ai/runner.js";
 import { loadConfig } from "../core/config.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
-import { getProviderSandboxName } from "../core/sandbox.js";
+import {
+  checkProviderSandboxMismatch,
+  getProviderSandboxName,
+} from "../core/sandbox.js";
 import { JsonStream } from "../display/json-stream.js";
 import { bold, cyan, dim, green, red } from "../display/terminal.js";
 import { startRepl } from "../repl/repl.js";
@@ -195,8 +198,14 @@ async function handleJsonStream(
       : await createRunnerAsync(config.ai.provider, false);
 
     if (!runner) {
+      const mismatch = checkProviderSandboxMismatch(
+        config.sandbox,
+        config.ai.model,
+        config.ai.provider
+      );
       stream.emitError(
-        `Sandbox for provider "${config.ai.provider}" is not configured. Run locus sandbox.`,
+        mismatch ??
+          `No sandbox configured for "${config.ai.provider}". Run "locus sandbox" to create one.`,
         false
       );
       return;

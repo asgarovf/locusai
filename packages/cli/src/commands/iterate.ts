@@ -14,6 +14,7 @@ import { execSync } from "node:child_process";
 import { iterateOnPR } from "../core/agent.js";
 import { loadConfig } from "../core/config.js";
 import { getPRComments, listPRs } from "../core/github.js";
+import { checkProviderSandboxMismatch } from "../core/sandbox.js";
 import { createTimer } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { LocusConfig, PullRequest } from "../types.js";
@@ -70,6 +71,19 @@ export async function iterateCommand(
       flags.dryRun = true;
     } else if (/^\d+$/.test(args[i])) {
       issueNumber = Number.parseInt(args[i], 10);
+    }
+  }
+
+  // Check for provider/sandbox mismatch before AI execution
+  if (config.sandbox.enabled) {
+    const mismatch = checkProviderSandboxMismatch(
+      config.sandbox,
+      config.ai.model,
+      config.ai.provider
+    );
+    if (mismatch) {
+      process.stderr.write(`${red("✗")} ${mismatch}\n`);
+      return;
     }
   }
 

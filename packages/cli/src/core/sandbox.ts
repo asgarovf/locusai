@@ -36,6 +36,44 @@ export function getModelSandboxName(
   return getProviderSandboxName(config, provider);
 }
 
+// ─── Provider Mismatch Check ─────────────────────────────────────────────────
+
+/**
+ * Check whether sandbox mode is enabled but the target provider has no sandbox
+ * configured. Returns a user-facing warning message if there's a mismatch,
+ * or `null` if everything is fine.
+ */
+export function checkProviderSandboxMismatch(
+  config: SandboxConfig,
+  model: string,
+  fallbackProvider: AIProvider
+): string | null {
+  if (!config.enabled) return null;
+
+  const targetProvider = inferProviderFromModel(model) ?? fallbackProvider;
+  const sandboxName = getProviderSandboxName(config, targetProvider);
+
+  // Sandbox exists for this provider — all good
+  if (sandboxName) return null;
+
+  // Find which providers ARE configured
+  const configured = (["claude", "codex"] as AIProvider[]).filter(
+    (p) => config.providers[p]
+  );
+
+  if (configured.length > 0) {
+    return (
+      `Sandbox is configured for ${configured.join(", ")} but not for ${targetProvider}. ` +
+      `Run "locus sandbox" and select ${targetProvider} to create its sandbox.`
+    );
+  }
+
+  return (
+    `No sandbox is configured for ${targetProvider}. ` +
+    `Run "locus sandbox" to create one.`
+  );
+}
+
 // ─── Detection ───────────────────────────────────────────────────────────────
 
 const TIMEOUT_MS = 5000;

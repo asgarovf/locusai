@@ -52,16 +52,31 @@ Expected outcome:
 - `.locus/config.json` exists.
 - `.sandboxignore` exists (generated if missing).
 
-## Step 3: Create Provider Sandboxes
+## Step 3: Create a Provider Sandbox
+
+Run `locus sandbox` and select which provider you want to use:
 
 ```bash
 locus sandbox
 ```
 
+You will be prompted to choose a provider:
+
+```
+Select a provider to create a sandbox for:
+
+  1. claude
+  2. codex
+
+Enter choice (1-2):
+```
+
 Expected outcome:
 
-- Locus creates provider-specific sandboxes (Claude and Codex).
+- Locus creates a sandbox for the selected provider.
 - `sandbox.enabled` is turned on in `.locus/config.json`.
+
+If you use both providers, run `locus sandbox` again and select the other provider.
 
 Check state anytime:
 
@@ -69,18 +84,21 @@ Check state anytime:
 locus sandbox status
 ```
 
-## Step 4: Authenticate Inside Each Sandbox
+## Step 4: Authenticate Inside the Sandbox
 
-Authenticate providers in their own sandbox once:
+Authenticate the provider in its sandbox:
 
 ```bash
+# If you chose claude
 locus sandbox claude
+
+# If you chose codex
 locus sandbox codex
 ```
 
 Expected outcome:
 
-- Claude and Codex credentials are stored in their sandbox environment.
+- Provider credentials are stored in the sandbox environment.
 - Later `locus run`, `locus exec`, and other AI commands can execute without host credential exposure.
 
 ## Step 5: Choose Model, Run, and Verify Isolation
@@ -104,6 +122,19 @@ Expected outcome:
 
 - You switch providers only by changing `ai.model`.
 - The sandboxing layer stays the same (Docker sandbox + workspace sync + `.sandboxignore` enforcement).
+
+## Optional: Custom Sandbox Setup Script
+
+For non-JavaScript projects (Python, Rust, Go, etc.) or projects requiring extra system dependencies, create a `.locus/sandbox-setup.sh` script. Locus runs this script automatically inside each new sandbox after creation.
+
+```bash
+#!/bin/sh
+# .locus/sandbox-setup.sh — Example for a Python project
+apt-get update && apt-get install -y python3 python3-pip
+pip install -r requirements.txt
+```
+
+For more examples and details, see [Custom Setup with sandbox-setup.sh](../cli/sandbox.md#custom-setup-with-sandbox-setupsh).
 
 ## Optional: Install Extra Tools Inside Sandbox
 
