@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.20.2
+
+### Patch Changes
+
+- Do not use worktree for single task
+  Submodule detection and syncing
+  Repo context detection and base install.sh
+- Updated dependencies
+  - @locusai/shared@0.20.2
+
 ## 0.20.1
 
 ### Patch Changes
