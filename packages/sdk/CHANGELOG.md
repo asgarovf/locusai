@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.20.4
+
+### Patch Changes
+
+- Sandbox creation fix
+
 ## 0.20.3
 
 ### Patch Changes

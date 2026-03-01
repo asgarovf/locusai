@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.4
+
+### Patch Changes
+
+- Sandbox creation fix
+- Updated dependencies
+  - @locusai/shared@0.20.4
+
 ## 0.20.3
 
 ### Patch Changes
