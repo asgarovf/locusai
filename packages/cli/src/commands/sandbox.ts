@@ -19,6 +19,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { loadConfig, saveConfig } from "../core/config.js";
 import {
+  detectProjectEcosystem,
+  isJavaScriptEcosystem,
+} from "../core/ecosystem.js";
+import {
   detectSandboxSupport,
   getProviderSandboxName,
 } from "../core/sandbox.js";
@@ -690,40 +694,50 @@ async function runSandboxSetup(
   sandboxName: string,
   projectRoot: string
 ): Promise<boolean> {
-  const pm = detectPackageManager(projectRoot);
+  const ecosystem = detectProjectEcosystem(projectRoot);
+  const isJS = isJavaScriptEcosystem(ecosystem);
 
-  // npm is always available in the sandbox; other PMs need to be installed first
-  if (pm !== "npm") {
-    await ensurePackageManagerInSandbox(sandboxName, pm);
-  }
+  // Only run JS package install for JavaScript/TypeScript projects
+  if (isJS) {
+    const pm = detectPackageManager(projectRoot);
 
-  const installCmd = getInstallCommand(pm);
+    // npm is always available in the sandbox; other PMs need to be installed first
+    if (pm !== "npm") {
+      await ensurePackageManagerInSandbox(sandboxName, pm);
+    }
 
-  process.stderr.write(
-    `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
-  );
+    const installCmd = getInstallCommand(pm);
 
-  const installOk = await runInteractiveCommand("docker", [
-    "sandbox",
-    "exec",
-    "-w",
-    projectRoot,
-    sandboxName,
-    ...installCmd,
-  ]);
-
-  if (!installOk) {
     process.stderr.write(
-      `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
+      `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
     );
-    return false;
+
+    const installOk = await runInteractiveCommand("docker", [
+      "sandbox",
+      "exec",
+      "-w",
+      projectRoot,
+      sandboxName,
+      ...installCmd,
+    ]);
+
+    if (!installOk) {
+      process.stderr.write(
+        `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
+      );
+      return false;
+    }
+
+    process.stderr.write(
+      `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
+    );
+  } else {
+    process.stderr.write(
+      `\n${dim(`Detected ${ecosystem} project — skipping JS package install.`)}\n`
+    );
   }
 
-  process.stderr.write(
-    `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
-  );
-
-  // Run optional setup hook
+  // Run optional setup hook (important for non-JS projects)
   const setupScript = join(projectRoot, ".locus", "sandbox-setup.sh");
   if (existsSync(setupScript)) {
     process.stderr.write(
@@ -743,6 +757,13 @@ async function runSandboxSetup(
         `${yellow("⚠")} Setup hook failed in sandbox ${dim(sandboxName)}.\n`
       );
     }
+  } else if (!isJS) {
+    process.stderr.write(
+      `${yellow("⚠")} No ${bold(".locus/sandbox-setup.sh")} found. Create one to install ${ecosystem} toolchain in the sandbox.\n`
+    );
+    process.stderr.write(
+      `  Re-run ${cyan("locus init")} to auto-generate a template, or create it manually.\n`
+    );
   }
 
   return true;

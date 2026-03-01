@@ -26,6 +26,10 @@ import {
 import { getLogger } from "./logger.js";
 import { buildExecutionPrompt, buildFeedbackPrompt } from "./prompt-builder.js";
 import { getModelSandboxName } from "./sandbox.js";
+import {
+  getSubmoduleChangeSummary,
+  pushSubmoduleBranches,
+} from "./submodule.js";
 
 /**
  * Execute a single issue using the AI agent.
@@ -326,6 +330,9 @@ async function createIssuePR(
       return undefined;
     }
 
+    // Push submodule branches first (if any) so parent refs are valid
+    pushSubmoduleBranches(projectRoot);
+
     // Push branch
     execSync(`git push -u origin ${currentBranch}`, {
       cwd: projectRoot,
@@ -333,9 +340,19 @@ async function createIssuePR(
       stdio: ["pipe", "pipe", "pipe"],
     });
 
+    // Build PR body, including submodule change summary if applicable
+    const submoduleSummary = getSubmoduleChangeSummary(
+      projectRoot,
+      config.agent.baseBranch
+    );
+    let prBody = `Closes #${issue.number}`;
+    if (submoduleSummary) {
+      prBody += `\n\n${submoduleSummary}`;
+    }
+    prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
+
     // Create PR
     const prTitle = `${issue.title} (#${issue.number})`;
-    const prBody = `Closes #${issue.number}\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
 
     const prNumber = createPR(
       prTitle,

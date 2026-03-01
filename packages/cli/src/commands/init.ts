@@ -20,6 +20,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_CONFIG, isInitialized, saveConfig } from "../core/config.js";
 import { checkGhCli, detectRepoContext, isGitRepo } from "../core/context.js";
+import {
+  detectProjectEcosystem,
+  generateSandboxSetupTemplate,
+} from "../core/ecosystem.js";
 import { ensureLabels } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
 import {
@@ -362,7 +366,27 @@ export async function initCommand(cwd: string): Promise<void> {
     );
   }
 
-  // 9. Create GitHub labels
+  // 9. Generate sandbox-setup.sh for non-JS ecosystems
+  const ecosystem = detectProjectEcosystem(cwd);
+  const sandboxSetupPath = join(locusDir, "sandbox-setup.sh");
+  if (!existsSync(sandboxSetupPath)) {
+    const template = generateSandboxSetupTemplate(ecosystem);
+    if (template) {
+      writeFileSync(sandboxSetupPath, template, {
+        encoding: "utf-8",
+        mode: 0o755,
+      });
+      process.stderr.write(
+        `${green("✓")} Generated .locus/sandbox-setup.sh (${ecosystem} project detected)\n`
+      );
+    }
+  } else {
+    process.stderr.write(
+      `${dim("○")} sandbox-setup.sh already exists (preserved)\n`
+    );
+  }
+
+  // 10. Create GitHub labels
   process.stderr.write(`${cyan("●")} Creating GitHub labels...`);
   try {
     ensureLabels(ALL_LABELS, { cwd });
@@ -375,7 +399,7 @@ export async function initCommand(cwd: string): Promise<void> {
     );
   }
 
-  // 10. Update .gitignore
+  // 11. Update .gitignore
   const gitignorePath = join(cwd, ".gitignore");
   let gitignoreContent = "";
   if (existsSync(gitignorePath)) {
@@ -394,7 +418,7 @@ export async function initCommand(cwd: string): Promise<void> {
     process.stderr.write(`${dim("○")} .gitignore already configured\n`);
   }
 
-  // 11. Print next steps
+  // 12. Print next steps
   process.stderr.write(`\n${bold(green("Locus initialized!"))}\n\n`);
   process.stderr.write(`${bold("Next steps:")}\n`);
   process.stderr.write(
@@ -410,7 +434,7 @@ export async function initCommand(cwd: string): Promise<void> {
     `  ${gray("4.")} Start coding:  ${bold("locus exec")}\n`
   );
 
-  // 12. Sandbox tutorial
+  // 13. Sandbox tutorial
   process.stderr.write(`\n${bold("Sandbox mode")} ${dim("(recommended)")}\n`);
   process.stderr.write(
     `  Run AI agents in an isolated Docker sandbox for safety.\n\n`

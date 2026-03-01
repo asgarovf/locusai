@@ -8,6 +8,7 @@ import { execSync } from "node:child_process";
 import { bold, cyan, dim, red, yellow } from "../display/terminal.js";
 import type { ConflictCheckResult } from "../types.js";
 import { getLogger } from "./logger.js";
+import { updateSubmodulesAfterRebase } from "./submodule.js";
 
 // ─── Git Helpers ──────────────────────────────────────────────────────────────
 
@@ -132,6 +133,10 @@ export function attemptRebase(
   try {
     git(`rebase origin/${baseBranch}`, cwd);
     log.info(`Successfully rebased onto origin/${baseBranch}`);
+
+    // Update submodule refs after successful rebase
+    updateSubmodulesAfterRebase(cwd);
+
     return { success: true };
   } catch (_e) {
     // Rebase failed — extract conflicting files

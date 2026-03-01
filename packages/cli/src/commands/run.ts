@@ -45,6 +45,11 @@ import {
 } from "../core/sandbox.js";
 import { registerShutdownHandlers } from "../core/shutdown.js";
 import {
+  commitDirtySubmodules,
+  getSubmoduleChangeSummary,
+  pushSubmoduleBranches,
+} from "../core/submodule.js";
+import {
   cleanupStaleWorktrees,
   createWorktree,
   removeWorktree,
@@ -500,6 +505,7 @@ async function handleSingleIssue(
   flags: { dryRun?: boolean; model?: string },
   sandboxed: boolean
 ): Promise<void> {
+  const log = getLogger();
   const execution = resolveExecutionContext(config, flags.model);
 
   // Check if issue is in a sprint — sprint issues run on the sprint branch, not worktrees
@@ -513,7 +519,7 @@ async function handleSingleIssue(
 
   if (isSprintIssue) {
     process.stderr.write(
-      `\n${bold("Running sprint issue")} ${cyan(`#${issueNumber}`)} ${dim("(sequential, no worktree)")}\n\n`
+      `\n${bold("Running sprint issue")} ${cyan(`#${issueNumber}`)} ${dim("(sequential)")}\n\n`
     );
 
     await executeIssue(projectRoot, {
@@ -527,33 +533,32 @@ async function handleSingleIssue(
     return;
   }
 
-  // Standalone issue — use a worktree
-  process.stderr.write(
-    `\n${bold("Running issue")} ${cyan(`#${issueNumber}`)} ${dim("(worktree)")}\n\n`
-  );
+  // Standalone issue — create a branch (no worktree needed for single tasks)
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  const branchName = `locus/issue-${issueNumber}-${randomSuffix}`;
 
-  let worktreePath: string | undefined;
+  process.stderr.write(
+    `\n${bold("Running issue")} ${cyan(`#${issueNumber}`)} ${dim(`(branch: ${branchName})`)}\n\n`
+  );
 
   if (!flags.dryRun) {
     try {
-      const wt = createWorktree(
-        projectRoot,
-        issueNumber,
-        config.agent.baseBranch
-      );
-      worktreePath = wt.path;
-      process.stderr.write(`  ${dim(`Worktree: ${wt.branch}`)}\n\n`);
+      execSync(`git checkout -B ${branchName} ${config.agent.baseBranch}`, {
+        cwd: projectRoot,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      log.info(`Checked out branch ${branchName}`);
     } catch (e) {
-      process.stderr.write(`${yellow("⚠")} Could not create worktree: ${e}\n`);
+      process.stderr.write(`${yellow("⚠")} Could not create branch: ${e}\n`);
       process.stderr.write(
-        `  ${dim("Falling back to running in project root.")}\n\n`
+        `  ${dim("Running on current branch instead.")}\n\n`
       );
     }
   }
 
   const result = await executeIssue(projectRoot, {
     issueNumber,
-    worktreePath,
     provider: execution.provider,
     model: execution.model,
     dryRun: flags.dryRun,
@@ -561,14 +566,22 @@ async function handleSingleIssue(
     sandboxName: execution.sandboxName,
   });
 
-  // Clean up worktree on success, preserve on failure for debugging
-  if (worktreePath && !flags.dryRun) {
+  // On success, checkout back to base branch
+  if (!flags.dryRun) {
     if (result.success) {
-      removeWorktree(projectRoot, issueNumber);
-      process.stderr.write(`  ${dim("Worktree cleaned up.")}\n`);
+      try {
+        execSync(`git checkout ${config.agent.baseBranch}`, {
+          cwd: projectRoot,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+        log.info(`Checked out ${config.agent.baseBranch}`);
+      } catch {
+        // Non-fatal
+      }
     } else {
       process.stderr.write(
-        `  ${yellow("⚠")} Worktree preserved for debugging: ${dim(worktreePath)}\n`
+        `  ${yellow("⚠")} Branch ${dim(branchName)} preserved for debugging.\n`
       );
     }
   }
@@ -892,6 +905,9 @@ function getOrder(issue: Issue): number | null {
 /**
  * Safety-net commit: if the AI left uncommitted changes after a task,
  * stage and commit them so the sprint branch stays clean per task.
+ *
+ * Handles submodules: commits inside dirty submodules first, then stages
+ * the updated submodule refs in the parent repo.
  */
 function ensureTaskCommit(
   projectRoot: string,
@@ -899,6 +915,18 @@ function ensureTaskCommit(
   issueTitle: string
 ): void {
   try {
+    // Commit inside dirty submodules first (if any)
+    const committedSubmodules = commitDirtySubmodules(
+      projectRoot,
+      issueNumber,
+      issueTitle
+    );
+    if (committedSubmodules.length > 0) {
+      process.stderr.write(
+        `  ${dim(`Committed submodule changes: ${committedSubmodules.join(", ")}`)}\n`
+      );
+    }
+
     const status = execSync("git status --porcelain", {
       cwd: projectRoot,
       encoding: "utf-8",
@@ -956,6 +984,9 @@ async function createSprintPR(
       return undefined;
     }
 
+    // Push submodule branches first (if any)
+    pushSubmoduleBranches(projectRoot);
+
     execSync(`git push -u origin ${branchName}`, {
       cwd: projectRoot,
       encoding: "utf-8",
@@ -966,7 +997,16 @@ async function createSprintPR(
       .map((t) => `- Closes #${t.issue}${t.title ? `: ${t.title}` : ""}`)
       .join("\n");
 
-    const prBody = `## Sprint: ${sprintName}\n\n${taskLines}\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
+    const submoduleSummary = getSubmoduleChangeSummary(
+      projectRoot,
+      config.agent.baseBranch
+    );
+
+    let prBody = `## Sprint: ${sprintName}\n\n${taskLines}`;
+    if (submoduleSummary) {
+      prBody += `\n\n${submoduleSummary}`;
+    }
+    prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
 
     const prNumber = createPR(
       `Sprint: ${sprintName}`,

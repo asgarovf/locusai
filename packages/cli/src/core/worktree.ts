@@ -10,6 +10,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { getLogger } from "./logger.js";
+import { initSubmodules } from "./submodule.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -108,6 +109,9 @@ export function createWorktree(
     `worktree add ${JSON.stringify(worktreePath)} -b ${branch} ${baseBranch}`,
     projectRoot
   );
+
+  // Initialize submodules in the new worktree (if any)
+  initSubmodules(worktreePath);
 
   log.info(`Created worktree for issue #${issueNumber}`, {
     path: worktreePath,
