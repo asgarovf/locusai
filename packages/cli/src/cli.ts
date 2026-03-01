@@ -13,7 +13,7 @@ import { isInitialized, loadConfig } from "./core/config.js";
 import { getGitRoot, isGitRepo } from "./core/context.js";
 import { initLogger } from "./core/logger.js";
 import { getRateLimiter } from "./core/rate-limiter.js";
-import { bold, cyan, dim, red } from "./display/terminal.js";
+import { bold, cyan, dim, red, white } from "./display/terminal.js";
 import type { LogLevel } from "./types.js";
 
 // ─── Version ─────────────────────────────────────────────────────────────────
@@ -192,9 +192,45 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
+const LOCUS_LOGO = [
+  "    ▄█                  ",
+  "▄▄████▄▄▄▄              ",
+  "████▀ ████              ",
+  "████▄▄████              ",
+  "▀█▄█▀███▀▀ ▄▄██▄▄       ",
+  "████    ▄██████▀███▄    ",
+  "████▄██▀ ▀▀███ ▄████    ",
+  "▀▀██████▄    ██████▀    ",
+  "    ▀▀█████▄▄██▀▀       ",
+  "       ▀▀██▀▀           ",
+];
+
+function printLogo(): void {
+  process.stderr.write("\n");
+  const logoWidth = 10;
+  const gap = "    ";
+  const infoLines = [
+    `${bold("Locus")} ${dim(`v${VERSION}`)}`,
+    `${dim("GitHub-native AI engineering assistant")}`,
+  ];
+
+  const textOffset = 1;
+  const totalLines = Math.max(LOCUS_LOGO.length, infoLines.length + textOffset);
+
+  for (let i = 0; i < totalLines; i++) {
+    const logoLine = LOCUS_LOGO[i] ?? "";
+    const paddedLogo = logoLine.padEnd(logoWidth);
+    const infoIdx = i - textOffset;
+    const infoLine =
+      infoIdx >= 0 && infoIdx < infoLines.length ? infoLines[infoIdx] : "";
+
+    process.stderr.write(`${bold(white(paddedLogo))}${gap}${infoLine}\n`);
+  }
+}
+
 function printHelp(): void {
+  printLogo();
   process.stderr.write(`
-${bold("Locus")} ${dim(`v${VERSION}`)} — GitHub-native AI engineering assistant
 
 ${bold("Usage:")}
   locus <command> [options]

@@ -13,7 +13,15 @@ import {
   getModelSandboxName,
   getProviderSandboxName,
 } from "../core/sandbox.js";
-import { bold, cyan, dim, drawBox, green, red, yellow } from "../display/terminal.js";
+import {
+  bold,
+  cyan,
+  dim,
+  green,
+  red,
+  white,
+  yellow,
+} from "../display/terminal.js";
 import type { AgentRunner, LocusConfig, Session } from "../types.js";
 import { getAllCommandNames, handleSlashCommand } from "./commands.js";
 import {
@@ -391,17 +399,45 @@ async function executeAITurn(
 
 // ─── Welcome Message ────────────────────────────────────────────────────────
 
+const LOCUS_LOGO = [
+  "      ▄█                 ",
+  "  ▄▄████▄▄▄▄             ",
+  "  ████▀ ████             ",
+  "  ████▄▄████             ",
+  "  ▀█▄█▀███▀▀ ▄▄██▄▄      ",
+  "  ████    ▄██████▀███▄   ",
+  "  ████▄██▀ ▀▀███ ▄████   ",
+  "  ▀▀██████▄    ██████▀   ",
+  "      ▀▀█████▄▄██▀▀      ",
+  "         ▀▀██▀▀          ",
+];
+
 function printWelcome(session: Session): void {
   process.stderr.write("\n");
-  const banner = drawBox(
-    [
-      ` ${bold("Locus")} ${dim("REPL")}`,
-      ` ${dim("Provider:")} ${session.metadata.provider} ${dim("/")} ${session.metadata.model}`,
-      ` ${dim("Session:")}  ${dim(session.id)}`,
-    ],
-    { width: 52 }
-  );
-  process.stderr.write(`${dim(banner)}\n`);
+
+  const logoWidth = 10;
+  const gap = "    ";
+  const infoLines = [
+    `${bold("Locus")} ${dim("REPL")}`,
+    `${dim("Provider:")} ${session.metadata.provider} ${dim("/")} ${session.metadata.model}`,
+    `${dim("Session:")}  ${dim(session.id)}`,
+  ];
+
+  // Render logo (left) alongside info text (right, vertically centered)
+  const textOffset = 1;
+  const totalLines = Math.max(LOCUS_LOGO.length, infoLines.length + textOffset);
+
+  for (let i = 0; i < totalLines; i++) {
+    const logoLine = LOCUS_LOGO[i] ?? "";
+    const paddedLogo = logoLine.padEnd(logoWidth);
+    const infoIdx = i - textOffset;
+    const infoLine =
+      infoIdx >= 0 && infoIdx < infoLines.length ? infoLines[infoIdx] : "";
+
+    process.stderr.write(`${bold(white(paddedLogo))}${gap}${infoLine}\n`);
+  }
+
+  process.stderr.write("\n");
   process.stderr.write(
     `  ${dim("Type /help for commands, Shift+Enter for newline, Ctrl+C twice to exit")}\n`
   );
