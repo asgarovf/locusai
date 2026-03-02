@@ -143,17 +143,6 @@ export function renderToolCard(event: ToolEvent): string[] {
   return lines;
 }
 
-/**
- * Render a batch of tool events.
- */
-export function renderToolBatch(events: ToolEvent[]): string[] {
-  const lines: string[] = [];
-  for (const event of events) {
-    lines.push(...renderToolCard(event));
-  }
-  return lines;
-}
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function toolIcon(tool: string): string {
