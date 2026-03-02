@@ -181,10 +181,6 @@ locus exec "Refactor the auth middleware to use JWT"
 | `--no-sandbox` | Disable Docker isolation |
 | `--sandbox=require` | Require Docker (fail if unavailable) |
 
-## VS Code Extension
-
-Locus includes a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=locusai.locus) with an integrated chat interface for running tasks directly from your editor.
-
 ## Documentation
 
 Full documentation is available at [docs.locusai.dev](https://docs.locusai.dev).
