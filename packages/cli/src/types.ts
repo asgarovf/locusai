@@ -2,23 +2,19 @@
 
 export interface LocusConfig {
   version: string;
-  github: GitHubConfig;
-  ai: AIConfig;
+  github: {
+    owner: string;
+    repo: string;
+    defaultBranch: string;
+  };
+  ai: {
+    provider: AIProvider;
+    model: string;
+  };
   agent: AgentConfig;
   sprint: SprintConfig;
   logging: LoggingConfig;
   sandbox: SandboxConfig;
-}
-
-export interface GitHubConfig {
-  owner: string;
-  repo: string;
-  defaultBranch: string;
-}
-
-export interface AIConfig {
-  provider: AIProvider;
-  model: string;
 }
 
 export type AIProvider = "claude" | "codex";
@@ -325,10 +321,3 @@ export interface LogEntry {
   [key: string]: unknown;
 }
 
-// ─── Command Result ──────────────────────────────────────────────────────────
-
-export interface CommandResult {
-  success: boolean;
-  message?: string;
-  error?: string;
-}
