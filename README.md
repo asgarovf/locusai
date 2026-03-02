@@ -95,7 +95,73 @@ $ locus run
   📁 Branch: locus/sprint-oauth
 ```
 
-<!-- Preserved for Sprint Orchestration hero block (issue #5):
+## Sandboxed Execution
+
+Locus provides a **unified Docker sandbox layer** for both Claude and Codex. Every agent runs inside a hypervisor-isolated container — your host machine is never exposed to AI-generated code. One interface, any provider.
+
+```bash
+# Create isolated Docker sandboxes for Claude and Codex
+locus sandbox
+
+# Authenticate providers inside their sandboxes
+locus sandbox claude
+locus sandbox codex
+
+# Install tools inside sandboxes without touching your host
+locus sandbox install eslint prettier typescript
+
+# Every `locus run` now executes inside the sandbox automatically
+locus run
+```
+
+### Enforce sandboxing in CI
+
+Use the `--sandbox=require` flag to guarantee sandboxed execution in CI pipelines — the run will fail if Docker is unavailable rather than falling back to unsandboxed mode.
+
+```bash
+# CI pipeline — never run without a sandbox
+locus run --sandbox=require
+```
+
+| Flag | Behavior |
+|------|----------|
+| *(default)* | Use sandbox when configured and available; warn and fall back if Docker is unavailable |
+| `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
+| `--sandbox=require` | Require sandbox — fail if Docker sandbox is unavailable |
+
+### .sandboxignore
+
+The `.sandboxignore` file (created by `locus init`) controls what is excluded from sandbox-visible workspace content. By default, `.env` and common secret patterns are excluded from sync — sensitive files never enter the sandbox.
+
+Workspace sync is bidirectional for included files; excluded files stay out of sandbox execution entirely.
+
+<details>
+<summary>Sandbox configuration (<code>.locus/config.json</code>)</summary>
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "extraWorkspaces": ["/path/to/shared/libs"],
+    "readOnlyPaths": ["/path/to/configs"]
+  }
+}
+```
+
+- `enabled` — Toggle sandbox mode on/off
+- `extraWorkspaces` — Additional directories to mount into the sandbox
+- `readOnlyPaths` — Paths mounted as read-only inside the sandbox
+
+</details>
+
+Full setup and security details:
+- [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
+- [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
+
+## Sprint Orchestration
+
+Locus is GitHub-native — Issues are tasks, Milestones are sprints, Labels track status, and Pull Requests are deliverables. No external dashboards, no vendor lock-in.
+
 **GitHub IS the backend:**
 
 | Concept | GitHub Primitive |
@@ -106,33 +172,54 @@ $ locus run
 | Priority | Labels (`p:critical`, `p:high`, `p:medium`, `p:low`) |
 | Execution Order | Labels (`order:1`, `order:2`, ...) |
 | Deliverable | Pull Request |
--->
 
-## Features
+```bash
+# AI breaks your goal into ordered GitHub Issues
+locus plan "Add SSO login and role-based access"
 
-### Sprint execution
-Sequential task execution on a single branch. Each task builds on the previous one's output. Resume interrupted runs with `--resume` — no re-executing completed work.
+# Execute sequentially on one branch — resume if interrupted
+locus run
+locus run --resume
 
-### AI sprint planning
-Describe a goal in plain English. AI decomposes it into structured GitHub issues with priority, type, and execution order — ready for `locus run`.
+# Or run independent issues in parallel (3 concurrent agents)
+locus run 42 43 44
+```
 
-### Parallel worktrees
-Run standalone issues concurrently using git worktrees. Each issue gets its own isolated branch. Up to 3 concurrent agents by default (configurable via `agent.maxParallel`).
+## Review & Iterate
 
-### Interactive REPL
-Full-featured terminal with streaming markdown, session persistence, tab completion, and slash commands. Use `locus exec` for interactive mode or `locus exec "prompt"` for one-shot execution.
+Close the feedback loop without manual intervention. AI reviews PRs with inline GitHub comments, then agents address the feedback and update the code automatically.
 
-### AI code review
-Review pull requests with AI-powered analysis. Posts inline comments directly on GitHub with actionable suggestions.
+```bash
+# AI reviews PRs, posts inline comments on GitHub
+locus review
 
-### Iterate on feedback
-Agents re-execute tasks with PR review comments as context, updating code until it's ready to merge. Close the loop without manual intervention.
+# Agents address review feedback and update PRs
+locus iterate --sprint
+```
 
-### Docker sandbox isolation
-Claude and Codex use the same Docker-backed sandboxing layer. Locus syncs your workspace into sandbox execution while enforcing `.sandboxignore` exclusions to keep sensitive files controlled.
+## Interactive REPL
 
-### Extensible packages
-Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk).
+Full-featured terminal with streaming markdown, session persistence, and slash commands. Use it for exploratory coding, one-shot prompts, or ongoing sessions.
+
+```bash
+# Start an interactive session
+locus exec
+
+# Or run a one-shot prompt
+locus exec "Refactor the auth middleware to use JWT"
+```
+
+## Packages & Extensibility
+
+Install community-built packages to extend Locus with new capabilities — or build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk).
+
+```bash
+# Install a community package
+locus install <package-name>
+
+# Run a package command
+locus pkg <name>
+```
 
 ## CLI Reference
 
@@ -192,41 +279,6 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
 | `locus sandbox status` | Show current sandbox state |
 
-## Workflows
-
-### Sprint: plan, execute, review, iterate
-
-```bash
-locus plan "Add SSO login and role-based access"
-locus run
-locus review
-locus iterate --sprint
-```
-
-### Parallel standalone issues
-
-```bash
-# Run 3 independent issues concurrently
-locus run 42 43 44
-```
-
-### Resume a failed run
-
-```bash
-# Pick up where it left off — completed tasks are skipped
-locus run --resume
-```
-
-### Interactive coding session
-
-```bash
-# Start a REPL session
-locus exec
-
-# Or one-shot
-locus exec "Refactor the auth middleware to use JWT"
-```
-
 ## Project Structure
 
 After `locus init`, your project gets a `.locus/` directory:
@@ -244,42 +296,6 @@ After `locus init`, your project gets a `.locus/` directory:
 ├── logs/              # Execution logs (NDJSON)
 └── worktrees/         # Git worktrees for parallel execution
 ```
-
-## Security & Sandboxing
-
-Locus supports running AI agents inside **Docker Desktop sandboxes** (4.58+) with one interface for Claude and Codex. Sandbox mode isolates execution from your host and enforces sync controls with `.sandboxignore`.
-
-Sandbox execution requires provider sandboxes configured via `locus sandbox`. In default auto mode, Locus uses sandboxing when Docker is available and provider sandboxes are configured; if Docker is unavailable, it warns and can fall back to unsandboxed execution.
-
-Security defaults and controls:
-
-- `.env` and common secret patterns are excluded from sandbox sync by default via `.sandboxignore` (created by `locus init`).
-- `.sandboxignore` defines what is excluded from sandbox-visible workspace content.
-- Use `--sandbox=require` in CI or critical automation to prevent insecure fallback.
-- Workspace sync is bidirectional for included files; excluded files stay out of sandbox execution.
-
-| Flag | Behavior |
-|------|----------|
-| *(default)* | Use sandbox when configured and available; warn and fall back if Docker is unavailable |
-| `--no-sandbox` | Explicitly disable sandboxing (shows safety warning) |
-| `--sandbox=require` | Require sandbox — fail if Docker sandbox is unavailable |
-
-Configure sandbox behavior in `.locus/config.json`:
-
-```json
-{
-  "sandbox": {
-    "enabled": true,
-    "extraWorkspaces": ["/path/to/shared/libs"],
-    "readOnlyPaths": ["/path/to/configs"]
-  }
-}
-```
-
-Full setup and security details:
-
-- [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
-- [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
 ## VS Code Extension
 
