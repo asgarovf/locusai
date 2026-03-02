@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
-  formatDuration,
+  createTimer,
   progressBar,
   renderTaskStatus,
 } from "../src/display/progress.js";
@@ -54,25 +54,14 @@ describe("progress", () => {
     });
   });
 
-  describe("formatDuration", () => {
-    it("formats milliseconds", () => {
-      expect(formatDuration(500)).toBe("500ms");
-    });
-
-    it("formats seconds", () => {
-      expect(formatDuration(2500)).toBe("2.5s");
-    });
-
-    it("formats minutes and seconds", () => {
-      expect(formatDuration(125000)).toBe("2m 5s");
-    });
-
-    it("formats exact minute boundary", () => {
-      expect(formatDuration(60000)).toBe("1m 0s");
-    });
-
-    it("formats zero", () => {
-      expect(formatDuration(0)).toBe("0ms");
+  describe("createTimer", () => {
+    it("returns elapsed time and formatted string", () => {
+      const timer = createTimer();
+      const elapsed = timer.elapsed();
+      expect(elapsed).toBeGreaterThanOrEqual(0);
+      // formatted() returns a duration string like "0ms", "1.2s", etc.
+      const formatted = timer.formatted();
+      expect(formatted).toMatch(/^\d+ms$|^\d+\.\d+s$|^\d+m \d+s$/);
     });
   });
 

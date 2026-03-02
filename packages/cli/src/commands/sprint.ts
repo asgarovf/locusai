@@ -20,6 +20,7 @@ import {
   updateIssueLabels,
 } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
+import { progressBar } from "../display/progress.js";
 import { type Column, renderDetails, renderTable } from "../display/table.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { Issue, Milestone } from "../types.js";
@@ -257,8 +258,12 @@ async function sprintList(
         const closed = row.closedIssues as number;
         const total = open + closed;
         if (total === 0) return dim("no issues");
-        const pct = Math.round((closed / total) * 100);
-        const bar = progressBar(pct, 10);
+        const bar = progressBar(closed, total, {
+          width: 10,
+          brackets: false,
+          showPercent: false,
+          showCount: false,
+        });
         return `${bar} ${dim(`${closed}/${total}`)}`;
       },
     },
@@ -366,7 +371,7 @@ async function sprintShow(
   const details = renderDetails([
     {
       label: "Progress",
-      value: `${progressBar(pct, 20)} ${bold(`${pct}%`)} ${dim(`(${milestone.closedIssues}/${total} tasks)`)}`,
+      value: `${progressBar(milestone.closedIssues, total, { width: 20, brackets: false, showPercent: false, showCount: false })} ${bold(`${pct}%`)} ${dim(`(${milestone.closedIssues}/${total} tasks)`)}`,
     },
     {
       label: "Due",
@@ -799,13 +804,6 @@ function formatStatus(labels: string[]): string {
     if (label === "locus:failed") return red("failed");
   }
   return dim("—");
-}
-
-/** Render a progress bar. */
-function progressBar(percent: number, width: number): string {
-  const filled = Math.round((percent / 100) * width);
-  const empty = width - filled;
-  return green("█".repeat(filled)) + dim("░".repeat(empty));
 }
 
 // ─── Help ────────────────────────────────────────────────────────────────────
