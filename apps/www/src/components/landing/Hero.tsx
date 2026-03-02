@@ -34,16 +34,16 @@ export function Hero({ version }: HeroProps) {
           transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
           className="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-muted-foreground mb-3"
         >
-          Unified AI Interface for GitHub Teams
+          Sandboxed AI Engineering
         </motion.p>
 
         <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.05] tracking-tight mb-5 max-w-4xl animate-hero-heading">
           <span className="font-sans font-bold text-white">
-            From issue to PR
+            Run AI agents
           </span>
           <br />
           <span className="font-bold gradient-text-hero">
-            with one interface across Claude and Codex.
+            in isolated Docker sandboxes.
           </span>
         </h1>
 
@@ -53,8 +53,8 @@ export function Hero({ version }: HeroProps) {
           transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           className="text-base md:text-lg text-muted-foreground max-w-2xl mb-8 leading-relaxed"
         >
-          Plan, execute, review, and iterate in GitHub-native workflows, with
-          full sandboxing support for Claude and Codex when Docker is available.
+          One CLI across Claude and Codex with full execution isolation,
+          unified context, and GitHub-native workflows.
         </motion.p>
 
         <motion.div
@@ -111,17 +111,17 @@ export function Hero({ version }: HeroProps) {
           className="flex flex-wrap items-center justify-center gap-4"
         >
           <Link
-            href="https://docs.locusai.dev/getting-started/installation"
+            href="https://docs.locusai.dev/getting-started/sandboxing-setup"
             className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
           >
-            Get Started
+            Setup Sandboxing
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           <Link
-            href="https://docs.locusai.dev/concepts/security-sandboxing"
+            href="https://docs.locusai.dev/getting-started/installation"
             className="inline-flex items-center gap-2 text-sm font-medium text-white px-7 py-3 rounded-xl border border-border/60 hover:bg-white/[0.06] hover:border-border transition-colors"
           >
-            Sandboxing Docs
+            Get Started
           </Link>
         </motion.div>
 
@@ -131,6 +131,13 @@ export function Hero({ version }: HeroProps) {
           transition={{ duration: 0.5, delay: 0.65 }}
           className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground"
         >
+          <Link
+            href="https://docs.locusai.dev/concepts/security-sandboxing"
+            className="hover:text-white transition-colors"
+          >
+            Security sandboxing
+          </Link>
+          <span className="text-border">/</span>
           <Link
             href="https://docs.locusai.dev/concepts/unified-interface"
             className="hover:text-white transition-colors"
@@ -146,17 +153,10 @@ export function Hero({ version }: HeroProps) {
           </Link>
           <span className="text-border">/</span>
           <Link
-            href="https://docs.locusai.dev/concepts/auto-approval-mode"
+            href="https://docs.locusai.dev/cli/overview"
             className="hover:text-white transition-colors"
           >
-            Auto-approval
-          </Link>
-          <span className="text-border">/</span>
-          <Link
-            href="https://docs.locusai.dev/concepts/security-sandboxing"
-            className="hover:text-white transition-colors"
-          >
-            Security sandboxing
+            CLI tools
           </Link>
         </motion.div>
       </div>

@@ -25,24 +25,24 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "Locus | GitHub-Native AI Engineering",
+    default: "Locus | Sandboxed AI Engineering for GitHub Teams",
     template: "%s | Locus",
   },
   description:
-    "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+    "Run AI agents in isolated Docker sandboxes. One CLI across Claude and Codex with unified context, GitHub-native workflows, and full execution isolation.",
   keywords: [
+    "AI sandboxing",
+    "Docker sandbox",
     "AI agents",
     "GitHub CLI",
     "AI engineering",
     "developer tools",
     "CLI",
     "code automation",
-    "sprint planning",
-    "code review",
-    "git worktrees",
+    "isolated execution",
     "AI coding",
-    "GitHub issues",
-    "GitHub milestones",
+    "Claude",
+    "Codex",
     "autonomous coding",
     "open source",
   ],
@@ -54,23 +54,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://locusai.dev",
     siteName: "Locus",
-    title: "Locus | GitHub-Native AI Engineering",
+    title: "Locus | Sandboxed AI Engineering for GitHub Teams",
     description:
-      "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+      "Run AI agents in isolated Docker sandboxes. One CLI across Claude and Codex with unified context, GitHub-native workflows, and full execution isolation.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Locus - GitHub-Native AI Engineering",
+        alt: "Locus - Sandboxed AI Engineering for GitHub Teams",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Locus | GitHub-Native AI Engineering",
+    title: "Locus | Sandboxed AI Engineering for GitHub Teams",
     description:
-      "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+      "Run AI agents in isolated Docker sandboxes. One CLI across Claude and Codex with unified context, GitHub-native workflows, and full execution isolation.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -105,13 +105,13 @@ const jsonLd = {
         "@id": "https://locusai.dev/#organization",
       },
       description:
-        "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+        "Run AI agents in isolated Docker sandboxes. One CLI across Claude and Codex with unified context, GitHub-native workflows, and full execution isolation.",
     },
     {
       "@type": "WebPage",
       "@id": "https://locusai.dev/#webpage",
       url: "https://locusai.dev",
-      name: "Locus | GitHub-Native AI Engineering",
+      name: "Locus | Sandboxed AI Engineering for GitHub Teams",
       isPartOf: {
         "@id": "https://locusai.dev/#website",
       },
@@ -119,7 +119,7 @@ const jsonLd = {
         "@id": "https://locusai.dev/#software",
       },
       description:
-        "Turn GitHub issues into shipped code. Plan sprints, execute tasks with AI agents, and iterate on feedback — all native to GitHub.",
+        "Run AI agents in isolated Docker sandboxes. One CLI across Claude and Codex with unified context, GitHub-native workflows, and full execution isolation.",
     },
   ],
 };

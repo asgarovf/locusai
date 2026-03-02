@@ -31,7 +31,7 @@ function buildSoftwareJsonLd(version: string) {
     isAccessibleForFree: true,
     softwareVersion: version,
     description:
-      "GitHub-native AI engineering CLI. Turn GitHub issues into shipped code with AI agents. Plan sprints, execute tasks, and iterate on feedback.",
+      "Sandboxed AI engineering CLI. Run Claude and Codex in isolated Docker containers with unified context, GitHub-native workflows, and full execution isolation.",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -123,11 +123,11 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Why Locus - four core strengths */}
-        <FeatureGrid />
-
-        {/* Sandboxing section */}
+        {/* Sandboxing — core value proposition */}
         <SandboxingSection />
+
+        {/* Core strengths */}
+        <FeatureGrid />
 
         {/* How it works - product showcase */}
         <ProductShowcase />

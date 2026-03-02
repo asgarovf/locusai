@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Bot, Github, Wrench, Zap } from "lucide-react";
+import { ArrowRight, Bot, Github, ShieldCheck, Wrench } from "lucide-react";
 import Link from "next/link";
 
 interface Feature {
@@ -17,9 +17,20 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Unified Interface Across Multiple AI Clients",
+    title: "Docker Sandboxing for AI Agents",
     description:
-      "Run the same Locus workflow across Claude and Codex by switching models, not tooling.",
+      "Run Claude and Codex inside isolated Docker containers. Your host stays clean while agents execute with full filesystem access inside the sandbox.",
+    evidence:
+      "One command to sandbox: locus sandbox claude or locus sandbox codex. Same isolation model for both providers.",
+    icon: ShieldCheck,
+    color: "text-cyan",
+    docsHref: "https://docs.locusai.dev/concepts/security-sandboxing",
+    docsLabel: "Security sandboxing docs",
+  },
+  {
+    title: "Unified Interface Across AI Clients",
+    description:
+      "Switch between Claude and Codex without changing your workflow. Same commands, same context, different provider.",
     evidence:
       "Switch ai.model between claude-sonnet-4-6 and gpt-5.3-codex while keeping the same run, review, and iterate commands.",
     icon: Bot,
@@ -30,35 +41,24 @@ const features: Feature[] = [
   {
     title: "GitHub as Operational Memory",
     description:
-      "Issues, milestones, labels, and PRs become your execution database and audit trail.",
+      "Issues, milestones, labels, and PRs become your execution database. Every AI agent run is tracked and auditable through GitHub.",
     evidence:
-      "GitHub-native example: create an issue, assign it to a sprint milestone, run execution, and track delivery status from GitHub objects.",
+      "Create issues, assign sprints, execute with AI, and track delivery — all persisted in GitHub objects your team already uses.",
     icon: Github,
-    color: "text-cyan",
+    color: "text-emerald",
     docsHref: "https://docs.locusai.dev/concepts/github-backend",
     docsLabel: "GitHub backend docs",
   },
   {
     title: "Built-In Orchestration Tools",
     description:
-      "Use planning, execution, review, iteration, and status commands that go beyond raw provider CLIs.",
+      "Plan, execute, review, and iterate with commands that go beyond raw provider CLIs. Full delivery lifecycle in one tool.",
     evidence:
-      "Built-in tools example: locus plan, locus review, locus iterate, and locus logs in one operational workflow.",
+      "locus plan, locus run, locus review, locus iterate — an operational workflow that works the same across Claude and Codex.",
     icon: Wrench,
     color: "text-amber",
     docsHref: "https://docs.locusai.dev/cli/overview",
     docsLabel: "CLI overview docs",
-  },
-  {
-    title: "Auto-Approval Automation",
-    description:
-      "Execute in full-auto mode with automatic labels, PR creation, and resumable runs.",
-    evidence:
-      "Set agent.autoPR and agent.autoLabel, then use locus run --resume to continue failed execution without restarting completed work.",
-    icon: Zap,
-    color: "text-emerald",
-    docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
-    docsLabel: "Auto-approval docs",
   },
 ];
 
@@ -94,16 +94,14 @@ export function FeatureGrid() {
           className="text-center mb-16"
         >
           <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-4">
-            Four Core Strengths
+            Why Locus
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
-            One interface, GitHub-native execution, built-in tooling, and
-            automation.
+            Sandboxed execution, unified context, GitHub-native delivery.
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-            Locus is the unified AI engineering interface for GitHub teams: one
-            CLI to plan, execute, review, and automate delivery across Claude
-            and Codex.
+            Isolated AI agent runs, one CLI across providers, and GitHub as the
+            system of record. Everything your team needs to ship safely with AI.
           </p>
         </motion.div>
 

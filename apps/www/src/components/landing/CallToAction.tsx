@@ -21,15 +21,15 @@ export function CallToAction() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            <span className="font-sans">Ship with one interface.</span>
+            <span className="font-sans">Ship with sandboxed AI.</span>
             <br />
             <span className="font-bold gradient-text-hero">
-              Scale with full-auto delivery.
+              One interface. Full isolation.
             </span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
-            Start with installation docs, then run your first GitHub-native
-            sprint with built-in planning, execution, review, and iteration.
+            Install the CLI, set up Docker sandboxing, and run your first
+            isolated sprint across Claude or Codex in minutes.
           </p>
 
           <div className="max-w-md mx-auto mb-8">
@@ -38,21 +38,35 @@ export function CallToAction() {
 
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
             <Link
-              href="https://docs.locusai.dev/getting-started/installation"
+              href="https://docs.locusai.dev/getting-started/sandboxing-setup"
               className="inline-flex items-center gap-2 text-sm font-medium bg-white text-background px-7 py-3 rounded-xl hover:bg-white/85 transition-colors"
             >
-              Get Started
+              Setup Sandboxing
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href="https://docs.locusai.dev/concepts/how-it-works"
+              href="https://docs.locusai.dev/getting-started/installation"
               className="inline-flex items-center gap-2 text-sm font-medium text-white px-7 py-3 rounded-xl border border-border/60 hover:bg-white/[0.06] hover:border-border transition-colors"
             >
-              Read Docs
+              Get Started
             </Link>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+            <Link
+              href="https://docs.locusai.dev/concepts/security-sandboxing"
+              className="hover:text-white transition-colors"
+            >
+              Security sandboxing
+            </Link>
+            <span className="text-border">/</span>
+            <Link
+              href="https://docs.locusai.dev/concepts/unified-interface"
+              className="hover:text-white transition-colors"
+            >
+              Unified interface
+            </Link>
+            <span className="text-border">/</span>
             <Link
               href="https://docs.locusai.dev/concepts/github-native-workflows"
               className="hover:text-white transition-colors"
@@ -61,24 +75,10 @@ export function CallToAction() {
             </Link>
             <span className="text-border">/</span>
             <Link
-              href="https://docs.locusai.dev/cli/run"
+              href="https://docs.locusai.dev/cli/overview"
               className="hover:text-white transition-colors"
             >
-              locus run guide
-            </Link>
-            <span className="text-border">/</span>
-            <Link
-              href="https://docs.locusai.dev/cli/review"
-              className="hover:text-white transition-colors"
-            >
-              locus review guide
-            </Link>
-            <span className="text-border">/</span>
-            <Link
-              href="https://docs.locusai.dev/cli/iterate"
-              className="hover:text-white transition-colors"
-            >
-              locus iterate guide
+              CLI overview
             </Link>
           </div>
         </motion.div>

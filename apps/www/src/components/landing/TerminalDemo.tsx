@@ -12,44 +12,60 @@ interface Line {
 }
 
 const lines: Line[] = [
-  // Phase 1: Plan
+  // Phase 1: Sandbox setup
   {
-    text: 'locus plan "Build OAuth integration with Google & GitHub"',
+    text: "locus sandbox",
     color: "text-foreground",
     prefix: "$ ",
   },
   { text: "", color: "" },
   {
-    text: "Planning with AI agent...",
+    text: "  Pulling locus-sandbox image...",
     color: "text-violet",
   },
   {
-    text: "  Analyzing codebase and requirements...",
-    color: "text-violet",
-  },
-  { text: "", color: "" },
-  {
-    text: "  Created 4 GitHub issues in Sprint 1:",
+    text: "  Creating Claude sandbox...          done",
     color: "text-emerald",
   },
   {
-    text: "  #12  order:1  Implement Google OAuth provider",
-    color: "text-muted-foreground",
+    text: "  Creating Codex sandbox...           done",
+    color: "text-emerald",
   },
   {
-    text: "  #13  order:2  Implement GitHub OAuth provider",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "  #14  order:3  Add OAuth callback routes",
-    color: "text-muted-foreground",
-  },
-  {
-    text: "  #15  order:4  Create auth session middleware",
+    text: "  Agents run in isolated Docker containers.",
     color: "text-muted-foreground",
   },
   { text: "", color: "" },
-  // Phase 2: Run sprint
+  // Phase 2: Plan from GitHub issue context
+  {
+    text: 'locus plan "Add JWT auth with refresh tokens"',
+    color: "text-foreground",
+    prefix: "$ ",
+  },
+  { text: "", color: "" },
+  {
+    text: "  Analyzing codebase in sandbox...",
+    color: "text-violet",
+  },
+  { text: "", color: "" },
+  {
+    text: "  Created 3 issues in Sprint 1:",
+    color: "text-emerald",
+  },
+  {
+    text: "  #21  order:1  Add JWT auth middleware",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  #22  order:2  Create login & register endpoints",
+    color: "text-muted-foreground",
+  },
+  {
+    text: "  #23  order:3  Add protected route guards",
+    color: "text-muted-foreground",
+  },
+  { text: "", color: "" },
+  // Phase 3: Run sprint in sandbox
   {
     text: "locus run",
     color: "text-foreground",
@@ -57,41 +73,61 @@ const lines: Line[] = [
   },
   { text: "", color: "" },
   {
-    text: "Sprint 1 — 4 tasks on branch locus/sprint-1",
+    text: "  Sprint 1 — 3 tasks (sandboxed)",
     color: "text-cyan",
   },
   { text: "", color: "" },
   {
-    text: "  [1/4] Implement Google OAuth provider       done",
+    text: "  [1/3] Add JWT auth middleware            PR #31",
     color: "text-emerald",
   },
   {
-    text: "  [2/4] Implement GitHub OAuth provider       done",
+    text: "  [2/3] Create login & register endpoints  PR #32",
     color: "text-emerald",
   },
   {
-    text: "  [3/4] Add OAuth callback routes             done",
-    color: "text-emerald",
-  },
-  {
-    text: "  [4/4] Create auth session middleware         done",
+    text: "  [3/3] Add protected route guards         PR #33",
     color: "text-emerald",
   },
   { text: "", color: "" },
   {
-    text: "  All tasks completed. 4 PRs created.",
+    text: "  All tasks completed. 3 PRs created.",
     color: "text-cyan",
   },
   { text: "", color: "" },
-  // Phase 3: Review
+  // Phase 4: AI-powered review
   { text: "locus review", color: "text-foreground", prefix: "$ " },
   { text: "", color: "" },
   {
-    text: "  Reviewing 4 open PRs...",
+    text: "  Reviewing 3 PRs...",
     color: "text-amber",
   },
   {
-    text: "  All PRs reviewed. No issues found.",
+    text: "  PR #31 — approved",
+    color: "text-emerald",
+  },
+  {
+    text: "  PR #32 — 1 suggestion",
+    color: "text-amber",
+  },
+  {
+    text: "  PR #33 — approved",
+    color: "text-emerald",
+  },
+  { text: "", color: "" },
+  // Phase 5: Iterate on feedback
+  {
+    text: "locus iterate --pr 32",
+    color: "text-foreground",
+    prefix: "$ ",
+  },
+  { text: "", color: "" },
+  {
+    text: "  Applying review feedback in sandbox...",
+    color: "text-violet",
+  },
+  {
+    text: "  PR #32 updated — changes pushed.",
     color: "text-emerald",
   },
 ];
@@ -100,35 +136,36 @@ export function TerminalDemo() {
   const [visibleLines, setVisibleLines] = useState(0);
   const [iteration, setIteration] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const restartRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Drive the line-by-line animation from the `iteration` counter.
+  // When `iteration` changes the effect re-runs, resets visibleLines to 0,
+  // and starts a fresh interval — no recursive closure issues.
   useEffect(() => {
-    const startAnimation = () => {
-      setVisibleLines(0);
-      timerRef.current = setInterval(() => {
-        setVisibleLines((prev) => {
-          if (prev >= lines.length) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            timerRef.current = null;
-            restartRef.current = setTimeout(() => {
-              setIteration((i) => i + 1);
-              startAnimation();
-            }, 3000);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 500);
-    };
+    setVisibleLines(0);
 
-    startAnimation();
+    const timer = setInterval(() => {
+      setVisibleLines((prev) => {
+        if (prev >= lines.length) {
+          clearInterval(timer);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 500);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (restartRef.current) clearTimeout(restartRef.current);
-    };
-  }, []);
+    return () => clearInterval(timer);
+  }, [iteration]);
+
+  // Separate effect: once all lines are visible, schedule the next iteration.
+  useEffect(() => {
+    if (visibleLines < lines.length) return;
+
+    const timeout = setTimeout(() => {
+      setIteration((i) => i + 1);
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [visibleLines]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: we need to scroll the terminal to the bottom when the visible lines change
   useEffect(() => {

@@ -165,7 +165,7 @@ export function SupportedTools() {
             Powered by tools you already use
           </p>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
-            Multiple AI providers. One unified workflow.
+            Multiple AI providers. One sandbox. One workflow.
           </h2>
         </motion.div>
 

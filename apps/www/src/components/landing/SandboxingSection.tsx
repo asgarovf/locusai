@@ -8,21 +8,21 @@ const points = [
   {
     title: "Isolated by default",
     description:
-      "Run Claude or Codex in the same Docker sandbox layer, so agent execution stays separated from your host environment.",
+      "Every AI agent runs inside its own Docker container. Your host filesystem, credentials, and system stay untouched — even during autonomous execution.",
     icon: ShieldCheck,
     color: "text-cyan",
   },
   {
     title: "Controlled and reproducible",
     description:
-      "Standardized sandbox setup gives teams safer, repeatable runs across machines without changing the Locus command workflow.",
+      "Same sandbox configuration across all team members and CI. No more \"works on my machine\" for AI-assisted development.",
     icon: Workflow,
     color: "text-violet",
   },
   {
     title: "Automatic workspace sync",
     description:
-      "Locus automatically syncs your workspace to and from the sandbox, so code changes stay aligned while excluded files remain controlled.",
+      "Code changes sync seamlessly between sandbox and host. Sensitive files stay excluded, and your .gitignore rules are respected.",
     icon: RefreshCw,
     color: "text-emerald",
   },
@@ -42,15 +42,15 @@ export function SandboxingSection() {
           className="rounded-3xl border border-border/35 bg-[#060609]/90 p-8 md:p-10"
         >
           <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-4">
-            Sandboxing
+            Core Value
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
-            Full Claude + Codex sandboxing in one interface.
+            Docker-backed isolation for every AI agent run.
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-3xl">
-            Locus runs both providers through the same Docker-backed isolation
-            model, helping teams ship with stronger safety, controlled
-            execution, and reproducible operations.
+            AI agents with filesystem access need boundaries. Locus runs Claude
+            and Codex in the same Docker-backed isolation layer, so your team
+            gets safe, reproducible execution without sacrificing speed.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">

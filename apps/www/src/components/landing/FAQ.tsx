@@ -14,7 +14,12 @@ const faqs: FAQItem[] = [
   {
     question: "What is Locus?",
     answer:
-      "Locus is an open-source CLI tool that provides a unified interface for AI-powered software engineering across Claude and Codex. It uses GitHub issues, milestones, and PRs as its operational backend, enabling teams to plan sprints, execute tasks with AI agents, and iterate on feedback — all from one command-line interface.",
+      "Locus is an open-source CLI that runs AI agents in isolated Docker sandboxes. It provides a unified interface across Claude and Codex, uses GitHub as its operational backend, and includes built-in orchestration for planning, execution, review, and iteration.",
+  },
+  {
+    question: "How does sandboxing work?",
+    answer:
+      "Locus runs AI agents inside Docker containers, isolating them from your host filesystem and system. Each provider (Claude or Codex) gets its own sandbox with the same configuration. Your workspace is synced into the container, and code changes are synced back — while sensitive files stay excluded.",
   },
   {
     question: "Is Locus free?",
@@ -27,20 +32,15 @@ const faqs: FAQItem[] = [
       "No. Locus runs entirely on your machine. It communicates directly with GitHub and your chosen AI provider (Claude or Codex). There are no Locus servers — your code, prompts, and credentials never leave your local environment.",
   },
   {
-    question: "What AI models does Locus support?",
-    answer:
-      "Locus supports Claude (via Anthropic) and Codex (via OpenAI). You can switch between models with a single config command: locus config set ai.model <model-name>. The unified interface means your workflow stays the same regardless of provider.",
-  },
-  {
     question:
       "How is Locus different from using Claude Code or Codex CLI directly?",
     answer:
-      "Claude Code and Codex CLI are standalone tools for their respective providers. Locus builds on top of them by adding sprint planning, GitHub-native state management, multi-model support, and orchestration commands (plan, run, review, iterate). If you want structured delivery workflows or the ability to switch providers without changing your process, Locus adds that layer.",
+      "Claude Code and Codex CLI are standalone tools for their respective providers. Locus adds Docker-based sandboxing for both, a unified interface to switch between them, GitHub-native state management, and orchestration commands (plan, run, review, iterate). One tool, both providers, fully isolated.",
   },
   {
     question: "How do I install Locus?",
     answer:
-      "Run npm install -g @locusai/cli. You need Node.js 18+ and GitHub CLI (gh) installed and authenticated. Full setup instructions are at docs.locusai.dev/getting-started/installation.",
+      "Run npm install -g @locusai/cli. You need Node.js 18+, GitHub CLI (gh), and Docker Desktop 4.58+ for sandboxing. Full setup instructions are at docs.locusai.dev/getting-started/installation.",
   },
 ];
 

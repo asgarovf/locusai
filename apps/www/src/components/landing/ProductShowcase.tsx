@@ -25,13 +25,13 @@ interface SequenceStep {
 const steps: SequenceStep[] = [
   {
     step: "01",
-    label: "Choose Your AI Client",
-    title: "Select Claude or Codex without changing your workflow",
+    label: "Choose and Sandbox Your AI Client",
+    title: "Select Claude or Codex, then run in an isolated sandbox",
     description:
-      "Set the model, then keep using the same Locus command surface. One interface across Claude and Codex means teams switch providers without rewriting process.",
+      "Set the model and enable sandboxing. Both providers run in the same Docker-backed isolation layer with unified context and consistent commands.",
     docsHref: "https://docs.locusai.dev/concepts/unified-interface",
     docsLabel: "Unified interface deep dive",
-    terminalTitle: "locus config set ai.model",
+    terminalTitle: "locus config + sandbox",
     lines: [
       {
         text: "locus config set ai.model claude-sonnet-4-6",
@@ -40,15 +40,11 @@ const steps: SequenceStep[] = [
       },
       { text: "ai.model updated", color: "text-violet" },
       { text: "", color: "" },
-      { text: "locus run", color: "text-foreground", prefix: "$ " },
-      { text: "Running sprint with Claude client...", color: "text-violet" },
+      { text: "locus sandbox claude", color: "text-foreground", prefix: "$ " },
+      { text: "Sandbox ready for Claude client", color: "text-cyan" },
       { text: "", color: "" },
-      {
-        text: "locus config set ai.model gpt-5.3-codex",
-        color: "text-foreground",
-        prefix: "$ ",
-      },
-      { text: "ai.model updated", color: "text-emerald" },
+      { text: "locus run", color: "text-foreground", prefix: "$ " },
+      { text: "Running sprint in sandbox...", color: "text-violet" },
     ],
   },
   {
@@ -113,13 +109,13 @@ const steps: SequenceStep[] = [
   },
   {
     step: "04",
-    label: "Automate with Auto-Approval",
-    title: "Enable full-auto execution with resumable delivery",
+    label: "Automate with Full Isolation",
+    title: "Full-auto execution inside sandboxed containers",
     description:
-      "Turn on automation settings to auto-label issues and auto-create PRs. Failed runs can resume from the last unfinished step instead of restarting.",
+      "Enable auto-approval for autonomous runs. Combined with sandboxing, agents execute safely without human intervention — auto-labeling issues, creating PRs, and resuming from failures.",
     docsHref: "https://docs.locusai.dev/concepts/auto-approval-mode",
     docsLabel: "Full-auto execution model",
-    terminalTitle: "autoPR + autoLabel + run --resume",
+    terminalTitle: "sandboxed auto-approval",
     lines: [
       {
         text: "locus config set agent.autoPR true",
@@ -133,10 +129,10 @@ const steps: SequenceStep[] = [
       },
       { text: "", color: "" },
       { text: "locus run", color: "text-foreground", prefix: "$ " },
-      { text: "Auto-labeling issues and opening PRs", color: "text-emerald" },
+      { text: "Running in sandbox with auto-approval", color: "text-emerald" },
       { text: "Run interrupted on task 4/6", color: "text-amber" },
       { text: "locus run --resume", color: "text-foreground", prefix: "$ " },
-      { text: "Resumed from task 4/6", color: "text-emerald" },
+      { text: "Resumed from task 4/6 in sandbox", color: "text-emerald" },
     ],
   },
 ];
@@ -197,12 +193,12 @@ export function ProductShowcase() {
             How It Works
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
-            Choose AI client, run one interface, persist in GitHub, automate.
+            Choose AI client, sandbox, execute, persist in GitHub.
           </h2>
           <p className="text-muted-foreground max-w-3xl mx-auto text-sm md:text-base leading-relaxed">
-            The sequence is always the same on mobile and desktop: pick Claude
-            or Codex, execute with built-in Locus commands, keep state in
-            GitHub-native objects, then enable auto-approval for full-auto runs.
+            Pick Claude or Codex, run in an isolated sandbox, execute with
+            built-in orchestration commands, and keep all state in
+            GitHub-native objects.
           </p>
         </motion.div>
 
