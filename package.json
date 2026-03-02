@@ -24,8 +24,7 @@
     "build:cli": "bun run build && cd packages/cli && bun run build",
     "version": "changeset version",
     "release": "bun run build:packages && changeset publish",
-    "build:packages": "bun run build:shared && bun run build:cli-only",
-    "build:shared": "cd packages/shared && bun run build",
+    "build:packages": "bun run build:cli-only",
     "build:cli-only": "cd packages/cli && bun run build",
     "clean": "rm -rf bun.lock",
     "simulate": "bun run packages/cli/src/cli.ts"

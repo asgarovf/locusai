@@ -293,9 +293,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architectur
 | Package | Description |
 |---------|-------------|
 | [`@locusai/cli`](./packages/cli) | Main CLI |
-| [`@locusai/shared`](./packages/shared) | Shared types and utilities |
 | [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
-| [`locus-vscode`](./packages/vscode) | VS Code extension |
 | [`@locusai/www`](./apps/www) | Documentation website |
 
 ## License

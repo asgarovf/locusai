@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
   reactStrictMode: true,
-  transpilePackages: ["@locusai/shared"],
+  transpilePackages: [],
   eslint: {
     ignoreDuringBuilds: true,
   },
