@@ -75,7 +75,6 @@ export const bold = wrap("\x1b[1m", "\x1b[22m");
 export const dim = wrap("\x1b[2m", "\x1b[22m");
 export const italic = wrap("\x1b[3m", "\x1b[23m");
 export const underline = wrap("\x1b[4m", "\x1b[24m");
-export const strikethrough = wrap("\x1b[9m", "\x1b[29m");
 
 // Foreground colors
 export const red = wrap("\x1b[31m", "\x1b[39m");
@@ -86,21 +85,6 @@ export const magenta = wrap("\x1b[35m", "\x1b[39m");
 export const cyan = wrap("\x1b[36m", "\x1b[39m");
 export const white = wrap("\x1b[37m", "\x1b[39m");
 export const gray = wrap("\x1b[90m", "\x1b[39m");
-
-// Bright foreground
-export const redBright = wrap("\x1b[91m", "\x1b[39m");
-export const greenBright = wrap("\x1b[92m", "\x1b[39m");
-export const yellowBright = wrap("\x1b[93m", "\x1b[39m");
-export const blueBright = wrap("\x1b[94m", "\x1b[39m");
-export const magentaBright = wrap("\x1b[95m", "\x1b[39m");
-export const cyanBright = wrap("\x1b[96m", "\x1b[39m");
-
-// Background colors
-export const bgRed = wrap("\x1b[41m", "\x1b[49m");
-export const bgGreen = wrap("\x1b[42m", "\x1b[49m");
-export const bgYellow = wrap("\x1b[43m", "\x1b[49m");
-export const bgBlue = wrap("\x1b[44m", "\x1b[49m");
-export const bgGray = wrap("\x1b[100m", "\x1b[49m");
 
 // ─── ANSI Utilities ──────────────────────────────────────────────────────────
 
