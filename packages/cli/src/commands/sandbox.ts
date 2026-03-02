@@ -27,7 +27,10 @@ import {
   detectSandboxSupport,
   getProviderSandboxName,
 } from "../core/sandbox.js";
-import { enforceSandboxIgnore } from "../core/sandbox-ignore.js";
+import {
+  backupIgnoredFiles,
+  enforceSandboxIgnore,
+} from "../core/sandbox-ignore.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import type { AIProvider, ProviderSandboxes } from "../types.js";
 
@@ -258,7 +261,12 @@ async function handleAgentLogin(
 
   await new Promise<void>((resolve) => {
     child.on("close", async (code) => {
-      await enforceSandboxIgnore(sandboxName, projectRoot);
+      const backup = backupIgnoredFiles(projectRoot);
+      try {
+        await enforceSandboxIgnore(sandboxName, projectRoot);
+      } finally {
+        backup.restore();
+      }
 
       if (code === 0) {
         process.stderr.write(
@@ -873,7 +881,12 @@ async function createProviderSandbox(
     await ensureCodexInSandbox(sandboxName);
   }
 
-  await enforceSandboxIgnore(sandboxName, projectRoot);
+  const backup = backupIgnoredFiles(projectRoot);
+  try {
+    await enforceSandboxIgnore(sandboxName, projectRoot);
+  } finally {
+    backup.restore();
+  }
   return true;
 }
 

@@ -5,7 +5,10 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import { getLogger } from "../core/logger.js";
-import { enforceSandboxIgnore } from "../core/sandbox-ignore.js";
+import {
+  backupIgnoredFiles,
+  enforceSandboxIgnore,
+} from "../core/sandbox-ignore.js";
 import type { AgentRunner, RunnerOptions, RunnerResult } from "../types.js";
 import { buildClaudeArgs } from "./claude.js";
 
@@ -47,7 +50,11 @@ export class SandboxedClaudeRunner implements AgentRunner {
     // Claude's prompt argument flow the same way across environments.
     const claudeArgs = ["-p", options.prompt, ...buildClaudeArgs(options)];
 
+    // Back up host files matching .sandboxignore BEFORE enforcement.
+    // Docker sandbox uses bidirectional sync — deletions inside the sandbox
+    // propagate back to the host. The backup ensures we never lose host files.
     options.onStatusChange?.("Syncing sandbox...");
+    const backup = backupIgnoredFiles(options.cwd);
     await enforceSandboxIgnore(this.sandboxName, options.cwd);
     options.onStatusChange?.("Thinking...");
 
@@ -67,109 +74,115 @@ export class SandboxedClaudeRunner implements AgentRunner {
       cwd: options.cwd,
     });
 
-    return await new Promise<RunnerResult>((resolve) => {
-      let output = "";
-      let errorOutput = "";
+    try {
+      return await new Promise<RunnerResult>((resolve) => {
+        let output = "";
+        let errorOutput = "";
 
-      this.process = spawn("docker", dockerArgs, {
-        stdio: ["ignore", "pipe", "pipe"],
-        env: process.env,
-      });
+        this.process = spawn("docker", dockerArgs, {
+          stdio: ["ignore", "pipe", "pipe"],
+          env: process.env,
+        });
 
-      if (options.verbose) {
-        let lineBuffer = "";
-        const seenToolIds = new Set<string>();
+        if (options.verbose) {
+          let lineBuffer = "";
+          const seenToolIds = new Set<string>();
 
-        this.process.stdout?.on("data", (chunk: Buffer) => {
-          lineBuffer += chunk.toString();
-          const lines = lineBuffer.split("\n");
-          lineBuffer = lines.pop() ?? "";
+          this.process.stdout?.on("data", (chunk: Buffer) => {
+            lineBuffer += chunk.toString();
+            const lines = lineBuffer.split("\n");
+            lineBuffer = lines.pop() ?? "";
 
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const event = JSON.parse(line) as ClaudeStreamEvent;
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try {
+                const event = JSON.parse(line) as ClaudeStreamEvent;
 
-              if (event.type === "assistant" && event.message?.content) {
-                for (const item of event.message.content) {
-                  if (
-                    item.type === "tool_use" &&
-                    item.id &&
-                    !seenToolIds.has(item.id)
-                  ) {
-                    seenToolIds.add(item.id);
-                    options.onToolActivity?.(
-                      formatToolCall(item.name ?? "", item.input ?? {})
-                    );
+                if (event.type === "assistant" && event.message?.content) {
+                  for (const item of event.message.content) {
+                    if (
+                      item.type === "tool_use" &&
+                      item.id &&
+                      !seenToolIds.has(item.id)
+                    ) {
+                      seenToolIds.add(item.id);
+                      options.onToolActivity?.(
+                        formatToolCall(item.name ?? "", item.input ?? {})
+                      );
+                    }
                   }
+                } else if (event.type === "result") {
+                  const text = event.result ?? "";
+                  output = text;
+                  options.onOutput?.(text);
                 }
-              } else if (event.type === "result") {
-                const text = event.result ?? "";
-                output = text;
-                options.onOutput?.(text);
+              } catch {
+                const newLine = `${line}\n`;
+                output += newLine;
+                options.onOutput?.(newLine);
               }
-            } catch {
-              const newLine = `${line}\n`;
-              output += newLine;
-              options.onOutput?.(newLine);
             }
+          });
+        } else {
+          this.process.stdout?.on("data", (chunk: Buffer) => {
+            const text = chunk.toString();
+            output += text;
+            options.onOutput?.(text);
+          });
+        }
+
+        this.process.stderr?.on("data", (chunk: Buffer) => {
+          const text = chunk.toString();
+          errorOutput += text;
+          log.debug("sandboxed claude stderr", { text: text.slice(0, 500) });
+        });
+
+        this.process.on("close", (code) => {
+          this.process = null;
+
+          if (this.aborted) {
+            resolve({
+              success: false,
+              output,
+              error: "Aborted by user",
+              exitCode: code ?? 143,
+            });
+            return;
+          }
+
+          if (code === 0) {
+            resolve({ success: true, output, exitCode: 0 });
+          } else {
+            resolve({
+              success: false,
+              output,
+              error:
+                errorOutput || `sandboxed claude exited with code ${code}`,
+              exitCode: code ?? 1,
+            });
           }
         });
-      } else {
-        this.process.stdout?.on("data", (chunk: Buffer) => {
-          const text = chunk.toString();
-          output += text;
-          options.onOutput?.(text);
-        });
-      }
 
-      this.process.stderr?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
-        errorOutput += text;
-        log.debug("sandboxed claude stderr", { text: text.slice(0, 500) });
-      });
-
-      this.process.on("close", (code) => {
-        this.process = null;
-
-        if (this.aborted) {
+        this.process.on("error", (err) => {
+          this.process = null;
           resolve({
             success: false,
             output,
-            error: "Aborted by user",
-            exitCode: code ?? 143,
+            error: `Failed to spawn docker sandbox: ${err.message}`,
+            exitCode: 1,
           });
-          return;
-        }
+        });
 
-        if (code === 0) {
-          resolve({ success: true, output, exitCode: 0 });
-        } else {
-          resolve({
-            success: false,
-            output,
-            error: errorOutput || `sandboxed claude exited with code ${code}`,
-            exitCode: code ?? 1,
+        if (options.signal) {
+          options.signal.addEventListener("abort", () => {
+            this.abort();
           });
         }
       });
-
-      this.process.on("error", (err) => {
-        this.process = null;
-        resolve({
-          success: false,
-          output,
-          error: `Failed to spawn docker sandbox: ${err.message}`,
-          exitCode: 1,
-        });
-      });
-
-      if (options.signal) {
-        options.signal.addEventListener("abort", () => {
-          this.abort();
-        });
-      }
-    });
+    } finally {
+      // Always restore host files — even on abort, crash, or error.
+      backup.restore();
+    }
   }
 
   abort(): void {
