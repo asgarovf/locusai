@@ -33,12 +33,18 @@
 
 ## Why Locus?
 
-AI coding agents are powerful — but they're point solutions. You still need to break down work, sequence tasks, track state, review output, and iterate on feedback. Locus wraps that entire loop into a single CLI that uses GitHub as its backend.
+AI coding agents are powerful — but they're point solutions. Locus wraps the entire plan-execute-review loop into a single CLI.
 
-- **Unified AI interface** — Switch between [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) and [Codex](https://openai.com/index/introducing-codex/) without changing your workflow
-- **End-to-end orchestration** — Plan, execute, review, and iterate in one tool
-- **GitHub-native** — No new accounts, no dashboards, no vendor lock-in. Everything lives in Issues, Milestones, Labels, and PRs
-- **Unified sandboxing layer** — Run Claude and Codex through the same Docker-backed sandbox interface
+| | Locus | Cursor | Aider | Codex CLI |
+|---|---|---|---|---|
+| GitHub-native (Issues = tasks) | **Yes** | No | No | No |
+| Docker sandbox isolation | **Unified** | N/A | No | Built-in |
+| Multi-provider (Claude + Codex) | **Yes** | Claude only | Multi | OpenAI only |
+| Sprint planning & orchestration | **Yes** | No | No | No |
+| AI code review loop | **Yes** | No | No | No |
+| Parallel worktree execution | **Yes** | No | No | No |
+| Community packages (SDK) | **Yes** | Extensions | No | No |
+| Interactive REPL | **Yes** | Yes | Yes | Yes |
 
 ## Quick Start
 
