@@ -26,6 +26,11 @@
 > [!WARNING]
 > **Active Development**: Locus is in early alpha. Expect breaking changes and evolving APIs.
 
+> [!NOTE]
+> **Security by default**: AI agents run inside hypervisor-isolated Docker sandboxes.
+> `.sandboxignore` excludes `.env` and secrets from sync automatically.
+> Use `--sandbox=require` in CI to enforce sandboxed execution.
+
 ## Why Locus?
 
 AI coding agents are powerful — but they're point solutions. You still need to break down work, sequence tasks, track state, review output, and iterate on feedback. Locus wraps that entire loop into a single CLI that uses GitHub as its backend.
