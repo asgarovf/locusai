@@ -72,8 +72,8 @@ export function detectRepoContext(cwd: string): RepoContext {
 
 /** Parse owner and repo from various Git remote URL formats. */
 export function parseRemoteUrl(url: string): { owner: string; repo: string } {
-  // SSH: git@github.com:owner/repo.git
-  let match = url.match(/git@github\.com:([^/]+)\/([^/.]+)/);
+  // SSH: git@github.com:owner/repo.git (also supports custom SSH usernames like org-123@github.com)
+  let match = url.match(/[^@]+@github\.com:([^/]+)\/([^/.]+)/);
   if (match) return { owner: match[1], repo: match[2] };
 
   // HTTPS: https://github.com/owner/repo.git

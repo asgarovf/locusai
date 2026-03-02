@@ -39,6 +39,14 @@ describe("context", () => {
       expect(result.repo).toBe("my-repo");
     });
 
+    it("parses SSH URL with custom username (multiple GitHub accounts)", () => {
+      const result = parseRemoteUrl(
+        "org-856813@github.com:stripe/stripe-js.git"
+      );
+      expect(result.owner).toBe("stripe");
+      expect(result.repo).toBe("stripe-js");
+    });
+
     it("handles HTTPS URL with port (rare but valid)", () => {
       const result = parseRemoteUrl("https://github.com/owner/repo");
       expect(result.owner).toBe("owner");
