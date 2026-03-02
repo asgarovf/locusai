@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.5
+
+### Patch Changes
+
+- Add comment instead of change requests on review
+
 ## 0.21.4
 
 ### Patch Changes
