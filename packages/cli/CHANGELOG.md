@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.20.5
+
+### Patch Changes
+
+- NOOP - just version update
+
 ## 0.20.4
 
 ### Patch Changes

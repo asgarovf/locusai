@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.5
+
+### Patch Changes
+
+- NOOP - just version update
+- Updated dependencies
+  - @locusai/shared@0.20.5
+
 ## 0.20.4
 
 ### Patch Changes
