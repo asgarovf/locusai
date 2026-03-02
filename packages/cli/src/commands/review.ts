@@ -7,7 +7,7 @@
  *   locus review 15 --focus "security,performance"
  */
 
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
@@ -227,8 +227,9 @@ async function reviewPR(
     try {
       const reviewBody = `## 🤖 Locus AI Review\n\n${output.slice(0, 60000)}\n\n---\n_Reviewed by Locus AI (${config.ai.provider}/${flags.model ?? config.ai.model})_`;
 
-      execSync(
-        `gh pr comment ${pr.number} --body ${JSON.stringify(reviewBody)}`,
+      execFileSync(
+        "gh",
+        ["pr", "comment", String(pr.number), "--body", reviewBody],
         { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
       );
 
