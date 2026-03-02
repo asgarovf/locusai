@@ -320,4 +320,3 @@ export interface LogEntry {
   msg: string;
   [key: string]: unknown;
 }
-

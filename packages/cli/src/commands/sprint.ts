@@ -258,7 +258,12 @@ async function sprintList(
         const closed = row.closedIssues as number;
         const total = open + closed;
         if (total === 0) return dim("no issues");
-        const bar = progressBar(closed, total, { width: 10, brackets: false, showPercent: false, showCount: false });
+        const bar = progressBar(closed, total, {
+          width: 10,
+          brackets: false,
+          showPercent: false,
+          showCount: false,
+        });
         return `${bar} ${dim(`${closed}/${total}`)}`;
       },
     },
