@@ -225,59 +225,78 @@ locus pkg <name>
 
 ### Setup & Configuration
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `locus init` | | Initialize project with `.locus/` structure and GitHub labels |
-| `locus config` | | View and manage settings |
-| `locus upgrade` | | Self-upgrade to latest version |
-
-### Work Modeling
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `locus issue` | `locus i` | Create, list, show, label, and close GitHub issues |
-| `locus sprint` | `locus s` | Create, list, show, activate, reorder, and close sprints |
-| `locus plan` | | AI-powered sprint planning from a goal description |
-
-### Execution & Review
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `locus run` | | Execute sprint tasks or standalone issues with AI agents |
-| `locus exec` | `locus e` | Interactive REPL or one-shot prompt execution |
-| `locus review` | | AI code review on pull requests |
-| `locus iterate` | | Re-execute tasks with PR feedback context |
-| `locus discuss` | | AI-powered architectural discussions |
-
-### Visibility
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `locus status` | | Dashboard view of project state |
-| `locus logs` | | View, tail, and manage execution logs |
-| `locus artifacts` | | View and manage AI-generated artifacts |
-
-### Packages
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `locus install` | | Install a community package from npm |
-| `locus uninstall` | | Remove an installed package |
-| `locus packages` | | List installed packages |
-| `locus pkg <name>` | | Run a package-provided command |
+| Command | Alias | Example | Description |
+|---------|-------|---------|-------------|
+| `locus init` | | `locus init` | Initialize project with `.locus/` structure and GitHub labels |
+| `locus config` | | `locus config show` / `locus config set ai.model claude` | View and manage settings |
+| `locus upgrade` | | `locus upgrade` | Self-upgrade to latest version |
 
 ### Sandbox Management
 
-| Command | Description |
-|---------|-------------|
-| `locus sandbox` | Create provider sandboxes (Claude + Codex) and enable sandbox mode |
-| `locus sandbox claude` | Authenticate Claude inside its sandbox |
-| `locus sandbox codex` | Authenticate Codex inside its sandbox |
-| `locus sandbox install <pkg>` | Install global npm package(s) in provider sandbox(s) |
-| `locus sandbox shell <provider>` | Open an interactive shell in a provider sandbox |
-| `locus sandbox logs <provider>` | Show provider sandbox logs |
-| `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
-| `locus sandbox status` | Show current sandbox state |
+| Command | Example | Description |
+|---------|---------|-------------|
+| `locus sandbox` | `locus sandbox` | Create provider sandboxes (Claude + Codex) and enable sandbox mode |
+| `locus sandbox claude` | `locus sandbox claude` | Authenticate Claude inside its sandbox |
+| `locus sandbox codex` | `locus sandbox codex` | Authenticate Codex inside its sandbox |
+| `locus sandbox install <pkg>` | `locus sandbox install eslint prettier` | Install global npm package(s) in provider sandbox(s) |
+| `locus sandbox shell <provider>` | `locus sandbox shell claude` | Open an interactive shell in a provider sandbox |
+| `locus sandbox logs <provider>` | `locus sandbox logs codex` | Show provider sandbox logs |
+| `locus sandbox rm` | `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
+| `locus sandbox status` | `locus sandbox status` | Show current sandbox state |
+
+### Work Modeling
+
+| Command | Alias | Example | Description |
+|---------|-------|---------|-------------|
+| `locus issue` | `locus i` | `locus issue create` / `locus issue list` | Create, list, show, label, and close GitHub issues |
+| `locus sprint` | `locus s` | `locus sprint create` / `locus sprint list` | Create, list, show, activate, reorder, and close sprints |
+| `locus plan` | | `locus plan "Add auth"` / `locus plan approve <id>` | AI-powered sprint planning from a goal description |
+
+### Execution & Review
+
+| Command | Alias | Example | Description |
+|---------|-------|---------|-------------|
+| `locus run` | | `locus run` / `locus run 42 43` / `locus run --resume` | Execute sprint tasks or standalone issues with AI agents |
+| `locus exec` | `locus e` | `locus exec` / `locus exec "Fix the login bug"` | Interactive REPL or one-shot prompt execution |
+| `locus review` | | `locus review` | AI code review on pull requests |
+| `locus iterate` | | `locus iterate --sprint` / `locus iterate --pr 5` | Re-execute tasks with PR feedback context |
+| `locus discuss` | | `locus discuss "Should we use REST or GraphQL?"` | AI-powered architectural discussions |
+
+### Visibility
+
+| Command | Alias | Example | Description |
+|---------|-------|---------|-------------|
+| `locus status` | | `locus status` | Dashboard view of project state |
+| `locus logs` | | `locus logs` / `locus logs --follow` | View, tail, and manage execution logs |
+| `locus artifacts` | | `locus artifacts` | View and manage AI-generated artifacts |
+
+### Packages
+
+| Command | Alias | Example | Description |
+|---------|-------|---------|-------------|
+| `locus install` | | `locus install <package-name>` | Install a community package from npm |
+| `locus uninstall` | | `locus uninstall <package-name>` | Remove an installed package |
+| `locus packages` | | `locus packages` | List installed packages |
+| `locus pkg <name>` | | `locus pkg telegram` | Run a package-provided command |
+
+### Common Workflows
+
+```bash
+# First-time setup
+npm i -g @locusai/cli && locus init && locus sandbox
+
+# Full sprint cycle — plan, execute, review, iterate
+locus plan "Add user authentication" && locus run && locus review && locus iterate
+
+# Run independent issues in parallel
+locus run 42 43 44
+
+# Resume a failed or interrupted run
+locus run --resume
+
+# Interactive coding session
+locus exec
+```
 
 ## Project Structure
 
