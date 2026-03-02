@@ -102,7 +102,9 @@ export async function sandboxCommand(
 // ─── Create ──────────────────────────────────────────────────────────────────
 
 async function promptProviderSelection(): Promise<AIProvider | null> {
-  process.stderr.write(`\n${bold("Select a provider to create a sandbox for:")}\n\n`);
+  process.stderr.write(
+    `\n${bold("Select a provider to create a sandbox for:")}\n\n`
+  );
   for (let i = 0; i < PROVIDERS.length; i++) {
     process.stderr.write(`  ${bold(String(i + 1))}. ${PROVIDERS[i]}\n`);
   }

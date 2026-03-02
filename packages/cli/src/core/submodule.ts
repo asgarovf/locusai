@@ -142,9 +142,7 @@ export function commitDirtySubmodules(
       });
 
       committed.push(sub.path);
-      log.info(
-        `Committed submodule changes: ${sub.path} for #${issueNumber}`
-      );
+      log.info(`Committed submodule changes: ${sub.path} for #${issueNumber}`);
     } catch {
       // May fail if submodule has no changes after staging — non-fatal
       log.verbose(`No committable changes in submodule ${sub.path}`);
