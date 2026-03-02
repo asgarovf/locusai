@@ -23,7 +23,6 @@ locus sandbox <subcommand> [options]
 | `locus sandbox claude` | Open an interactive Claude session in the Claude sandbox (for auth) |
 | `locus sandbox codex` | Open an interactive Codex session in the Codex sandbox (for auth) |
 | `locus sandbox install <package...>` | Install global npm package(s) inside sandbox(es) |
-| `locus sandbox exec <provider> -- <command...>` | Run a command inside a provider sandbox |
 | `locus sandbox shell <provider>` | Open an interactive shell (`sh`) in a provider sandbox |
 | `locus sandbox logs <provider>` | Show Docker sandbox logs for a provider sandbox |
 | `locus sandbox status` | Show configured sandbox names and running state |
@@ -82,20 +81,6 @@ locus sandbox install bun pnpm --provider all
 
 ---
 
-## exec
-
-Run a command inside a provider sandbox (working directory is set to your project root).
-
-```bash
-locus sandbox exec <provider> -- <command...>
-```
-
-Examples:
-
-```bash
-locus sandbox exec codex -- bun --version
-locus sandbox exec claude -- node -v
-```
 
 ---
 

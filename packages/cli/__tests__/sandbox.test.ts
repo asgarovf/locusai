@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
 import {
-  parseSandboxExecArgs,
   parseSandboxInstallArgs,
   parseSandboxLogsArgs,
 } from "../src/commands/sandbox.js";
@@ -16,18 +15,6 @@ describe("sandbox command argument parsing", () => {
   it("returns install usage error when package is missing", () => {
     const result = parseSandboxInstallArgs(["--provider", "all"]);
     expect(result.error).toContain("Usage: locus sandbox install");
-  });
-
-  it("parses exec args with separator", () => {
-    const result = parseSandboxExecArgs(["codex", "--", "bun", "--version"]);
-    expect(result.error).toBeUndefined();
-    expect(result.provider).toBe("codex");
-    expect(result.command).toEqual(["bun", "--version"]);
-  });
-
-  it("returns exec error for invalid provider", () => {
-    const result = parseSandboxExecArgs(["invalid", "--", "ls"]);
-    expect(result.error).toContain('Invalid provider "invalid"');
   });
 
   it("parses logs args with follow and tail", () => {

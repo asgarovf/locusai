@@ -503,42 +503,6 @@ async function handleInstall(
 
 // ─── Exec / Shell / Logs ────────────────────────────────────────────────────
 
-export function parseSandboxExecArgs(args: string[]): {
-  provider?: AIProvider;
-  command: string[];
-  error?: string;
-} {
-  if (args.length === 0) {
-    return {
-      command: [],
-      error: "Usage: locus sandbox exec <provider> -- <command...>",
-    };
-  }
-
-  const provider = args[0];
-  if (provider !== "claude" && provider !== "codex") {
-    return {
-      command: [],
-      error: `Invalid provider "${provider}". Expected claude or codex.`,
-    };
-  }
-
-  const separatorIndex = args.indexOf("--");
-  const command =
-    separatorIndex >= 0 ? args.slice(separatorIndex + 1) : args.slice(1);
-
-  if (command.length === 0) {
-    return {
-      provider,
-      command: [],
-      error:
-        "Missing command. Example: locus sandbox exec codex -- bun --version",
-    };
-  }
-
-  return { provider, command };
-}
-
 async function handleShell(projectRoot: string, args: string[]): Promise<void> {
   const provider = args[0];
   if (provider !== "claude" && provider !== "codex") {

@@ -169,7 +169,6 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus sandbox claude` | Authenticate Claude inside its sandbox |
 | `locus sandbox codex` | Authenticate Codex inside its sandbox |
 | `locus sandbox install <pkg>` | Install global npm package(s) in provider sandbox(s) |
-| `locus sandbox exec <provider> -- <cmd...>` | Run a command inside a provider sandbox |
 | `locus sandbox shell <provider>` | Open an interactive shell in a provider sandbox |
 | `locus sandbox logs <provider>` | Show provider sandbox logs |
 | `locus sandbox rm` | Destroy provider sandboxes and disable sandbox mode |
