@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.21.3
+
+### Patch Changes
+
+- Fix repo ssh url parsing
+
 ## 0.21.2
 
 ### Patch Changes
