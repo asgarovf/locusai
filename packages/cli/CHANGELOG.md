@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.1
+
+### Patch Changes
+
+- README
+
 ## 0.21.0
 
 ### Minor Changes
