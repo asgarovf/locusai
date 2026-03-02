@@ -301,7 +301,8 @@ Categories to check:
     instructions += `\n\n**Focus areas:** ${focus}\nPay special attention to the above areas.`;
   }
 
-  instructions += `\n\nEnd with an overall assessment: APPROVE, REQUEST_CHANGES, or COMMENT.
+  instructions += `\n\nEnd with an overall assessment: APPROVE or COMMENT.
+If there are issues or suggestions, use COMMENT — never request changes.
 Be constructive and specific. Praise good patterns too.`;
 
   parts.push(`<review-instructions>\n${instructions}\n</review-instructions>`);
