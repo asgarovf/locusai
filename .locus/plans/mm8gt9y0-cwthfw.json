@@ -1,0 +1,72 @@
+{
+  "id": "mm8gt9y0-cwthfw",
+  "directive": "I want to delete unused functions, types, utils and other stuff from the repository",
+  "sprint": null,
+  "createdAt": "2026-03-02T00:53:10.680Z",
+  "issues": [
+    {
+      "order": 1,
+      "title": "Remove unused terminal color and style functions",
+      "body": "## Summary\n\nThe terminal display module (`packages/cli/src/display/terminal.ts`) exports 12 color/style functions that are never imported or used anywhere in the codebase. These should be removed to reduce dead code.\n\n## Unused exports to remove\n\n**Style functions:**\n- `strikethrough`\n\n**Bright color functions (entire set):**\n- `redBright`\n- `greenBright`\n- `yellowBright`\n- `blueBright`\n- `magentaBright`\n- `cyanBright`\n\n**Background color functions (entire set):**\n- `bgRed`\n- `bgGreen`\n- `bgYellow`\n- `bgBlue`\n- `bgGray`\n\n## Acceptance Criteria\n\n- [ ] All 12 unused color/style functions are removed from `packages/cli/src/display/terminal.ts`\n- [ ] No remaining imports of these functions exist anywhere in the codebase\n- [ ] Any tests referencing these removed functions are updated or removed\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "medium",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 2,
+      "title": "Remove unused type definitions from CLI types.ts",
+      "body": "## Summary\n\nThe CLI types module (`packages/cli/src/types.ts`) exports several type definitions that are never imported or referenced outside the file. These should be cleaned up.\n\n## Types to remove\n\n1. **`CommandResult`** (interface) — Completely unused anywhere in the codebase. Definition:\n   ```ts\n   interface CommandResult { success: boolean; message?: string; error?: string; }\n   ```\n\n2. **`GitHubConfig`** (interface) — Never directly imported. Only used inline within the `LocusConfig` interface definition in the same file. Should be inlined as an anonymous type within `LocusConfig`.\n\n3. **`AIConfig`** (interface) — Never directly imported. Only used inline within the `LocusConfig` interface definition in the same file. Should be inlined as an anonymous type within `LocusConfig`.\n\n## Acceptance Criteria\n\n- [ ] `CommandResult` interface is removed entirely\n- [ ] `GitHubConfig` is inlined into `LocusConfig` (its fields placed directly in the `github` property type)\n- [ ] `AIConfig` is inlined into `LocusConfig` (its fields placed directly in the `ai` property type)\n- [ ] No compile errors from the changes\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "medium",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 3,
+      "title": "Remove unused renderToolBatch function",
+      "body": "## Summary\n\nThe function `renderToolBatch` in `packages/cli/src/display/tool-renderer.ts` is exported but never called anywhere in the codebase. It should be removed.\n\n## Details\n\n- **File:** `packages/cli/src/display/tool-renderer.ts`\n- **Function:** `renderToolBatch(events: ToolEvent[]): string`\n- The function internally calls `renderToolCard` which IS used, so only `renderToolBatch` itself should be removed\n\n## Acceptance Criteria\n\n- [ ] `renderToolBatch` function is removed from `tool-renderer.ts`\n- [ ] No remaining references to `renderToolBatch` exist in the codebase\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "low",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 4,
+      "title": "Remove unused isKnownModel function and unexported model arrays",
+      "body": "## Summary\n\nThe `packages/cli/src/core/ai-models.ts` module exports a validation function and model constant arrays that are never imported by any other module.\n\n## Items to remove\n\n1. **`isKnownModel(model: string): boolean`** — Exported function, never imported or called anywhere\n2. **`CLAUDE_MODELS`** — Exported array constant, never imported outside `ai-models.ts`\n3. **`CODEX_MODELS`** — Exported array constant, never imported outside `ai-models.ts`\n\n**Note:** If `CLAUDE_MODELS` and `CODEX_MODELS` are used internally within the same file (e.g., to build lookup Sets), keep them as non-exported (`const` without `export`). Only remove the `export` keyword if they are still needed internally; delete entirely if not.\n\n## Acceptance Criteria\n\n- [ ] `isKnownModel` function is removed\n- [ ] `CLAUDE_MODELS` and `CODEX_MODELS` are either removed entirely or have their `export` keyword removed (depending on internal usage)\n- [ ] No remaining imports of these symbols exist in the codebase\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "low",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 5,
+      "title": "Deduplicate progressBar in sprint.ts",
+      "body": "## Summary\n\nThe file `packages/cli/src/commands/sprint.ts` contains a local/private `progressBar()` function that duplicates the exported `progressBar()` function from `packages/cli/src/display/progress.ts`. The local copy should be removed and replaced with an import from the display module.\n\n## Details\n\n- **Duplicate location:** `packages/cli/src/commands/sprint.ts` (local function)\n- **Canonical location:** `packages/cli/src/display/progress.ts` (exported function)\n- Compare both implementations to confirm they are functionally equivalent before replacing\n- If the implementations differ slightly, align the canonical version to cover both use cases\n\n## Acceptance Criteria\n\n- [ ] Local `progressBar()` function in `sprint.ts` is removed\n- [ ] `sprint.ts` imports `progressBar` from `../display/progress.ts` (or the appropriate relative path)\n- [ ] Behavior is preserved — the sprint command output looks the same\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "medium",
+      "type": "refactor",
+      "dependsOn": "none"
+    },
+    {
+      "order": 6,
+      "title": "Remove unused PageTransition component",
+      "body": "## Summary\n\nThe `PageTransition` React component in `apps/www/src/components/layout/PageTransition.tsx` is exported from the layout barrel file but never used in any page or layout.\n\n## Details\n\n- **Component file:** `apps/www/src/components/layout/PageTransition.tsx`\n- **Barrel export:** `apps/www/src/components/layout/index.ts`\n- The component is exported in the layout index but never imported or rendered anywhere in the app\n\n## Acceptance Criteria\n\n- [ ] `PageTransition.tsx` file is deleted\n- [ ] `PageTransition` export is removed from `apps/www/src/components/layout/index.ts`\n- [ ] No remaining imports of `PageTransition` exist in the codebase\n- [ ] The www app builds successfully (`cd apps/www && npm run build`)",
+      "priority": "low",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 7,
+      "title": "Remove unused formatDuration export",
+      "body": "## Summary\n\nThe `formatDuration` function in `packages/cli/src/display/progress.ts` is exported but never directly imported by any other module. It is only used internally within the same file by the `createTimer()` function.\n\n## Details\n\n- **File:** `packages/cli/src/display/progress.ts`\n- **Function:** `formatDuration(ms: number): string`\n- The function is used internally by `createTimer()` in the same file, so it should be kept but its `export` keyword removed\n\n## Acceptance Criteria\n\n- [ ] `export` keyword is removed from `formatDuration` (function remains as a local/private function)\n- [ ] No external modules import `formatDuration`\n- [ ] Any tests that directly test `formatDuration` are updated to test it indirectly through `createTimer` or removed\n- [ ] Project builds successfully (`npm run build:cli`)\n- [ ] Tests pass (`npm test`)",
+      "priority": "low",
+      "type": "chore",
+      "dependsOn": "none"
+    },
+    {
+      "order": 8,
+      "title": "Verify build and test suite after all removals",
+      "body": "## Summary\n\nAfter all unused code has been removed across the previous issues, perform a final verification pass to ensure nothing was broken.\n\n## Steps\n\n1. Run the full build for all packages:\n   - `npm run build:cli`\n   - `npm run build:packages`\n   - `cd apps/www && npm run build`\n2. Run the full test suite: `npm test`\n3. Run the linter: `npm run lint`\n4. Verify no TypeScript errors: `npx tsc --noEmit` (in each package)\n5. Do a final grep for any remaining references to deleted symbols\n\n## Acceptance Criteria\n\n- [ ] All packages build without errors\n- [ ] All tests pass\n- [ ] Linter reports no new issues\n- [ ] TypeScript type checking passes with no errors\n- [ ] No dangling references to removed symbols exist in the codebase",
+      "priority": "high",
+      "type": "chore",
+      "dependsOn": "1,2,3,4,5,6,7"
+    }
+  ]
+}
