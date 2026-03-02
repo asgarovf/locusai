@@ -31,21 +31,6 @@
 > `.sandboxignore` excludes `.env` and secrets from sync automatically.
 > Use `--sandbox=require` in CI to enforce sandboxed execution.
 
-## Why Locus?
-
-AI coding agents are powerful — but they're point solutions. Locus wraps the entire plan-execute-review loop into a single CLI.
-
-| | Locus | Cursor | Aider | Codex CLI |
-|---|---|---|---|---|
-| GitHub-native (Issues = tasks) | **Yes** | No | No | No |
-| Docker sandbox isolation | **Unified** | N/A | No | Built-in |
-| Multi-provider (Claude + Codex) | **Yes** | Claude only | Multi | OpenAI only |
-| Sprint planning & orchestration | **Yes** | No | No | No |
-| AI code review loop | **Yes** | No | No | No |
-| Parallel worktree execution | **Yes** | No | No | No |
-| Community packages (SDK) | **Yes** | Extensions | No | No |
-| Interactive REPL | **Yes** | Yes | Yes | Yes |
-
 ## Quick Start
 
 ### Prerequisites
@@ -94,6 +79,21 @@ $ locus run
   🔒 Sandbox: Docker (claude-sandbox)
   📁 Branch: locus/sprint-oauth
 ```
+
+## Why Locus?
+
+AI coding agents are powerful — but they're point solutions. Locus wraps the entire plan-execute-review loop into a single CLI.
+
+| | Locus | Cursor | Aider | Codex CLI |
+|---|---|---|---|---|
+| GitHub-native (Issues = tasks) | **Yes** | No | No | No |
+| Docker sandbox isolation | **Unified** | N/A | No | Built-in |
+| Multi-provider (Claude + Codex) | **Yes** | Claude only | Multi | OpenAI only |
+| Sprint planning & orchestration | **Yes** | No | No | No |
+| AI code review loop | **Yes** | No | No | No |
+| Parallel worktree execution | **Yes** | No | No | No |
+| Community packages (SDK) | **Yes** | Extensions | No | No |
+| Interactive REPL | **Yes** | Yes | Yes | Yes |
 
 ## Sandboxed Execution
 
@@ -298,7 +298,14 @@ locus run --resume
 locus exec
 ```
 
+## VS Code Extension
+
+Locus includes a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=locusai.locus) with an integrated chat interface for running tasks directly from your editor.
+
 ## Project Structure
+
+<details>
+<summary>Project Structure</summary>
 
 After `locus init`, your project gets a `.locus/` directory:
 
@@ -316,17 +323,12 @@ After `locus init`, your project gets a `.locus/` directory:
 └── worktrees/         # Git worktrees for parallel execution
 ```
 
-## VS Code Extension
-
-Locus includes a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=locusai.locus) with an integrated chat interface for running tasks directly from your editor.
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+L` | Open Locus chat |
-| `Ctrl+Shift+E` | Explain selected code |
-| `Ctrl+Shift+N` | New session |
+</details>
 
 ## Development
+
+<details>
+<summary>Development</summary>
 
 ```bash
 # Install dependencies
@@ -341,13 +343,15 @@ bun run lint && bun run typecheck
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architecture details, and release process.
 
-## Packages
+### Packages
 
 | Package | Description |
 |---------|-------------|
 | [`@locusai/cli`](./packages/cli) | Main CLI |
 | [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
 | [`@locusai/www`](./apps/www) | Documentation website |
+
+</details>
 
 ## License
 
