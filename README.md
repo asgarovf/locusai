@@ -5,13 +5,15 @@
 <h3 align="center">GitHub-native AI engineering CLI</h3>
 
 <p align="center">
-  Turn GitHub issues into shipped code — plan sprints, execute tasks with AI agents, and iterate on feedback.
+  Ship code from GitHub Issues — AI agents plan, execute, review, and iterate inside Docker sandboxes. No servers. No accounts.
 </p>
 
 <p align="center">
   <a href="https://github.com/asgarovf/locusai/stargazers"><img src="https://img.shields.io/github/stars/asgarovf/locusai?style=flat&color=blue" alt="GitHub Stars" /></a>
   <a href="https://www.npmjs.com/package/@locusai/cli"><img src="https://img.shields.io/npm/v/@locusai/cli?label=%40locusai%2Fcli&color=blue" alt="@locusai/cli" /></a>
   <a href="https://github.com/asgarovf/locusai/blob/master/LICENSE"><img src="https://img.shields.io/github/license/asgarovf/locusai?style=flat&color=blue" alt="License" /></a>
+  <a href="https://www.npmjs.com/package/@locusai/cli"><img src="https://img.shields.io/npm/dt/@locusai/cli?color=blue" alt="npm downloads" /></a>
+  <a href="https://github.com/asgarovf/locusai/commits/master"><img src="https://img.shields.io/github/last-commit/asgarovf/locusai?color=blue" alt="Last commit" /></a>
   <a href="https://docs.locusai.dev"><img src="https://img.shields.io/badge/docs-locusai.dev-blue" alt="Documentation" /></a>
 </p>
 
@@ -20,8 +22,6 @@
 </p>
 
 ---
-
-> GitHub Issues are tasks. Milestones are sprints. Labels track status. Pull Requests are deliverables. **No servers. No database. No accounts.**
 
 > [!WARNING]
 > **Active Development**: Locus is in early alpha. Expect breaking changes and evolving APIs.
