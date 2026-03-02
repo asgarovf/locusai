@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.21.0
+
+### Minor Changes
+
+- Remove shared package
+
 ## 0.20.5
 
 ### Patch Changes
