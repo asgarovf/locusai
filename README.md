@@ -75,15 +75,21 @@ For Docker-first sandbox setup and operations (create/auth/install/exec/shell/lo
 - [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
 - [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
-## How It Works
+## What It Looks Like
 
 ```
-locus plan "your goal"    →  AI breaks the goal into GitHub Issues with execution order
-locus run                 →  Agents execute tasks sequentially, push code, create PRs
-locus review              →  AI reviews PRs, posts inline comments on GitHub
-locus iterate             →  Agents address review feedback until ready to merge
+$ locus run
+
+  ● Sprint: Add OAuth Support (3 tasks)
+  ├─ ✓ #12  Create OAuth provider config       [claude-sonnet-4-6]  42s
+  ├─ ● #13  Implement login callback endpoint   [claude-sonnet-4-6]  running...
+  └─ ○ #14  Add session management middleware
+
+  🔒 Sandbox: Docker (claude-sandbox)
+  📁 Branch: locus/sprint-oauth
 ```
 
+<!-- Preserved for Sprint Orchestration hero block (issue #5):
 **GitHub IS the backend:**
 
 | Concept | GitHub Primitive |
@@ -94,6 +100,7 @@ locus iterate             →  Agents address review feedback until ready to mer
 | Priority | Labels (`p:critical`, `p:high`, `p:medium`, `p:low`) |
 | Execution Order | Labels (`order:1`, `order:2`, ...) |
 | Deliverable | Pull Request |
+-->
 
 ## Features
 
