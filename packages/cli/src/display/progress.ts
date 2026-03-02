@@ -13,6 +13,8 @@ export interface ProgressBarOptions {
   showPercent?: boolean;
   /** Show count (default: true). */
   showCount?: boolean;
+  /** Wrap bar in brackets (default: true). */
+  brackets?: boolean;
   /** Label prefix. */
   label?: string;
 }
@@ -23,7 +25,13 @@ export function progressBar(
   total: number,
   options: ProgressBarOptions = {}
 ): string {
-  const { width = 30, showPercent = true, showCount = true, label } = options;
+  const {
+    width = 30,
+    showPercent = true,
+    showCount = true,
+    brackets = true,
+    label,
+  } = options;
   const percent = total > 0 ? current / total : 0;
   const filled = Math.round(width * percent);
   const empty = width - filled;
@@ -32,7 +40,7 @@ export function progressBar(
   const parts: string[] = [];
 
   if (label) parts.push(label);
-  parts.push(`[${bar}]`);
+  parts.push(brackets ? `[${bar}]` : bar);
   if (showPercent) parts.push(bold(`${Math.round(percent * 100)}%`));
   if (showCount) parts.push(dim(`(${current}/${total})`));
 
