@@ -98,31 +98,56 @@ export function saveRegistry(registry: LocusPackageRegistry): void {
  * Given a short name like `"telegram"`, resolves the absolute path to the
  * binary inside `~/.locus/packages/node_modules/.bin/locus-telegram`.
  *
+ * For scoped packages (e.g. `@locusai/locus-telegram`), npm creates the
+ * `.bin/` symlink using just the name part after the scope (`locus-telegram`).
+ *
  * Returns `null` if the binary does not exist on disk.
  */
 export function resolvePackageBinary(packageName: string): string | null {
   const fullName = normalizePackageName(packageName);
-  const binPath = join(getPackagesDir(), "node_modules", ".bin", fullName);
+
+  // For scoped packages, the .bin entry uses the name after the scope.
+  const binName = fullName.includes("/")
+    ? (fullName.split("/").pop() as string)
+    : fullName;
+
+  const binPath = join(getPackagesDir(), "node_modules", ".bin", binName);
   return existsSync(binPath) ? binPath : null;
 }
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+/** The npm scope all official Locus packages live under. */
+export const PACKAGE_SCOPE = "@locusai";
+
+/** Full prefix for scoped Locus packages. */
+const SCOPED_PREFIX = `${PACKAGE_SCOPE}/locus-`;
 
 // ─── Name Normalisation ──────────────────────────────────────────────────────
 
 /**
- * Converts a short package name to its full npm name.
+ * Converts a short package name to its full scoped npm name.
  *
- * - `"telegram"` → `"locus-telegram"`
- * - `"locus-telegram"` → `"locus-telegram"` (unchanged)
- * - `"@org/locus-telegram"` → `"@org/locus-telegram"` (scoped, unchanged)
+ * - `"telegram"`                → `"@locusai/locus-telegram"`
+ * - `"@locusai/locus-telegram"` → `"@locusai/locus-telegram"` (unchanged)
  */
 export function normalizePackageName(input: string): string {
-  // Scoped packages (@org/…) are passed through as-is.
-  if (input.startsWith("@")) {
+  // Already a scoped @locusai package → pass through.
+  if (input.startsWith(SCOPED_PREFIX)) {
     return input;
   }
-  // Already prefixed → pass through.
-  if (input.startsWith("locus-")) {
-    return input;
+  // Short name → add scope and prefix.
+  return `${SCOPED_PREFIX}${input}`;
+}
+
+/**
+ * Extracts the user-facing short name from a full package name.
+ *
+ * - `"@locusai/locus-telegram"` → `"telegram"`
+ */
+export function extractShortName(packageName: string): string {
+  if (packageName.startsWith(SCOPED_PREFIX)) {
+    return packageName.slice(SCOPED_PREFIX.length);
   }
-  return `locus-${input}`;
+  return packageName;
 }

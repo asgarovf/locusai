@@ -2,15 +2,19 @@
  * `locus pkg <name> [command] [args...]` — Dispatch to an installed package binary.
  *
  * Usage:
- *   locus pkg telegram start     # spawn locus-telegram with ["start"]
- *   locus pkg telegram           # spawn locus-telegram with no args (shows package help)
+ *   locus pkg telegram start     # spawn @locusai/locus-telegram with ["start"]
+ *   locus pkg telegram           # spawn @locusai/locus-telegram with no args (shows package help)
  *   locus pkg                    # list all installed packages
  */
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
-import { loadRegistry, normalizePackageName } from "../packages/registry.js";
+import {
+  extractShortName,
+  loadRegistry,
+  normalizePackageName,
+} from "../packages/registry.js";
 
 // ─── List installed packages ──────────────────────────────────────────────────
 
@@ -31,6 +35,7 @@ export function listInstalledPackages(): void {
   for (const entry of entries) {
     const { name, version, manifest } = entry;
     const displayName = manifest.displayName || name;
+    const shortName = extractShortName(name);
 
     process.stderr.write(
       `  ${bold(cyan(displayName))} ${dim(`v${version}`)}\n`
@@ -47,7 +52,7 @@ export function listInstalledPackages(): void {
     }
 
     process.stderr.write(
-      `  Run: ${bold(`locus pkg ${name.replace(/^locus-/, "")} --help`)}\n`
+      `  Run: ${bold(`locus pkg ${shortName} --help`)}\n`
     );
     process.stderr.write("\n");
   }

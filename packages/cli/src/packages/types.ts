@@ -19,7 +19,7 @@ export interface LocusPackageManifest {
  * A single installed-package record persisted in the global registry.
  */
 export interface LocusPackageRegistryEntry {
-  /** Full npm package name, e.g. "locus-telegram". */
+  /** Full npm package name, e.g. "@locusai/locus-telegram". */
   name: string;
   /** Installed semver version, e.g. "1.2.3". */
   version: string;
@@ -33,7 +33,7 @@ export interface LocusPackageRegistryEntry {
 
 /**
  * Full shape of `~/.locus/packages/registry.json`.
- * Keys are full npm package names (e.g. "locus-telegram").
+ * Keys are full npm package names (e.g. "@locusai/locus-telegram").
  */
 export interface LocusPackageRegistry {
   packages: Record<string, LocusPackageRegistryEntry>;

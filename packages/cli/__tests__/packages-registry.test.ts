@@ -33,6 +33,7 @@ const {
   saveRegistry,
   resolvePackageBinary,
   normalizePackageName,
+  extractShortName,
 } = await import("../src/packages/registry.js");
 
 afterAll(() => {
@@ -133,8 +134,8 @@ describe("loadRegistry", () => {
     const registryPath = getRegistryPath();
     const data = {
       packages: {
-        "locus-telegram": {
-          name: "locus-telegram",
+        "@locusai/locus-telegram": {
+          name: "@locusai/locus-telegram",
           version: "1.0.0",
           installedAt: "2024-01-01T00:00:00.000Z",
           binaryPath: "/fake/bin/locus-telegram",
@@ -149,8 +150,10 @@ describe("loadRegistry", () => {
     };
     writeFileSync(registryPath, JSON.stringify(data));
     const registry = loadRegistry();
-    expect(registry.packages["locus-telegram"].name).toBe("locus-telegram");
-    expect(registry.packages["locus-telegram"].version).toBe("1.0.0");
+    expect(registry.packages["@locusai/locus-telegram"].name).toBe(
+      "@locusai/locus-telegram"
+    );
+    expect(registry.packages["@locusai/locus-telegram"].version).toBe("1.0.0");
   });
 });
 
@@ -168,16 +171,16 @@ describe("saveRegistry", () => {
   it("persists the registry and can be reloaded", () => {
     const registry = {
       packages: {
-        "locus-demo": {
-          name: "locus-demo",
-          version: "0.1.0",
+        "@locusai/locus-telegram": {
+          name: "@locusai/locus-telegram",
+          version: "0.21.8",
           installedAt: "2024-06-01T12:00:00.000Z",
-          binaryPath: "/some/path/locus-demo",
+          binaryPath: "/some/path/locus-telegram",
           manifest: {
-            displayName: "Demo",
-            description: "A demo package",
-            commands: ["demo"],
-            version: "0.1.0",
+            displayName: "Telegram",
+            description: "Remote-control your Locus agent from Telegram",
+            commands: ["telegram"],
+            version: "0.21.8",
           },
         },
       },
@@ -185,8 +188,10 @@ describe("saveRegistry", () => {
 
     saveRegistry(registry);
     const reloaded = loadRegistry();
-    expect(reloaded.packages["locus-demo"].name).toBe("locus-demo");
-    expect(reloaded.packages["locus-demo"].version).toBe("0.1.0");
+    expect(reloaded.packages["@locusai/locus-telegram"].name).toBe(
+      "@locusai/locus-telegram"
+    );
+    expect(reloaded.packages["@locusai/locus-telegram"].version).toBe("0.21.8");
   });
 });
 
@@ -209,6 +214,7 @@ describe("resolvePackageBinary", () => {
     const dir = getPackagesDir();
     const binDir = join(dir, "node_modules", ".bin");
     mkdirSync(binDir, { recursive: true });
+    // npm creates .bin/ entries using the name after the scope
     const binPath = join(binDir, "locus-telegram");
     writeFileSync(binPath, "#!/usr/bin/env node\n");
 
@@ -216,40 +222,47 @@ describe("resolvePackageBinary", () => {
     expect(resolved).toBe(binPath);
   });
 
-  it("returns the binary path when given an already-prefixed name", () => {
+  it("returns the binary path when given the full scoped name", () => {
     const dir = getPackagesDir();
     const binDir = join(dir, "node_modules", ".bin");
     mkdirSync(binDir, { recursive: true });
-    const binPath = join(binDir, "locus-slack");
+    const binPath = join(binDir, "locus-telegram");
     writeFileSync(binPath, "#!/usr/bin/env node\n");
 
-    const resolved = resolvePackageBinary("locus-slack");
+    const resolved = resolvePackageBinary("@locusai/locus-telegram");
     expect(resolved).toBe(binPath);
   });
+
 });
 
 // ─── normalizePackageName ─────────────────────────────────────────────────────
 
 describe("normalizePackageName", () => {
-  it("prepends locus- to a short name", () => {
-    expect(normalizePackageName("telegram")).toBe("locus-telegram");
+  it("converts a short name to the full scoped name", () => {
+    expect(normalizePackageName("telegram")).toBe("@locusai/locus-telegram");
   });
 
-  it("passes through an already-prefixed name unchanged", () => {
-    expect(normalizePackageName("locus-telegram")).toBe("locus-telegram");
-  });
-
-  it("passes through a scoped package unchanged (@org/locus-telegram)", () => {
-    expect(normalizePackageName("@org/locus-telegram")).toBe(
-      "@org/locus-telegram"
+  it("passes through a fully scoped @locusai name unchanged", () => {
+    expect(normalizePackageName("@locusai/locus-telegram")).toBe(
+      "@locusai/locus-telegram"
     );
   });
 
-  it("passes through a scoped package without locus- prefix unchanged", () => {
-    expect(normalizePackageName("@myorg/plugin-x")).toBe("@myorg/plugin-x");
+  it("does not double-prefix an already-scoped name", () => {
+    expect(normalizePackageName("@locusai/locus-telegram")).toBe(
+      "@locusai/locus-telegram"
+    );
+  });
+});
+
+// ─── extractShortName ────────────────────────────────────────────────────────
+
+describe("extractShortName", () => {
+  it("extracts short name from scoped package", () => {
+    expect(extractShortName("@locusai/locus-telegram")).toBe("telegram");
   });
 
-  it("does not double-prefix an already-prefixed name", () => {
-    expect(normalizePackageName("locus-locus-weird")).toBe("locus-locus-weird");
+  it("returns the input unchanged if no prefix matches", () => {
+    expect(extractShortName("some-other-pkg")).toBe("some-other-pkg");
   });
 });

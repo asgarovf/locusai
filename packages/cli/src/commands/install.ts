@@ -2,7 +2,7 @@
  * `locus install <package>` — Install a community package from npm.
  *
  * Usage:
- *   locus install telegram               # installs locus-telegram@latest
+ *   locus install telegram               # installs @locusai/locus-telegram@latest
  *   locus install telegram -v 1.0.0      # pins a specific version
  *   locus install telegram --version 1.0.0
  *   locus install telegram@1.0.0         # inline @version syntax
@@ -14,6 +14,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import {
+  extractShortName,
   getPackagesDir,
   loadRegistry,
   normalizePackageName,
@@ -221,6 +222,7 @@ export async function installCommand(
 
   // ── Success output ─────────────────────────────────────────────────────────
   const verb = existing ? "upgraded" : "installed";
+  const shortName = extractShortName(packageName);
   process.stderr.write(`\n${green("✓")} Package ${verb} successfully!\n\n`);
 
   process.stderr.write(`  Package: ${bold(cyan(packageName))}\n`);
@@ -235,6 +237,10 @@ export async function installCommand(
   if (binaryPath) {
     process.stderr.write(`  Binary:  ${dim(binaryPath)}\n`);
   }
+
+  process.stderr.write(
+    `  Run: ${bold(`locus pkg ${shortName} --help`)}\n`
+  );
 
   process.stderr.write("\n");
 }

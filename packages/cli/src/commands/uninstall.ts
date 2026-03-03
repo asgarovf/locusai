@@ -2,8 +2,8 @@
  * `locus uninstall <package>` — Remove an installed community package.
  *
  * Usage:
- *   locus uninstall telegram        # removes locus-telegram
- *   locus uninstall locus-telegram  # full name also accepted
+ *   locus uninstall telegram                    # removes @locusai/locus-telegram
+ *   locus uninstall @locusai/locus-telegram     # full name also accepted
  */
 
 import { spawnSync } from "node:child_process";
