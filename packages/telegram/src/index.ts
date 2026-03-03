@@ -118,6 +118,34 @@ async function handleBot(): Promise<void> {
   logger.info("Starting Telegram bot...");
   logger.info(`Allowed chat IDs: ${config.allowedChatIds.join(", ")}`);
 
+  // Sync the Telegram command menu so /command suggestions stay up-to-date
+  await bot.api.setMyCommands([
+    { command: "run", description: "Execute issues" },
+    { command: "status", description: "Dashboard view" },
+    { command: "issues", description: "List issues" },
+    { command: "issue", description: "Show issue details" },
+    { command: "sprint", description: "Sprint management" },
+    { command: "plan", description: "AI planning" },
+    { command: "review", description: "Code review" },
+    { command: "iterate", description: "Re-execute with feedback" },
+    { command: "discuss", description: "AI discussion" },
+    { command: "exec", description: "REPL / one-shot prompt" },
+    { command: "logs", description: "View logs" },
+    { command: "config", description: "View config" },
+    { command: "artifacts", description: "View artifacts" },
+    { command: "gitstatus", description: "Git status" },
+    { command: "stage", description: "Stage files" },
+    { command: "commit", description: "Commit changes" },
+    { command: "stash", description: "Stash operations" },
+    { command: "branch", description: "List/create branches" },
+    { command: "checkout", description: "Switch branch" },
+    { command: "diff", description: "Show diff" },
+    { command: "pr", description: "Create pull request" },
+    { command: "service", description: "Manage bot process" },
+    { command: "help", description: "Show help message" },
+  ]);
+  logger.info("Telegram command menu synced.");
+
   // Graceful shutdown
   const shutdown = () => {
     logger.info("Shutting down bot...");
