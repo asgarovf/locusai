@@ -40,6 +40,7 @@ import { InputHandler } from "./input-handler.js";
 import { InputHistory } from "./input-history.js";
 import { persistReplModelSelection } from "./model-config.js";
 import { SessionManager } from "./session-manager.js";
+import { VoiceController, voiceStatusIndicator } from "./voice.js";
 
 export interface ReplOptions {
   projectRoot: string;
@@ -194,8 +195,18 @@ async function runInteractiveRepl(
     new FilePathCompletion(projectRoot),
   ]);
 
+  const basePrompt = `${cyan("locus")} ${dim(">")} `;
+
+  // Initialize voice controller
+  const voice = new VoiceController({
+    onStateChange: (state) => {
+      const indicator = voiceStatusIndicator(state);
+      input.setPrompt(indicator ? `${indicator}${basePrompt}` : basePrompt);
+    },
+  });
+
   const input = new InputHandler({
-    prompt: `${cyan("locus")} ${dim(">")} `,
+    prompt: basePrompt,
     getHistory: () => history.getEntries(),
     onTab: (text) => completion.complete(text),
   });
@@ -269,6 +280,15 @@ async function runInteractiveRepl(
       verbose = !verbose;
     },
     getVerbose: () => verbose,
+    onVoiceToggle: () => {
+      if (voice.getState() !== "idle") return;
+      const started = voice.startRecording();
+      if (started) {
+        process.stderr.write(
+          `${dim("Recording... press")} ${bold("Enter")} ${dim("to stop")}\n`
+        );
+      }
+    },
   };
 
   // Main loop
@@ -277,6 +297,18 @@ async function runInteractiveRepl(
 
     switch (result.type) {
       case "submit": {
+        // If voice is recording, Enter stops recording and transcribes
+        if (voice.getState() === "recording") {
+          process.stderr.write(`${dim("Transcribing...")}\n`);
+          const transcribed = await voice.stopAndTranscribe();
+          if (transcribed) {
+            input.setInitialBuffer(transcribed);
+          } else {
+            process.stderr.write(`${yellow("!")} No speech detected.\n`);
+          }
+          continue;
+        }
+
         const text = result.text.trim();
         if (!text) continue;
 
@@ -351,6 +383,9 @@ async function runInteractiveRepl(
         break;
     }
   }
+
+  // Cancel any active voice recording on exit
+  voice.cancel();
 
   const shouldPersistOnExit =
     session.messages.length > 0 || sessionManager.isPersisted(session);
@@ -457,7 +492,7 @@ function printWelcome(session: Session): void {
 
   process.stderr.write("\n");
   process.stderr.write(
-    `  ${dim("Type /help for commands, Shift+Enter for newline, Ctrl+C twice to exit")}\n`
+    `  ${dim("Type /help for commands, Shift+Enter for newline, /v for voice input")}\n`
   );
   process.stderr.write("\n");
 }

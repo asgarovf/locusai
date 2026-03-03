@@ -114,13 +114,29 @@ export class InputHandler {
   private prompt: string;
   private getHistory: () => string[];
   private onTab: ((partial: string) => string | null) | undefined;
+  private activeInsertText: ((text: string) => void) | null = null;
+  private activeRender: (() => void) | null = null;
   private locked = false;
   private lastInterruptTime = 0;
+  private pendingInsert: string | null = null;
 
   constructor(options: InputHandlerOptions) {
     this.prompt = options.prompt;
     this.getHistory = options.getHistory ?? (() => []);
     this.onTab = options.onTab;
+  }
+
+  /** Insert text from an external source (e.g. voice transcription) into the active readline buffer. */
+  insertTextFromExternal(text: string): void {
+    if (this.activeInsertText && this.activeRender) {
+      this.activeInsertText(text);
+      this.activeRender();
+    }
+  }
+
+  /** Pre-fill the buffer for the next readline() call (e.g. after voice transcription). */
+  setInitialBuffer(text: string): void {
+    this.pendingInsert = text;
   }
 
   setPrompt(prompt: string): void {
@@ -168,6 +184,8 @@ export class InputHandler {
         if (resolved) return;
         resolved = true;
 
+        this.activeInsertText = null;
+        this.activeRender = null;
         stdin.removeListener("data", onData);
 
         if (stdin.isTTY) {
@@ -696,6 +714,16 @@ export class InputHandler {
 
       if (stdin.isTTY) {
         out.write(ENABLE_BRACKETED_PASTE + ENABLE_KITTY_KEYBOARD);
+      }
+
+      // Expose closures for external text insertion (e.g. voice transcription)
+      this.activeInsertText = insertText;
+      this.activeRender = render;
+
+      // Pre-fill buffer from external source (e.g. voice transcription)
+      if (this.pendingInsert) {
+        insertText(this.pendingInsert);
+        this.pendingInsert = null;
       }
 
       render();

@@ -26,6 +26,8 @@ export interface SlashCommandContext {
   onVerboseToggle: () => void;
   /** Whether verbose mode is currently active. */
   getVerbose: () => boolean;
+  /** Toggle voice recording. */
+  onVoiceToggle?: () => void;
 }
 
 export interface SlashCommandDef {
@@ -40,13 +42,13 @@ export function getSlashCommands(): SlashCommandDef[] {
   return [
     {
       name: "/help",
-      aliases: ["/h", "/?"],
+      aliases: ["/h"],
       description: "Show available commands",
       handler: cmdHelp,
     },
     {
       name: "/clear",
-      aliases: ["/cls"],
+      aliases: [],
       description: "Clear screen",
       handler: cmdClear,
     },
@@ -82,7 +84,7 @@ export function getSlashCommands(): SlashCommandDef[] {
     },
     {
       name: "/undo",
-      aliases: ["/u"],
+      aliases: [],
       description: "Undo last AI change",
       handler: cmdUndo,
     },
@@ -94,9 +96,15 @@ export function getSlashCommands(): SlashCommandDef[] {
     },
     {
       name: "/verbose",
-      aliases: ["/v"],
+      aliases: [],
       description: "Toggle verbose mode (show agent stderr streams)",
       handler: cmdVerbose,
+    },
+    {
+      name: "/voice",
+      aliases: ["/v"],
+      description: "Start voice recording (press Enter to stop)",
+      handler: cmdVoice,
     },
     {
       name: "/exit",
@@ -311,6 +319,16 @@ function cmdVerbose(_args: string, ctx: SlashCommandContext): void {
   process.stderr.write(
     `${isOn ? green("✓") : dim("○")} Verbose mode ${isOn ? bold("on") : "off"} — agent streams ${isOn ? "visible" : "hidden"}.\n`
   );
+}
+
+function cmdVoice(_args: string, ctx: SlashCommandContext): void {
+  if (ctx.onVoiceToggle) {
+    ctx.onVoiceToggle();
+  } else {
+    process.stderr.write(
+      `${red("✗")} Voice input not available in this session.\n`
+    );
+  }
 }
 
 function cmdExit(_args: string, ctx: SlashCommandContext): void {
