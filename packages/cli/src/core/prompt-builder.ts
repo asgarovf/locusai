@@ -100,6 +100,10 @@ export function buildReplPrompt(
     sections.push(`<past-learnings>\n${learnings}\n</past-learnings>`);
   }
 
+  sections.push(
+    `<learnings-reminder>IMPORTANT: If during this interaction you discover reusable lessons (architectural patterns, non-obvious constraints, user corrections), you MUST append them to \`.locus/LEARNINGS.md\` before finishing. This is mandatory — see the "Continuous Learning" section in project instructions.</learnings-reminder>`
+  );
+
   // Previous conversation history (last 10 exchanges for context)
   if (previousMessages && previousMessages.length > 0) {
     const recent = previousMessages.slice(-10);
@@ -262,13 +266,14 @@ function buildExecutionRules(config: LocusConfig): string {
 1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Every commit message MUST be multi-line: the first line is the title, then a blank line, then \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a Git trailer. Use \`git commit -m "<title>" -m "Co-Authored-By: LocusAgent <agent@locusai.team>"\` (two separate -m flags) to ensure the trailer is on its own line.
 2. **Code quality:** Follow existing code style. Run linters/formatters if available.
 3. **Testing:** If test files exist for modified code, update them accordingly.
-4. **Do NOT:**
+4. **Update learnings:** Before finishing, if you discovered any reusable lessons (architectural patterns, non-obvious constraints, user corrections), append them to \`.locus/LEARNINGS.md\`. This is mandatory — see the "Continuous Learning" section in project instructions.
+5. **Do NOT:**
    - Run \`git push\` (the orchestrator handles pushing)
    - Modify files outside the scope of this issue
    - Delete or revert changes from previous sprint tasks
    - Introduce new dependencies without clear justification
-5. **Base branch:** ${config.agent.baseBranch}
-6. **Provider:** ${config.ai.provider} / ${config.ai.model}
+6. **Base branch:** ${config.agent.baseBranch}
+7. **Provider:** ${config.ai.provider} / ${config.ai.model}
 
 When you are done, provide a brief summary of what you changed and why.
 </execution-rules>`;
@@ -296,7 +301,8 @@ function buildFeedbackInstructions(): string {
 2. Make targeted changes — do NOT rewrite code from scratch.
 3. If a reviewer comment is unclear, make your best judgment and note your interpretation.
 4. Push changes to the same branch — do NOT create a new PR.
-5. When done, summarize what you changed in response to each comment.
+5. If you learned any reusable lessons from this feedback (non-obvious constraints, architectural patterns), append them to \`.locus/LEARNINGS.md\`.
+6. When done, summarize what you changed in response to each comment.
 </instructions>`;
 }
 

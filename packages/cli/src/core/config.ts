@@ -4,45 +4,14 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { DEFAULT_CONFIG as SDK_DEFAULT_CONFIG } from "@locusai/sdk";
 import type { LocusConfig } from "../types.js";
 import { inferProviderFromModel } from "./ai-models.js";
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
-export const DEFAULT_CONFIG: LocusConfig = {
-  version: "3.2.0",
-  github: {
-    owner: "",
-    repo: "",
-    defaultBranch: "main",
-  },
-  ai: {
-    provider: "claude",
-    model: "claude-sonnet-4-6",
-  },
-  agent: {
-    maxParallel: 3,
-    autoLabel: true,
-    autoPR: true,
-    baseBranch: "main",
-    rebaseBeforeTask: true,
-  },
-  sprint: {
-    active: null,
-    stopOnFailure: true,
-  },
-  logging: {
-    level: "normal",
-    maxFiles: 20,
-    maxTotalSizeMB: 50,
-  },
-  sandbox: {
-    enabled: true,
-    providers: {},
-    extraWorkspaces: [],
-    readOnlyPaths: [],
-  },
-};
+// Re-export from SDK — single source of truth for default config values.
+export const DEFAULT_CONFIG = SDK_DEFAULT_CONFIG as unknown as LocusConfig;
 
 // ─── Config Operations ───────────────────────────────────────────────────────
 

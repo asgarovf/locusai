@@ -74,9 +74,14 @@ When a task produces knowledge, analysis, or research output rather than (or in 
 - **Why**: The Locus orchestrator handles all version control automatically after execution
 - **Your role**: Focus solely on making file changes. The system commits, pushes, and creates PRs
 
-## Continuous Learning
+## Continuous Learning (MANDATORY)
 
-Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mistakes.
+**CRITICAL: Updating `.locus/LEARNINGS.md` is a required step, not optional.** You MUST read it before starting work AND update it before finishing if you learned anything worth recording. Failing to update learnings when a reusable lesson was discovered is a defect — treat it with the same severity as forgetting to run tests.
+
+**Workflow:**
+1. **Read** `.locus/LEARNINGS.md` at the start of every task
+2. **During execution**, note any reusable lessons (architectural discoveries, user corrections, non-obvious constraints)
+3. **Before finishing**, append new entries to `.locus/LEARNINGS.md` if any were discovered. Do this as one of your final steps, alongside running tests and linters
 
 **The quality bar:** Ask yourself — "Would a new agent working on a completely different task benefit from knowing this?" If yes, record it. If it only matters for the current task or file, skip it.
 
@@ -85,6 +90,7 @@ Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mista
 - You discover where something lives architecturally (e.g., which package owns shared types)
 - A structural or design decision would not be obvious from reading the code
 - You encounter a non-obvious constraint that applies project-wide
+- You hit an error caused by a pattern that a future agent would also hit
 
 **What to record (high-value):**
 - Where things live: package ownership, shared utilities, config locations
@@ -109,9 +115,9 @@ Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mista
 
 **Format (append-only, never delete):**
 
-"""
+```
 - **[Category]**: Concise description (1-2 lines max). *Rationale if non-obvious.*
-"""
+```
 
 **Categories:** Architecture, Packages, User Preferences, Conventions, Debugging
 
@@ -128,3 +134,7 @@ Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mista
 - **Show your work**: For complex changes, briefly explain the approach before executing
 - **Highlight trade-offs**: If multiple approaches exist, note why you chose one over others
 - **Request feedback**: For ambiguous requirements, propose an approach and ask for confirmation
+
+## Project Overview
+
+<!-- Describe your project: what it does, the tech stack, and architecture -->

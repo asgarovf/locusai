@@ -83,6 +83,17 @@ export interface LocusConfig {
     /** Maximum total log size in MB before pruning. */
     maxTotalSizeMB: number;
   };
+  /** Sandbox execution settings. */
+  sandbox?: {
+    /** Whether sandboxed execution is enabled. */
+    enabled: boolean;
+    /** User-managed persistent sandbox names per provider. */
+    providers: Record<string, string | undefined>;
+    /** Additional workspace paths to mount. */
+    extraWorkspaces: string[];
+    /** Paths to mount as read-only. */
+    readOnlyPaths: string[];
+  };
   /**
    * Community package configuration.
    * Each key is the package name (e.g. `"telegram"`), and the value is an

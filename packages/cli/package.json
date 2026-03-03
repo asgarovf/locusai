@@ -36,6 +36,7 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
+    "@locusai/sdk": "^0.21.7",
     "@types/bun": "latest",
     "typescript": "^5.8.3"
   },

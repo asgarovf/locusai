@@ -14,8 +14,8 @@ import type { LocusConfig } from "./types.js";
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
-const DEFAULT_CONFIG: LocusConfig = {
-  version: "0.19.1",
+export const DEFAULT_CONFIG: LocusConfig = {
+  version: "0.21.7",
   github: {
     owner: "",
     repo: "",
@@ -40,6 +40,12 @@ const DEFAULT_CONFIG: LocusConfig = {
     level: "normal",
     maxFiles: 20,
     maxTotalSizeMB: 50,
+  },
+  sandbox: {
+    enabled: true,
+    providers: {},
+    extraWorkspaces: [],
+    readOnlyPaths: [],
   },
 };
 

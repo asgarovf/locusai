@@ -14,7 +14,7 @@
  */
 
 // Config
-export { readLocusConfig } from "./config.js";
+export { DEFAULT_CONFIG, readLocusConfig } from "./config.js";
 // Invocation
 export type { LocusInvokeResult } from "./invoke.js";
 export { invokeLocus, invokeLocusStream } from "./invoke.js";

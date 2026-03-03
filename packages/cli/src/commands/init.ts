@@ -115,9 +115,14 @@ When a task produces knowledge, analysis, or research output rather than (or in 
 - **Why**: The Locus orchestrator handles all version control automatically after execution
 - **Your role**: Focus solely on making file changes. The system commits, pushes, and creates PRs
 
-## Continuous Learning
+## Continuous Learning (MANDATORY)
 
-Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mistakes.
+**CRITICAL: Updating \`.locus/LEARNINGS.md\` is a required step, not optional.** You MUST read it before starting work AND update it before finishing if you learned anything worth recording. Failing to update learnings when a reusable lesson was discovered is a defect — treat it with the same severity as forgetting to run tests.
+
+**Workflow:**
+1. **Read** \`.locus/LEARNINGS.md\` at the start of every task
+2. **During execution**, note any reusable lessons (architectural discoveries, user corrections, non-obvious constraints)
+3. **Before finishing**, append new entries to \`.locus/LEARNINGS.md\` if any were discovered. Do this as one of your final steps, alongside running tests and linters
 
 **The quality bar:** Ask yourself — "Would a new agent working on a completely different task benefit from knowing this?" If yes, record it. If it only matters for the current task or file, skip it.
 
@@ -126,6 +131,7 @@ Read ".locus/LEARNINGS.md" **before starting any task** to avoid repeating mista
 - You discover where something lives architecturally (e.g., which package owns shared types)
 - A structural or design decision would not be obvious from reading the code
 - You encounter a non-obvious constraint that applies project-wide
+- You hit an error caused by a pattern that a future agent would also hit
 
 **What to record (high-value):**
 - Where things live: package ownership, shared utilities, config locations
@@ -216,22 +222,9 @@ This file captures important lessons, decisions, and corrections made during dev
 It is read by AI agents before every task to avoid repeating mistakes and to follow established patterns.
 
 <!-- Add learnings below this line. Format: - **[Category]**: Description -->
-- **[User Preferences]**: Do not record low-level implementation details or one-time fixes in learnings. Focus on architectural decisions, package ownership, and explicit user preference overrides — entries that help any future agent on any task, not just the current one.
 `;
 
-const GITIGNORE_ENTRIES = [
-  "",
-  "# Locus",
-  ".locus/config.json",
-  ".locus/run-state.json",
-  ".locus/rate-limit.json",
-  ".locus/sessions/",
-  ".locus/logs/",
-  ".locus/worktrees/",
-  ".locus/artifacts/",
-  ".locus/discussions/",
-  ".locus/tmp/",
-];
+const GITIGNORE_ENTRIES = ["", "# Locus", ".locus/", "!.locus/LEARNINGS.md"];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
 
