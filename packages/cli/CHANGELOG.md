@@ -1,5 +1,12 @@
 # @locusai/cli
 
+## 0.21.8
+
+### Patch Changes
+
+- Continious learning improvements
+  Fix Telegram package installation issue
+
 ## 0.21.7
 
 ### Patch Changes

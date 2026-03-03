@@ -1,5 +1,14 @@
 # @locusai/locus-telegram
 
+## 0.21.8
+
+### Patch Changes
+
+- Continious learning improvements
+  Fix Telegram package installation issue
+- Updated dependencies
+  - @locusai/sdk@0.21.8
+
 ## 0.21.7
 
 ### Patch Changes
