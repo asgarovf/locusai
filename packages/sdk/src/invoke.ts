@@ -78,7 +78,7 @@ export function invokeLocus(
 export function invokeLocusStream(args: string[], cwd?: string): ChildProcess {
   return spawn("locus", args, {
     cwd: cwd ?? process.cwd(),
-    stdio: ["inherit", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe"],
     env: process.env,
     shell: false,
   });

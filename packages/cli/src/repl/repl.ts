@@ -102,7 +102,14 @@ export async function startRepl(options: ReplOptions): Promise<void> {
     return;
   }
 
-  // Interactive REPL
+  // Interactive REPL requires a TTY
+  if (!process.stdin.isTTY) {
+    process.stderr.write(
+      `${red("✗")} Interactive REPL requires a terminal. Use: locus exec "your prompt"\n`
+    );
+    return;
+  }
+
   await runInteractiveRepl(session, sessionManager, options);
 }
 

@@ -10,7 +10,7 @@ import { bold, codeBlock, escapeHtml, italic } from "./format.js";
 
 export function welcomeMessage(): string {
   return [
-    `${bold("🤖 Locus Telegram Bot")}`,
+    `${bold("🤖 Locus Telegram Remote Control")}`,
     "",
     "Control your Locus agent directly from Telegram.",
     "",

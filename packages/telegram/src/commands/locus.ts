@@ -46,6 +46,13 @@ const STREAMING_COMMANDS = new Set([
   "exec",
 ]);
 
+/** Commands that require at least one argument (they enter interactive mode without args). */
+const REQUIRES_ARGS: Record<string, string> = {
+  exec: "Please provide a prompt.\n\nExample: /exec Add error handling to the API",
+  discuss:
+    "Please provide a discussion topic.\n\nExample: /discuss Should we use Redis or in-memory caching?",
+};
+
 /** Minimum interval between message edits (ms) to avoid Telegram rate limits. */
 const EDIT_INTERVAL = 2000;
 
@@ -62,6 +69,13 @@ export async function handleLocusCommand(
   const cliArgs = COMMAND_MAP[command];
   if (!cliArgs) {
     await ctx.reply(`Unknown command: /${command}`);
+    return;
+  }
+
+  // Block commands that would enter interactive/REPL mode without arguments
+  const requiresArgsMsg = REQUIRES_ARGS[command];
+  if (requiresArgsMsg && args.length === 0) {
+    await ctx.reply(requiresArgsMsg);
     return;
   }
 

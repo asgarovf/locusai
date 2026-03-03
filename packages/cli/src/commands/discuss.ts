@@ -255,6 +255,11 @@ async function convertDiscussionToPlan(
 // ─── Interactive Answer Prompt ───────────────────────────────────────────────
 
 async function promptForAnswers(): Promise<string> {
+  // Non-interactive context (e.g., spawned from Telegram bot) — skip prompting
+  if (!process.stdin.isTTY) {
+    return "";
+  }
+
   const input = new InputHandler({
     prompt: `${cyan("you")} ${dim(">")} `,
   });
