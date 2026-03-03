@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.21.9
+
+### Patch Changes
+
+- Locus package names convention fixes
+
 ## 0.21.8
 
 ### Patch Changes
