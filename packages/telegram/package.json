@@ -33,6 +33,11 @@
   "devDependencies": {
     "typescript": "^5.8.3"
   },
+  "keywords": [
+    "locusai-package",
+    "locus",
+    "telegram"
+  ],
   "engines": {
     "node": ">=18"
   },

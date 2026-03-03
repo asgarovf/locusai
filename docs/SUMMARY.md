@@ -22,6 +22,10 @@
 * [Sprints & Issues](concepts/sprints-and-issues.md)
 * [Security & Sandboxing](concepts/security-sandboxing.md)
 
+## Packages
+
+* [Packages](packages.md)
+
 ## CLI Reference
 
 * [Overview](cli/overview.md)

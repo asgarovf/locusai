@@ -142,7 +142,7 @@ function PackageCard({ pkg }: { pkg: PackageData }) {
               key={cmd}
               className="text-xs font-mono bg-white/[0.04] border border-border/20 rounded px-1.5 py-0.5 text-muted-foreground"
             >
-              {`locus pkg ${pkg.name.replace(/^locus-/, "")} ${cmd}`}
+              {`locus pkg ${cmd}`}
             </span>
           ))}
         </div>
@@ -238,8 +238,8 @@ export function MarketplaceClient({ packages }: { packages: PackageData[] }) {
             Extend Locus with community packages
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Install integrations built by the community — Telegram, Slack, and
-            more — all with a single command.
+            Discover and install integrations built by the community — all with
+            a single command.
           </p>
         </div>
       </section>
@@ -323,21 +323,23 @@ export function MarketplaceClient({ packages }: { packages: PackageData[] }) {
               Publish your own package
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mb-3">
-              Built something useful? Publish it to npm with the{" "}
+              Built something useful? Add your package to the{" "}
+              <code className="text-xs font-mono bg-white/[0.04] px-1.5 py-0.5 rounded border border-border/20 text-muted-foreground">
+                packages/
+              </code>{" "}
+              directory in the monorepo and submit a pull request. Once
+              published to npm with the{" "}
               <code className="text-xs font-mono bg-white/[0.04] px-1.5 py-0.5 rounded border border-border/20 text-muted-foreground">
                 locusai-package
               </code>{" "}
-              keyword and the{" "}
-              <code className="text-xs font-mono bg-white/[0.04] px-1.5 py-0.5 rounded border border-border/20 text-muted-foreground">
-                locus-
-              </code>{" "}
-              name prefix, and it will appear here automatically.
+              keyword, it will appear here automatically.
             </p>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-8">
-              Packages must include a{" "}
-              <code className="font-mono text-xs">&quot;locus&quot;</code> field
-              in <code className="font-mono text-xs">package.json</code> for
-              full CLI integration.
+              Include a{" "}
+              <code className="font-mono text-xs">&quot;locus&quot;</code>{" "}
+              manifest field in{" "}
+              <code className="font-mono text-xs">package.json</code> for full
+              CLI integration. See the guide for details.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link

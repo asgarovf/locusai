@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     url: "https://locusai.dev/packages",
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };
@@ -43,20 +43,31 @@ interface NpmSearchResult {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Official scope + prefix for Locus packages. */
+const SCOPED_PREFIX = "@locusai/locus-";
+
+/**
+ * Extract the short user-facing name from a full npm package name.
+ *
+ * - `@locusai/locus-telegram` → `telegram`
+ * - `locus-telegram`          → `telegram`
+ * - `my-custom-pkg`           → `my-custom-pkg`
+ */
+function extractShortName(name: string): string {
+  if (name.startsWith(SCOPED_PREFIX)) return name.slice(SCOPED_PREFIX.length);
+  if (name.startsWith("locus-")) return name.slice("locus-".length);
+  return name;
+}
+
 /**
  * Convert an npm package name to the short `locus install <name>` form.
  *
- * - `locus-telegram`  → `locus install telegram`
- * - `@org/locus-pkg`  → `locus install @org/locus-pkg`  (scoped, unchanged)
+ * - `@locusai/locus-telegram` → `locus install telegram`
+ * - `locus-telegram`          → `locus install telegram`
+ * - `@org/locus-pkg`          → `locus install @org/locus-pkg`  (non-locusai scope, unchanged)
  */
 function getInstallCommand(name: string): string {
-  if (name.startsWith("@")) {
-    return `locus install ${name}`;
-  }
-  if (name.startsWith("locus-")) {
-    return `locus install ${name.slice("locus-".length)}`;
-  }
-  return `locus install ${name}`;
+  return `locus install ${extractShortName(name)}`;
 }
 
 /**

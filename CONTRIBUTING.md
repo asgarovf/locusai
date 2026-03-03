@@ -5,8 +5,9 @@ Thank you for your interest in contributing to Locus! Locus is a GitHub-native A
 ## Repository Structure
 
 - `packages/cli`: The unified CLI entry point (`@locusai/cli`)
+- `packages/sdk`: SDK for building community packages (`@locusai/sdk`)
+- `packages/telegram`: Telegram integration package (`@locusai/locus-telegram`)
 - `packages/shared`: Shared types and utilities
-- `packages/vscode`: The VS Code extension
 - `apps/www`: The marketing and documentation website
 
 ## Local Development Setup
@@ -33,9 +34,14 @@ bun run simulate <command>
 bun run simulate init --dir /path/to/test-project
 ```
 
-### 4. Building the CLI Bundle
-If you modify the CLI or shared packages, rebuild:
+### 4. Building Packages
 ```bash
+# Build all packages (SDK, Telegram, CLI)
+bun run build:packages
+
+# Build individual packages
+bun run build:sdk
+bun run build:telegram
 bun run build:cli
 ```
 
@@ -58,6 +64,31 @@ bun run format
 # Run type checks
 bun run typecheck
 ```
+
+## Contributing a Community Package
+
+Community packages extend Locus with new integrations (Slack, Jira, Discord, etc.). All packages live inside this monorepo under `packages/` and are published to npm through our automated release pipeline.
+
+### Quick overview
+
+1. Create your package in `packages/<name>/`
+2. Follow the naming convention: `@locusai/locus-<name>`
+3. Use the `@locusai/sdk` for config, logging, and CLI invocation
+4. Test locally with `locus pkg <name>`
+5. Submit a pull request
+
+### Detailed guide
+
+See the **[Package Author Guide](./packages/sdk/PACKAGE_GUIDE.md)** for the complete walkthrough, including:
+- Package structure and required fields
+- `package.json` template with all required fields
+- SDK usage (config, invocation, logging)
+- Step-by-step instructions for creating a new package
+- Pre-submission checklist
+
+### Reference implementation
+
+The Telegram package (`packages/telegram/`) is the canonical example. Study it for naming, structure, build scripts, and README format.
 
 ## Submitting Changes
 

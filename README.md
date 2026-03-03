@@ -114,7 +114,7 @@ Agents re-execute tasks with PR review comments as context, updating code until 
 Claude and Codex use the same Docker-backed sandboxing layer. Locus syncs your workspace into sandbox execution while enforcing `.sandboxignore` exclusions to keep sensitive files controlled.
 
 ### Extensible packages
-Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk).
+Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk) and [submit a pull request](./packages/sdk/PACKAGE_GUIDE.md).
 
 ## CLI Reference
 
@@ -294,7 +294,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architectur
 |---------|-------------|
 | [`@locusai/cli`](./packages/cli) | Main CLI |
 | [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
+| [`@locusai/locus-telegram`](./packages/telegram) | Remote-control Locus via Telegram |
 | [`@locusai/www`](./apps/www) | Documentation website |
+
+Want to build a package? See the [Package Author Guide](./packages/sdk/PACKAGE_GUIDE.md) and submit a pull request.
 
 ## License
 

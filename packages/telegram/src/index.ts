@@ -15,7 +15,6 @@
  */
 
 import { createLogger } from "@locusai/sdk";
-import { createBot } from "./bot.js";
 import { loadTelegramConfig } from "./config.js";
 import {
   pm2Delete,
@@ -113,6 +112,7 @@ function handleLogs(args: string[]): void {
 
 async function handleBot(): Promise<void> {
   const config = loadTelegramConfig();
+  const { createBot } = await import("./bot.js");
   const bot = createBot(config);
 
   logger.info("Starting Telegram bot...");
