@@ -15,6 +15,8 @@ export interface LocusConfig {
   sprint: SprintConfig;
   logging: LoggingConfig;
   sandbox: SandboxConfig;
+  /** Community package configuration, keyed by package name. */
+  packages?: Record<string, Record<string, unknown>>;
 }
 
 export type AIProvider = "claude" | "codex";

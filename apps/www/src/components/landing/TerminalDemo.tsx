@@ -140,6 +140,7 @@ export function TerminalDemo() {
   // Drive the line-by-line animation from the `iteration` counter.
   // When `iteration` changes the effect re-runs, resets visibleLines to 0,
   // and starts a fresh interval — no recursive closure issues.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to reset the visible lines when the iteration changes
   useEffect(() => {
     setVisibleLines(0);
 

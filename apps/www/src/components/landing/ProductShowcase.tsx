@@ -197,8 +197,8 @@ export function ProductShowcase() {
           </h2>
           <p className="text-muted-foreground max-w-3xl mx-auto text-sm md:text-base leading-relaxed">
             Pick Claude or Codex, run in an isolated sandbox, execute with
-            built-in orchestration commands, and keep all state in
-            GitHub-native objects.
+            built-in orchestration commands, and keep all state in GitHub-native
+            objects.
           </p>
         </motion.div>
 

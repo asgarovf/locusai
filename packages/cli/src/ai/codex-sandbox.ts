@@ -194,8 +194,7 @@ export class SandboxedCodexRunner implements AgentRunner {
             resolve({
               success: false,
               output: rawOutput,
-              error:
-                errorOutput || `sandboxed codex exited with code ${code}`,
+              error: errorOutput || `sandboxed codex exited with code ${code}`,
               exitCode: code ?? 1,
             });
           }

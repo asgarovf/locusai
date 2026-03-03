@@ -15,7 +15,7 @@ const points = [
   {
     title: "Controlled and reproducible",
     description:
-      "Same sandbox configuration across all team members and CI. No more \"works on my machine\" for AI-assisted development.",
+      'Same sandbox configuration across all team members and CI. No more "works on my machine" for AI-assisted development.',
     icon: Workflow,
     color: "text-violet",
   },

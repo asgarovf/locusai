@@ -38,9 +38,7 @@ export function Hero({ version }: HeroProps) {
         </motion.p>
 
         <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] leading-[1.05] tracking-tight mb-5 max-w-4xl animate-hero-heading">
-          <span className="font-sans font-bold text-white">
-            Run AI agents
-          </span>
+          <span className="font-sans font-bold text-white">Run AI agents</span>
           <br />
           <span className="font-bold gradient-text-hero">
             in isolated Docker sandboxes.
@@ -53,8 +51,8 @@ export function Hero({ version }: HeroProps) {
           transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           className="text-base md:text-lg text-muted-foreground max-w-2xl mb-8 leading-relaxed"
         >
-          One CLI across Claude and Codex with full execution isolation,
-          unified context, and GitHub-native workflows.
+          One CLI across Claude and Codex with full execution isolation, unified
+          context, and GitHub-native workflows.
         </motion.p>
 
         <motion.div

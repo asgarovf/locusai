@@ -84,10 +84,8 @@ pids
 screenshots/
 
 # package builds
-packages/cli/bin/locus.js
-packages/cli/bin/locus.js.map
-packages/cli/bin/agent/
-packages/cli2/bin/
+**/bin/**
+**/dist/**
 
 # Locus
 .locus/config.json

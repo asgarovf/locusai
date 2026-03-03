@@ -83,4 +83,22 @@ export interface LocusConfig {
     /** Maximum total log size in MB before pruning. */
     maxTotalSizeMB: number;
   };
+  /**
+   * Community package configuration.
+   * Each key is the package name (e.g. `"telegram"`), and the value is an
+   * arbitrary config object owned by that package.
+   *
+   * @example
+   * ```json
+   * {
+   *   "packages": {
+   *     "telegram": {
+   *       "botToken": "123456:ABC...",
+   *       "chatIds": [12345678]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  packages?: Record<string, Record<string, unknown>>;
 }

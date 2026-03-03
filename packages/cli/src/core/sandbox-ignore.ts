@@ -18,6 +18,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  Stats,
   statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -166,7 +167,7 @@ function findIgnoredPaths(projectRoot: string, rules: IgnoreRule[]): string[] {
       if (SKIP_DIRS.has(name)) continue;
 
       const fullPath = join(dir, name);
-      let stat;
+      let stat: Stats | null = null;
       try {
         stat = statSync(fullPath);
       } catch {
@@ -212,7 +213,11 @@ export interface SandboxIgnoreBackup {
 }
 
 /** No-op backup returned when there's nothing to back up. */
-const NOOP_BACKUP: SandboxIgnoreBackup = { restore() {} };
+const NOOP_BACKUP: SandboxIgnoreBackup = {
+  restore() {
+    // no-op
+  },
+};
 
 /**
  * Back up host files that match `.sandboxignore` patterns to a temp directory.

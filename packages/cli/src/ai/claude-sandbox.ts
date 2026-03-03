@@ -156,8 +156,7 @@ export class SandboxedClaudeRunner implements AgentRunner {
             resolve({
               success: false,
               output,
-              error:
-                errorOutput || `sandboxed claude exited with code ${code}`,
+              error: errorOutput || `sandboxed claude exited with code ${code}`,
               exitCode: code ?? 1,
             });
           }

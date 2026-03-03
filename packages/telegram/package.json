@@ -1,0 +1,35 @@
+{
+  "name": "@locusai/locus-telegram",
+  "version": "0.21.6",
+  "description": "Remote-control Locus via Telegram with full CLI mapping, git operations, and PM2 management",
+  "type": "module",
+  "bin": {
+    "locus-telegram": "./bin/locus-telegram.js"
+  },
+  "locus": {
+    "displayName": "Telegram",
+    "description": "Remote-control your Locus agent from Telegram",
+    "commands": [
+      "telegram"
+    ],
+    "version": "0.1.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "@locusai/sdk": "workspace:*",
+    "grammy": "^1.35.0",
+    "pm2": "^6.0.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
