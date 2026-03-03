@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.16
+
+### Patch Changes
+
+- Fix Telegram available command list
+
 ## 0.21.15
 
 ### Patch Changes
