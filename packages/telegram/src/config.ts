@@ -2,8 +2,8 @@
  * Configuration for the Telegram bot, read from the Locus config system.
  *
  * Users configure via:
- *   locus config packages.telegram.botToken "123456:ABC..."
- *   locus config packages.telegram.chatIds "12345678,87654321"
+ *   locus config set packages.telegram.botToken "123456:ABC..."
+ *   locus config set packages.telegram.chatIds "12345678,87654321"
  */
 
 import { readLocusConfig } from "@locusai/sdk";
