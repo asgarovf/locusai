@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.21.12
+
+### Patch Changes
+
+- Remaining package resolution issues
+- Updated dependencies
+  - @locusai/sdk@0.21.12
+
 ## 0.21.11
 
 ### Patch Changes

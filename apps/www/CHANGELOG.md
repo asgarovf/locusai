@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.21.12
+
+### Patch Changes
+
+- Remaining package resolution issues
+
 ## 0.21.11
 
 ### Patch Changes
