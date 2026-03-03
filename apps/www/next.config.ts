@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests",
-              "connect-src 'self' https://*.locusai.dev https://*.google-analytics.com https://analytics.google.com https://*.whelp.co wss://*.whelp.co ws://*.whelp.co",
+              "connect-src 'self' https://*.locusai.dev https://*.google-analytics.com https://analytics.google.com https://*.whelp.co wss://*.whelp.co ws://*.whelp.co https://registry.npmjs.org https://api.npmjs.org",
             ].join("; "),
           },
           {

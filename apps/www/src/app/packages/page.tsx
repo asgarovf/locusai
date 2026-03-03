@@ -88,7 +88,12 @@ async function fetchMarketplacePackages(): Promise<PackageData[]> {
       { next: { revalidate: 3600 } }
     );
 
-    if (!searchRes.ok) return [];
+    if (!searchRes.ok) {
+      console.error(
+        `[packages] npm search failed: ${searchRes.status} ${searchRes.statusText}`
+      );
+      return [];
+    }
 
     const searchData: NpmSearchResult =
       (await searchRes.json()) as NpmSearchResult;
@@ -159,7 +164,8 @@ async function fetchMarketplacePackages(): Promise<PackageData[]> {
     );
 
     return packages;
-  } catch {
+  } catch (error) {
+    console.error("[packages] Failed to fetch marketplace packages:", error);
     return [];
   }
 }
