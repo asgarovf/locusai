@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.21.11
+
+### Patch Changes
+
+- Package resolution fixes
+
 ## 0.21.10
 
 ### Patch Changes
