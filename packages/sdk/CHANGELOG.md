@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.21.15
+
+### Patch Changes
+
+- Fix Telegram pacakge installation guide commands
+
 ## 0.21.14
 
 ### Patch Changes
