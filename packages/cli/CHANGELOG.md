@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.13
+
+### Patch Changes
+
+- PM2 resolution
+
 ## 0.21.12
 
 ### Patch Changes
