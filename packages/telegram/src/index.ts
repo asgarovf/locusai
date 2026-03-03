@@ -159,8 +159,8 @@ function printHelp(): void {
     packages.telegram.chatIds     Comma-separated chat IDs or JSON array
 
   Setup:
-    locus config packages.telegram.botToken "123456:ABC-DEF..."
-    locus config packages.telegram.chatIds "12345678"
+    locus config set packages.telegram.botToken "123456:ABC-DEF..."
+    locus config set packages.telegram.chatIds "12345678"
 
   Examples:
     locus pkg telegram start      # Start in background

@@ -20,7 +20,7 @@ export function loadTelegramConfig(): TelegramConfig {
   const botToken = pkg?.botToken;
   if (!botToken || typeof botToken !== "string") {
     throw new Error(
-      'Telegram bot token not configured. Run:\n  locus config packages.telegram.botToken "<your-token>"\n\nGet a token from @BotFather on Telegram.'
+      'Telegram bot token not configured. Run:\n  locus config set packages.telegram.botToken "<your-token>"\n\nGet a token from @BotFather on Telegram.'
     );
   }
 
