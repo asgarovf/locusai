@@ -5,13 +5,26 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PROCESS_NAME = "locus-telegram";
 
 function getPm2Bin(): string {
-  // Try local node_modules first, then global
+  // Try pm2 in the sibling node_modules/.bin/ (installed as a dependency)
+  try {
+    const currentFile = fileURLToPath(import.meta.url);
+    const packageRoot = dirname(dirname(currentFile));
+    // packageRoot = .../node_modules/@locusai/locus-telegram
+    // .bin lives at  .../node_modules/.bin
+    const localPm2 = join(packageRoot, "..", "..", ".bin", "pm2");
+    if (existsSync(localPm2)) return localPm2;
+  } catch {
+    // fall through
+  }
+
+  // Try global pm2
   try {
     const result = execSync("which pm2", {
       encoding: "utf-8",
