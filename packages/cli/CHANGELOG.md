@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.10
+
+### Patch Changes
+
+- Package resolution
+
 ## 0.21.9
 
 ### Patch Changes
