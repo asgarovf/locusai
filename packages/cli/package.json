@@ -1,6 +1,6 @@
 {
   "name": "@locusai/cli",
-  "version": "0.21.6",
+  "version": "0.21.7",
   "description": "GitHub-native AI engineering assistant",
   "type": "module",
   "bin": {

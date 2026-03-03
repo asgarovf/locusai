@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-telegram",
-  "version": "0.21.6",
+  "version": "0.21.7",
   "description": "Remote-control Locus via Telegram with full CLI mapping, git operations, and PM2 management",
   "type": "module",
   "bin": {
