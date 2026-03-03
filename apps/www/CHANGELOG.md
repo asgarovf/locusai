@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.21.14
+
+### Patch Changes
+
+- Punycode deprecation warning
+
 ## 0.21.13
 
 ### Patch Changes

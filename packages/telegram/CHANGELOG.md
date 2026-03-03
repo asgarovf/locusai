@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.21.14
+
+### Patch Changes
+
+- Punycode deprecation warning
+- Updated dependencies
+  - @locusai/sdk@0.21.14
+
 ## 0.21.13
 
 ### Patch Changes
