@@ -1,5 +1,16 @@
 # @locusai/locus-telegram
 
+## 0.22.0
+
+### Minor Changes
+
+- Voice command
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.22.0
+
 ## 0.21.17
 
 ### Patch Changes

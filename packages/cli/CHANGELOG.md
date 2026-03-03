@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.22.0
+
+### Minor Changes
+
+- Voice command
+
 ## 0.21.17
 
 ### Patch Changes
