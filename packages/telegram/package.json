@@ -6,6 +6,12 @@
   "bin": {
     "locus-telegram": "./bin/locus-telegram.js"
   },
+  "files": [
+    "bin",
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "locus": {
     "displayName": "Telegram",
     "description": "Remote-control your Locus agent from Telegram",

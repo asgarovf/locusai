@@ -28,7 +28,7 @@ Multiple chat IDs can be comma-separated: `"12345678,87654321"`
 ### 4. Install & Start
 
 ```sh
-locus install locus-telegram
+locus install telegram
 locus pkg telegram start
 ```
 
