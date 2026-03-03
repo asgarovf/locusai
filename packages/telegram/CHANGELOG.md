@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.21.17
+
+### Patch Changes
+
+- Fix REPL commands on telegram
+- Updated dependencies
+  - @locusai/sdk@0.21.17
+
 ## 0.21.16
 
 ### Patch Changes

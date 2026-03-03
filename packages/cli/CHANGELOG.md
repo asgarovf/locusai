@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.21.17
+
+### Patch Changes
+
+- Fix REPL commands on telegram
+
 ## 0.21.16
 
 ### Patch Changes
