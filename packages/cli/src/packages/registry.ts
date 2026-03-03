@@ -55,6 +55,9 @@ export function getRegistryPath(): string {
 /**
  * Reads and parses `registry.json`.
  * Returns an empty registry if the file does not exist or is malformed.
+ *
+ * Legacy entries (unscoped package names not under `@locusai/`) are
+ * automatically pruned on load so stale packages never show up.
  */
 export function loadRegistry(): LocusPackageRegistry {
   const registryPath = getRegistryPath();
@@ -72,7 +75,32 @@ export function loadRegistry(): LocusPackageRegistry {
       "packages" in parsed &&
       typeof (parsed as Record<string, unknown>).packages === "object"
     ) {
-      return parsed as LocusPackageRegistry;
+      const registry = parsed as LocusPackageRegistry;
+
+      // Prune legacy unscoped entries (e.g. "locus-demo") that predate the
+      // @locusai/ naming convention.  Mutating in place is fine — the
+      // caller will write back via saveRegistry() if anything meaningful
+      // changes, or the stale keys are simply ignored.
+      let pruned = false;
+      for (const key of Object.keys(registry.packages)) {
+        if (!key.startsWith(PACKAGE_SCOPE)) {
+          delete registry.packages[key];
+          pruned = true;
+        }
+      }
+
+      // Persist the cleanup so it only runs once.
+      if (pruned) {
+        const tmp = `${registryPath}.tmp`;
+        writeFileSync(
+          tmp,
+          `${JSON.stringify(registry, null, 2)}\n`,
+          "utf-8"
+        );
+        renameSync(tmp, registryPath);
+      }
+
+      return registry;
     }
     return { packages: {} };
   } catch {

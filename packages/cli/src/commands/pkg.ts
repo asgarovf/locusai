@@ -14,6 +14,8 @@ import {
   extractShortName,
   loadRegistry,
   normalizePackageName,
+  resolvePackageBinary,
+  saveRegistry,
 } from "../packages/registry.js";
 
 // ─── List installed packages ──────────────────────────────────────────────────
@@ -133,21 +135,31 @@ export async function pkgCommand(
     return;
   }
 
-  // Guard against the binary having been manually deleted after install
-  const binaryPath = entry.binaryPath;
+  // Guard against the binary having been manually deleted after install.
+  // If the stored path is stale, try to re-resolve from node_modules/.bin/
+  // so that a reinstall isn't required just because the path changed.
+  let binaryPath = entry.binaryPath;
 
   if (!binaryPath || !existsSync(binaryPath)) {
-    process.stderr.write(
-      `${red("✗")} Binary for ${bold(packageName)} not found on disk.\n`
-    );
-    if (binaryPath) {
-      process.stderr.write(`  Expected: ${dim(binaryPath)}\n`);
+    const resolved = resolvePackageBinary(packageName);
+    if (resolved) {
+      binaryPath = resolved;
+      // Persist the corrected path so subsequent runs are instant.
+      entry.binaryPath = resolved;
+      saveRegistry(registry);
+    } else {
+      process.stderr.write(
+        `${red("✗")} Binary for ${bold(packageName)} not found on disk.\n`
+      );
+      if (binaryPath) {
+        process.stderr.write(`  Expected: ${dim(binaryPath)}\n`);
+      }
+      process.stderr.write(
+        `  Try reinstalling: ${bold(`locus install ${packageInput} --upgrade`)}\n`
+      );
+      process.exit(1);
+      return;
     }
-    process.stderr.write(
-      `  Try reinstalling: ${bold(`locus install ${packageInput} --upgrade`)}\n`
-    );
-    process.exit(1);
-    return;
   }
 
   // Forward all remaining args to the binary (args[1..])

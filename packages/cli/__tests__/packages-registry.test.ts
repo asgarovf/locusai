@@ -130,6 +130,49 @@ describe("loadRegistry", () => {
     expect(registry).toEqual({ packages: {} });
   });
 
+  it("prunes legacy unscoped entries on load", () => {
+    const registryPath = getRegistryPath();
+    const data = {
+      packages: {
+        "locus-demo": {
+          name: "locus-demo",
+          version: "0.1.0",
+          installedAt: "2024-06-01T12:00:00.000Z",
+          binaryPath: "/some/path/locus-demo",
+          manifest: {
+            displayName: "Demo",
+            description: "A demo package",
+            commands: ["demo"],
+            version: "0.1.0",
+          },
+        },
+        "@locusai/locus-telegram": {
+          name: "@locusai/locus-telegram",
+          version: "1.0.0",
+          installedAt: "2024-01-01T00:00:00.000Z",
+          binaryPath: "/fake/bin/locus-telegram",
+          manifest: {
+            displayName: "Telegram",
+            description: "Remote control via Telegram",
+            commands: ["telegram"],
+            version: "1.0.0",
+          },
+        },
+      },
+    };
+    writeFileSync(registryPath, JSON.stringify(data));
+    const registry = loadRegistry();
+    // Legacy entry should be gone
+    expect(registry.packages["locus-demo"]).toBeUndefined();
+    // Scoped entry should remain
+    expect(registry.packages["@locusai/locus-telegram"]).toBeDefined();
+    // Pruning should have been persisted to disk
+    const reloaded = JSON.parse(readFileSync(registryPath, "utf-8")) as {
+      packages: Record<string, unknown>;
+    };
+    expect(reloaded.packages["locus-demo"]).toBeUndefined();
+  });
+
   it("parses a valid registry file", () => {
     const registryPath = getRegistryPath();
     const data = {
