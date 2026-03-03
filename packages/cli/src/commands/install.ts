@@ -238,9 +238,7 @@ export async function installCommand(
     process.stderr.write(`  Binary:  ${dim(binaryPath)}\n`);
   }
 
-  process.stderr.write(
-    `  Run: ${bold(`locus pkg ${shortName} --help`)}\n`
-  );
+  process.stderr.write(`  Run: ${bold(`locus pkg ${shortName} --help`)}\n`);
 
   process.stderr.write("\n");
 }

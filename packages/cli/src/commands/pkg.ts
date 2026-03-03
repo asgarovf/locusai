@@ -53,9 +53,7 @@ export function listInstalledPackages(): void {
       );
     }
 
-    process.stderr.write(
-      `  Run: ${bold(`locus pkg ${shortName} --help`)}\n`
-    );
+    process.stderr.write(`  Run: ${bold(`locus pkg ${shortName} --help`)}\n`);
     process.stderr.write("\n");
   }
 }

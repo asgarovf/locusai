@@ -8,7 +8,6 @@
   },
   "files": [
     "bin",
-    "dist",
     "package.json",
     "README.md"
   ],
@@ -21,7 +20,7 @@
     "version": "0.1.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "bun build src/cli.ts --outfile bin/locus-telegram.js --target node",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write ."

@@ -12,11 +12,10 @@
       "!**/dist",
       "!**/build",
       "!**/out",
-      "!**/packages/cli/bin",
+      "!**/*/bin",
       "!**/coverage",
       "!**/*.min.js",
-      "!**/*.min.css",
-      "!**/packages/vscode/dist"
+      "!**/*.min.css"
     ]
   },
   "formatter": {

@@ -92,11 +92,7 @@ export function loadRegistry(): LocusPackageRegistry {
       // Persist the cleanup so it only runs once.
       if (pruned) {
         const tmp = `${registryPath}.tmp`;
-        writeFileSync(
-          tmp,
-          `${JSON.stringify(registry, null, 2)}\n`,
-          "utf-8"
-        );
+        writeFileSync(tmp, `${JSON.stringify(registry, null, 2)}\n`, "utf-8");
         renameSync(tmp, registryPath);
       }
 

@@ -275,7 +275,6 @@ describe("resolvePackageBinary", () => {
     const resolved = resolvePackageBinary("@locusai/locus-telegram");
     expect(resolved).toBe(binPath);
   });
-
 });
 
 // ─── normalizePackageName ─────────────────────────────────────────────────────
