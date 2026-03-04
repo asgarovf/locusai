@@ -282,9 +282,11 @@ export async function displaySandboxWarning(
  * mount the project at a different path — this function probes the container
  * to find it.
  *
- * Strategy: `docker sandbox exec <name> pwd` returns the container's default
- * working directory, which Docker Desktop sets to the project mount point.
- * If it matches the host path, no translation is needed (returns null).
+ * Strategy:
+ * 1. Fast path: check if the host path exists inside the container (`test -d`).
+ *    If it does, paths match (macOS/Linux) — return null.
+ * 2. Probe: search for a `.git` directory as a reliable project marker to
+ *    locate the actual mount point (WSL/Windows).
  */
 export function detectContainerWorkdir(
   sandboxName: string,
@@ -292,35 +294,44 @@ export function detectContainerWorkdir(
 ): string | null {
   const log = getLogger();
 
-  // Use pwd to get the container's default working directory.
-  // Docker sandbox sets this to the project mount point.
+  // Fast path: check if the host path exists inside the container.
+  // On macOS/Linux, Docker Desktop mounts at the same absolute path.
   try {
-    const containerPath = execSync(
-      `docker sandbox exec ${sandboxName} pwd`,
-      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    execSync(
+      `docker sandbox exec ${sandboxName} test -d ${JSON.stringify(hostProjectRoot)}`,
+      { stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    );
+    log.debug("Container workdir matches host path", { hostProjectRoot });
+    return null;
+  } catch {
+    log.debug(
+      "Host path not found in container, probing for mount point..."
+    );
+  }
+
+  // WSL/Windows: host path doesn't exist in container.
+  // Find the project by locating a .git directory (reliable project marker).
+  try {
+    const gitDir = execSync(
+      `docker sandbox exec ${sandboxName} sh -c "find / -maxdepth 4 -name .git -type d ! -path '*/proc/*' ! -path '*/sys/*' 2>/dev/null | head -1"`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 10000 }
     ).trim();
 
-    if (!containerPath) {
-      log.debug("Container pwd returned empty result");
-      return null;
+    if (gitDir) {
+      const containerPath = gitDir.replace(/\/\.git$/, "") || "/";
+      log.debug("Detected container workdir from .git marker", {
+        hostProjectRoot,
+        containerWorkdir: containerPath,
+      });
+      return containerPath;
     }
-
-    if (containerPath === hostProjectRoot) {
-      log.debug("Container workdir matches host path", { hostProjectRoot });
-      return null;
-    }
-
-    log.debug("Detected container workdir differs from host", {
-      hostProjectRoot,
-      containerWorkdir: containerPath,
-    });
-    return containerPath;
   } catch (err) {
-    log.debug("Container workdir detection via pwd failed", {
+    log.debug("Container workdir detection via .git probe failed", {
       error: err instanceof Error ? err.message : String(err),
     });
   }
 
+  log.debug("Could not detect container workdir, falling back to host path");
   return null;
 }
 
