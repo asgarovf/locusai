@@ -249,6 +249,7 @@ ${bold("Commands:")}
   ${cyan("status")}            Dashboard view of current state
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
+  ${cyan("create")} ${dim("<name>")}       Scaffold a new community package
   ${cyan("install")}           Install a community package
   ${cyan("uninstall")}         Remove an installed package
   ${cyan("packages")}          Manage installed packages (list, outdated)
@@ -438,6 +439,14 @@ async function main(): Promise<void> {
   if (command === "init") {
     const { initCommand } = await import("./commands/init.js");
     await initCommand(cwd);
+    logger.destroy();
+    return;
+  }
+
+  if (command === "create") {
+    const { createCommand } = await import("./commands/create.js");
+    const createArgs = parsed.flags.help ? ["help"] : parsed.args;
+    await createCommand(createArgs);
     logger.destroy();
     return;
   }

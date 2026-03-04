@@ -23,7 +23,7 @@ export const DEFAULT_CONFIG: LocusConfig = {
   },
   ai: {
     provider: "claude",
-    model: "claude-sonnet-4-6",
+    model: "opus",
   },
   agent: {
     maxParallel: 3,

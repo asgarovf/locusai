@@ -212,35 +212,62 @@ Output uses the same prefix symbols as the Locus CLI (`●`, `⚠`, `✗`, `⋯`
 
 ## Step-by-step: adding a new package
 
-### 1. Create the package directory
+### Quick start with `locus create`
+
+The fastest way to scaffold a new package:
+
+```sh
+locus create <name>
+# or with a custom description:
+locus create <name> --description "My awesome integration"
+```
+
+This generates the full directory structure, `package.json`, `tsconfig.json`,
+entry points, and README — all with correct naming and configuration.
+
+After scaffolding, skip to [step 6](#6-build-and-test-locally) below.
+
+### Manual setup (if not using `locus create`)
+
+#### 1. Create the package directory
 
 ```sh
 mkdir -p packages/<name>/src packages/<name>/bin
 ```
 
-### 2. Create `package.json`
+#### 2. Create `package.json`
 
 Use the template above. Set the `name` to `@locusai/locus-<name>` and fill in
 the `locus` manifest.
 
-### 3. Create `tsconfig.json`
+#### 3. Create `tsconfig.json`
 
 ```json
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./bin",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
     "rootDir": "./src"
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "bin"]
 }
 ```
 
-### 4. Write your source code
+#### 4. Write your source code
 
 Create `src/cli.ts` as the entry point:
 
 ```ts
+#!/usr/bin/env node
+
 import { main } from "./index.js";
 
 main(process.argv.slice(2)).catch((error) => {
@@ -263,7 +290,7 @@ export async function main(args: string[]): Promise<void> {
 }
 ```
 
-### 5. Add build script to root `package.json`
+#### 5. Add build script to root `package.json`
 
 Add your package's build to the root `build:packages` script:
 
