@@ -206,11 +206,7 @@ function printHelp(): void {
 `;
 }
 
-function generateReadme(
-  name: string,
-  displayName: string,
-  description: string
-): string {
+function generateReadme(name: string, description: string): string {
   return `# @locusai/locus-${name}
 
 ${description}
@@ -395,7 +391,7 @@ export async function createCommand(args: string[]): Promise<void> {
 
   writeFileSync(
     join(packagesDir, "README.md"),
-    generateReadme(name, displayName, description),
+    generateReadme(name, description),
     "utf-8"
   );
   process.stderr.write(`${green("✓")} Generated README.md\n`);
