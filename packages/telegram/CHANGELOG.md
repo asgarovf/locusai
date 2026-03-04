@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.22.1
+
+### Patch Changes
+
+- Create command to prepare package templates
+- Updated dependencies
+  - @locusai/sdk@0.22.1
+
 ## 0.22.0
 
 ### Minor Changes

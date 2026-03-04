@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.22.1
+
+### Patch Changes
+
+- Create command to prepare package templates
+
 ## 0.22.0
 
 ### Minor Changes
