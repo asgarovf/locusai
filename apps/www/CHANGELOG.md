@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.22.8
+
+### Patch Changes
+
+- Package symlink generations on sandbox
+
 ## 0.22.7
 
 ### Patch Changes

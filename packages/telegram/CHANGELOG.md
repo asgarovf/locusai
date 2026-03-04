@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.22.8
+
+### Patch Changes
+
+- Package symlink generations on sandbox
+- Updated dependencies
+  - @locusai/sdk@0.22.8
+
 ## 0.22.7
 
 ### Patch Changes
