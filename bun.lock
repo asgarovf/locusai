@@ -22,7 +22,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.22.0",
+      "version": "0.22.4",
       "dependencies": {
         "@next/third-parties": "^16.1.4",
         "@radix-ui/react-slot": "^1.2.4",
@@ -48,28 +48,28 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.22.0",
+      "version": "0.22.4",
       "bin": {
         "locus": "./bin/locus.js",
       },
       "devDependencies": {
-        "@locusai/sdk": "^0.22.0",
+        "@locusai/sdk": "^0.22.4",
         "@types/bun": "latest",
         "typescript": "^5.8.3",
       },
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.22.0",
+      "version": "0.22.4",
     },
     "packages/telegram": {
       "name": "@locusai/locus-telegram",
-      "version": "0.22.0",
+      "version": "0.22.4",
       "bin": {
         "locus-telegram": "./bin/locus-telegram.js",
       },
       "dependencies": {
-        "@locusai/sdk": "^0.22.0",
+        "@locusai/sdk": "^0.22.4",
         "grammy": "^1.35.0",
         "pm2": "^6.0.5",
       },

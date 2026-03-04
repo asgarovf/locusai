@@ -278,15 +278,17 @@ export async function displaySandboxWarning(
  * Detect the actual workspace path inside a Docker sandbox container.
  *
  * On macOS/Linux the host path is mounted at the same absolute path, so this
- * returns `null` (no translation needed). On Windows/WSL, Docker Desktop may
- * mount the project at a different path — this function probes the container
- * to find it.
+ * returns `null` (no translation needed). On Windows/WSL, Docker Desktop
+ * translates the WSL path to a Windows UNC path (e.g.
+ * `\\wsl.localhost\Ubuntu-24.04\home\user\project`) and may mount the project
+ * at a deeply nested container path. This function probes the container to
+ * find the actual mount point.
  *
  * Strategy:
- * 1. Fast path: check if the host path exists inside the container (`test -d`).
- *    If it does, paths match (macOS/Linux) — return null.
- * 2. Probe: search for a `.git` directory as a reliable project marker to
- *    locate the actual mount point (WSL/Windows).
+ * 1. Fast path: `test -d <hostPath>` — if it exists, paths match (macOS/Linux).
+ * 2. Mount table: parse `/proc/mounts` for non-system mount points and check
+ *    each one for project markers (`.git`, `package.json`).
+ * 3. Deep find: search for `.git` at depth up to 10 as a last resort.
  */
 export function detectContainerWorkdir(
   sandboxName: string,
@@ -304,29 +306,72 @@ export function detectContainerWorkdir(
     log.debug("Container workdir matches host path", { hostProjectRoot });
     return null;
   } catch {
-    log.debug(
-      "Host path not found in container, probing for mount point..."
-    );
+    log.debug("Host path not found in container, probing for mount point...");
   }
 
   // WSL/Windows: host path doesn't exist in container.
-  // Find the project by locating a .git directory (reliable project marker).
+  // Strategy 1: Inspect /proc/mounts to find non-system mount points,
+  // then check each one for project markers.
+  try {
+    const raw = execSync(
+      `docker sandbox exec ${sandboxName} cat /proc/mounts`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    ).trim();
+
+    if (raw) {
+      const systemPrefixes = ["/proc", "/sys", "/dev"];
+      const candidates = raw
+        .split("\n")
+        .map((line) => {
+          const fields = line.split(" ");
+          return fields[1]; // mount point is the second field
+        })
+        .filter(
+          (mp): mp is string =>
+            !!mp &&
+            mp !== "/" &&
+            !systemPrefixes.some((p) => mp === p || mp.startsWith(`${p}/`))
+        );
+
+      for (const candidate of candidates) {
+        try {
+          execSync(
+            `docker sandbox exec ${sandboxName} sh -c "test -d ${JSON.stringify(candidate + "/.git")} || test -f ${JSON.stringify(candidate + "/package.json")}"`,
+            { stdio: ["pipe", "pipe", "pipe"], timeout: 3000 }
+          );
+          log.debug("Detected container workdir from mount table", {
+            hostProjectRoot,
+            containerWorkdir: candidate,
+          });
+          return candidate;
+        } catch {
+          // Not a project mount, try next
+        }
+      }
+    }
+  } catch (err) {
+    log.debug("Mount table probe failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  // Strategy 2: Deep find for .git directory (handles exotic mount points).
   try {
     const gitDir = execSync(
-      `docker sandbox exec ${sandboxName} sh -c "find / -maxdepth 4 -name .git -type d ! -path '*/proc/*' ! -path '*/sys/*' 2>/dev/null | head -1"`,
-      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 10000 }
+      `docker sandbox exec ${sandboxName} sh -c "find / -maxdepth 10 -name .git -type d ! -path '*/proc/*' ! -path '*/sys/*' ! -path '*/dev/*' ! -path '*/node_modules/*' 2>/dev/null | head -1"`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 15000 }
     ).trim();
 
     if (gitDir) {
       const containerPath = gitDir.replace(/\/\.git$/, "") || "/";
-      log.debug("Detected container workdir from .git marker", {
+      log.debug("Detected container workdir from .git marker (deep find)", {
         hostProjectRoot,
         containerWorkdir: containerPath,
       });
       return containerPath;
     }
   } catch (err) {
-    log.debug("Container workdir detection via .git probe failed", {
+    log.debug("Container workdir detection via deep find failed", {
       error: err instanceof Error ? err.message : String(err),
     });
   }
