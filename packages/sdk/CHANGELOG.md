@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.22.9
+
+### Patch Changes
+
+- WSL workdir path detection
+
 ## 0.22.8
 
 ### Patch Changes
