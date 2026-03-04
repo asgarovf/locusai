@@ -203,7 +203,8 @@ async function handleCreate(projectRoot: string): Promise<void> {
     `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
   );
 
-  // Detect container workspace path (differs from host on WSL/Windows)
+  // Detect container workspace path (differs from host on WSL/Windows).
+  // Must happen before enforceSandboxIgnore and runSandboxSetup.
   if (!config.sandbox.containerWorkdir) {
     const containerWorkdir = detectContainerWorkdir(name, projectRoot);
     if (containerWorkdir) {
@@ -214,13 +215,22 @@ async function handleCreate(projectRoot: string): Promise<void> {
     }
   }
 
+  const workdir = config.sandbox.containerWorkdir ?? projectRoot;
+
+  // Enforce sandbox-ignore with the correct container path
+  const backup = backupIgnoredFiles(projectRoot);
+  try {
+    await enforceSandboxIgnore(name, projectRoot, config.sandbox.containerWorkdir);
+  } finally {
+    backup.restore();
+  }
+
   readySandboxes[provider] = name;
   config.sandbox.enabled = true;
   config.sandbox.providers = readySandboxes;
   saveConfig(projectRoot, config);
 
   // Install project dependencies in the newly created sandbox
-  const workdir = config.sandbox.containerWorkdir ?? projectRoot;
   await runSandboxSetup(name, projectRoot, workdir);
 
   process.stderr.write(
@@ -887,8 +897,7 @@ function runInteractiveCommand(
 async function createProviderSandbox(
   provider: AIProvider,
   sandboxName: string,
-  projectRoot: string,
-  containerWorkdir?: string
+  projectRoot: string
 ): Promise<boolean> {
   try {
     execSync(
@@ -910,12 +919,6 @@ async function createProviderSandbox(
     await ensureCodexInSandbox(sandboxName);
   }
 
-  const backup = backupIgnoredFiles(projectRoot);
-  try {
-    await enforceSandboxIgnore(sandboxName, projectRoot, containerWorkdir);
-  } finally {
-    backup.restore();
-  }
   return true;
 }
 
