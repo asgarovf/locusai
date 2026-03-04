@@ -703,12 +703,16 @@ function detectPackageManager(projectRoot: string): PackageManager {
   return "npm";
 }
 
-function getInstallCommand(pm: PackageManager): string[] {
+function getInstallCommand(pm: PackageManager, noSymlinks?: boolean): string[] {
   // No --frozen-lockfile: the sandbox runs Linux while the host lockfile
   // reflects macOS binaries, so platform-specific deps must be re-resolved.
   switch (pm) {
     case "bun":
-      return ["bun", "install"];
+      // On WSL, Docker bind mounts don't support symlinks (ENOSYS).
+      // Use --backend=copyfile to avoid symlink creation.
+      return noSymlinks
+        ? ["bun", "install", "--backend=copyfile"]
+        : ["bun", "install"];
     case "yarn":
       return ["yarn", "install"];
     case "pnpm":
@@ -736,7 +740,7 @@ async function runSandboxSetup(
       await ensurePackageManagerInSandbox(sandboxName, pm);
     }
 
-    const installCmd = getInstallCommand(pm);
+    const installCmd = getInstallCommand(pm, !!containerWorkdir);
 
     process.stderr.write(
       `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
