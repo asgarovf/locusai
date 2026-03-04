@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.22.7
+
+### Patch Changes
+
+- Attempt fixing WSL package installations
+
 ## 0.22.6
 
 ### Patch Changes
