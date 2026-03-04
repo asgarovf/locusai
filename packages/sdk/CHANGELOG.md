@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.22.3
+
+### Patch Changes
+
+- Fix calling detectContainerWorkdir
+
 ## 0.22.2
 
 ### Patch Changes
