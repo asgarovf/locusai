@@ -220,7 +220,11 @@ async function handleCreate(projectRoot: string): Promise<void> {
   // Enforce sandbox-ignore with the correct container path
   const backup = backupIgnoredFiles(projectRoot);
   try {
-    await enforceSandboxIgnore(name, projectRoot, config.sandbox.containerWorkdir);
+    await enforceSandboxIgnore(
+      name,
+      projectRoot,
+      config.sandbox.containerWorkdir
+    );
   } finally {
     backup.restore();
   }
@@ -288,7 +292,11 @@ async function handleAgentLogin(
     child.on("close", async (code) => {
       const backup = backupIgnoredFiles(projectRoot);
       try {
-        await enforceSandboxIgnore(sandboxName, projectRoot, config.sandbox.containerWorkdir);
+        await enforceSandboxIgnore(
+          sandboxName,
+          projectRoot,
+          config.sandbox.containerWorkdir
+        );
       } finally {
         backup.restore();
       }
@@ -703,16 +711,12 @@ function detectPackageManager(projectRoot: string): PackageManager {
   return "npm";
 }
 
-function getInstallCommand(pm: PackageManager, noSymlinks?: boolean): string[] {
+function getInstallCommand(pm: PackageManager): string[] {
   // No --frozen-lockfile: the sandbox runs Linux while the host lockfile
   // reflects macOS binaries, so platform-specific deps must be re-resolved.
   switch (pm) {
     case "bun":
-      // On WSL, Docker bind mounts don't support symlinks (ENOSYS).
-      // Use --backend=copyfile to avoid symlink creation.
-      return noSymlinks
-        ? ["bun", "install", "--backend=copyfile"]
-        : ["bun", "install"];
+      return ["bun", "install"];
     case "yarn":
       return ["yarn", "install"];
     case "pnpm":
@@ -720,6 +724,69 @@ function getInstallCommand(pm: PackageManager, noSymlinks?: boolean): string[] {
     case "npm":
       return ["npm", "install"];
   }
+}
+
+/**
+ * Build a shell script that installs dependencies on the container's native
+ * filesystem (which supports symlinks), then copies the resulting node_modules
+ * back to the bind-mounted project directory with all symlinks dereferenced.
+ *
+ * This is needed on WSL where Docker bind mounts don't support symlinks at all
+ * (ENOSYS). The --backend=copyfile flag only controls file copying strategy but
+ * package managers still create symlinks for .bin entries, hoisted packages, and
+ * workspace links — all of which fail with ENOSYS on WSL bind mounts.
+ */
+function buildWSLInstallScript(workdir: string, pm: PackageManager): string {
+  const installCmd = getInstallCommand(pm).join(" ");
+
+  // The script:
+  // 1. Copies package manifests + lockfiles to a temp dir on native filesystem
+  // 2. Runs the package manager install there (symlinks work on native fs)
+  // 3. Copies all resulting node_modules back to the bind mount using cp -rL
+  //    which dereferences symlinks into regular files/directories
+  // 4. Cleans up the temp dir
+  return [
+    "set -e",
+    'TMPDIR="/tmp/locus-deps-install"',
+    `WORKDIR="${workdir}"`,
+    "",
+    "# Clean previous attempt",
+    'rm -rf "$TMPDIR"',
+    'mkdir -p "$TMPDIR"',
+    'cd "$WORKDIR"',
+    "",
+    "# Copy all package.json files (preserving workspace directory structure)",
+    'find . -name package.json -not -path "*/node_modules/*" -not -path "./.git/*" | while read f; do',
+    '  mkdir -p "$TMPDIR/$(dirname "$f")"',
+    '  cp "$f" "$TMPDIR/$f"',
+    "done",
+    "",
+    "# Copy lockfiles and config files that affect installation",
+    "for lf in bun.lock bun.lockb yarn.lock pnpm-lock.yaml package-lock.json; do",
+    '  [ -f "$WORKDIR/$lf" ] && cp "$WORKDIR/$lf" "$TMPDIR/$lf" || true',
+    "done",
+    "for cf in bunfig.toml .npmrc .yarnrc .yarnrc.yml .pnpmfile.cjs pnpm-workspace.yaml; do",
+    '  [ -f "$WORKDIR/$cf" ] && cp "$WORKDIR/$cf" "$TMPDIR/$cf" || true',
+    "done",
+    "",
+    "# Install on native filesystem (symlinks work here)",
+    'cd "$TMPDIR"',
+    `${installCmd}`,
+    "",
+    "# Copy node_modules back to bind mount, dereferencing all symlinks.",
+    "# -L follows symlinks so they become regular files/dirs on the bind mount.",
+    "# maxdepth 3 covers root + workspace packages (e.g. packages/foo/node_modules)",
+    'find "$TMPDIR" -maxdepth 3 -name node_modules -type d | while read nm; do',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: Ignoring the raw commands
+    '  rel="${nm#$TMPDIR/}"',
+    '  dest="$WORKDIR/$rel"',
+    '  rm -rf "$dest"',
+    '  cp -rL "$nm" "$dest" 2>/dev/null || cp -r "$nm" "$dest"',
+    "done",
+    "",
+    "# Cleanup",
+    'rm -rf "$TMPDIR"',
+  ].join("\n");
 }
 
 async function runSandboxSetup(
@@ -740,20 +807,42 @@ async function runSandboxSetup(
       await ensurePackageManagerInSandbox(sandboxName, pm);
     }
 
-    const installCmd = getInstallCommand(pm, !!containerWorkdir);
+    let installOk: boolean;
 
-    process.stderr.write(
-      `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
-    );
+    if (containerWorkdir) {
+      // WSL mode: install on native filesystem then copy node_modules back
+      // with symlinks dereferenced. Docker bind mounts on WSL don't support
+      // symlinks at all (ENOSYS), so we must avoid creating any on the mount.
+      const installCmd = getInstallCommand(pm);
+      process.stderr.write(
+        `\nInstalling dependencies (${bold(installCmd.join(" "))}, WSL-safe) in sandbox ${dim(sandboxName)}...\n`
+      );
 
-    const installOk = await runInteractiveCommand("docker", [
-      "sandbox",
-      "exec",
-      "-w",
-      workdir,
-      sandboxName,
-      ...installCmd,
-    ]);
+      const script = buildWSLInstallScript(workdir, pm);
+      installOk = await runInteractiveCommand("docker", [
+        "sandbox",
+        "exec",
+        sandboxName,
+        "sh",
+        "-c",
+        script,
+      ]);
+    } else {
+      // Standard mode: install directly on the bind mount (macOS/Linux)
+      const installCmd = getInstallCommand(pm);
+      process.stderr.write(
+        `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
+      );
+
+      installOk = await runInteractiveCommand("docker", [
+        "sandbox",
+        "exec",
+        "-w",
+        workdir,
+        sandboxName,
+        ...installCmd,
+      ]);
+    }
 
     if (!installOk) {
       process.stderr.write(
@@ -828,7 +917,11 @@ async function handleSetup(projectRoot: string): Promise<void> {
       continue;
     }
 
-    await runSandboxSetup(sandboxName, projectRoot, config.sandbox.containerWorkdir);
+    await runSandboxSetup(
+      sandboxName,
+      projectRoot,
+      config.sandbox.containerWorkdir
+    );
   }
 }
 
