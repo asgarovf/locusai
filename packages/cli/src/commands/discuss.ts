@@ -352,6 +352,7 @@ async function startDiscussion(
         flags.model ?? config.ai.model,
         config.ai.provider
       ),
+      containerWorkdir: config.sandbox.containerWorkdir,
     });
 
     if (aiResult.interrupted) {

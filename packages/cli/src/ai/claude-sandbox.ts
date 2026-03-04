@@ -17,7 +17,10 @@ export class SandboxedClaudeRunner implements AgentRunner {
   private process: ChildProcess | null = null;
   private aborted = false;
 
-  constructor(private readonly sandboxName: string) {}
+  constructor(
+    private readonly sandboxName: string,
+    private readonly containerWorkdir?: string
+  ) {}
 
   /** Delegate to ClaudeRunner — checks host `claude` CLI availability. */
   async isAvailable(): Promise<boolean> {
@@ -55,14 +58,16 @@ export class SandboxedClaudeRunner implements AgentRunner {
     // propagate back to the host. The backup ensures we never lose host files.
     options.onStatusChange?.("Syncing sandbox...");
     const backup = backupIgnoredFiles(options.cwd);
-    await enforceSandboxIgnore(this.sandboxName, options.cwd);
+    await enforceSandboxIgnore(this.sandboxName, options.cwd, this.containerWorkdir);
     options.onStatusChange?.("Thinking...");
 
+    // Use containerWorkdir when set (WSL/Windows) — host path may not exist in container
+    const workdir = this.containerWorkdir ?? options.cwd;
     const dockerArgs = [
       "sandbox",
       "exec",
       "-w",
-      options.cwd,
+      workdir,
       this.sandboxName,
       "claude",
       ...claudeArgs,

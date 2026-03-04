@@ -4,7 +4,7 @@
  * Result is cached for the lifetime of the process.
  */
 
-import { execFile } from "node:child_process";
+import { execFile, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { bold, dim, red, yellow } from "../display/terminal.js";
 import type { AIProvider, SandboxConfig } from "../types.js";
@@ -270,6 +270,65 @@ export async function displaySandboxWarning(
 
   // Docker available — sandbox will be used
   return true;
+}
+
+// ─── Container Workdir Detection ──────────────────────────────────────────
+
+/**
+ * Detect the actual workspace path inside a Docker sandbox container.
+ *
+ * On macOS/Linux the host path is mounted at the same absolute path, so this
+ * returns `null` (no translation needed). On Windows/WSL, Docker Desktop may
+ * mount the project at a different path — this function probes the container
+ * to find it.
+ *
+ * Strategy:
+ *  1. Fast `test -d <hostPath>` — succeeds when paths match.
+ *  2. Fallback `find` for `.locus/config.json` inside the container.
+ */
+export function detectContainerWorkdir(
+  sandboxName: string,
+  hostProjectRoot: string
+): string | null {
+  const log = getLogger();
+
+  // Fast path: check if the host path exists inside the container
+  try {
+    execSync(
+      `docker sandbox exec ${sandboxName} test -d ${JSON.stringify(hostProjectRoot)}`,
+      { stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    );
+    log.debug("Container workdir matches host path", { hostProjectRoot });
+    return null;
+  } catch {
+    // Host path doesn't exist inside container — probe for actual path
+  }
+
+  // Fallback: find the .locus/config.json inside the container
+  try {
+    const result = execSync(
+      `docker sandbox exec ${sandboxName} find / -maxdepth 5 -path '*/.locus/config.json' -type f 2>/dev/null`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 15000 }
+    ).trim();
+
+    if (result) {
+      const configPath = result.split("\n")[0].trim();
+      const workdir = configPath.replace(/\/.locus\/config\.json$/, "");
+      if (workdir) {
+        log.debug("Detected container workdir", {
+          hostProjectRoot,
+          containerWorkdir: workdir,
+        });
+        return workdir;
+      }
+    }
+  } catch (err) {
+    log.debug("Container workdir probe failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  return null;
 }
 
 /** Wait for the user to press Enter. Resolves immediately if stdin is not a TTY. */

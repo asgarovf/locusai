@@ -24,6 +24,7 @@ import {
   isJavaScriptEcosystem,
 } from "../core/ecosystem.js";
 import {
+  detectContainerWorkdir,
   detectSandboxSupport,
   getProviderSandboxName,
 } from "../core/sandbox.js";
@@ -202,13 +203,25 @@ async function handleCreate(projectRoot: string): Promise<void> {
     `${green("✓")} ${provider} sandbox created: ${bold(name)}\n`
   );
 
+  // Detect container workspace path (differs from host on WSL/Windows)
+  if (!config.sandbox.containerWorkdir) {
+    const containerWorkdir = detectContainerWorkdir(name, projectRoot);
+    if (containerWorkdir) {
+      config.sandbox.containerWorkdir = containerWorkdir;
+      process.stderr.write(
+        `  ${dim(`Container workdir: ${containerWorkdir}`)}\n`
+      );
+    }
+  }
+
   readySandboxes[provider] = name;
   config.sandbox.enabled = true;
   config.sandbox.providers = readySandboxes;
   saveConfig(projectRoot, config);
 
   // Install project dependencies in the newly created sandbox
-  await runSandboxSetup(name, projectRoot);
+  const workdir = config.sandbox.containerWorkdir ?? projectRoot;
+  await runSandboxSetup(name, projectRoot, workdir);
 
   process.stderr.write(
     `\n${green("✓")} Sandbox mode enabled for ${bold(provider)}.\n`
@@ -246,6 +259,8 @@ async function handleAgentLogin(
     await ensureCodexInSandbox(sandboxName);
   }
 
+  const workdir = config.sandbox.containerWorkdir ?? projectRoot;
+
   process.stderr.write(
     `Connecting to ${agent} sandbox ${dim(sandboxName)}...\n`
   );
@@ -253,7 +268,7 @@ async function handleAgentLogin(
 
   const child = spawn(
     "docker",
-    ["sandbox", "exec", "-it", "-w", projectRoot, sandboxName, agent],
+    ["sandbox", "exec", "-it", "-w", workdir, sandboxName, agent],
     {
       stdio: "inherit",
     }
@@ -263,7 +278,7 @@ async function handleAgentLogin(
     child.on("close", async (code) => {
       const backup = backupIgnoredFiles(projectRoot);
       try {
-        await enforceSandboxIgnore(sandboxName, projectRoot);
+        await enforceSandboxIgnore(sandboxName, projectRoot, config.sandbox.containerWorkdir);
       } finally {
         backup.restore();
       }
@@ -327,6 +342,7 @@ function handleRemove(projectRoot: string): void {
 
   config.sandbox.providers = {};
   config.sandbox.enabled = false;
+  delete config.sandbox.containerWorkdir;
   saveConfig(projectRoot, config);
 
   process.stderr.write(
@@ -343,6 +359,11 @@ function handleStatus(projectRoot: string): void {
   process.stderr.write(
     `  ${dim("Enabled:")}  ${config.sandbox.enabled ? green("yes") : red("no")}\n`
   );
+  if (config.sandbox.containerWorkdir) {
+    process.stderr.write(
+      `  ${dim("Container workdir:")}  ${config.sandbox.containerWorkdir}\n`
+    );
+  }
 
   for (const provider of PROVIDERS) {
     const name = config.sandbox.providers[provider];
@@ -520,11 +541,13 @@ async function handleShell(projectRoot: string, args: string[]): Promise<void> {
     return;
   }
 
+  const config = loadConfig(projectRoot);
   const sandboxName = getActiveProviderSandbox(projectRoot, provider);
   if (!sandboxName) {
     return;
   }
 
+  const workdir = config.sandbox.containerWorkdir ?? projectRoot;
   process.stderr.write(
     `Opening shell in ${provider} sandbox ${dim(sandboxName)}...\n`
   );
@@ -533,7 +556,7 @@ async function handleShell(projectRoot: string, args: string[]): Promise<void> {
     "exec",
     "-it",
     "-w",
-    projectRoot,
+    workdir,
     sandboxName,
     "sh",
   ]);
@@ -687,8 +710,10 @@ function getInstallCommand(pm: PackageManager): string[] {
 
 async function runSandboxSetup(
   sandboxName: string,
-  projectRoot: string
+  projectRoot: string,
+  containerWorkdir?: string
 ): Promise<boolean> {
+  const workdir = containerWorkdir ?? projectRoot;
   const ecosystem = detectProjectEcosystem(projectRoot);
   const isJS = isJavaScriptEcosystem(ecosystem);
 
@@ -711,7 +736,7 @@ async function runSandboxSetup(
       "sandbox",
       "exec",
       "-w",
-      projectRoot,
+      workdir,
       sandboxName,
       ...installCmd,
     ]);
@@ -734,6 +759,9 @@ async function runSandboxSetup(
 
   // Run optional setup hook (important for non-JS projects)
   const setupScript = join(projectRoot, ".locus", "sandbox-setup.sh");
+  const containerSetupScript = containerWorkdir
+    ? join(containerWorkdir, ".locus", "sandbox-setup.sh")
+    : setupScript;
   if (existsSync(setupScript)) {
     process.stderr.write(
       `Running ${bold(".locus/sandbox-setup.sh")} in sandbox ${dim(sandboxName)}...\n`
@@ -742,10 +770,10 @@ async function runSandboxSetup(
       "sandbox",
       "exec",
       "-w",
-      projectRoot,
+      workdir,
       sandboxName,
       "sh",
-      setupScript,
+      containerSetupScript,
     ]);
     if (!hookOk) {
       process.stderr.write(
@@ -786,7 +814,7 @@ async function handleSetup(projectRoot: string): Promise<void> {
       continue;
     }
 
-    await runSandboxSetup(sandboxName, projectRoot);
+    await runSandboxSetup(sandboxName, projectRoot, config.sandbox.containerWorkdir);
   }
 }
 
@@ -859,7 +887,8 @@ function runInteractiveCommand(
 async function createProviderSandbox(
   provider: AIProvider,
   sandboxName: string,
-  projectRoot: string
+  projectRoot: string,
+  containerWorkdir?: string
 ): Promise<boolean> {
   try {
     execSync(
@@ -883,7 +912,7 @@ async function createProviderSandbox(
 
   const backup = backupIgnoredFiles(projectRoot);
   try {
-    await enforceSandboxIgnore(sandboxName, projectRoot);
+    await enforceSandboxIgnore(sandboxName, projectRoot, containerWorkdir);
   } finally {
     backup.restore();
   }

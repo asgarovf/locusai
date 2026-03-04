@@ -172,7 +172,7 @@ async function runInteractiveRepl(
       inferProviderFromModel(config.ai.model) || config.ai.provider;
     const sandboxName = getProviderSandboxName(config.sandbox, provider);
     if (sandboxName) {
-      sandboxRunner = createUserManagedSandboxRunner(provider, sandboxName);
+      sandboxRunner = createUserManagedSandboxRunner(provider, sandboxName, config.sandbox.containerWorkdir);
       process.stderr.write(
         `${dim("Using")} ${dim(provider)} ${dim("sandbox")} ${dim(sandboxName)}\n`
       );
@@ -248,7 +248,8 @@ async function runInteractiveRepl(
           if (sandboxName) {
             sandboxRunner = createUserManagedSandboxRunner(
               inferredProvider,
-              sandboxName
+              sandboxName,
+              config.sandbox.containerWorkdir
             );
             process.stderr.write(
               `${dim("Switched sandbox agent to")} ${dim(inferredProvider)} ${dim(`(${sandboxName})`)}\n`
@@ -429,6 +430,7 @@ async function executeAITurn(
     verbose,
     sandboxed: config.sandbox.enabled,
     sandboxName,
+    containerWorkdir: config.sandbox.containerWorkdir,
     runner,
   });
 

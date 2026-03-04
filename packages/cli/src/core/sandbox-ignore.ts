@@ -310,7 +310,8 @@ export function backupIgnoredFiles(projectRoot: string): SandboxIgnoreBackup {
  */
 export async function enforceSandboxIgnore(
   sandboxName: string,
-  projectRoot: string
+  projectRoot: string,
+  containerWorkdir?: string
 ): Promise<void> {
   const log = getLogger();
   const ignorePath = join(projectRoot, ".sandboxignore");
@@ -318,7 +319,8 @@ export async function enforceSandboxIgnore(
   const rules = parseIgnoreFile(ignorePath);
   if (rules.length === 0) return;
 
-  const script = buildCleanupScript(rules, projectRoot);
+  // Use containerWorkdir for find commands inside the container (WSL path translation)
+  const script = buildCleanupScript(rules, containerWorkdir ?? projectRoot);
   if (!script) return;
 
   log.debug("Enforcing .sandboxignore", {

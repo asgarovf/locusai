@@ -123,6 +123,7 @@ export async function executeIssue(
     activity: `issue #${issueNumber}`,
     sandboxed: options.sandboxed,
     sandboxName: options.sandboxName,
+    containerWorkdir: options.containerWorkdir,
   });
 
   const output = aiResult.output;
@@ -280,6 +281,7 @@ export async function iterateOnPR(
       config.ai.model,
       config.ai.provider
     ),
+    containerWorkdir: config.sandbox.containerWorkdir,
   });
 
   if (aiResult.interrupted) {

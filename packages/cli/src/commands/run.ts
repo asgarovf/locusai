@@ -66,11 +66,11 @@ import type { Issue, LocusConfig } from "../types.js";
 function resolveExecutionContext(
   config: LocusConfig,
   modelOverride?: string
-): { provider: "claude" | "codex"; model: string; sandboxName?: string } {
+): { provider: "claude" | "codex"; model: string; sandboxName?: string; containerWorkdir?: string } {
   const model = modelOverride ?? config.ai.model;
   const provider = inferProviderFromModel(model) ?? config.ai.provider;
   const sandboxName = getModelSandboxName(config.sandbox, model, provider);
-  return { provider, model, sandboxName };
+  return { provider, model, sandboxName, containerWorkdir: config.sandbox.containerWorkdir };
 }
 
 // ─── Help ────────────────────────────────────────────────────────────────────
@@ -431,6 +431,7 @@ async function handleSprintRun(
       skipPR: true,
       sandboxed,
       sandboxName: execution.sandboxName,
+      containerWorkdir: execution.containerWorkdir,
     });
 
     if (result.success) {
@@ -544,6 +545,7 @@ async function handleSingleIssue(
       dryRun: flags.dryRun,
       sandboxed,
       sandboxName: execution.sandboxName,
+      containerWorkdir: execution.containerWorkdir,
     });
     return;
   }
@@ -688,6 +690,7 @@ async function handleParallelRun(
         dryRun: flags.dryRun,
         sandboxed,
         sandboxName: execution.sandboxName,
+      containerWorkdir: execution.containerWorkdir,
       });
 
       if (result.success) {
@@ -822,6 +825,7 @@ async function handleResume(
       skipPR: isSprintRun,
       sandboxed,
       sandboxName: execution.sandboxName,
+      containerWorkdir: execution.containerWorkdir,
     });
 
     if (result.success) {

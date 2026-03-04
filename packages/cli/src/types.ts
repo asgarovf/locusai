@@ -53,6 +53,13 @@ export interface SandboxConfig {
   providers: ProviderSandboxes;
   extraWorkspaces: string[];
   readOnlyPaths: string[];
+  /**
+   * Detected workspace path inside the Docker container.
+   * Set automatically after sandbox creation when the container mounts the
+   * project at a different path than the host (e.g., on Windows/WSL).
+   * When undefined/null, host paths are used directly (macOS/Linux default).
+   */
+  containerWorkdir?: string;
 }
 
 // ─── GitHub Data ─────────────────────────────────────────────────────────────
@@ -230,6 +237,8 @@ export interface AgentOptions {
   sandboxed?: boolean;
   /** Name of a user-managed sandbox to exec into (from `locus sandbox`). */
   sandboxName?: string;
+  /** Detected workspace path inside the container (WSL/Windows path translation). */
+  containerWorkdir?: string;
 }
 
 export interface AgentResult {

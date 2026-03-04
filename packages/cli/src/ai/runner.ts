@@ -56,13 +56,14 @@ export async function createRunnerAsync(
  */
 export function createUserManagedSandboxRunner(
   provider: AIProvider,
-  sandboxName: string
+  sandboxName: string,
+  containerWorkdir?: string
 ): AgentRunner {
   switch (provider) {
     case "claude":
-      return new SandboxedClaudeRunner(sandboxName);
+      return new SandboxedClaudeRunner(sandboxName, containerWorkdir);
     case "codex":
-      return new SandboxedCodexRunner(sandboxName);
+      return new SandboxedCodexRunner(sandboxName, containerWorkdir);
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }

@@ -394,6 +394,7 @@ async function handleAIPlan(
       flags.model ?? config.ai.model,
       config.ai.provider
     ),
+    containerWorkdir: config.sandbox.containerWorkdir,
   });
 
   if (aiResult.interrupted) {
@@ -546,6 +547,7 @@ Start with foundational/setup tasks, then core features, then integration/testin
       flags.model ?? config.ai.model,
       config.ai.provider
     ),
+    containerWorkdir: config.sandbox.containerWorkdir,
   });
 
   if (aiResult.interrupted) {

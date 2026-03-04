@@ -36,6 +36,8 @@ export interface RunAIOptions {
   sandboxed?: boolean;
   /** Name of a user-managed sandbox to exec into (from `locus sandbox`). */
   sandboxName?: string;
+  /** Detected workspace path inside the container (WSL/Windows path translation). */
+  containerWorkdir?: string;
   /**
    * Pre-created runner instance to reuse (e.g., a persistent sandboxed runner).
    * When provided, `createRunnerAsync` is skipped and this runner is used directly.
@@ -190,7 +192,8 @@ export async function runAI(options: RunAIOptions): Promise<RunAIResult> {
       }
       runner = createUserManagedSandboxRunner(
         resolvedProvider,
-        options.sandboxName
+        options.sandboxName,
+        options.containerWorkdir
       );
     } else {
       runner = await createRunnerAsync(resolvedProvider, false);
