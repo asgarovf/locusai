@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.22.2
+
+### Patch Changes
+
+- Container workdir detection to fix WSL issues
+
 ## 0.22.1
 
 ### Patch Changes
