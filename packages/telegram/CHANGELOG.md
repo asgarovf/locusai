@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.22.5
+
+### Patch Changes
+
+- Attempt fixing WSL sandbox issues
+- Updated dependencies
+  - @locusai/sdk@0.22.5
+
 ## 0.22.4
 
 ### Patch Changes
