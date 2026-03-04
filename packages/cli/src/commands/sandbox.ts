@@ -27,6 +27,7 @@ import {
   detectContainerWorkdir,
   detectSandboxSupport,
   getProviderSandboxName,
+  probeSymlinkSupport,
 } from "../core/sandbox.js";
 import {
   backupIgnoredFiles,
@@ -217,6 +218,19 @@ async function handleCreate(projectRoot: string): Promise<void> {
 
   const workdir = config.sandbox.containerWorkdir ?? projectRoot;
 
+  // Probe symlink support on the bind-mount. If symlinks fail (ENOSYS on
+  // WSL/NTFS or restrictive Docker configs), we use a temp-dir install
+  // strategy to avoid symlink creation on the bind mount.
+  if (config.sandbox.noSymlinks === undefined) {
+    const symlinkOk = probeSymlinkSupport(name, workdir);
+    config.sandbox.noSymlinks = !symlinkOk;
+    if (!symlinkOk) {
+      process.stderr.write(
+        `  ${yellow("⚠")} Bind mount does not support symlinks — using copy-based install.\n`
+      );
+    }
+  }
+
   // Enforce sandbox-ignore with the correct container path
   const backup = backupIgnoredFiles(projectRoot);
   try {
@@ -235,7 +249,12 @@ async function handleCreate(projectRoot: string): Promise<void> {
   saveConfig(projectRoot, config);
 
   // Install project dependencies in the newly created sandbox
-  await runSandboxSetup(name, projectRoot, workdir);
+  await runSandboxSetup(
+    name,
+    projectRoot,
+    config.sandbox.containerWorkdir,
+    config.sandbox.noSymlinks
+  );
 
   process.stderr.write(
     `\n${green("✓")} Sandbox mode enabled for ${bold(provider)}.\n`
@@ -731,12 +750,16 @@ function getInstallCommand(pm: PackageManager): string[] {
  * filesystem (which supports symlinks), then copies the resulting node_modules
  * back to the bind-mounted project directory with all symlinks dereferenced.
  *
- * This is needed on WSL where Docker bind mounts don't support symlinks at all
- * (ENOSYS). The --backend=copyfile flag only controls file copying strategy but
- * package managers still create symlinks for .bin entries, hoisted packages, and
- * workspace links — all of which fail with ENOSYS on WSL bind mounts.
+ * This is needed when the Docker bind mount does not support symlinks (ENOSYS).
+ * Common on WSL/NTFS but can also occur with other Docker configurations.
+ * The --backend=copyfile flag only controls file copying strategy but package
+ * managers still create symlinks for .bin entries, hoisted packages, and
+ * workspace links — all of which fail with ENOSYS on such mounts.
  */
-function buildWSLInstallScript(workdir: string, pm: PackageManager): string {
+function buildNoSymlinksInstallScript(
+  workdir: string,
+  pm: PackageManager
+): string {
   const installCmd = getInstallCommand(pm).join(" ");
 
   // The script:
@@ -744,7 +767,8 @@ function buildWSLInstallScript(workdir: string, pm: PackageManager): string {
   // 2. Runs the package manager install there (symlinks work on native fs)
   // 3. Copies all resulting node_modules back to the bind mount using cp -rL
   //    which dereferences symlinks into regular files/directories
-  // 4. Cleans up the temp dir
+  // 4. Verifies that .bin entries are present and executable
+  // 5. Cleans up the temp dir
   return [
     "set -e",
     'TMPDIR="/tmp/locus-deps-install"',
@@ -775,14 +799,20 @@ function buildWSLInstallScript(workdir: string, pm: PackageManager): string {
     "",
     "# Copy node_modules back to bind mount, dereferencing all symlinks.",
     "# -L follows symlinks so they become regular files/dirs on the bind mount.",
-    "# maxdepth 3 covers root + workspace packages (e.g. packages/foo/node_modules)",
-    'find "$TMPDIR" -maxdepth 3 -name node_modules -type d | while read nm; do',
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: Ignoring the raw commands
+    "# maxdepth 5 covers root + nested workspace packages",
+    'find "$TMPDIR" -maxdepth 5 -name node_modules -type d | while read nm; do',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: shell variable expansion
     '  rel="${nm#$TMPDIR/}"',
     '  dest="$WORKDIR/$rel"',
     '  rm -rf "$dest"',
-    '  cp -rL "$nm" "$dest" 2>/dev/null || cp -r "$nm" "$dest"',
+    "  # cp -rL dereferences symlinks; fall back to cp -rH if -L is unsupported",
+    '  cp -rL "$nm" "$dest" 2>/dev/null || cp -rH "$nm" "$dest" 2>/dev/null || cp -r "$nm" "$dest"',
     "done",
+    "",
+    "# Ensure .bin entries are executable (some cp implementations drop +x)",
+    'if [ -d "$WORKDIR/node_modules/.bin" ]; then',
+    '  chmod +x "$WORKDIR/node_modules/.bin/"* 2>/dev/null || true',
+    "fi",
     "",
     "# Cleanup",
     'rm -rf "$TMPDIR"',
@@ -792,7 +822,8 @@ function buildWSLInstallScript(workdir: string, pm: PackageManager): string {
 async function runSandboxSetup(
   sandboxName: string,
   projectRoot: string,
-  containerWorkdir?: string
+  containerWorkdir?: string,
+  noSymlinks?: boolean
 ): Promise<boolean> {
   const workdir = containerWorkdir ?? projectRoot;
   const ecosystem = detectProjectEcosystem(projectRoot);
@@ -809,26 +840,27 @@ async function runSandboxSetup(
 
     let installOk: boolean;
 
-    if (containerWorkdir) {
-      // WSL mode: install on native filesystem then copy node_modules back
-      // with symlinks dereferenced. Docker bind mounts on WSL don't support
-      // symlinks at all (ENOSYS), so we must avoid creating any on the mount.
+    if (noSymlinks) {
+      // No-symlink mode: install on native filesystem then copy node_modules
+      // back with symlinks dereferenced. Docker bind mounts on some environments
+      // (WSL/NTFS, restrictive configs) don't support symlinks (ENOSYS).
       const installCmd = getInstallCommand(pm);
       process.stderr.write(
-        `\nInstalling dependencies (${bold(installCmd.join(" "))}, WSL-safe) in sandbox ${dim(sandboxName)}...\n`
+        `\nInstalling dependencies (${bold(installCmd.join(" "))}, symlink-free) in sandbox ${dim(sandboxName)}...\n`
       );
 
-      const script = buildWSLInstallScript(workdir, pm);
+      const script = buildNoSymlinksInstallScript(workdir, pm);
       installOk = await runInteractiveCommand("docker", [
         "sandbox",
         "exec",
+        "--privileged",
         sandboxName,
         "sh",
         "-c",
         script,
       ]);
     } else {
-      // Standard mode: install directly on the bind mount (macOS/Linux)
+      // Standard mode: install directly on the bind mount (symlinks work)
       const installCmd = getInstallCommand(pm);
       process.stderr.write(
         `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
@@ -837,6 +869,7 @@ async function runSandboxSetup(
       installOk = await runInteractiveCommand("docker", [
         "sandbox",
         "exec",
+        "--privileged",
         "-w",
         workdir,
         sandboxName,
@@ -854,6 +887,9 @@ async function runSandboxSetup(
     process.stderr.write(
       `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
     );
+
+    // Post-install verification: check that .bin entries exist
+    verifyBinEntries(sandboxName, workdir);
   } else {
     process.stderr.write(
       `\n${dim(`Detected ${ecosystem} project — skipping JS package install.`)}\n`
