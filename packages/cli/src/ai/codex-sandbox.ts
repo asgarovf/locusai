@@ -84,6 +84,7 @@ export class SandboxedCodexRunner implements AgentRunner {
     const dockerArgs = [
       "sandbox",
       "exec",
+      "--privileged",
       "-i",
       "-w",
       workdir,
@@ -264,12 +265,12 @@ export class SandboxedCodexRunner implements AgentRunner {
     const execAsync = promisify(exec);
 
     try {
-      await execAsync(`docker sandbox exec ${name} which codex`, {
+      await execAsync(`docker sandbox exec --privileged ${name} which codex`, {
         timeout: 5000,
       });
     } catch {
       await execAsync(
-        `docker sandbox exec ${name} npm install -g @openai/codex`,
+        `docker sandbox exec --privileged ${name} npm install -g @openai/codex`,
         {
           timeout: 120_000,
         }

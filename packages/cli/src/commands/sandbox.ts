@@ -541,6 +541,7 @@ async function handleInstall(
     const ok = await runInteractiveCommand("docker", [
       "sandbox",
       "exec",
+      "--privileged",
       sandboxName,
       "npm",
       "install",
@@ -746,6 +747,46 @@ function getInstallCommand(pm: PackageManager): string[] {
 }
 
 /**
+ * Post-install verification: check that node_modules/.bin has entries.
+ * Warns about missing binaries that are common in JS projects (biome, tsc, etc.)
+ */
+function verifyBinEntries(sandboxName: string, workdir: string): void {
+  try {
+    const binDir = `${workdir}/node_modules/.bin/`;
+    const result = execSync(
+      `docker sandbox exec --privileged ${sandboxName} sh -c ${JSON.stringify(
+        `ls ${JSON.stringify(binDir)} 2>/dev/null | head -20`
+      )}`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    ).trim();
+
+    if (!result) {
+      process.stderr.write(
+        `${yellow("⚠")} node_modules/.bin is empty — binaries like biome may not be available.\n`
+      );
+      process.stderr.write(
+        `  ${dim("This can happen if symlink dereferencing failed during install.")}\n`
+      );
+      return;
+    }
+
+    // Check for specific well-known binaries that projects commonly need
+    const bins = result.split("\n").map((b) => b.trim());
+    const knownBins = ["biome", "tsc", "jest"];
+    const missing = knownBins.filter(
+      (b) => !bins.some((entry) => entry === b)
+    );
+    if (missing.length > 0) {
+      process.stderr.write(
+        `  ${dim(`Note: ${missing.join(", ")} not found in .bin (may not be a project dependency).`)}\n`
+      );
+    }
+  } catch {
+    // Best-effort check — don't fail setup over this
+  }
+}
+
+/**
  * Build a shell script that installs dependencies on the container's native
  * filesystem (which supports symlinks), then copies the resulting node_modules
  * back to the bind-mounted project directory with all symlinks dereferenced.
@@ -908,6 +949,7 @@ async function runSandboxSetup(
     const hookOk = await runInteractiveCommand("docker", [
       "sandbox",
       "exec",
+      "--privileged",
       "-w",
       workdir,
       sandboxName,
@@ -956,7 +998,8 @@ async function handleSetup(projectRoot: string): Promise<void> {
     await runSandboxSetup(
       sandboxName,
       projectRoot,
-      config.sandbox.containerWorkdir
+      config.sandbox.containerWorkdir,
+      config.sandbox.noSymlinks
     );
   }
 }
@@ -1064,7 +1107,7 @@ async function ensurePackageManagerInSandbox(
   pm: PackageManager
 ): Promise<void> {
   try {
-    execSync(`docker sandbox exec ${sandboxName} which ${pm}`, {
+    execSync(`docker sandbox exec --privileged ${sandboxName} which ${pm}`, {
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 5000,
     });
@@ -1072,10 +1115,13 @@ async function ensurePackageManagerInSandbox(
     const npmPkg = pm === "bun" ? "bun" : pm === "yarn" ? "yarn" : "pnpm";
     process.stderr.write(`Installing ${bold(pm)} in sandbox...\n`);
     try {
-      execSync(`docker sandbox exec ${sandboxName} npm install -g ${npmPkg}`, {
-        stdio: "inherit",
-        timeout: 120_000,
-      });
+      execSync(
+        `docker sandbox exec --privileged ${sandboxName} npm install -g ${npmPkg}`,
+        {
+          stdio: "inherit",
+          timeout: 120_000,
+        }
+      );
     } catch {
       process.stderr.write(
         `${yellow("⚠")} Failed to install ${pm} in sandbox. Dependency install may fail.\n`
@@ -1090,7 +1136,7 @@ async function ensurePackageManagerInSandbox(
  */
 async function ensureCodexInSandbox(sandboxName: string): Promise<void> {
   try {
-    execSync(`docker sandbox exec ${sandboxName} which codex`, {
+    execSync(`docker sandbox exec --privileged ${sandboxName} which codex`, {
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 5000,
     });
@@ -1098,7 +1144,7 @@ async function ensureCodexInSandbox(sandboxName: string): Promise<void> {
     process.stderr.write(`Installing codex in sandbox...\n`);
     try {
       execSync(
-        `docker sandbox exec ${sandboxName} npm install -g @openai/codex`,
+        `docker sandbox exec --privileged ${sandboxName} npm install -g @openai/codex`,
         { stdio: "inherit", timeout: 120_000 }
       );
     } catch {

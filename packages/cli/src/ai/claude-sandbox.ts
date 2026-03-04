@@ -66,6 +66,7 @@ export class SandboxedClaudeRunner implements AgentRunner {
     const dockerArgs = [
       "sandbox",
       "exec",
+      "--privileged",
       "-w",
       workdir,
       this.sandboxName,

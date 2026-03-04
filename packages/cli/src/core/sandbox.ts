@@ -336,7 +336,7 @@ export function detectContainerWorkdir(
       for (const candidate of candidates) {
         try {
           execSync(
-            `docker sandbox exec ${sandboxName} sh -c "test -d ${JSON.stringify(candidate + "/.git")} || test -f ${JSON.stringify(candidate + "/package.json")}"`,
+            `docker sandbox exec ${sandboxName} sh -c "test -d ${JSON.stringify(`${candidate}/`)} || test -f ${JSON.stringify(`${candidate}/package.json`)}"`,
             { stdio: ["pipe", "pipe", "pipe"], timeout: 3000 }
           );
           log.debug("Detected container workdir from mount table", {

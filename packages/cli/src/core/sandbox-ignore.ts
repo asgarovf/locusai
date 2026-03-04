@@ -330,7 +330,7 @@ export async function enforceSandboxIgnore(
 
   try {
     await execAsync(
-      `docker sandbox exec ${sandboxName} sh -c ${JSON.stringify(script)}`,
+      `docker sandbox exec --privileged ${sandboxName} sh -c ${JSON.stringify(script)}`,
       { timeout: 15000 }
     );
     log.debug("sandbox-ignore enforcement complete", { sandboxName });
