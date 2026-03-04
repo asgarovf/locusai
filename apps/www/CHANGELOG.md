@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.22.4
+
+### Patch Changes
+
+- Attempt fixing WSL sandbox issues
+
 ## 0.22.3
 
 ### Patch Changes
