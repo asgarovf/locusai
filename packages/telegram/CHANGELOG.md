@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.22.6
+
+### Patch Changes
+
+- Allow nosymlinks option
+- Updated dependencies
+  - @locusai/sdk@0.22.6
+
 ## 0.22.5
 
 ### Patch Changes

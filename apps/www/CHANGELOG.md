@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.22.6
+
+### Patch Changes
+
+- Allow nosymlinks option
+
 ## 0.22.5
 
 ### Patch Changes
