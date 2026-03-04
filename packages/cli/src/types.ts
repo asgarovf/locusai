@@ -60,6 +60,12 @@ export interface SandboxConfig {
    * When undefined/null, host paths are used directly (macOS/Linux default).
    */
   containerWorkdir?: string;
+  /**
+   * True when the sandbox bind-mount does not support symlinks (ENOSYS).
+   * Detected via a probe at sandbox creation. When true, dependency install
+   * uses a temp-dir strategy (install on native fs, copy back with cp -rL).
+   */
+  noSymlinks?: boolean;
 }
 
 // ─── GitHub Data ─────────────────────────────────────────────────────────────

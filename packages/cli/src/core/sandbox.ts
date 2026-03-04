@@ -380,6 +380,48 @@ export function detectContainerWorkdir(
   return null;
 }
 
+// ─── Symlink Support Probe ────────────────────────────────────────────────
+
+/**
+ * Test whether the sandbox bind-mount supports symlinks.
+ *
+ * Creates a temporary symlink in the workdir and removes it. If the operation
+ * fails (ENOSYS on WSL/NTFS, or any other error), returns `false`.
+ */
+export function probeSymlinkSupport(
+  sandboxName: string,
+  workdir: string
+): boolean {
+  const log = getLogger();
+  const probe = ".locus-symlink-probe";
+  try {
+    execSync(
+      `docker sandbox exec --privileged ${sandboxName} sh -c ${JSON.stringify(
+        `cd ${JSON.stringify(workdir)} && ln -s /tmp ${probe} && rm -f ${probe}`
+      )}`,
+      { stdio: ["pipe", "pipe", "pipe"], timeout: 5000 }
+    );
+    log.debug("Symlink probe succeeded — bind mount supports symlinks");
+    return true;
+  } catch {
+    // Clean up in case ln succeeded but rm failed (unlikely)
+    try {
+      execSync(
+        `docker sandbox exec ${sandboxName} rm -f ${JSON.stringify(
+          `${workdir}/${probe}`
+        )}`,
+        { stdio: ["pipe", "pipe", "pipe"], timeout: 3000 }
+      );
+    } catch {
+      // Best-effort cleanup
+    }
+    log.debug(
+      "Symlink probe failed — bind mount does not support symlinks (ENOSYS)"
+    );
+    return false;
+  }
+}
+
 /** Wait for the user to press Enter. Resolves immediately if stdin is not a TTY. */
 function waitForEnter(): Promise<void> {
   return new Promise((resolve) => {
