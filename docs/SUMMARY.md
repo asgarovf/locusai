@@ -42,4 +42,5 @@
 * [locus status](cli/status.md)
 * [locus config](cli/config.md)
 * [locus logs](cli/logs.md)
+* [locus commit](cli/commit.md)
 * [locus upgrade](cli/upgrade.md)

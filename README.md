@@ -21,6 +21,14 @@
 
 ---
 
+<p align="center">
+  <a href="https://youtu.be/JmHeKq3Ty0s">
+    <img src="https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube" alt="Watch Demo" />
+  </a>
+</p>
+
+---
+
 > GitHub Issues are tasks. Milestones are sprints. Labels track status. Pull Requests are deliverables. **No servers. No database. No accounts.**
 
 > [!WARNING]
@@ -143,6 +151,7 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus review` | | AI code review on pull requests |
 | `locus iterate` | | Re-execute tasks with PR feedback context |
 | `locus discuss` | | AI-powered architectural discussions |
+| `locus commit` | | AI-powered commit message generation |
 
 ### Visibility
 
