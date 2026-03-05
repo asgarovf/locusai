@@ -13,6 +13,7 @@ import {
   bold,
   codeBlock,
   escapeHtml,
+  formatConflictMessage,
   formatError,
   formatSuccess,
 } from "../ui/format.js";
@@ -51,6 +52,16 @@ async function tracked(
   fn: () => Promise<void>
 ): Promise<void> {
   const chatId = ctx.chat!.id;
+
+  // Concurrency guard — prevent conflicting exclusive commands
+  const conflict = commandTracker.checkExclusiveConflict(chatId, command);
+  if (conflict) {
+    await ctx.reply(formatConflictMessage(command, conflict.runningCommand), {
+      parse_mode: "HTML",
+    });
+    return;
+  }
+
   const id = commandTracker.track(chatId, command, args);
   try {
     await fn();

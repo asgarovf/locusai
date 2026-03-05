@@ -111,6 +111,15 @@ export function formatStreamingMessage(
   return `${header}\n\n${codeBlock(lastLines)}${hint}`;
 }
 
+/** Format a concurrency conflict message. */
+export function formatConflictMessage(
+  blockedCommand: string,
+  running: { command: string; args: string[] }
+): string {
+  const runningLabel = `/${escapeHtml(running.command)}${running.args.length ? ` ${escapeHtml(running.args.join(" "))}` : ""}`;
+  return `⚠️ ${bold(escapeHtml(`/${blockedCommand}`))} cannot start — ${bold(runningLabel)} is already running.\n\nSend /cancel to abort it, or wait for it to finish.`;
+}
+
 /** Format an error message. */
 export function formatError(message: string, detail?: string): string {
   let text = `❌ ${bold("Error")}\n\n${escapeHtml(message)}`;

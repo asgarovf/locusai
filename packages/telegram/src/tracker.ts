@@ -17,6 +17,40 @@ export interface ActiveCommand {
   startedAt: Date;
 }
 
+// ─── Exclusivity Groups ─────────────────────────────────────────────────────
+
+/** Workspace-mutating commands — only one at a time per chat. */
+const WORKSPACE_EXCLUSIVE = new Set([
+  "run",
+  "plan",
+  "iterate",
+  "exec",
+]);
+
+/** Git-write commands — only one at a time per chat. */
+const GIT_EXCLUSIVE = new Set([
+  "stage",
+  "commit",
+  "checkout",
+  "stash",
+  "pr",
+]);
+
+export type ExclusivityGroup = "workspace" | "git";
+
+/** Returns the exclusivity group a command belongs to, or null if non-exclusive. */
+function getExclusivityGroup(command: string): ExclusivityGroup | null {
+  if (WORKSPACE_EXCLUSIVE.has(command)) return "workspace";
+  if (GIT_EXCLUSIVE.has(command)) return "git";
+  return null;
+}
+
+export interface ConflictResult {
+  blocked: true;
+  runningCommand: ActiveCommand;
+  group: ExclusivityGroup;
+}
+
 // ─── Tracker ────────────────────────────────────────────────────────────────
 
 let nextId = 1;
@@ -64,6 +98,26 @@ class CommandTracker {
   /** Get all active commands for a chat. */
   getActive(chatId: number): readonly ActiveCommand[] {
     return this.active.get(chatId) ?? [];
+  }
+
+  /** Check if a command would conflict with an already-running exclusive command. */
+  checkExclusiveConflict(
+    chatId: number,
+    command: string
+  ): ConflictResult | null {
+    const group = getExclusivityGroup(command);
+    if (!group) return null;
+
+    const list = this.active.get(chatId);
+    if (!list) return null;
+
+    for (const entry of list) {
+      if (getExclusivityGroup(entry.command) === group) {
+        return { blocked: true, runningCommand: entry, group };
+      }
+    }
+
+    return null;
   }
 
   /** Kill a specific command's child process and untrack it. */

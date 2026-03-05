@@ -9,7 +9,11 @@
 import { invokeLocusStream } from "@locusai/sdk";
 import type { Context } from "grammy";
 import { commandTracker } from "../tracker.js";
-import { formatCommandResult, formatStreamingMessage } from "../ui/format.js";
+import {
+  formatCommandResult,
+  formatConflictMessage,
+  formatStreamingMessage,
+} from "../ui/format.js";
 import {
   planKeyboard,
   reviewKeyboard,
@@ -77,6 +81,15 @@ export async function handleLocusCommand(
   const requiresArgsMsg = REQUIRES_ARGS[command];
   if (requiresArgsMsg && args.length === 0) {
     await ctx.reply(requiresArgsMsg);
+    return;
+  }
+
+  // Concurrency guard — prevent conflicting exclusive commands
+  const conflict = commandTracker.checkExclusiveConflict(ctx.chat!.id, command);
+  if (conflict) {
+    await ctx.reply(formatConflictMessage(command, conflict.runningCommand), {
+      parse_mode: "HTML",
+    });
     return;
   }
 
