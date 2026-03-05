@@ -14,6 +14,7 @@
  *   locus pkg telegram bot        → run bot directly (foreground)
  */
 
+import { run } from "@grammyjs/runner";
 import { createLogger } from "@locusai/sdk";
 import { loadTelegramConfig } from "./config.js";
 import {
@@ -142,6 +143,7 @@ async function handleBot(): Promise<void> {
       { command: "checkout", description: "Switch branch" },
       { command: "diff", description: "Show diff" },
       { command: "pr", description: "Create pull request" },
+      { command: "cancel", description: "Abort running commands" },
       { command: "service", description: "Manage bot process" },
       { command: "help", description: "Show help message" },
     ]);
@@ -150,22 +152,22 @@ async function handleBot(): Promise<void> {
     logger.warn("Failed to sync command menu", { error: String(err) });
   }
 
+  // Drop pending updates before starting the runner
+  await bot.api.deleteWebhook({ drop_pending_updates: true });
+
+  const runner = run(bot);
+
   // Graceful shutdown
   const shutdown = () => {
     logger.info("Shutting down bot...");
-    bot.stop();
+    runner.stop();
     process.exit(0);
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  await bot.start({
-    drop_pending_updates: true,
-    onStart: () => {
-      logger.info("Bot is running. Send /help in Telegram to get started.");
-    },
-  });
+  logger.info("Bot is running. Send /help in Telegram to get started.");
 }
 
 // ─── Help ───────────────────────────────────────────────────────────────────
