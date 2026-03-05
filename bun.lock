@@ -22,7 +22,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.22.8",
+      "version": "0.22.11",
       "dependencies": {
         "@next/third-parties": "^16.1.4",
         "@radix-ui/react-slot": "^1.2.4",
@@ -48,28 +48,29 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.22.8",
+      "version": "0.22.11",
       "bin": {
         "locus": "./bin/locus.js",
       },
       "devDependencies": {
-        "@locusai/sdk": "^0.22.8",
+        "@locusai/sdk": "^0.22.11",
         "@types/bun": "latest",
         "typescript": "^5.8.3",
       },
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.22.8",
+      "version": "0.22.11",
     },
     "packages/telegram": {
       "name": "@locusai/locus-telegram",
-      "version": "0.22.8",
+      "version": "0.22.11",
       "bin": {
         "locus-telegram": "./bin/locus-telegram.js",
       },
       "dependencies": {
-        "@locusai/sdk": "^0.22.8",
+        "@grammyjs/runner": "^2.0.3",
+        "@locusai/sdk": "^0.22.11",
         "grammy": "^1.35.0",
         "pm2": "^6.0.5",
       },
@@ -211,6 +212,8 @@
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.8.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-mehfKSMWjjNol8659Z8KxEMrdSJDDot5SXMq00dM8BN4o+CLNXQ0xH2V7EchNHV4RmbZLmmPdEaXZc5H2FXmDg=="],
+
+    "@grammyjs/runner": ["@grammyjs/runner@2.0.3", "", { "dependencies": { "abort-controller": "^3.0.0" }, "peerDependencies": { "grammy": "^1.13.1" } }, "sha512-nckmTs1dPWfVQteK9cxqxzE+0m1VRvluLWB8UgFzsjg62w3qthPJt0TYtJBEdG7OedvfQq4vnFAyE6iaMkR42A=="],
 
     "@grammyjs/types": ["@grammyjs/types@3.25.0", "", {}, "sha512-iN9i5p+8ZOu9OMxWNcguojQfz4K/PDyMPOnL7PPCON+SoA/F8OKMH3uR7CVUkYfdNe0GCz8QOzAWrnqusQYFOg=="],
 
