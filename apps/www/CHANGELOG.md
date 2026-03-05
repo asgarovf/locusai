@@ -1,5 +1,13 @@
 # @locusai/www
 
+## 0.22.10
+
+### Patch Changes
+
+- Commit command to commit changes
+  Run state json file improvements
+  Argument normalization
+
 ## 0.22.9
 
 ### Patch Changes

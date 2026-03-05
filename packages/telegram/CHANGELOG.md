@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.22.10
+
+### Patch Changes
+
+- Commit command to commit changes
+  Run state json file improvements
+  Argument normalization
+- Updated dependencies
+  - @locusai/sdk@0.22.10
+
 ## 0.22.9
 
 ### Patch Changes
