@@ -94,9 +94,43 @@ export class SandboxedClaudeRunner implements AgentRunner {
           env: process.env,
         });
 
+        // Flush function — set by the verbose branch so the close handler
+        // can drain any remaining data from the line buffer.
+        let flushLineBuffer: (() => void) | null = null;
+
         if (options.verbose) {
           let lineBuffer = "";
           const seenToolIds = new Set<string>();
+
+          const processLine = (line: string) => {
+            if (!line.trim()) return;
+            try {
+              const event = JSON.parse(line) as ClaudeStreamEvent;
+
+              if (event.type === "assistant" && event.message?.content) {
+                for (const item of event.message.content) {
+                  if (
+                    item.type === "tool_use" &&
+                    item.id &&
+                    !seenToolIds.has(item.id)
+                  ) {
+                    seenToolIds.add(item.id);
+                    options.onToolActivity?.(
+                      formatToolCall(item.name ?? "", item.input ?? {})
+                    );
+                  }
+                }
+              } else if (event.type === "result") {
+                const text = event.result ?? "";
+                output = text;
+                options.onOutput?.(text);
+              }
+            } catch {
+              const newLine = `${line}\n`;
+              output += newLine;
+              options.onOutput?.(newLine);
+            }
+          };
 
           this.process.stdout?.on("data", (chunk: Buffer) => {
             lineBuffer += chunk.toString();
@@ -104,35 +138,19 @@ export class SandboxedClaudeRunner implements AgentRunner {
             lineBuffer = lines.pop() ?? "";
 
             for (const line of lines) {
-              if (!line.trim()) continue;
-              try {
-                const event = JSON.parse(line) as ClaudeStreamEvent;
-
-                if (event.type === "assistant" && event.message?.content) {
-                  for (const item of event.message.content) {
-                    if (
-                      item.type === "tool_use" &&
-                      item.id &&
-                      !seenToolIds.has(item.id)
-                    ) {
-                      seenToolIds.add(item.id);
-                      options.onToolActivity?.(
-                        formatToolCall(item.name ?? "", item.input ?? {})
-                      );
-                    }
-                  }
-                } else if (event.type === "result") {
-                  const text = event.result ?? "";
-                  output = text;
-                  options.onOutput?.(text);
-                }
-              } catch {
-                const newLine = `${line}\n`;
-                output += newLine;
-                options.onOutput?.(newLine);
-              }
+              processLine(line);
             }
           });
+
+          // Expose flush so the close handler can drain the remaining buffer.
+          // Docker sandbox exec may not terminate stdout with a trailing
+          // newline, leaving the final "result" event stuck in the buffer.
+          flushLineBuffer = () => {
+            if (lineBuffer.trim()) {
+              processLine(lineBuffer);
+              lineBuffer = "";
+            }
+          };
         } else {
           this.process.stdout?.on("data", (chunk: Buffer) => {
             const text = chunk.toString();
@@ -149,6 +167,9 @@ export class SandboxedClaudeRunner implements AgentRunner {
 
         this.process.on("close", (code) => {
           this.process = null;
+
+          // Flush any remaining verbose line buffer before resolving.
+          flushLineBuffer?.();
 
           if (this.aborted) {
             resolve({
