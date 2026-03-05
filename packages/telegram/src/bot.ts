@@ -6,6 +6,12 @@
 import { createLogger } from "@locusai/sdk";
 import { Bot } from "grammy";
 import {
+  CANCEL_ALL,
+  CANCEL_CMD_PREFIX,
+  handleCancel,
+  handleCancelCallback,
+} from "./commands/cancel.js";
+import {
   handleBranch,
   handleCheckout,
   handleCommit,
@@ -112,6 +118,11 @@ export function createBot(config: TelegramConfig): Bot {
   bot.command("pr", async (ctx) => {
     const args = parseArgs(ctx.message?.text ?? "", "pr");
     await handlePR(ctx, args);
+  });
+
+  // ── Cancel Command ─────────────────────────────────────────────────────
+  bot.command("cancel", async (ctx) => {
+    await handleCancel(ctx);
   });
 
   // ── Service Commands ────────────────────────────────────────────────────
@@ -229,6 +240,15 @@ function registerCallbackHandlers(bot: Bot): void {
   bot.callbackQuery(CB.STASH_DROP, async (ctx) => {
     await ctx.answerCallbackQuery();
     await handleStash(ctx, ["drop"]);
+  });
+
+  // Cancel command callbacks
+  bot.callbackQuery(CANCEL_ALL, async (ctx) => {
+    await handleCancelCallback(ctx);
+  });
+
+  bot.callbackQuery(new RegExp(`^${CANCEL_CMD_PREFIX}`), async (ctx) => {
+    await handleCancelCallback(ctx);
   });
 
   // Confirmation callbacks

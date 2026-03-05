@@ -143,6 +143,7 @@ async function handleBot(): Promise<void> {
       { command: "checkout", description: "Switch branch" },
       { command: "diff", description: "Show diff" },
       { command: "pr", description: "Create pull request" },
+      { command: "cancel", description: "Abort running commands" },
       { command: "service", description: "Manage bot process" },
       { command: "help", description: "Show help message" },
     ]);

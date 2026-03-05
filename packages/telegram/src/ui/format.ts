@@ -100,14 +100,15 @@ export function formatStreamingMessage(
   const header = `${status} ${bold(escapeHtml(command))}`;
 
   if (!output.trim()) {
-    return `${header}\n\n${italic("Running...")}`;
+    return `${header}\n\n${italic("Running...")}\n\n${italic("Send /cancel to abort")}`;
   }
 
   // Take last N lines for streaming display
   const lines = output.trim().split("\n");
   const lastLines = lines.slice(-30).join("\n");
 
-  return `${header}\n\n${codeBlock(lastLines)}`;
+  const hint = isComplete ? "" : `\n\n${italic("Send /cancel to abort")}`;
+  return `${header}\n\n${codeBlock(lastLines)}${hint}`;
 }
 
 /** Format an error message. */
