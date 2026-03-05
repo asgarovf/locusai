@@ -262,6 +262,7 @@ ${bold("Commands:")}
   ${cyan("discuss")}           AI-powered architectural discussions
   ${cyan("artifacts")}         View and manage AI-generated artifacts
   ${cyan("status")}            Dashboard view of current state
+  ${cyan("commit")}            AI-powered commit message generation
   ${cyan("config")}            View and manage settings
   ${cyan("logs")}              View, tail, and manage execution logs
   ${cyan("create")} ${dim("<name>")}       Scaffold a new community package
@@ -335,6 +336,7 @@ function requiresSandboxSync(
     case "run":
     case "review":
     case "iterate":
+    case "commit":
       return true;
 
     case "exec":
@@ -645,6 +647,16 @@ async function main(): Promise<void> {
       const { artifactsCommand } = await import("./commands/artifacts.js");
       const artifactsArgs = parsed.flags.help ? ["help"] : parsed.args;
       await artifactsCommand(projectRoot, artifactsArgs);
+      break;
+    }
+
+    case "commit": {
+      const { commitCommand } = await import("./commands/commit.js");
+      const commitArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await commitCommand(projectRoot, commitArgs, {
+        dryRun: parsed.flags.dryRun,
+        model: parsed.flags.model,
+      });
       break;
     }
 

@@ -1,6 +1,10 @@
 /**
  * Run state persistence — tracks sprint/parallel execution progress.
  * Enables resume after failure with `locus run --resume`.
+ *
+ * State is stored per-sprint in `.locus/run-state/<sprint-slug>.json`,
+ * allowing independent pause/resume of multiple sprints.
+ * Parallel (non-sprint) runs use `.locus/run-state/_parallel.json`.
  */
 
 import {
@@ -16,28 +20,55 @@ import { getLogger } from "./logger.js";
 
 // ─── Paths ──────────────────────────────────────────────────────────────────
 
-function getRunStatePath(projectRoot: string): string {
-  return join(projectRoot, ".locus", "run-state.json");
+function getRunStateDir(projectRoot: string): string {
+  return join(projectRoot, ".locus", "run-state");
+}
+
+/** Slugify a sprint name for use as a filename. */
+function sprintSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Get the path to the run state file.
+ * - With sprintName: `.locus/run-state/<slug>.json`
+ * - Without: `.locus/run-state/_parallel.json`
+ */
+function getRunStatePath(projectRoot: string, sprintName?: string): string {
+  const dir = getRunStateDir(projectRoot);
+  if (sprintName) {
+    return join(dir, `${sprintSlug(sprintName)}.json`);
+  }
+  return join(dir, "_parallel.json");
 }
 
 // ─── Load / Save ────────────────────────────────────────────────────────────
 
-/** Load the current run state, or null if no active run. */
-export function loadRunState(projectRoot: string): RunState | null {
-  const path = getRunStatePath(projectRoot);
+/**
+ * Load run state for a specific sprint, or parallel state if no sprint given.
+ */
+export function loadRunState(
+  projectRoot: string,
+  sprintName?: string
+): RunState | null {
+  const path = getRunStatePath(projectRoot, sprintName);
   if (!existsSync(path)) return null;
 
   try {
     return JSON.parse(readFileSync(path, "utf-8"));
   } catch {
-    getLogger().warn("Corrupted run-state.json, ignoring");
+    getLogger().warn("Corrupted run state file, ignoring");
     return null;
   }
 }
 
-/** Save run state to disk. */
+/** Save run state to disk. Path is derived from `state.sprint`. */
 export function saveRunState(projectRoot: string, state: RunState): void {
-  const path = getRunStatePath(projectRoot);
+  const path = getRunStatePath(projectRoot, state.sprint);
   const dir = dirname(path);
 
   if (!existsSync(dir)) {
@@ -47,9 +78,11 @@ export function saveRunState(projectRoot: string, state: RunState): void {
   writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
 }
 
-/** Clear run state (on successful completion or manual clear). */
-export function clearRunState(projectRoot: string): void {
-  const path = getRunStatePath(projectRoot);
+/**
+ * Clear run state for a specific sprint, or parallel state if no sprint given.
+ */
+export function clearRunState(projectRoot: string, sprintName?: string): void {
+  const path = getRunStatePath(projectRoot, sprintName);
   if (existsSync(path)) {
     unlinkSync(path);
   }

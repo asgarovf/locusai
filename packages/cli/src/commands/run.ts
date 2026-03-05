@@ -128,9 +128,12 @@ export async function runCommand(
 
   const config = loadConfig(projectRoot);
   const _log = getLogger();
+
+  // Mutable ref so the shutdown handler can load the correct sprint-specific state
+  const runRef = { sprintName: undefined as string | undefined };
   const cleanupShutdown = registerShutdownHandlers({
     projectRoot,
-    getRunState: () => loadRunState(projectRoot),
+    getRunState: () => loadRunState(projectRoot, runRef.sprintName),
   });
 
   try {
@@ -182,7 +185,7 @@ export async function runCommand(
 
     // Resume mode
     if (flags.resume) {
-      return handleResume(projectRoot, config, sandboxed);
+      return handleResume(projectRoot, config, sandboxed, runRef);
     }
 
     // Parse issue numbers from args
@@ -190,7 +193,7 @@ export async function runCommand(
 
     if (issueNumbers.length === 0) {
       // No issue numbers — run active sprint
-      return handleSprintRun(projectRoot, config, flags, sandboxed);
+      return handleSprintRun(projectRoot, config, flags, sandboxed, runRef);
     }
 
     if (issueNumbers.length === 1) {
@@ -223,7 +226,8 @@ async function handleSprintRun(
   projectRoot: string,
   config: LocusConfig,
   flags: { dryRun?: boolean; model?: string },
-  sandboxed: boolean
+  sandboxed: boolean,
+  runRef: { sprintName: string | undefined }
 ): Promise<void> {
   const log = getLogger();
   const execution = resolveExecutionContext(config, flags.model);
@@ -240,15 +244,16 @@ async function handleSprintRun(
   }
 
   const sprintName = config.sprint.active;
+  runRef.sprintName = sprintName;
   process.stderr.write(`\n${bold("Sprint:")} ${cyan(sprintName)}\n`);
 
-  // Check for existing run lock
-  const existingState = loadRunState(projectRoot);
-  if (existingState && existingState.type === "sprint") {
+  // Check for existing run state for this sprint
+  const existingState = loadRunState(projectRoot, sprintName);
+  if (existingState) {
     const stats = getRunStats(existingState);
     if (stats.inProgress > 0 || stats.pending > 0) {
       process.stderr.write(
-        `\n${yellow("⚠")} A sprint run is already in progress.\n`
+        `\n${yellow("⚠")} A run for this sprint is already in progress.\n`
       );
       process.stderr.write(
         `  Use ${bold("locus run --resume")} to continue.\n`
@@ -508,7 +513,7 @@ async function handleSprintRun(
   }
 
   if (stats.failed === 0) {
-    clearRunState(projectRoot);
+    clearRunState(projectRoot, sprintName);
   }
 }
 
@@ -759,16 +764,27 @@ async function handleParallelRun(
 async function handleResume(
   projectRoot: string,
   config: LocusConfig,
-  sandboxed: boolean
+  sandboxed: boolean,
+  runRef: { sprintName: string | undefined }
 ): Promise<void> {
   const execution = resolveExecutionContext(config);
-  const state = loadRunState(projectRoot);
+
+  // Try active sprint state first, then fall back to parallel state
+  const sprintName = config.sprint.active ?? undefined;
+  let state = sprintName ? loadRunState(projectRoot, sprintName) : null;
+  if (!state) {
+    state = loadRunState(projectRoot); // parallel state
+  }
+
   if (!state) {
     process.stderr.write(
       `${red("✗")} No run state found. Nothing to resume.\n`
     );
     return;
   }
+
+  // Track the sprint for the shutdown handler
+  runRef.sprintName = state.sprint;
 
   const stats = getRunStats(state);
   process.stderr.write(
@@ -899,7 +915,7 @@ async function handleResume(
   }
 
   if (finalStats.failed === 0) {
-    clearRunState(projectRoot);
+    clearRunState(projectRoot, state.sprint);
   }
 }
 

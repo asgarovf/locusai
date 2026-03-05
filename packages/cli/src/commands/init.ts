@@ -277,6 +277,7 @@ export async function initCommand(cwd: string): Promise<void> {
     join(locusDir, "artifacts"),
     join(locusDir, "plans"),
     join(locusDir, "logs"),
+    join(locusDir, "run-state"),
   ];
 
   for (const dir of dirs) {
@@ -315,6 +316,7 @@ export async function initCommand(cwd: string): Promise<void> {
         config.logging = { ...config.logging, ...existing.logging };
       if (existing.sandbox)
         config.sandbox = { ...config.sandbox, ...existing.sandbox };
+      if (existing.packages) config.packages = existing.packages;
     } catch {
       // Ignore parse errors on re-init
     }

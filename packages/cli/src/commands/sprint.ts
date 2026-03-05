@@ -20,7 +20,6 @@ import {
   updateIssueLabels,
 } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
-import { clearRunState } from "../core/run-state.js";
 import { progressBar } from "../display/progress.js";
 import { type Column, renderDetails, renderTable } from "../display/table.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
@@ -513,9 +512,6 @@ async function sprintActive(
   }
 
   updateConfigValue(projectRoot, "sprint.active", found.title);
-
-  // Clear stale run state so `locus run` starts fresh for the new sprint
-  clearRunState(projectRoot);
 
   process.stderr.write(
     `\r${green("✓")} Active sprint set to "${bold(found.title)}"\n`
