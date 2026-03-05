@@ -70,8 +70,23 @@ interface ParsedArgs {
   };
 }
 
+/**
+ * Normalize single-dash long flags to double-dash (e.g., -sprint → --sprint).
+ * Telegram converts `--` to `-`, so we accept both forms.
+ * Single-char flags like -d, -h, -n are left unchanged.
+ */
+export function normalizeArgs(args: string[]): string[] {
+  return args.map((arg) => {
+    if (arg.startsWith("--") || !arg.startsWith("-")) return arg;
+    // Single-char flags (e.g., -d, -h) have length 2 — leave them alone
+    if (arg.length <= 2) return arg;
+    // Handle -flag=value (e.g., -sandbox=require → --sandbox=require)
+    return `-${arg}`;
+  });
+}
+
 function parseArgs(argv: string[]): ParsedArgs {
-  const rawArgs = argv.slice(2); // skip node + script
+  const rawArgs = normalizeArgs(argv.slice(2)); // skip node + script; normalize dashes
 
   const flags: ParsedArgs["flags"] = {
     debug: false,
