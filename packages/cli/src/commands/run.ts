@@ -66,11 +66,21 @@ import type { Issue, LocusConfig } from "../types.js";
 function resolveExecutionContext(
   config: LocusConfig,
   modelOverride?: string
-): { provider: "claude" | "codex"; model: string; sandboxName?: string; containerWorkdir?: string } {
+): {
+  provider: "claude" | "codex";
+  model: string;
+  sandboxName?: string;
+  containerWorkdir?: string;
+} {
   const model = modelOverride ?? config.ai.model;
   const provider = inferProviderFromModel(model) ?? config.ai.provider;
   const sandboxName = getModelSandboxName(config.sandbox, model, provider);
-  return { provider, model, sandboxName, containerWorkdir: config.sandbox.containerWorkdir };
+  return {
+    provider,
+    model,
+    sandboxName,
+    containerWorkdir: config.sandbox.containerWorkdir,
+  };
 }
 
 // ─── Help ────────────────────────────────────────────────────────────────────
@@ -695,7 +705,7 @@ async function handleParallelRun(
         dryRun: flags.dryRun,
         sandboxed,
         sandboxName: execution.sandboxName,
-      containerWorkdir: execution.containerWorkdir,
+        containerWorkdir: execution.containerWorkdir,
       });
 
       if (result.success) {

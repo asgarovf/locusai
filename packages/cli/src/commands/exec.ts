@@ -193,7 +193,11 @@ async function handleJsonStream(
     );
     const runner = config.sandbox.enabled
       ? sandboxName
-        ? createUserManagedSandboxRunner(config.ai.provider, sandboxName, config.sandbox.containerWorkdir)
+        ? createUserManagedSandboxRunner(
+            config.ai.provider,
+            sandboxName,
+            config.sandbox.containerWorkdir
+          )
         : null
       : await createRunnerAsync(config.ai.provider, false);
 

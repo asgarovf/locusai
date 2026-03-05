@@ -773,9 +773,7 @@ function verifyBinEntries(sandboxName: string, workdir: string): void {
     // Check for specific well-known binaries that projects commonly need
     const bins = result.split("\n").map((b) => b.trim());
     const knownBins = ["biome", "tsc", "jest"];
-    const missing = knownBins.filter(
-      (b) => !bins.some((entry) => entry === b)
-    );
+    const missing = knownBins.filter((b) => !bins.some((entry) => entry === b));
     if (missing.length > 0) {
       process.stderr.write(
         `  ${dim(`Note: ${missing.join(", ")} not found in .bin (may not be a project dependency).`)}\n`

@@ -172,7 +172,11 @@ async function runInteractiveRepl(
       inferProviderFromModel(config.ai.model) || config.ai.provider;
     const sandboxName = getProviderSandboxName(config.sandbox, provider);
     if (sandboxName) {
-      sandboxRunner = createUserManagedSandboxRunner(provider, sandboxName, config.sandbox.containerWorkdir);
+      sandboxRunner = createUserManagedSandboxRunner(
+        provider,
+        sandboxName,
+        config.sandbox.containerWorkdir
+      );
       process.stderr.write(
         `${dim("Using")} ${dim(provider)} ${dim("sandbox")} ${dim(sandboxName)}\n`
       );

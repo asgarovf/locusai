@@ -69,7 +69,11 @@ export class SandboxedCodexRunner implements AgentRunner {
     // propagate back to the host. The backup ensures we never lose host files.
     options.onStatusChange?.("Syncing sandbox...");
     const backup = backupIgnoredFiles(options.cwd);
-    await enforceSandboxIgnore(this.sandboxName, options.cwd, this.containerWorkdir);
+    await enforceSandboxIgnore(
+      this.sandboxName,
+      options.cwd,
+      this.containerWorkdir
+    );
 
     if (!this.codexInstalled) {
       options.onStatusChange?.("Checking codex...");
