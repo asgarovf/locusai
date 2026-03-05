@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.22.11
+
+### Patch Changes
+
+- Sandbox verbose mode improvements
+
 ## 0.22.10
 
 ### Patch Changes

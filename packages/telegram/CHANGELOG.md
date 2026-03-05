@@ -1,5 +1,13 @@
 # @locusai/locus-telegram
 
+## 0.22.11
+
+### Patch Changes
+
+- Sandbox verbose mode improvements
+- Updated dependencies
+  - @locusai/sdk@0.22.11
+
 ## 0.22.10
 
 ### Patch Changes
