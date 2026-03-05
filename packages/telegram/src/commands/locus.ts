@@ -8,6 +8,7 @@
 
 import { invokeLocusStream } from "@locusai/sdk";
 import type { Context } from "grammy";
+import { commandTracker } from "../tracker.js";
 import { formatCommandResult, formatStreamingMessage } from "../ui/format.js";
 import {
   planKeyboard,
@@ -109,7 +110,9 @@ async function handleStreamingCommand(
   command: string,
   args: string[]
 ): Promise<void> {
+  const chatId = ctx.chat!.id;
   const child = invokeLocusStream(fullArgs);
+  const trackingId = commandTracker.track(chatId, command, args, child);
 
   let output = "";
   let lastEditTime = 0;
@@ -151,6 +154,7 @@ async function handleStreamingCommand(
 
   await new Promise<void>((resolve) => {
     child.on("close", async (exitCode) => {
+      commandTracker.untrack(chatId, trackingId);
       if (editTimer) clearTimeout(editTimer);
 
       // Final edit with complete output
@@ -190,7 +194,9 @@ async function handleBufferedCommand(
   fullArgs: string[],
   command: string
 ): Promise<void> {
+  const chatId = ctx.chat!.id;
   const child = invokeLocusStream(fullArgs);
+  const trackingId = commandTracker.track(chatId, command, [], child);
   let output = "";
 
   child.stdout?.on("data", (chunk: Buffer) => {
@@ -203,6 +209,7 @@ async function handleBufferedCommand(
 
   await new Promise<void>((resolve) => {
     child.on("close", async (exitCode) => {
+      commandTracker.untrack(chatId, trackingId);
       const result = formatCommandResult(displayCmd, output, exitCode ?? 0);
 
       const keyboard = getPostCommandKeyboard(command, [], exitCode ?? 0);
