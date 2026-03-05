@@ -51,7 +51,8 @@ async function tracked(
   args: string[],
   fn: () => Promise<void>
 ): Promise<void> {
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
 
   // Concurrency guard — prevent conflicting exclusive commands
   const conflict = commandTracker.checkExclusiveConflict(chatId, command);

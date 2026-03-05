@@ -17,7 +17,8 @@ export const CANCEL_ALL = "cancel:all";
 
 /** /cancel handler */
 export async function handleCancel(ctx: Context): Promise<void> {
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
   const active = commandTracker.getActive(chatId);
 
   if (active.length === 0) {
@@ -56,7 +57,8 @@ export async function handleCancelCallback(ctx: Context): Promise<void> {
   const data = ctx.callbackQuery?.data;
   if (!data) return;
 
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
 
   if (data === CANCEL_ALL) {
     const count = commandTracker.killAll(chatId);

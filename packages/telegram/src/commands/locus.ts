@@ -85,7 +85,10 @@ export async function handleLocusCommand(
   }
 
   // Concurrency guard — prevent conflicting exclusive commands
-  const conflict = commandTracker.checkExclusiveConflict(ctx.chat!.id, command);
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
+
+  const conflict = commandTracker.checkExclusiveConflict(chatId, command);
   if (conflict) {
     await ctx.reply(formatConflictMessage(command, conflict.runningCommand), {
       parse_mode: "HTML",
@@ -123,7 +126,8 @@ async function handleStreamingCommand(
   command: string,
   args: string[]
 ): Promise<void> {
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
   const child = invokeLocusStream(fullArgs);
   const trackingId = commandTracker.track(chatId, command, args, child);
 
@@ -207,7 +211,8 @@ async function handleBufferedCommand(
   fullArgs: string[],
   command: string
 ): Promise<void> {
-  const chatId = ctx.chat!.id;
+  const chatId = ctx.chat?.id;
+  if (!chatId) return;
   const child = invokeLocusStream(fullArgs);
   const trackingId = commandTracker.track(chatId, command, [], child);
   let output = "";
