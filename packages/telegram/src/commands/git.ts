@@ -5,7 +5,8 @@
  * PR creation uses `gh` CLI (same as the locus CLI does).
  */
 
-import { execSync } from "node:child_process";
+import { exec as execCb } from "node:child_process";
+import { promisify } from "node:util";
 import type { Context } from "grammy";
 import {
   bold,
@@ -23,19 +24,18 @@ import {
   prCreatedMessage,
 } from "../ui/messages.js";
 
+const exec = promisify(execCb);
+
 // ─── Git Helper ─────────────────────────────────────────────────────────────
 
-function git(args: string): string {
-  return execSync(`git ${args}`, {
-    encoding: "utf-8",
-    stdio: ["pipe", "pipe", "pipe"],
-    cwd: process.cwd(),
-  });
+async function git(args: string): Promise<string> {
+  const { stdout } = await exec(`git ${args}`, { cwd: process.cwd() });
+  return stdout;
 }
 
-function gitSafe(args: string): string | null {
+async function gitSafe(args: string): Promise<string | null> {
   try {
-    return git(args);
+    return await git(args);
   } catch {
     return null;
   }
@@ -46,7 +46,7 @@ function gitSafe(args: string): string | null {
 /** /gitstatus — show git status */
 export async function handleGitStatus(ctx: Context): Promise<void> {
   try {
-    const status = git("status --short");
+    const status = await git("status --short");
     if (!status.trim()) {
       await ctx.reply(formatSuccess("Working tree is clean."), {
         parse_mode: "HTML",
@@ -54,7 +54,7 @@ export async function handleGitStatus(ctx: Context): Promise<void> {
       return;
     }
 
-    const branch = git("branch --show-current").trim();
+    const branch = (await git("branch --show-current")).trim();
     await ctx.reply(
       `${bold("Branch:")} ${escapeHtml(branch)}\n\n${codeBlock(status)}`,
       { parse_mode: "HTML" }
@@ -71,8 +71,8 @@ export async function handleStage(ctx: Context, args: string[]): Promise<void> {
   const target = args.length > 0 ? args.join(" ") : ".";
 
   try {
-    git(`add ${target}`);
-    const status = git("status --short");
+    await git(`add ${target}`);
+    const status = await git("status --short");
     await ctx.reply(
       `${formatSuccess(`Staged: ${target}`)}\n\n${codeBlock(status)}`,
       { parse_mode: "HTML" }
@@ -99,7 +99,7 @@ export async function handleCommit(
   const message = args.join(" ");
 
   try {
-    const result = git(`commit -m ${JSON.stringify(message)}`);
+    const result = await git(`commit -m ${JSON.stringify(message)}`);
     // Extract short hash from commit output
     const hashMatch = result.match(/\[[\w/.-]+ ([a-f0-9]+)\]/);
     const hash = hashMatch?.[1] ?? "unknown";
@@ -136,7 +136,7 @@ export async function handleStash(ctx: Context, args: string[]): Promise<void> {
         const stashArgs = message
           ? `stash push -m ${JSON.stringify(message)}`
           : "stash push";
-        git(stashArgs);
+        await git(stashArgs);
         await ctx.reply(gitStashMessage("Changes stashed"), {
           parse_mode: "HTML",
           reply_markup: stashKeyboard(),
@@ -144,14 +144,14 @@ export async function handleStash(ctx: Context, args: string[]): Promise<void> {
         break;
       }
       case "pop": {
-        git("stash pop");
+        await git("stash pop");
         await ctx.reply(gitStashMessage("Stash popped"), {
           parse_mode: "HTML",
         });
         break;
       }
       case "list": {
-        const list = gitSafe("stash list") ?? "";
+        const list = (await gitSafe("stash list")) ?? "";
         if (!list.trim()) {
           await ctx.reply(formatSuccess("No stashes."), {
             parse_mode: "HTML",
@@ -163,7 +163,7 @@ export async function handleStash(ctx: Context, args: string[]): Promise<void> {
       }
       case "drop": {
         const stashRef = args[1] ?? "stash@{0}";
-        git(`stash drop ${stashRef}`);
+        await git(`stash drop ${stashRef}`);
         await ctx.reply(gitStashMessage(`Dropped ${stashRef}`), {
           parse_mode: "HTML",
         });
@@ -171,7 +171,7 @@ export async function handleStash(ctx: Context, args: string[]): Promise<void> {
       }
       default: {
         // Default: just stash
-        git("stash push");
+        await git("stash push");
         await ctx.reply(gitStashMessage("Changes stashed"), {
           parse_mode: "HTML",
           reply_markup: stashKeyboard(),
@@ -193,8 +193,8 @@ export async function handleBranch(
   try {
     if (args.length === 0) {
       // List branches
-      const branches = git("branch -a --format='%(refname:short)'");
-      const current = git("branch --show-current").trim();
+      const branches = await git("branch -a --format='%(refname:short)'");
+      const current = (await git("branch --show-current")).trim();
       await ctx.reply(
         `${bold("Current:")} ${escapeHtml(current)}\n\n${codeBlock(branches)}`,
         { parse_mode: "HTML" }
@@ -202,7 +202,7 @@ export async function handleBranch(
     } else {
       // Create new branch
       const branchName = args[0];
-      git(`branch ${branchName}`);
+      await git(`branch ${branchName}`);
       await ctx.reply(gitBranchCreatedMessage(branchName), {
         parse_mode: "HTML",
       });
@@ -229,7 +229,7 @@ export async function handleCheckout(
   const branch = args[0];
 
   try {
-    git(`checkout ${branch}`);
+    await git(`checkout ${branch}`);
     await ctx.reply(gitCheckoutMessage(branch), { parse_mode: "HTML" });
   } catch (error: unknown) {
     await ctx.reply(formatError("Checkout failed", String(error)), {
@@ -241,9 +241,9 @@ export async function handleCheckout(
 /** /diff — show git diff summary */
 export async function handleDiff(ctx: Context): Promise<void> {
   try {
-    const diff = git("diff --stat");
+    const diff = await git("diff --stat");
     if (!diff.trim()) {
-      const staged = git("diff --cached --stat");
+      const staged = await git("diff --cached --stat");
       if (!staged.trim()) {
         await ctx.reply(formatSuccess("No changes."), {
           parse_mode: "HTML",
@@ -278,21 +278,17 @@ export async function handlePR(ctx: Context, args: string[]): Promise<void> {
 
   try {
     // Push current branch first
-    const branch = git("branch --show-current").trim();
+    const branch = (await git("branch --show-current")).trim();
     try {
-      git(`push -u origin ${branch}`);
+      await git(`push -u origin ${branch}`);
     } catch {
       // May already be pushed — continue
     }
 
     // Create PR using gh CLI
-    const result = execSync(
+    const { stdout: result } = await exec(
       `gh pr create --title ${JSON.stringify(title)} --body "Created via Locus Telegram Bot" --head ${branch}`,
-      {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-        cwd: process.cwd(),
-      }
+      { cwd: process.cwd() },
     );
 
     const prMatch = result.match(/\/pull\/(\d+)/);
