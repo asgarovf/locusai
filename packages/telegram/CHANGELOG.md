@@ -1,5 +1,16 @@
 # @locusai/locus-telegram
 
+## 0.23.2
+
+### Patch Changes
+
+- Telegram action flow improvements
+  Sandbox initialization problem fixes
+- Updated dependencies
+  - @locusai/locus-gateway@0.23.2
+  - @locusai/locus-pm2@0.23.2
+  - @locusai/sdk@0.23.2
+
 ## 0.23.1
 
 ### Patch Changes

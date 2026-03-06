@@ -1,5 +1,12 @@
 # @locusai/locus-pm2
 
+## 0.23.2
+
+### Patch Changes
+
+- Telegram action flow improvements
+  Sandbox initialization problem fixes
+
 ## 0.23.1
 
 ### Patch Changes
