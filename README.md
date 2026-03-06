@@ -303,6 +303,8 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architectur
 |---------|-------------|
 | [`@locusai/cli`](./packages/cli) | Main CLI |
 | [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
+| [`@locusai/locus-gateway`](./packages/gateway) | Channel-agnostic message gateway for platform adapters |
+| [`@locusai/locus-pm2`](./packages/pm2) | Unified PM2 process management for platform packages |
 | [`@locusai/locus-telegram`](./packages/telegram) | Remote-control Locus via Telegram |
 | [`@locusai/www`](./apps/www) | Documentation website |
 
