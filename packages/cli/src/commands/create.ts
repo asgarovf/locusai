@@ -87,7 +87,8 @@ function generatePackageJson(
   name: string,
   displayName: string,
   description: string,
-  sdkVersion: string
+  sdkVersion: string,
+  gatewayVersion: string
 ): string {
   const pkg = {
     name: `@locusai/locus-${name}`,
@@ -111,6 +112,7 @@ function generatePackageJson(
       format: "biome format --write .",
     },
     dependencies: {
+      "@locusai/locus-gateway": `^${gatewayVersion}`,
       "@locusai/sdk": `^${sdkVersion}`,
     },
     devDependencies: {
@@ -346,14 +348,27 @@ export async function createCommand(args: string[]): Promise<void> {
     );
   }
 
-  // 4. Determine SDK version from the monorepo
+  // 4. Determine SDK and gateway versions from the monorepo
   let sdkVersion = "0.22.0";
+  let gatewayVersion = "0.22.0";
   try {
+    const { readFileSync } = await import("node:fs");
+
     const sdkPkgPath = join(process.cwd(), "packages", "sdk", "package.json");
     if (existsSync(sdkPkgPath)) {
-      const { readFileSync } = await import("node:fs");
       const sdkPkg = JSON.parse(readFileSync(sdkPkgPath, "utf-8"));
       if (sdkPkg.version) sdkVersion = sdkPkg.version;
+    }
+
+    const gatewayPkgPath = join(
+      process.cwd(),
+      "packages",
+      "gateway",
+      "package.json"
+    );
+    if (existsSync(gatewayPkgPath)) {
+      const gatewayPkg = JSON.parse(readFileSync(gatewayPkgPath, "utf-8"));
+      if (gatewayPkg.version) gatewayVersion = gatewayPkg.version;
     }
   } catch {
     // Use fallback
@@ -367,7 +382,7 @@ export async function createCommand(args: string[]): Promise<void> {
   // 6. Write files
   writeFileSync(
     join(packagesDir, "package.json"),
-    generatePackageJson(name, displayName, description, sdkVersion),
+    generatePackageJson(name, displayName, description, sdkVersion, gatewayVersion),
     "utf-8"
   );
   process.stderr.write(`${green("✓")} Generated package.json\n`);

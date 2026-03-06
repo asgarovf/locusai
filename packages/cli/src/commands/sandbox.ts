@@ -28,6 +28,7 @@ import {
   detectSandboxSupport,
   getProviderSandboxName,
   probeSymlinkSupport,
+  SANDBOX_DEPS_DIR,
 } from "../core/sandbox.js";
 import {
   backupIgnoredFiles,
@@ -301,7 +302,16 @@ async function handleAgentLogin(
 
   const child = spawn(
     "docker",
-    ["sandbox", "exec", "-it", "-w", workdir, sandboxName, agent],
+    [
+      "sandbox",
+      "exec",
+      "--privileged",
+      "-it",
+      "-w",
+      workdir,
+      sandboxName,
+      agent,
+    ],
     {
       stdio: "inherit",
     }
@@ -589,14 +599,52 @@ async function handleShell(projectRoot: string, args: string[]): Promise<void> {
   process.stderr.write(
     `Opening shell in ${provider} sandbox ${dim(sandboxName)}...\n`
   );
+  // Build a shell init that auto-detects common bin directories for any
+  // ecosystem (JS, Python, Rust, Go, Ruby, etc.) and sources a user-defined
+  // profile if present. This ensures the sandbox shell mirrors the host
+  // environment regardless of project type.
+  const binDirs = [
+    `"${SANDBOX_DEPS_DIR}/node_modules/.bin"`,
+    `"${workdir}/node_modules/.bin"`,
+    `"${workdir}/.venv/bin"`,
+    `"${workdir}/venv/bin"`,
+    `"${workdir}/vendor/bundle/ruby/*/bin"`,
+    `"$HOME/.cargo/bin"`,
+    `"$HOME/go/bin"`,
+    `"$HOME/.local/bin"`,
+    `"$HOME/.bun/bin"`,
+    `"$HOME/.deno/bin"`,
+    `"$HOME/.sdkman/candidates/*/current/bin"`,
+  ].join(" ");
+  const shellInit = [
+    // Auto-detect and add common bin directories to PATH
+    `for d in ${binDirs}; do`,
+    `  [ -d "$d" ] && case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac`,
+    `done`,
+    `export PATH`,
+    // Set NODE_PATH so require.resolve() in tool wrappers (biome, etc.)
+    // finds platform-specific binaries from the sandbox deps install
+    'NODE_PATH="' +
+      SANDBOX_DEPS_DIR +
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: We need a right formatting here
+      '/node_modules${NODE_PATH:+:$NODE_PATH}"',
+    `export NODE_PATH`,
+    // Source user-defined sandbox profile if present (for custom env vars, aliases, etc.)
+    `[ -f "${workdir}/.locus/sandbox-profile.sh" ] && . "${workdir}/.locus/sandbox-profile.sh"`,
+    `exec sh`,
+  ].join("\n");
+
   await runInteractiveCommand("docker", [
     "sandbox",
     "exec",
+    "--privileged",
     "-it",
     "-w",
     workdir,
     sandboxName,
     "sh",
+    "-c",
+    shellInit,
   ]);
 }
 
@@ -785,76 +833,39 @@ function verifyBinEntries(sandboxName: string, workdir: string): void {
 }
 
 /**
- * Build a shell script that installs dependencies on the container's native
- * filesystem (which supports symlinks), then copies the resulting node_modules
- * back to the bind-mounted project directory with all symlinks dereferenced.
+ * Build a shell script that installs dependencies to a container-local
+ * directory (SANDBOX_DEPS_DIR), NOT on the bind-mounted project directory.
  *
- * This is needed when the Docker bind mount does not support symlinks (ENOSYS).
- * Common on WSL/NTFS but can also occur with other Docker configurations.
- * The --backend=copyfile flag only controls file copying strategy but package
- * managers still create symlinks for .bin entries, hoisted packages, and
- * workspace links — all of which fail with ENOSYS on such mounts.
+ * This prevents cross-platform binary conflicts: the host (macOS) keeps its
+ * own node_modules with macOS binaries, and the sandbox (Linux) installs
+ * Linux-specific binaries separately. PATH and NODE_PATH are configured in
+ * the shell/agent to find the sandbox deps.
  */
-function buildNoSymlinksInstallScript(
-  workdir: string,
-  pm: PackageManager
-): string {
+function buildSandboxDepsScript(workdir: string, pm: PackageManager): string {
   const installCmd = getInstallCommand(pm).join(" ");
 
-  // The script:
-  // 1. Copies package manifests + lockfiles to a temp dir on native filesystem
-  // 2. Runs the package manager install there (symlinks work on native fs)
-  // 3. Copies all resulting node_modules back to the bind mount using cp -rL
-  //    which dereferences symlinks into regular files/directories
-  // 4. Verifies that .bin entries are present and executable
-  // 5. Cleans up the temp dir
   return [
     "set -e",
-    'TMPDIR="/tmp/locus-deps-install"',
+    `DEPS_DIR="${SANDBOX_DEPS_DIR}"`,
     `WORKDIR="${workdir}"`,
     "",
-    "# Clean previous attempt",
-    'rm -rf "$TMPDIR"',
-    'mkdir -p "$TMPDIR"',
-    'cd "$WORKDIR"',
+    'rm -rf "$DEPS_DIR"',
+    'mkdir -p "$DEPS_DIR"',
     "",
-    "# Copy all package.json files (preserving workspace directory structure)",
-    'find . -name package.json -not -path "*/node_modules/*" -not -path "./.git/*" | while read f; do',
-    '  mkdir -p "$TMPDIR/$(dirname "$f")"',
-    '  cp "$f" "$TMPDIR/$f"',
-    "done",
-    "",
-    "# Copy lockfiles and config files that affect installation",
-    "for lf in bun.lock bun.lockb yarn.lock pnpm-lock.yaml package-lock.json; do",
-    '  [ -f "$WORKDIR/$lf" ] && cp "$WORKDIR/$lf" "$TMPDIR/$lf" || true',
-    "done",
-    "for cf in bunfig.toml .npmrc .yarnrc .yarnrc.yml .pnpmfile.cjs pnpm-workspace.yaml; do",
-    '  [ -f "$WORKDIR/$cf" ] && cp "$WORKDIR/$cf" "$TMPDIR/$cf" || true',
-    "done",
-    "",
-    "# Install on native filesystem (symlinks work here)",
-    'cd "$TMPDIR"',
-    `${installCmd}`,
-    "",
-    "# Copy node_modules back to bind mount, dereferencing all symlinks.",
-    "# -L follows symlinks so they become regular files/dirs on the bind mount.",
-    "# maxdepth 5 covers root + nested workspace packages",
-    'find "$TMPDIR" -maxdepth 5 -name node_modules -type d | while read nm; do',
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: shell variable expansion
-    '  rel="${nm#$TMPDIR/}"',
-    '  dest="$WORKDIR/$rel"',
-    '  rm -rf "$dest"',
-    "  # cp -rL dereferences symlinks; fall back to cp -rH if -L is unsupported",
-    '  cp -rL "$nm" "$dest" 2>/dev/null || cp -rH "$nm" "$dest" 2>/dev/null || cp -r "$nm" "$dest"',
-    "done",
-    "",
-    "# Ensure .bin entries are executable (some cp implementations drop +x)",
-    'if [ -d "$WORKDIR/node_modules/.bin" ]; then',
-    '  chmod +x "$WORKDIR/node_modules/.bin/"* 2>/dev/null || true',
+    "# Copy package.json, stripping workspaces to avoid resolution errors",
+    "if command -v node >/dev/null 2>&1; then",
+    "  node -e \"var p=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));delete p.workspaces;require('fs').writeFileSync(process.argv[2],JSON.stringify(p,null,2));\" \"$WORKDIR/package.json\" \"$DEPS_DIR/package.json\"",
+    "else",
+    '  cp "$WORKDIR/package.json" "$DEPS_DIR/package.json"',
     "fi",
     "",
-    "# Cleanup",
-    'rm -rf "$TMPDIR"',
+    "# Copy lockfiles and config files",
+    "for f in bun.lock bun.lockb yarn.lock pnpm-lock.yaml package-lock.json bunfig.toml .npmrc .yarnrc .yarnrc.yml; do",
+    '  [ -f "$WORKDIR/$f" ] && cp "$WORKDIR/$f" "$DEPS_DIR/$f" || true',
+    "done",
+    "",
+    'cd "$DEPS_DIR"',
+    installCmd,
   ].join("\n");
 }
 
@@ -862,7 +873,7 @@ async function runSandboxSetup(
   sandboxName: string,
   projectRoot: string,
   containerWorkdir?: string,
-  noSymlinks?: boolean
+  _noSymlinks?: boolean
 ): Promise<boolean> {
   const workdir = containerWorkdir ?? projectRoot;
   const ecosystem = detectProjectEcosystem(projectRoot);
@@ -877,58 +888,39 @@ async function runSandboxSetup(
       await ensurePackageManagerInSandbox(sandboxName, pm);
     }
 
-    let installOk: boolean;
+    // Install deps to a container-local directory (not the bind mount).
+    // This prevents cross-platform binary conflicts: macOS host keeps its
+    // node_modules, sandbox gets Linux-specific binaries separately.
+    const installCmd = getInstallCommand(pm);
+    process.stderr.write(
+      `\nInstalling sandbox dependencies (${bold(installCmd.join(" "))}) to container filesystem...\n`
+    );
 
-    if (noSymlinks) {
-      // No-symlink mode: install on native filesystem then copy node_modules
-      // back with symlinks dereferenced. Docker bind mounts on some environments
-      // (WSL/NTFS, restrictive configs) don't support symlinks (ENOSYS).
-      const installCmd = getInstallCommand(pm);
-      process.stderr.write(
-        `\nInstalling dependencies (${bold(installCmd.join(" "))}, symlink-free) in sandbox ${dim(sandboxName)}...\n`
-      );
-
-      const script = buildNoSymlinksInstallScript(workdir, pm);
-      installOk = await runInteractiveCommand("docker", [
-        "sandbox",
-        "exec",
-        "--privileged",
-        sandboxName,
-        "sh",
-        "-c",
-        script,
-      ]);
-    } else {
-      // Standard mode: install directly on the bind mount (symlinks work)
-      const installCmd = getInstallCommand(pm);
-      process.stderr.write(
-        `\nInstalling dependencies (${bold(installCmd.join(" "))}) in sandbox ${dim(sandboxName)}...\n`
-      );
-
-      installOk = await runInteractiveCommand("docker", [
-        "sandbox",
-        "exec",
-        "--privileged",
-        "-w",
-        workdir,
-        sandboxName,
-        ...installCmd,
-      ]);
-    }
+    const script = buildSandboxDepsScript(workdir, pm);
+    const installOk = await runInteractiveCommand("docker", [
+      "sandbox",
+      "exec",
+      "--privileged",
+      sandboxName,
+      "sh",
+      "-c",
+      script,
+    ]);
 
     if (!installOk) {
       process.stderr.write(
-        `${red("✗")} Dependency install failed in sandbox ${dim(sandboxName)}.\n`
+        `${yellow("⚠")} Sandbox dependency install failed. Platform-specific tools may not work.\n`
+      );
+      process.stderr.write(
+        `  ${dim("Host node_modules will be used as fallback.")}\n`
       );
       return false;
     }
 
-    process.stderr.write(
-      `${green("✓")} Dependencies installed in sandbox ${dim(sandboxName)}.\n`
-    );
+    process.stderr.write(`${green("✓")} Sandbox dependencies installed.\n`);
 
     // Post-install verification: check that .bin entries exist
-    verifyBinEntries(sandboxName, workdir);
+    verifyBinEntries(sandboxName, SANDBOX_DEPS_DIR);
   } else {
     process.stderr.write(
       `\n${dim(`Detected ${ecosystem} project — skipping JS package install.`)}\n`

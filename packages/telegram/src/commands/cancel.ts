@@ -19,7 +19,8 @@ export const CANCEL_ALL = "cancel:all";
 export async function handleCancel(ctx: Context): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
-  const active = commandTracker.getActive(chatId);
+  const sessionId = String(chatId);
+  const active = commandTracker.getActive(sessionId);
 
   if (active.length === 0) {
     await ctx.reply(`ℹ️ No commands are currently running.`, {
@@ -30,7 +31,7 @@ export async function handleCancel(ctx: Context): Promise<void> {
 
   if (active.length === 1) {
     const cmd = active[0];
-    commandTracker.kill(chatId, cmd.id);
+    commandTracker.kill(sessionId, cmd.id);
     await ctx.reply(
       `🛑 Cancelled ${bold(`/${escapeHtml(cmd.command)}`)}${cmd.args.length ? ` ${escapeHtml(cmd.args.join(" "))}` : ""}`,
       { parse_mode: "HTML" }
@@ -59,9 +60,10 @@ export async function handleCancelCallback(ctx: Context): Promise<void> {
 
   const chatId = ctx.chat?.id;
   if (!chatId) return;
+  const sessionId = String(chatId);
 
   if (data === CANCEL_ALL) {
-    const count = commandTracker.killAll(chatId);
+    const count = commandTracker.killAll(sessionId);
     await ctx.answerCallbackQuery({ text: `Cancelled ${count} command(s)` });
     await ctx.editMessageText(`🛑 Cancelled ${bold(`${count} command(s)`)}.`, {
       parse_mode: "HTML",
@@ -71,7 +73,7 @@ export async function handleCancelCallback(ctx: Context): Promise<void> {
 
   if (data.startsWith(CANCEL_CMD_PREFIX)) {
     const id = data.slice(CANCEL_CMD_PREFIX.length);
-    const killed = commandTracker.kill(chatId, id);
+    const killed = commandTracker.kill(sessionId, id);
     if (killed) {
       await ctx.answerCallbackQuery({ text: "Command cancelled" });
       await ctx.editMessageText(`🛑 Command cancelled.`, {

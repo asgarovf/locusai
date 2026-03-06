@@ -95,10 +95,9 @@ export function buildReplPrompt(
     );
   }
 
-  const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
-  if (learnings) {
-    sections.push(`<past-learnings>\n${learnings}\n</past-learnings>`);
-  }
+  sections.push(
+    `<past-learnings>\nPast learnings are located in \`.locus/LEARNINGS.md\`.</past-learnings>`
+  );
 
   sections.push(
     `<learnings-reminder>IMPORTANT: If during this interaction you discover reusable lessons (architectural patterns, non-obvious constraints, user corrections), you MUST append them to \`.locus/LEARNINGS.md\` before finishing. This is mandatory — see the "Continuous Learning" section in project instructions.</learnings-reminder>`
@@ -132,11 +131,9 @@ function buildSystemContext(projectRoot: string): string {
     parts.push(`<project-instructions>\n${locusmd}\n</project-instructions>`);
   }
 
-  // LEARNINGS.md — accumulated knowledge
-  const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
-  if (learnings) {
-    parts.push(`<past-learnings>\n${learnings}\n</past-learnings>`);
-  }
+  parts.push(
+    `<past-learnings>\nPast learnings are located in \`.locus/LEARNINGS.md\`.</past-learnings>`
+  );
 
   // Discussion insights (if any)
   const discussionsDir = join(projectRoot, ".locus", "discussions");

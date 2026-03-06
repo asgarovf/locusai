@@ -4,8 +4,14 @@
  *
  * Long-running commands stream output by editing the Telegram message
  * in place at regular intervals.
+ *
+ * Uses the gateway's command registry and tracker (with string session IDs).
  */
 
+import {
+  getCommandDefinition,
+  STREAMING_COMMANDS,
+} from "@locusai/locus-gateway";
 import { invokeLocusStream } from "@locusai/sdk";
 import type { Context } from "grammy";
 import { commandTracker } from "../tracker.js";
@@ -22,42 +28,6 @@ import {
 } from "../ui/keyboards.js";
 import { reviewStartedMessage, runStartedMessage } from "../ui/messages.js";
 
-// ─── Command Map ────────────────────────────────────────────────────────────
-
-/** Maps Telegram command names to locus CLI arguments. */
-const COMMAND_MAP: Record<string, string[]> = {
-  run: ["run"],
-  status: ["status"],
-  issues: ["issue", "list"],
-  issue: ["issue", "show"],
-  sprint: ["sprint"],
-  plan: ["plan"],
-  review: ["review"],
-  iterate: ["iterate"],
-  discuss: ["discuss"],
-  exec: ["exec"],
-  logs: ["logs"],
-  config: ["config"],
-  artifacts: ["artifacts"],
-};
-
-/** Commands that produce long-running streaming output. */
-const STREAMING_COMMANDS = new Set([
-  "run",
-  "plan",
-  "review",
-  "iterate",
-  "discuss",
-  "exec",
-]);
-
-/** Commands that require at least one argument (they enter interactive mode without args). */
-const REQUIRES_ARGS: Record<string, string> = {
-  exec: "Please provide a prompt.\n\nExample: /exec Add error handling to the API",
-  discuss:
-    "Please provide a discussion topic.\n\nExample: /discuss Should we use Redis or in-memory caching?",
-};
-
 /** Minimum interval between message edits (ms) to avoid Telegram rate limits. */
 const EDIT_INTERVAL = 2000;
 
@@ -71,24 +41,24 @@ export async function handleLocusCommand(
   command: string,
   args: string[]
 ): Promise<void> {
-  const cliArgs = COMMAND_MAP[command];
-  if (!cliArgs) {
+  const definition = getCommandDefinition(command);
+  if (!definition) {
     await ctx.reply(`Unknown command: /${command}`);
     return;
   }
 
   // Block commands that would enter interactive/REPL mode without arguments
-  const requiresArgsMsg = REQUIRES_ARGS[command];
-  if (requiresArgsMsg && args.length === 0) {
-    await ctx.reply(requiresArgsMsg);
+  if (definition.requiresArgs && args.length === 0) {
+    await ctx.reply(definition.requiresArgs);
     return;
   }
 
   // Concurrency guard — prevent conflicting exclusive commands
   const chatId = ctx.chat?.id;
   if (!chatId) return;
+  const sessionId = String(chatId);
 
-  const conflict = commandTracker.checkExclusiveConflict(chatId, command);
+  const conflict = commandTracker.checkExclusiveConflict(sessionId, command);
   if (conflict) {
     await ctx.reply(formatConflictMessage(command, conflict.runningCommand), {
       parse_mode: "HTML",
@@ -96,7 +66,7 @@ export async function handleLocusCommand(
     return;
   }
 
-  const fullArgs = [...cliArgs, ...args];
+  const fullArgs = [...definition.cliArgs, ...args];
   const displayCmd = `locus ${fullArgs.join(" ")}`;
   const isStreaming = STREAMING_COMMANDS.has(command);
 
@@ -128,8 +98,9 @@ async function handleStreamingCommand(
 ): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
+  const sessionId = String(chatId);
   const child = invokeLocusStream(fullArgs);
-  const trackingId = commandTracker.track(chatId, command, args, child);
+  const trackingId = commandTracker.track(sessionId, command, args, child);
 
   let output = "";
   let lastEditTime = 0;
@@ -171,7 +142,7 @@ async function handleStreamingCommand(
 
   await new Promise<void>((resolve) => {
     child.on("close", async (exitCode) => {
-      commandTracker.untrack(chatId, trackingId);
+      commandTracker.untrack(sessionId, trackingId);
       if (editTimer) clearTimeout(editTimer);
 
       // Final edit with complete output
@@ -213,8 +184,9 @@ async function handleBufferedCommand(
 ): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
+  const sessionId = String(chatId);
   const child = invokeLocusStream(fullArgs);
-  const trackingId = commandTracker.track(chatId, command, [], child);
+  const trackingId = commandTracker.track(sessionId, command, [], child);
   let output = "";
 
   child.stdout?.on("data", (chunk: Buffer) => {
@@ -227,7 +199,7 @@ async function handleBufferedCommand(
 
   await new Promise<void>((resolve) => {
     child.on("close", async (exitCode) => {
-      commandTracker.untrack(chatId, trackingId);
+      commandTracker.untrack(sessionId, trackingId);
       const result = formatCommandResult(displayCmd, output, exitCode ?? 0);
 
       const keyboard = getPostCommandKeyboard(command, [], exitCode ?? 0);

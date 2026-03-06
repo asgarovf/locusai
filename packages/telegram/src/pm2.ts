@@ -1,151 +1,50 @@
 /**
- * PM2 programmatic wrapper for managing the Telegram bot process.
+ * Telegram-specific PM2 configuration and re-exports.
  *
- * Uses pm2 package API to start/stop/restart/status/logs the bot.
+ * Delegates to @locusai/locus-pm2 with telegram-specific process name and script.
  */
 
-import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import type { Pm2Config } from "@locusai/locus-pm2";
+import {
+  pm2Delete as _pm2Delete,
+  pm2Logs as _pm2Logs,
+  pm2Restart as _pm2Restart,
+  pm2Start as _pm2Start,
+  pm2Status as _pm2Status,
+  pm2Stop as _pm2Stop,
+  resolvePackageScript,
+} from "@locusai/locus-pm2";
 
-const PROCESS_NAME = "locus-telegram";
+export type { Pm2Status } from "@locusai/locus-pm2";
 
-function getPm2Bin(): string {
-  // Try pm2 in the sibling node_modules/.bin/ (installed as a dependency)
-  try {
-    const currentFile = fileURLToPath(import.meta.url);
-    const packageRoot = dirname(dirname(currentFile));
-    // packageRoot = .../node_modules/@locusai/locus-telegram
-    // .bin lives at  .../node_modules/.bin
-    const localPm2 = join(packageRoot, "..", "..", ".bin", "pm2");
-    if (existsSync(localPm2)) return localPm2;
-  } catch {
-    // fall through
-  }
-
-  // Try global pm2
-  try {
-    const result = execSync("which pm2", {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    if (result) return result;
-  } catch {
-    // fall through
-  }
-
-  // Try npx as fallback
-  return "npx pm2";
-}
-
-function pm2Exec(args: string): string {
-  const pm2 = getPm2Bin();
-  try {
-    return execSync(`${pm2} ${args}`, {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-      env: process.env,
-    });
-  } catch (error: unknown) {
-    const err = error as { stderr?: string; message?: string };
-    throw new Error(err.stderr?.trim() || err.message || "PM2 command failed");
-  }
-}
-
-function getBotScriptPath(): string {
-  const currentFile = fileURLToPath(import.meta.url);
-  const packageRoot = dirname(dirname(currentFile));
-  return join(packageRoot, "bin", "locus-telegram.js");
+function getConfig(): Pm2Config {
+  return {
+    processName: "locus-telegram",
+    scriptPath: resolvePackageScript(import.meta.url, "locus-telegram"),
+    scriptArgs: ["bot"],
+  };
 }
 
 export function pm2Start(): string {
-  const script = getBotScriptPath();
-  const pm2 = getPm2Bin();
-
-  try {
-    // Check if already running
-    const list = pm2Exec("jlist");
-    const processes = JSON.parse(list) as Array<{ name: string }>;
-    const existing = processes.find((p) => p.name === PROCESS_NAME);
-    if (existing) {
-      pm2Exec(`restart ${PROCESS_NAME}`);
-      return `Restarted ${PROCESS_NAME}`;
-    }
-  } catch {
-    // Not running, start fresh
-  }
-
-  execSync(
-    `${pm2} start ${JSON.stringify(script)} --name ${PROCESS_NAME} -- bot`,
-    {
-      encoding: "utf-8",
-      stdio: "inherit",
-      env: process.env,
-    }
-  );
-
-  return `Started ${PROCESS_NAME}`;
+  return _pm2Start(getConfig());
 }
 
 export function pm2Stop(): string {
-  pm2Exec(`stop ${PROCESS_NAME}`);
-  return `Stopped ${PROCESS_NAME}`;
+  return _pm2Stop(getConfig());
 }
 
 export function pm2Restart(): string {
-  pm2Exec(`restart ${PROCESS_NAME}`);
-  return `Restarted ${PROCESS_NAME}`;
+  return _pm2Restart(getConfig());
 }
 
 export function pm2Delete(): string {
-  pm2Exec(`delete ${PROCESS_NAME}`);
-  return `Deleted ${PROCESS_NAME}`;
+  return _pm2Delete(getConfig());
 }
 
-export interface Pm2Status {
-  name: string;
-  status: string;
-  pid: number | null;
-  uptime: number | null;
-  memory: number | null;
-  restarts: number;
-}
-
-export function pm2Status(): Pm2Status | null {
-  try {
-    const list = pm2Exec("jlist");
-    const processes = JSON.parse(list) as Array<{
-      name: string;
-      pm2_env?: {
-        status?: string;
-        pm_uptime?: number;
-        restart_time?: number;
-      };
-      pid?: number;
-      monit?: { memory?: number };
-    }>;
-
-    const proc = processes.find((p) => p.name === PROCESS_NAME);
-    if (!proc) return null;
-
-    return {
-      name: PROCESS_NAME,
-      status: proc.pm2_env?.status ?? "unknown",
-      pid: proc.pid ?? null,
-      uptime: proc.pm2_env?.pm_uptime ?? null,
-      memory: proc.monit?.memory ?? null,
-      restarts: proc.pm2_env?.restart_time ?? 0,
-    };
-  } catch {
-    return null;
-  }
+export function pm2Status() {
+  return _pm2Status(getConfig());
 }
 
 export function pm2Logs(lines = 50): string {
-  try {
-    return pm2Exec(`logs ${PROCESS_NAME} --nostream --lines ${lines}`);
-  } catch {
-    return "No logs available.";
-  }
+  return _pm2Logs(getConfig(), lines);
 }

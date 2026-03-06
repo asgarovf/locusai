@@ -5,6 +5,7 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import { getLogger } from "../core/logger.js";
+import { buildSandboxEnvWrapper } from "../core/sandbox.js";
 import {
   backupIgnoredFiles,
   enforceSandboxIgnore,
@@ -85,6 +86,9 @@ export class SandboxedCodexRunner implements AgentRunner {
 
     // Use containerWorkdir when set (WSL/Windows) — host path may not exist in container
     const workdir = this.containerWorkdir ?? options.cwd;
+    // Wrap with shell env setup so the agent's tool execution finds
+    // platform-specific binaries (biome, esbuild, etc.) from sandbox deps.
+    const envWrapper = buildSandboxEnvWrapper(workdir);
     const dockerArgs = [
       "sandbox",
       "exec",
@@ -93,6 +97,10 @@ export class SandboxedCodexRunner implements AgentRunner {
       "-w",
       workdir,
       this.sandboxName,
+      "sh",
+      "-c",
+      envWrapper,
+      "_",
       "codex",
       ...codexArgs,
     ];

@@ -22,7 +22,7 @@
     },
     "apps/www": {
       "name": "@locusai/www",
-      "version": "0.22.11",
+      "version": "0.22.12",
       "dependencies": {
         "@next/third-parties": "^16.1.4",
         "@radix-ui/react-slot": "^1.2.4",
@@ -48,31 +48,52 @@
     },
     "packages/cli": {
       "name": "@locusai/cli",
-      "version": "0.22.11",
+      "version": "0.22.12",
       "bin": {
         "locus": "./bin/locus.js",
       },
       "devDependencies": {
-        "@locusai/sdk": "^0.22.11",
+        "@locusai/sdk": "^0.22.12",
         "@types/bun": "latest",
+        "typescript": "^5.8.3",
+      },
+    },
+    "packages/gateway": {
+      "name": "@locusai/locus-gateway",
+      "version": "0.22.12",
+      "dependencies": {
+        "@locusai/sdk": "^0.22.12",
+      },
+      "devDependencies": {
+        "typescript": "^5.8.3",
+      },
+    },
+    "packages/pm2": {
+      "name": "@locusai/locus-pm2",
+      "version": "0.22.12",
+      "dependencies": {
+        "pm2": "^6.0.5",
+      },
+      "devDependencies": {
         "typescript": "^5.8.3",
       },
     },
     "packages/sdk": {
       "name": "@locusai/sdk",
-      "version": "0.22.11",
+      "version": "0.22.12",
     },
     "packages/telegram": {
       "name": "@locusai/locus-telegram",
-      "version": "0.22.11",
+      "version": "0.22.12",
       "bin": {
         "locus-telegram": "./bin/locus-telegram.js",
       },
       "dependencies": {
         "@grammyjs/runner": "^2.0.3",
-        "@locusai/sdk": "^0.22.11",
+        "@locusai/locus-gateway": "^0.22.12",
+        "@locusai/locus-pm2": "^0.22.12",
+        "@locusai/sdk": "^0.22.12",
         "grammy": "^1.35.0",
-        "pm2": "^6.0.5",
       },
       "devDependencies": {
         "typescript": "^5.8.3",
@@ -316,6 +337,10 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@locusai/cli": ["@locusai/cli@workspace:packages/cli"],
+
+    "@locusai/locus-gateway": ["@locusai/locus-gateway@workspace:packages/gateway"],
+
+    "@locusai/locus-pm2": ["@locusai/locus-pm2@workspace:packages/pm2"],
 
     "@locusai/locus-telegram": ["@locusai/locus-telegram@workspace:packages/telegram"],
 

@@ -11,6 +11,37 @@ import type { AIProvider, SandboxConfig } from "../types.js";
 import { inferProviderFromModel } from "./ai-models.js";
 import { getLogger } from "./logger.js";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/**
+ * Container-local directory for sandbox dependencies.
+ * Installed on the container's native filesystem (not the bind mount) to avoid
+ * cross-platform binary conflicts between the host (macOS) and sandbox (Linux).
+ * Platform-specific native binaries (biome, esbuild, swc, etc.) are installed
+ * here so both host and sandbox have correct binaries without interference.
+ */
+export const SANDBOX_DEPS_DIR = "/tmp/sandbox-deps";
+
+/**
+ * Build a shell wrapper that sets up PATH and NODE_PATH for sandbox deps,
+ * then exec's the original command. Used with:
+ *   sh -c '<wrapper>' _ <command> <args...>
+ */
+export function buildSandboxEnvWrapper(workdir: string): string {
+  return (
+    'PATH="' +
+    SANDBOX_DEPS_DIR +
+    "/node_modules/.bin:" +
+    workdir +
+    '/node_modules/.bin:$PATH"; export PATH; ' +
+    'NODE_PATH="' +
+    SANDBOX_DEPS_DIR +
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: We need a right formatting here
+    '/node_modules${NODE_PATH:+:$NODE_PATH}"; export NODE_PATH; ' +
+    'exec "$@"'
+  );
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface SandboxStatus {
@@ -407,7 +438,7 @@ export function probeSymlinkSupport(
     // Clean up in case ln succeeded but rm failed (unlikely)
     try {
       execSync(
-        `docker sandbox exec ${sandboxName} rm -f ${JSON.stringify(
+        `docker sandbox exec --privileged ${sandboxName} rm -f ${JSON.stringify(
           `${workdir}/${probe}`
         )}`,
         { stdio: ["pipe", "pipe", "pipe"], timeout: 3000 }

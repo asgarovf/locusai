@@ -53,9 +53,10 @@ async function tracked(
 ): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
+  const sessionId = String(chatId);
 
   // Concurrency guard — prevent conflicting exclusive commands
-  const conflict = commandTracker.checkExclusiveConflict(chatId, command);
+  const conflict = commandTracker.checkExclusiveConflict(sessionId, command);
   if (conflict) {
     await ctx.reply(formatConflictMessage(command, conflict.runningCommand), {
       parse_mode: "HTML",
@@ -63,11 +64,11 @@ async function tracked(
     return;
   }
 
-  const id = commandTracker.track(chatId, command, args);
+  const id = commandTracker.track(sessionId, command, args);
   try {
     await fn();
   } finally {
-    commandTracker.untrack(chatId, id);
+    commandTracker.untrack(sessionId, id);
   }
 }
 
@@ -91,19 +92,15 @@ export async function handleGitStatus(ctx: Context): Promise<void> {
         { parse_mode: "HTML" }
       );
     } catch (error: unknown) {
-      await ctx.reply(
-        formatError("Failed to get git status", String(error)),
-        { parse_mode: "HTML" }
-      );
+      await ctx.reply(formatError("Failed to get git status", String(error)), {
+        parse_mode: "HTML",
+      });
     }
   });
 }
 
 /** /stage [files|.] — stage files for commit */
-export async function handleStage(
-  ctx: Context,
-  args: string[]
-): Promise<void> {
+export async function handleStage(ctx: Context, args: string[]): Promise<void> {
   await tracked(ctx, "stage", args, async () => {
     const target = args.length > 0 ? args.join(" ") : ".";
 
@@ -163,10 +160,7 @@ export async function handleCommit(
 }
 
 /** /stash [pop|list|drop|save] — stash operations */
-export async function handleStash(
-  ctx: Context,
-  args: string[]
-): Promise<void> {
+export async function handleStash(ctx: Context, args: string[]): Promise<void> {
   await tracked(ctx, "stash", args, async () => {
     const subcommand = args[0] ?? "push";
 
@@ -303,10 +297,9 @@ export async function handleDiff(ctx: Context): Promise<void> {
           );
         }
       } else {
-        await ctx.reply(
-          `${bold("Unstaged changes:")}\n\n${codeBlock(diff)}`,
-          { parse_mode: "HTML" }
-        );
+        await ctx.reply(`${bold("Unstaged changes:")}\n\n${codeBlock(diff)}`, {
+          parse_mode: "HTML",
+        });
       }
     } catch (error: unknown) {
       await ctx.reply(formatError("Diff failed", String(error)), {

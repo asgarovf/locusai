@@ -27,9 +27,10 @@
   },
   "dependencies": {
     "@grammyjs/runner": "^2.0.3",
+    "@locusai/locus-gateway": "^0.22.12",
+    "@locusai/locus-pm2": "^0.22.12",
     "@locusai/sdk": "^0.22.12",
-    "grammy": "^1.35.0",
-    "pm2": "^6.0.5"
+    "grammy": "^1.35.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
