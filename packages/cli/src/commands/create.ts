@@ -382,7 +382,13 @@ export async function createCommand(args: string[]): Promise<void> {
   // 6. Write files
   writeFileSync(
     join(packagesDir, "package.json"),
-    generatePackageJson(name, displayName, description, sdkVersion, gatewayVersion),
+    generatePackageJson(
+      name,
+      displayName,
+      description,
+      sdkVersion,
+      gatewayVersion
+    ),
     "utf-8"
   );
   process.stderr.write(`${green("✓")} Generated package.json\n`);
