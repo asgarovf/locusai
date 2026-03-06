@@ -190,6 +190,14 @@ The package automatically finds the PM2 binary using a four-step fallback:
 
 No manual configuration is needed.
 
+## Related Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@locusai/locus-gateway`](../gateway) | Channel-agnostic message gateway that platform adapters connect to |
+| [`@locusai/locus-telegram`](../telegram) | Telegram adapter — primary consumer of this package |
+| [`@locusai/sdk`](../sdk) | SDK for building community packages |
+
 ## License
 
 [MIT](https://github.com/asgarovf/locusai/blob/master/LICENSE)

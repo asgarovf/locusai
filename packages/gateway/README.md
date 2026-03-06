@@ -277,6 +277,14 @@ const gateway = new Gateway({
 });
 ```
 
+## Related Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@locusai/locus-pm2`](../pm2) | Process management for long-running adapter daemons |
+| [`@locusai/locus-telegram`](../telegram) | Telegram adapter built on this gateway |
+| [`@locusai/sdk`](../sdk) | SDK for building community packages |
+
 ## License
 
 [MIT](https://github.com/asgarovf/locusai/blob/master/LICENSE)
