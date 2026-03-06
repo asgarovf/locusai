@@ -2,7 +2,6 @@
  * Service management commands — PM2 lifecycle control via Telegram.
  */
 
-import type { Context } from "grammy";
 import {
   pm2Delete,
   pm2Logs,
@@ -10,7 +9,9 @@ import {
   pm2Start,
   pm2Status,
   pm2Stop,
-} from "../pm2.js";
+} from "@locusai/locus-pm2";
+import type { Context } from "grammy";
+import { getTelegramPm2Config } from "../config.js";
 import { codeBlock, formatError, formatSuccess } from "../ui/format.js";
 import {
   serviceNotRunningMessage,
@@ -27,27 +28,27 @@ export async function handleService(
   try {
     switch (subcommand) {
       case "start": {
-        const result = pm2Start();
+        const result = pm2Start(getTelegramPm2Config());
         await ctx.reply(formatSuccess(result), { parse_mode: "HTML" });
         break;
       }
       case "stop": {
-        const result = pm2Stop();
+        const result = pm2Stop(getTelegramPm2Config());
         await ctx.reply(formatSuccess(result), { parse_mode: "HTML" });
         break;
       }
       case "restart": {
-        const result = pm2Restart();
+        const result = pm2Restart(getTelegramPm2Config());
         await ctx.reply(formatSuccess(result), { parse_mode: "HTML" });
         break;
       }
       case "delete": {
-        const result = pm2Delete();
+        const result = pm2Delete(getTelegramPm2Config());
         await ctx.reply(formatSuccess(result), { parse_mode: "HTML" });
         break;
       }
       case "status": {
-        const status = pm2Status();
+        const status = pm2Status(getTelegramPm2Config());
         if (!status) {
           await ctx.reply(serviceNotRunningMessage(), {
             parse_mode: "HTML",
@@ -68,7 +69,7 @@ export async function handleService(
       }
       case "logs": {
         const lines = args[1] ? Number(args[1]) : 50;
-        const logs = pm2Logs(lines);
+        const logs = pm2Logs(getTelegramPm2Config(), lines);
         await ctx.reply(codeBlock(logs), { parse_mode: "HTML" });
         break;
       }

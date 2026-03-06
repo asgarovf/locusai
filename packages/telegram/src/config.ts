@@ -6,6 +6,8 @@
  *   locus config set packages.telegram.chatIds "12345678,87654321"
  */
 
+import type { Pm2Config } from "@locusai/locus-pm2";
+import { resolvePackageScript } from "@locusai/locus-pm2";
 import { readLocusConfig } from "@locusai/sdk";
 
 export interface TelegramConfig {
@@ -40,6 +42,14 @@ export function loadTelegramConfig(): TelegramConfig {
   }
 
   return { botToken, allowedChatIds };
+}
+
+export function getTelegramPm2Config(): Pm2Config {
+  return {
+    processName: "locus-telegram",
+    scriptPath: resolvePackageScript(import.meta.url, "locus-telegram"),
+    scriptArgs: ["bot"],
+  };
 }
 
 function parseChatIds(raw: unknown): number[] {

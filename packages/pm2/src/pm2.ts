@@ -6,6 +6,7 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,7 +33,25 @@ export interface Pm2Status {
 // ─── PM2 Binary Discovery ───────────────────────────────────────────────────
 
 function getPm2Bin(): string {
-  // Try to find pm2 on PATH (local node_modules/.bin or global)
+  // 1. Walk up from cwd to find pm2 in node_modules/.bin
+  let dir = process.cwd();
+  while (dir !== dirname(dir)) {
+    const candidate = join(dir, "node_modules", ".bin", "pm2");
+    if (existsSync(candidate)) return candidate;
+    dir = dirname(dir);
+  }
+
+  // 2. Walk up from the running script to find pm2
+  if (process.argv[1]) {
+    let scriptDir = dirname(process.argv[1]);
+    while (scriptDir !== dirname(scriptDir)) {
+      const candidate = join(scriptDir, "node_modules", ".bin", "pm2");
+      if (existsSync(candidate)) return candidate;
+      scriptDir = dirname(scriptDir);
+    }
+  }
+
+  // 3. Try system PATH
   try {
     const result = execSync("which pm2", {
       encoding: "utf-8",
@@ -43,7 +62,7 @@ function getPm2Bin(): string {
     // fall through
   }
 
-  // Try npx as fallback
+  // 4. Fallback to npx
   return "npx pm2";
 }
 

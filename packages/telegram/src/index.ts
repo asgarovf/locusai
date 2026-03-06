@@ -15,8 +15,6 @@
  */
 
 import { run } from "@grammyjs/runner";
-import { createLogger } from "@locusai/sdk";
-import { loadTelegramConfig } from "./config.js";
 import {
   pm2Delete,
   pm2Logs,
@@ -24,7 +22,9 @@ import {
   pm2Start,
   pm2Status,
   pm2Stop,
-} from "./pm2.js";
+} from "@locusai/locus-pm2";
+import { createLogger } from "@locusai/sdk";
+import { getTelegramPm2Config, loadTelegramConfig } from "./config.js";
 
 const logger = createLogger("telegram");
 
@@ -60,27 +60,27 @@ export async function main(args: string[]): Promise<void> {
 // ─── PM2 Service Commands ───────────────────────────────────────────────────
 
 function handleStart(): void {
-  const result = pm2Start();
+  const result = pm2Start(getTelegramPm2Config());
   logger.info(result);
 }
 
 function handleStop(): void {
-  const result = pm2Stop();
+  const result = pm2Stop(getTelegramPm2Config());
   logger.info(result);
 }
 
 function handleRestart(): void {
-  const result = pm2Restart();
+  const result = pm2Restart(getTelegramPm2Config());
   logger.info(result);
 }
 
 function handleDelete(): void {
-  const result = pm2Delete();
+  const result = pm2Delete(getTelegramPm2Config());
   logger.info(result);
 }
 
 function handleStatus(): void {
-  const status = pm2Status();
+  const status = pm2Status(getTelegramPm2Config());
   if (!status) {
     logger.warn("Bot is not running");
     return;
@@ -105,7 +105,7 @@ function handleStatus(): void {
 
 function handleLogs(args: string[]): void {
   const lines = args[0] ? Number(args[0]) : 50;
-  const logs = pm2Logs(lines);
+  const logs = pm2Logs(getTelegramPm2Config(), lines);
   console.log(logs);
 }
 
