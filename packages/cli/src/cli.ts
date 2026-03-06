@@ -283,7 +283,7 @@ ${bold("Examples:")}
   locus exec                          ${dim("# Start interactive REPL")}
   locus issue create "Fix login bug"  ${dim("# Create a new issue")}
   locus plan "Build auth system"      ${dim("# AI creates a plan file")}
-  locus plan approve <id>             ${dim("# Create issues from saved plan")}
+  locus plan approve <id> <sprint>    ${dim("# Create issues from saved plan")}
   locus run                           ${dim("# Execute active sprint")}
   locus run 42 43                     ${dim("# Run issues in parallel")}
   locus run 42 --no-sandbox           ${dim("# Run without sandbox")}

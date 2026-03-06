@@ -31,10 +31,16 @@ export const CB = {
 
 // ─── Keyboard Builders ──────────────────────────────────────────────────────
 
-/** Keyboard shown after plan creation. */
-export function planKeyboard(planId: string): InlineKeyboard {
+/** Keyboard shown after plan creation (sprint required for approval). */
+export function planKeyboard(
+  planId: string,
+  sprintName: string
+): InlineKeyboard {
   return new InlineKeyboard()
-    .text("✅ Approve Plan", `${CB.APPROVE_PLAN}${planId}`)
+    .text(
+      "✅ Approve Plan",
+      `${CB.APPROVE_PLAN}${planId}:${sprintName}`
+    )
     .text("❌ Reject Plan", CB.REJECT_PLAN);
 }
 

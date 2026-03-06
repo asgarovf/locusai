@@ -3,7 +3,7 @@
  *
  * Usage:
  *   locus plan "Build a user auth system"          # AI creates plan file in .locus/plans/
- *   locus plan approve <id>                         # Create GitHub issues from a saved plan
+ *   locus plan approve <id> <sprintname>             # Create GitHub issues from a saved plan
  *   locus plan list                                 # List saved plans
  *   locus plan show <id>                            # Show a saved plan
  *   locus plan --from-issues --sprint "Sprint 2"   # Organize existing issues
@@ -51,7 +51,7 @@ ${bold("locus plan")} — AI-powered sprint planning
 
 ${bold("Usage:")}
   locus plan "<directive>"                 ${dim("# AI creates a plan file")}
-  locus plan approve <id> [--sprint <name>] ${dim("# Create GitHub issues from saved plan")}
+  locus plan approve <id> <sprintname>      ${dim("# Create GitHub issues from saved plan")}
   locus plan list                          ${dim("# List saved plans")}
   locus plan show <id>                     ${dim("# Show a saved plan")}
   locus plan --from-issues --sprint <name> ${dim("# Organize existing issues")}
@@ -64,8 +64,7 @@ ${bold("Options:")}
 ${bold("Examples:")}
   locus plan "Build user authentication with OAuth"
   locus plan "Improve API performance" --sprint "Sprint 3"
-  locus plan approve abc123
-  locus plan approve abc123 --sprint "Sprint 3"
+  locus plan approve abc123 "Sprint 3"
   locus plan list
   locus plan --from-issues --sprint "Sprint 2"
 
@@ -161,11 +160,23 @@ export async function planCommand(
 
   if (args[0] === "approve") {
     const approveArgs = parsePlanArgs(args.slice(2));
+    // Sprint: positional arg (in directive) or --sprint flag
+    const sprintName =
+      approveArgs.sprintName ?? (approveArgs.directive || undefined);
+    if (!sprintName) {
+      process.stderr.write(
+        `${red("✗")} Sprint name is required for plan approval.\n`
+      );
+      process.stderr.write(
+        `  Usage: ${bold('locus plan approve <id> <sprintname>')}\n`
+      );
+      return;
+    }
     return handleApprovePlan(
       projectRoot,
       args[1],
       { ...flags, dryRun: flags.dryRun || approveArgs.dryRun },
-      approveArgs.sprintName
+      sprintName
     );
   }
 
@@ -238,7 +249,7 @@ function handleListPlans(projectRoot: string): void {
 
   process.stderr.write("\n");
   process.stderr.write(
-    `  Approve a plan: ${bold("locus plan approve <id> --sprint <name>")}\n\n`
+    `  Approve a plan: ${bold("locus plan approve <id> <sprintname>")}\n\n`
   );
 }
 
@@ -277,7 +288,7 @@ function handleShowPlan(projectRoot: string, id: string | undefined): void {
 
   process.stderr.write("\n");
   process.stderr.write(
-    `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)}`)}  ${dim("(--sprint <name> to assign to a sprint)")}\n\n`
+    `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)} <sprintname>`)}\n\n`
   );
 }
 
@@ -291,7 +302,9 @@ async function handleApprovePlan(
 ): Promise<void> {
   if (!id) {
     process.stderr.write(`${red("✗")} Please provide a plan ID.\n`);
-    process.stderr.write(`  Usage: ${bold("locus plan approve <id>")}\n`);
+    process.stderr.write(
+      `  Usage: ${bold("locus plan approve <id> <sprintname>")}\n`
+    );
     process.stderr.write(`  List plans with: ${bold("locus plan list")}\n`);
     return;
   }
@@ -459,13 +472,13 @@ async function handleAIPlan(
       `${yellow("⚠")} ${bold("Dry run")} — no issues created.\n`
     );
     process.stderr.write(
-      `  Approve later with: ${bold(`locus plan approve ${id.slice(0, 8)}`)}\n\n`
+      `  Approve later with: ${bold(`locus plan approve ${id.slice(0, 8)} <sprintname>`)}\n\n`
     );
     return;
   }
 
   process.stderr.write(
-    `  To create these issues: ${bold(`locus plan approve ${id.slice(0, 8)} --sprint <sprint name>`)}\n\n`
+    `  To create these issues: ${bold(`locus plan approve ${id.slice(0, 8)} <sprintname>`)}\n\n`
   );
 }
 

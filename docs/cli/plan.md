@@ -10,6 +10,7 @@ Use AI to break down a high-level goal into actionable GitHub issues. The AI ana
 
 ```bash
 locus plan "<directive>" [options]
+locus plan approve <id> <sprintname> [--dry-run]
 locus plan --from-issues --sprint "<name>" [options]
 ```
 
@@ -76,6 +77,12 @@ locus plan "Implement real-time notifications" --sprint "Sprint 4"
 
 # Preview the plan without creating anything
 locus plan "Migrate database to PostgreSQL" --dry-run
+
+# Approve a plan (sprint name is required)
+locus plan approve abc123 "Sprint 3"
+
+# Approve with dry run
+locus plan approve abc123 "Sprint 3" --dry-run
 
 # Organize existing sprint issues into optimal order
 locus plan --from-issues --sprint "Sprint 2"

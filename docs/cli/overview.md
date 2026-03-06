@@ -33,7 +33,7 @@ Locus built-in tools add:
 |---|---|---|
 | [`locus issue`](issue.md) | Create/manage GitHub issues as execution units | `locus issue create "Add webhook signature validation" --sprint "Sprint 8"` |
 | [`locus sprint`](sprint.md) | Create/activate/manage sprint milestones | `locus sprint active "Sprint 8"` |
-| [`locus plan`](plan.md) | Generate plan files, review, and approve into GitHub issues | `locus plan "Build billing retries" --sprint "Sprint 8"` then `locus plan approve <id>` |
+| [`locus plan`](plan.md) | Generate plan files, review, and approve into GitHub issues | `locus plan "Build billing retries" --sprint "Sprint 8"` then `locus plan approve <id> "Sprint 8"` |
 
 ### 3) Execution, Review, and Iteration
 
@@ -92,7 +92,7 @@ Why this beats raw provider CLI usage:
 locus plan "Add SSO login and role-based access"
 locus plan list
 locus plan show <id>
-locus plan approve <id> --sprint "Sprint 9"
+locus plan approve <id> "Sprint 9"
 locus run
 ```
 

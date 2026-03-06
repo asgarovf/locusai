@@ -264,10 +264,11 @@ function getPostCommandKeyboard(
         if (sprint) return sprintActiveKeyboard(sprint);
         return runKeyboard();
       }
-      // After plan creation → show approve/reject with plan ID
+      // After plan creation → show approve/reject with plan ID + sprint
       if (args[0] !== "list" && args[0] !== "show") {
         const planId = extractPlanId(output);
-        if (planId) return planKeyboard(planId);
+        const sprint = extractSprintName(output);
+        if (planId && sprint) return planKeyboard(planId, sprint);
       }
       return null;
     }

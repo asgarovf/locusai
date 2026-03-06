@@ -154,11 +154,12 @@ export function createBot(config: TelegramConfig): Bot {
 
 function registerCallbackHandlers(bot: Bot): void {
   // Plan callbacks
-  bot.callbackQuery(/^plan:approve:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^plan:approve:([^:]+):(.+)$/, async (ctx) => {
     const planId = ctx.match[1];
+    const sprintName = ctx.match[2];
     await ctx.answerCallbackQuery({ text: "Approving plan..." });
     await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-    await handleLocusCommand(ctx, "plan", ["approve", planId]);
+    await handleLocusCommand(ctx, "plan", ["approve", planId, sprintName]);
   });
 
   bot.callbackQuery(CB.REJECT_PLAN, async (ctx) => {
