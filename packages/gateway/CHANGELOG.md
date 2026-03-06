@@ -1,5 +1,16 @@
 # @locusai/locus-gateway
 
+## 0.23.0
+
+### Minor Changes
+
+- PM2 package improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.23.0
+
 ## 0.22.15
 
 ### Patch Changes

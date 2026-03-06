@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.23.0
+
+### Minor Changes
+
+- PM2 package improvements
+
 ## 0.22.15
 
 ### Patch Changes
