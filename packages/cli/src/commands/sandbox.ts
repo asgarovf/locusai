@@ -28,8 +28,8 @@ import {
   detectSandboxSupport,
   getProviderSandboxName,
   probeSymlinkSupport,
-  SANDBOX_DEPS_DIR,
   SANDBOX_BINARY_OVERRIDES,
+  SANDBOX_DEPS_DIR,
 } from "../core/sandbox.js";
 import {
   backupIgnoredFiles,

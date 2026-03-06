@@ -62,9 +62,7 @@ export const SANDBOX_BINARY_OVERRIDES: [string, string[]][] = [
  */
 export function buildBinaryOverrideSnippet(): string {
   return SANDBOX_BINARY_OVERRIDES.map(([envVar, candidates]) => {
-    const paths = candidates
-      .map((p) => `"${SANDBOX_DEPS_DIR}/${p}"`)
-      .join(" ");
+    const paths = candidates.map((p) => `"${SANDBOX_DEPS_DIR}/${p}"`).join(" ");
     return `for _b in ${paths}; do [ -x "$_b" ] && ${envVar}="$_b" && export ${envVar} && break; done;`;
   }).join(" ");
 }
