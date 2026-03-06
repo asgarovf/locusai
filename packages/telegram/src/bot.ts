@@ -3,6 +3,8 @@
  * and callback query handlers.
  */
 
+import { exec as execCb } from "node:child_process";
+import { promisify } from "node:util";
 import { createLogger } from "@locusai/sdk";
 import { Bot } from "grammy";
 import {
@@ -24,9 +26,11 @@ import {
 import { handleLocusCommand } from "./commands/locus.js";
 import { handleService } from "./commands/service.js";
 import type { TelegramConfig } from "./config.js";
-import { formatInfo, formatSuccess } from "./ui/format.js";
+import { formatError, formatInfo, formatSuccess } from "./ui/format.js";
 import { CB } from "./ui/keyboards.js";
 import { welcomeMessage } from "./ui/messages.js";
+
+const exec = promisify(execCb);
 
 const logger = createLogger("telegram");
 
@@ -170,7 +174,7 @@ function registerCallbackHandlers(bot: Bot): void {
 
   bot.callbackQuery(CB.SHOW_PLAN_DETAILS, async (ctx) => {
     await ctx.answerCallbackQuery();
-    await handleLocusCommand(ctx, "plan", ["--show"]);
+    await handleLocusCommand(ctx, "plan", ["list"]);
   });
 
   // Run callbacks
@@ -191,9 +195,17 @@ function registerCallbackHandlers(bot: Bot): void {
     const pr = ctx.match[1];
     await ctx.answerCallbackQuery({ text: "Approving PR..." });
     await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-    await ctx.reply(formatSuccess(`Approved PR #${pr}`), {
-      parse_mode: "HTML",
-    });
+
+    try {
+      await exec(`gh pr review ${pr} --approve`, { cwd: process.cwd() });
+      await ctx.reply(formatSuccess(`Approved PR #${pr}`), {
+        parse_mode: "HTML",
+      });
+    } catch (error: unknown) {
+      await ctx.reply(formatError(`Failed to approve PR #${pr}`, String(error)), {
+        parse_mode: "HTML",
+      });
+    }
   });
 
   bot.callbackQuery(/^review:changes:(\d+)$/, async (ctx) => {
@@ -211,7 +223,7 @@ function registerCallbackHandlers(bot: Bot): void {
   bot.callbackQuery(/^review:diff:(\d+)$/, async (ctx) => {
     const pr = ctx.match[1];
     await ctx.answerCallbackQuery();
-    await handleLocusCommand(ctx, "review", [pr, "--diff"]);
+    await handleLocusCommand(ctx, "review", [pr]);
   });
 
   // Status callbacks
