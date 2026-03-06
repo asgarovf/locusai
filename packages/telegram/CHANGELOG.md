@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.22.14
+
+### Patch Changes
+
+- Noop
+- Updated dependencies
+  - @locusai/locus-gateway@0.22.14
+  - @locusai/locus-pm2@0.22.14
+  - @locusai/sdk@0.22.14
+
 ## 0.22.13
 
 ### Patch Changes

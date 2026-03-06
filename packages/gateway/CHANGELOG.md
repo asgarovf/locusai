@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.22.14
+
+### Patch Changes
+
+- Noop
+- Updated dependencies
+  - @locusai/sdk@0.22.14
+
 ## 0.22.13
 
 ### Patch Changes

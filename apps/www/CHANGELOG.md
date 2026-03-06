@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.22.14
+
+### Patch Changes
+
+- Noop
+
 ## 0.22.13
 
 ### Patch Changes
