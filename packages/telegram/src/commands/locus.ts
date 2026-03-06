@@ -24,6 +24,8 @@ import {
   planKeyboard,
   reviewKeyboard,
   runCompleteKeyboard,
+  runKeyboard,
+  sprintActiveKeyboard,
   statusKeyboard,
 } from "../ui/keyboards.js";
 import { reviewStartedMessage, runStartedMessage } from "../ui/messages.js";
@@ -82,7 +84,7 @@ export async function handleLocusCommand(
   if (isStreaming) {
     await handleStreamingCommand(ctx, displayCmd, fullArgs, command, args);
   } else {
-    await handleBufferedCommand(ctx, displayCmd, fullArgs, command);
+    await handleBufferedCommand(ctx, displayCmd, fullArgs, command, args);
   }
 }
 
@@ -158,7 +160,12 @@ async function handleStreamingCommand(
       }
 
       // Send keyboard for post-command actions
-      const keyboard = getPostCommandKeyboard(command, args, exitCode ?? 0);
+      const keyboard = getPostCommandKeyboard(
+        command,
+        args,
+        exitCode ?? 0,
+        output
+      );
       if (keyboard) {
         await ctx.reply(
           exitCode === 0
@@ -180,13 +187,14 @@ async function handleBufferedCommand(
   ctx: Context,
   displayCmd: string,
   fullArgs: string[],
-  command: string
+  command: string,
+  args: string[]
 ): Promise<void> {
   const chatId = ctx.chat?.id;
   if (!chatId) return;
   const sessionId = String(chatId);
   const child = invokeLocusStream(fullArgs);
-  const trackingId = commandTracker.track(sessionId, command, [], child);
+  const trackingId = commandTracker.track(sessionId, command, args, child);
   let output = "";
 
   child.stdout?.on("data", (chunk: Buffer) => {
@@ -202,7 +210,12 @@ async function handleBufferedCommand(
       commandTracker.untrack(sessionId, trackingId);
       const result = formatCommandResult(displayCmd, output, exitCode ?? 0);
 
-      const keyboard = getPostCommandKeyboard(command, [], exitCode ?? 0);
+      const keyboard = getPostCommandKeyboard(
+        command,
+        args,
+        exitCode ?? 0,
+        output
+      );
       await ctx.reply(result, {
         parse_mode: "HTML",
         reply_markup: keyboard ?? undefined,
@@ -215,16 +228,56 @@ async function handleBufferedCommand(
 
 // ─── Post-Command Keyboards ────────────────────────────────────────────────
 
+/** Strip ANSI escape codes from a string. */
+function stripAnsi(text: string): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape codes require control characters
+  return text.replace(/\x1B\[[0-9;]*m/g, "");
+}
+
+/** Extract plan ID from CLI output (matches "Plan saved: <id>"). */
+function extractPlanId(output: string): string | null {
+  const clean = stripAnsi(output);
+  const match = clean.match(/Plan saved:\s*(\S+)/);
+  return match?.[1] ?? null;
+}
+
+/** Extract sprint name from CLI output (matches "Sprint: <name>"). */
+function extractSprintName(output: string): string | null {
+  const clean = stripAnsi(output);
+  const match = clean.match(/Sprint:\s*(.+?)$/m);
+  return match?.[1]?.trim() ?? null;
+}
+
 function getPostCommandKeyboard(
   command: string,
   args: string[],
-  exitCode: number
+  exitCode: number,
+  output = ""
 ) {
   if (exitCode !== 0) return null;
 
   switch (command) {
-    case "plan":
-      return planKeyboard();
+    case "plan": {
+      // After plan approve → show sprint active or run keyboard
+      if (args[0] === "approve") {
+        const sprint = extractSprintName(output);
+        if (sprint) return sprintActiveKeyboard(sprint);
+        return runKeyboard();
+      }
+      // After plan creation → show approve/reject with plan ID
+      if (args[0] !== "list" && args[0] !== "show") {
+        const planId = extractPlanId(output);
+        if (planId) return planKeyboard(planId);
+      }
+      return null;
+    }
+    case "sprint": {
+      // After sprint active → show run keyboard
+      if (args[0] === "active" && args.length > 1) {
+        return runKeyboard();
+      }
+      return null;
+    }
     case "review":
       if (args.length > 0) {
         return reviewKeyboard(Number(args[0]));

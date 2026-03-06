@@ -10,9 +10,10 @@ import { InlineKeyboard } from "grammy";
 // ─── Callback Data Prefixes ─────────────────────────────────────────────────
 
 export const CB = {
-  APPROVE_PLAN: "plan:approve",
+  APPROVE_PLAN: "plan:approve:",
   REJECT_PLAN: "plan:reject",
-  SHOW_PLAN_DETAILS: "plan:details",
+  SPRINT_ACTIVE: "sprint:active:",
+  RUN_START: "run:start",
   CONFIRM_ACTION: "confirm:yes",
   CANCEL_ACTION: "confirm:no",
   VIEW_PR: "pr:view:",
@@ -31,12 +32,23 @@ export const CB = {
 // ─── Keyboard Builders ──────────────────────────────────────────────────────
 
 /** Keyboard shown after plan creation. */
-export function planKeyboard(): InlineKeyboard {
+export function planKeyboard(planId: string): InlineKeyboard {
   return new InlineKeyboard()
-    .text("✅ Approve Plan", CB.APPROVE_PLAN)
-    .text("❌ Reject Plan", CB.REJECT_PLAN)
-    .row()
-    .text("📋 Show Details", CB.SHOW_PLAN_DETAILS);
+    .text("✅ Approve Plan", `${CB.APPROVE_PLAN}${planId}`)
+    .text("❌ Reject Plan", CB.REJECT_PLAN);
+}
+
+/** Keyboard shown after plan approval with a sprint. */
+export function sprintActiveKeyboard(sprintName: string): InlineKeyboard {
+  return new InlineKeyboard().text(
+    "🚀 Activate Sprint",
+    `${CB.SPRINT_ACTIVE}${sprintName}`
+  );
+}
+
+/** Simple run keyboard. */
+export function runKeyboard(): InlineKeyboard {
+  return new InlineKeyboard().text("🚀 Run", CB.RUN_START);
 }
 
 /** Keyboard shown after a run completes. */

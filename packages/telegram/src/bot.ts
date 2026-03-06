@@ -154,14 +154,11 @@ export function createBot(config: TelegramConfig): Bot {
 
 function registerCallbackHandlers(bot: Bot): void {
   // Plan callbacks
-  bot.callbackQuery(CB.APPROVE_PLAN, async (ctx) => {
-    await ctx.answerCallbackQuery({ text: "Plan approved!" });
+  bot.callbackQuery(/^plan:approve:(.+)$/, async (ctx) => {
+    const planId = ctx.match[1];
+    await ctx.answerCallbackQuery({ text: "Approving plan..." });
     await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-    await ctx.reply(formatSuccess("Plan approved. Starting execution..."), {
-      parse_mode: "HTML",
-    });
-    // Trigger the run
-    await handleLocusCommand(ctx, "run", []);
+    await handleLocusCommand(ctx, "plan", ["approve", planId]);
   });
 
   bot.callbackQuery(CB.REJECT_PLAN, async (ctx) => {
@@ -172,9 +169,19 @@ function registerCallbackHandlers(bot: Bot): void {
     });
   });
 
-  bot.callbackQuery(CB.SHOW_PLAN_DETAILS, async (ctx) => {
-    await ctx.answerCallbackQuery();
-    await handleLocusCommand(ctx, "plan", ["list"]);
+  // Sprint active callback
+  bot.callbackQuery(/^sprint:active:(.+)$/, async (ctx) => {
+    const sprintName = ctx.match[1];
+    await ctx.answerCallbackQuery({ text: "Activating sprint..." });
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+    await handleLocusCommand(ctx, "sprint", ["active", sprintName]);
+  });
+
+  // Run callback
+  bot.callbackQuery(CB.RUN_START, async (ctx) => {
+    await ctx.answerCallbackQuery({ text: "Starting run..." });
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+    await handleLocusCommand(ctx, "run", []);
   });
 
   // Run callbacks
@@ -202,9 +209,12 @@ function registerCallbackHandlers(bot: Bot): void {
         parse_mode: "HTML",
       });
     } catch (error: unknown) {
-      await ctx.reply(formatError(`Failed to approve PR #${pr}`, String(error)), {
-        parse_mode: "HTML",
-      });
+      await ctx.reply(
+        formatError(`Failed to approve PR #${pr}`, String(error)),
+        {
+          parse_mode: "HTML",
+        }
+      );
     }
   });
 

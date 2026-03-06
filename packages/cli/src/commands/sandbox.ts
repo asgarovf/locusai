@@ -29,6 +29,7 @@ import {
   getProviderSandboxName,
   probeSymlinkSupport,
   SANDBOX_DEPS_DIR,
+  SANDBOX_BINARY_OVERRIDES,
 } from "../core/sandbox.js";
 import {
   backupIgnoredFiles,
@@ -629,6 +630,15 @@ async function handleShell(projectRoot: string, args: string[]): Promise<void> {
       // biome-ignore lint/suspicious/noTemplateCurlyInString: We need a right formatting here
       '/node_modules${NODE_PATH:+:$NODE_PATH}"',
     `export NODE_PATH`,
+    // Probe and export native binary overrides (biome, esbuild, turbo, etc.)
+    // so Node.js wrappers use the Linux binary from sandbox-deps instead of
+    // the macOS binary from the host's bind-mounted node_modules/.bun/ cache.
+    ...SANDBOX_BINARY_OVERRIDES.map(([envVar, candidates]) => {
+      const paths = candidates
+        .map((p) => `"${SANDBOX_DEPS_DIR}/${p}"`)
+        .join(" ");
+      return `for _b in ${paths}; do [ -x "$_b" ] && export ${envVar}="$_b" && break; done`;
+    }),
     // Source user-defined sandbox profile if present (for custom env vars, aliases, etc.)
     `[ -f "${workdir}/.locus/sandbox-profile.sh" ] && . "${workdir}/.locus/sandbox-profile.sh"`,
     `exec sh`,

@@ -23,6 +23,53 @@ import { getLogger } from "./logger.js";
 export const SANDBOX_DEPS_DIR = "/tmp/sandbox-deps";
 
 /**
+ * Native binary overrides for tools whose Node.js wrappers use
+ * require.resolve() to locate platform-specific binaries.
+ *
+ * When the host (macOS) bind-mounts node_modules into the Linux sandbox,
+ * require.resolve() finds the macOS binary from the .bun/ cache → SIGILL.
+ * These env vars tell each wrapper to use the Linux binary from sandbox-deps.
+ *
+ * Each entry: [envVar, [...candidatePaths relative to SANDBOX_DEPS_DIR]]
+ */
+export const SANDBOX_BINARY_OVERRIDES: [string, string[]][] = [
+  [
+    "BIOME_BINARY",
+    [
+      "node_modules/@biomejs/cli-linux-arm64/biome",
+      "node_modules/@biomejs/cli-linux-x64/biome",
+    ],
+  ],
+  [
+    "ESBUILD_BINARY_PATH",
+    [
+      "node_modules/@esbuild/linux-arm64/bin/esbuild",
+      "node_modules/@esbuild/linux-x64/bin/esbuild",
+    ],
+  ],
+  [
+    "TURBO_BINARY_PATH",
+    [
+      "node_modules/turbo-linux-arm64/bin/turbo",
+      "node_modules/turbo-linux-64/bin/turbo",
+    ],
+  ],
+];
+
+/**
+ * Generate shell snippet that probes and exports all binary overrides.
+ * For each entry, tries candidates in order and exports the first executable found.
+ */
+export function buildBinaryOverrideSnippet(): string {
+  return SANDBOX_BINARY_OVERRIDES.map(([envVar, candidates]) => {
+    const paths = candidates
+      .map((p) => `"${SANDBOX_DEPS_DIR}/${p}"`)
+      .join(" ");
+    return `for _b in ${paths}; do [ -x "$_b" ] && ${envVar}="$_b" && export ${envVar} && break; done;`;
+  }).join(" ");
+}
+
+/**
  * Build a shell wrapper that sets up PATH and NODE_PATH for sandbox deps,
  * then exec's the original command. Used with:
  *   sh -c '<wrapper>' _ <command> <args...>
@@ -38,6 +85,9 @@ export function buildSandboxEnvWrapper(workdir: string): string {
     SANDBOX_DEPS_DIR +
     // biome-ignore lint/suspicious/noTemplateCurlyInString: We need a right formatting here
     '/node_modules${NODE_PATH:+:$NODE_PATH}"; export NODE_PATH; ' +
+    // Probe and export all native binary overrides (biome, esbuild, turbo)
+    buildBinaryOverrideSnippet() +
+    " " +
     'exec "$@"'
   );
 }
