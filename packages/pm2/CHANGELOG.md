@@ -1,5 +1,11 @@
 # @locusai/locus-pm2
 
+## 0.23.1
+
+### Patch Changes
+
+- Fix predefined commands on telegram
+
 ## 0.23.0
 
 ### Minor Changes

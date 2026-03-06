@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.23.1
+
+### Patch Changes
+
+- Fix predefined commands on telegram
+- Updated dependencies
+  - @locusai/sdk@0.23.1
+
 ## 0.23.0
 
 ### Minor Changes

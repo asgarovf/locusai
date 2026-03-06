@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-telegram",
-  "version": "0.23.0",
+  "version": "0.23.1",
   "description": "Remote-control Locus via Telegram with full CLI mapping, git operations, and PM2 management",
   "type": "module",
   "bin": {
@@ -27,9 +27,9 @@
   },
   "dependencies": {
     "@grammyjs/runner": "^2.0.3",
-    "@locusai/locus-gateway": "^0.23.0",
-    "@locusai/locus-pm2": "^0.23.0",
-    "@locusai/sdk": "^0.23.0",
+    "@locusai/locus-gateway": "^0.23.1",
+    "@locusai/locus-pm2": "^0.23.1",
+    "@locusai/sdk": "^0.23.1",
     "grammy": "^1.35.0"
   },
   "devDependencies": {
