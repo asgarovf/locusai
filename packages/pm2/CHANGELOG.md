@@ -1,0 +1,9 @@
+# @locusai/locus-pm2
+
+## 0.22.13
+
+### Patch Changes
+
+- Gateway package isolation
+  PM2 package isolation
+  Sandbox setup and dependency installation improvements

@@ -1,5 +1,13 @@
 # @locusai/cli
 
+## 0.22.13
+
+### Patch Changes
+
+- Gateway package isolation
+  PM2 package isolation
+  Sandbox setup and dependency installation improvements
+
 ## 0.22.12
 
 ### Patch Changes
