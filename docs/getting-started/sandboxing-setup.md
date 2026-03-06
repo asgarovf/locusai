@@ -136,6 +136,22 @@ pip install -r requirements.txt
 
 For more examples and details, see [Custom Setup with sandbox-setup.sh](../cli/sandbox.md#custom-setup-with-sandbox-setupsh).
 
+## Optional: Customize Shell Environment
+
+If you need custom environment variables, aliases, or `PATH` entries when using `locus sandbox shell`, create a `.locus/sandbox-profile.sh` file:
+
+```bash
+#!/bin/sh
+# .locus/sandbox-profile.sh — Example shell customization
+export DATABASE_URL="postgres://localhost:5432/devdb"
+export PATH="/opt/custom-tools/bin:$PATH"
+alias t='npm test'
+```
+
+This file is sourced automatically when you open an interactive sandbox shell. It does not affect automated AI agent execution.
+
+For more details, see [Shell Environment with sandbox-profile.sh](../cli/sandbox.md#shell-environment-with-sandbox-profilesh).
+
 ## Optional: Install Extra Tools Inside Sandbox
 
 If your workflow needs additional CLIs inside provider sandboxes (for example `bun`), install them globally:

@@ -241,6 +241,93 @@ apt-get install -y protobuf-compiler
 
 ---
 
+## Shell Environment with `sandbox-profile.sh`
+
+When you open an interactive shell with `locus sandbox shell <provider>`, Locus automatically sets up the environment by adding common binary directories to `PATH` (node_modules/.bin, .venv/bin, .cargo/bin, go/bin, etc.) and configuring `NODE_PATH`.
+
+If your project needs additional environment customization — extra `PATH` entries, environment variables, shell aliases, or functions — create a `.locus/sandbox-profile.sh` file. Locus sources this file at the end of shell initialization, so your customizations take effect on top of the auto-detected defaults.
+
+### How it works
+
+1. Locus opens a shell inside the provider sandbox.
+2. Common bin directories for all ecosystems are auto-detected and added to `PATH`.
+3. `NODE_PATH` is configured for sandbox-installed dependencies.
+4. If `.locus/sandbox-profile.sh` exists, it is **sourced** (`. <file>`) in the shell context.
+5. The interactive shell starts.
+
+### When to use it
+
+- Your project uses tools installed in non-standard locations
+- You need project-specific environment variables available in the sandbox shell
+- You want shell aliases or helper functions for sandbox debugging
+- You have custom SDK paths, compiler flags, or runtime configuration
+
+### Examples
+
+**Custom environment variables and PATH:**
+
+```bash
+# .locus/sandbox-profile.sh
+
+# Add project-specific tool to PATH
+export PATH="/opt/custom-tools/bin:$PATH"
+
+# Set environment variables for the project
+export DATABASE_URL="postgres://localhost:5432/devdb"
+export NODE_ENV="development"
+export RUST_LOG="debug"
+```
+
+**Shell aliases for common tasks:**
+
+```bash
+# .locus/sandbox-profile.sh
+
+# Quick shortcuts
+alias t='npm test'
+alias b='npm run build'
+alias lint='npm run lint'
+
+# Project-specific helpers
+alias db-reset='psql -f scripts/reset-db.sql'
+```
+
+**Multi-language environment setup:**
+
+```bash
+# .locus/sandbox-profile.sh
+
+# Python virtualenv activation
+[ -f .venv/bin/activate ] && . .venv/bin/activate
+
+# Java/JVM via SDKMAN
+export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# Custom Go workspace
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+```
+
+### Tips
+
+- This file is **sourced**, not executed as a subprocess — variables and aliases persist in the shell session.
+- It only runs during `locus sandbox shell`, not during automated AI agent execution (`locus run`, `locus exec`).
+- The working directory is set to your project root when the file is sourced.
+- Keep it lightweight — heavy initialization slows down shell startup.
+
+### Difference from `sandbox-setup.sh`
+
+| | `sandbox-setup.sh` | `sandbox-profile.sh` |
+|---|---|---|
+| **Purpose** | Install toolchains and dependencies | Customize shell environment |
+| **When** | During sandbox creation (`locus sandbox`) | During interactive shell (`locus sandbox shell`) |
+| **Execution** | Runs as a subprocess (`sh <file>`) | Sourced in shell context (`. <file>`) |
+| **Runs as** | Root, non-interactive | Current user, interactive shell |
+| **Use for** | `apt-get install`, `pip install`, `cargo build` | `export`, `alias`, `PATH` additions |
+
+---
+
 ## Notes
 
 - Sandboxes must be created first with `locus sandbox`.

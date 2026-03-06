@@ -183,6 +183,17 @@ docker info
 
 Large files or high-frequency writes can cause visible sync latency. Keep large generated artifacts out of active execution loops.
 
+## Customization Hooks
+
+Locus provides two optional hook scripts in `.locus/` for sandbox customization:
+
+| Script | Purpose | When it runs |
+|--------|---------|--------------|
+| `sandbox-setup.sh` | Install toolchains, system packages, and project dependencies | During sandbox creation (`locus sandbox`) |
+| `sandbox-profile.sh` | Set environment variables, aliases, and PATH entries | During interactive shell (`locus sandbox shell`) |
+
+Neither script runs during automated AI agent execution (`locus run`, `locus exec`). See [locus sandbox](../cli/sandbox.md) for full details and examples.
+
 ## Related Docs
 
 - [Sandboxing Setup](../getting-started/sandboxing-setup.md)
