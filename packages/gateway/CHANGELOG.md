@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.23.3
+
+### Patch Changes
+
+- Plan approval method
+- Updated dependencies
+  - @locusai/sdk@0.23.3
+
 ## 0.23.2
 
 ### Patch Changes

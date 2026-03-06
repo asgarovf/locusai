@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.23.3
+
+### Patch Changes
+
+- Plan approval method
+
 ## 0.23.2
 
 ### Patch Changes
