@@ -11,13 +11,25 @@
  *   locus skills info <name>      # show skill metadata and install status
  */
 
+import { type Column, renderTable } from "../display/table.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
-import { renderTable, type Column } from "../display/table.js";
-import { installSkill, removeSkill, isSkillInstalled } from "../skills/installer.js";
+import {
+  installSkill,
+  isSkillInstalled,
+  removeSkill,
+} from "../skills/installer.js";
 import { computeSkillHash, readLockFile } from "../skills/lock.js";
-import { fetchRegistry, fetchSkillContent, findSkillInRegistry } from "../skills/registry.js";
+import {
+  fetchRegistry,
+  fetchSkillContent,
+  findSkillInRegistry,
+} from "../skills/registry.js";
 import type { RemoteSkillRegistry, SkillLockFile } from "../skills/types.js";
-import { REGISTRY_REPO, CLAUDE_SKILLS_DIR, AGENTS_SKILLS_DIR } from "../skills/types.js";
+import {
+  AGENTS_SKILLS_DIR,
+  CLAUDE_SKILLS_DIR,
+  REGISTRY_REPO,
+} from "../skills/types.js";
 
 // ─── List (remote) ───────────────────────────────────────────────────────────
 
@@ -58,7 +70,7 @@ async function listRemoteSkills(): Promise<void> {
     platforms: s.platforms,
   }));
 
-  process.stderr.write(renderTable(columns, rows) + "\n\n");
+  process.stderr.write(`${renderTable(columns, rows)}\n\n`);
   process.stderr.write(
     `  ${dim(`${registry.skills.length} skill(s) available.`)} Install with: ${bold("locus skills install <name>")}\n\n`
   );
@@ -72,9 +84,7 @@ function listInstalledSkills(): void {
   const entries = Object.entries(lockFile.skills);
 
   if (entries.length === 0) {
-    process.stderr.write(
-      `${yellow("⚠")}  No skills installed.\n`
-    );
+    process.stderr.write(`${yellow("⚠")}  No skills installed.\n`);
     process.stderr.write(
       `  Browse available skills with: ${bold("locus skills list")}\n`
     );
@@ -101,10 +111,8 @@ function listInstalledSkills(): void {
     hash: entry.computedHash,
   }));
 
-  process.stderr.write(renderTable(columns, rows) + "\n\n");
-  process.stderr.write(
-    `  ${dim(`${entries.length} skill(s) installed.`)}\n\n`
-  );
+  process.stderr.write(`${renderTable(columns, rows)}\n\n`);
+  process.stderr.write(`  ${dim(`${entries.length} skill(s) installed.`)}\n\n`);
 }
 
 // ─── Install ──────────────────────────────────────────────────────────────────
@@ -129,8 +137,12 @@ async function installRemoteSkill(name: string): Promise<void> {
 
   const entry = findSkillInRegistry(registry, name);
   if (!entry) {
-    process.stderr.write(`${red("✗")} Skill '${bold(name)}' not found in the registry.\n`);
-    process.stderr.write(`  Run ${bold("locus skills list")} to see available skills.\n`);
+    process.stderr.write(
+      `${red("✗")} Skill '${bold(name)}' not found in the registry.\n`
+    );
+    process.stderr.write(
+      `  Run ${bold("locus skills list")} to see available skills.\n`
+    );
     process.exit(1);
   }
 
@@ -148,7 +160,9 @@ async function installRemoteSkill(name: string): Promise<void> {
 
   await installSkill(cwd, name, content, source);
 
-  process.stderr.write(`\n${green("✓")} Installed skill '${bold(name)}' from ${REGISTRY_REPO}\n`);
+  process.stderr.write(
+    `\n${green("✓")} Installed skill '${bold(name)}' from ${REGISTRY_REPO}\n`
+  );
   process.stderr.write(`  → ${CLAUDE_SKILLS_DIR}/${name}/SKILL.md\n`);
   process.stderr.write(`  → ${AGENTS_SKILLS_DIR}/${name}/SKILL.md\n\n`);
 }
@@ -165,8 +179,12 @@ async function removeInstalledSkill(name: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!isSkillInstalled(cwd, name)) {
-    process.stderr.write(`${red("✗")} Skill '${bold(name)}' is not installed.\n`);
-    process.stderr.write(`  Run ${bold("locus skills list --installed")} to see installed skills.\n`);
+    process.stderr.write(
+      `${red("✗")} Skill '${bold(name)}' is not installed.\n`
+    );
+    process.stderr.write(
+      `  Run ${bold("locus skills list --installed")} to see installed skills.\n`
+    );
     process.exit(1);
   }
 
@@ -191,12 +209,12 @@ async function updateSkills(name?: string): Promise<void> {
   }
 
   // If a name is provided, only update that specific skill
-  const targets = name
-    ? installed.filter(([n]) => n === name)
-    : installed;
+  const targets = name ? installed.filter(([n]) => n === name) : installed;
 
   if (name && targets.length === 0) {
-    process.stderr.write(`${red("✗")} Skill '${bold(name)}' is not installed.\n`);
+    process.stderr.write(
+      `${red("✗")} Skill '${bold(name)}' is not installed.\n`
+    );
     process.stderr.write(
       `  Run ${bold("locus skills list --installed")} to see installed skills.\n`
     );
@@ -241,9 +259,7 @@ async function updateSkills(name?: string): Promise<void> {
     const newHash = computeSkillHash(content);
 
     if (newHash === lockEntry.computedHash) {
-      process.stderr.write(
-        `  '${cyan(skillName)}' is already up to date\n`
-      );
+      process.stderr.write(`  '${cyan(skillName)}' is already up to date\n`);
       continue;
     }
 
@@ -261,9 +277,7 @@ async function updateSkills(name?: string): Promise<void> {
   if (updatedCount === 0) {
     process.stderr.write(`  ${dim("All skills are up to date.")}\n\n`);
   } else {
-    process.stderr.write(
-      `  ${dim(`${updatedCount} skill(s) updated.`)}\n\n`
-    );
+    process.stderr.write(`  ${dim(`${updatedCount} skill(s) updated.`)}\n\n`);
   }
 }
 
@@ -296,7 +310,9 @@ async function infoSkill(name: string): Promise<void> {
     process.stderr.write(
       `${red("✗")} Skill '${bold(name)}' not found in the registry or locally.\n`
     );
-    process.stderr.write(`  Run ${bold("locus skills list")} to see available skills.\n`);
+    process.stderr.write(
+      `  Run ${bold("locus skills list")} to see available skills.\n`
+    );
     process.exit(1);
   }
 
@@ -305,10 +321,16 @@ async function infoSkill(name: string): Promise<void> {
   if (entry) {
     process.stderr.write(`  ${bold("Name:")}         ${cyan(entry.name)}\n`);
     process.stderr.write(`  ${bold("Description:")}  ${entry.description}\n`);
-    process.stderr.write(`  ${bold("Platforms:")}    ${entry.platforms.join(", ")}\n`);
-    process.stderr.write(`  ${bold("Tags:")}         ${entry.tags.join(", ")}\n`);
+    process.stderr.write(
+      `  ${bold("Platforms:")}    ${entry.platforms.join(", ")}\n`
+    );
+    process.stderr.write(
+      `  ${bold("Tags:")}         ${entry.tags.join(", ")}\n`
+    );
     process.stderr.write(`  ${bold("Author:")}       ${entry.author}\n`);
-    process.stderr.write(`  ${bold("Source:")}       ${REGISTRY_REPO}/${entry.path}\n`);
+    process.stderr.write(
+      `  ${bold("Source:")}       ${REGISTRY_REPO}/${entry.path}\n`
+    );
   } else {
     process.stderr.write(`  ${bold("Name:")}         ${cyan(name)}\n`);
     process.stderr.write(`  ${dim("(not found in remote registry)")}\n`);
@@ -318,7 +340,9 @@ async function infoSkill(name: string): Promise<void> {
 
   if (lockEntry) {
     process.stderr.write(`  ${bold("Installed:")}    ${green("yes")}\n`);
-    process.stderr.write(`  ${bold("Hash:")}         ${dim(lockEntry.computedHash.slice(0, 10))}\n`);
+    process.stderr.write(
+      `  ${bold("Hash:")}         ${dim(lockEntry.computedHash.slice(0, 10))}\n`
+    );
     process.stderr.write(`  ${bold("Source:")}       ${lockEntry.source}\n`);
   } else {
     process.stderr.write(`  ${bold("Installed:")}    ${dim("no")}\n`);

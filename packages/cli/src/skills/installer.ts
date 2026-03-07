@@ -2,12 +2,10 @@
 // Skills Marketplace – skill installer (install / remove / check)
 // ---------------------------------------------------------------------------
 
-import { mkdirSync, rmSync, existsSync } from "node:fs";
-import { writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-
-import { AGENTS_SKILLS_DIR, CLAUDE_SKILLS_DIR } from "./types.js";
 import { computeSkillHash, readLockFile, writeLockFile } from "./lock.js";
+import { AGENTS_SKILLS_DIR, CLAUDE_SKILLS_DIR } from "./types.js";
 
 /**
  * Install a skill by writing SKILL.md to both `.claude/skills/<name>/`

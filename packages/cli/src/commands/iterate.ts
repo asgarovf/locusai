@@ -187,9 +187,7 @@ async function handleSprint(
   config: LocusConfig,
   flags: { dryRun?: boolean; model?: string }
 ): Promise<void> {
-  process.stderr.write(
-    `\n${bold("Iterating on sprint PRs...")}\n\n`
-  );
+  process.stderr.write(`\n${bold("Iterating on sprint PRs...")}\n\n`);
 
   // Get all open agent PRs
   const prs = listPRs(

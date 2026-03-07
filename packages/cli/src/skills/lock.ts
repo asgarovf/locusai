@@ -34,7 +34,7 @@ export function writeLockFile(
   lockFile: SkillLockFile
 ): void {
   const filePath = join(projectRoot, SKILLS_LOCK_FILENAME);
-  writeFileSync(filePath, JSON.stringify(lockFile, null, 2) + "\n", "utf-8");
+  writeFileSync(filePath, `${JSON.stringify(lockFile, null, 2)}\n`, "utf-8");
 }
 
 /**
