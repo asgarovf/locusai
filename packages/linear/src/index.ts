@@ -20,8 +20,25 @@
 
 import type { LinearCommand } from "./types.js";
 
+export { LocusLinearClient } from "./client.js";
+export type { LocusLinearClientOptions } from "./client.js";
+export {
+  loadLinearConfig,
+  validateLinearConfig,
+  saveLinearConfig,
+  saveTokens,
+  clearTokens,
+  setTeamKey,
+  loadTokens,
+} from "./config.js";
+export {
+  isTokenExpired,
+  refreshAccessToken,
+  revokeToken,
+} from "./auth/token.js";
+
 export async function main(args: string[]): Promise<void> {
-  const command = (args[0] ?? "help") as LinearCommand;
+  const command = args[0] ?? "help";
 
   switch (command) {
     case "auth":
