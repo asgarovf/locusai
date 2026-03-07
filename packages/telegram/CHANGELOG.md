@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.24.4
+
+### Patch Changes
+
+- update default OAuth client ID
+- Updated dependencies
+  - @locusai/locus-gateway@0.24.4
+  - @locusai/locus-pm2@0.24.4
+  - @locusai/sdk@0.24.4
+
 ## 0.24.3
 
 ### Patch Changes

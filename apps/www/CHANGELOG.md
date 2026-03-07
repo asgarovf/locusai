@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.24.4
+
+### Patch Changes
+
+- update default OAuth client ID
+
 ## 0.24.3
 
 ### Patch Changes
