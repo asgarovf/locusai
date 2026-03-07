@@ -20,6 +20,8 @@ export interface CronConfig {
   enabled: boolean;
   /** User-defined cron jobs. */
   crons: CronJobConfig[];
+  /** Batch window in seconds for co-scheduled external notifications. Defaults to 60. */
+  batchWindowSeconds?: number;
 }
 
 /** Runtime state for a single active cron job. */

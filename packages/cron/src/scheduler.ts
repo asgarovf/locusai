@@ -10,6 +10,7 @@ import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { resolveAdapters } from "./adapters/index.js";
+import { ResultBatcher } from "./batcher.js";
 import { parseSchedule } from "./parse-schedule.js";
 import type {
   ActiveCron,
@@ -24,12 +25,17 @@ export class CronScheduler {
   private activeCrons: Map<string, ActiveCron> = new Map();
   private running = false;
   private cronBaseDir: string;
+  private batcher: ResultBatcher;
 
   constructor(
     private config: CronConfig,
     private cwd: string
   ) {
     this.cronBaseDir = join(cwd, ".locus", "cron");
+    const batchWindowMs = config.batchWindowSeconds
+      ? config.batchWindowSeconds * 1000
+      : undefined;
+    this.batcher = new ResultBatcher(batchWindowMs);
   }
 
   /** Start all configured cron jobs. */
@@ -86,6 +92,7 @@ export class CronScheduler {
       clearInterval(active.timer);
     }
     this.activeCrons.clear();
+    this.batcher.dispose();
     this.running = false;
     this.logGlobal("[info] Cron scheduler stopped");
   }
@@ -142,18 +149,12 @@ export class CronScheduler {
     };
 
     const adapters = resolveAdapters(active.config.routes, this.cwd);
-    for (const adapter of adapters) {
-      try {
-        await adapter.send(result);
-      } catch (adapterErr: unknown) {
-        const msg =
-          adapterErr instanceof Error ? adapterErr.message : String(adapterErr);
-        this.logForJob(
-          name,
-          `[${result.timestamp.toISOString()}] Adapter "${adapter.name}" error: ${msg}`
-        );
-      }
-    }
+    await this.batcher.submit(result, adapters, (adapterName, msg) => {
+      this.logForJob(
+        name,
+        `[${result.timestamp.toISOString()}] Adapter "${adapterName}" error: ${msg}`
+      );
+    });
   }
 
   /** Append a line to a job-specific log file at .locus/cron/<name>/output.log. */
