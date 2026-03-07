@@ -1,5 +1,12 @@
 # @locusai/locus-pm2
 
+## 0.24.2
+
+### Patch Changes
+
+- `plan refine` command
+  better cron definition
+
 ## 0.24.1
 
 ### Patch Changes
