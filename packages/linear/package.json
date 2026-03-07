@@ -8,7 +8,8 @@
   },
   "files": [
     "bin",
-    "dist"
+    "package.json",
+    "README.md"
   ],
   "locus": {
     "displayName": "Linear",

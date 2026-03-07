@@ -11,12 +11,21 @@
  */
 
 import { createLogger } from "@locusai/sdk";
+import { loadLinearConfig, validateLinearConfig } from "../config.js";
+import { handleCommandError } from "../errors.js";
 import { runImport, type ImportOptions, type ImportResult } from "../sync/importer.js";
 
 const logger = createLogger("linear");
 
 export async function importCommand(args: string[]): Promise<void> {
   const options = parseImportArgs(args);
+
+  const config = loadLinearConfig();
+  const configError = validateLinearConfig(config);
+  if (configError) {
+    process.stderr.write(`\n  ${configError}\n\n`);
+    process.exit(1);
+  }
 
   if (options.dryRun) {
     process.stderr.write("\n  Dry run — no GitHub issues will be created or updated.\n\n");
@@ -28,9 +37,7 @@ export async function importCommand(args: string[]): Promise<void> {
   try {
     result = await runImport(options);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`\n  Import failed: ${msg}\n\n`);
-    process.exit(1);
+    handleCommandError(err);
   }
 
   printResults(result, options.dryRun ?? false);

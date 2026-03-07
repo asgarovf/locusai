@@ -9,12 +9,21 @@
  */
 
 import { createLogger } from "@locusai/sdk";
+import { loadLinearConfig, validateLinearConfig } from "../config.js";
+import { handleCommandError } from "../errors.js";
 import { runExport, type ExportOptions, type ExportResult } from "../sync/exporter.js";
 
 const logger = createLogger("linear");
 
 export async function exportCommand(args: string[]): Promise<void> {
   const options = parseExportArgs(args);
+
+  const config = loadLinearConfig();
+  const configError = validateLinearConfig(config);
+  if (configError) {
+    process.stderr.write(`\n  ${configError}\n\n`);
+    process.exit(1);
+  }
 
   if (options.dryRun) {
     process.stderr.write(
@@ -28,9 +37,7 @@ export async function exportCommand(args: string[]): Promise<void> {
   try {
     result = await runExport(options);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`\n  Export failed: ${msg}\n\n`);
-    process.exit(1);
+    handleCommandError(err);
   }
 
   printResults(result, options.dryRun ?? false);

@@ -3,7 +3,8 @@ export {};
 
 const { main } = await import("./index.js");
 
+const { handleCommandError } = await import("./errors.js");
+
 main(process.argv.slice(2)).catch((error) => {
-  console.error(`Fatal error: ${error.message}`);
-  process.exit(1);
+  handleCommandError(error);
 });

@@ -28,6 +28,7 @@ import { issuesCommand } from "./commands/issues.js";
 import { mappingCommand } from "./commands/mapping.js";
 import { syncCommand } from "./commands/sync.js";
 import { teamCommand } from "./commands/team.js";
+import { handleCommandError } from "./errors.js";
 
 export { LocusLinearClient } from "./client.js";
 export type { LocusLinearClientOptions } from "./client.js";
@@ -80,37 +81,42 @@ export { runExport } from "./sync/exporter.js";
 export type { ExportOptions, ExportResult } from "./sync/exporter.js";
 export { aiEnrichIssue } from "./ai/create.js";
 export type { AiIssueResult } from "./ai/create.js";
+export { handleCommandError } from "./errors.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
 
-  switch (command) {
-    case "auth":
-      return authCommand(args.slice(1));
-    case "import":
-      return importCommand(args.slice(1));
-    case "export":
-      return exportCommand(args.slice(1));
-    case "sync":
-      return syncCommand(args.slice(1));
-    case "create":
-      return createCommand(args.slice(1));
-    case "issues":
-      return issuesCommand(args.slice(1));
-    case "issue":
-      return issueCommand(args.slice(1));
-    case "team":
-      return teamCommand(args.slice(1));
-    case "mapping":
-      return mappingCommand(args.slice(1));
-    case "help":
-    case "--help":
-    case "-h":
-      return printHelp();
-    default:
-      console.error(`Unknown command: ${command}`);
-      printHelp();
-      process.exit(1);
+  try {
+    switch (command) {
+      case "auth":
+        return await authCommand(args.slice(1));
+      case "import":
+        return await importCommand(args.slice(1));
+      case "export":
+        return await exportCommand(args.slice(1));
+      case "sync":
+        return await syncCommand(args.slice(1));
+      case "create":
+        return await createCommand(args.slice(1));
+      case "issues":
+        return await issuesCommand(args.slice(1));
+      case "issue":
+        return await issueCommand(args.slice(1));
+      case "team":
+        return teamCommand(args.slice(1));
+      case "mapping":
+        return mappingCommand(args.slice(1));
+      case "help":
+      case "--help":
+      case "-h":
+        return printHelp();
+      default:
+        console.error(`Unknown command: ${command}`);
+        printHelp();
+        process.exit(1);
+    }
+  } catch (err) {
+    handleCommandError(err);
   }
 }
 
