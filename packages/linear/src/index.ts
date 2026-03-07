@@ -20,6 +20,8 @@
 
 import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
+import { mappingCommand } from "./commands/mapping.js";
+import { teamCommand } from "./commands/team.js";
 
 export { LocusLinearClient } from "./client.js";
 export type { LocusLinearClientOptions } from "./client.js";
@@ -39,6 +41,27 @@ export {
 } from "./auth/token.js";
 export { runOAuthFlow } from "./auth/oauth.js";
 export { authCommand } from "./commands/auth.js";
+export { mappingCommand } from "./commands/mapping.js";
+export { teamCommand } from "./commands/team.js";
+export {
+  loadState,
+  saveState,
+  getMapping,
+  getMappingByGithubIssue,
+  addMapping,
+  updateMapping,
+  removeMapping,
+} from "./sync/state.js";
+export {
+  mapPriority,
+  reverseMapPriority,
+  mapState,
+  reverseMapState,
+  mapLabels,
+  mapAssignee,
+  buildGitHubIssuePayload,
+} from "./sync/mapper.js";
+export type { GitHubIssuePayload } from "./sync/mapper.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
@@ -59,9 +82,9 @@ export async function main(args: string[]): Promise<void> {
     case "issue":
       return handleStub("issue", args.slice(1));
     case "team":
-      return handleStub("team", args.slice(1));
+      return teamCommand(args.slice(1));
     case "mapping":
-      return handleStub("mapping", args.slice(1));
+      return mappingCommand(args.slice(1));
     case "help":
     case "--help":
     case "-h":
