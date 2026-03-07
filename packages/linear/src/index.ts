@@ -20,6 +20,7 @@
 
 import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
+import { createCommand } from "./commands/create.js";
 import { exportCommand } from "./commands/export.js";
 import { importCommand } from "./commands/import.js";
 import { issueCommand } from "./commands/issue.js";
@@ -46,6 +47,7 @@ export {
 } from "./auth/token.js";
 export { runOAuthFlow } from "./auth/oauth.js";
 export { authCommand } from "./commands/auth.js";
+export { createCommand } from "./commands/create.js";
 export { exportCommand } from "./commands/export.js";
 export { importCommand } from "./commands/import.js";
 export { issueCommand } from "./commands/issue.js";
@@ -76,6 +78,8 @@ export { runImport } from "./sync/importer.js";
 export type { ImportOptions, ImportResult } from "./sync/importer.js";
 export { runExport } from "./sync/exporter.js";
 export type { ExportOptions, ExportResult } from "./sync/exporter.js";
+export { aiEnrichIssue } from "./ai/create.js";
+export type { AiIssueResult } from "./ai/create.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
@@ -90,7 +94,7 @@ export async function main(args: string[]): Promise<void> {
     case "sync":
       return syncCommand(args.slice(1));
     case "create":
-      return handleStub("create", args.slice(1));
+      return createCommand(args.slice(1));
     case "issues":
       return issuesCommand(args.slice(1));
     case "issue":
@@ -108,12 +112,6 @@ export async function main(args: string[]): Promise<void> {
       printHelp();
       process.exit(1);
   }
-}
-
-function handleStub(command: string, _args: string[]): void {
-  console.log(
-    `\n  Command "${command}" is not yet implemented.\n  This is a placeholder — implementation coming in a future sprint.\n`
-  );
 }
 
 function printHelp(): void {
@@ -145,6 +143,7 @@ function printHelp(): void {
 
   AI-Powered:
     create "<title>"              AI-assisted issue creation in Linear
+    create "<title>" --no-ai      Create plain issue without AI enrichment
 
   Query:
     issues                        List issues from configured team
