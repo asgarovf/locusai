@@ -22,6 +22,8 @@ import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
 import { exportCommand } from "./commands/export.js";
 import { importCommand } from "./commands/import.js";
+import { issueCommand } from "./commands/issue.js";
+import { issuesCommand } from "./commands/issues.js";
 import { mappingCommand } from "./commands/mapping.js";
 import { syncCommand } from "./commands/sync.js";
 import { teamCommand } from "./commands/team.js";
@@ -46,6 +48,8 @@ export { runOAuthFlow } from "./auth/oauth.js";
 export { authCommand } from "./commands/auth.js";
 export { exportCommand } from "./commands/export.js";
 export { importCommand } from "./commands/import.js";
+export { issueCommand } from "./commands/issue.js";
+export { issuesCommand } from "./commands/issues.js";
 export { mappingCommand } from "./commands/mapping.js";
 export { syncCommand } from "./commands/sync.js";
 export { teamCommand } from "./commands/team.js";
@@ -88,9 +92,9 @@ export async function main(args: string[]): Promise<void> {
     case "create":
       return handleStub("create", args.slice(1));
     case "issues":
-      return handleStub("issues", args.slice(1));
+      return issuesCommand(args.slice(1));
     case "issue":
-      return handleStub("issue", args.slice(1));
+      return issueCommand(args.slice(1));
     case "team":
       return teamCommand(args.slice(1));
     case "mapping":
