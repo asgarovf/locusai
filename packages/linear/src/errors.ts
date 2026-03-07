@@ -25,7 +25,7 @@ export function handleCommandError(err: unknown): never {
   // Token expired or refresh failed
   if (
     msg.includes("Token refresh failed") ||
-    msg.includes("token") && msg.includes("expired")
+    (msg.includes("token") && msg.includes("expired"))
   ) {
     process.stderr.write(
       "\n  Your Linear token has expired and could not be refreshed.\n" +

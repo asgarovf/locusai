@@ -25,9 +25,7 @@ const DEFAULT_RESULT: AiIssueResult = {
  * Invoke AI to enrich a brief issue title into a fully detailed issue.
  * Returns structured fields to be used when creating the Linear issue.
  */
-export async function aiEnrichIssue(
-  title: string
-): Promise<AiIssueResult> {
+export async function aiEnrichIssue(title: string): Promise<AiIssueResult> {
   const prompt = buildPrompt(title);
   const result = await invokeLocus(["exec", prompt]);
 
@@ -50,13 +48,13 @@ function buildPrompt(title: string): string {
     "",
     "Output ONLY a valid JSON object with these exact fields:",
     "",
-    '  description: A detailed markdown description of the issue including:',
-    '    - What needs to be done and why',
-    '    - Relevant files or modules that may need changes',
-    '    - Implementation hints based on the codebase',
-    '  priority: A number 1-4 where 1=urgent, 2=high, 3=medium, 4=low',
+    "  description: A detailed markdown description of the issue including:",
+    "    - What needs to be done and why",
+    "    - Relevant files or modules that may need changes",
+    "    - Implementation hints based on the codebase",
+    "  priority: A number 1-4 where 1=urgent, 2=high, 3=medium, 4=low",
     '  labels: An array of suggested label strings (e.g., ["bug", "frontend", "api"])',
-    '  acceptanceCriteria: An array of specific, testable acceptance criteria strings',
+    "  acceptanceCriteria: An array of specific, testable acceptance criteria strings",
     "",
     "Rules:",
     "- Output ONLY the JSON object, no markdown fences, no explanation.",

@@ -172,7 +172,9 @@ export function buildGitHubIssuePayload(
     bodyParts.push(issue.description);
   }
 
-  bodyParts.push(`---\n_Synced from Linear: [${issue.identifier}](${issue.url})_`);
+  bodyParts.push(
+    `---\n_Synced from Linear: [${issue.identifier}](${issue.url})_`
+  );
 
   return {
     title: `${issue.identifier}: ${issue.title}`,

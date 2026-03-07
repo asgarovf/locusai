@@ -21,7 +21,9 @@ export function mappingCommand(_args: string[]): void {
     const label = mapPriority(i);
     const name =
       i === 1 ? "Urgent" : i === 2 ? "High" : i === 3 ? "Medium" : "Low";
-    process.stderr.write(`  ${String(i).padEnd(6)} ${name.padEnd(12)} → ${label}\n`);
+    process.stderr.write(
+      `  ${String(i).padEnd(6)} ${name.padEnd(12)} → ${label}\n`
+    );
   }
   process.stderr.write("\n");
 
@@ -36,9 +38,7 @@ export function mappingCommand(_args: string[]): void {
     );
   } else {
     for (const [linearState, githubLabel] of stateEntries) {
-      process.stderr.write(
-        `  ${linearState.padEnd(20)} → ${githubLabel}\n`
-      );
+      process.stderr.write(`  ${linearState.padEnd(20)} → ${githubLabel}\n`);
     }
   }
   process.stderr.write("\n");
@@ -54,9 +54,7 @@ export function mappingCommand(_args: string[]): void {
     );
   } else {
     for (const [linearLabel, githubLabel] of labelEntries) {
-      process.stderr.write(
-        `  ${linearLabel.padEnd(20)} → ${githubLabel}\n`
-      );
+      process.stderr.write(`  ${linearLabel.padEnd(20)} → ${githubLabel}\n`);
     }
   }
   process.stderr.write("\n");
@@ -67,9 +65,7 @@ export function mappingCommand(_args: string[]): void {
     process.stderr.write("  User Mapping (Linear → GitHub)\n");
     process.stderr.write(`  ${"─".repeat(40)}\n`);
     for (const [linearUser, githubUser] of userEntries) {
-      process.stderr.write(
-        `  ${linearUser.padEnd(20)} → ${githubUser}\n`
-      );
+      process.stderr.write(`  ${linearUser.padEnd(20)} → ${githubUser}\n`);
     }
     process.stderr.write("\n");
   }

@@ -10,12 +10,13 @@
  *   locus pkg linear import --dry-run        → preview without creating issues
  */
 
-import { createLogger } from "@locusai/sdk";
 import { loadLinearConfig, validateLinearConfig } from "../config.js";
 import { handleCommandError } from "../errors.js";
-import { runImport, type ImportOptions, type ImportResult } from "../sync/importer.js";
-
-const logger = createLogger("linear");
+import {
+  type ImportOptions,
+  type ImportResult,
+  runImport,
+} from "../sync/importer.js";
 
 export async function importCommand(args: string[]): Promise<void> {
   const options = parseImportArgs(args);
@@ -28,7 +29,9 @@ export async function importCommand(args: string[]): Promise<void> {
   }
 
   if (options.dryRun) {
-    process.stderr.write("\n  Dry run — no GitHub issues will be created or updated.\n\n");
+    process.stderr.write(
+      "\n  Dry run — no GitHub issues will be created or updated.\n\n"
+    );
   }
 
   process.stderr.write("  Fetching issues from Linear...\n");
@@ -82,25 +85,32 @@ function parseImportArgs(args: string[]): ImportOptions {
 
 function printResults(result: ImportResult, dryRun: boolean): void {
   const prefix = dryRun ? "Would have" : "";
-  const total = result.created + result.updated + result.skipped + result.errors;
+  const total =
+    result.created + result.updated + result.skipped + result.errors;
 
   process.stderr.write("\n  Import Summary\n");
   process.stderr.write(`  ${"─".repeat(50)}\n`);
 
   if (result.issues.length > 0) {
-    process.stderr.write(`\n  ${"Action".padEnd(10)} ${"Issue".padEnd(15)} Title\n`);
-    process.stderr.write(`  ${"─".repeat(10)} ${"─".repeat(15)} ${"─".repeat(40)}\n`);
+    process.stderr.write(
+      `\n  ${"Action".padEnd(10)} ${"Issue".padEnd(15)} Title\n`
+    );
+    process.stderr.write(
+      `  ${"─".repeat(10)} ${"─".repeat(15)} ${"─".repeat(40)}\n`
+    );
 
     for (const issue of result.issues) {
-      const action = issue.action === "error"
-        ? "ERROR"
-        : dryRun
-          ? `${issue.action}*`
-          : issue.action;
+      const action =
+        issue.action === "error"
+          ? "ERROR"
+          : dryRun
+            ? `${issue.action}*`
+            : issue.action;
       const ghRef = issue.githubNumber ? `#${issue.githubNumber}` : "";
-      const title = issue.title.length > 40
-        ? `${issue.title.slice(0, 37)}...`
-        : issue.title;
+      const title =
+        issue.title.length > 40
+          ? `${issue.title.slice(0, 37)}...`
+          : issue.title;
 
       process.stderr.write(
         `  ${action.padEnd(10)} ${issue.identifier.padEnd(15)} ${title}`

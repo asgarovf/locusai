@@ -9,9 +9,10 @@
  *   locus pkg linear create "Fix login bug" --no-ai     → plain issue (title only)
  */
 
+import type { IssuePayload } from "@linear/sdk";
+import { aiEnrichIssue } from "../ai/create.js";
 import { LocusLinearClient } from "../client.js";
 import { loadLinearConfig, validateLinearConfig } from "../config.js";
-import { aiEnrichIssue } from "../ai/create.js";
 
 interface CreateOptions {
   title: string;
@@ -48,7 +49,9 @@ export async function createCommand(args: string[]): Promise<void> {
   let labelIds: string[] | undefined;
 
   if (!options.noAi) {
-    process.stderr.write("\n  Analyzing codebase and generating issue details...\n");
+    process.stderr.write(
+      "\n  Analyzing codebase and generating issue details...\n"
+    );
 
     const aiResult = await aiEnrichIssue(options.title);
 
@@ -85,9 +88,7 @@ export async function createCommand(args: string[]): Promise<void> {
 
       process.stderr.write("  AI enrichment complete.\n");
     } else {
-      process.stderr.write(
-        "  AI enrichment failed — creating plain issue.\n"
-      );
+      process.stderr.write("  AI enrichment failed — creating plain issue.\n");
     }
   }
 
@@ -107,7 +108,7 @@ export async function createCommand(args: string[]): Promise<void> {
     input.labelIds = labelIds;
   }
 
-  let issuePayload;
+  let issuePayload: IssuePayload;
   try {
     issuePayload = await client.createIssue(
       input as Parameters<typeof client.createIssue>[0]
@@ -166,7 +167,7 @@ function parseCreateArgs(args: string[]): CreateOptions {
   if (!title) {
     process.stderr.write(
       '\n  Usage: locus pkg linear create "<title>"\n' +
-        "  Example: locus pkg linear create \"Add rate limiting to the API\"\n\n"
+        '  Example: locus pkg linear create "Add rate limiting to the API"\n\n'
     );
     process.exit(1);
   }

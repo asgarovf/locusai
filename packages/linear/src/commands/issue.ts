@@ -88,7 +88,9 @@ export async function issueCommand(args: string[]): Promise<void> {
   }
 
   if (parent) {
-    process.stderr.write(`  Parent:      ${parent.identifier}: ${parent.title}\n`);
+    process.stderr.write(
+      `  Parent:      ${parent.identifier}: ${parent.title}\n`
+    );
   }
 
   if (children.nodes.length > 0) {
@@ -105,16 +107,26 @@ export async function issueCommand(args: string[]): Promise<void> {
   process.stderr.write(`  Comments:    ${comments.nodes.length}\n`);
 
   process.stderr.write(`  URL:         ${node.url}\n`);
-  process.stderr.write(`  Created:     ${node.createdAt.toISOString().split("T")[0]}\n`);
-  process.stderr.write(`  Updated:     ${node.updatedAt.toISOString().split("T")[0]}\n`);
+  process.stderr.write(
+    `  Created:     ${node.createdAt.toISOString().split("T")[0]}\n`
+  );
+  process.stderr.write(
+    `  Updated:     ${node.updatedAt.toISOString().split("T")[0]}\n`
+  );
 
   // Sync status
   process.stderr.write(`\n  ${"─".repeat(70)}\n`);
   if (mapping) {
-    process.stderr.write(`  Sync:        Imported as GitHub Issue #${mapping.githubIssueNumber}\n`);
-    process.stderr.write(`  Last synced: ${mapping.lastSyncedAt.split("T")[0]}\n`);
+    process.stderr.write(
+      `  Sync:        Imported as GitHub Issue #${mapping.githubIssueNumber}\n`
+    );
+    process.stderr.write(
+      `  Last synced: ${mapping.lastSyncedAt.split("T")[0]}\n`
+    );
   } else {
-    process.stderr.write("  Sync:        Not imported (no GitHub Issue linked)\n");
+    process.stderr.write(
+      "  Sync:        Not imported (no GitHub Issue linked)\n"
+    );
   }
 
   // Description

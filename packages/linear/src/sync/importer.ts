@@ -10,9 +10,9 @@ import { execFileSync } from "node:child_process";
 import { createLogger } from "@locusai/sdk";
 import { LocusLinearClient } from "../client.js";
 import { loadLinearConfig, validateLinearConfig } from "../config.js";
-import type { LinearConfig, LinearIssue, IssueMapping } from "../types.js";
+import type { IssueMapping, LinearConfig, LinearIssue } from "../types.js";
 import { buildGitHubIssuePayload } from "./mapper.js";
-import { loadState, saveState, getMapping } from "./state.js";
+import { getMapping, loadState, saveState } from "./state.js";
 
 const logger = createLogger("linear");
 
@@ -40,7 +40,9 @@ export interface ImportResult {
 /**
  * Run the full import flow: fetch from Linear, create/update GitHub Issues.
  */
-export async function runImport(options: ImportOptions = {}): Promise<ImportResult> {
+export async function runImport(
+  options: ImportOptions = {}
+): Promise<ImportResult> {
   const config = loadLinearConfig();
   const configError = validateLinearConfig(config);
   if (configError) {
@@ -86,7 +88,7 @@ export async function runImport(options: ImportOptions = {}): Promise<ImportResu
   if (options.project) {
     const projectsConnection = await team.projects();
     const project = projectsConnection.nodes.find(
-      (p) => p.name.toLowerCase() === options.project!.toLowerCase()
+      (p) => p.name.toLowerCase() === options.project?.toLowerCase()
     );
     if (!project) {
       throw new Error(
@@ -324,10 +326,22 @@ async function fetchAllIssues(
 // ─── GitHub Issue Operations (via gh CLI) ────────────────────────────────────
 
 function createGitHubIssue(
-  payload: { title: string; body: string; labels: string[]; assignee: string | null },
+  payload: {
+    title: string;
+    body: string;
+    labels: string[];
+    assignee: string | null;
+  },
   order: number
 ): number {
-  const args = ["issue", "create", "--title", payload.title, "--body-file", "-"];
+  const args = [
+    "issue",
+    "create",
+    "--title",
+    payload.title,
+    "--body-file",
+    "-",
+  ];
 
   for (const label of payload.labels) {
     args.push("--label", label);
@@ -356,7 +370,12 @@ function createGitHubIssue(
 
 function updateGitHubIssue(
   issueNumber: number,
-  payload: { title: string; body: string; labels: string[]; assignee: string | null },
+  payload: {
+    title: string;
+    body: string;
+    labels: string[];
+    assignee: string | null;
+  },
   order: number
 ): void {
   const args = [

@@ -5,12 +5,12 @@
  * OAuth tokens for the Linear API.
  */
 
-import type { TokenInfo } from "../types.js";
 import {
+  clearTokens,
   loadTokens as loadTokensFromConfig,
   saveTokens as saveTokensToConfig,
-  clearTokens,
 } from "../config.js";
+import type { TokenInfo } from "../types.js";
 
 const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
 const LINEAR_REVOKE_URL = "https://api.linear.app/oauth/revoke";
@@ -63,9 +63,7 @@ export async function refreshAccessToken(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(
-      `Token refresh failed (${response.status}): ${body}`
-    );
+    throw new Error(`Token refresh failed (${response.status}): ${body}`);
   }
 
   const data = (await response.json()) as {
@@ -101,9 +99,7 @@ export async function revokeToken(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(
-      `Token revocation failed (${response.status}): ${body}`
-    );
+    throw new Error(`Token revocation failed (${response.status}): ${body}`);
   }
 
   clearTokens(cwd);

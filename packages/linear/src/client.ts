@@ -5,23 +5,19 @@
  * the OAuth access token when it is near expiry (within 5 minutes).
  */
 
-import { LinearClient, type LinearDocument } from "@linear/sdk";
 import type {
+  CycleConnection,
   Issue,
   IssueConnection,
-  IssuePayload,
   IssueLabelConnection,
-  CycleConnection,
+  IssuePayload,
   Team,
   TeamConnection,
   WorkflowStateConnection,
 } from "@linear/sdk";
+import { LinearClient, type LinearDocument } from "@linear/sdk";
+import { isTokenExpired, refreshAccessToken } from "./auth/token.js";
 import { loadLinearConfig, validateLinearConfig } from "./config.js";
-import {
-  isTokenExpired,
-  loadTokens,
-  refreshAccessToken,
-} from "./auth/token.js";
 import type { TokenInfo } from "./types.js";
 
 export interface LocusLinearClientOptions {
@@ -63,7 +59,8 @@ export class LocusLinearClient {
     if (error) {
       throw new Error(error);
     }
-    return new LocusLinearClient(config.auth!, { ...options, cwd });
+    // validateLinearConfig above ensures config.auth exists
+    return new LocusLinearClient(config.auth as TokenInfo, { ...options, cwd });
   }
 
   /**
@@ -71,11 +68,7 @@ export class LocusLinearClient {
    * Returns the underlying LinearClient ready for use.
    */
   async ensureFreshClient(): Promise<LinearClient> {
-    if (
-      this.clientId &&
-      this.clientSecret &&
-      isTokenExpired(this.tokens)
-    ) {
+    if (this.clientId && this.clientSecret && isTokenExpired(this.tokens)) {
       this.tokens = await refreshAccessToken(
         this.tokens,
         this.clientId,
@@ -103,13 +96,17 @@ export class LocusLinearClient {
   }
 
   /** Fetch issues with optional filters. */
-  async getIssues(variables?: Record<string, unknown>): Promise<IssueConnection> {
+  async getIssues(
+    variables?: Record<string, unknown>
+  ): Promise<IssueConnection> {
     const client = await this.ensureFreshClient();
     return client.issues(variables);
   }
 
   /** Create a new issue. */
-  async createIssue(input: LinearDocument.IssueCreateInput): Promise<IssuePayload> {
+  async createIssue(
+    input: LinearDocument.IssueCreateInput
+  ): Promise<IssuePayload> {
     const client = await this.ensureFreshClient();
     return client.createIssue(input);
   }

@@ -117,7 +117,9 @@ export async function issuesCommand(args: string[]): Promise<void> {
     : `${team.name} (${team.key})`;
 
   process.stderr.write(`\n  ${header}\n`);
-  process.stderr.write(`  ${issues.length} issue${issues.length === 1 ? "" : "s"}\n`);
+  process.stderr.write(
+    `  ${issues.length} issue${issues.length === 1 ? "" : "s"}\n`
+  );
   process.stderr.write(`  ${"═".repeat(90)}\n`);
 
   if (issues.length === 0) {
@@ -135,9 +137,7 @@ export async function issuesCommand(args: string[]): Promise<void> {
 
   for (const issue of issues) {
     const title =
-      issue.title.length > 38
-        ? `${issue.title.slice(0, 35)}...`
-        : issue.title;
+      issue.title.length > 38 ? `${issue.title.slice(0, 35)}...` : issue.title;
     const assignee =
       issue.assignee.length > 10
         ? `${issue.assignee.slice(0, 7)}...`

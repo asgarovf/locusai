@@ -10,7 +10,6 @@ import { execFileSync } from "node:child_process";
 import { createLogger } from "@locusai/sdk";
 import { LocusLinearClient } from "../client.js";
 import { loadLinearConfig, validateLinearConfig } from "../config.js";
-import type { IssueMapping } from "../types.js";
 import { reverseMapPriority, reverseMapState } from "./mapper.js";
 import { loadState, saveState } from "./state.js";
 
@@ -119,7 +118,7 @@ export async function runExport(
 
       // Map closed GitHub issue to "Done" state (if not already mapped by label)
       if (ghIssue.state === "closed" && !linearStateName) {
-        const doneStateId = stateNameToId["Done"];
+        const doneStateId = stateNameToId.Done;
         if (doneStateId) {
           updatePayload.stateId = doneStateId;
           changes.push("state → Done (closed)");

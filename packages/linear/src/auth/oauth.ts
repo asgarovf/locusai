@@ -9,11 +9,15 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import type { AddressInfo } from "node:net";
 import open from "open";
-import { saveTokens } from "./token.js";
 import type { TokenInfo } from "../types.js";
+import { saveTokens } from "./token.js";
 
 const LINEAR_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
@@ -63,67 +67,91 @@ export async function runOAuthFlow(
   const state = generateState();
 
   return new Promise<OAuthFlowResult>((resolve, reject) => {
-    const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-      try {
-        const url = new URL(req.url ?? "/", `http://localhost`);
+    const server = createServer(
+      async (req: IncomingMessage, res: ServerResponse) => {
+        try {
+          const url = new URL(req.url ?? "/", `http://localhost`);
 
-        if (url.pathname !== "/callback") {
-          res.writeHead(404);
-          res.end("Not found");
-          return;
-        }
+          if (url.pathname !== "/callback") {
+            res.writeHead(404);
+            res.end("Not found");
+            return;
+          }
 
-        const receivedState = url.searchParams.get("state");
-        const code = url.searchParams.get("code");
-        const error = url.searchParams.get("error");
+          const receivedState = url.searchParams.get("state");
+          const code = url.searchParams.get("code");
+          const error = url.searchParams.get("error");
 
-        if (error) {
+          if (error) {
+            res.writeHead(200, { "Content-Type": "text/html" });
+            res.end(
+              buildHtmlPage(
+                "Authorization Cancelled",
+                "You can close this window and return to the terminal."
+              )
+            );
+            server.close();
+            resolve({ tokens: null as unknown as TokenInfo, cancelled: true });
+            return;
+          }
+
+          if (receivedState !== state) {
+            res.writeHead(400, { "Content-Type": "text/html" });
+            res.end(
+              buildHtmlPage(
+                "Error",
+                "Invalid state parameter. This may be a CSRF attack. Please try again."
+              )
+            );
+            server.close();
+            reject(new Error("Invalid state parameter in OAuth callback"));
+            return;
+          }
+
+          if (!code) {
+            res.writeHead(400, { "Content-Type": "text/html" });
+            res.end(
+              buildHtmlPage(
+                "Error",
+                "No authorization code received. Please try again."
+              )
+            );
+            server.close();
+            reject(new Error("No authorization code in OAuth callback"));
+            return;
+          }
+
+          const port = (server.address() as AddressInfo).port;
+          const redirectUri = `http://localhost:${port}/callback`;
+
+          const tokens = await exchangeCodeForTokens({
+            code,
+            codeVerifier,
+            clientId,
+            redirectUri,
+          });
+
+          saveTokens(tokens, cwd);
+
           res.writeHead(200, { "Content-Type": "text/html" });
-          res.end(buildHtmlPage("Authorization Cancelled", "You can close this window and return to the terminal."));
+          res.end(
+            buildHtmlPage(
+              "Authorization Successful",
+              "You can close this window and return to the terminal."
+            )
+          );
           server.close();
-          resolve({ tokens: null as unknown as TokenInfo, cancelled: true });
-          return;
-        }
-
-        if (receivedState !== state) {
-          res.writeHead(400, { "Content-Type": "text/html" });
-          res.end(buildHtmlPage("Error", "Invalid state parameter. This may be a CSRF attack. Please try again."));
+          resolve({ tokens, cancelled: false });
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "text/html" });
+          res.end(
+            buildHtmlPage("Error", "Token exchange failed. Please try again.")
+          );
           server.close();
-          reject(new Error("Invalid state parameter in OAuth callback"));
-          return;
+          reject(err);
         }
-
-        if (!code) {
-          res.writeHead(400, { "Content-Type": "text/html" });
-          res.end(buildHtmlPage("Error", "No authorization code received. Please try again."));
-          server.close();
-          reject(new Error("No authorization code in OAuth callback"));
-          return;
-        }
-
-        const port = (server.address() as AddressInfo).port;
-        const redirectUri = `http://localhost:${port}/callback`;
-
-        const tokens = await exchangeCodeForTokens({
-          code,
-          codeVerifier,
-          clientId,
-          redirectUri,
-        });
-
-        saveTokens(tokens, cwd);
-
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(buildHtmlPage("Authorization Successful", "You can close this window and return to the terminal."));
-        server.close();
-        resolve({ tokens, cancelled: false });
-      } catch (err) {
-        res.writeHead(500, { "Content-Type": "text/html" });
-        res.end(buildHtmlPage("Error", "Token exchange failed. Please try again."));
-        server.close();
-        reject(err);
       }
-    });
+    );
 
     server.listen(0, "127.0.0.1", () => {
       const port = (server.address() as AddressInfo).port;
@@ -140,7 +168,9 @@ export async function runOAuthFlow(
       authUrl.searchParams.set("prompt", "consent");
 
       process.stderr.write(`\n  Opening browser for Linear authorization...\n`);
-      process.stderr.write(`  If the browser doesn't open, visit:\n  ${authUrl.toString()}\n\n`);
+      process.stderr.write(
+        `  If the browser doesn't open, visit:\n  ${authUrl.toString()}\n\n`
+      );
 
       open(authUrl.toString()).catch(() => {
         // Browser open failed — user can manually visit the URL
@@ -148,14 +178,19 @@ export async function runOAuthFlow(
     });
 
     server.on("error", (err) => {
-      reject(new Error(`Failed to start OAuth callback server: ${err.message}`));
+      reject(
+        new Error(`Failed to start OAuth callback server: ${err.message}`)
+      );
     });
 
     // Timeout after 5 minutes
-    const timeout = setTimeout(() => {
-      server.close();
-      reject(new Error("OAuth flow timed out after 5 minutes"));
-    }, 5 * 60 * 1000);
+    const timeout = setTimeout(
+      () => {
+        server.close();
+        reject(new Error("OAuth flow timed out after 5 minutes"));
+      },
+      5 * 60 * 1000
+    );
 
     server.on("close", () => clearTimeout(timeout));
   });
@@ -170,7 +205,9 @@ interface ExchangeParams {
   redirectUri: string;
 }
 
-async function exchangeCodeForTokens(params: ExchangeParams): Promise<TokenInfo> {
+async function exchangeCodeForTokens(
+  params: ExchangeParams
+): Promise<TokenInfo> {
   const response = await fetch(LINEAR_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

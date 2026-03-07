@@ -14,10 +14,11 @@ export function teamCommand(args: string[]): void {
   const newKey = args[0];
 
   if (!newKey) {
-    return showTeam();
+    showTeam();
+    return;
   }
 
-  return setTeam(newKey);
+  setTeam(newKey);
 }
 
 function showTeam(): void {

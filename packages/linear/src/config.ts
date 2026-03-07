@@ -58,13 +58,13 @@ export function loadLinearConfig(cwd?: string): LinearConfig {
  */
 export function validateLinearConfig(config: LinearConfig): string | null {
   if (!config.auth) {
-    return 'Not authenticated. Run: locus pkg linear auth';
+    return "Not authenticated. Run: locus pkg linear auth";
   }
   if (!config.auth.accessToken) {
-    return 'Invalid auth: missing access token. Run: locus pkg linear auth';
+    return "Invalid auth: missing access token. Run: locus pkg linear auth";
   }
   if (!config.teamKey) {
-    return 'No team configured. Run: locus pkg linear team <KEY>';
+    return "No team configured. Run: locus pkg linear team <KEY>";
   }
   return null;
 }

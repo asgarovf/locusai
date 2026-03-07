@@ -11,10 +11,7 @@ import { LinearClient } from "@linear/sdk";
 import { createLogger } from "@locusai/sdk";
 import { runOAuthFlow } from "../auth/oauth.js";
 import { loadTokens, revokeToken } from "../auth/token.js";
-import {
-  loadLinearConfig,
-  saveLinearConfig,
-} from "../config.js";
+import { loadLinearConfig, saveLinearConfig } from "../config.js";
 import type { LinearConfig, TokenInfo } from "../types.js";
 
 const logger = createLogger("linear");
@@ -76,7 +73,9 @@ function showStatus(): void {
   const config = loadLinearConfig();
 
   if (!config.auth) {
-    process.stderr.write("\n  Not authenticated.\n  Run: locus pkg linear auth\n\n");
+    process.stderr.write(
+      "\n  Not authenticated.\n  Run: locus pkg linear auth\n\n"
+    );
     return;
   }
 
@@ -90,7 +89,9 @@ function showStatus(): void {
   process.stderr.write("\n  Linear Auth Status\n");
   process.stderr.write(`  ${"─".repeat(40)}\n`);
   process.stderr.write(`  Token:      ${expired ? "expired" : "valid"}\n`);
-  process.stderr.write(`  Expires:    ${expiresAt.toLocaleString()} (${expiryLabel})\n`);
+  process.stderr.write(
+    `  Expires:    ${expiresAt.toLocaleString()} (${expiryLabel})\n`
+  );
   process.stderr.write(`  Scope:      ${config.auth.scope || "unknown"}\n`);
   process.stderr.write(`  Team:       ${config.teamKey ?? "not set"}\n`);
 

@@ -8,8 +8,8 @@
  *   locus pkg linear sync --dry-run    → preview both directions
  */
 
-import { importCommand } from "./import.js";
 import { exportCommand } from "./export.js";
+import { importCommand } from "./import.js";
 
 export async function syncCommand(args: string[]): Promise<void> {
   // Pass all args to import (supports --cycle, --project, --dry-run, --enrich)

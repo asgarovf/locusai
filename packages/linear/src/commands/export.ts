@@ -8,12 +8,13 @@
  *   locus pkg linear export --dry-run    → preview without updating Linear
  */
 
-import { createLogger } from "@locusai/sdk";
 import { loadLinearConfig, validateLinearConfig } from "../config.js";
 import { handleCommandError } from "../errors.js";
-import { runExport, type ExportOptions, type ExportResult } from "../sync/exporter.js";
-
-const logger = createLogger("linear");
+import {
+  type ExportOptions,
+  type ExportResult,
+  runExport,
+} from "../sync/exporter.js";
 
 export async function exportCommand(args: string[]): Promise<void> {
   const options = parseExportArgs(args);
@@ -26,9 +27,7 @@ export async function exportCommand(args: string[]): Promise<void> {
   }
 
   if (options.dryRun) {
-    process.stderr.write(
-      "\n  Dry run — no Linear issues will be updated.\n\n"
-    );
+    process.stderr.write("\n  Dry run — no Linear issues will be updated.\n\n");
   }
 
   process.stderr.write("  Reading GitHub issue states...\n");

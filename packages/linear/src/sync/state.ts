@@ -87,10 +87,7 @@ export function getMappingByGithubIssue(
 /**
  * Add a new issue mapping to the sync state and persist.
  */
-export function addMapping(
-  mapping: IssueMapping,
-  cwd?: string
-): void {
+export function addMapping(mapping: IssueMapping, cwd?: string): void {
   const state = loadState(cwd);
 
   const existing = state.mappings.findIndex(

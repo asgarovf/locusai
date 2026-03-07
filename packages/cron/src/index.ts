@@ -160,17 +160,23 @@ async function handleAdd(args: string[]): Promise<void> {
 
   // Validate parsed fields
   if (!name || !schedule || !command) {
-    console.error("AI response missing required fields (name, schedule, command).");
+    console.error(
+      "AI response missing required fields (name, schedule, command)."
+    );
     process.exit(1);
   }
 
   if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(name)) {
-    console.error(`Invalid generated name: "${name}". Must be alphanumeric with hyphens.`);
+    console.error(
+      `Invalid generated name: "${name}". Must be alphanumeric with hyphens.`
+    );
     process.exit(1);
   }
 
   if (!parseSchedule(schedule)) {
-    console.error(`Invalid generated schedule: "${schedule}". Must use formats like 30s, 5m, 1h, 1d.`);
+    console.error(
+      `Invalid generated schedule: "${schedule}". Must use formats like 30s, 5m, 1h, 1d.`
+    );
     process.exit(1);
   }
 
@@ -190,14 +196,14 @@ function buildCronParsePrompt(description: string): string {
     "output ONLY a valid JSON object with these exact fields:",
     "",
     '  name: a kebab-case identifier (e.g. "check-linter-errors")',
-    '  schedule: an interval string using these formats: 30s, 5m, 1h, 1d (minimum 10s)',
-    '  command: the shell command to execute. For AI-powered tasks, use: locus exec \'<prompt>\'',
+    "  schedule: an interval string using these formats: 30s, 5m, 1h, 1d (minimum 10s)",
+    "  command: the shell command to execute. For AI-powered tasks, use: locus exec '<prompt>'",
     "",
     "Rules:",
     "- Output ONLY the JSON object, no markdown, no explanation, no code fences.",
     "- The name should be descriptive and derived from the task description.",
-    "- Map time references: \"every hour\" → \"1h\", \"every 5 minutes\" → \"5m\", \"daily\" → \"1d\", \"every 30 seconds\" → \"30s\".",
-    "- If no time is specified, default to \"1h\".",
+    '- Map time references: "every hour" → "1h", "every 5 minutes" → "5m", "daily" → "1d", "every 30 seconds" → "30s".',
+    '- If no time is specified, default to "1h".',
     "- If the task is a development/AI task (review, check, analyze, fix, etc.), the command should be: locus exec '<appropriate prompt>'",
     "- If the task is a simple shell operation (disk check, memory usage, etc.), use a plain shell command.",
     "",
@@ -260,18 +266,14 @@ function handleList(): void {
     return;
   }
 
-  console.log(
-    `  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`
-  );
+  console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`);
   console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(40)}`);
   for (const cron of config.crons) {
     const cmd =
       cron.command.length > 60
         ? `${cron.command.slice(0, 57)}...`
         : cron.command;
-    console.log(
-      `  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`
-    );
+    console.log(`  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`);
   }
   console.log();
 }

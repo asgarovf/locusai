@@ -18,7 +18,6 @@
  *   locus pkg linear issues        → List issues from configured team
  */
 
-import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
 import { createCommand } from "./commands/create.js";
 import { exportCommand } from "./commands/export.js";
@@ -30,23 +29,16 @@ import { syncCommand } from "./commands/sync.js";
 import { teamCommand } from "./commands/team.js";
 import { handleCommandError } from "./errors.js";
 
-export { LocusLinearClient } from "./client.js";
-export type { LocusLinearClientOptions } from "./client.js";
-export {
-  loadLinearConfig,
-  validateLinearConfig,
-  saveLinearConfig,
-  saveTokens,
-  clearTokens,
-  setTeamKey,
-  loadTokens,
-} from "./config.js";
+export type { AiIssueResult } from "./ai/create.js";
+export { aiEnrichIssue } from "./ai/create.js";
+export { runOAuthFlow } from "./auth/oauth.js";
 export {
   isTokenExpired,
   refreshAccessToken,
   revokeToken,
 } from "./auth/token.js";
-export { runOAuthFlow } from "./auth/oauth.js";
+export type { LocusLinearClientOptions } from "./client.js";
+export { LocusLinearClient } from "./client.js";
 export { authCommand } from "./commands/auth.js";
 export { createCommand } from "./commands/create.js";
 export { exportCommand } from "./commands/export.js";
@@ -57,31 +49,38 @@ export { mappingCommand } from "./commands/mapping.js";
 export { syncCommand } from "./commands/sync.js";
 export { teamCommand } from "./commands/team.js";
 export {
-  loadState,
-  saveState,
+  clearTokens,
+  loadLinearConfig,
+  loadTokens,
+  saveLinearConfig,
+  saveTokens,
+  setTeamKey,
+  validateLinearConfig,
+} from "./config.js";
+export { handleCommandError } from "./errors.js";
+export type { ExportOptions, ExportResult } from "./sync/exporter.js";
+export { runExport } from "./sync/exporter.js";
+export type { ImportOptions, ImportResult } from "./sync/importer.js";
+export { runImport } from "./sync/importer.js";
+export type { GitHubIssuePayload } from "./sync/mapper.js";
+export {
+  buildGitHubIssuePayload,
+  mapAssignee,
+  mapLabels,
+  mapPriority,
+  mapState,
+  reverseMapPriority,
+  reverseMapState,
+} from "./sync/mapper.js";
+export {
+  addMapping,
   getMapping,
   getMappingByGithubIssue,
-  addMapping,
-  updateMapping,
+  loadState,
   removeMapping,
+  saveState,
+  updateMapping,
 } from "./sync/state.js";
-export {
-  mapPriority,
-  reverseMapPriority,
-  mapState,
-  reverseMapState,
-  mapLabels,
-  mapAssignee,
-  buildGitHubIssuePayload,
-} from "./sync/mapper.js";
-export type { GitHubIssuePayload } from "./sync/mapper.js";
-export { runImport } from "./sync/importer.js";
-export type { ImportOptions, ImportResult } from "./sync/importer.js";
-export { runExport } from "./sync/exporter.js";
-export type { ExportOptions, ExportResult } from "./sync/exporter.js";
-export { aiEnrichIssue } from "./ai/create.js";
-export type { AiIssueResult } from "./ai/create.js";
-export { handleCommandError } from "./errors.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
