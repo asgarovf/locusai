@@ -12,6 +12,8 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { loadConfig } from "../core/config.js";
 import { listIssues, listMilestones, listPRs } from "../core/github.js";
 import { getRunStats, loadRunState } from "../core/run-state.js";
@@ -26,7 +28,11 @@ import {
   red,
   yellow,
 } from "../display/terminal.js";
-import { extractShortName, loadRegistry } from "../packages/registry.js";
+import {
+  extractShortName,
+  getPackagesDir,
+  loadRegistry,
+} from "../packages/registry.js";
 import type { SandboxConfig } from "../types.js";
 
 export async function statusCommand(projectRoot: string): Promise<void> {
@@ -260,9 +266,45 @@ interface Pm2ProcessInfo {
   memory: number | null;
 }
 
+/**
+ * Discover the pm2 binary using the same strategy as `@locusai/locus-pm2`:
+ * 1. Look in ~/.locus/packages/node_modules/.bin/pm2 (where packages install pm2)
+ * 2. Walk up from cwd
+ * 3. System PATH
+ * 4. Fallback to npx
+ */
+function getPm2Bin(): string {
+  // 1. Check the global packages dir (where locus-pm2 installs pm2)
+  const pkgsBin = join(getPackagesDir(), "node_modules", ".bin", "pm2");
+  if (existsSync(pkgsBin)) return pkgsBin;
+
+  // 2. Walk up from cwd
+  let dir = process.cwd();
+  while (dir !== dirname(dir)) {
+    const candidate = join(dir, "node_modules", ".bin", "pm2");
+    if (existsSync(candidate)) return candidate;
+    dir = dirname(dir);
+  }
+
+  // 3. System PATH
+  try {
+    const result = execSync("which pm2", {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (result) return result;
+  } catch {
+    // fall through
+  }
+
+  // 4. Fallback
+  return "npx pm2";
+}
+
 function getPm2Processes(): Pm2ProcessInfo[] {
   try {
-    const output = execSync("npx pm2 jlist", {
+    const pm2 = getPm2Bin();
+    const output = execSync(`${pm2} jlist`, {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 5000,
