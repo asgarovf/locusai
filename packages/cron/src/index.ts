@@ -135,7 +135,29 @@ async function handleAdd(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const description = args.join(" ");
+  // Extract --route flag before joining remaining args as description
+  let routes: string[] | undefined;
+  const descParts: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--route" && i + 1 < args.length) {
+      routes = args[i + 1]
+        .split(",")
+        .map((r) => r.trim())
+        .filter(Boolean);
+      i++; // skip the value
+    } else {
+      descParts.push(args[i]);
+    }
+  }
+
+  if (descParts.length === 0) {
+    console.error(
+      'Usage: locus pkg cron add "<description>"\n\nExample: locus pkg cron add "check linter errors every hour"'
+    );
+    process.exit(1);
+  }
+
+  const description = descParts.join(" ");
 
   logger.info(`Interpreting: "${description}" ...`);
 
@@ -180,13 +202,31 @@ async function handleAdd(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const err = addCronJob({ name, schedule, command });
+  const job: {
+    name: string;
+    schedule: string;
+    command: string;
+    routes?: string[];
+  } = {
+    name,
+    schedule,
+    command,
+  };
+  if (routes && routes.length > 0) {
+    job.routes = routes;
+  }
+
+  const err = addCronJob(job);
   if (err) {
     console.error(err);
     process.exit(1);
   }
 
-  logger.info(`Added cron job "${name}" (every ${schedule}): ${command}`);
+  const routeInfo =
+    routes && routes.length > 0 ? ` → routes: ${routes.join(", ")}` : "";
+  logger.info(
+    `Added cron job "${name}" (every ${schedule}): ${command}${routeInfo}`
+  );
   logger.info("Restart the cron worker to apply: locus pkg cron restart");
 }
 
@@ -266,14 +306,37 @@ function handleList(): void {
     return;
   }
 
-  console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`);
-  console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(40)}`);
-  for (const cron of config.crons) {
-    const cmd =
-      cron.command.length > 60
-        ? `${cron.command.slice(0, 57)}...`
-        : cron.command;
-    console.log(`  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`);
+  const hasRoutes = config.crons.some((c) => c.routes && c.routes.length > 0);
+
+  if (hasRoutes) {
+    console.log(
+      `  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} ${"Routes".padEnd(20)} Command`
+    );
+    console.log(
+      `  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(20)} ${"─".repeat(40)}`
+    );
+    for (const cron of config.crons) {
+      const cmd =
+        cron.command.length > 40
+          ? `${cron.command.slice(0, 37)}...`
+          : cron.command;
+      const routeStr = cron.routes?.join(", ") ?? "local";
+      console.log(
+        `  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${routeStr.padEnd(20)} ${cmd}`
+      );
+    }
+  } else {
+    console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`);
+    console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(40)}`);
+    for (const cron of config.crons) {
+      const cmd =
+        cron.command.length > 60
+          ? `${cron.command.slice(0, 57)}...`
+          : cron.command;
+      console.log(
+        `  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`
+      );
+    }
   }
   console.log();
 }
@@ -315,18 +378,21 @@ function printHelp(): void {
 
   Management commands:
     add "<description>"               Add a cron job from natural language
+      --route <targets>               Route output to targets (comma-separated)
     remove <name>                     Remove a cron job (alias: rm)
     list                              List all configured cron jobs (alias: ls)
     enable                            Enable the cron scheduler
     disable                           Disable the cron scheduler
 
-  Output:
-    Cron output is written to .locus/cron/<job-name>/output.log
+  Output routing:
+    By default, cron output is written locally to .locus/cron/<job-name>/output.log.
+    Use --route to send output to additional targets (e.g. telegram, webhook).
 
   Examples:
     locus pkg cron add "check linter errors every hour"
     locus pkg cron add "review codebase for security issues daily"
-    locus pkg cron add "check disk usage every 5 minutes"
+    locus pkg cron add "check disk usage every 5 minutes" --route telegram
+    locus pkg cron add "run tests every 30 minutes" --route telegram,local
     locus pkg cron remove disk-check
     locus pkg cron list
     locus pkg cron enable
@@ -335,6 +401,7 @@ function printHelp(): void {
   `);
 }
 
+export { resolveAdapters } from "./adapters/index.js";
 export { formatInterval, parseSchedule } from "./parse-schedule.js";
 // Re-export types for programmatic use
 export { CronScheduler } from "./scheduler.js";
@@ -342,5 +409,7 @@ export type {
   ActiveCron,
   CronConfig,
   CronJobConfig,
+  CronJobResult,
   CronSchedulerStatus,
+  OutputAdapter,
 } from "./types.js";

@@ -9,8 +9,15 @@ import { exec as execCb } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { resolveAdapters } from "./adapters/index.js";
+import { ResultBatcher } from "./batcher.js";
 import { parseSchedule } from "./parse-schedule.js";
-import type { ActiveCron, CronConfig, CronSchedulerStatus } from "./types.js";
+import type {
+  ActiveCron,
+  CronConfig,
+  CronJobResult,
+  CronSchedulerStatus,
+} from "./types.js";
 
 const exec = promisify(execCb);
 
@@ -18,12 +25,17 @@ export class CronScheduler {
   private activeCrons: Map<string, ActiveCron> = new Map();
   private running = false;
   private cronBaseDir: string;
+  private batcher: ResultBatcher;
 
   constructor(
     private config: CronConfig,
     private cwd: string
   ) {
     this.cronBaseDir = join(cwd, ".locus", "cron");
+    const batchWindowMs = config.batchWindowSeconds
+      ? config.batchWindowSeconds * 1000
+      : undefined;
+    this.batcher = new ResultBatcher(cwd, batchWindowMs);
   }
 
   /** Start all configured cron jobs. */
@@ -80,6 +92,7 @@ export class CronScheduler {
       clearInterval(active.timer);
     }
     this.activeCrons.clear();
+    this.batcher.dispose();
     this.running = false;
     this.logGlobal("[info] Cron scheduler stopped");
   }
@@ -106,22 +119,42 @@ export class CronScheduler {
     if (!active) return;
 
     active.lastRun = new Date();
-    const timestamp = active.lastRun.toISOString();
+
+    let output = "";
+    let exitCode = 0;
 
     try {
       const { stdout, stderr } = await exec(active.config.command, {
         timeout: 30_000,
         cwd: this.cwd,
       });
-
-      const output = (stdout || stderr || "").trim();
-      if (output) {
-        this.logForJob(name, `[${timestamp}] ${output}`);
-      }
+      output = (stdout || stderr || "").trim();
     } catch (error: unknown) {
+      if (error && typeof error === "object" && "code" in error) {
+        exitCode = (error as { code: number }).code ?? 1;
+      } else {
+        exitCode = 1;
+      }
       const errMsg = error instanceof Error ? error.message : String(error);
-      this.logForJob(name, `[${timestamp}] ERROR: ${errMsg}`);
+      output = errMsg;
     }
+
+    const result: CronJobResult = {
+      jobId: name,
+      command: active.config.command,
+      output,
+      exitCode,
+      timestamp: active.lastRun,
+      schedule: active.config.schedule,
+    };
+
+    const adapters = resolveAdapters(active.config.routes, this.cwd);
+    await this.batcher.submit(result, adapters, (adapterName, msg) => {
+      this.logForJob(
+        name,
+        `[${result.timestamp.toISOString()}] Adapter "${adapterName}" error: ${msg}`
+      );
+    });
   }
 
   /** Append a line to a job-specific log file at .locus/cron/<name>/output.log. */

@@ -10,6 +10,8 @@ export interface CronJobConfig {
   schedule: string;
   /** Shell command to execute when the cron fires. */
   command: string;
+  /** Output routing targets (e.g. `["telegram", "local", "webhook:https://..."]`). */
+  routes?: string[];
 }
 
 /** Cron package configuration stored under `packages.cron` in `.locus/config.json`. */
@@ -18,6 +20,8 @@ export interface CronConfig {
   enabled: boolean;
   /** User-defined cron jobs. */
   crons: CronJobConfig[];
+  /** Batch window in seconds for co-scheduled external notifications. Defaults to 60. */
+  batchWindowSeconds?: number;
 }
 
 /** Runtime state for a single active cron job. */
@@ -30,6 +34,30 @@ export interface ActiveCron {
   intervalMs: number;
   /** Timestamp of last execution, or null if never run. */
   lastRun: Date | null;
+}
+
+/** Result of a completed cron job execution. */
+export interface CronJobResult {
+  /** The cron job identifier. */
+  jobId: string;
+  /** The shell command that was executed. */
+  command: string;
+  /** Captured stdout/stderr output. */
+  output: string;
+  /** Process exit code. */
+  exitCode: number;
+  /** When the job finished. */
+  timestamp: Date;
+  /** The schedule interval that triggered this run. */
+  schedule: string;
+}
+
+/** Adapter for routing cron job results to an output destination. */
+export interface OutputAdapter {
+  /** Unique name for this adapter (e.g. `"telegram"`, `"local"`). */
+  name: string;
+  /** Send a cron job result to this adapter's destination. */
+  send(result: CronJobResult): Promise<void>;
 }
 
 /** Status snapshot returned by getStatus(). */
