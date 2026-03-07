@@ -342,5 +342,7 @@ export type {
   ActiveCron,
   CronConfig,
   CronJobConfig,
+  CronJobResult,
   CronSchedulerStatus,
+  OutputAdapter,
 } from "./types.js";
