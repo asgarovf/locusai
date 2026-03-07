@@ -14,7 +14,6 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import type { AddressInfo } from "node:net";
 import open from "open";
 import type { TokenInfo } from "../types.js";
 import { saveTokens } from "./token.js";
@@ -22,7 +21,9 @@ import { saveTokens } from "./token.js";
 const LINEAR_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
 
-const SCOPES = "read,write,issues:create,issues:update,comments:create";
+const SCOPES = "read,write,issues:create,comments:create";
+const CALLBACK_PORT = 6789;
+const REDIRECT_URI = `http://localhost:${CALLBACK_PORT}/callback`;
 
 /** Generate a cryptographically random code verifier (43-128 chars, URL-safe). */
 function generateCodeVerifier(): string {
@@ -121,8 +122,7 @@ export async function runOAuthFlow(
             return;
           }
 
-          const port = (server.address() as AddressInfo).port;
-          const redirectUri = `http://localhost:${port}/callback`;
+          const redirectUri = REDIRECT_URI;
 
           const tokens = await exchangeCodeForTokens({
             code,
@@ -153,9 +153,8 @@ export async function runOAuthFlow(
       }
     );
 
-    server.listen(0, "127.0.0.1", () => {
-      const port = (server.address() as AddressInfo).port;
-      const redirectUri = `http://localhost:${port}/callback`;
+    server.listen(CALLBACK_PORT, "127.0.0.1", () => {
+      const redirectUri = REDIRECT_URI;
 
       const authUrl = new URL(LINEAR_AUTHORIZE_URL);
       authUrl.searchParams.set("client_id", clientId);
