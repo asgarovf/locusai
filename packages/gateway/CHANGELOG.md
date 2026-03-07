@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.23.4
+
+### Patch Changes
+
+- Initial locus-cron package
+- Updated dependencies
+  - @locusai/sdk@0.23.4
+
 ## 0.23.3
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.23.4
+
+### Patch Changes
+
+- Initial locus-cron package
+- Updated dependencies
+  - @locusai/locus-gateway@0.23.4
+  - @locusai/locus-pm2@0.23.4
+  - @locusai/sdk@0.23.4
+
 ## 0.23.3
 
 ### Patch Changes

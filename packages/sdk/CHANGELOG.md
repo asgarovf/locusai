@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.23.4
+
+### Patch Changes
+
+- Initial locus-cron package
+
 ## 0.23.3
 
 ### Patch Changes
