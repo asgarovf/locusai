@@ -16,7 +16,7 @@ import type { LinearConfig, TokenInfo } from "../types.js";
 
 const logger = createLogger("linear");
 
-const DEFAULT_CLIENT_ID = "2901b40c42ded129b757ee3b4a3e4208";
+const DEFAULT_CLIENT_ID = "7714a6775ffffb95b0a313b3870c4d6f";
 
 export async function authCommand(args: string[]): Promise<void> {
   const flag = args[0];
