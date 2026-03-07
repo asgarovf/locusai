@@ -7,12 +7,14 @@
  *   locus skills list --installed  # list locally installed skills
  *   locus skills install <name>   # install a skill from the registry
  *   locus skills remove <name>    # remove an installed skill
+ *   locus skills update [name]    # update installed skill(s) from registry
+ *   locus skills info <name>      # show skill metadata and install status
  */
 
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import { renderTable, type Column } from "../display/table.js";
 import { installSkill, removeSkill, isSkillInstalled } from "../skills/installer.js";
-import { readLockFile } from "../skills/lock.js";
+import { computeSkillHash, readLockFile } from "../skills/lock.js";
 import { fetchRegistry, fetchSkillContent, findSkillInRegistry } from "../skills/registry.js";
 import type { RemoteSkillRegistry, SkillLockFile } from "../skills/types.js";
 import { REGISTRY_REPO, CLAUDE_SKILLS_DIR, AGENTS_SKILLS_DIR } from "../skills/types.js";
@@ -173,6 +175,184 @@ async function removeInstalledSkill(name: string): Promise<void> {
   process.stderr.write(`${green("✓")} Removed skill '${bold(name)}'\n`);
 }
 
+// ─── Update ──────────────────────────────────────────────────────────────────
+
+async function updateSkills(name?: string): Promise<void> {
+  const cwd = process.cwd();
+  const lockFile = readLockFile(cwd);
+  const installed = Object.entries(lockFile.skills);
+
+  if (installed.length === 0) {
+    process.stderr.write(`${yellow("⚠")}  No skills installed.\n`);
+    process.stderr.write(
+      `  Install skills with: ${bold("locus skills install <name>")}\n`
+    );
+    return;
+  }
+
+  // If a name is provided, only update that specific skill
+  const targets = name
+    ? installed.filter(([n]) => n === name)
+    : installed;
+
+  if (name && targets.length === 0) {
+    process.stderr.write(`${red("✗")} Skill '${bold(name)}' is not installed.\n`);
+    process.stderr.write(
+      `  Run ${bold("locus skills list --installed")} to see installed skills.\n`
+    );
+    process.exit(1);
+  }
+
+  let registry: RemoteSkillRegistry;
+  try {
+    registry = await fetchRegistry();
+  } catch (err) {
+    process.stderr.write(
+      `${red("✗")} Failed to fetch skills registry. Check your internet connection.\n`
+    );
+    process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    process.exit(1);
+  }
+
+  process.stderr.write("\n");
+
+  let updatedCount = 0;
+
+  for (const [skillName, lockEntry] of targets) {
+    const entry = findSkillInRegistry(registry, skillName);
+
+    if (!entry) {
+      process.stderr.write(
+        `${yellow("⚠")}  '${bold(skillName)}' is no longer in the registry (skipped)\n`
+      );
+      continue;
+    }
+
+    let content: string;
+    try {
+      content = await fetchSkillContent(entry.path);
+    } catch (err) {
+      process.stderr.write(
+        `${red("✗")} Failed to download skill '${skillName}': ${dim((err as Error).message)}\n`
+      );
+      continue;
+    }
+
+    const newHash = computeSkillHash(content);
+
+    if (newHash === lockEntry.computedHash) {
+      process.stderr.write(
+        `  '${cyan(skillName)}' is already up to date\n`
+      );
+      continue;
+    }
+
+    const source = `${REGISTRY_REPO}/${entry.path}`;
+    await installSkill(cwd, skillName, content, source);
+    updatedCount++;
+
+    process.stderr.write(
+      `${green("✓")} Updated '${bold(skillName)}' (hash changed)\n`
+    );
+  }
+
+  process.stderr.write("\n");
+
+  if (updatedCount === 0) {
+    process.stderr.write(`  ${dim("All skills are up to date.")}\n\n`);
+  } else {
+    process.stderr.write(
+      `  ${dim(`${updatedCount} skill(s) updated.`)}\n\n`
+    );
+  }
+}
+
+// ─── Info ────────────────────────────────────────────────────────────────────
+
+async function infoSkill(name: string): Promise<void> {
+  if (!name) {
+    process.stderr.write(`${red("✗")} Please specify a skill name.\n`);
+    process.stderr.write(`  Usage: ${bold("locus skills info <name>")}\n`);
+    process.exit(1);
+  }
+
+  let registry: RemoteSkillRegistry;
+  try {
+    registry = await fetchRegistry();
+  } catch (err) {
+    process.stderr.write(
+      `${red("✗")} Failed to fetch skills registry. Check your internet connection.\n`
+    );
+    process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    process.exit(1);
+  }
+
+  const entry = findSkillInRegistry(registry, name);
+  const cwd = process.cwd();
+  const lockFile = readLockFile(cwd);
+  const lockEntry = lockFile.skills[name];
+
+  if (!entry && !lockEntry) {
+    process.stderr.write(
+      `${red("✗")} Skill '${bold(name)}' not found in the registry or locally.\n`
+    );
+    process.stderr.write(`  Run ${bold("locus skills list")} to see available skills.\n`);
+    process.exit(1);
+  }
+
+  process.stderr.write(`\n${bold("Skill Information")}\n\n`);
+
+  if (entry) {
+    process.stderr.write(`  ${bold("Name:")}         ${cyan(entry.name)}\n`);
+    process.stderr.write(`  ${bold("Description:")}  ${entry.description}\n`);
+    process.stderr.write(`  ${bold("Platforms:")}    ${entry.platforms.join(", ")}\n`);
+    process.stderr.write(`  ${bold("Tags:")}         ${entry.tags.join(", ")}\n`);
+    process.stderr.write(`  ${bold("Author:")}       ${entry.author}\n`);
+    process.stderr.write(`  ${bold("Source:")}       ${REGISTRY_REPO}/${entry.path}\n`);
+  } else {
+    process.stderr.write(`  ${bold("Name:")}         ${cyan(name)}\n`);
+    process.stderr.write(`  ${dim("(not found in remote registry)")}\n`);
+  }
+
+  process.stderr.write("\n");
+
+  if (lockEntry) {
+    process.stderr.write(`  ${bold("Installed:")}    ${green("yes")}\n`);
+    process.stderr.write(`  ${bold("Hash:")}         ${dim(lockEntry.computedHash.slice(0, 10))}\n`);
+    process.stderr.write(`  ${bold("Source:")}       ${lockEntry.source}\n`);
+  } else {
+    process.stderr.write(`  ${bold("Installed:")}    ${dim("no")}\n`);
+  }
+
+  process.stderr.write("\n");
+}
+
+// ─── Help ─────────────────────────────────────────────────────────────────────
+
+function printSkillsHelp(): void {
+  process.stderr.write(`
+${bold("Usage:")}
+  locus skills <subcommand> [options]
+
+${bold("Subcommands:")}
+  ${cyan("list")}              List available skills from the registry
+  ${cyan("list")} ${dim("--installed")}   List locally installed skills
+  ${cyan("install")} ${dim("<name>")}    Install a skill from the registry
+  ${cyan("remove")} ${dim("<name>")}     Remove an installed skill
+  ${cyan("update")} ${dim("[name]")}     Update installed skill(s) from registry
+  ${cyan("info")} ${dim("<name>")}       Show skill metadata and install status
+
+${bold("Examples:")}
+  locus skills list                   ${dim("# Browse available skills")}
+  locus skills list --installed       ${dim("# Show installed skills")}
+  locus skills install code-review    ${dim("# Install a skill")}
+  locus skills remove code-review     ${dim("# Remove a skill")}
+  locus skills update                 ${dim("# Update all installed skills")}
+  locus skills info code-review       ${dim("# Show skill details")}
+
+`);
+}
+
 // ─── Command ─────────────────────────────────────────────────────────────────
 
 /**
@@ -188,6 +368,10 @@ export async function skillsCommand(
   const subcommand = args[0] ?? "list";
 
   switch (subcommand) {
+    case "help": {
+      printSkillsHelp();
+      break;
+    }
     case "list": {
       const isInstalled =
         flags.installed !== undefined || args.includes("--installed");
@@ -211,12 +395,24 @@ export async function skillsCommand(
       break;
     }
 
+    case "update": {
+      const skillName = args[1];
+      await updateSkills(skillName);
+      break;
+    }
+
+    case "info": {
+      const skillName = args[1];
+      await infoSkill(skillName);
+      break;
+    }
+
     default:
       process.stderr.write(
         `${red("✗")} Unknown subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")}\n`
+        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")}, ${bold("update")}, ${bold("info")}\n`
       );
       process.exit(1);
   }
