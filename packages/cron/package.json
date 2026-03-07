@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-cron",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "Standalone cron job scheduler for Locus with PM2 worker support",
   "type": "module",
   "bin": {
@@ -27,8 +27,8 @@
     "clean": "rm -rf dist bin node_modules"
   },
   "dependencies": {
-    "@locusai/locus-pm2": "^0.24.0",
-    "@locusai/sdk": "^0.24.0"
+    "@locusai/locus-pm2": "^0.24.1",
+    "@locusai/sdk": "^0.24.1"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

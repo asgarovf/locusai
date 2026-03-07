@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.24.1
+
+### Patch Changes
+
+- Remove remove locusai-package keyword from gateway and pm2
+- Updated dependencies
+  - @locusai/locus-pm2@0.24.1
+  - @locusai/sdk@0.24.1
+
 ## 0.24.0
 
 ### Minor Changes

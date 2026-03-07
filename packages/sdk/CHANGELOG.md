@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.24.1
+
+### Patch Changes
+
+- Remove remove locusai-package keyword from gateway and pm2
+
 ## 0.24.0
 
 ### Minor Changes
