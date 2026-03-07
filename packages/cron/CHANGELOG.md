@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.24.9
+
+### Patch Changes
+
+- auto-detect open sprints and run each in isolated worktree
+- Updated dependencies
+  - @locusai/locus-pm2@0.24.9
+  - @locusai/sdk@0.24.9
+
 ## 0.24.8
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.24.9
+
+### Patch Changes
+
+- auto-detect open sprints and run each in isolated worktree
+- Updated dependencies
+  - @locusai/sdk@0.24.9
+
 ## 0.24.8
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.24.9
+
+### Patch Changes
+
+- auto-detect open sprints and run each in isolated worktree
+
 ## 0.24.8
 
 ### Patch Changes
