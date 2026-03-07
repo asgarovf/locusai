@@ -65,6 +65,7 @@ interface ParsedArgs {
     installVersion?: string;
     upgrade: boolean;
     list: boolean;
+    installed: boolean;
     noSandbox: boolean;
     sandbox?: string;
     sprint?: string;
@@ -101,6 +102,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     check: false,
     upgrade: false,
     list: false,
+    installed: false,
     noSandbox: false,
   };
 
@@ -185,6 +187,9 @@ function parseArgs(argv: string[]): ParsedArgs {
         break;
       case "--target-version":
         flags.targetVersion = rawArgs[++i];
+        break;
+      case "--installed":
+        flags.installed = true;
         break;
       case "--no-sandbox":
         flags.noSandbox = true;
@@ -274,6 +279,7 @@ ${bold("Commands:")}
   ${cyan("uninstall")}         Remove an installed package
   ${cyan("packages")}          Manage installed packages (list, outdated)
   ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
+  ${cyan("skills")}            Discover and manage agent skills
   ${cyan("sandbox")}           Manage Docker sandbox lifecycle
   ${cyan("upgrade")}           Check for and install updates
 
@@ -292,6 +298,8 @@ ${bold("Examples:")}
   locus run 42 43                     ${dim("# Run issues in parallel")}
   locus run 42 --no-sandbox           ${dim("# Run without sandbox")}
   locus run 42 --sandbox=require      ${dim("# Require Docker sandbox")}
+  locus skills list                   ${dim("# Browse available skills")}
+  locus skills install code-review    ${dim("# Install a skill")}
   locus sandbox                       ${dim("# Create Docker sandbox")}
   locus sandbox claude                ${dim("# Login to Claude in sandbox")}
 
@@ -503,6 +511,18 @@ async function main(): Promise<void> {
   if (command === "packages") {
     const { packagesCommand } = await import("./commands/packages.js");
     await packagesCommand(parsed.args, {});
+    logger.destroy();
+    return;
+  }
+
+  if (command === "skills") {
+    const { skillsCommand } = await import("./commands/skills.js");
+    const skillsArgs = parsed.flags.help ? ["help"] : parsed.args;
+    const skillsFlags: Record<string, string> = {};
+    if (parsed.flags.installed) {
+      skillsFlags.installed = "true";
+    }
+    await skillsCommand(skillsArgs, skillsFlags);
     logger.destroy();
     return;
   }
