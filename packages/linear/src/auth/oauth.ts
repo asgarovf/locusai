@@ -2,7 +2,7 @@
  * OAuth2 Authorization Code flow with PKCE for Linear.
  *
  * - Generates PKCE code_verifier + code_challenge (S256)
- * - Starts ephemeral HTTP server on port 6789
+ * - Starts ephemeral HTTP server on port 8089
  * - Opens browser to Linear's authorization URL
  * - Handles callback: validates state, exchanges code for tokens
  * - Stores tokens via token.ts
@@ -22,7 +22,7 @@ const LINEAR_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
 
 const SCOPES = "read,write,issues:create,comments:create";
-const PREFERRED_PORT: number = 6789;
+const PREFERRED_PORT: number = 8089;
 
 /** Generate a cryptographically random code verifier (43-128 chars, URL-safe). */
 function generateCodeVerifier(): string {
