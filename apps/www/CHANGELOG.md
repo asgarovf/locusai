@@ -1,5 +1,11 @@
 # @locusai/www
 
+## 0.24.3
+
+### Patch Changes
+
+- Readme updates
+
 ## 0.24.2
 
 ### Patch Changes
