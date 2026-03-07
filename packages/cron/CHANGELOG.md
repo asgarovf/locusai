@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.24.8
+
+### Patch Changes
+
+- change OAuth callback port from 6789 to 8089
+- Updated dependencies
+  - @locusai/locus-pm2@0.24.8
+  - @locusai/sdk@0.24.8
+
 ## 0.24.7
 
 ### Patch Changes
