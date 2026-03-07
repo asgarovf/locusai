@@ -140,7 +140,10 @@ async function handleAdd(args: string[]): Promise<void> {
   const descParts: string[] = [];
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--route" && i + 1 < args.length) {
-      routes = args[i + 1].split(",").map((r) => r.trim()).filter(Boolean);
+      routes = args[i + 1]
+        .split(",")
+        .map((r) => r.trim())
+        .filter(Boolean);
       i++; // skip the value
     } else {
       descParts.push(args[i]);
@@ -199,7 +202,12 @@ async function handleAdd(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const job: { name: string; schedule: string; command: string; routes?: string[] } = {
+  const job: {
+    name: string;
+    schedule: string;
+    command: string;
+    routes?: string[];
+  } = {
     name,
     schedule,
     command,
@@ -214,8 +222,11 @@ async function handleAdd(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const routeInfo = routes && routes.length > 0 ? ` → routes: ${routes.join(", ")}` : "";
-  logger.info(`Added cron job "${name}" (every ${schedule}): ${command}${routeInfo}`);
+  const routeInfo =
+    routes && routes.length > 0 ? ` → routes: ${routes.join(", ")}` : "";
+  logger.info(
+    `Added cron job "${name}" (every ${schedule}): ${command}${routeInfo}`
+  );
   logger.info("Restart the cron worker to apply: locus pkg cron restart");
 }
 
@@ -298,15 +309,21 @@ function handleList(): void {
   const hasRoutes = config.crons.some((c) => c.routes && c.routes.length > 0);
 
   if (hasRoutes) {
-    console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} ${"Routes".padEnd(20)} Command`);
-    console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(20)} ${"─".repeat(40)}`);
+    console.log(
+      `  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} ${"Routes".padEnd(20)} Command`
+    );
+    console.log(
+      `  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(20)} ${"─".repeat(40)}`
+    );
     for (const cron of config.crons) {
       const cmd =
         cron.command.length > 40
           ? `${cron.command.slice(0, 37)}...`
           : cron.command;
       const routeStr = cron.routes?.join(", ") ?? "local";
-      console.log(`  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${routeStr.padEnd(20)} ${cmd}`);
+      console.log(
+        `  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${routeStr.padEnd(20)} ${cmd}`
+      );
     }
   } else {
     console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`);
@@ -316,7 +333,9 @@ function handleList(): void {
         cron.command.length > 60
           ? `${cron.command.slice(0, 57)}...`
           : cron.command;
-      console.log(`  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`);
+      console.log(
+        `  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`
+      );
     }
   }
   console.log();

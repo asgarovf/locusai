@@ -21,14 +21,14 @@ function loadTelegramAdapterConfig(): TelegramAdapterConfig {
   const botToken = pkg?.botToken;
   if (!botToken || typeof botToken !== "string") {
     throw new Error(
-      "[telegram-adapter] Telegram bot token not configured. Run:\n  locus config set packages.telegram.botToken \"<your-token>\""
+      '[telegram-adapter] Telegram bot token not configured. Run:\n  locus config set packages.telegram.botToken "<your-token>"'
     );
   }
 
   const chatIdsRaw = pkg?.chatIds;
   if (!chatIdsRaw) {
     throw new Error(
-      "[telegram-adapter] Telegram chat IDs not configured. Run:\n  locus config set packages.telegram.chatIds \"<chat-id>\""
+      '[telegram-adapter] Telegram chat IDs not configured. Run:\n  locus config set packages.telegram.chatIds "<chat-id>"'
     );
   }
 
@@ -144,9 +144,7 @@ export function createTelegramAdapter(): OutputAdapter {
         try {
           await sendTelegramMessage(config.botToken, chatId, message);
         } catch (err) {
-          errors.push(
-            err instanceof Error ? err : new Error(String(err))
-          );
+          errors.push(err instanceof Error ? err : new Error(String(err)));
         }
       }
 

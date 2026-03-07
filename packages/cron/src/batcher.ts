@@ -92,7 +92,8 @@ export class ResultBatcher {
       });
     }
 
-    const batch = this.batches.get(routeKey)!;
+    const batch = this.batches.get(routeKey);
+    if (!batch) return;
     batch.timer = setTimeout(() => {
       this.flush(routeKey, externalAdapters, onError);
     }, this.batchWindowMs);

@@ -283,9 +283,7 @@ async function sprintShow(
 
   const sprintName = parsed.positional[0];
   if (!sprintName) {
-    process.stderr.write(
-      `${red("✗")} Missing sprint name.\n`
-    );
+    process.stderr.write(`${red("✗")} Missing sprint name.\n`);
     process.stderr.write(`  Usage: ${bold('locus sprint show "Sprint 1"')}\n`);
     process.exit(1);
   }
@@ -428,10 +426,10 @@ async function sprintOrder(
   const sprintName = parsed.positional[0];
 
   if (!sprintName) {
+    process.stderr.write(`${red("✗")} Missing sprint name.\n`);
     process.stderr.write(
-      `${red("✗")} Missing sprint name.\n`
+      `  Usage: ${bold('locus sprint order "Sprint 1" 17 15 16')}\n`
     );
-    process.stderr.write(`  Usage: ${bold('locus sprint order "Sprint 1" 17 15 16')}\n`);
     process.exit(1);
   }
 

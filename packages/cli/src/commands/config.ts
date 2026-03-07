@@ -76,9 +76,7 @@ function showConfig(cwd: string): void {
     },
     {
       title: "Sprint",
-      entries: [
-        ["Stop on Failure", String(config.sprint.stopOnFailure)],
-      ],
+      entries: [["Stop on Failure", String(config.sprint.stopOnFailure)]],
     },
     {
       title: "Logging",
