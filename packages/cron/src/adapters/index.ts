@@ -4,6 +4,7 @@
 
 import type { OutputAdapter } from "../types.js";
 import { createLocalAdapter } from "./local.js";
+import { createTelegramAdapter } from "./telegram.js";
 
 const DEFAULT_ROUTES = ["local"];
 
@@ -23,6 +24,9 @@ export function resolveAdapters(
     switch (route) {
       case "local":
         adapters.push(createLocalAdapter(cwd));
+        break;
+      case "telegram":
+        adapters.push(createTelegramAdapter());
         break;
       default:
         console.warn(`[cron] Unknown output route: "${route}", skipping.`);
