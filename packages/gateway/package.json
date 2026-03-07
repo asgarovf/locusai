@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-gateway",
-  "version": "0.24.6",
+  "version": "0.24.7",
   "description": "Channel-agnostic message gateway for Locus platform adapters",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -29,7 +29,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@locusai/sdk": "^0.24.6"
+    "@locusai/sdk": "^0.24.7"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

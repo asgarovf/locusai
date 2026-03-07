@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.24.7
+
+### Patch Changes
+
+- : add EADDRINUSE error handling and derive redirect URI from actual port
+- Updated dependencies
+  - @locusai/locus-gateway@0.24.7
+  - @locusai/locus-pm2@0.24.7
+  - @locusai/sdk@0.24.7
+
 ## 0.24.6
 
 ### Patch Changes

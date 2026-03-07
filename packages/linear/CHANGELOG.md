@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.24.7
+
+### Patch Changes
+
+- : add EADDRINUSE error handling and derive redirect URI from actual port
+- Updated dependencies
+  - @locusai/sdk@0.24.7
+
 ## 0.24.6
 
 ### Patch Changes
