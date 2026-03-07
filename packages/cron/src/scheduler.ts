@@ -35,7 +35,7 @@ export class CronScheduler {
     const batchWindowMs = config.batchWindowSeconds
       ? config.batchWindowSeconds * 1000
       : undefined;
-    this.batcher = new ResultBatcher(batchWindowMs);
+    this.batcher = new ResultBatcher(cwd, batchWindowMs);
   }
 
   /** Start all configured cron jobs. */

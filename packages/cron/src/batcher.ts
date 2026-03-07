@@ -5,9 +5,11 @@
  * The local adapter is excluded from batching and always receives results immediately.
  */
 
+import { createLocalAdapter } from "./adapters/local.js";
 import type { CronJobResult, OutputAdapter } from "./types.js";
 
 const DEFAULT_BATCH_WINDOW_MS = 60_000;
+const RETRY_DELAY_MS = 5_000;
 
 interface PendingBatch {
   results: CronJobResult[];
@@ -45,8 +47,10 @@ function combineResults(results: CronJobResult[]): CronJobResult {
 export class ResultBatcher {
   private batches: Map<string, PendingBatch> = new Map();
   private batchWindowMs: number;
+  private cwd: string;
 
-  constructor(batchWindowMs?: number) {
+  constructor(cwd: string, batchWindowMs?: number) {
+    this.cwd = cwd;
     this.batchWindowMs = batchWindowMs ?? DEFAULT_BATCH_WINDOW_MS;
   }
 
@@ -66,12 +70,7 @@ export class ResultBatcher {
 
     // Local adapters always receive results immediately
     for (const adapter of localAdapters) {
-      try {
-        await adapter.send(result);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        onError(adapter.name, msg);
-      }
+      await this.sendWithRetry(adapter, result, onError);
     }
 
     // External adapters are batched per route key
@@ -115,11 +114,50 @@ export class ResultBatcher {
     const combined = combineResults(batch.results);
 
     for (const adapter of adapters) {
-      try {
-        await adapter.send(combined);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        onError(adapter.name, msg);
+      await this.sendWithRetry(adapter, combined, onError);
+    }
+  }
+
+  /**
+   * Attempt to send a result to an adapter. On failure, wait 5s and retry once.
+   * If the retry also fails, log the failure and the original result to the
+   * local adapter as a fallback. One adapter failing never blocks others.
+   */
+  private async sendWithRetry(
+    adapter: OutputAdapter,
+    result: CronJobResult,
+    onError: (adapterName: string, error: string) => void
+  ): Promise<void> {
+    try {
+      await adapter.send(result);
+      return;
+    } catch {
+      // First attempt failed — retry after delay
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+
+    try {
+      await adapter.send(result);
+      return;
+    } catch (err: unknown) {
+      // Retry also failed
+      const msg = err instanceof Error ? err.message : String(err);
+      onError(adapter.name, msg);
+
+      // Fall back to local adapter for non-local adapters
+      if (adapter.name !== "local") {
+        const fallback = createLocalAdapter(this.cwd);
+        const failureLine = `[${new Date().toISOString()}] ROUTE FAILED (${adapter.name}): ${msg}`;
+        const fallbackResult: CronJobResult = {
+          ...result,
+          output: `${failureLine}\n${result.output}`,
+        };
+        try {
+          await fallback.send(fallbackResult);
+        } catch {
+          // Nothing more we can do
+        }
       }
     }
   }
