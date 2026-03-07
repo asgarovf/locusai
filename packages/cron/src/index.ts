@@ -6,12 +6,10 @@
  *   - Direct worker execution (worker)
  *
  * Usage:
- *   locus pkg cron start      → start cron worker via PM2
- *   locus pkg cron stop       → stop cron worker
- *   locus pkg cron restart    → restart cron worker
- *   locus pkg cron status     → show PM2 process status
- *   locus pkg cron logs       → tail PM2 logs
- *   locus pkg cron worker     → run worker directly (foreground)
+ *   locus pkg cron start                              → start cron worker via PM2
+ *   locus pkg cron stop                               → stop cron worker
+ *   locus pkg cron add "check linter errors every hour" → AI-powered cron creation
+ *   locus pkg cron list                               → list configured crons
  */
 
 import {
@@ -22,8 +20,15 @@ import {
   pm2Status,
   pm2Stop,
 } from "@locusai/locus-pm2";
-import { createLogger } from "@locusai/sdk";
-import { getCronPm2Config } from "./config.js";
+import { createLogger, invokeLocus } from "@locusai/sdk";
+import {
+  addCronJob,
+  getCronPm2Config,
+  loadCronConfig,
+  removeCronJob,
+  setCronEnabled,
+} from "./config.js";
+import { parseSchedule } from "./parse-schedule.js";
 
 const logger = createLogger("cron");
 
@@ -45,6 +50,18 @@ export async function main(args: string[]): Promise<void> {
       return handleLogs(args.slice(1));
     case "worker":
       return handleWorker();
+    case "add":
+      return await handleAdd(args.slice(1));
+    case "remove":
+    case "rm":
+      return handleRemove(args.slice(1));
+    case "list":
+    case "ls":
+      return handleList();
+    case "enable":
+      return handleEnable();
+    case "disable":
+      return handleDisable();
     case "help":
     case "--help":
     case "-h":
@@ -108,6 +125,169 @@ function handleLogs(args: string[]): void {
   console.log(logs);
 }
 
+// ─── Cron Management Commands ───────────────────────────────────────────────
+
+async function handleAdd(args: string[]): Promise<void> {
+  if (args.length === 0) {
+    console.error(
+      'Usage: locus pkg cron add "<description>"\n\nExample: locus pkg cron add "check linter errors every hour"'
+    );
+    process.exit(1);
+  }
+
+  const description = args.join(" ");
+
+  logger.info(`Interpreting: "${description}" ...`);
+
+  const prompt = buildCronParsePrompt(description);
+  const result = await invokeLocus(["exec", prompt]);
+
+  if (result.exitCode !== 0) {
+    console.error("Failed to interpret cron description.");
+    if (result.stderr) console.error(result.stderr);
+    process.exit(1);
+  }
+
+  const parsed = extractJson(result.stdout);
+  if (!parsed) {
+    console.error(
+      "Could not parse AI response into a cron job. Please try rephrasing your description."
+    );
+    process.exit(1);
+  }
+
+  const { name, schedule, command } = parsed;
+
+  // Validate parsed fields
+  if (!name || !schedule || !command) {
+    console.error(
+      "AI response missing required fields (name, schedule, command)."
+    );
+    process.exit(1);
+  }
+
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(name)) {
+    console.error(
+      `Invalid generated name: "${name}". Must be alphanumeric with hyphens.`
+    );
+    process.exit(1);
+  }
+
+  if (!parseSchedule(schedule)) {
+    console.error(
+      `Invalid generated schedule: "${schedule}". Must use formats like 30s, 5m, 1h, 1d.`
+    );
+    process.exit(1);
+  }
+
+  const err = addCronJob({ name, schedule, command });
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+
+  logger.info(`Added cron job "${name}" (every ${schedule}): ${command}`);
+  logger.info("Restart the cron worker to apply: locus pkg cron restart");
+}
+
+function buildCronParsePrompt(description: string): string {
+  return [
+    "You are a cron job configuration parser. Given a natural language description of a cron task,",
+    "output ONLY a valid JSON object with these exact fields:",
+    "",
+    '  name: a kebab-case identifier (e.g. "check-linter-errors")',
+    "  schedule: an interval string using these formats: 30s, 5m, 1h, 1d (minimum 10s)",
+    "  command: the shell command to execute. For AI-powered tasks, use: locus exec '<prompt>'",
+    "",
+    "Rules:",
+    "- Output ONLY the JSON object, no markdown, no explanation, no code fences.",
+    "- The name should be descriptive and derived from the task description.",
+    '- Map time references: "every hour" → "1h", "every 5 minutes" → "5m", "daily" → "1d", "every 30 seconds" → "30s".',
+    '- If no time is specified, default to "1h".',
+    "- If the task is a development/AI task (review, check, analyze, fix, etc.), the command should be: locus exec '<appropriate prompt>'",
+    "- If the task is a simple shell operation (disk check, memory usage, etc.), use a plain shell command.",
+    "",
+    `Description: "${description}"`,
+  ].join("\n");
+}
+
+function extractJson(
+  output: string
+): { name: string; schedule: string; command: string } | null {
+  // Try to find JSON in the output — the AI may wrap it in markdown fences
+  const jsonMatch = output.match(/\{[\s\S]*?\}/);
+  if (!jsonMatch) return null;
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    if (
+      typeof parsed.name === "string" &&
+      typeof parsed.schedule === "string" &&
+      typeof parsed.command === "string"
+    ) {
+      return {
+        name: parsed.name,
+        schedule: parsed.schedule,
+        command: parsed.command,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function handleRemove(args: string[]): void {
+  if (args.length < 1) {
+    console.error("Usage: locus pkg cron remove <name>");
+    process.exit(1);
+  }
+
+  const name = args[0];
+  const err = removeCronJob(name);
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+
+  logger.info(`Removed cron job "${name}"`);
+  logger.info("Restart the cron worker to apply: locus pkg cron restart");
+}
+
+function handleList(): void {
+  const config = loadCronConfig();
+
+  console.log(
+    `\n  Cron scheduler: ${config.enabled ? "enabled" : "disabled"}\n`
+  );
+
+  if (config.crons.length === 0) {
+    console.log("  No cron jobs configured.\n");
+    return;
+  }
+
+  console.log(`  ${"Name".padEnd(30)} ${"Schedule".padEnd(10)} Command`);
+  console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(40)}`);
+  for (const cron of config.crons) {
+    const cmd =
+      cron.command.length > 60
+        ? `${cron.command.slice(0, 57)}...`
+        : cron.command;
+    console.log(`  ${cron.name.padEnd(30)} ${cron.schedule.padEnd(10)} ${cmd}`);
+  }
+  console.log();
+}
+
+function handleEnable(): void {
+  setCronEnabled(true);
+  logger.info("Cron scheduler enabled");
+}
+
+function handleDisable(): void {
+  setCronEnabled(false);
+  logger.info("Cron scheduler disabled");
+}
+
 // ─── Direct Worker Execution ────────────────────────────────────────────────
 
 async function handleWorker(): Promise<void> {
@@ -124,45 +304,34 @@ function printHelp(): void {
   Usage:
     locus pkg cron <command>
 
-  Commands:
-    start       Start the cron worker via PM2 (background)
-    stop        Stop the cron worker
-    restart     Restart the cron worker
-    delete      Remove the cron worker from PM2
-    status      Show worker process status
-    logs [n]    Show last n lines of logs (default: 50)
-    worker      Run the worker directly (foreground)
-    help        Show this help message
+  Service commands:
+    start             Start the cron worker via PM2 (background)
+    stop              Stop the cron worker
+    restart           Restart the cron worker
+    delete            Remove the cron worker from PM2
+    status            Show worker process status
+    logs [n]          Show last n lines of logs (default: 50)
+    worker            Run the worker directly (foreground)
 
-  Schedule format:
-    30s         Every 30 seconds
-    5m          Every 5 minutes
-    1h          Every 1 hour
-    1d          Every 1 day
-
-  Configuration (in .locus/config.json):
-    {
-      "packages": {
-        "cron": {
-          "enabled": true,
-          "crons": [
-            {
-              "name": "disk-check",
-              "schedule": "1h",
-              "command": "df -h / | tail -1"
-            }
-          ]
-        }
-      }
-    }
+  Management commands:
+    add "<description>"               Add a cron job from natural language
+    remove <name>                     Remove a cron job (alias: rm)
+    list                              List all configured cron jobs (alias: ls)
+    enable                            Enable the cron scheduler
+    disable                           Disable the cron scheduler
 
   Output:
-    Cron output is written to .locus/cron/output.log
+    Cron output is written to .locus/cron/<job-name>/output.log
 
   Examples:
-    locus pkg cron start      # Start in background
-    locus pkg cron worker     # Run in foreground (development)
-    locus pkg cron logs 100   # View last 100 lines of logs
+    locus pkg cron add "check linter errors every hour"
+    locus pkg cron add "review codebase for security issues daily"
+    locus pkg cron add "check disk usage every 5 minutes"
+    locus pkg cron remove disk-check
+    locus pkg cron list
+    locus pkg cron enable
+    locus pkg cron start
+    locus pkg cron logs 100
   `);
 }
 

@@ -1,0 +1,46 @@
+{
+  "name": "@locusai/locus-linear",
+  "version": "0.24.1",
+  "description": "Linear integration for Locus — sync issues, AI-powered workflows, and bidirectional project management",
+  "type": "module",
+  "bin": {
+    "locus-linear": "./bin/locus-linear.js"
+  },
+  "files": [
+    "bin",
+    "package.json",
+    "README.md"
+  ],
+  "locus": {
+    "displayName": "Linear",
+    "description": "Linear integration with OAuth, issue sync, and AI-powered workflows",
+    "commands": [
+      "linear"
+    ],
+    "version": "0.1.0"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --outfile bin/locus-linear.js --target node",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "clean": "rm -rf dist bin node_modules"
+  },
+  "dependencies": {
+    "@locusai/sdk": "^0.24.1",
+    "@linear/sdk": "^29.0.0",
+    "open": "^10.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "locusai-package",
+    "locus",
+    "linear"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

@@ -52,6 +52,7 @@ ${bold("locus plan")} — AI-powered sprint planning
 ${bold("Usage:")}
   locus plan "<directive>"                 ${dim("# AI creates a plan file")}
   locus plan approve <id> <sprintname>      ${dim("# Create GitHub issues from saved plan")}
+  locus plan refine <id> "<feedback>"       ${dim("# Refine a plan with feedback")}
   locus plan list                          ${dim("# List saved plans")}
   locus plan show <id>                     ${dim("# Show a saved plan")}
   locus plan --from-issues --sprint <name> ${dim("# Organize existing issues")}
@@ -65,6 +66,7 @@ ${bold("Examples:")}
   locus plan "Build user authentication with OAuth"
   locus plan "Improve API performance" --sprint "Sprint 3"
   locus plan approve abc123 "Sprint 3"
+  locus plan refine abc123 "Split the auth issue into login and signup"
   locus plan list
   locus plan --from-issues --sprint "Sprint 2"
 
@@ -156,6 +158,22 @@ export async function planCommand(
 
   if (args[0] === "show") {
     return handleShowPlan(projectRoot, args[1]);
+  }
+
+  if (args[0] === "refine") {
+    const refineId = args[1];
+    const refineArgs = parsePlanArgs(args.slice(2));
+    const feedback = refineArgs.directive;
+    if (!refineId || !feedback) {
+      process.stderr.write(
+        `${red("✗")} Please provide a plan ID and feedback.\n`
+      );
+      process.stderr.write(
+        `  Usage: ${bold('locus plan refine <id> "your feedback"')}\n`
+      );
+      return;
+    }
+    return handleRefinePlan(projectRoot, refineId, feedback, flags);
   }
 
   if (args[0] === "approve") {
@@ -289,6 +307,127 @@ function handleShowPlan(projectRoot: string, id: string | undefined): void {
   process.stderr.write("\n");
   process.stderr.write(
     `  Approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)} <sprintname>`)}\n\n`
+  );
+}
+
+// ─── Refine Plan ──────────────────────────────────────────────────────────────
+
+async function handleRefinePlan(
+  projectRoot: string,
+  id: string,
+  feedback: string,
+  flags: { dryRun?: boolean; model?: string }
+): Promise<void> {
+  const plan = loadPlanFile(projectRoot, id);
+  if (!plan) {
+    process.stderr.write(`${red("✗")} Plan "${id}" not found.\n`);
+    process.stderr.write(`  List plans with: ${bold("locus plan list")}\n`);
+    return;
+  }
+
+  const config = loadConfig(projectRoot);
+  const planPath = join(getPlansDir(projectRoot), `${plan.id}.json`);
+  const planPathRelative = `.locus/plans/${plan.id}.json`;
+
+  process.stderr.write(`\n${bold("Refining plan:")} ${cyan(plan.directive)}\n`);
+  process.stderr.write(`  ${dim(`Feedback: ${feedback}`)}\n\n`);
+
+  // Check for provider/sandbox mismatch before AI execution
+  if (config.sandbox.enabled) {
+    const mismatch = checkProviderSandboxMismatch(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    );
+    if (mismatch) {
+      process.stderr.write(`${red("✗")} ${mismatch}\n`);
+      return;
+    }
+  }
+
+  const prompt = buildRefinePrompt(
+    projectRoot,
+    config,
+    plan,
+    feedback,
+    planPathRelative
+  );
+
+  const aiResult = await runAI({
+    prompt,
+    provider: config.ai.provider,
+    model: flags.model ?? config.ai.model,
+    cwd: projectRoot,
+    activity: "refining plan",
+    sandboxed: config.sandbox.enabled,
+    sandboxName: getModelSandboxName(
+      config.sandbox,
+      flags.model ?? config.ai.model,
+      config.ai.provider
+    ),
+    containerWorkdir: config.sandbox.containerWorkdir,
+  });
+
+  if (aiResult.interrupted) {
+    process.stderr.write(`\n${yellow("⚡")} Refinement interrupted.\n`);
+    return;
+  }
+
+  if (!aiResult.success) {
+    process.stderr.write(
+      `\n${red("✗")} Refinement failed: ${aiResult.error}\n`
+    );
+    return;
+  }
+
+  // Check if the plan file was updated by the AI agent
+  if (!existsSync(planPath)) {
+    process.stderr.write(
+      `\n${yellow("⚠")} Plan file was not found at ${bold(planPathRelative)}.\n`
+    );
+    return;
+  }
+
+  // Parse and validate the updated plan file
+  let updatedPlan: PlanFile;
+  try {
+    const content = readFileSync(planPath, "utf-8");
+    updatedPlan = JSON.parse(content) as PlanFile;
+  } catch {
+    process.stderr.write(
+      `\n${red("✗")} Updated plan file at ${bold(planPathRelative)} is not valid JSON.\n`
+    );
+    return;
+  }
+
+  if (!Array.isArray(updatedPlan.issues) || updatedPlan.issues.length === 0) {
+    process.stderr.write(`\n${yellow("⚠")} Refined plan has no issues.\n`);
+    return;
+  }
+
+  // Preserve metadata
+  updatedPlan.id = plan.id;
+  updatedPlan.directive = plan.directive;
+  updatedPlan.sprint = updatedPlan.sprint ?? plan.sprint;
+  updatedPlan.createdAt = plan.createdAt;
+  writeFileSync(planPath, JSON.stringify(updatedPlan, null, 2), "utf-8");
+
+  // Show summary
+  process.stderr.write(`\n${bold("Plan refined:")} ${cyan(plan.id)}\n\n`);
+  process.stderr.write(
+    `  ${dim("Order")}  ${dim("Title".padEnd(50))}  ${dim("Priority")}   ${dim("Type")}\n`
+  );
+  for (const issue of updatedPlan.issues) {
+    process.stderr.write(
+      `  ${String(issue.order).padStart(5)}  ${issue.title.padEnd(50).slice(0, 50)}  ${(issue.priority ?? "medium").padEnd(10)} ${issue.type ?? "feature"}\n`
+    );
+  }
+  process.stderr.write("\n");
+  process.stderr.write(
+    `  To approve: ${bold(`locus plan approve ${plan.id.slice(0, 8)} <sprintname>`)}\n`
+  );
+  process.stderr.write(
+    `  To refine again: ${bold(`locus plan refine ${plan.id.slice(0, 8)} "more feedback"`)}\n\n`
   );
 }
 
@@ -698,6 +837,73 @@ Write ONLY a valid JSON file to ${planPathRelative} with this exact structure:
   parts.push(`<requirements>
 - Break the directive into 3-10 specific, actionable issues
 - Each issue must be independently executable by an AI agent
+- Order them so dependencies are respected (foundational tasks first)
+- Write detailed issue bodies with clear acceptance criteria
+- Use valid GitHub Markdown only in issue bodies
+- Create the file using the Write tool — do not print the JSON to the terminal
+</requirements>`);
+
+  return parts.join("\n\n");
+}
+
+function buildRefinePrompt(
+  projectRoot: string,
+  config: LocusConfig,
+  plan: PlanFile,
+  feedback: string,
+  planPathRelative: string
+): string {
+  const parts: string[] = [];
+
+  parts.push(
+    `<role>\nYou are a sprint planning assistant for the GitHub repository ${config.github.owner}/${config.github.repo}.\n</role>`
+  );
+
+  parts.push(
+    `<existing-plan>\n${JSON.stringify(plan, null, 2)}\n</existing-plan>`
+  );
+
+  parts.push(`<feedback>\n${feedback}\n</feedback>`);
+
+  // Include LOCUS.md if it exists
+  const locusPath = join(projectRoot, ".locus", "LOCUS.md");
+  if (existsSync(locusPath)) {
+    const content = readFileSync(locusPath, "utf-8");
+    parts.push(
+      `<project-context>\n${content.slice(0, 3000)}\n</project-context>`
+    );
+  }
+
+  parts.push(`<task>
+You have been given an existing plan and user feedback about it. Modify the plan according to the feedback.
+
+Write the updated plan as valid JSON to ${planPathRelative}, keeping the same structure:
+
+\`\`\`json
+{
+  "id": "${plan.id}",
+  "directive": ${JSON.stringify(plan.directive)},
+  "sprint": ${plan.sprint ? JSON.stringify(plan.sprint) : "null"},
+  "createdAt": "${plan.createdAt}",
+  "issues": [
+    {
+      "order": 1,
+      "title": "concise issue title",
+      "body": "detailed markdown body with acceptance criteria",
+      "priority": "critical|high|medium|low",
+      "type": "feature|bug|chore|refactor|docs",
+      "dependsOn": "none or comma-separated order numbers"
+    }
+  ]
+}
+\`\`\`
+</task>`);
+
+  parts.push(`<requirements>
+- Apply the user's feedback to modify the existing plan
+- You may add, remove, reorder, or modify issues based on the feedback
+- Keep issues that the feedback does not mention unchanged
+- Ensure each issue is independently executable by an AI agent
 - Order them so dependencies are respected (foundational tasks first)
 - Write detailed issue bodies with clear acceptance criteria
 - Use valid GitHub Markdown only in issue bodies
