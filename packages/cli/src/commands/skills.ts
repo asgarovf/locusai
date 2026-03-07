@@ -5,13 +5,16 @@
  *   locus skills              # alias for `locus skills list`
  *   locus skills list         # list available skills from remote registry
  *   locus skills list --installed  # list locally installed skills
+ *   locus skills install <name>   # install a skill from the registry
  */
 
-import { bold, cyan, dim, red, yellow } from "../display/terminal.js";
+import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import { renderTable, type Column } from "../display/table.js";
+import { installSkill } from "../skills/installer.js";
 import { readLockFile } from "../skills/lock.js";
-import { fetchRegistry } from "../skills/registry.js";
+import { fetchRegistry, fetchSkillContent, findSkillInRegistry } from "../skills/registry.js";
 import type { RemoteSkillRegistry, SkillLockFile } from "../skills/types.js";
+import { REGISTRY_REPO, CLAUDE_SKILLS_DIR, AGENTS_SKILLS_DIR } from "../skills/types.js";
 
 // ─── List (remote) ───────────────────────────────────────────────────────────
 
@@ -101,6 +104,52 @@ function listInstalledSkills(): void {
   );
 }
 
+// ─── Install ──────────────────────────────────────────────────────────────────
+
+async function installRemoteSkill(name: string): Promise<void> {
+  if (!name) {
+    process.stderr.write(`${red("✗")} Please specify a skill name.\n`);
+    process.stderr.write(`  Usage: ${bold("locus skills install <name>")}\n`);
+    process.exit(1);
+  }
+
+  let registry: RemoteSkillRegistry;
+  try {
+    registry = await fetchRegistry();
+  } catch (err) {
+    process.stderr.write(
+      `${red("✗")} Failed to fetch skills registry. Check your internet connection.\n`
+    );
+    process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    process.exit(1);
+  }
+
+  const entry = findSkillInRegistry(registry, name);
+  if (!entry) {
+    process.stderr.write(`${red("✗")} Skill '${bold(name)}' not found in the registry.\n`);
+    process.stderr.write(`  Run ${bold("locus skills list")} to see available skills.\n`);
+    process.exit(1);
+  }
+
+  let content: string;
+  try {
+    content = await fetchSkillContent(entry.path);
+  } catch (err) {
+    process.stderr.write(`${red("✗")} Failed to download skill '${name}'.\n`);
+    process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    process.exit(1);
+  }
+
+  const cwd = process.cwd();
+  const source = `${REGISTRY_REPO}/${entry.path}`;
+
+  await installSkill(cwd, name, content, source);
+
+  process.stderr.write(`\n${green("✓")} Installed skill '${bold(name)}' from ${REGISTRY_REPO}\n`);
+  process.stderr.write(`  → ${CLAUDE_SKILLS_DIR}/${name}/SKILL.md\n`);
+  process.stderr.write(`  → ${AGENTS_SKILLS_DIR}/${name}/SKILL.md\n\n`);
+}
+
 // ─── Command ─────────────────────────────────────────────────────────────────
 
 /**
@@ -127,12 +176,18 @@ export async function skillsCommand(
       break;
     }
 
+    case "install": {
+      const skillName = args[1];
+      await installRemoteSkill(skillName);
+      break;
+    }
+
     default:
       process.stderr.write(
         `${red("✗")} Unknown subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${bold("list")}\n`
+        `  Available: ${bold("list")}, ${bold("install")}\n`
       );
       process.exit(1);
   }
