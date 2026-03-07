@@ -1,5 +1,15 @@
 # @locusai/locus-cron
 
+## 0.23.5
+
+### Patch Changes
+
+- Improved `locus status` command
+  Cron package binary lookup
+- Updated dependencies
+  - @locusai/locus-pm2@0.23.5
+  - @locusai/sdk@0.23.5
+
 ## 0.23.4
 
 ### Patch Changes

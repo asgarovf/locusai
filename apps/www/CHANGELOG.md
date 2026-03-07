@@ -1,5 +1,12 @@
 # @locusai/www
 
+## 0.23.5
+
+### Patch Changes
+
+- Improved `locus status` command
+  Cron package binary lookup
+
 ## 0.23.4
 
 ### Patch Changes
