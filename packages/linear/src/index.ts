@@ -19,6 +19,7 @@
  */
 
 import type { LinearCommand } from "./types.js";
+import { authCommand } from "./commands/auth.js";
 
 export { LocusLinearClient } from "./client.js";
 export type { LocusLinearClientOptions } from "./client.js";
@@ -36,13 +37,15 @@ export {
   refreshAccessToken,
   revokeToken,
 } from "./auth/token.js";
+export { runOAuthFlow } from "./auth/oauth.js";
+export { authCommand } from "./commands/auth.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
 
   switch (command) {
     case "auth":
-      return handleStub("auth", args.slice(1));
+      return authCommand(args.slice(1));
     case "import":
       return handleStub("import", args.slice(1));
     case "export":
