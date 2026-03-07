@@ -3,5 +3,6 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node"
-  }
+  },
+  "exclude": ["src/cli.ts", "src/worker.ts"]
 }
