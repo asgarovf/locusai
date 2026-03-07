@@ -187,13 +187,8 @@ async function handleSprint(
   config: LocusConfig,
   flags: { dryRun?: boolean; model?: string }
 ): Promise<void> {
-  if (!config.sprint.active) {
-    process.stderr.write(`${red("✗")} No active sprint set.\n`);
-    return;
-  }
-
   process.stderr.write(
-    `\n${bold("Iterating on sprint:")} ${cyan(config.sprint.active)}\n\n`
+    `\n${bold("Iterating on sprint PRs...")}\n\n`
   );
 
   // Get all open agent PRs

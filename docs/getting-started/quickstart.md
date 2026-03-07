@@ -51,7 +51,6 @@ Deep dive: [Unified Interface Across AI Clients](../concepts/unified-interface.m
 
 ```bash
 locus plan "Add /health endpoint with tests and API docs" --sprint "Sprint 1"
-locus sprint active "Sprint 1"
 locus sprint show "Sprint 1"
 ```
 
@@ -60,6 +59,7 @@ Expected outcome:
 - Locus creates a sprint milestone and issue set on GitHub
 - Issues are labeled for priority, type, and execution order
 - Sprint scope is visible to your whole team in GitHub
+- `locus run` will auto-detect this sprint — no manual activation needed
 
 Deep dives:
 
@@ -126,7 +126,6 @@ cd /path/to/your-repo
 locus init
 locus config set ai.model claude-sonnet-4-6
 locus plan "Add /health endpoint with tests and API docs" --sprint "Sprint 1"
-locus sprint active "Sprint 1"
 locus run
 locus review
 locus iterate --sprint

@@ -41,7 +41,7 @@ Planning produces GitHub Issues with labels for priority, type, and execution or
 AI agents pick up issues and implement them. In sprint mode, tasks run sequentially on a single branch. For standalone issues, tasks run in parallel using git worktrees.
 
 ```bash
-# Run the active sprint
+# Run all open sprints (auto-detected)
 locus run
 
 # Run a single issue
@@ -154,7 +154,7 @@ graph LR
 
 ## Recovery Model
 
-Locus persists execution state to `.locus/run-state.json` so that interrupted or failed runs can be resumed:
+Locus persists execution state to `.locus/run-state/` (one file per sprint) so that interrupted or failed runs can be resumed:
 
 ```mermaid
 graph LR
@@ -183,7 +183,7 @@ After initialization, Locus creates a `.locus/` directory in your project root:
 ```
 .locus/
   config.json          # Project configuration (provider, model, sprint settings)
-  run-state.json       # Active run progress (auto-managed)
+  run-state/           # Active run progress, per-sprint (auto-managed)
   LOCUS.md             # Project instructions for AI agents
   LEARNINGS.md         # Accumulated learnings
   logs/                # Execution logs
@@ -191,7 +191,7 @@ After initialization, Locus creates a `.locus/` directory in your project root:
   worktrees/           # Git worktrees for parallel execution
 ```
 
-Sensitive files (`config.json`, `run-state.json`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed so the entire team benefits from accumulated context.
+Sensitive files (`config.json`, `run-state/`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed so the entire team benefits from accumulated context.
 
 ## Related Docs
 

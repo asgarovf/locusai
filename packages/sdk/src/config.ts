@@ -33,8 +33,7 @@ export const DEFAULT_CONFIG: LocusConfig = {
     rebaseBeforeTask: true,
   },
   sprint: {
-    active: null,
-    stopOnFailure: true,
+    stopOnFailure: false,
   },
   logging: {
     level: "normal",
@@ -125,5 +124,12 @@ export function readLocusConfig(cwd?: string): LocusConfig {
     projectRaw
   );
 
-  return merged as unknown as LocusConfig;
+  const config = merged as unknown as LocusConfig;
+
+  // Backward compat: remove deprecated sprint.active field
+  if (config.sprint && "active" in (config.sprint as Record<string, unknown>)) {
+    delete (config.sprint as Record<string, unknown>).active;
+  }
+
+  return config;
 }

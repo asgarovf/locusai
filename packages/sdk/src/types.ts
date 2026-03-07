@@ -69,8 +69,6 @@ export interface LocusConfig {
   };
   /** Sprint settings. */
   sprint: {
-    /** Active sprint label, or `null` if none. */
-    active: string | null;
     /** Whether to stop the sprint on the first failure. */
     stopOnFailure: boolean;
   };

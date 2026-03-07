@@ -77,7 +77,6 @@ function showConfig(cwd: string): void {
     {
       title: "Sprint",
       entries: [
-        ["Active", config.sprint.active ?? dim("(none)")],
         ["Stop on Failure", String(config.sprint.stopOnFailure)],
       ],
     },

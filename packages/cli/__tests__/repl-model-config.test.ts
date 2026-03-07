@@ -21,7 +21,7 @@ describe("repl model config persistence", () => {
         baseBranch: "main",
         rebaseBeforeTask: true,
       },
-      sprint: { active: null, stopOnFailure: true },
+      sprint: { stopOnFailure: false },
       logging: { level: "normal" as const, maxFiles: 20, maxTotalSizeMB: 50 },
     };
     saveConfig(TEST_DIR, initialConfig);

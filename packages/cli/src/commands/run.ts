@@ -2,7 +2,8 @@
  * `locus run` — Sprint and parallel issue execution.
  *
  * Usage:
- *   locus run                      # Run active sprint (sequential)
+ *   locus run                      # Run all open sprints (parallel, worktrees)
+ *   locus run --sprint <name>      # Run a specific sprint
  *   locus run 42                   # Run single issue (worktree)
  *   locus run 42 43 44             # Run multiple issues (parallel, worktrees)
  *   locus run --resume             # Resume failed sprint run
@@ -10,6 +11,8 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { executeIssue } from "../core/agent.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { loadConfig } from "../core/config.js";
@@ -52,7 +55,9 @@ import {
 } from "../core/submodule.js";
 import {
   cleanupStaleWorktrees,
+  createSprintWorktree,
   createWorktree,
+  removeSprintWorktree,
   removeWorktree,
 } from "../core/worktree.js";
 import {
@@ -61,7 +66,7 @@ import {
   renderTaskStatus,
 } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
-import type { Issue, LocusConfig } from "../types.js";
+import type { Issue, LocusConfig, RunState } from "../types.js";
 
 function resolveExecutionContext(
   config: LocusConfig,
@@ -90,12 +95,14 @@ function printRunHelp(): void {
 ${bold("locus run")} — Execute issues using AI agents
 
 ${bold("Usage:")}
-  locus run                           ${dim("# Run active sprint (sequential)")}
+  locus run                           ${dim("# Run all open sprints (parallel)")}
+  locus run --sprint <name>           ${dim("# Run a specific sprint")}
   locus run <issue>                   ${dim("# Run single issue (worktree)")}
   locus run <issue> <issue> ...       ${dim("# Run multiple issues (parallel)")}
   locus run --resume                  ${dim("# Resume interrupted run")}
 
 ${bold("Options:")}
+  --sprint <name>       Run a specific sprint (instead of all active)
   --resume              Resume a previously interrupted run
   --dry-run             Show what would happen without executing
   --model <name>        Override the AI model for this run
@@ -108,7 +115,8 @@ ${bold("Sandbox:")}
   unsandboxed with a warning.
 
 ${bold("Examples:")}
-  locus run                           ${dim("# Execute active sprint")}
+  locus run                           ${dim("# Execute all open sprints")}
+  locus run --sprint "Sprint 1"       ${dim("# Run a specific sprint")}
   locus run 42                        ${dim("# Run single issue")}
   locus run 42 43 44                  ${dim("# Run issues in parallel")}
   locus run --resume                  ${dim("# Resume after failure")}
@@ -129,6 +137,7 @@ export async function runCommand(
     model?: string;
     sandbox?: string;
     noSandbox?: boolean;
+    sprint?: string;
   } = {}
 ): Promise<void> {
   if (args[0] === "help") {
@@ -195,15 +204,15 @@ export async function runCommand(
 
     // Resume mode
     if (flags.resume) {
-      return handleResume(projectRoot, config, sandboxed, runRef);
+      return handleResume(projectRoot, config, sandboxed, flags);
     }
 
     // Parse issue numbers from args
     const issueNumbers = args.filter((a) => /^\d+$/.test(a)).map(Number);
 
     if (issueNumbers.length === 0) {
-      // No issue numbers — run active sprint
-      return handleSprintRun(projectRoot, config, flags, sandboxed, runRef);
+      // No issue numbers — run sprint(s)
+      return handleSprintRun(projectRoot, config, flags, sandboxed);
     }
 
     if (issueNumbers.length === 1) {
@@ -235,17 +244,39 @@ export async function runCommand(
 async function handleSprintRun(
   projectRoot: string,
   config: LocusConfig,
-  flags: { dryRun?: boolean; model?: string },
-  sandboxed: boolean,
-  runRef: { sprintName: string | undefined }
+  flags: { dryRun?: boolean; model?: string; sprint?: string },
+  sandboxed: boolean
 ): Promise<void> {
-  const log = getLogger();
-  const execution = resolveExecutionContext(config, flags.model);
+  // Determine which sprints to run
+  let sprintNames: string[];
 
-  // Check for active sprint
-  if (!config.sprint.active) {
+  if (flags.sprint) {
+    // --sprint flag: run a specific sprint
+    sprintNames = [flags.sprint];
+  } else {
+    // Auto-detect all open sprints
+    process.stderr.write(`${cyan("●")} Detecting open sprints...`);
+    try {
+      const milestones = listMilestones(
+        config.github.owner,
+        config.github.repo,
+        "open",
+        { cwd: projectRoot }
+      );
+      sprintNames = milestones.map((m) => m.title);
+    } catch (e) {
+      process.stderr.write(
+        `\r${red("✗")} Failed to fetch sprints: ${(e as Error).message}\n`
+      );
+      return;
+    }
+    process.stderr.write("\r\x1b[2K");
+  }
+
+  if (sprintNames.length === 0) {
+    process.stderr.write(`${red("✗")} No open sprints found.\n`);
     process.stderr.write(
-      `${red("✗")} No active sprint. Set one with: ${bold("locus sprint active <name>")}\n`
+      `  Create one: ${bold('locus sprint create "Sprint 1"')}\n`
     );
     process.stderr.write(
       `  Or specify issue numbers: ${bold("locus run 42 43 44")}\n`
@@ -253,8 +284,59 @@ async function handleSprintRun(
     return;
   }
 
-  const sprintName = config.sprint.active;
-  runRef.sprintName = sprintName;
+  // Clean up stale worktrees
+  const cleaned = cleanupStaleWorktrees(projectRoot);
+  if (cleaned > 0) {
+    process.stderr.write(
+      `  ${dim(`Cleaned up ${cleaned} stale worktree${cleaned === 1 ? "" : "s"}.`)}\n`
+    );
+  }
+
+  if (sprintNames.length === 1) {
+    // Single sprint — run directly
+    await executeSingleSprint(
+      projectRoot,
+      config,
+      sprintNames[0],
+      flags,
+      sandboxed
+    );
+  } else {
+    // Multiple sprints — run in parallel worktrees
+    process.stderr.write(
+      `\n${bold("Running")} ${cyan(`${sprintNames.length} sprints`)} ${dim("(parallel, worktrees)")}\n\n`
+    );
+
+    const timer = createTimer();
+
+    const promises = sprintNames.map((name) =>
+      executeSingleSprint(projectRoot, config, name, flags, sandboxed).catch(
+        (e) => {
+          getLogger().warn(`Sprint "${name}" threw: ${e}`);
+        }
+      )
+    );
+
+    await Promise.allSettled(promises);
+
+    process.stderr.write(
+      `\n${bold("All sprints complete")} ${dim(`(${timer.formatted()})`)}\n\n`
+    );
+  }
+}
+
+/**
+ * Execute a single sprint — tasks run sequentially inside a worktree.
+ */
+async function executeSingleSprint(
+  projectRoot: string,
+  config: LocusConfig,
+  sprintName: string,
+  flags: { dryRun?: boolean; model?: string },
+  sandboxed: boolean
+): Promise<void> {
+  const execution = resolveExecutionContext(config, flags.model);
+
   process.stderr.write(`\n${bold("Sprint:")} ${cyan(sprintName)}\n`);
 
   // Check for existing run state for this sprint
@@ -263,7 +345,7 @@ async function handleSprintRun(
     const stats = getRunStats(existingState);
     if (stats.inProgress > 0 || stats.pending > 0) {
       process.stderr.write(
-        `\n${yellow("⚠")} A run for this sprint is already in progress.\n`
+        `\n${yellow("⚠")} A run for sprint "${sprintName}" is already in progress.\n`
       );
       process.stderr.write(
         `  Use ${bold("locus run --resume")} to continue.\n`
@@ -301,9 +383,34 @@ async function handleSprintRun(
   // Sort by order:N label
   issues = sortByOrder(issues);
 
+  // Create worktree for this sprint
+  let worktreePath: string | undefined;
+  let branchName: string;
+
+  if (!flags.dryRun) {
+    try {
+      const wt = createSprintWorktree(
+        projectRoot,
+        sprintName,
+        config.agent.baseBranch
+      );
+      worktreePath = wt.path;
+      branchName = wt.branch;
+      process.stderr.write(`  ${dim(`Worktree: ${wt.path}`)}\n`);
+      process.stderr.write(`  ${dim(`Branch: ${wt.branch}`)}\n`);
+    } catch (e) {
+      process.stderr.write(`${red("✗")} Failed to create worktree: ${e}\n`);
+      return;
+    }
+  } else {
+    const randomSuffix = Math.random().toString(36).slice(2, 8);
+    branchName = `locus/sprint-${sprintName.toLowerCase().replace(/\s+/g, "-")}-${randomSuffix}`;
+  }
+
+  // The working directory for this sprint's tasks
+  const workDir = worktreePath ?? projectRoot;
+
   // Create run state
-  const randomSuffix = Math.random().toString(36).slice(2, 8);
-  const branchName = `locus/sprint-${sprintName.toLowerCase().replace(/\s+/g, "-")}-${randomSuffix}`;
   const state = createSprintRunState(
     sprintName,
     branchName,
@@ -314,9 +421,7 @@ async function handleSprintRun(
   );
   saveRunState(projectRoot, state);
 
-  process.stderr.write(
-    `  ${dim(`${issues.length} tasks, branch: ${branchName}`)}\n\n`
-  );
+  process.stderr.write(`  ${dim(`${issues.length} tasks`)}\n\n`);
 
   // Print task list
   for (const task of state.tasks) {
@@ -338,22 +443,7 @@ async function handleSprintRun(
     );
   }
 
-  // Create/checkout sprint branch
-  if (!flags.dryRun) {
-    try {
-      execSync(`git checkout -B ${branchName}`, {
-        cwd: projectRoot,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-      log.info(`Checked out branch ${branchName}`);
-    } catch (e) {
-      process.stderr.write(`${red("✗")} Failed to create branch: ${e}\n`);
-      return;
-    }
-  }
-
-  // Execute tasks sequentially
+  // Execute tasks sequentially within the worktree
   const timer = createTimer();
 
   for (let i = 0; i < state.tasks.length; i++) {
@@ -374,7 +464,7 @@ async function handleSprintRun(
     // Check for conflicts (if enabled)
     if (config.agent.rebaseBeforeTask && !flags.dryRun && i > 0) {
       const conflictResult = checkForConflicts(
-        projectRoot,
+        workDir,
         config.agent.baseBranch
       );
 
@@ -382,30 +472,41 @@ async function handleSprintRun(
         printConflictReport(conflictResult, config.agent.baseBranch);
 
         if (conflictResult.hasConflict) {
-          // Stop sprint — user must resolve conflicts
+          // Mark task as failed but continue to next task
           markTaskFailed(state, task.issue, "Merge conflict with base branch");
           saveRunState(projectRoot, state);
           process.stderr.write(
-            `\n${red("✗")} Sprint stopped due to conflicts.\n`
+            `  ${red("✗")} Task #${task.issue} skipped due to conflicts.\n`
           );
-          process.stderr.write(
-            `  Resolve conflicts and run: ${bold("locus run --resume")}\n`
-          );
-          return;
+
+          if (config.sprint.stopOnFailure) {
+            process.stderr.write(
+              `\n${red("✗")} Sprint stopped due to conflicts.\n`
+            );
+            process.stderr.write(
+              `  Resolve conflicts and run: ${bold("locus run --resume")}\n`
+            );
+            break;
+          }
+          continue;
         }
 
         // Auto-rebase
-        const rebaseResult = attemptRebase(
-          projectRoot,
-          config.agent.baseBranch
-        );
+        const rebaseResult = attemptRebase(workDir, config.agent.baseBranch);
         if (!rebaseResult.success) {
           markTaskFailed(state, task.issue, "Rebase failed");
           saveRunState(projectRoot, state);
           process.stderr.write(
-            `\n${red("✗")} Auto-rebase failed. Resolve manually.\n`
+            `  ${red("✗")} Auto-rebase failed for task #${task.issue}.\n`
           );
-          return;
+
+          if (config.sprint.stopOnFailure) {
+            process.stderr.write(
+              `\n${red("✗")} Sprint stopped. Resolve manually.\n`
+            );
+            break;
+          }
+          continue;
         }
       }
     }
@@ -417,7 +518,7 @@ async function handleSprintRun(
         sprintContext = execSync(
           `git diff origin/${config.agent.baseBranch}..HEAD`,
           {
-            cwd: projectRoot,
+            cwd: workDir,
             encoding: "utf-8",
             stdio: ["pipe", "pipe", "pipe"],
           }
@@ -429,7 +530,7 @@ async function handleSprintRun(
 
     // Progress
     process.stderr.write(
-      `\n${progressBar(i, state.tasks.length, { label: "Sprint Progress" })}\n\n`
+      `\n${progressBar(i, state.tasks.length, { label: `Sprint: ${sprintName}` })}\n\n`
     );
 
     // Mark in-progress
@@ -437,7 +538,7 @@ async function handleSprintRun(
     saveRunState(projectRoot, state);
 
     // Execute (skip per-task PR — a single sprint PR is created after all tasks).
-    const result = await executeIssue(projectRoot, {
+    const result = await executeIssue(workDir, {
       issueNumber: task.issue,
       provider: execution.provider,
       model: execution.model,
@@ -453,7 +554,7 @@ async function handleSprintRun(
       // Ensure all changes are committed before moving to the next task
       if (!flags.dryRun) {
         const issueTitle = issue?.title ?? "";
-        ensureTaskCommit(projectRoot, task.issue, issueTitle);
+        ensureTaskCommit(workDir, task.issue, issueTitle);
 
         // Sandbox sync is bidirectional with the host workspace, so each task
         // sees the latest committed state.
@@ -470,11 +571,15 @@ async function handleSprintRun(
 
       if (config.sprint.stopOnFailure) {
         process.stderr.write(
-          `\n${red("✗")} Sprint stopped: task #${task.issue} failed.\n`
+          `\n${red("✗")} Sprint "${sprintName}" stopped: task #${task.issue} failed.\n`
         );
         process.stderr.write(`  Resume with: ${bold("locus run --resume")}\n`);
-        return;
+        break;
       }
+      // When stopOnFailure is false, log and continue to next task
+      process.stderr.write(
+        `  ${yellow("⚠")} Task #${task.issue} failed, continuing to next task.\n`
+      );
     }
 
     saveRunState(projectRoot, state);
@@ -483,7 +588,7 @@ async function handleSprintRun(
   // Sprint complete
   const stats = getRunStats(state);
   process.stderr.write(
-    `\n${progressBar(stats.done, stats.total, { label: "Sprint Complete" })}\n`
+    `\n${progressBar(stats.done, stats.total, { label: `Sprint Complete: ${sprintName}` })}\n`
   );
   process.stderr.write(`\n${bold("Summary:")}\n`);
   process.stderr.write(
@@ -498,32 +603,29 @@ async function handleSprintRun(
         issue: t.issue,
         title: issues.find((i) => i.number === t.issue)?.title,
       }));
-    const prNumber = await createSprintPR(
-      projectRoot,
+
+    await createSprintPR(
+      workDir,
       config,
       sprintName,
       branchName,
       completedTasks
     );
-
-    if (prNumber !== undefined) {
-      try {
-        execSync(`git checkout ${config.agent.baseBranch}`, {
-          cwd: projectRoot,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"],
-        });
-        process.stderr.write(
-          `  ${dim(`Checked out ${config.agent.baseBranch}`)}\n`
-        );
-      } catch {
-        // Non-fatal
-      }
-    }
   }
 
+  // Clean up worktree on full success
   if (stats.failed === 0) {
     clearRunState(projectRoot, sprintName);
+    if (worktreePath) {
+      removeSprintWorktree(projectRoot, sprintName);
+    }
+  } else {
+    // Preserve worktree for debugging/resume
+    if (worktreePath) {
+      process.stderr.write(
+        `  ${yellow("⚠")} Sprint worktree preserved: ${dim(worktreePath)}\n`
+      );
+    }
   }
 }
 
@@ -775,55 +877,124 @@ async function handleResume(
   projectRoot: string,
   config: LocusConfig,
   sandboxed: boolean,
-  runRef: { sprintName: string | undefined }
+  flags: { sprint?: string }
 ): Promise<void> {
-  const execution = resolveExecutionContext(config);
-
-  // Try active sprint state first, then fall back to parallel state
-  const sprintName = config.sprint.active ?? undefined;
-  let state = sprintName ? loadRunState(projectRoot, sprintName) : null;
-  if (!state) {
-    state = loadRunState(projectRoot); // parallel state
+  // Determine which sprints to resume
+  if (flags.sprint) {
+    // Resume a specific sprint
+    const state = loadRunState(projectRoot, flags.sprint);
+    if (!state) {
+      process.stderr.write(
+        `${red("✗")} No run state found for sprint "${flags.sprint}".\n`
+      );
+      return;
+    }
+    await resumeSingleRun(projectRoot, config, state, sandboxed);
+    return;
   }
 
-  if (!state) {
+  // Scan run-state directory for any resumable runs
+  const sprintsToResume: RunState[] = [];
+
+  try {
+    const { readdirSync } = await import("node:fs");
+    const runStateDir = join(projectRoot, ".locus", "run-state");
+    if (existsSync(runStateDir)) {
+      const files = readdirSync(runStateDir).filter((f: string) =>
+        f.endsWith(".json")
+      );
+      for (const file of files) {
+        const sprintName =
+          file === "_parallel.json" ? undefined : file.replace(/\.json$/, "");
+        const state = loadRunState(projectRoot, sprintName);
+        if (state) {
+          const stats = getRunStats(state);
+          if (stats.failed > 0 || stats.pending > 0 || stats.inProgress > 0) {
+            sprintsToResume.push(state);
+          }
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — fall through to "nothing to resume"
+  }
+
+  if (sprintsToResume.length === 0) {
     process.stderr.write(
       `${red("✗")} No run state found. Nothing to resume.\n`
     );
     return;
   }
 
-  // Track the sprint for the shutdown handler
-  runRef.sprintName = state.sprint;
+  if (sprintsToResume.length === 1) {
+    await resumeSingleRun(projectRoot, config, sprintsToResume[0], sandboxed);
+  } else {
+    // Resume multiple sprints in parallel
+    process.stderr.write(
+      `\n${bold("Resuming")} ${cyan(`${sprintsToResume.length} runs`)} ${dim("(parallel)")}\n\n`
+    );
+
+    const promises = sprintsToResume.map((state) =>
+      resumeSingleRun(projectRoot, config, state, sandboxed).catch((e) => {
+        getLogger().warn(`Resume for "${state.sprint}" threw: ${e}`);
+      })
+    );
+
+    await Promise.allSettled(promises);
+  }
+}
+
+/**
+ * Resume a single run (sprint or parallel).
+ */
+async function resumeSingleRun(
+  projectRoot: string,
+  config: LocusConfig,
+  state: RunState,
+  sandboxed: boolean
+): Promise<void> {
+  const execution = resolveExecutionContext(config);
 
   const stats = getRunStats(state);
   process.stderr.write(
-    `\n${bold("Resuming")} ${state.type} run ${dim(state.runId)}\n`
+    `\n${bold("Resuming")} ${state.type} run ${dim(state.runId)}${state.sprint ? ` (${cyan(state.sprint)})` : ""}\n`
   );
   process.stderr.write(
     `  Done: ${stats.done}, Failed: ${stats.failed}, Pending: ${stats.pending}\n\n`
   );
 
-  if (state.type === "sprint" && state.branch) {
-    // Ensure we're on the right branch
-    try {
-      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", {
-        cwd: projectRoot,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-
-      if (currentBranch !== state.branch) {
-        execSync(`git checkout ${state.branch}`, {
+  // Determine the working directory
+  let workDir = projectRoot;
+  if (state.type === "sprint" && state.sprint) {
+    // Check if a worktree exists for this sprint
+    const { getSprintWorktreePath, sprintSlug } = await import(
+      "../core/worktree.js"
+    );
+    const { existsSync } = await import("node:fs");
+    const wtPath = getSprintWorktreePath(projectRoot, sprintSlug(state.sprint));
+    if (existsSync(wtPath)) {
+      workDir = wtPath;
+    } else if (state.branch) {
+      // Fallback: checkout the sprint branch in the main tree
+      try {
+        const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", {
           cwd: projectRoot,
           encoding: "utf-8",
           stdio: ["pipe", "pipe", "pipe"],
-        });
+        }).trim();
+
+        if (currentBranch !== state.branch) {
+          execSync(`git checkout ${state.branch}`, {
+            cwd: projectRoot,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          });
+        }
+      } catch {
+        process.stderr.write(
+          `${yellow("⚠")} Could not checkout branch ${state.branch}\n`
+        );
       }
-    } catch {
-      process.stderr.write(
-        `${yellow("⚠")} Could not checkout branch ${state.branch}\n`
-      );
     }
   }
 
@@ -844,7 +1015,7 @@ async function handleResume(
     markTaskInProgress(state, task.issue);
     saveRunState(projectRoot, state);
 
-    const result = await executeIssue(projectRoot, {
+    const result = await executeIssue(workDir, {
       issueNumber: task.issue,
       provider: execution.provider,
       model: execution.model,
@@ -864,7 +1035,7 @@ async function handleResume(
         } catch {
           // Non-fatal
         }
-        ensureTaskCommit(projectRoot, task.issue, issueTitle);
+        ensureTaskCommit(workDir, task.issue, issueTitle);
 
         // Sandbox sync is bidirectional with the host workspace.
         if (sandboxed) {
@@ -884,6 +1055,9 @@ async function handleResume(
         );
         return;
       }
+      process.stderr.write(
+        `  ${yellow("⚠")} Task #${task.issue} failed, continuing to next task.\n`
+      );
     }
 
     saveRunState(projectRoot, state);
@@ -900,32 +1074,22 @@ async function handleResume(
     const completedTasks = state.tasks
       .filter((t) => t.status === "done")
       .map((t) => ({ issue: t.issue }));
-    const prNumber = await createSprintPR(
-      projectRoot,
+
+    await createSprintPR(
+      workDir,
       config,
       state.sprint,
       state.branch,
       completedTasks
     );
-
-    if (prNumber !== undefined) {
-      try {
-        execSync(`git checkout ${config.agent.baseBranch}`, {
-          cwd: projectRoot,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"],
-        });
-        process.stderr.write(
-          `  ${dim(`Checked out ${config.agent.baseBranch}`)}\n`
-        );
-      } catch {
-        // Non-fatal
-      }
-    }
   }
 
   if (finalStats.failed === 0) {
     clearRunState(projectRoot, state.sprint);
+    // Clean up sprint worktree on full success
+    if (isSprintRun && state.sprint) {
+      removeSprintWorktree(projectRoot, state.sprint);
+    }
   }
 }
 
@@ -955,14 +1119,14 @@ function getOrder(issue: Issue): number | null {
  * the updated submodule refs in the parent repo.
  */
 function ensureTaskCommit(
-  projectRoot: string,
+  workDir: string,
   issueNumber: number,
   issueTitle: string
 ): void {
   try {
     // Commit inside dirty submodules first (if any)
     const committedSubmodules = commitDirtySubmodules(
-      projectRoot,
+      workDir,
       issueNumber,
       issueTitle
     );
@@ -973,7 +1137,7 @@ function ensureTaskCommit(
     }
 
     const status = execSync("git status --porcelain", {
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
@@ -981,7 +1145,7 @@ function ensureTaskCommit(
     if (!status) return;
 
     execSync("git add -A", {
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -989,7 +1153,7 @@ function ensureTaskCommit(
     const message = `chore: complete #${issueNumber} - ${issueTitle}\n\nCo-Authored-By: LocusAgent <agent@locusai.team>`;
     execSync(`git commit -F -`, {
       input: message,
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -1006,7 +1170,7 @@ function ensureTaskCommit(
  * Create a single sprint-level PR covering all completed tasks.
  */
 async function createSprintPR(
-  projectRoot: string,
+  workDir: string,
   config: LocusConfig,
   sprintName: string,
   branchName: string,
@@ -1018,7 +1182,7 @@ async function createSprintPR(
     const diff = execSync(
       `git diff origin/${config.agent.baseBranch}..HEAD --stat`,
       {
-        cwd: projectRoot,
+        cwd: workDir,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
       }
@@ -1030,10 +1194,10 @@ async function createSprintPR(
     }
 
     // Push submodule branches first (if any)
-    pushSubmoduleBranches(projectRoot);
+    pushSubmoduleBranches(workDir);
 
     execSync(`git push -u origin ${branchName}`, {
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -1043,7 +1207,7 @@ async function createSprintPR(
       .join("\n");
 
     const submoduleSummary = getSubmoduleChangeSummary(
-      projectRoot,
+      workDir,
       config.agent.baseBranch
     );
 
@@ -1058,7 +1222,7 @@ async function createSprintPR(
       prBody,
       branchName,
       config.agent.baseBranch,
-      { cwd: projectRoot }
+      { cwd: workDir }
     );
 
     process.stderr.write(`  ${green("✓")} Created sprint PR #${prNumber}\n`);

@@ -13,10 +13,9 @@ In Locus, **issues are tasks** and **sprints are milestones**. You create GitHub
 ```mermaid
 graph LR
     A[Create Sprint] --> B[Plan / Add Issues]
-    B --> C[Set Active]
-    C --> D[Execute]
-    D --> E[Review & Iterate]
-    E --> F[Close Sprint]
+    B --> C[Execute]
+    C --> D[Review & Iterate]
+    D --> E[Close Sprint]
 ```
 
 ### 1. Create
@@ -39,21 +38,19 @@ locus issue create "Set up OAuth provider" --sprint "Sprint 1"
 locus issue create "Add login page UI" --sprint "Sprint 1"
 ```
 
-### 3. Set Active
+### 3. Execute
+
+`locus run` automatically detects all open sprints and runs them. Multiple sprints execute in parallel, each in its own worktree. Tasks within a sprint run sequentially.
 
 ```bash
-locus sprint active "Sprint 1"
-```
-
-Only one sprint can be active at a time. The active sprint is the default target for `locus run`.
-
-### 4. Execute
-
-```bash
+# Run all open sprints
 locus run
+
+# Run a specific sprint
+locus run --sprint "Sprint 1"
 ```
 
-### 5. Close
+### 4. Close
 
 ```bash
 locus sprint close "Sprint 1"
@@ -183,9 +180,8 @@ locus sprint list --all    # Include closed
 # Show sprint details
 locus sprint show "Sprint 1"
 
-# Check/set active sprint
-locus sprint active
-locus sprint active "Sprint 1"
+# Close a sprint
+locus sprint close "Sprint 1"
 ```
 
 ## Related Docs

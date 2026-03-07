@@ -22,7 +22,7 @@ locus iterate --sprint
 | Flag | Description |
 |------|-------------|
 | `--pr <number>` | Iterate on a specific PR by number |
-| `--sprint` | Iterate on all agent PRs in the active sprint that have feedback |
+| `--sprint` | Iterate on all open agent PRs that have feedback |
 | `--dry-run` | Show what would be iterated without executing |
 | `--model <name>` | Override the AI model |
 
@@ -60,7 +60,7 @@ Locus searches for open PRs that reference the issue (via "Closes #N" or the `lo
 
 ### Sprint Mode
 
-Iterate on all agent PRs with feedback that belong to the active sprint.
+Iterate on all open agent PRs that have feedback.
 
 ```bash
 locus iterate --sprint

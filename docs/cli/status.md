@@ -1,5 +1,5 @@
 ---
-description: Dashboard view showing repository info, active sprint progress, worktrees, and agent-managed PRs.
+description: Dashboard view showing repository info, open sprint progress, worktrees, and agent-managed PRs.
 ---
 
 # locus status
@@ -22,14 +22,14 @@ Shows the GitHub repository (`owner/repo`), configured AI provider and model, an
 
 ### Sprint Progress
 
-If an active sprint is set, displays:
+Shows all open sprints (GitHub Milestones). For each sprint, displays:
 
 - Sprint name and completion count (e.g., "3 of 7 done")
 - Due date (if set)
 - A progress bar
 - Issue breakdown by status: in-progress, queued, failed, done
 
-If no active sprint is set, displays "none active".
+If no open sprints exist, displays "no open sprints".
 
 ### Active Run
 

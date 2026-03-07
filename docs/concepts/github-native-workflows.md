@@ -30,10 +30,9 @@ The core delivery loop when you already know the task.
 ```bash
 # Create sprint and issue
 locus sprint create "Sprint 1"
-locus sprint active "Sprint 1"
 locus issue create "Add /health endpoint with tests" --sprint "Sprint 1"
 
-# Execute
+# Execute (auto-detects open sprints)
 locus run
 
 # Review and iterate
@@ -69,8 +68,7 @@ locus plan "Build billing webhook ingestion with retries" --sprint "Sprint 2"
 # Review what was created
 locus sprint show "Sprint 2"
 
-# Execute when ready
-locus sprint active "Sprint 2"
+# Execute when ready (auto-detects open sprints)
 locus run
 ```
 
@@ -156,12 +154,17 @@ git remote -v
 locus init
 ```
 
-### `locus run` says no active sprint
+### `locus run` says no open sprints found
 
 ```bash
+# Check existing sprints
 locus sprint list
-locus sprint active "Sprint 1"
-locus run
+
+# Create one if needed
+locus sprint create "Sprint 1"
+
+# Or run a specific sprint
+locus run --sprint "Sprint 1"
 ```
 
 ### Rate limit or transient API failures

@@ -1,5 +1,5 @@
 ---
-description: Execute issues using AI agents. Supports sprint mode (sequential), single issue mode (worktree), and parallel mode (multiple worktrees).
+description: Execute issues using AI agents. Supports sprint mode (parallel worktrees, sequential within each sprint), single issue mode, and parallel issue mode.
 ---
 
 # locus run
@@ -18,6 +18,7 @@ locus run [issue-numbers...] [options]
 
 | Flag | Description |
 |------|-------------|
+| `--sprint <name>` | Run a specific sprint instead of all open sprints |
 | `--resume` | Resume a previously interrupted run (sprint or parallel) |
 | `--dry-run` | Show what would happen without executing agents or making changes |
 | `--model <name>` | Override the AI model for this run |
@@ -30,22 +31,26 @@ locus run [issue-numbers...] [options]
 
 ### Sprint Mode (no arguments)
 
-When called without issue numbers, Locus runs the active sprint. Tasks are executed sequentially on a single branch.
+When called without issue numbers, Locus auto-detects all open sprints (GitHub Milestones) and runs them. If multiple sprints are open, they execute in parallel — each in its own git worktree. Tasks within a sprint are executed sequentially.
 
 ```bash
+# Run all open sprints
 locus run
+
+# Run a specific sprint
+locus run --sprint "Sprint 1"
 ```
 
 **How it works:**
 
-1. Reads the active sprint from `config.json`.
-2. Fetches all open issues in the sprint, sorted by `order:N` labels.
-3. Creates or checks out a sprint branch (e.g., `locus/sprint-sprint-1`).
-4. Executes each issue in order using the configured AI agent.
+1. Auto-detects all open milestones via the GitHub API (or uses `--sprint` to target one).
+2. For each sprint, creates a worktree at `.locus/worktrees/sprint-<slug>/` with a unique branch.
+3. Fetches all open issues in the sprint, sorted by `order:N` labels.
+4. Executes each issue sequentially within the worktree using the configured AI agent.
 5. Passes a cumulative diff of previous tasks as context to later tasks.
-6. Tracks progress in `.locus/run-state.json`.
+6. Tracks progress in `.locus/run-state/<sprint-slug>.json`.
 
-If `sprint.stopOnFailure` is `true` (the default), the sprint halts when a task fails. Resume with `locus run --resume`.
+If `sprint.stopOnFailure` is `true`, the sprint halts when a task fails. The default is `false` — failed tasks are skipped and the sprint continues to the next task. Resume failed tasks with `locus run --resume`.
 
 Before each task (when `agent.rebaseBeforeTask` is enabled), Locus checks for conflicts with the base branch and attempts an auto-rebase.
 
@@ -90,13 +95,13 @@ If a sprint or parallel run is interrupted (by failure, signal, or crash), use `
 locus run --resume
 ```
 
-Resume reads the run state from `.locus/run-state.json`, skips completed tasks, retries failed tasks, and continues with pending ones. For sprint runs, the correct branch is checked out automatically.
+Resume scans the `.locus/run-state/` directory for resumable runs, skips completed tasks, retries failed tasks, and continues with pending ones. Use `--sprint <name>` to resume a specific sprint. For sprint runs, the worktree is reused automatically.
 
 ---
 
 ## Run State
 
-Active runs are tracked in `.locus/run-state.json` with:
+Active runs are tracked in `.locus/run-state/<sprint-slug>.json` (sprint runs) or `.locus/run-state/_parallel.json` (parallel runs), with:
 
 - Run ID and type (`sprint` or `parallel`)
 - Sprint name and branch (for sprint runs)
@@ -104,7 +109,7 @@ Active runs are tracked in `.locus/run-state.json` with:
 - Associated PR numbers for completed tasks
 - Error messages for failed tasks
 
-The run state file is cleared when all tasks complete successfully.
+Each sprint has independent state, enabling parallel sprint execution. The run state file is cleared when all tasks complete successfully.
 
 ---
 
@@ -128,8 +133,11 @@ See also: [locus sandbox](sandbox.md) and [Security & Sandboxing](../concepts/se
 ## Examples
 
 ```bash
-# Run the active sprint
+# Run all open sprints (auto-detected)
 locus run
+
+# Run a specific sprint
+locus run --sprint "Sprint 1"
 
 # Preview sprint execution
 locus run --dry-run

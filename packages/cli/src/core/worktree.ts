@@ -54,10 +54,101 @@ export function getWorktreePath(
   return join(getWorktreeDir(projectRoot), `issue-${issueNumber}`);
 }
 
+/** Get the worktree path for a sprint. */
+export function getSprintWorktreePath(
+  projectRoot: string,
+  sprintSlug: string
+): string {
+  return join(getWorktreeDir(projectRoot), `sprint-${sprintSlug}`);
+}
+
 /** Generate a new unique branch name for a worktree issue. */
 function generateBranchName(issueNumber: number): string {
   const randomSuffix = Math.random().toString(36).slice(2, 8);
   return `locus/issue-${issueNumber}-${randomSuffix}`;
+}
+
+/** Slugify a sprint name for filesystem use. */
+export function sprintSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Create a worktree for a sprint.
+ * Returns the worktree path and branch name.
+ */
+export function createSprintWorktree(
+  projectRoot: string,
+  sprintName: string,
+  baseBranch: string
+): { path: string; branch: string } {
+  const log = getLogger();
+  const slug = sprintSlug(sprintName);
+  const worktreePath = getSprintWorktreePath(projectRoot, slug);
+
+  // If worktree already exists, return it
+  if (existsSync(worktreePath)) {
+    log.verbose(`Sprint worktree already exists for "${sprintName}"`);
+    const existingBranch =
+      getWorktreeBranch(worktreePath) ?? `locus/sprint-${slug}`;
+    return { path: worktreePath, branch: existingBranch };
+  }
+
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  const branch = `locus/sprint-${slug}-${randomSuffix}`;
+
+  git(
+    `worktree add ${JSON.stringify(worktreePath)} -b ${branch} ${baseBranch}`,
+    projectRoot
+  );
+
+  initSubmodules(worktreePath);
+
+  log.info(`Created sprint worktree for "${sprintName}"`, {
+    path: worktreePath,
+    branch,
+    baseBranch,
+  });
+
+  return { path: worktreePath, branch };
+}
+
+/**
+ * Remove a sprint worktree.
+ */
+export function removeSprintWorktree(
+  projectRoot: string,
+  sprintName: string
+): void {
+  const log = getLogger();
+  const slug = sprintSlug(sprintName);
+  const worktreePath = getSprintWorktreePath(projectRoot, slug);
+
+  if (!existsSync(worktreePath)) {
+    log.verbose(`Sprint worktree for "${sprintName}" does not exist`);
+    return;
+  }
+
+  const branch = getWorktreeBranch(worktreePath);
+
+  try {
+    git(`worktree remove ${JSON.stringify(worktreePath)} --force`, projectRoot);
+    log.info(`Removed sprint worktree for "${sprintName}"`);
+  } catch (e) {
+    log.warn(`Failed to remove sprint worktree: ${e}`);
+    gitSafe(
+      `worktree remove ${JSON.stringify(worktreePath)} --force`,
+      projectRoot
+    );
+  }
+
+  if (branch) {
+    gitSafe(`branch -D ${branch}`, projectRoot);
+  }
 }
 
 /** Read the current branch name from an existing worktree directory. */

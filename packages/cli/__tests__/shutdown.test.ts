@@ -55,7 +55,7 @@ describe("shutdown state preservation", () => {
 
     saveRunState(testDir, state);
 
-    const loaded = loadRunState(testDir);
+    const loaded = loadRunState(testDir, "v1");
     expect(loaded).not.toBeNull();
     expect(loaded?.tasks[0].status).toBe("done");
     expect(loaded?.tasks[1].status).toBe("failed"); // was in_progress
@@ -80,7 +80,7 @@ describe("shutdown state preservation", () => {
 
     // File should be valid JSON
     const raw = readFileSync(
-      join(testDir, ".locus", "run-state.json"),
+      join(testDir, ".locus", "run-state", "_parallel.json"),
       "utf-8"
     );
     const parsed = JSON.parse(raw);
@@ -144,7 +144,7 @@ describe("shutdown state preservation", () => {
     markInProgressTasksInterrupted(state);
 
     saveRunState(testDir, state);
-    const loaded = loadRunState(testDir);
+    const loaded = loadRunState(testDir, "v2");
 
     expect(loaded?.tasks[0].status).toBe("done");
     expect(loaded?.tasks[0].pr).toBe(100);
@@ -167,7 +167,7 @@ describe("shutdown state preservation", () => {
     };
 
     saveRunState(testDir, state);
-    const loaded = loadRunState(testDir);
+    const loaded = loadRunState(testDir, "empty");
     expect(loaded?.tasks).toHaveLength(0);
   });
 
@@ -197,7 +197,7 @@ describe("shutdown state preservation", () => {
     saveRunState(testDir, state);
 
     // Simulate resume — failed interrupted task should be retried first.
-    const loaded = loadRunState(testDir);
+    const loaded = loadRunState(testDir, "resume-test");
     const next = loaded ? getNextTask(loaded) : null;
     expect(next?.issue).toBe(41); // The one that was in_progress
     expect(next?.status).toBe("failed");

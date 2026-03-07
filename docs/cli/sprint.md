@@ -1,5 +1,5 @@
 ---
-description: Manage sprints via GitHub Milestones. Create, list, show progress, set the active sprint, reorder tasks, and close sprints.
+description: Manage sprints via GitHub Milestones. Create, list, show progress, reorder tasks, and close sprints.
 ---
 
 # locus sprint
@@ -59,7 +59,7 @@ locus sprint              # Same as 'locus sprint list'
 |------|-------|-------------|
 | `--all` | `-a` | Include closed sprints (default shows only open) |
 
-The output shows each sprint's name, progress bar, open/closed issue counts, state, and due date. The active sprint is highlighted with a green indicator.
+The output shows each sprint's name, progress bar, open/closed issue counts, state, and due date.
 
 **Examples:**
 
@@ -75,35 +75,15 @@ locus sprint list --all
 Show detailed sprint information including issue breakdown and execution order.
 
 ```bash
-locus sprint show ["<name>"]
+locus sprint show "<name>"
 ```
 
-If no name is provided, the active sprint is shown. Displays progress percentage, due date, state, and a table of all tasks sorted by their `order:N` labels. Completed tasks are marked as "frozen" (their order cannot be changed).
+Displays progress percentage, due date, state, and a table of all tasks sorted by their `order:N` labels. Completed tasks are marked as "frozen" (their order cannot be changed).
 
 **Examples:**
 
 ```bash
 locus sprint show "Sprint 1"
-locus sprint show                # Uses active sprint
-```
-
----
-
-### active
-
-Set or display the active sprint. The active sprint is used by `locus run` (when called without arguments), `locus sprint show` (when called without a name), and `locus iterate --sprint`.
-
-```bash
-locus sprint active ["<name>"]
-```
-
-When called without a name, displays the current active sprint. When called with a name, sets that sprint as active in the local configuration.
-
-**Examples:**
-
-```bash
-locus sprint active              # Show current active sprint
-locus sprint active "Sprint 1"  # Set active sprint
 ```
 
 ---
@@ -143,19 +123,16 @@ locus sprint order "Sprint 1" 17 15 16
 
 ### close
 
-Close a sprint (milestone). If the closed sprint was the active sprint, the active sprint setting is cleared.
+Close a sprint (milestone).
 
 ```bash
-locus sprint close ["<name>"]
+locus sprint close "<name>"
 ```
-
-If no name is provided, the active sprint is closed.
 
 **Examples:**
 
 ```bash
 locus sprint close "Sprint 1"
-locus sprint close             # Close active sprint
 ```
 
 ---
@@ -167,6 +144,6 @@ Sprints in Locus are backed by GitHub Milestones:
 - **Issues** are assigned to sprints via the milestone field.
 - **Execution order** is tracked with `order:N` labels on each issue.
 - **Progress** is calculated from the milestone's open vs. closed issue counts.
-- **Active sprint** is stored locally in `.locus/config.json` under `sprint.active`.
+- **Auto-detection** — `locus run` automatically discovers all open sprints via the GitHub API. No manual activation is needed.
 
-When `locus run` executes a sprint, it processes issues sequentially on a single branch (e.g., `locus/sprint-sprint-1`), in ascending order of their `order:N` labels.
+When `locus run` executes a sprint, it creates a worktree at `.locus/worktrees/sprint-<slug>/` and processes issues sequentially within it, in ascending order of their `order:N` labels. Multiple sprints run in parallel, each in its own worktree.

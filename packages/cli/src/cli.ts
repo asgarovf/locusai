@@ -67,6 +67,7 @@ interface ParsedArgs {
     list: boolean;
     noSandbox: boolean;
     sandbox?: string;
+    sprint?: string;
   };
 }
 
@@ -187,6 +188,9 @@ function parseArgs(argv: string[]): ParsedArgs {
         break;
       case "--no-sandbox":
         flags.noSandbox = true;
+        break;
+      case "--sprint":
+        flags.sprint = rawArgs[++i];
         break;
       default:
         // Handle --sandbox=<value> (e.g. --sandbox=require)
@@ -592,6 +596,7 @@ async function main(): Promise<void> {
         model: parsed.flags.model,
         sandbox: parsed.flags.sandbox,
         noSandbox: parsed.flags.noSandbox,
+        sprint: parsed.flags.sprint,
       });
       break;
     }

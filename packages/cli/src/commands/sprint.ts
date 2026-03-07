@@ -5,12 +5,11 @@
  *   create  — Create a new sprint (milestone)
  *   list    — List sprints
  *   show    — Show sprint details (issues, progress, execution order)
- *   active  — Set the active sprint
  *   order   — Reorder sprint tasks (respecting frozen completed tasks)
  *   close   — Close a sprint
  */
 
-import { loadConfig, updateConfigValue } from "../core/config.js";
+import { loadConfig } from "../core/config.js";
 import {
   closeMilestone,
   createMilestone,
@@ -111,9 +110,6 @@ export async function sprintCommand(
     case "show":
       await sprintShow(projectRoot, parsed);
       break;
-    case "active":
-      await sprintActive(projectRoot, parsed);
-      break;
     case "order":
       await sprintOrder(projectRoot, parsed);
       break;
@@ -171,11 +167,6 @@ async function sprintCreate(
     if (parsed.flags.due) {
       process.stderr.write(`  Due: ${parsed.flags.due}\n`);
     }
-
-    // Ask if user wants to set as active
-    process.stderr.write(
-      `  Set as active sprint: ${bold(`locus sprint active "${title}"`)}\n`
-    );
   } catch (e) {
     process.stderr.write(
       `\r${red("✗")} Failed to create sprint: ${(e as Error).message}\n`
@@ -190,10 +181,6 @@ async function sprintList(
 ): Promise<void> {
   const config = loadConfig(projectRoot);
   const { owner, repo } = config.github;
-  const activeSprint = config.sprint.active;
-  const normalizedActiveSprint = activeSprint
-    ? normalizeMilestoneTitle(activeSprint)
-    : null;
 
   const state = parsed.flags.all ? "all" : "open";
 
@@ -231,23 +218,9 @@ async function sprintList(
 
   const columns: Column[] = [
     {
-      key: "active",
-      header: " ",
-      minWidth: 2,
-      format: (_, row) =>
-        normalizedActiveSprint !== null &&
-        normalizeMilestoneTitle(String(row.title)) === normalizedActiveSprint
-          ? green("●")
-          : " ",
-    },
-    {
       key: "title",
       header: "Sprint",
-      format: (v, row) =>
-        normalizedActiveSprint !== null &&
-        normalizeMilestoneTitle(String(row.title)) === normalizedActiveSprint
-          ? bold(green(String(v)))
-          : bold(String(v)),
+      format: (v) => bold(String(v)),
     },
     {
       key: "progress",
@@ -290,7 +263,6 @@ async function sprintList(
   ];
 
   const rows = milestones.map((m) => ({
-    active: null,
     title: m.title,
     openIssues: m.openIssues,
     closedIssues: m.closedIssues,
@@ -300,10 +272,6 @@ async function sprintList(
   }));
 
   process.stderr.write(`${renderTable(columns, rows)}\n\n`);
-
-  if (activeSprint) {
-    process.stderr.write(`  ${green("●")} = active sprint\n`);
-  }
 }
 
 async function sprintShow(
@@ -313,15 +281,12 @@ async function sprintShow(
   const config = loadConfig(projectRoot);
   const { owner, repo } = config.github;
 
-  const sprintName = parsed.positional[0] ?? config.sprint.active;
+  const sprintName = parsed.positional[0];
   if (!sprintName) {
     process.stderr.write(
-      `${red("✗")} No sprint specified and no active sprint set.\n`
+      `${red("✗")} Missing sprint name.\n`
     );
     process.stderr.write(`  Usage: ${bold('locus sprint show "Sprint 1"')}\n`);
-    process.stderr.write(
-      `  Or set active: ${bold('locus sprint active "Sprint 1"')}\n`
-    );
     process.exit(1);
   }
 
@@ -386,15 +351,6 @@ async function sprintShow(
     {
       label: "State",
       value: milestone.state === "open" ? green("open") : dim("closed"),
-    },
-    {
-      label: "Active",
-      value:
-        config.sprint.active &&
-        normalizeMilestoneTitle(config.sprint.active) ===
-          normalizeMilestoneTitle(milestone.title)
-          ? green("yes")
-          : dim("no"),
     },
   ]);
   process.stderr.write(`${details}\n`);
@@ -465,70 +421,17 @@ async function sprintShow(
   process.stderr.write("\n");
 }
 
-async function sprintActive(
+async function sprintOrder(
   projectRoot: string,
   parsed: SprintArgs
 ): Promise<void> {
   const sprintName = parsed.positional[0];
 
   if (!sprintName) {
-    // Show current active sprint
-    const config = loadConfig(projectRoot);
-    if (config.sprint.active) {
-      process.stderr.write(
-        `Active sprint: ${bold(green(config.sprint.active))}\n`
-      );
-    } else {
-      process.stderr.write(`${dim("No active sprint set.")}\n`);
-      process.stderr.write(
-        `  Set one: ${bold('locus sprint active "Sprint 1"')}\n`
-      );
-    }
-    return;
-  }
-
-  // Verify sprint exists
-  const config = loadConfig(projectRoot);
-  const { owner, repo } = config.github;
-
-  process.stderr.write(`${cyan("●")} Verifying sprint...`);
-
-  let milestones: Milestone[];
-  try {
-    milestones = listMilestones(owner, repo, "open", { cwd: projectRoot });
-  } catch (e) {
-    process.stderr.write(`\r${red("✗")} ${(e as Error).message}\n`);
-    process.exit(1);
-    return;
-  }
-
-  const found = findMilestoneByTitle(milestones, sprintName);
-  if (!found) {
     process.stderr.write(
-      `\r${red("✗")} Sprint "${sprintName}" not found (or is closed).\n`
+      `${red("✗")} Missing sprint name.\n`
     );
-    process.exit(1);
-    return;
-  }
-
-  updateConfigValue(projectRoot, "sprint.active", found.title);
-
-  process.stderr.write(
-    `\r${green("✓")} Active sprint set to "${bold(found.title)}"\n`
-  );
-}
-
-async function sprintOrder(
-  projectRoot: string,
-  parsed: SprintArgs
-): Promise<void> {
-  const config = loadConfig(projectRoot);
-  const sprintName = parsed.positional[0] ?? config.sprint.active;
-
-  if (!sprintName) {
-    process.stderr.write(
-      `${red("✗")} No sprint specified and no active sprint set.\n`
-    );
+    process.stderr.write(`  Usage: ${bold('locus sprint order "Sprint 1" 17 15 16')}\n`);
     process.exit(1);
   }
 
@@ -709,15 +612,15 @@ async function sprintClose(
   projectRoot: string,
   parsed: SprintArgs
 ): Promise<void> {
-  const config = loadConfig(projectRoot);
-  const sprintName = parsed.positional[0] ?? config.sprint.active;
+  const sprintName = parsed.positional[0];
 
   if (!sprintName) {
-    process.stderr.write(`${red("✗")} No sprint specified.\n`);
+    process.stderr.write(`${red("✗")} Missing sprint name.\n`);
     process.stderr.write(`  Usage: ${bold('locus sprint close "Sprint 1"')}\n`);
     process.exit(1);
   }
 
+  const config = loadConfig(projectRoot);
   const { owner, repo } = config.github;
 
   // Find milestone number
@@ -752,18 +655,6 @@ async function sprintClose(
   process.stderr.write(
     `\r${green("✓")} Closed sprint "${bold(milestone.title)}"\n`
   );
-
-  // Clear active sprint if it matches
-  if (
-    config.sprint.active &&
-    normalizeMilestoneTitle(config.sprint.active) ===
-      normalizeMilestoneTitle(milestone.title)
-  ) {
-    updateConfigValue(projectRoot, "sprint.active", null);
-    process.stderr.write(
-      `  ${dim(`Cleared active sprint (was ${milestone.title})`)}\n`
-    );
-  }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -817,7 +708,6 @@ ${bold("Subcommands:")}
   ${cyan("create")} ${dim("(c)")}    Create a new sprint
   ${cyan("list")} ${dim("(ls)")}     List sprints (default)
   ${cyan("show")}           Show sprint details and task order
-  ${cyan("active")}         Set or show the active sprint
   ${cyan("order")}          Reorder sprint tasks
   ${cyan("close")}          Close a sprint
 
@@ -835,7 +725,6 @@ ${bold("Examples:")}
   locus sprint create "Sprint 1" --due 2026-03-07
   locus sprint list
   locus sprint show "Sprint 1"
-  locus sprint active "Sprint 1"
   locus sprint order "Sprint 1" 17 15 16
   locus sprint order "Sprint 1" --show
   locus sprint close "Sprint 1"

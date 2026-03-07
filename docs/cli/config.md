@@ -34,7 +34,7 @@ Sections displayed:
 | **GitHub** | `owner`, `repo`, `defaultBranch` |
 | **AI** | `provider`, `model` |
 | **Agent** | `maxParallel`, `autoLabel`, `autoPR`, `baseBranch`, `rebaseBeforeTask` |
-| **Sprint** | `active`, `stopOnFailure` |
+| **Sprint** | `stopOnFailure` |
 | **Logging** | `level`, `maxFiles`, `maxTotalSizeMB` |
 | **Sandbox** | `enabled`, `extraWorkspaces`, `readOnlyPaths` |
 
@@ -71,7 +71,7 @@ locus config get <path>
 
 ```bash
 locus config get ai.model
-locus config get sprint.active
+locus config get sprint.stopOnFailure
 locus config get agent.maxParallel
 ```
 
@@ -93,8 +93,7 @@ For nested objects, the output is formatted as JSON.
 | `agent.autoPR` | boolean | `true` | Automatically create PRs after task completion |
 | `agent.baseBranch` | string | (detected) | Branch that sprint and worktree branches are based on |
 | `agent.rebaseBeforeTask` | boolean | `true` | Rebase sprint branch before each task |
-| `sprint.active` | string/null | `null` | Name of the active sprint |
-| `sprint.stopOnFailure` | boolean | `true` | Stop sprint execution when a task fails |
+| `sprint.stopOnFailure` | boolean | `false` | Stop sprint execution when a task fails (default: continue to next task) |
 | `logging.level` | string | `"normal"` | Log level: `silent`, `normal`, `verbose`, `debug` |
 | `logging.maxFiles` | number | `10` | Maximum number of log files to keep |
 | `logging.maxTotalSizeMB` | number | `50` | Maximum total log size in MB |
@@ -117,8 +116,8 @@ locus config set ai.model gpt-5.3-codex
 # Increase parallelism
 locus config set agent.maxParallel 8
 
-# Set active sprint
-locus config set sprint.active "Sprint 2"
+# Stop sprint on first failure (default is false — continue to next task)
+locus config set sprint.stopOnFailure true
 
 # Read a value for scripting
 MODEL=$(locus config get ai.model)

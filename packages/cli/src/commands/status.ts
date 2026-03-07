@@ -54,21 +54,16 @@ export async function statusCommand(projectRoot: string): Promise<void> {
   lines.push(`  ${dim("Branch:")}   ${config.agent.baseBranch}`);
 
   // ─── Sprint Progress ────────────────────────────────────────────────
-  if (config.sprint.active) {
-    const sprintName = config.sprint.active;
+  try {
+    const milestones = listMilestones(
+      config.github.owner,
+      config.github.repo,
+      "open",
+      { cwd: projectRoot }
+    );
 
-    try {
-      const milestones = listMilestones(
-        config.github.owner,
-        config.github.repo,
-        "open",
-        { cwd: projectRoot }
-      );
-      const milestone = milestones.find(
-        (m) => m.title.toLowerCase() === sprintName.toLowerCase()
-      );
-
-      if (milestone) {
+    if (milestones.length > 0) {
+      for (const milestone of milestones) {
         const total = milestone.openIssues + milestone.closedIssues;
         const done = milestone.closedIssues;
         const dueStr = milestone.dueOn
@@ -77,7 +72,7 @@ export async function statusCommand(projectRoot: string): Promise<void> {
 
         lines.push("");
         lines.push(
-          `  ${bold("Sprint:")}  ${cyan(sprintName)} (${done} of ${total} done${dueStr})`
+          `  ${bold("Sprint:")}  ${cyan(milestone.title)} (${done} of ${total} done${dueStr})`
         );
         if (total > 0) {
           lines.push(`  ${progressBar(done, total, { width: 30 })}`);
@@ -85,7 +80,7 @@ export async function statusCommand(projectRoot: string): Promise<void> {
 
         // Show issue breakdown
         const issues = listIssues(
-          { milestone: sprintName, state: "all" },
+          { milestone: milestone.title, state: "all" },
           { cwd: projectRoot }
         );
 
@@ -108,21 +103,14 @@ export async function statusCommand(projectRoot: string): Promise<void> {
         if (parts.length > 0) {
           lines.push(`  ${parts.join("  ")}`);
         }
-      } else {
-        lines.push("");
-        lines.push(
-          `  ${bold("Sprint:")}  ${cyan(sprintName)} ${dim("(not found)")}`
-        );
       }
-    } catch {
+    } else {
       lines.push("");
-      lines.push(
-        `  ${bold("Sprint:")}  ${cyan(sprintName)} ${dim("(could not fetch)")}`
-      );
+      lines.push(`  ${dim("Sprint:")}  ${dim("no open sprints")}`);
     }
-  } else {
+  } catch {
     lines.push("");
-    lines.push(`  ${dim("Sprint:")}  ${dim("none active")}`);
+    lines.push(`  ${dim("Sprint:")}  ${dim("(could not fetch)")}`);
   }
 
   // ─── Run State ───────────────────────────────────────────────────────

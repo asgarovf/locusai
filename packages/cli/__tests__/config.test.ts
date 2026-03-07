@@ -27,7 +27,7 @@ function setupProject(config?: Record<string, unknown>): void {
       baseBranch: "main",
       rebaseBeforeTask: true,
     },
-    sprint: { active: null, stopOnFailure: true },
+    sprint: { stopOnFailure: false },
     logging: { level: "normal", maxFiles: 20, maxTotalSizeMB: 50 },
   };
   writeFileSync(

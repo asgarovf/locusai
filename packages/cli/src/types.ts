@@ -30,7 +30,6 @@ export interface AgentConfig {
 }
 
 export interface SprintConfig {
-  active: string | null;
   stopOnFailure: boolean;
 }
 

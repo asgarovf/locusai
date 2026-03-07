@@ -8,20 +8,23 @@ description: How Locus executes tasks -- sprint mode, standalone mode, run state
 
 Locus supports two execution modes:
 
-- **Sprint mode** -- Tasks run sequentially on a single branch
-- **Standalone mode** -- Tasks run in parallel using git worktrees
+- **Sprint mode** -- Each sprint runs in its own worktree; tasks within a sprint run sequentially. Multiple sprints execute in parallel.
+- **Standalone mode** -- Individual issues run in parallel using git worktrees.
 
 The mode is determined automatically based on how you invoke `locus run`.
 
 ---
 
-## Sprint Mode (Sequential)
+## Sprint Mode
 
-Sprint mode activates when you run `locus run` with an active sprint and no issue numbers.
+Sprint mode activates when you run `locus run` without issue numbers. Locus auto-detects all open sprints (GitHub Milestones) and runs them.
 
 ```bash
-locus sprint active "Sprint 1"
+# Run all open sprints in parallel
 locus run
+
+# Run a specific sprint
+locus run --sprint "Sprint 1"
 ```
 
 ### How It Works
@@ -33,43 +36,48 @@ sequenceDiagram
     participant AI as AI Agent
     participant Git as Git
 
-    L->>GH: Fetch sprint issues (ordered by order:N)
-    L->>Git: Create/checkout locus/sprint-<name>
+    L->>GH: Fetch open milestones
+    L->>Git: Create worktree per sprint
 
-    loop For each task in order
-        L->>GH: Label issue as locus:in-progress
-        L->>AI: Send prompt (issue + context + sprint diff)
-        AI->>Git: Make code changes
-        AI-->>L: Stream output
-        L->>GH: Label issue as locus:done
-        L->>L: Save run state
+    loop For each sprint (parallel)
+        L->>GH: Fetch sprint issues (ordered by order:N)
+        loop For each task in order (sequential)
+            L->>GH: Label issue as locus:in-progress
+            L->>AI: Send prompt (issue + context + sprint diff)
+            AI->>Git: Make code changes
+            AI-->>L: Stream output
+            L->>GH: Label issue as locus:done
+            L->>L: Save run state
+        end
+        L->>Git: Push branch
+        L->>GH: Create sprint PR
     end
-
-    L->>Git: Push branch
-    L->>GH: Create sprint PR
 ```
 
-1. Locus creates (or checks out) a branch named `locus/sprint-<name>`.
-2. Issues are fetched from the milestone and sorted by `order:N` labels.
-3. Each task executes sequentially on this single branch. After task N completes, task N+1 begins with all of task N's changes already present.
-4. Before each task (except the first), Locus provides **sprint context** -- the cumulative diff from the base branch -- so the AI agent knows what previous tasks changed.
-5. Run state is persisted continuously for resume support.
+1. Locus fetches all open milestones via the GitHub API (or targets one with `--sprint`).
+2. For each sprint, a worktree is created at `.locus/worktrees/sprint-<slug>/` with a unique branch.
+3. Issues are fetched from the milestone and sorted by `order:N` labels.
+4. Each task executes sequentially within the worktree. After task N completes, task N+1 begins with all of task N's changes already present.
+5. Before each task (except the first), Locus provides **sprint context** -- the cumulative diff from the base branch -- so the AI agent knows what previous tasks changed.
+6. Run state is persisted per-sprint in `.locus/run-state/<sprint-slug>.json` for resume support.
 
-### Why Sequential
+### Why Sequential Within a Sprint
 
-Sprint tasks build on each other. Task 2 may depend on files created by task 1. Running them on a single branch in order ensures each task sees the full state of all previous work.
+Sprint tasks build on each other. Task 2 may depend on files created by task 1. Running them in order within the same worktree ensures each task sees the full state of all previous work.
 
-### Sprint Branch Naming
+### Why Parallel Across Sprints
+
+Different sprints are independent work streams. Each sprint gets its own worktree and branch, so they never interfere with each other.
+
+### Sprint Worktree Layout
 
 ```
-locus/sprint-<normalized-sprint-name>
+.locus/worktrees/
+  sprint-sprint-1/       # Worktree for "Sprint 1"
+  sprint-auth-feature/   # Worktree for "Auth Feature"
 ```
 
-| Sprint Name | Branch |
-|---|---|
-| Sprint 1 | `locus/sprint-sprint-1` |
-| Auth Feature | `locus/sprint-auth-feature` |
-| v2.0 Migration | `locus/sprint-v2.0-migration` |
+Each worktree gets a branch like `locus/sprint-<slug>-<random>` (e.g., `locus/sprint-sprint-1-a3b2c1`).
 
 ---
 
@@ -129,20 +137,20 @@ stateDiagram-v2
 | Pending | `locus:queued` | Task is waiting for execution |
 | In Progress | `locus:in-progress` | AI agent is currently working |
 | Done | `locus:done` | PR created, summary comment posted on issue |
-| Failed | `locus:failed` | Error comment posted, sprint stops (if `stopOnFailure`) |
+| Failed | `locus:failed` | Error comment posted; sprint continues to next task (default) or stops (if `stopOnFailure: true`) |
 
 ---
 
 ## Run State & Resume
 
-Locus tracks execution progress in `.locus/run-state.json`:
+Locus tracks execution progress per-sprint in `.locus/run-state/<sprint-slug>.json` (parallel runs use `_parallel.json`):
 
 ```json
 {
   "runId": "run-2026-02-24T10-30-00",
   "type": "sprint",
   "sprint": "Sprint 1",
-  "branch": "locus/sprint-sprint-1",
+  "branch": "locus/sprint-sprint-1-a3b2c1",
   "tasks": [
     { "issue": 15, "order": 1, "status": "done", "pr": 20 },
     { "issue": 16, "order": 2, "status": "failed", "error": "..." },
@@ -154,16 +162,20 @@ Locus tracks execution progress in `.locus/run-state.json`:
 Resume from failures:
 
 ```bash
+# Resume all interrupted runs
 locus run --resume
+
+# Resume a specific sprint
+locus run --resume --sprint "Sprint 1"
 ```
 
-1. Loads existing run state
-2. For sprint runs, checks out the sprint branch
+1. Scans `.locus/run-state/` directory for resumable runs
+2. For sprint runs, reuses the existing worktree
 3. Finds the first failed task (for retry) or next pending task
 4. Resets failed tasks to pending and re-executes
 5. Continues through remaining pending tasks
 
-The run state is automatically deleted when all tasks complete successfully.
+Each sprint has independent state, so multiple sprints can be resumed in parallel. The run state file is automatically deleted when all tasks complete successfully.
 
 ---
 
@@ -231,8 +243,7 @@ Run state is saved so `locus run --resume` can pick up where interruption occurr
 | `agent.autoPR` | `true` | Auto-create PRs for completed tasks |
 | `agent.baseBranch` | `main` | Base branch for PRs and worktree creation |
 | `agent.rebaseBeforeTask` | `true` | Check for base branch drift between tasks |
-| `sprint.stopOnFailure` | `true` | Stop sprint execution when a task fails |
-| `sprint.active` | `null` | Name of the currently active sprint |
+| `sprint.stopOnFailure` | `false` | Stop sprint execution when a task fails (default: continue to next task) |
 
 ## Related Docs
 

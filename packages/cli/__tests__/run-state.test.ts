@@ -63,23 +63,23 @@ describe("run-state", () => {
       const state = createSprintRunState("S1", "b", [{ number: 1, order: 1 }]);
       saveRunState(TEST_DIR, state);
 
-      const loaded = loadRunState(TEST_DIR);
+      const loaded = loadRunState(TEST_DIR, "S1");
       expect(loaded).not.toBeNull();
       expect(loaded?.runId).toBe(state.runId);
       expect(loaded?.tasks[0].issue).toBe(1);
     });
 
     it("returns null when no state file exists", () => {
-      expect(loadRunState(TEST_DIR)).toBeNull();
+      expect(loadRunState(TEST_DIR, "nonexistent")).toBeNull();
     });
 
     it("clears state file", () => {
       const state = createSprintRunState("S1", "b", [{ number: 1, order: 1 }]);
       saveRunState(TEST_DIR, state);
-      expect(loadRunState(TEST_DIR)).not.toBeNull();
+      expect(loadRunState(TEST_DIR, "S1")).not.toBeNull();
 
-      clearRunState(TEST_DIR);
-      expect(loadRunState(TEST_DIR)).toBeNull();
+      clearRunState(TEST_DIR, "S1");
+      expect(loadRunState(TEST_DIR, "S1")).toBeNull();
     });
 
     it("clearRunState is idempotent", () => {

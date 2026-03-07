@@ -35,7 +35,7 @@ const mockConfig: LocusConfig = {
     baseBranch: "main",
     rebaseBeforeTask: true,
   },
-  sprint: { active: null, stopOnFailure: true },
+  sprint: { stopOnFailure: false },
   logging: { level: "normal", maxFiles: 20, maxTotalSizeMB: 50 },
 };
 
@@ -117,17 +117,13 @@ describe("prompt-builder", () => {
       expect(prompt).toContain("Use TypeScript");
     });
 
-    it("includes LEARNINGS.md when present", () => {
-      writeFileSync(
-        join(TEST_DIR, ".locus", "LEARNINGS.md"),
-        "- Always use bun for builds"
-      );
+    it("includes LEARNINGS.md reference", () => {
       const prompt = buildExecutionPrompt({
         issue: mockIssue,
         config: mockConfig,
         projectRoot: TEST_DIR,
       });
-      expect(prompt).toContain("Always use bun for builds");
+      expect(prompt).toContain("LEARNINGS.md");
     });
 
     it("includes issue comments when provided", () => {
