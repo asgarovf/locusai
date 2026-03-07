@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.24.6
+
+### Patch Changes
+
+- simplify OAuth redirect URI to single local variable
+- Updated dependencies
+  - @locusai/locus-pm2@0.24.6
+  - @locusai/sdk@0.24.6
+
 ## 0.24.5
 
 ### Patch Changes

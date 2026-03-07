@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.24.6
+
+### Patch Changes
+
+- simplify OAuth redirect URI to single local variable
+- Updated dependencies
+  - @locusai/sdk@0.24.6
+
 ## 0.24.5
 
 ### Patch Changes

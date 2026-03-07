@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.24.6
+
+### Patch Changes
+
+- simplify OAuth redirect URI to single local variable
+
 ## 0.24.5
 
 ### Patch Changes
