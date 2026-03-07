@@ -3,6 +3,7 @@
   "version": "0.24.1",
   "description": "Linear integration for Locus — sync issues, AI-powered workflows, and bidirectional project management",
   "type": "module",
+  "private": true,
   "bin": {
     "locus-linear": "./bin/locus-linear.js"
   },
