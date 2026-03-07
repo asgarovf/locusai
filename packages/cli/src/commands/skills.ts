@@ -6,11 +6,12 @@
  *   locus skills list         # list available skills from remote registry
  *   locus skills list --installed  # list locally installed skills
  *   locus skills install <name>   # install a skill from the registry
+ *   locus skills remove <name>    # remove an installed skill
  */
 
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import { renderTable, type Column } from "../display/table.js";
-import { installSkill } from "../skills/installer.js";
+import { installSkill, removeSkill, isSkillInstalled } from "../skills/installer.js";
 import { readLockFile } from "../skills/lock.js";
 import { fetchRegistry, fetchSkillContent, findSkillInRegistry } from "../skills/registry.js";
 import type { RemoteSkillRegistry, SkillLockFile } from "../skills/types.js";
@@ -150,6 +151,28 @@ async function installRemoteSkill(name: string): Promise<void> {
   process.stderr.write(`  → ${AGENTS_SKILLS_DIR}/${name}/SKILL.md\n\n`);
 }
 
+// ─── Remove ──────────────────────────────────────────────────────────────────
+
+async function removeInstalledSkill(name: string): Promise<void> {
+  if (!name) {
+    process.stderr.write(`${red("✗")} Please specify a skill name.\n`);
+    process.stderr.write(`  Usage: ${bold("locus skills remove <name>")}\n`);
+    process.exit(1);
+  }
+
+  const cwd = process.cwd();
+
+  if (!isSkillInstalled(cwd, name)) {
+    process.stderr.write(`${red("✗")} Skill '${bold(name)}' is not installed.\n`);
+    process.stderr.write(`  Run ${bold("locus skills list --installed")} to see installed skills.\n`);
+    process.exit(1);
+  }
+
+  await removeSkill(cwd, name);
+
+  process.stderr.write(`${green("✓")} Removed skill '${bold(name)}'\n`);
+}
+
 // ─── Command ─────────────────────────────────────────────────────────────────
 
 /**
@@ -182,12 +205,18 @@ export async function skillsCommand(
       break;
     }
 
+    case "remove": {
+      const skillName = args[1];
+      await removeInstalledSkill(skillName);
+      break;
+    }
+
     default:
       process.stderr.write(
         `${red("✗")} Unknown subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${bold("list")}, ${bold("install")}\n`
+        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")}\n`
       );
       process.exit(1);
   }
