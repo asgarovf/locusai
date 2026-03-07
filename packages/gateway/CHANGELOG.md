@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.24.5
+
+### Patch Changes
+
+- fixed OAuth callback port instead of random port
+- Updated dependencies
+  - @locusai/sdk@0.24.5
+
 ## 0.24.4
 
 ### Patch Changes

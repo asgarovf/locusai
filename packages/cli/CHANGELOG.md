@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.24.5
+
+### Patch Changes
+
+- fixed OAuth callback port instead of random port
+
 ## 0.24.4
 
 ### Patch Changes
