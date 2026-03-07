@@ -22,7 +22,7 @@ const LINEAR_AUTHORIZE_URL = "https://linear.app/oauth/authorize";
 const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
 
 const SCOPES = "read,write,issues:create,comments:create";
-const CALLBACK_PORT = 6789;
+const PREFERRED_PORT: number = 6789;
 
 /** Generate a cryptographically random code verifier (43-128 chars, URL-safe). */
 function generateCodeVerifier(): string {
@@ -66,11 +66,12 @@ export async function runOAuthFlow(
   const codeChallenge = generateCodeChallenge(codeVerifier);
   const state = generateState();
 
-  const redirectUri = `http://localhost:${CALLBACK_PORT}/callback`;
-
   return new Promise<OAuthFlowResult>((resolve, reject) => {
     const server = createServer(
       async (req: IncomingMessage, res: ServerResponse) => {
+        const actualPort = (server.address() as { port: number }).port;
+        const redirectUri = `http://localhost:${actualPort}/callback`;
+
         try {
           const url = new URL(req.url ?? "/", `http://localhost`);
 
@@ -152,7 +153,26 @@ export async function runOAuthFlow(
       }
     );
 
-    server.listen(CALLBACK_PORT, "127.0.0.1", () => {
+    server.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        reject(
+          new Error(
+            `Port ${PREFERRED_PORT} is already in use. Please free it and try again.\n` +
+              `  To find the process: lsof -i:${PREFERRED_PORT}\n` +
+              `  To kill it:          kill -9 <PID>`
+          )
+        );
+      } else {
+        reject(
+          new Error(`Failed to start OAuth callback server: ${err.message}`)
+        );
+      }
+    });
+
+    server.on("listening", () => {
+      const actualPort = (server.address() as { port: number }).port;
+      const redirectUri = `http://localhost:${actualPort}/callback`;
+
       const authUrl = new URL(LINEAR_AUTHORIZE_URL);
       authUrl.searchParams.set("client_id", clientId);
       authUrl.searchParams.set("redirect_uri", redirectUri);
@@ -173,11 +193,7 @@ export async function runOAuthFlow(
       });
     });
 
-    server.on("error", (err) => {
-      reject(
-        new Error(`Failed to start OAuth callback server: ${err.message}`)
-      );
-    });
+    server.listen(PREFERRED_PORT, "127.0.0.1");
 
     // Timeout after 5 minutes
     const timeout = setTimeout(
