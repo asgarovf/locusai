@@ -353,18 +353,45 @@ async function createIssuePR(
     }
     prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/asgarovf/locusai)`;
 
-    // Create PR
+    // Create or update PR
     const prTitle = `${issue.title} (#${issue.number})`;
 
-    const prNumber = createPR(
-      prTitle,
-      prBody,
-      currentBranch,
-      config.agent.baseBranch,
-      { cwd: projectRoot }
-    );
+    // Check if a PR already exists for this branch
+    let prNumber: number | undefined;
+    try {
+      const existing = execSync(
+        `gh pr list --head ${currentBranch} --base ${config.agent.baseBranch} --json number --limit 1`,
+        { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+      ).trim();
+      const parsed = JSON.parse(existing);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        prNumber = parsed[0].number;
+      }
+    } catch {
+      // Non-fatal — fall through to create
+    }
 
-    process.stderr.write(`  ${green("✓")} Created PR #${prNumber}\n`);
+    if (prNumber) {
+      // Update existing PR with latest title and body
+      try {
+        execSync(
+          `gh pr edit ${prNumber} --title ${JSON.stringify(prTitle)} --body-file -`,
+          { input: prBody, cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+        );
+        process.stderr.write(`  ${green("✓")} Updated existing PR #${prNumber}\n`);
+      } catch (editErr) {
+        getLogger().warn(`Failed to update PR #${prNumber}: ${editErr}`);
+      }
+    } else {
+      prNumber = createPR(
+        prTitle,
+        prBody,
+        currentBranch,
+        config.agent.baseBranch,
+        { cwd: projectRoot }
+      );
+      process.stderr.write(`  ${green("✓")} Created PR #${prNumber}\n`);
+    }
 
     return prNumber;
   } catch (e) {

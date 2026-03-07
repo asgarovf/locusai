@@ -7,7 +7,14 @@
  */
 
 import { execSync } from "node:child_process";
-import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
 import { join } from "node:path";
 import { getLogger } from "./logger.js";
 import { initSubmodules } from "./submodule.js";
@@ -19,6 +26,27 @@ export interface WorktreeInfo {
   path: string;
   branch: string;
   status: "active" | "stale";
+}
+
+// ─── Locus Config Helpers ────────────────────────────────────────────────────
+
+/**
+ * Copy the `.locus` directory from the main project into a worktree so that
+ * `loadConfig(worktreePath)` finds `config.json` and other Locus state.
+ * Skips the `worktrees` subdirectory itself to avoid recursive nesting.
+ */
+function copyLocusDir(projectRoot: string, worktreePath: string): void {
+  const srcLocus = join(projectRoot, ".locus");
+  if (!existsSync(srcLocus)) return;
+
+  const destLocus = join(worktreePath, ".locus");
+  mkdirSync(destLocus, { recursive: true });
+
+  for (const entry of readdirSync(srcLocus)) {
+    // Never copy the worktrees directory into a worktree
+    if (entry === "worktrees") continue;
+    cpSync(join(srcLocus, entry), join(destLocus, entry), { recursive: true });
+  }
 }
 
 // ─── Git Helpers ─────────────────────────────────────────────────────────────
@@ -107,6 +135,7 @@ export function createSprintWorktree(
   );
 
   initSubmodules(worktreePath);
+  copyLocusDir(projectRoot, worktreePath);
 
   log.info(`Created sprint worktree for "${sprintName}"`, {
     path: worktreePath,
@@ -203,6 +232,7 @@ export function createWorktree(
 
   // Initialize submodules in the new worktree (if any)
   initSubmodules(worktreePath);
+  copyLocusDir(projectRoot, worktreePath);
 
   log.info(`Created worktree for issue #${issueNumber}`, {
     path: worktreePath,

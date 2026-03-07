@@ -237,17 +237,24 @@ export class SandboxedClaudeRunner implements AgentRunner {
   }
 
   private async isSandboxRunning(): Promise<boolean> {
-    try {
-      const { promisify } = await import("node:util");
-      const { exec } = await import("node:child_process");
-      const execAsync = promisify(exec);
-      const { stdout } = await execAsync("docker sandbox ls", {
-        timeout: 5000,
-      });
-      return stdout.includes(this.sandboxName);
-    } catch {
-      return false;
+    const { promisify } = await import("node:util");
+    const { exec } = await import("node:child_process");
+    const execAsync = promisify(exec);
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const { stdout } = await execAsync("docker sandbox ls", {
+          timeout: 15_000,
+        });
+        return stdout.includes(this.sandboxName);
+      } catch {
+        // Retry after a short delay on transient failures
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
     }
+    return false;
   }
 }
 

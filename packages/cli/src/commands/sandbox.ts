@@ -1155,14 +1155,20 @@ async function ensureCodexInSandbox(sandboxName: string): Promise<void> {
 
 /** Check if a sandbox is alive by running `docker sandbox ls` and looking for its name. */
 function isSandboxAlive(name: string): boolean {
-  try {
-    const output = execSync("docker sandbox ls", {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-      timeout: 5000,
-    });
-    return output.includes(name);
-  } catch {
-    return false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const output = execSync("docker sandbox ls", {
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 15_000,
+      });
+      return output.includes(name);
+    } catch {
+      if (attempt < 2) {
+        // Brief synchronous delay before retry
+        execSync("sleep 2", { stdio: "ignore" });
+      }
+    }
   }
+  return false;
 }

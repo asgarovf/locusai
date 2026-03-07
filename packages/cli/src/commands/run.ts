@@ -1217,15 +1217,45 @@ async function createSprintPR(
     }
     prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/asgarovf/locusai)`;
 
-    const prNumber = createPR(
-      `Sprint: ${sprintName}`,
-      prBody,
-      branchName,
-      config.agent.baseBranch,
-      { cwd: workDir }
-    );
+    // Check if a PR already exists for this branch
+    const prTitle = `Sprint: ${sprintName}`;
+    let prNumber: number | undefined;
+    try {
+      const existing = execSync(
+        `gh pr list --head ${branchName} --base ${config.agent.baseBranch} --json number --limit 1`,
+        { cwd: workDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+      ).trim();
+      const parsed = JSON.parse(existing);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        prNumber = parsed[0].number;
+      }
+    } catch {
+      // Non-fatal — fall through to create
+    }
 
-    process.stderr.write(`  ${green("✓")} Created sprint PR #${prNumber}\n`);
+    if (prNumber) {
+      // Update existing PR with latest title and body
+      try {
+        execSync(
+          `gh pr edit ${prNumber} --title ${JSON.stringify(prTitle)} --body-file -`,
+          { input: prBody, cwd: workDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+        );
+        process.stderr.write(`  ${green("✓")} Updated existing sprint PR #${prNumber}\n`);
+      } catch (editErr) {
+        getLogger().warn(`Failed to update sprint PR #${prNumber}: ${editErr}`);
+        process.stderr.write(`  ${yellow("⚠")} PR #${prNumber} exists but could not update: ${editErr}\n`);
+      }
+    } else {
+      prNumber = createPR(
+        prTitle,
+        prBody,
+        branchName,
+        config.agent.baseBranch,
+        { cwd: workDir }
+      );
+      process.stderr.write(`  ${green("✓")} Created sprint PR #${prNumber}\n`);
+    }
+
     return prNumber;
   } catch (e) {
     getLogger().warn(`Failed to create sprint PR: ${e}`);
