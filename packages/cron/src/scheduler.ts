@@ -2,7 +2,7 @@
  * CronScheduler — manages user-defined cron jobs.
  *
  * Each cron job executes a shell command on a human-readable interval
- * and writes output to a log file in .locus/cron/.
+ * and writes output to a per-job log file in .locus/cron/<job-name>/.
  */
 
 import { exec as execCb } from "node:child_process";
@@ -17,31 +17,38 @@ const exec = promisify(execCb);
 export class CronScheduler {
   private activeCrons: Map<string, ActiveCron> = new Map();
   private running = false;
-  private outputDir: string;
+  private cronBaseDir: string;
 
   constructor(
     private config: CronConfig,
     private cwd: string
   ) {
-    this.outputDir = join(cwd, ".locus", "cron");
+    this.cronBaseDir = join(cwd, ".locus", "cron");
   }
 
   /** Start all configured cron jobs. */
   start(): void {
     if (this.running) return;
 
-    // Ensure output directory exists
-    if (!existsSync(this.outputDir)) {
-      mkdirSync(this.outputDir, { recursive: true });
+    // Ensure base output directory exists
+    if (!existsSync(this.cronBaseDir)) {
+      mkdirSync(this.cronBaseDir, { recursive: true });
     }
 
     for (const cronConfig of this.config.crons) {
       const intervalMs = parseSchedule(cronConfig.schedule);
       if (!intervalMs) {
-        this.log(
-          `[error] Invalid schedule for "${cronConfig.name}": "${cronConfig.schedule}". Use formats like 30m, 1h, 1d.`
+        this.logForJob(
+          cronConfig.name,
+          `[error] Invalid schedule: "${cronConfig.schedule}". Use formats like 30m, 1h, 1d.`
         );
         continue;
+      }
+
+      // Ensure per-job output directory exists
+      const jobDir = join(this.cronBaseDir, cronConfig.name);
+      if (!existsSync(jobDir)) {
+        mkdirSync(jobDir, { recursive: true });
       }
 
       // Execute immediately on start, then on interval
@@ -60,7 +67,7 @@ export class CronScheduler {
     }
 
     this.running = true;
-    this.log(
+    this.logGlobal(
       `[info] Cron scheduler started with ${this.activeCrons.size} job(s)`
     );
   }
@@ -74,7 +81,7 @@ export class CronScheduler {
     }
     this.activeCrons.clear();
     this.running = false;
-    this.log("[info] Cron scheduler stopped");
+    this.logGlobal("[info] Cron scheduler stopped");
   }
 
   /** Get current scheduler status. */
@@ -109,21 +116,34 @@ export class CronScheduler {
 
       const output = (stdout || stderr || "").trim();
       if (output) {
-        this.log(`[${timestamp}] [${name}] ${output}`);
+        this.logForJob(name, `[${timestamp}] ${output}`);
       }
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      this.log(`[${timestamp}] [${name}] ERROR: ${errMsg}`);
+      this.logForJob(name, `[${timestamp}] ERROR: ${errMsg}`);
     }
   }
 
-  /** Append a line to the output log. */
-  private log(message: string): void {
-    const logPath = join(this.outputDir, "output.log");
+  /** Append a line to a job-specific log file at .locus/cron/<name>/output.log. */
+  private logForJob(name: string, message: string): void {
+    const jobDir = join(this.cronBaseDir, name);
+    if (!existsSync(jobDir)) {
+      mkdirSync(jobDir, { recursive: true });
+    }
+    const logPath = join(jobDir, "output.log");
     try {
       appendFileSync(logPath, `${message}\n`);
     } catch {
-      // If we can't write to log, write to stderr as fallback
+      console.error(message);
+    }
+  }
+
+  /** Append a line to the global scheduler log at .locus/cron/scheduler.log. */
+  private logGlobal(message: string): void {
+    const logPath = join(this.cronBaseDir, "scheduler.log");
+    try {
+      appendFileSync(logPath, `${message}\n`);
+    } catch {
       console.error(message);
     }
   }
