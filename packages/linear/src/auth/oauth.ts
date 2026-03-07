@@ -2,7 +2,7 @@
  * OAuth2 Authorization Code flow with PKCE for Linear.
  *
  * - Generates PKCE code_verifier + code_challenge (S256)
- * - Starts ephemeral HTTP server on a random port
+ * - Starts ephemeral HTTP server on port 6789
  * - Opens browser to Linear's authorization URL
  * - Handles callback: validates state, exchanges code for tokens
  * - Stores tokens via token.ts
@@ -23,7 +23,6 @@ const LINEAR_TOKEN_URL = "https://api.linear.app/oauth/token";
 
 const SCOPES = "read,write,issues:create,comments:create";
 const CALLBACK_PORT = 6789;
-const REDIRECT_URI = `http://localhost:${CALLBACK_PORT}/callback`;
 
 /** Generate a cryptographically random code verifier (43-128 chars, URL-safe). */
 function generateCodeVerifier(): string {
@@ -66,6 +65,8 @@ export async function runOAuthFlow(
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
   const state = generateState();
+
+  const redirectUri = `http://localhost:${CALLBACK_PORT}/callback`;
 
   return new Promise<OAuthFlowResult>((resolve, reject) => {
     const server = createServer(
@@ -122,8 +123,6 @@ export async function runOAuthFlow(
             return;
           }
 
-          const redirectUri = REDIRECT_URI;
-
           const tokens = await exchangeCodeForTokens({
             code,
             codeVerifier,
@@ -154,8 +153,6 @@ export async function runOAuthFlow(
     );
 
     server.listen(CALLBACK_PORT, "127.0.0.1", () => {
-      const redirectUri = REDIRECT_URI;
-
       const authUrl = new URL(LINEAR_AUTHORIZE_URL);
       authUrl.searchParams.set("client_id", clientId);
       authUrl.searchParams.set("redirect_uri", redirectUri);
