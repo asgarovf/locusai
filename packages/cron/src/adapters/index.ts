@@ -5,6 +5,7 @@
 import type { OutputAdapter } from "../types.js";
 import { createLocalAdapter } from "./local.js";
 import { createTelegramAdapter } from "./telegram.js";
+import { createWebhookAdapter } from "./webhook.js";
 
 const DEFAULT_ROUTES = ["local"];
 
@@ -29,7 +30,12 @@ export function resolveAdapters(
         adapters.push(createTelegramAdapter());
         break;
       default:
-        console.warn(`[cron] Unknown output route: "${route}", skipping.`);
+        if (route.startsWith("webhook:")) {
+          const url = route.slice("webhook:".length);
+          adapters.push(createWebhookAdapter(url));
+        } else {
+          console.warn(`[cron] Unknown output route: "${route}", skipping.`);
+        }
     }
   }
 
