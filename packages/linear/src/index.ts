@@ -20,6 +20,7 @@
 
 import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
+import { importCommand } from "./commands/import.js";
 import { mappingCommand } from "./commands/mapping.js";
 import { teamCommand } from "./commands/team.js";
 
@@ -41,6 +42,7 @@ export {
 } from "./auth/token.js";
 export { runOAuthFlow } from "./auth/oauth.js";
 export { authCommand } from "./commands/auth.js";
+export { importCommand } from "./commands/import.js";
 export { mappingCommand } from "./commands/mapping.js";
 export { teamCommand } from "./commands/team.js";
 export {
@@ -62,6 +64,8 @@ export {
   buildGitHubIssuePayload,
 } from "./sync/mapper.js";
 export type { GitHubIssuePayload } from "./sync/mapper.js";
+export { runImport } from "./sync/importer.js";
+export type { ImportOptions, ImportResult } from "./sync/importer.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
@@ -70,7 +74,7 @@ export async function main(args: string[]): Promise<void> {
     case "auth":
       return authCommand(args.slice(1));
     case "import":
-      return handleStub("import", args.slice(1));
+      return importCommand(args.slice(1));
     case "export":
       return handleStub("export", args.slice(1));
     case "sync":
@@ -121,6 +125,8 @@ function printHelp(): void {
   Sync:
     import                        Import Linear issues → GitHub Issues
     import --cycle                Import only from active cycle
+    import --project "Name"       Import from specific project
+    import --dry-run              Preview without creating issues
     import --enrich               AI-enrich issues during import
     export                        Export Locus status updates → Linear
     sync                          Bidirectional: import + export
@@ -138,7 +144,8 @@ function printHelp(): void {
 
   Examples:
     locus pkg linear auth
-    locus pkg linear import --enrich
+    locus pkg linear import --cycle --dry-run
+    locus pkg linear import --project "Backend"
     locus pkg linear create "Add rate limiting to the API"
     locus pkg linear issues --cycle
     locus pkg linear issue ENG-123
