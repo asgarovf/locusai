@@ -20,8 +20,10 @@
 
 import type { LinearCommand } from "./types.js";
 import { authCommand } from "./commands/auth.js";
+import { exportCommand } from "./commands/export.js";
 import { importCommand } from "./commands/import.js";
 import { mappingCommand } from "./commands/mapping.js";
+import { syncCommand } from "./commands/sync.js";
 import { teamCommand } from "./commands/team.js";
 
 export { LocusLinearClient } from "./client.js";
@@ -42,8 +44,10 @@ export {
 } from "./auth/token.js";
 export { runOAuthFlow } from "./auth/oauth.js";
 export { authCommand } from "./commands/auth.js";
+export { exportCommand } from "./commands/export.js";
 export { importCommand } from "./commands/import.js";
 export { mappingCommand } from "./commands/mapping.js";
+export { syncCommand } from "./commands/sync.js";
 export { teamCommand } from "./commands/team.js";
 export {
   loadState,
@@ -66,6 +70,8 @@ export {
 export type { GitHubIssuePayload } from "./sync/mapper.js";
 export { runImport } from "./sync/importer.js";
 export type { ImportOptions, ImportResult } from "./sync/importer.js";
+export { runExport } from "./sync/exporter.js";
+export type { ExportOptions, ExportResult } from "./sync/exporter.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
@@ -76,9 +82,9 @@ export async function main(args: string[]): Promise<void> {
     case "import":
       return importCommand(args.slice(1));
     case "export":
-      return handleStub("export", args.slice(1));
+      return exportCommand(args.slice(1));
     case "sync":
-      return handleStub("sync", args.slice(1));
+      return syncCommand(args.slice(1));
     case "create":
       return handleStub("create", args.slice(1));
     case "issues":
@@ -129,7 +135,9 @@ function printHelp(): void {
     import --dry-run              Preview without creating issues
     import --enrich               AI-enrich issues during import
     export                        Export Locus status updates → Linear
+    export --dry-run              Preview without updating Linear
     sync                          Bidirectional: import + export
+    sync --dry-run                Preview both directions
 
   AI-Powered:
     create "<title>"              AI-assisted issue creation in Linear
