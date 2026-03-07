@@ -1051,7 +1051,7 @@ async function createSprintPR(
     if (submoduleSummary) {
       prBody += `\n\n${submoduleSummary}`;
     }
-    prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/locusai/locus)`;
+    prBody += `\n\n---\n\n🤖 Automated by [Locus](https://github.com/asgarovf/locusai)`;
 
     const prNumber = createPR(
       `Sprint: ${sprintName}`,

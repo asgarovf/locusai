@@ -1,6 +1,6 @@
 # locus-telegram
 
-Remote-control your [Locus](https://github.com/locusai/locus) agent from Telegram. Full CLI command mapping, git operations, interactive keyboards, and built-in PM2 process management.
+Remote-control your [Locus](https://github.com/asgarovf/locusai) agent from Telegram. Full CLI command mapping, git operations, interactive keyboards, and built-in PM2 process management.
 
 ## Setup
 

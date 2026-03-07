@@ -1,6 +1,6 @@
 # @locusai/locus-linear
 
-Linear integration for [Locus](https://github.com/locusai/locus) — sync issues, AI-powered workflows, and bidirectional project management.
+Linear integration for [Locus](https://github.com/asgarovf/locusai) — sync issues, AI-powered workflows, and bidirectional project management.
 
 ## Setup
 
