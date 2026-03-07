@@ -1,5 +1,17 @@
 # @locusai/locus-gateway
 
+## 0.24.0
+
+### Minor Changes
+
+- Stable cron package
+  Status command output fixes
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.24.0
+
 ## 0.23.5
 
 ### Patch Changes

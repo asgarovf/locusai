@@ -1,5 +1,12 @@
 # @locusai/cli
 
+## 0.24.0
+
+### Minor Changes
+
+- Stable cron package
+  Status command output fixes
+
 ## 0.23.5
 
 ### Patch Changes
