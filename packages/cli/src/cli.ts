@@ -274,6 +274,7 @@ ${bold("Commands:")}
   ${cyan("uninstall")}         Remove an installed package
   ${cyan("packages")}          Manage installed packages (list, outdated)
   ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
+  ${cyan("skills")}            Discover and manage agent skills
   ${cyan("sandbox")}           Manage Docker sandbox lifecycle
   ${cyan("upgrade")}           Check for and install updates
 
@@ -503,6 +504,13 @@ async function main(): Promise<void> {
   if (command === "packages") {
     const { packagesCommand } = await import("./commands/packages.js");
     await packagesCommand(parsed.args, {});
+    logger.destroy();
+    return;
+  }
+
+  if (command === "skills") {
+    const { skillsCommand } = await import("./commands/skills.js");
+    await skillsCommand(parsed.args, {});
     logger.destroy();
     return;
   }
