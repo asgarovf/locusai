@@ -22,4 +22,8 @@ export { invokeLocus, invokeLocusStream } from "./invoke.js";
 export type { LocusLogger } from "./logger.js";
 export { createLogger } from "./logger.js";
 // Types
-export type { AIProvider, LocusConfig, LocusPackageManifest } from "./types.js";
+export type {
+  AIProvider,
+  LocusConfig,
+  LocusPackageManifest,
+} from "./types.js";

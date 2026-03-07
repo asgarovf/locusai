@@ -37,10 +37,7 @@ export function planKeyboard(
   sprintName: string
 ): InlineKeyboard {
   return new InlineKeyboard()
-    .text(
-      "✅ Approve Plan",
-      `${CB.APPROVE_PLAN}${planId}:${sprintName}`
-    )
+    .text("✅ Approve Plan", `${CB.APPROVE_PLAN}${planId}:${sprintName}`)
     .text("❌ Reject Plan", CB.REJECT_PLAN);
 }
 

@@ -168,7 +168,7 @@ export async function planCommand(
         `${red("✗")} Sprint name is required for plan approval.\n`
       );
       process.stderr.write(
-        `  Usage: ${bold('locus plan approve <id> <sprintname>')}\n`
+        `  Usage: ${bold("locus plan approve <id> <sprintname>")}\n`
       );
       return;
     }

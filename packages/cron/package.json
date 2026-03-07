@@ -1,0 +1,59 @@
+{
+  "name": "@locusai/locus-cron",
+  "version": "0.23.3",
+  "description": "Standalone cron job scheduler for Locus with PM2 worker support",
+  "type": "module",
+  "bin": {
+    "locus-cron": "./bin/locus-cron.js"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "locus": {
+    "displayName": "Cron",
+    "description": "Standalone cron job scheduler with human-readable intervals",
+    "commands": [
+      "cron"
+    ],
+    "version": "0.1.0"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --outfile bin/locus-cron.js --target node && bun build ./src/index.ts --outdir ./dist --target node --format esm && bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "clean": "rm -rf dist bin node_modules"
+  },
+  "dependencies": {
+    "@locusai/locus-pm2": "^0.23.3",
+    "@locusai/sdk": "^0.23.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "locusai-package",
+    "locus",
+    "cron"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

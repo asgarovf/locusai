@@ -28,6 +28,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/terms`,
       lastModified: new Date("2026-01-15"),
     },
+    {
+      url: `${baseUrl}/packages`,
+      lastModified: new Date("2026-02-28"),
+    },
   ];
 
   return routes;
