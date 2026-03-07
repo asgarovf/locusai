@@ -335,6 +335,7 @@ function printHelp(): void {
   `);
 }
 
+export { resolveAdapters } from "./adapters/index.js";
 export { formatInterval, parseSchedule } from "./parse-schedule.js";
 // Re-export types for programmatic use
 export { CronScheduler } from "./scheduler.js";
