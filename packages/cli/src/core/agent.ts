@@ -440,9 +440,7 @@ async function createIssuePR(
     return prNumber;
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : String(e);
-    process.stderr.write(
-      `  ${red("✗")} Failed to create PR: ${errorMsg}\n`
-    );
+    process.stderr.write(`  ${red("✗")} Failed to create PR: ${errorMsg}\n`);
     return undefined;
   }
 }
