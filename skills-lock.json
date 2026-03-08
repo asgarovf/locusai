@@ -2,17 +2,17 @@
   "version": 1,
   "skills": {
     "code-review": {
-      "source": "locusai/skills/code-review/SKILL.md",
+      "source": "asgarovf/locusai/skills/code-review/SKILL.md",
       "sourceType": "github",
       "computedHash": "a0d8668746db9831c82ce52c73a8c3de13816aead983281626eb2dc24107d143"
     },
     "find-skills": {
-      "source": "locusai/skills/find-skills/SKILL.md",
+      "source": "asgarovf/locusai/skills/find-skills/SKILL.md",
       "sourceType": "github",
       "computedHash": "e90e334dae657c73dd151b48a6485f592730ab0706933a4efc1026a39eb4684f"
     },
     "frontend-design": {
-      "source": "locusai/skills/frontend-design/SKILL.md",
+      "source": "asgarovf/locusai/skills/frontend-design/SKILL.md",
       "sourceType": "github",
       "computedHash": "798cf94bb939719759576fc2c71a2e6b182a740f241294e4385afdd9b6e20d47"
     }

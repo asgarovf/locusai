@@ -19,7 +19,7 @@ const ROOT = resolve(import.meta.dir, "..");
 const SKILLS_DIR = join(ROOT, "skills");
 const REGISTRY_PATH = join(ROOT, "registry.json");
 const LOCK_PATH = join(ROOT, "skills-lock.json");
-const REGISTRY_REPO = "locusai/skills";
+const REGISTRY_REPO = "asgarovf/locusai";
 
 // ---------------------------------------------------------------------------
 // Frontmatter parser (avoids external YAML dependency)
@@ -121,7 +121,7 @@ function main() {
       process.exit(1);
     }
 
-    const path = `${skillDir}/SKILL.md`;
+    const path = `skills/${skillDir}/SKILL.md`;
     const source = `${REGISTRY_REPO}/${path}`;
     const hash = createHash("sha256").update(content).digest("hex");
 

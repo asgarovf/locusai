@@ -33,8 +33,8 @@ export interface SkillLockFile {
 
 // ---- Constants -------------------------------------------------------------
 
-export const REGISTRY_REPO = "locusai/skills";
-export const REGISTRY_BRANCH = "main";
+export const REGISTRY_REPO = "asgarovf/locusai";
+export const REGISTRY_BRANCH = "master";
 export const SKILLS_LOCK_FILENAME = "skills-lock.json";
 export const CLAUDE_SKILLS_DIR = ".claude/skills";
 export const AGENTS_SKILLS_DIR = ".agents/skills";
