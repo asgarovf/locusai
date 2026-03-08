@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.25.3
+
+### Patch Changes
+
+- add atomic skill install with rollback
+
 ## 0.25.2
 
 ### Patch Changes

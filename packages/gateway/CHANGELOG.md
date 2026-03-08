@@ -1,5 +1,13 @@
 # @locusai/locus-gateway
 
+## 0.25.3
+
+### Patch Changes
+
+- add atomic skill install with rollback
+- Updated dependencies
+  - @locusai/sdk@0.25.3
+
 ## 0.25.2
 
 ### Patch Changes

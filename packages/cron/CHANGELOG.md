@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.25.3
+
+### Patch Changes
+
+- add atomic skill install with rollback
+- Updated dependencies
+  - @locusai/locus-pm2@0.25.3
+  - @locusai/sdk@0.25.3
+
 ## 0.25.2
 
 ### Patch Changes
