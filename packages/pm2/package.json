@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-pm2",
-  "version": "0.24.9",
+  "version": "0.25.0",
   "description": "Unified PM2 process management for Locus platform packages",
   "type": "module",
   "main": "./dist/index.cjs",

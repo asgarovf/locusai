@@ -1,5 +1,13 @@
 # @locusai/locus-pm2
 
+## 0.25.0
+
+### Minor Changes
+
+- Add hearbeat on worker package
+  Locus skills
+  Add routing to cron package
+
 ## 0.24.9
 
 ### Patch Changes
