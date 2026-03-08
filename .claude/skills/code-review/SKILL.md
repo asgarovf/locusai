@@ -4,6 +4,7 @@ description: Conduct thorough, constructive code reviews for quality and securit
 allowed-tools: [Read, Grep, Glob]
 tags: [code-review, code-quality, security, best-practices, PR-review]
 platforms: [Claude, ChatGPT, Gemini]
+author: locusai
 ---
 
 # Code Review
