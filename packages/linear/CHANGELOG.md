@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.25.2
+
+### Patch Changes
+
+- update skills registry repo and paths to asgarovf/locusai
+- Updated dependencies
+  - @locusai/sdk@0.25.2
+
 ## 0.25.1
 
 ### Patch Changes

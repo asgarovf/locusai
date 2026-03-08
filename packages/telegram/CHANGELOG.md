@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.25.2
+
+### Patch Changes
+
+- update skills registry repo and paths to asgarovf/locusai
+- Updated dependencies
+  - @locusai/locus-gateway@0.25.2
+  - @locusai/locus-pm2@0.25.2
+  - @locusai/sdk@0.25.2
+
 ## 0.25.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @locusai/locus-pm2
 
+## 0.25.2
+
+### Patch Changes
+
+- update skills registry repo and paths to asgarovf/locusai
+
 ## 0.25.1
 
 ### Patch Changes
