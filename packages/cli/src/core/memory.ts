@@ -4,7 +4,7 @@
  */
 
 import { mkdir, readFile, stat, writeFile, appendFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -85,6 +85,25 @@ export async function readAllMemory(projectRoot: string): Promise<string> {
     const content = await readMemoryFile(projectRoot, category);
     if (content.trim()) {
       parts.push(content.trim());
+    }
+  }
+
+  return parts.join("\n\n");
+}
+
+/** Synchronous version of readAllMemory — for use in prompt builders that are sync. */
+export function readAllMemorySync(projectRoot: string): string {
+  const dir = getMemoryDir(projectRoot);
+  if (!existsSync(dir)) return "";
+
+  const parts: string[] = [];
+  for (const meta of Object.values(MEMORY_CATEGORIES)) {
+    const filePath = join(dir, meta.file);
+    try {
+      const content = readFileSync(filePath, "utf-8").trim();
+      if (content) parts.push(content);
+    } catch {
+      // skip missing files
     }
   }
 
