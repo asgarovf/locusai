@@ -210,19 +210,6 @@ describe("memory", () => {
       expect(conv).toContain("Some unknown category entry");
     });
 
-    it("skips duplicate entries (idempotent)", async () => {
-      writeLearnings("- **[Architecture]**: SDK exports shared types\n");
-
-      // First migration
-      const first = await migrateFromLearnings(TEST_DIR);
-      expect(first.migrated).toBe(1);
-
-      // Second migration — same content, should skip
-      const second = await migrateFromLearnings(TEST_DIR);
-      expect(second.migrated).toBe(0);
-      expect(second.skipped).toBe(1);
-    });
-
     it("skips duplicates within the same batch", async () => {
       writeLearnings(
         [
@@ -236,17 +223,25 @@ describe("memory", () => {
       expect(result.skipped).toBe(1);
     });
 
-    it("does not modify original LEARNINGS.md", async () => {
-      const original = "# Learnings\n- **[Architecture]**: Some entry\n";
-      writeLearnings(original);
+    it("deletes LEARNINGS.md after successful migration", async () => {
+      writeLearnings("- **[Architecture]**: Some entry\n");
 
       await migrateFromLearnings(TEST_DIR);
 
-      const after = readFileSync(
-        join(TEST_DIR, ".locus", "LEARNINGS.md"),
-        "utf-8"
-      );
-      expect(after).toBe(original);
+      expect(existsSync(join(TEST_DIR, ".locus", "LEARNINGS.md"))).toBe(false);
+    });
+
+    it("returns zeros when LEARNINGS.md was already deleted", async () => {
+      writeLearnings("- **[Architecture]**: SDK exports shared types\n");
+
+      // First migration — migrates and deletes
+      const first = await migrateFromLearnings(TEST_DIR);
+      expect(first.migrated).toBe(1);
+
+      // Second migration — file is gone
+      const second = await migrateFromLearnings(TEST_DIR);
+      expect(second.migrated).toBe(0);
+      expect(second.skipped).toBe(0);
     });
 
     it("handles multi-line entries", async () => {

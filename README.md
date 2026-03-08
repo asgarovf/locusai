@@ -280,7 +280,6 @@ After `locus init`, your project gets a `.locus/` directory:
 ├── config.json        # Project settings (auto-detected)
 ├── run-state/         # Per-sprint execution state for recovery
 ├── LOCUS.md           # Agent instructions & project context
-├── LEARNINGS.md       # Legacy lessons file (migrated to memory/)
 ├── memory/            # Structured memory system (5 category files)
 ├── sessions/          # REPL session history
 ├── discussions/       # AI discussion archives

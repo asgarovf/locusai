@@ -51,7 +51,7 @@ locus run 42
 locus run 42 43 44
 ```
 
-The agent reads the issue description, your project instructions (`LOCUS.md`), accumulated learnings (`LEARNINGS.md`), and repository context to build a rich prompt. It then delegates to an AI provider (Claude or Codex) that makes the actual code changes.
+The agent reads the issue description, your project instructions (`LOCUS.md`), accumulated learnings (`.locus/memory/`), and repository context to build a rich prompt. It then delegates to an AI provider (Claude or Codex) that makes the actual code changes.
 
 ### 3. Review
 
@@ -148,7 +148,7 @@ graph LR
 
 **LOCUS.md** is the primary file you edit to teach the AI about your project. It lives at the repository root and is read before every execution.
 
-**`.locus/memory/`** stores lessons learned during development, organized into five category files. Entries are captured automatically after sessions and can be managed via `locus memory`. The memory system replaces the legacy flat `LEARNINGS.md` approach with structured, searchable categories.
+**`.locus/memory/`** stores lessons learned during development, organized into five category files. Entries are captured automatically after sessions and can be managed via `locus memory`.
 
 ---
 
@@ -185,7 +185,6 @@ After initialization, Locus creates a `.locus/` directory in your project root:
   config.json          # Project configuration (provider, model, sprint settings)
   run-state/           # Active run progress, per-sprint (auto-managed)
   LOCUS.md             # Project instructions for AI agents
-  LEARNINGS.md         # Legacy learnings (migrated to memory/)
   memory/              # Structured memory system (5 category files)
   logs/                # Execution logs
   sessions/            # REPL session history

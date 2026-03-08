@@ -446,7 +446,7 @@ async function startDiscussion(
 
 const MEMORY_MAX_CHARS = 2000;
 
-/** Reads structured memory, falling back to LEARNINGS.md. */
+/** Reads structured memory from `.locus/memory/`. */
 function loadPastMemory(projectRoot: string): string {
   const memoryDir = getMemoryDir(projectRoot);
   if (existsSync(memoryDir)) {
@@ -456,14 +456,6 @@ function loadPastMemory(projectRoot: string): string {
         ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
         : content;
     }
-  }
-  // Fallback: flat LEARNINGS.md
-  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
-  if (existsSync(learningsPath)) {
-    const content = readFileSync(learningsPath, "utf-8");
-    return content.length > MEMORY_MAX_CHARS
-      ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
-      : content;
   }
   return "";
 }
@@ -490,7 +482,7 @@ function buildDiscussionPrompt(
     );
   }
 
-  // Include structured memory (or fallback to LEARNINGS.md)
+  // Include structured memory
   const memoryContent = loadPastMemory(projectRoot);
   if (memoryContent) {
     parts.push(`<past-learnings>\n${memoryContent}\n</past-learnings>`);

@@ -7,8 +7,7 @@
  * 3. Create .locus/ directory structure
  * 4. Generate config.json with detected values
  * 5. Generate LOCUS.md template
- * 6. Generate LEARNINGS.md
- * 6b. Create .locus/memory/ and migrate LEARNINGS.md if needed
+ * 6. Create .locus/memory/ and migrate LEARNINGS.md if present
  * 7. Generate .sandboxignore
  * 8. Create GitHub labels if they don't exist
  * 9. Update .gitignore
@@ -229,21 +228,7 @@ service-account*.json
 docker-compose.override.yml
 `;
 
-const LEARNINGS_MD_TEMPLATE = `# Learnings
-
-This file captures important lessons, decisions, and corrections made during development.
-It is read by AI agents before every task to avoid repeating mistakes and to follow established patterns.
-
-<!-- Add learnings below this line. Format: - **[Category]**: Description -->
-`;
-
-const GITIGNORE_ENTRIES = [
-  "",
-  "# Locus",
-  ".locus/",
-  "!.locus/LEARNINGS.md",
-  "!.locus/memory/",
-];
+const GITIGNORE_ENTRIES = ["", "# Locus", ".locus/", "!.locus/memory/"];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
 
@@ -319,9 +304,8 @@ export async function initCommand(cwd: string): Promise<void> {
     );
   }
 
-  // 4c. Migrate LEARNINGS.md → memory/ if applicable
-  const learningsExists = existsSync(join(locusDir, "LEARNINGS.md"));
-  if (learningsExists && !memoryDirExists) {
+  // 4c. Auto-migrate LEARNINGS.md → memory/ if present (and delete it)
+  if (existsSync(join(locusDir, "LEARNINGS.md"))) {
     const result = await migrateFromLearnings(cwd);
     if (result.migrated > 0) {
       process.stderr.write(
@@ -332,6 +316,9 @@ export async function initCommand(cwd: string): Promise<void> {
       process.stderr.write(
         `${dim("○")} Skipped ${result.skipped} duplicate entries during migration\n`
       );
+    }
+    if (result.migrated > 0 || result.skipped > 0) {
+      process.stderr.write(`${green("✓")} Removed legacy LEARNINGS.md\n`);
     }
   }
 
@@ -387,18 +374,7 @@ export async function initCommand(cwd: string): Promise<void> {
     process.stderr.write(`${dim("○")} LOCUS.md already exists (preserved)\n`);
   }
 
-  // 7. Generate LEARNINGS.md (only if not exists)
-  const learningsMdPath = join(locusDir, "LEARNINGS.md");
-  if (!existsSync(learningsMdPath)) {
-    writeFileSync(learningsMdPath, LEARNINGS_MD_TEMPLATE, "utf-8");
-    process.stderr.write(`${green("✓")} Generated LEARNINGS.md\n`);
-  } else {
-    process.stderr.write(
-      `${dim("○")} LEARNINGS.md already exists (preserved)\n`
-    );
-  }
-
-  // 8. Generate .sandboxignore (only if not exists)
+  // 7. Generate .sandboxignore (only if not exists)
   const sandboxIgnorePath = join(cwd, ".sandboxignore");
   if (!existsSync(sandboxIgnorePath)) {
     writeFileSync(sandboxIgnorePath, SANDBOXIGNORE_TEMPLATE, "utf-8");

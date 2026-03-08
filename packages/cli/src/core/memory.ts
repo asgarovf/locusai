@@ -4,7 +4,14 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { appendFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  mkdir,
+  readFile,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -158,7 +165,7 @@ function resolveLearningsCategory(tag: string): string {
  * - Entries matching `- **[Category]**: Text` are extracted
  * - Multi-line entries (text spanning until the next `- **[` marker) are captured
  * - Duplicates (entries already present in target files) are skipped
- * - Original LEARNINGS.md is NOT modified
+ * - LEARNINGS.md is deleted after successful migration
  */
 export async function migrateFromLearnings(
   projectRoot: string
@@ -230,6 +237,15 @@ export async function migrateFromLearnings(
       (existingContent[entry.category] ?? "") +
       `- **[${MEMORY_CATEGORIES[entry.category]?.title}]**: ${entry.text}\n`;
     migrated++;
+  }
+
+  // Remove LEARNINGS.md after successful migration
+  if (migrated > 0 || skipped > 0) {
+    try {
+      await unlink(learningsPath);
+    } catch {
+      // Ignore if already deleted
+    }
   }
 
   return { migrated, skipped };

@@ -139,7 +139,7 @@ export function buildReplPrompt(
 
 // ─── Section Builders ───────────────────────────────────────────────────────
 
-/** Reads structured memory from `.locus/memory/`, falling back to `.locus/LEARNINGS.md`. */
+/** Reads structured memory from `.locus/memory/`. */
 function loadMemoryContent(projectRoot: string): string {
   const memoryDir = getMemoryDir(projectRoot);
   if (existsSync(memoryDir)) {
@@ -149,14 +149,6 @@ function loadMemoryContent(projectRoot: string): string {
         ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
         : content;
     }
-  }
-
-  // Fallback: read flat LEARNINGS.md
-  const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
-  if (learnings) {
-    return learnings.length > MEMORY_MAX_CHARS
-      ? `${learnings.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
-      : learnings;
   }
 
   return "";

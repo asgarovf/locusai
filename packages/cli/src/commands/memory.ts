@@ -6,7 +6,7 @@
  *   locus memory search <query>             Search entries by keyword
  *   locus memory stats                      Show per-category statistics
  *   locus memory reset [--confirm]          Clear all entries (preserve headers)
- *   locus memory migrate                    Migrate LEARNINGS.md → memory/
+ *   locus memory migrate                    Migrate legacy LEARNINGS.md → memory/ (auto-deletes)
  */
 
 import { existsSync } from "node:fs";
@@ -33,7 +33,7 @@ ${bold("Usage:")}
   locus memory search <query>             Search entries by keyword
   locus memory stats                      Show per-category statistics
   locus memory reset [--confirm]          Clear all entries (preserve headers)
-  locus memory migrate                    Migrate LEARNINGS.md → memory/
+  locus memory migrate                    Migrate legacy LEARNINGS.md → memory/
 
 ${bold("Categories:")}
   architecture, conventions, decisions, preferences, debugging
@@ -44,7 +44,7 @@ ${bold("Examples:")}
   locus memory search "sandbox"           ${dim("# Search for 'sandbox'")}
   locus memory stats                      ${dim("# Show entry counts and sizes")}
   locus memory reset --confirm            ${dim("# Clear all entries")}
-  locus memory migrate                    ${dim("# Run LEARNINGS.md migration")}
+  locus memory migrate                    ${dim("# Migrate legacy LEARNINGS.md")}
 `);
 }
 
@@ -231,13 +231,6 @@ async function handleStats(projectRoot: string): Promise<void> {
     `\n  ${bold("Total:")} ${totalEntries} entries, ${formatSize(totalSize)}\n`
   );
 
-  // Check migration status
-  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
-  const hasMigrated = !existsSync(learningsPath) || totalEntries > 0;
-  process.stderr.write(
-    `  ${bold("Migration:")} ${hasMigrated ? green("done") : yellow("pending — run `locus memory migrate`")}\n`
-  );
-
   process.stderr.write("\n");
 }
 
@@ -322,6 +315,9 @@ async function handleMigrate(projectRoot: string): Promise<void> {
     process.stderr.write(
       `${dim("○")} Skipped ${result.skipped} duplicate entries\n`
     );
+  }
+  if (result.migrated > 0 || result.skipped > 0) {
+    process.stderr.write(`${green("✓")} Removed legacy LEARNINGS.md\n`);
   }
   if (result.migrated === 0 && result.skipped === 0) {
     process.stderr.write(

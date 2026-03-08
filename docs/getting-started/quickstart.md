@@ -24,7 +24,7 @@ locus init
 
 Expected outcome:
 
-- `.locus/` is created with `config.json`, `LOCUS.md`, `LEARNINGS.md`, and `memory/` (structured learnings)
+- `.locus/` is created with `config.json`, `LOCUS.md`, and `memory/` (structured learnings)
 - GitHub labels are created or verified (`locus:*`, `p:*`, `type:*`, `agent:managed`)
 - Your repository is ready for issue-to-PR execution
 

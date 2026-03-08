@@ -13,7 +13,7 @@ locus memory list [--category <name>]    # List all memory entries
 locus memory search <query>              # Search entries by keyword
 locus memory stats                       # Show per-category statistics
 locus memory reset [--confirm]           # Clear all entries (preserve headers)
-locus memory migrate                     # Migrate LEARNINGS.md → memory/
+locus memory migrate                     # Migrate legacy LEARNINGS.md → memory/
 ```
 
 ---
@@ -81,7 +81,7 @@ locus memory reset --confirm    # Skip confirmation
 
 ### Migrate from LEARNINGS.md
 
-One-way migration from the legacy `.locus/LEARNINGS.md` format to the structured memory directory.
+One-way migration from the legacy `.locus/LEARNINGS.md` format to the structured memory directory. The legacy file is automatically deleted after migration.
 
 ```bash
 locus memory migrate
@@ -90,7 +90,7 @@ locus memory migrate
 - Parses entries matching `- **[Category]**: Text` from `LEARNINGS.md`
 - Maps old category tags to new category files automatically
 - Deduplicates entries (skips if already present)
-- Does **not** modify the original `LEARNINGS.md`
+- Deletes `LEARNINGS.md` after successful migration
 
 ---
 
@@ -125,7 +125,7 @@ Memory files live in `.locus/memory/` and are tracked in git (excluded from `.gi
 ## Examples
 
 ```bash
-# See all accumulated learnings
+# See all memory entries
 locus memory list
 
 # Find entries about Docker or sandboxing
@@ -134,7 +134,7 @@ locus memory search "docker"
 # Check how many entries exist per category
 locus memory stats
 
-# Migrate from legacy LEARNINGS.md after upgrading
+# Migrate from legacy LEARNINGS.md (auto-deletes after migration)
 locus memory migrate
 
 # Clear all memory and start fresh

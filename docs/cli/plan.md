@@ -4,7 +4,7 @@ description: AI-powered sprint planning. Break down a goal into structured GitHu
 
 # locus plan
 
-Use AI to break down a high-level goal into actionable GitHub issues. The AI analyzes your project context (from `LOCUS.md` and `LEARNINGS.md`) and generates structured issues with titles, descriptions, priorities, types, dependencies, and execution order.
+Use AI to break down a high-level goal into actionable GitHub issues. The AI analyzes your project context (from `LOCUS.md` and `.locus/memory/`) and generates structured issues with titles, descriptions, priorities, types, dependencies, and execution order.
 
 ## Usage
 
@@ -42,7 +42,7 @@ locus plan "Add dark mode support" --dry-run
 The AI prompt includes:
 
 - Your project context from `.locus/LOCUS.md`
-- Past learnings from `.locus/LEARNINGS.md`
+- Past learnings from `.locus/memory/`
 - Instructions to produce independently executable issues with acceptance criteria
 
 Each generated issue receives:

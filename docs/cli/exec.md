@@ -44,7 +44,7 @@ The REPL provides:
 - Multi-line input support
 - Tab completion for slash commands
 - Session auto-save
-- Full project context (reads `LOCUS.md`, `LEARNINGS.md`, and repository state)
+- Full project context (reads `LOCUS.md`, `.locus/memory/`, and repository state)
 
 ### One-Shot Mode
 
