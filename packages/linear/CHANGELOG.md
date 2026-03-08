@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.25.1
+
+### Patch Changes
+
+- expand READMEs and add skills registry with generation script
+- Updated dependencies
+  - @locusai/sdk@0.25.1
+
 ## 0.25.0
 
 ### Minor Changes

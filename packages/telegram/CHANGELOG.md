@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.25.1
+
+### Patch Changes
+
+- expand READMEs and add skills registry with generation script
+- Updated dependencies
+  - @locusai/locus-gateway@0.25.1
+  - @locusai/locus-pm2@0.25.1
+  - @locusai/sdk@0.25.1
+
 ## 0.25.0
 
 ### Minor Changes

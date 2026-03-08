@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.25.1
+
+### Patch Changes
+
+- expand READMEs and add skills registry with generation script
+
 ## 0.25.0
 
 ### Minor Changes
