@@ -42,6 +42,7 @@ AI coding agents are powerful — but they're point solutions. You still need to
 - **End-to-end orchestration** — Plan, execute, review, and iterate in one tool
 - **GitHub-native** — No new accounts, no dashboards, no vendor lock-in. Everything lives in Issues, Milestones, Labels, and PRs
 - **Unified sandboxing layer** — Run Claude and Codex through the same Docker-backed sandbox interface
+- **Extensible** — Install community packages and agent skills, or build your own with the SDK
 
 ## Quick Start
 
@@ -104,7 +105,7 @@ locus iterate             →  Agents address review feedback until ready to mer
 Sequential task execution on a single branch. Each task builds on the previous one's output. Resume interrupted runs with `--resume` — no re-executing completed work.
 
 ### AI sprint planning
-Describe a goal in plain English. AI decomposes it into structured GitHub issues with priority, type, and execution order — ready for `locus run`.
+Describe a goal in plain English. AI decomposes it into structured GitHub issues with priority, type, and execution order — ready for `locus run`. Refine plans with feedback before approving.
 
 ### Parallel worktrees
 Run standalone issues concurrently using git worktrees. Each issue gets its own isolated branch. Up to 3 concurrent agents by default (configurable via `agent.maxParallel`).
@@ -118,8 +119,14 @@ Review pull requests with AI-powered analysis. Posts inline comments directly on
 ### Iterate on feedback
 Agents re-execute tasks with PR review comments as context, updating code until it's ready to merge. Close the loop without manual intervention.
 
+### AI-powered commits
+Generate conventional commit messages from staged changes. AI analyzes diffs and recent history to produce descriptive commits.
+
 ### Docker sandbox isolation
 Claude and Codex use the same Docker-backed sandboxing layer. Locus syncs your workspace into sandbox execution while enforcing `.sandboxignore` exclusions to keep sensitive files controlled.
+
+### Agent skills
+Install reusable agent skills from a centralized registry. Skills extend AI agent capabilities across your project.
 
 ### Extensible packages
 Install community packages via `locus install <package>`. Build your own with the [`@locusai/sdk`](https://www.npmjs.com/package/@locusai/sdk) and [submit a pull request](./packages/sdk/PACKAGE_GUIDE.md).
@@ -139,7 +146,7 @@ Install community packages via `locus install <package>`. Build your own with th
 | Command | Alias | Description |
 |---------|-------|-------------|
 | `locus issue` | `locus i` | Create, list, show, label, and close GitHub issues |
-| `locus sprint` | `locus s` | Create, list, show, activate, reorder, and close sprints |
+| `locus sprint` | `locus s` | Create, list, show, reorder, and close sprints |
 | `locus plan` | | AI-powered sprint planning from a goal description |
 
 ### Execution & Review
@@ -161,14 +168,25 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus logs` | | View, tail, and manage execution logs |
 | `locus artifacts` | | View and manage AI-generated artifacts |
 
+### Skills
+
+| Command | Description |
+|---------|-------------|
+| `locus skills` | List available agent skills |
+| `locus skills install <name>` | Install a skill from the registry |
+| `locus skills remove <name>` | Uninstall a skill |
+| `locus skills update [name]` | Update all or a specific skill |
+| `locus skills info <name>` | Show skill details |
+
 ### Packages
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `locus install` | | Install a community package from npm |
-| `locus uninstall` | | Remove an installed package |
+| `locus install <name>` | | Install a community package from npm |
+| `locus uninstall <name>` | | Remove an installed package |
 | `locus packages` | | List installed packages |
-| `locus pkg <name>` | | Run a package-provided command |
+| `locus pkg <name> [cmd]` | | Run a package-provided command |
+| `locus create <name>` | | Scaffold a new community package |
 
 ### Sandbox Management
 
@@ -218,6 +236,40 @@ locus exec
 locus exec "Refactor the auth middleware to use JWT"
 ```
 
+## Packages
+
+Locus has a modular package ecosystem. **Core packages** provide the foundation, and **community packages** extend Locus with integrations and new capabilities.
+
+### Core Packages
+
+These packages power the Locus platform and are maintained by the core team:
+
+| Package | npm | Description |
+|---------|-----|-------------|
+| [`@locusai/cli`](./packages/cli) | [![npm](https://img.shields.io/npm/v/@locusai/cli?color=blue&label=)](https://www.npmjs.com/package/@locusai/cli) | Main CLI — plan, run, review, iterate |
+| [`@locusai/sdk`](./packages/sdk) | [![npm](https://img.shields.io/npm/v/@locusai/sdk?color=blue&label=)](https://www.npmjs.com/package/@locusai/sdk) | SDK for building community packages |
+| [`@locusai/locus-gateway`](./packages/gateway) | [![npm](https://img.shields.io/npm/v/@locusai/locus-gateway?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-gateway) | Channel-agnostic message gateway for platform adapters |
+| [`@locusai/locus-pm2`](./packages/pm2) | [![npm](https://img.shields.io/npm/v/@locusai/locus-pm2?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-pm2) | Unified PM2 process management for background workers |
+
+### Community Packages
+
+Installable via `locus install <name>`. Each package runs independently — no other packages required.
+
+| Package | npm | Install | Description |
+|---------|-----|---------|-------------|
+| [`@locusai/locus-telegram`](./packages/telegram) | [![npm](https://img.shields.io/npm/v/@locusai/locus-telegram?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-telegram) | `locus install telegram` | Remote-control Locus via Telegram bot |
+| [`@locusai/locus-cron`](./packages/cron) | [![npm](https://img.shields.io/npm/v/@locusai/locus-cron?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-cron) | `locus install cron` | Recurring tasks with output routing (local, Telegram, webhooks) |
+| [`@locusai/locus-linear`](./packages/linear) | [![npm](https://img.shields.io/npm/v/@locusai/locus-linear?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-linear) | `locus install linear` | Linear integration — sync issues, AI workflows, bidirectional management |
+
+### Building Your Own
+
+Want to build a package? See the [Package Author Guide](./packages/sdk/PACKAGE_GUIDE.md) and submit a pull request.
+
+```bash
+# Scaffold a new package
+locus create my-package
+```
+
 ## Project Structure
 
 After `locus init`, your project gets a `.locus/` directory:
@@ -225,7 +277,7 @@ After `locus init`, your project gets a `.locus/` directory:
 ```
 .locus/
 ├── config.json        # Project settings (auto-detected)
-├── run-state.json     # Execution state for recovery
+├── run-state/         # Per-sprint execution state for recovery
 ├── LOCUS.md           # Agent instructions & project context
 ├── LEARNINGS.md       # Accumulated lessons from past runs
 ├── sessions/          # REPL session history
@@ -233,6 +285,7 @@ After `locus init`, your project gets a `.locus/` directory:
 ├── artifacts/         # AI-generated reports
 ├── plans/             # Planning documents
 ├── logs/              # Execution logs (NDJSON)
+├── cron/              # Cron job output logs (if cron package installed)
 └── worktrees/         # Git worktrees for parallel execution
 ```
 
@@ -296,19 +349,6 @@ bun run lint && bun run typecheck
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full development setup, architecture details, and release process.
-
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| [`@locusai/cli`](./packages/cli) | Main CLI |
-| [`@locusai/sdk`](./packages/sdk) | SDK for building community packages |
-| [`@locusai/locus-gateway`](./packages/gateway) | Channel-agnostic message gateway for platform adapters |
-| [`@locusai/locus-pm2`](./packages/pm2) | Unified PM2 process management for platform packages |
-| [`@locusai/locus-telegram`](./packages/telegram) | Remote-control Locus via Telegram |
-| [`@locusai/www`](./apps/www) | Documentation website |
-
-Want to build a package? See the [Package Author Guide](./packages/sdk/PACKAGE_GUIDE.md) and submit a pull request.
 
 ## License
 

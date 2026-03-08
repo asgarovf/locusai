@@ -28,8 +28,8 @@ export interface CronConfig {
 export interface ActiveCron {
   /** Cron config. */
   config: CronJobConfig;
-  /** The interval timer handle. */
-  timer: ReturnType<typeof setInterval>;
+  /** The timer handle (setTimeout for deferred first run, then setInterval). */
+  timer: ReturnType<typeof setInterval> | ReturnType<typeof setTimeout>;
   /** Interval in milliseconds. */
   intervalMs: number;
   /** Timestamp of last execution, or null if never run. */

@@ -3,6 +3,10 @@
  *
  * Each cron job executes a shell command on a human-readable interval
  * and writes output to a per-job log file in .locus/cron/<job-name>/.
+ *
+ * Last-run timestamps are persisted to `.locus/cron/state.json` so that
+ * restarting the process does not cause redundant executions within the
+ * same interval window.
  */
 
 import { exec as execCb } from "node:child_process";
@@ -12,6 +16,7 @@ import { promisify } from "node:util";
 import { resolveAdapters } from "./adapters/index.js";
 import { ResultBatcher } from "./batcher.js";
 import { parseSchedule } from "./parse-schedule.js";
+import { CronStateManager } from "./state.js";
 import type {
   ActiveCron,
   CronConfig,
@@ -26,6 +31,7 @@ export class CronScheduler {
   private running = false;
   private cronBaseDir: string;
   private batcher: ResultBatcher;
+  private stateManager: CronStateManager;
 
   constructor(
     private config: CronConfig,
@@ -36,6 +42,7 @@ export class CronScheduler {
       ? config.batchWindowSeconds * 1000
       : undefined;
     this.batcher = new ResultBatcher(cwd, batchWindowMs);
+    this.stateManager = new CronStateManager(this.cronBaseDir);
   }
 
   /** Start all configured cron jobs. */
@@ -63,19 +70,67 @@ export class CronScheduler {
         mkdirSync(jobDir, { recursive: true });
       }
 
-      // Execute immediately on start, then on interval
-      this.executeCron(cronConfig.name);
+      const lastRun = this.stateManager.getLastRun(cronConfig.name);
+      const now = Date.now();
 
-      const timer = setInterval(() => {
+      if (lastRun) {
+        const elapsed = now - lastRun.getTime();
+        const remaining = intervalMs - elapsed;
+
+        if (remaining > 0) {
+          // Not due yet — schedule for the remaining time, then switch to setInterval
+          this.logForJob(
+            cronConfig.name,
+            `[info] Last ran ${Math.round(elapsed / 1000)}s ago, next run in ${Math.round(remaining / 1000)}s`
+          );
+
+          const timer = setTimeout(() => {
+            this.executeCron(cronConfig.name);
+            // Switch to regular interval
+            const active = this.activeCrons.get(cronConfig.name);
+            if (active) {
+              active.timer = setInterval(() => {
+                this.executeCron(cronConfig.name);
+              }, intervalMs);
+            }
+          }, remaining);
+
+          this.activeCrons.set(cronConfig.name, {
+            config: cronConfig,
+            timer,
+            intervalMs,
+            lastRun,
+          });
+        } else {
+          // Overdue — run immediately, then start interval
+          this.executeCron(cronConfig.name);
+
+          const timer = setInterval(() => {
+            this.executeCron(cronConfig.name);
+          }, intervalMs);
+
+          this.activeCrons.set(cronConfig.name, {
+            config: cronConfig,
+            timer,
+            intervalMs,
+            lastRun: null,
+          });
+        }
+      } else {
+        // First-ever run — execute immediately, then start interval
         this.executeCron(cronConfig.name);
-      }, intervalMs);
 
-      this.activeCrons.set(cronConfig.name, {
-        config: cronConfig,
-        timer,
-        intervalMs,
-        lastRun: null,
-      });
+        const timer = setInterval(() => {
+          this.executeCron(cronConfig.name);
+        }, intervalMs);
+
+        this.activeCrons.set(cronConfig.name, {
+          config: cronConfig,
+          timer,
+          intervalMs,
+          lastRun: null,
+        });
+      }
     }
 
     this.running = true;
@@ -89,6 +144,7 @@ export class CronScheduler {
     if (!this.running) return;
 
     for (const active of this.activeCrons.values()) {
+      clearTimeout(active.timer);
       clearInterval(active.timer);
     }
     this.activeCrons.clear();
@@ -138,6 +194,9 @@ export class CronScheduler {
       const errMsg = error instanceof Error ? error.message : String(error);
       output = errMsg;
     }
+
+    // Persist last-run timestamp to disk
+    this.stateManager.recordRun(name, active.lastRun);
 
     const result: CronJobResult = {
       jobId: name,

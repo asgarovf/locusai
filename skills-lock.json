@@ -2,19 +2,19 @@
   "version": 1,
   "skills": {
     "code-review": {
-      "source": "supercent-io/skills-template",
+      "source": "locusai/skills/code-review/SKILL.md",
       "sourceType": "github",
-      "computedHash": "aebf1b03bf6d52d76a7d99505dc1b3ae427908e36d2c9ee00469050d784fa5a8"
+      "computedHash": "a0d8668746db9831c82ce52c73a8c3de13816aead983281626eb2dc24107d143"
     },
     "find-skills": {
-      "source": "vercel-labs/skills",
+      "source": "locusai/skills/find-skills/SKILL.md",
       "sourceType": "github",
-      "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
+      "computedHash": "e90e334dae657c73dd151b48a6485f592730ab0706933a4efc1026a39eb4684f"
     },
     "frontend-design": {
-      "source": "anthropics/skills",
+      "source": "locusai/skills/frontend-design/SKILL.md",
       "sourceType": "github",
-      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+      "computedHash": "798cf94bb939719759576fc2c71a2e6b182a740f241294e4385afdd9b6e20d47"
     }
   }
 }
