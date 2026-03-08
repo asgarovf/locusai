@@ -145,7 +145,11 @@ function main() {
 
   // Write registry.json
   const registry = { version: 1, skills: registrySkills };
-  writeFileSync(REGISTRY_PATH, `${JSON.stringify(registry, null, 2)}\n`, "utf-8");
+  writeFileSync(
+    REGISTRY_PATH,
+    `${JSON.stringify(registry, null, 2)}\n`,
+    "utf-8"
+  );
 
   // Write skills-lock.json
   const lock = { version: 1, skills: lockSkills };
