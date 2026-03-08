@@ -1238,12 +1238,21 @@ async function createSprintPR(
       try {
         execSync(
           `gh pr edit ${prNumber} --title ${JSON.stringify(prTitle)} --body-file -`,
-          { input: prBody, cwd: workDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+          {
+            input: prBody,
+            cwd: workDir,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          }
         );
-        process.stderr.write(`  ${green("✓")} Updated existing sprint PR #${prNumber}\n`);
+        process.stderr.write(
+          `  ${green("✓")} Updated existing sprint PR #${prNumber}\n`
+        );
       } catch (editErr) {
         getLogger().warn(`Failed to update sprint PR #${prNumber}: ${editErr}`);
-        process.stderr.write(`  ${yellow("⚠")} PR #${prNumber} exists but could not update: ${editErr}\n`);
+        process.stderr.write(
+          `  ${yellow("⚠")} PR #${prNumber} exists but could not update: ${editErr}\n`
+        );
       }
     } else {
       prNumber = createPR(

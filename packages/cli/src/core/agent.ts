@@ -376,9 +376,16 @@ async function createIssuePR(
       try {
         execSync(
           `gh pr edit ${prNumber} --title ${JSON.stringify(prTitle)} --body-file -`,
-          { input: prBody, cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+          {
+            input: prBody,
+            cwd: projectRoot,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          }
         );
-        process.stderr.write(`  ${green("✓")} Updated existing PR #${prNumber}\n`);
+        process.stderr.write(
+          `  ${green("✓")} Updated existing PR #${prNumber}\n`
+        );
       } catch (editErr) {
         getLogger().warn(`Failed to update PR #${prNumber}: ${editErr}`);
       }
