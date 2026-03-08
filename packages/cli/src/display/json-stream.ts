@@ -1,5 +1,5 @@
 /**
- * NDJSON event stream for VSCode extension protocol.
+ * NDJSON event stream for programmatic integration.
  * Emits structured events as newline-delimited JSON to stdout.
  */
 

@@ -325,16 +325,6 @@ Full setup and security details:
 - [Sandboxing Setup (Docker-First)](https://docs.locusai.dev/getting-started/sandboxing-setup)
 - [Security & Sandboxing](https://docs.locusai.dev/concepts/security-sandboxing)
 
-## VS Code Extension
-
-Locus includes a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=locusai.locus) with an integrated chat interface for running tasks directly from your editor.
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+L` | Open Locus chat |
-| `Ctrl+Shift+E` | Explain selected code |
-| `Ctrl+Shift+N` | New session |
-
 ## Development
 
 ```bash

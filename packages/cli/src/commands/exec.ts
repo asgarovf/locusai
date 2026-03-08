@@ -8,7 +8,7 @@
  *   locus exec sessions list          # List sessions
  *   locus exec sessions show <id>     # Show session details
  *   locus exec sessions delete <id>   # Delete session
- *   locus exec --json-stream          # NDJSON mode for VSCode extension
+ *   locus exec --json-stream          # NDJSON mode for integrations
  */
 
 import {
@@ -41,7 +41,7 @@ export async function execCommand(
     return handleSessionSubcommand(projectRoot, args.slice(1));
   }
 
-  // JSON stream mode (for VSCode extension)
+  // JSON stream mode
   if (flags.jsonStream) {
     return handleJsonStream(projectRoot, config, args, flags.sessionId);
   }

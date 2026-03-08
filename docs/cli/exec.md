@@ -1,5 +1,5 @@
 ---
-description: Interactive REPL and one-shot AI execution with session management, slash commands, and VSCode integration.
+description: Interactive REPL and one-shot AI execution with session management, slash commands, and JSON stream output.
 ---
 
 # locus exec
@@ -15,7 +15,7 @@ locus exec                           # Interactive REPL
 locus exec "<prompt>"                # One-shot mode
 locus exec -s <session-id>          # Resume a session
 locus exec sessions <subcommand>    # Manage sessions
-locus exec --json-stream "<prompt>" # NDJSON mode for VSCode
+locus exec --json-stream "<prompt>" # NDJSON mode for integrations
 ```
 
 ---
@@ -25,7 +25,7 @@ locus exec --json-stream "<prompt>" # NDJSON mode for VSCode
 | Flag | Short | Description |
 |------|-------|-------------|
 | `--session-id` | `-s` | Resume a previous session by ID |
-| `--json-stream` | | Output NDJSON events (for VSCode extension integration) |
+| `--json-stream` | | Output NDJSON events (for programmatic integration) |
 
 ---
 
@@ -116,7 +116,7 @@ locus exec sessions delete <id>
 
 ## JSON Stream Mode
 
-For integration with the Locus VSCode extension, `--json-stream` outputs NDJSON events on stdout.
+For programmatic integration, `--json-stream` outputs NDJSON events on stdout.
 
 ```bash
 locus exec --json-stream "Fix the failing tests"
