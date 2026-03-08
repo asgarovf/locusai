@@ -655,7 +655,7 @@ async function handleSingleIssue(
       `\n${bold("Running sprint issue")} ${cyan(`#${issueNumber}`)} ${dim("(sequential)")}\n\n`
     );
 
-    await executeIssue(projectRoot, {
+    const result = await executeIssue(projectRoot, {
       issueNumber,
       provider: execution.provider,
       model: execution.model,
@@ -664,6 +664,12 @@ async function handleSingleIssue(
       sandboxName: execution.sandboxName,
       containerWorkdir: execution.containerWorkdir,
     });
+
+    if (!result.success) {
+      process.stderr.write(
+        `\n${red("✗")} Issue #${issueNumber} execution failed${result.error ? `: ${result.error}` : ""}\n`
+      );
+    }
     return;
   }
 
@@ -712,6 +718,17 @@ async function handleSingleIssue(
         log.info(`Checked out ${config.agent.baseBranch}`);
       } catch {
         // Non-fatal
+      }
+
+      // Show final summary
+      if (result.prNumber) {
+        process.stderr.write(
+          `\n${green("✓")} Issue #${issueNumber} done — PR #${result.prNumber} opened\n`
+        );
+      } else if (config.agent.autoPR) {
+        process.stderr.write(
+          `\n${yellow("⚠")} Issue #${issueNumber} done — no PR was created (check errors above)\n`
+        );
       }
     } else {
       process.stderr.write(

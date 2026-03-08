@@ -27,6 +27,7 @@ import { getLogger } from "./logger.js";
 import { buildExecutionPrompt, buildFeedbackPrompt } from "./prompt-builder.js";
 import { getModelSandboxName } from "./sandbox.js";
 import {
+  commitDirtySubmodules,
   getSubmoduleChangeSummary,
   pushSubmoduleBranches,
 } from "./submodule.js";
@@ -186,7 +187,8 @@ export async function executeIssue(
   // Create PR if configured and not skipped (sprint runs use a single sprint-level PR)
   let prNumber: number | undefined;
   if (config.agent.autoPR && !options.skipPR) {
-    prNumber = await createIssuePR(projectRoot, config, issue);
+    const workDir = options.worktreePath ?? projectRoot;
+    prNumber = await createIssuePR(workDir, config, issue);
   }
 
   // Label as done
@@ -306,14 +308,47 @@ export async function iterateOnPR(
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function createIssuePR(
-  projectRoot: string,
+  workDir: string,
   config: LocusConfig,
   issue: Issue
 ): Promise<number | undefined> {
   try {
+    // Safety-net: commit any uncommitted changes left by the AI agent
+    try {
+      commitDirtySubmodules(workDir, issue.number, issue.title);
+
+      const status = execSync("git status --porcelain", {
+        cwd: workDir,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+
+      if (status) {
+        execSync("git add -A", {
+          cwd: workDir,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+
+        const message = `chore: complete #${issue.number} - ${issue.title}\n\nCo-Authored-By: LocusAgent <agent@locusai.team>`;
+        execSync("git commit -F -", {
+          input: message,
+          cwd: workDir,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+
+        process.stderr.write(
+          `  ${dim(`Committed uncommitted changes for #${issue.number}`)}\n`
+        );
+      }
+    } catch {
+      // Non-fatal — AI may have already committed everything
+    }
+
     // Check if there are commits to push
     const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", {
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
@@ -321,30 +356,32 @@ async function createIssuePR(
     const diff = execSync(
       `git diff origin/${config.agent.baseBranch}..HEAD --stat`,
       {
-        cwd: projectRoot,
+        cwd: workDir,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
       }
     ).trim();
 
     if (!diff) {
-      getLogger().verbose("No changes to create PR for");
+      process.stderr.write(
+        `  ${yellow("⚠")} No changes detected — skipping PR creation\n`
+      );
       return undefined;
     }
 
     // Push submodule branches first (if any) so parent refs are valid
-    pushSubmoduleBranches(projectRoot);
+    pushSubmoduleBranches(workDir);
 
     // Push branch
     execSync(`git push -u origin ${currentBranch}`, {
-      cwd: projectRoot,
+      cwd: workDir,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
     });
 
     // Build PR body, including submodule change summary if applicable
     const submoduleSummary = getSubmoduleChangeSummary(
-      projectRoot,
+      workDir,
       config.agent.baseBranch
     );
     let prBody = `Closes #${issue.number}`;
@@ -361,7 +398,7 @@ async function createIssuePR(
     try {
       const existing = execSync(
         `gh pr list --head ${currentBranch} --base ${config.agent.baseBranch} --json number --limit 1`,
-        { cwd: projectRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+        { cwd: workDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
       ).trim();
       const parsed = JSON.parse(existing);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -378,7 +415,7 @@ async function createIssuePR(
           `gh pr edit ${prNumber} --title ${JSON.stringify(prTitle)} --body-file -`,
           {
             input: prBody,
-            cwd: projectRoot,
+            cwd: workDir,
             encoding: "utf-8",
             stdio: ["pipe", "pipe", "pipe"],
           }
@@ -395,14 +432,17 @@ async function createIssuePR(
         prBody,
         currentBranch,
         config.agent.baseBranch,
-        { cwd: projectRoot }
+        { cwd: workDir }
       );
       process.stderr.write(`  ${green("✓")} Created PR #${prNumber}\n`);
     }
 
     return prNumber;
   } catch (e) {
-    getLogger().warn(`Failed to create PR: ${e}`);
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    process.stderr.write(
+      `  ${red("✗")} Failed to create PR: ${errorMsg}\n`
+    );
     return undefined;
   }
 }
