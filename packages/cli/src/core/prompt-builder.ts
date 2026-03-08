@@ -354,9 +354,7 @@ ${entries.join("\n")}
 }
 
 /** Extract name and description from YAML frontmatter in a SKILL.md file. */
-function parseFrontmatter(
-  content: string
-): Record<string, string> {
+function parseFrontmatter(content: string): Record<string, string> {
   const result: Record<string, string> = {};
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) return result;
