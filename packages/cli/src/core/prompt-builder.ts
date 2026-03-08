@@ -7,6 +7,7 @@
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { CLAUDE_SKILLS_DIR } from "../skills/types.js";
 import type { Issue, LocusConfig } from "../types.js";
 
 // ─── Prompt Builders ────────────────────────────────────────────────────────
@@ -40,6 +41,10 @@ export function buildExecutionPrompt(ctx: PromptContext): string {
   // System context
   sections.push(buildSystemContext(ctx.projectRoot));
 
+  // Installed skills (compact index — agent reads full content from disk if relevant)
+  const skills = buildSkillsContext(ctx.projectRoot);
+  if (skills) sections.push(skills);
+
   // Task context
   sections.push(buildTaskContext(ctx.issue, ctx.issueComments));
 
@@ -65,6 +70,10 @@ export function buildFeedbackPrompt(ctx: FeedbackContext): string {
 
   // System context
   sections.push(buildSystemContext(ctx.projectRoot));
+
+  // Installed skills
+  const skills = buildSkillsContext(ctx.projectRoot);
+  if (skills) sections.push(skills);
 
   // Original task
   sections.push(buildTaskContext(ctx.issue));
@@ -301,6 +310,65 @@ function buildFeedbackInstructions(): string {
 5. If you learned any reusable lessons from this feedback (non-obvious constraints, architectural patterns), append them to \`.locus/LEARNINGS.md\`.
 6. When done, summarize what you changed in response to each comment.
 </instructions>`;
+}
+
+/**
+ * Build a compact skills context listing installed skills by name + description.
+ * The agent is instructed to read the full SKILL.md from disk if relevant.
+ */
+function buildSkillsContext(projectRoot: string): string | null {
+  const skillsDir = join(projectRoot, CLAUDE_SKILLS_DIR);
+  if (!existsSync(skillsDir)) return null;
+
+  let dirs: string[];
+  try {
+    dirs = readdirSync(skillsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
+  } catch {
+    return null;
+  }
+
+  if (dirs.length === 0) return null;
+
+  const entries: string[] = [];
+  for (const dir of dirs) {
+    const skillPath = join(skillsDir, dir, "SKILL.md");
+    const content = readFileSafe(skillPath);
+    if (!content) continue;
+
+    // Parse YAML frontmatter for name + description
+    const fm = parseFrontmatter(content);
+    const name = fm.name || dir;
+    const description = fm.description || "";
+    entries.push(`- **${name}**: ${description}`);
+  }
+
+  if (entries.length === 0) return null;
+
+  return `<installed-skills>
+The following skills are installed in this project. If a skill is relevant to the current task, read its full instructions from \`.claude/skills/<name>/SKILL.md\` before starting work.
+
+${entries.join("\n")}
+</installed-skills>`;
+}
+
+/** Extract name and description from YAML frontmatter in a SKILL.md file. */
+function parseFrontmatter(
+  content: string
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return result;
+
+  for (const line of match[1].split("\n")) {
+    const idx = line.indexOf(":");
+    if (idx === -1) continue;
+    const key = line.slice(0, idx).trim();
+    const val = line.slice(idx + 1).trim();
+    if (key && val) result[key] = val;
+  }
+  return result;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
