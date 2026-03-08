@@ -8,6 +8,8 @@ import { execSync } from "node:child_process";
 import { runAI } from "../ai/run-ai.js";
 import { createUserManagedSandboxRunner } from "../ai/runner.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
+import { getLogger } from "../core/logger.js";
+import { captureMemoryFromSession, prepareTranscript } from "../core/memory-capture.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
 import {
   checkProviderSandboxMismatch,
@@ -100,6 +102,18 @@ export async function startRepl(options: ReplOptions): Promise<void> {
       sessionManager,
       options
     );
+
+    // Fire-and-forget: capture memory if session has enough content
+    if (session.messages.length >= 2) {
+      const log = getLogger();
+      const transcript = prepareTranscript(session.messages);
+      captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
+        .then((result) => {
+          if (result.captured > 0) log.info(`Captured ${result.captured} memory entries`);
+        })
+        .catch(() => {});
+    }
+
     return;
   }
 
@@ -219,6 +233,7 @@ async function runInteractiveRepl(
   printWelcome(session);
 
   let shouldExit = false;
+  let wasInterrupted = false;
   let currentProvider =
     inferProviderFromModel(config.ai.model) || config.ai.provider;
   let currentModel = config.ai.model;
@@ -376,6 +391,7 @@ async function runInteractiveRepl(
       }
 
       case "interrupt":
+        wasInterrupted = true;
         shouldExit = true;
         break;
 
@@ -391,6 +407,17 @@ async function runInteractiveRepl(
 
   // Cancel any active voice recording on exit
   voice.cancel();
+
+  // Fire-and-forget: capture memory if session had meaningful content
+  if (!wasInterrupted && session.messages.length >= 2) {
+    const log = getLogger();
+    const transcript = prepareTranscript(session.messages);
+    captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
+      .then((result) => {
+        if (result.captured > 0) log.info(`Captured ${result.captured} memory entries`);
+      })
+      .catch(() => {});
+  }
 
   const shouldPersistOnExit =
     session.messages.length > 0 || sessionManager.isPersisted(session);
