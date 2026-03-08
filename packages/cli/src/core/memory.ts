@@ -110,6 +110,105 @@ export async function appendMemoryEntries(
   }
 }
 
+// ─── Migration ──────────────────────────────────────────────────────────────
+
+/** Maps LEARNINGS.md category tags to memory category keys. */
+const LEARNINGS_CATEGORY_MAP: Record<string, string> = {
+  architecture: "architecture",
+  conventions: "conventions",
+  packages: "architecture", // packages are architectural knowledge
+  "user preferences": "preferences",
+  debugging: "debugging",
+};
+
+/** Resolves a LEARNINGS.md category tag to a memory category key. */
+function resolveLearningsCategory(tag: string): string {
+  return LEARNINGS_CATEGORY_MAP[tag.toLowerCase()] ?? "conventions";
+}
+
+/**
+ * Parses `.locus/LEARNINGS.md` entries and distributes them into
+ * the structured `.locus/memory/` category files.
+ *
+ * - Entries matching `- **[Category]**: Text` are extracted
+ * - Multi-line entries (text spanning until the next `- **[` marker) are captured
+ * - Duplicates (entries already present in target files) are skipped
+ * - Original LEARNINGS.md is NOT modified
+ */
+export async function migrateFromLearnings(
+  projectRoot: string
+): Promise<{ migrated: number; skipped: number }> {
+  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
+
+  let content: string;
+  try {
+    content = await readFile(learningsPath, "utf-8");
+  } catch {
+    return { migrated: 0, skipped: 0 };
+  }
+
+  if (!content.trim()) {
+    return { migrated: 0, skipped: 0 };
+  }
+
+  // Parse entries — each starts with `- **[Category]**: `
+  const entryPattern = /^- \*\*\[([^\]]+)\]\*\*:\s*/;
+  const lines = content.split("\n");
+  const parsed: Array<{ category: string; text: string }> = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(entryPattern);
+    if (!match) continue;
+
+    const tag = match[1];
+    const category = resolveLearningsCategory(tag);
+    // Text starts after the tag prefix on the same line
+    let text = lines[i].slice(match[0].length);
+
+    // Capture multi-line continuation (lines until next entry or EOF)
+    for (let j = i + 1; j < lines.length; j++) {
+      if (lines[j].match(entryPattern) || lines[j].trim() === "") break;
+      text += "\n" + lines[j];
+      i = j; // advance outer loop past consumed lines
+    }
+
+    parsed.push({ category, text: text.trim() });
+  }
+
+  if (parsed.length === 0) {
+    return { migrated: 0, skipped: 0 };
+  }
+
+  // Ensure memory directory exists
+  await ensureMemoryDir(projectRoot);
+
+  // Read existing memory files to check for duplicates
+  const existingContent: Record<string, string> = {};
+  for (const key of Object.keys(MEMORY_CATEGORIES)) {
+    existingContent[key] = await readMemoryFile(projectRoot, key);
+  }
+
+  let migrated = 0;
+  let skipped = 0;
+
+  for (const entry of parsed) {
+    const existing = existingContent[entry.category] ?? "";
+    // Simple text match — skip if the entry text already appears in the target file
+    if (existing.includes(entry.text)) {
+      skipped++;
+      continue;
+    }
+
+    await appendMemoryEntries(projectRoot, [entry]);
+    // Update cache so subsequent duplicates within this batch are caught
+    existingContent[entry.category] = (existingContent[entry.category] ?? "") +
+      `- **[${MEMORY_CATEGORIES[entry.category]?.title}]**: ${entry.text}\n`;
+    migrated++;
+  }
+
+  return { migrated, skipped };
+}
+
 // ─── Stats ──────────────────────────────────────────────────────────────────
 
 /** Returns metadata per category: entry count, file size, and last modified date. */

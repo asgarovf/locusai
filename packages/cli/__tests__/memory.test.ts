@@ -8,6 +8,7 @@ import {
   ensureMemoryDir,
   getMemoryDir,
   getMemoryStats,
+  migrateFromLearnings,
   readAllMemory,
   readMemoryFile,
 } from "../src/core/memory.js";
@@ -130,6 +131,126 @@ describe("memory", () => {
       const conv = await readMemoryFile(TEST_DIR, "conventions");
       expect(conv).toContain("Use camelCase");
       expect(conv).toContain("Use ESM imports");
+    });
+  });
+
+  describe("migrateFromLearnings", () => {
+    function writeLearnings(content: string) {
+      const locusDir = join(TEST_DIR, ".locus");
+      mkdirSync(locusDir, { recursive: true });
+      require("node:fs").writeFileSync(join(locusDir, "LEARNINGS.md"), content);
+    }
+
+    it("returns zeros when LEARNINGS.md does not exist", async () => {
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result).toEqual({ migrated: 0, skipped: 0 });
+    });
+
+    it("returns zeros for empty LEARNINGS.md", async () => {
+      writeLearnings("");
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result).toEqual({ migrated: 0, skipped: 0 });
+    });
+
+    it("returns zeros for LEARNINGS.md with only header/no entries", async () => {
+      writeLearnings("# Learnings\n\nSome intro text.\n");
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result).toEqual({ migrated: 0, skipped: 0 });
+    });
+
+    it("migrates entries to correct category files", async () => {
+      writeLearnings([
+        "# Learnings",
+        "- **[Architecture]**: SDK exports shared types",
+        "- **[Debugging]**: Bun needs --watch for hot reload",
+        "- **[Conventions]**: Use camelCase everywhere",
+        "- **[User Preferences]**: Prefer slash commands over shortcuts",
+      ].join("\n"));
+
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result.migrated).toBe(4);
+      expect(result.skipped).toBe(0);
+
+      const arch = await readMemoryFile(TEST_DIR, "architecture");
+      expect(arch).toContain("SDK exports shared types");
+
+      const debug = await readMemoryFile(TEST_DIR, "debugging");
+      expect(debug).toContain("Bun needs --watch for hot reload");
+
+      const conv = await readMemoryFile(TEST_DIR, "conventions");
+      expect(conv).toContain("Use camelCase everywhere");
+
+      const prefs = await readMemoryFile(TEST_DIR, "preferences");
+      expect(prefs).toContain("Prefer slash commands over shortcuts");
+    });
+
+    it("maps [Packages] entries to architecture.md", async () => {
+      writeLearnings("- **[Packages]**: Never use workspace:* in published deps\n");
+
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result.migrated).toBe(1);
+
+      const arch = await readMemoryFile(TEST_DIR, "architecture");
+      expect(arch).toContain("Never use workspace:* in published deps");
+    });
+
+    it("maps unknown categories to conventions.md", async () => {
+      writeLearnings("- **[Random]**: Some unknown category entry\n");
+
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result.migrated).toBe(1);
+
+      const conv = await readMemoryFile(TEST_DIR, "conventions");
+      expect(conv).toContain("Some unknown category entry");
+    });
+
+    it("skips duplicate entries (idempotent)", async () => {
+      writeLearnings("- **[Architecture]**: SDK exports shared types\n");
+
+      // First migration
+      const first = await migrateFromLearnings(TEST_DIR);
+      expect(first.migrated).toBe(1);
+
+      // Second migration — same content, should skip
+      const second = await migrateFromLearnings(TEST_DIR);
+      expect(second.migrated).toBe(0);
+      expect(second.skipped).toBe(1);
+    });
+
+    it("skips duplicates within the same batch", async () => {
+      writeLearnings([
+        "- **[Architecture]**: Same entry",
+        "- **[Architecture]**: Same entry",
+      ].join("\n"));
+
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result.migrated).toBe(1);
+      expect(result.skipped).toBe(1);
+    });
+
+    it("does not modify original LEARNINGS.md", async () => {
+      const original = "# Learnings\n- **[Architecture]**: Some entry\n";
+      writeLearnings(original);
+
+      await migrateFromLearnings(TEST_DIR);
+
+      const after = readFileSync(join(TEST_DIR, ".locus", "LEARNINGS.md"), "utf-8");
+      expect(after).toBe(original);
+    });
+
+    it("handles multi-line entries", async () => {
+      writeLearnings([
+        "- **[Architecture]**: First line of entry",
+        "  continuation of the entry on next line",
+        "- **[Debugging]**: Single line entry",
+      ].join("\n"));
+
+      const result = await migrateFromLearnings(TEST_DIR);
+      expect(result.migrated).toBe(2);
+
+      const arch = await readMemoryFile(TEST_DIR, "architecture");
+      expect(arch).toContain("First line of entry");
+      expect(arch).toContain("continuation of the entry on next line");
     });
   });
 
