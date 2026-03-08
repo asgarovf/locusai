@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.25.6
+
+### Patch Changes
+
+- Fix artifact plan conversion
+- Updated dependencies
+  - @locusai/locus-pm2@0.25.6
+  - @locusai/sdk@0.25.6
+
 ## 0.25.5
 
 ### Patch Changes
