@@ -45,7 +45,7 @@ export function prepareTranscript(
   let transcript = lines.join("\n\n");
 
   if (transcript.length > TRANSCRIPT_MAX_CHARS) {
-    transcript = transcript.slice(0, TRANSCRIPT_MAX_CHARS) + "\n\n...(truncated)";
+    transcript = `${transcript.slice(0, TRANSCRIPT_MAX_CHARS)}\n\n...(truncated)`;
   }
 
   return transcript;

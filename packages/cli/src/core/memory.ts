@@ -187,7 +187,7 @@ export async function migrateFromLearnings(
     // Capture multi-line continuation (lines until next entry or EOF)
     for (let j = i + 1; j < lines.length; j++) {
       if (lines[j].match(entryPattern) || lines[j].trim() === "") break;
-      text += "\n" + lines[j];
+      text += `\n${lines[j]}`;
       i = j; // advance outer loop past consumed lines
     }
 
