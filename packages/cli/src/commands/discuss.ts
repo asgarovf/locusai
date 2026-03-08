@@ -23,6 +23,7 @@ import {
 import { join } from "node:path";
 import { runAI } from "../ai/run-ai.js";
 import { loadConfig } from "../core/config.js";
+import { getMemoryDir, readAllMemorySync } from "../core/memory.js";
 import {
   checkProviderSandboxMismatch,
   getModelSandboxName,
@@ -443,6 +444,30 @@ async function startDiscussion(
 
 // ─── Prompt Builder ──────────────────────────────────────────────────────────
 
+const MEMORY_MAX_CHARS = 2000;
+
+/** Reads structured memory, falling back to LEARNINGS.md. */
+function loadPastMemory(projectRoot: string): string {
+  const memoryDir = getMemoryDir(projectRoot);
+  if (existsSync(memoryDir)) {
+    const content = readAllMemorySync(projectRoot);
+    if (content.trim()) {
+      return content.length > MEMORY_MAX_CHARS
+        ? content.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+        : content;
+    }
+  }
+  // Fallback: flat LEARNINGS.md
+  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
+  if (existsSync(learningsPath)) {
+    const content = readFileSync(learningsPath, "utf-8");
+    return content.length > MEMORY_MAX_CHARS
+      ? content.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+      : content;
+  }
+  return "";
+}
+
 function buildDiscussionPrompt(
   projectRoot: string,
   config: LocusConfig,
@@ -465,12 +490,11 @@ function buildDiscussionPrompt(
     );
   }
 
-  // Include LEARNINGS.md
-  const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
-  if (existsSync(learningsPath)) {
-    const content = readFileSync(learningsPath, "utf-8");
+  // Include structured memory (or fallback to LEARNINGS.md)
+  const memoryContent = loadPastMemory(projectRoot);
+  if (memoryContent) {
     parts.push(
-      `<past-learnings>\n${content.slice(0, 2000)}\n</past-learnings>`
+      `<past-learnings>\n${memoryContent}\n</past-learnings>`
     );
   }
 

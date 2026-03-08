@@ -117,13 +117,13 @@ describe("prompt-builder", () => {
       expect(prompt).toContain("Use TypeScript");
     });
 
-    it("includes LEARNINGS.md reference", () => {
+    it("includes memory reference", () => {
       const prompt = buildExecutionPrompt({
         issue: mockIssue,
         config: mockConfig,
         projectRoot: TEST_DIR,
       });
-      expect(prompt).toContain("LEARNINGS.md");
+      expect(prompt).toContain(".locus/memory/");
     });
 
     it("includes issue comments when provided", () => {
