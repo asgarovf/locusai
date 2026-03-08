@@ -14,9 +14,11 @@
 import { type Column, renderTable } from "../display/table.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
 import {
+  hasOrphanedSkillFiles,
   installSkill,
   isSkillInstalled,
   removeSkill,
+  SkillInstallError,
 } from "../skills/installer.js";
 import { computeSkillHash, readLockFile } from "../skills/lock.js";
 import {
@@ -158,7 +160,22 @@ async function installRemoteSkill(name: string): Promise<void> {
   const cwd = process.cwd();
   const source = `${REGISTRY_REPO}/${entry.path}`;
 
-  await installSkill(cwd, name, content, source);
+  try {
+    await installSkill(cwd, name, content, source);
+  } catch (err) {
+    if (err instanceof SkillInstallError) {
+      process.stderr.write(`${red("✗")} ${err.message}\n`);
+      process.stderr.write(
+        `  To clean up and retry: ${bold(`locus skills remove ${name}`)} then ${bold(`locus skills install ${name}`)}\n`
+      );
+    } else {
+      process.stderr.write(
+        `${red("✗")} Unexpected error installing skill '${name}'.\n`
+      );
+      process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    }
+    process.exit(1);
+  }
 
   process.stderr.write(
     `\n${green("✓")} Installed skill '${bold(name)}' from ${REGISTRY_REPO}\n`
@@ -177,8 +194,10 @@ async function removeInstalledSkill(name: string): Promise<void> {
   }
 
   const cwd = process.cwd();
+  const installed = isSkillInstalled(cwd, name);
+  const orphaned = hasOrphanedSkillFiles(cwd, name);
 
-  if (!isSkillInstalled(cwd, name)) {
+  if (!installed && !orphaned) {
     process.stderr.write(
       `${red("✗")} Skill '${bold(name)}' is not installed.\n`
     );
@@ -190,7 +209,13 @@ async function removeInstalledSkill(name: string): Promise<void> {
 
   await removeSkill(cwd, name);
 
-  process.stderr.write(`${green("✓")} Removed skill '${bold(name)}'\n`);
+  if (orphaned) {
+    process.stderr.write(
+      `${green("✓")} Cleaned up orphaned skill files for '${bold(name)}'\n`
+    );
+  } else {
+    process.stderr.write(`${green("✓")} Removed skill '${bold(name)}'\n`);
+  }
 }
 
 // ─── Update ──────────────────────────────────────────────────────────────────
@@ -264,7 +289,21 @@ async function updateSkills(name?: string): Promise<void> {
     }
 
     const source = `${REGISTRY_REPO}/${entry.path}`;
-    await installSkill(cwd, skillName, content, source);
+    try {
+      await installSkill(cwd, skillName, content, source);
+    } catch (err) {
+      if (err instanceof SkillInstallError) {
+        process.stderr.write(`${red("✗")} ${err.message}\n`);
+        process.stderr.write(
+          `  To clean up: ${bold(`locus skills remove ${skillName}`)}\n`
+        );
+      } else {
+        process.stderr.write(
+          `${red("✗")} Failed to update '${skillName}': ${dim((err as Error).message)}\n`
+        );
+      }
+      continue;
+    }
     updatedCount++;
 
     process.stderr.write(
@@ -362,7 +401,7 @@ ${bold("Subcommands:")}
   ${cyan("list")}              List available skills from the registry
   ${cyan("list")} ${dim("--installed")}   List locally installed skills
   ${cyan("install")} ${dim("<name>")}    Install a skill from the registry
-  ${cyan("remove")} ${dim("<name>")}     Remove an installed skill
+  ${cyan("remove")} ${dim("<name>")}     Remove an installed skill (alias: ${cyan("uninstall")})
   ${cyan("update")} ${dim("[name]")}     Update installed skill(s) from registry
   ${cyan("info")} ${dim("<name>")}       Show skill metadata and install status
 
@@ -413,7 +452,8 @@ export async function skillsCommand(
       break;
     }
 
-    case "remove": {
+    case "remove":
+    case "uninstall": {
       const skillName = args[1];
       await removeInstalledSkill(skillName);
       break;
@@ -436,7 +476,7 @@ export async function skillsCommand(
         `${red("✗")} Unknown subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")}, ${bold("update")}, ${bold("info")}\n`
+        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")} (${bold("uninstall")}), ${bold("update")}, ${bold("info")}\n`
       );
       process.exit(1);
   }
