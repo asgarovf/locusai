@@ -31,7 +31,7 @@ locus discuss delete <id>        # Delete a discussion
 
 ### Start a Discussion
 
-Pass a question or topic as a string. The AI analyzes it using your project context from `LOCUS.md` and `LEARNINGS.md`.
+Pass a question or topic as a string. The AI analyzes it using your project context from `LOCUS.md` and accumulated memory (`.locus/memory/`).
 
 ```bash
 locus discuss "Should we use Redis or in-memory caching?"

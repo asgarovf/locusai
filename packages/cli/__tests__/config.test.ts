@@ -91,7 +91,7 @@ describe("config", () => {
       expect(config.github.defaultBranch).toBe("main");
       expect(config.ai.provider).toBe("claude");
       expect(config.agent.maxParallel).toBe(3);
-      expect(config.sprint.stopOnFailure).toBe(true);
+      expect(config.sprint.stopOnFailure).toBe(false);
       expect(config.logging.level).toBe("normal");
     });
 

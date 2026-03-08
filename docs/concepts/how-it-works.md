@@ -51,7 +51,7 @@ locus run 42
 locus run 42 43 44
 ```
 
-The agent reads the issue description, your project instructions (`LOCUS.md`), accumulated learnings (`LEARNINGS.md`), and repository context to build a rich prompt. It then delegates to an AI provider (Claude or Codex) that makes the actual code changes.
+The agent reads the issue description, your project instructions (`LOCUS.md`), accumulated learnings (`.locus/memory/`), and repository context to build a rich prompt. It then delegates to an AI provider (Claude or Codex) that makes the actual code changes.
 
 ### 3. Review
 
@@ -131,7 +131,7 @@ Before every task, Locus assembles a prompt from multiple sources:
 ```mermaid
 graph LR
     A[LOCUS.md<br>Project instructions] --> P[Prompt Builder]
-    B[LEARNINGS.md<br>Accumulated patterns] --> P
+    B[.locus/memory/<br>Categorized learnings] --> P
     C[Issue body + comments<br>Task requirements] --> P
     D[Sprint diff<br>Previous task changes] --> P
     E[File tree<br>Repo structure] --> P
@@ -141,14 +141,14 @@ graph LR
 | Source | Purpose |
 |--------|---------|
 | `LOCUS.md` | Project instructions, conventions, architecture |
-| `.locus/LEARNINGS.md` | Accumulated corrections and patterns |
+| `.locus/memory/` | Categorized learnings (architecture, conventions, decisions, preferences, debugging) |
 | Issue body + comments | Task requirements and discussion |
 | Sprint diff | Changes from previous tasks (sprint mode only) |
 | Repository file tree | Structural awareness |
 
 **LOCUS.md** is the primary file you edit to teach the AI about your project. It lives at the repository root and is read before every execution.
 
-**LEARNINGS.md** captures lessons learned during development -- patterns to follow, mistakes to avoid. It grows over time and prevents the AI from repeating errors.
+**`.locus/memory/`** stores lessons learned during development, organized into five category files. Entries are captured automatically after sessions and can be managed via `locus memory`.
 
 ---
 
@@ -185,13 +185,13 @@ After initialization, Locus creates a `.locus/` directory in your project root:
   config.json          # Project configuration (provider, model, sprint settings)
   run-state/           # Active run progress, per-sprint (auto-managed)
   LOCUS.md             # Project instructions for AI agents
-  LEARNINGS.md         # Accumulated learnings
+  memory/              # Structured memory system (5 category files)
   logs/                # Execution logs
   sessions/            # REPL session history
   worktrees/           # Git worktrees for parallel execution
 ```
 
-Sensitive files (`config.json`, `run-state/`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `LEARNINGS.md` should be committed so the entire team benefits from accumulated context.
+Sensitive files (`config.json`, `run-state/`, `sessions/`, `logs/`, `worktrees/`) are added to `.gitignore` during init. `LOCUS.md` and `.locus/memory/` should be committed so the entire team benefits from accumulated context.
 
 ## Related Docs
 

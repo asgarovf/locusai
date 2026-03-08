@@ -9,6 +9,9 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CLAUDE_SKILLS_DIR } from "../skills/types.js";
 import type { Issue, LocusConfig } from "../types.js";
+import { getMemoryDir, readAllMemorySync } from "./memory.js";
+
+const MEMORY_MAX_CHARS = 4000;
 
 // ─── Prompt Builders ────────────────────────────────────────────────────────
 
@@ -104,12 +107,17 @@ export function buildReplPrompt(
     );
   }
 
-  sections.push(
-    `<past-learnings>\nPast learnings are located in \`.locus/LEARNINGS.md\`.</past-learnings>`
-  );
+  const memory = loadMemoryContent(projectRoot);
+  if (memory) {
+    sections.push(`<past-learnings>\n${memory}\n</past-learnings>`);
+  } else {
+    sections.push(
+      `<past-learnings>\nNo past learnings recorded yet.</past-learnings>`
+    );
+  }
 
   sections.push(
-    `<learnings-reminder>IMPORTANT: If during this interaction you discover reusable lessons (architectural patterns, non-obvious constraints, user corrections), you MUST append them to \`.locus/LEARNINGS.md\` before finishing. This is mandatory — see the "Continuous Learning" section in project instructions.</learnings-reminder>`
+    `<learnings-reminder>IMPORTANT: If during this interaction you discover reusable lessons (architectural patterns, non-obvious constraints, user corrections), record them in the appropriate category file in \`.locus/memory/\` before finishing. This is mandatory — see the "Continuous Learning" section in project instructions.</learnings-reminder>`
   );
 
   // Previous conversation history (last 10 exchanges for context)
@@ -131,6 +139,21 @@ export function buildReplPrompt(
 
 // ─── Section Builders ───────────────────────────────────────────────────────
 
+/** Reads structured memory from `.locus/memory/`. */
+function loadMemoryContent(projectRoot: string): string {
+  const memoryDir = getMemoryDir(projectRoot);
+  if (existsSync(memoryDir)) {
+    const content = readAllMemorySync(projectRoot);
+    if (content.trim()) {
+      return content.length > MEMORY_MAX_CHARS
+        ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
+        : content;
+    }
+  }
+
+  return "";
+}
+
 function buildSystemContext(projectRoot: string): string {
   const parts: string[] = [];
 
@@ -140,9 +163,14 @@ function buildSystemContext(projectRoot: string): string {
     parts.push(`<project-instructions>\n${locusmd}\n</project-instructions>`);
   }
 
-  parts.push(
-    `<past-learnings>\nPast learnings are located in \`.locus/LEARNINGS.md\`.</past-learnings>`
-  );
+  const memory = loadMemoryContent(projectRoot);
+  if (memory) {
+    parts.push(`<past-learnings>\n${memory}\n</past-learnings>`);
+  } else {
+    parts.push(
+      `<past-learnings>\nNo past learnings recorded yet.</past-learnings>`
+    );
+  }
 
   // Discussion insights (if any)
   const discussionsDir = join(projectRoot, ".locus", "discussions");
@@ -272,7 +300,7 @@ function buildExecutionRules(config: LocusConfig): string {
 1. **Commit format:** Use conventional commits: \`feat: <title> (#<issue>)\`, \`fix: ...\`, \`chore: ...\`. Every commit message MUST be multi-line: the first line is the title, then a blank line, then \`Co-Authored-By: LocusAgent <agent@locusai.team>\` as a Git trailer. Use \`git commit -m "<title>" -m "Co-Authored-By: LocusAgent <agent@locusai.team>"\` (two separate -m flags) to ensure the trailer is on its own line.
 2. **Code quality:** Follow existing code style. Run linters/formatters if available.
 3. **Testing:** If test files exist for modified code, update them accordingly.
-4. **Update learnings:** Before finishing, if you discovered any reusable lessons (architectural patterns, non-obvious constraints, user corrections), append them to \`.locus/LEARNINGS.md\`. This is mandatory — see the "Continuous Learning" section in project instructions.
+4. **Update memory:** Before finishing, if you discovered any reusable lessons (architectural patterns, non-obvious constraints, user corrections), record them in the appropriate category file in \`.locus/memory/\` (architecture.md, conventions.md, decisions.md, preferences.md, debugging.md). This is mandatory — see the "Continuous Learning" section in project instructions.
 5. **Do NOT:**
    - Run \`git push\` (the orchestrator handles pushing)
    - Modify files outside the scope of this issue
@@ -307,7 +335,7 @@ function buildFeedbackInstructions(): string {
 2. Make targeted changes — do NOT rewrite code from scratch.
 3. If a reviewer comment is unclear, make your best judgment and note your interpretation.
 4. Push changes to the same branch — do NOT create a new PR.
-5. If you learned any reusable lessons from this feedback (non-obvious constraints, architectural patterns), append them to \`.locus/LEARNINGS.md\`.
+5. If you learned any reusable lessons from this feedback (non-obvious constraints, architectural patterns), record them in the appropriate category file in \`.locus/memory/\`.
 6. When done, summarize what you changed in response to each comment.
 </instructions>`;
 }

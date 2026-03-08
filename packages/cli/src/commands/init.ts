@@ -7,7 +7,7 @@
  * 3. Create .locus/ directory structure
  * 4. Generate config.json with detected values
  * 5. Generate LOCUS.md template
- * 6. Generate LEARNINGS.md
+ * 6. Create .locus/memory/ and migrate LEARNINGS.md if present
  * 7. Generate .sandboxignore
  * 8. Create GitHub labels if they don't exist
  * 9. Update .gitignore
@@ -26,6 +26,11 @@ import {
 } from "../core/ecosystem.js";
 import { ensureLabels } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
+import {
+  ensureMemoryDir,
+  getMemoryDir,
+  migrateFromLearnings,
+} from "../core/memory.js";
 import {
   bold,
   cyan,
@@ -117,12 +122,19 @@ When a task produces knowledge, analysis, or research output rather than (or in 
 
 ## Continuous Learning (MANDATORY)
 
-**CRITICAL: Updating \`.locus/LEARNINGS.md\` is a required step, not optional.** You MUST read it before starting work AND update it before finishing if you learned anything worth recording. Failing to update learnings when a reusable lesson was discovered is a defect — treat it with the same severity as forgetting to run tests.
+**CRITICAL: Updating \`.locus/memory/\` is a required step, not optional.** You MUST read memory files before starting work AND update them before finishing if you learned anything worth recording. Failing to update memory when a reusable lesson was discovered is a defect — treat it with the same severity as forgetting to run tests.
+
+**Memory is organized into 5 category files in \`.locus/memory/\`:**
+- \`architecture.md\` — Package ownership, module boundaries, data flow
+- \`conventions.md\` — Code style, naming, patterns
+- \`decisions.md\` — Trade-off rationale: why X over Y
+- \`preferences.md\` — User corrections, rejected approaches
+- \`debugging.md\` — Non-obvious gotchas, environment quirks
 
 **Workflow:**
-1. **Read** \`.locus/LEARNINGS.md\` at the start of every task
+1. **Read** files in \`.locus/memory/\` at the start of every task
 2. **During execution**, note any reusable lessons (architectural discoveries, user corrections, non-obvious constraints)
-3. **Before finishing**, append new entries to \`.locus/LEARNINGS.md\` if any were discovered. Do this as one of your final steps, alongside running tests and linters
+3. **Before finishing**, append new entries to the appropriate category file in \`.locus/memory/\`. Do this as one of your final steps, alongside running tests and linters
 
 **The quality bar:** Ask yourself — "Would a new agent working on a completely different task benefit from knowing this?" If yes, record it. If it only matters for the current task or file, skip it.
 
@@ -148,19 +160,19 @@ When a task produces knowledge, analysis, or research output rather than (or in 
 **Good examples:**
 - \`[Architecture]\`: Shared types for all packages live in \`@locusai/shared\` — never redefine them locally in CLI or API packages.
 - \`[User Preferences]\`: User prefers not to track low-level interrupt/signal handling patterns in learnings — focus on architectural and decision-level entries.
-- \`[Packages]\`: Validation uses Zod throughout — do not introduce a second validation library.
+- \`[Conventions]\`: Validation uses Zod throughout — do not introduce a second validation library.
 
 **Bad examples (do not write these):**
-- \`[Patterns]\`: \`run.ts\` must call \`registerShutdownHandlers()\` at startup. ← too local, obvious from the file.
+- \`[Conventions]\`: \`run.ts\` must call \`registerShutdownHandlers()\` at startup. ← too local, obvious from the file.
 - \`[Debugging]\`: Fixed a regex bug in \`image-detect.ts\`. ← one-time fix, irrelevant to future tasks.
 
-**Format (append-only, never delete):**
+**Format (append to the appropriate category file):**
 
 \`\`\`
 - **[Category]**: Concise description (1-2 lines max). *Rationale if non-obvious.*
 \`\`\`
 
-**Categories:** Architecture, Packages, User Preferences, Conventions, Debugging
+**Categories:** Architecture, Conventions, Decisions, Preferences, Debugging
 
 ## Error Handling
 
@@ -216,15 +228,7 @@ service-account*.json
 docker-compose.override.yml
 `;
 
-const LEARNINGS_MD_TEMPLATE = `# Learnings
-
-This file captures important lessons, decisions, and corrections made during development.
-It is read by AI agents before every task to avoid repeating mistakes and to follow established patterns.
-
-<!-- Add learnings below this line. Format: - **[Category]**: Description -->
-`;
-
-const GITIGNORE_ENTRIES = ["", "# Locus", ".locus/", "!.locus/LEARNINGS.md"];
+const GITIGNORE_ENTRIES = ["", "# Locus", ".locus/", "!.locus/memory/"];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
 
@@ -287,6 +291,37 @@ export async function initCommand(cwd: string): Promise<void> {
   }
   process.stderr.write(`${green("✓")} Created .locus/ directory structure\n`);
 
+  // 4b. Create .locus/memory/ directory with category files
+  const memoryDirExists = existsSync(getMemoryDir(cwd));
+  await ensureMemoryDir(cwd);
+  if (!memoryDirExists) {
+    process.stderr.write(
+      `${green("✓")} Created .locus/memory/ with category files\n`
+    );
+  } else {
+    process.stderr.write(
+      `${dim("○")} .locus/memory/ already exists (preserved)\n`
+    );
+  }
+
+  // 4c. Auto-migrate LEARNINGS.md → memory/ if present (and delete it)
+  if (existsSync(join(locusDir, "LEARNINGS.md"))) {
+    const result = await migrateFromLearnings(cwd);
+    if (result.migrated > 0) {
+      process.stderr.write(
+        `${green("✓")} Migrated ${result.migrated} entries from LEARNINGS.md to .locus/memory/\n`
+      );
+    }
+    if (result.skipped > 0) {
+      process.stderr.write(
+        `${dim("○")} Skipped ${result.skipped} duplicate entries during migration\n`
+      );
+    }
+    if (result.migrated > 0 || result.skipped > 0) {
+      process.stderr.write(`${green("✓")} Removed legacy LEARNINGS.md\n`);
+    }
+  }
+
   // 5. Generate config.json
   const isReInit = isInitialized(cwd);
   const config: LocusConfig = {
@@ -339,18 +374,7 @@ export async function initCommand(cwd: string): Promise<void> {
     process.stderr.write(`${dim("○")} LOCUS.md already exists (preserved)\n`);
   }
 
-  // 7. Generate LEARNINGS.md (only if not exists)
-  const learningsMdPath = join(locusDir, "LEARNINGS.md");
-  if (!existsSync(learningsMdPath)) {
-    writeFileSync(learningsMdPath, LEARNINGS_MD_TEMPLATE, "utf-8");
-    process.stderr.write(`${green("✓")} Generated LEARNINGS.md\n`);
-  } else {
-    process.stderr.write(
-      `${dim("○")} LEARNINGS.md already exists (preserved)\n`
-    );
-  }
-
-  // 8. Generate .sandboxignore (only if not exists)
+  // 7. Generate .sandboxignore (only if not exists)
   const sandboxIgnorePath = join(cwd, ".sandboxignore");
   if (!existsSync(sandboxIgnorePath)) {
     writeFileSync(sandboxIgnorePath, SANDBOXIGNORE_TEMPLATE, "utf-8");

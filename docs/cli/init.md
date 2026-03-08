@@ -6,7 +6,7 @@ description: Initialize Locus in a GitHub repository. Creates the .locus/ direct
 
 Initialize Locus in the current GitHub repository. This command sets up the directory structure, configuration, project context templates, GitHub labels, and `.gitignore` entries needed to use Locus.
 
-Running `locus init` is idempotent. Re-running it updates the configuration without overwriting user-edited files like `LOCUS.md` or `LEARNINGS.md`.
+Running `locus init` is idempotent. Re-running it updates the configuration without overwriting user-edited files like `LOCUS.md`.
 
 ## Usage
 
@@ -24,9 +24,9 @@ The `init` command performs these steps in order:
 4. **Create `.locus/` directory structure** -- creates subdirectories for sessions, discussions, artifacts, plans, and logs.
 5. **Generate `config.json`** -- writes default configuration with detected GitHub values. On re-init, existing AI, agent, sprint, and logging settings are preserved.
 6. **Generate `LOCUS.md`** -- creates a template for project context that AI agents read before every task. Skipped if the file already exists.
-7. **Generate `LEARNINGS.md`** -- creates a file for capturing lessons and corrections. Skipped if the file already exists.
-8. **Create GitHub labels** -- ensures all Locus labels exist on the repository (priority, type, status, and `agent:managed`).
-9. **Update `.gitignore`** -- adds entries for Locus runtime files (config, sessions, logs, worktrees).
+7. **Create `.locus/memory/` directory** -- creates the structured memory system with category files (`architecture.md`, `conventions.md`, `decisions.md`, `preferences.md`, `debugging.md`). If a legacy `LEARNINGS.md` exists, entries are automatically migrated and the file is deleted.
+9. **Create GitHub labels** -- ensures all Locus labels exist on the repository (priority, type, status, and `agent:managed`).
+10. **Update `.gitignore`** -- adds entries for Locus runtime files (config, sessions, logs, worktrees).
 
 ## Directory Structure
 
@@ -36,7 +36,12 @@ After initialization, the `.locus/` directory looks like this:
 .locus/
   config.json          # Project configuration (gitignored)
   LOCUS.md             # Project context for AI agents (committed)
-  LEARNINGS.md         # Lessons and corrections (committed)
+  memory/              # Structured memory system (committed)
+    architecture.md    # Package ownership, module boundaries, data flow
+    conventions.md     # Code style, naming, patterns
+    decisions.md       # Trade-off rationale
+    preferences.md     # User corrections, rejected approaches
+    debugging.md       # Non-obvious gotchas, environment quirks
   sessions/            # REPL session data (gitignored)
   discussions/         # Architectural discussions
   artifacts/           # Generated artifacts

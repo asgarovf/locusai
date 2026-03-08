@@ -158,6 +158,7 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus review` | | AI code review on pull requests |
 | `locus iterate` | | Re-execute tasks with PR feedback context |
 | `locus discuss` | | AI-powered architectural discussions |
+| `locus memory` | | List, search, and manage structured project memory |
 | `locus commit` | | AI-powered commit message generation |
 
 ### Visibility
@@ -279,7 +280,7 @@ After `locus init`, your project gets a `.locus/` directory:
 ├── config.json        # Project settings (auto-detected)
 ├── run-state/         # Per-sprint execution state for recovery
 ├── LOCUS.md           # Agent instructions & project context
-├── LEARNINGS.md       # Accumulated lessons from past runs
+├── memory/            # Structured memory system (5 category files)
 ├── sessions/          # REPL session history
 ├── discussions/       # AI discussion archives
 ├── artifacts/         # AI-generated reports

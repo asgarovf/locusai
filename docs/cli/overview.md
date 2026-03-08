@@ -51,6 +51,7 @@ Locus built-in tools add:
 |---|---|---|
 | [`locus exec`](exec.md) | Interactive or one-shot coding session | `locus exec "Add retry guard to webhook handler"` |
 | [`locus discuss`](discuss.md) | Architecture discussion and planning prompts | `locus discuss "Should we split webhook processing into a queue worker?"` |
+| [`locus memory`](memory.md) | List, search, and manage structured project memory | `locus memory list --category architecture` |
 | `locus artifacts` | Inspect and convert AI-generated artifacts in `.locus/artifacts/` | `locus artifacts plan webhook-reliability-prd` |
 
 ### 5) Package Ecosystem Tools
