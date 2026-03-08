@@ -6,6 +6,7 @@
 * [Installation](getting-started/installation.md)
 * [Sandboxing Setup (Docker-First)](getting-started/sandboxing-setup.md)
 * [Quickstart](getting-started/quickstart.md)
+* [Skills](getting-started/skills.md)
 
 ## Core Strengths
 
