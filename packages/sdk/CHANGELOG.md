@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.25.5
+
+### Patch Changes
+
+- Add GPT 5.4 support
+
 ## 0.25.4
 
 ### Patch Changes

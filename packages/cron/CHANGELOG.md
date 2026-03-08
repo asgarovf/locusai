@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.25.5
+
+### Patch Changes
+
+- Add GPT 5.4 support
+- Updated dependencies
+  - @locusai/locus-pm2@0.25.5
+  - @locusai/sdk@0.25.5
+
 ## 0.25.4
 
 ### Patch Changes
