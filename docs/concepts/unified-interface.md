@@ -61,6 +61,8 @@ The only required change is model selection. Everything else stays unchanged.
 
 | Model | Alias |
 |---|---|
+| GPT-5.4 | `gpt-5.4` |
+| GPT-5.4 Pro | `gpt-5.4-pro` |
 | GPT-5.3 Codex | `gpt-5.3-codex` |
 | GPT-5.3 Codex Spark | `gpt-5.3-codex-spark` |
 | GPT-5.2 Codex | `gpt-5.2-codex` |
@@ -76,7 +78,7 @@ The only required change is model selection. Everything else stays unchanged.
 Locus infers the provider from the model name:
 
 1. Known Claude aliases (`opus`, `sonnet`, `haiku`) → Claude
-2. Known Codex aliases → Codex
+2. Known Codex models (`gpt-5.4`, `gpt-5.4-pro`, `gpt-5.3-codex`, etc.) → Codex
 3. Model name starts with `claude-` → Claude
 4. Model name contains `codex` → Codex
 
