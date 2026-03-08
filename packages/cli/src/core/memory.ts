@@ -3,15 +3,18 @@
  * 5-category `.locus/memory/` layout.
  */
 
-import { mkdir, readFile, stat, writeFile, appendFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
+import { appendFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 export const MEMORY_DIR = "memory";
 
-export const MEMORY_CATEGORIES: Record<string, { file: string; title: string; description: string }> = {
+export const MEMORY_CATEGORIES: Record<
+  string,
+  { file: string; title: string; description: string }
+> = {
   architecture: {
     file: "architecture.md",
     title: "Architecture",
@@ -65,7 +68,10 @@ export async function ensureMemoryDir(projectRoot: string): Promise<void> {
 // ─── Read ───────────────────────────────────────────────────────────────────
 
 /** Reads a single category file. Returns empty string if file doesn't exist. */
-export async function readMemoryFile(projectRoot: string, category: string): Promise<string> {
+export async function readMemoryFile(
+  projectRoot: string,
+  category: string
+): Promise<string> {
   const meta = MEMORY_CATEGORIES[category];
   if (!meta) return "";
 
@@ -220,7 +226,8 @@ export async function migrateFromLearnings(
 
     await appendMemoryEntries(projectRoot, [entry]);
     // Update cache so subsequent duplicates within this batch are caught
-    existingContent[entry.category] = (existingContent[entry.category] ?? "") +
+    existingContent[entry.category] =
+      (existingContent[entry.category] ?? "") +
       `- **[${MEMORY_CATEGORIES[entry.category]?.title}]**: ${entry.text}\n`;
     migrated++;
   }
@@ -233,9 +240,14 @@ export async function migrateFromLearnings(
 /** Returns metadata per category: entry count, file size, and last modified date. */
 export async function getMemoryStats(
   projectRoot: string
-): Promise<Record<string, { count: number; size: number; lastModified: Date }>> {
+): Promise<
+  Record<string, { count: number; size: number; lastModified: Date }>
+> {
   const dir = getMemoryDir(projectRoot);
-  const result: Record<string, { count: number; size: number; lastModified: Date }> = {};
+  const result: Record<
+    string,
+    { count: number; size: number; lastModified: Date }
+  > = {};
 
   for (const [key, meta] of Object.entries(MEMORY_CATEGORIES)) {
     const filePath = join(dir, meta.file);
@@ -245,7 +257,9 @@ export async function getMemoryStats(
         stat(filePath),
       ]);
       // Count lines starting with "- " as entries
-      const count = content.split("\n").filter((line) => line.startsWith("- ")).length;
+      const count = content
+        .split("\n")
+        .filter((line) => line.startsWith("- ")).length;
       result[key] = {
         count,
         size: fileStat.size,

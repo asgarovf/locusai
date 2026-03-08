@@ -8,7 +8,11 @@
 
 import { spawn } from "node:child_process";
 import { getLogger } from "./logger.js";
-import { MEMORY_CATEGORIES, appendMemoryEntries, readAllMemory } from "./memory.js";
+import {
+  appendMemoryEntries,
+  MEMORY_CATEGORIES,
+  readAllMemory,
+} from "./memory.js";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -53,7 +57,10 @@ export function prepareTranscript(
 
 // ─── Extraction Prompt ──────────────────────────────────────────────────────
 
-function buildExtractionPrompt(transcript: string, existingMemory: string): string {
+function buildExtractionPrompt(
+  transcript: string,
+  existingMemory: string
+): string {
   const categoryList = Object.entries(MEMORY_CATEGORIES)
     .map(([key, meta]) => `- "${key}": ${meta.title} — ${meta.description}`)
     .join("\n");
@@ -103,7 +110,11 @@ function callExtractionAI(
   model?: string
 ): Promise<{ success: boolean; output: string; error?: string }> {
   return new Promise((resolve) => {
-    const args = ["--print", "--dangerously-skip-permissions", "--no-session-persistence"];
+    const args = [
+      "--print",
+      "--dangerously-skip-permissions",
+      "--no-session-persistence",
+    ];
     if (model) {
       args.push("--model", model);
     }

@@ -24,7 +24,10 @@ import {
   updateIssueLabels,
 } from "./github.js";
 import { getLogger } from "./logger.js";
-import { captureMemoryFromSession, prepareTranscript } from "./memory-capture.js";
+import {
+  captureMemoryFromSession,
+  prepareTranscript,
+} from "./memory-capture.js";
 import { buildExecutionPrompt, buildFeedbackPrompt } from "./prompt-builder.js";
 import { getModelSandboxName } from "./sandbox.js";
 import {
@@ -217,14 +220,20 @@ export async function executeIssue(
 
   // Fire-and-forget: capture memory from session transcript
   const transcript = prepareTranscript([
-    { role: "user", content: `Issue #${issueNumber}: ${issue.title}\n\n${issue.body}` },
+    {
+      role: "user",
+      content: `Issue #${issueNumber}: ${issue.title}\n\n${issue.body}`,
+    },
     { role: "assistant", content: output },
   ]);
   captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
     .then((result) => {
-      if (result.captured > 0) log.info(`Captured ${result.captured} memory entries`);
+      if (result.captured > 0)
+        log.info(`Captured ${result.captured} memory entries`);
     })
-    .catch(() => {});
+    .catch(() => {
+      /* fire-and-forget */
+    });
 
   return {
     issueNumber,

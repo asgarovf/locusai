@@ -7,9 +7,9 @@
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readAllMemorySync, getMemoryDir } from "./memory.js";
 import { CLAUDE_SKILLS_DIR } from "../skills/types.js";
 import type { Issue, LocusConfig } from "../types.js";
+import { getMemoryDir, readAllMemorySync } from "./memory.js";
 
 const MEMORY_MAX_CHARS = 4000;
 
@@ -146,7 +146,7 @@ function loadMemoryContent(projectRoot: string): string {
     const content = readAllMemorySync(projectRoot);
     if (content.trim()) {
       return content.length > MEMORY_MAX_CHARS
-        ? content.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+        ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
         : content;
     }
   }
@@ -155,7 +155,7 @@ function loadMemoryContent(projectRoot: string): string {
   const learnings = readFileSafe(join(projectRoot, ".locus", "LEARNINGS.md"));
   if (learnings) {
     return learnings.length > MEMORY_MAX_CHARS
-      ? learnings.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+      ? `${learnings.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
       : learnings;
   }
 

@@ -11,12 +11,12 @@
 
 import { existsSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { createInterface } from "node:readline";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import {
-  MEMORY_CATEGORIES,
   getMemoryDir,
   getMemoryStats,
+  MEMORY_CATEGORIES,
   migrateFromLearnings,
   readMemoryFile,
 } from "../core/memory.js";
@@ -102,10 +102,7 @@ export async function memoryCommand(
 
 // ─── list ────────────────────────────────────────────────────────────────────
 
-async function handleList(
-  projectRoot: string,
-  args: string[]
-): Promise<void> {
+async function handleList(projectRoot: string, args: string[]): Promise<void> {
   // Parse --category flag
   let categoryFilter: string | undefined;
   const catIdx = args.indexOf("--category");
@@ -133,7 +130,9 @@ async function handleList(
     if (entries.length === 0) continue;
 
     const meta = MEMORY_CATEGORIES[category];
-    process.stderr.write(`\n${bold(cyan(meta.title))} ${dim(`(${meta.description})`)}\n`);
+    process.stderr.write(
+      `\n${bold(cyan(meta.title))} ${dim(`(${meta.description})`)}\n`
+    );
 
     for (const entry of entries) {
       process.stderr.write(`  ${entry}\n`);
@@ -186,9 +185,7 @@ async function handleSearch(
   }
 
   if (matchCount === 0) {
-    process.stderr.write(
-      `\n${dim("No matches found for")} "${query}"\n`
-    );
+    process.stderr.write(`\n${dim("No matches found for")} "${query}"\n`);
   } else {
     process.stderr.write(
       `\n${green(`${matchCount} match${matchCount === 1 ? "" : "es"}`)} found for "${query}"\n`
@@ -212,11 +209,13 @@ async function handleStats(projectRoot: string): Promise<void> {
     const sizeStr = formatSize(s.size).padStart(8);
     const dateStr =
       s.size > 0
-        ? dim(s.lastModified.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }))
+        ? dim(
+            s.lastModified.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          )
         : dim("—");
 
     const icon = s.count > 0 ? green("●") : dim("○");
@@ -228,7 +227,9 @@ async function handleStats(projectRoot: string): Promise<void> {
     totalSize += s.size;
   }
 
-  process.stderr.write(`\n  ${bold("Total:")} ${totalEntries} entries, ${formatSize(totalSize)}\n`);
+  process.stderr.write(
+    `\n  ${bold("Total:")} ${totalEntries} entries, ${formatSize(totalSize)}\n`
+  );
 
   // Check migration status
   const learningsPath = join(projectRoot, ".locus", "LEARNINGS.md");
@@ -242,10 +243,7 @@ async function handleStats(projectRoot: string): Promise<void> {
 
 // ─── reset ───────────────────────────────────────────────────────────────────
 
-async function handleReset(
-  projectRoot: string,
-  args: string[]
-): Promise<void> {
+async function handleReset(projectRoot: string, args: string[]): Promise<void> {
   const confirmed = args.includes("--confirm");
 
   if (!confirmed) {
@@ -337,9 +335,7 @@ async function handleMigrate(projectRoot: string): Promise<void> {
 /** Extracts bullet-point entries (lines starting with "- ") from file content. */
 function parseEntries(content: string): string[] {
   if (!content) return [];
-  return content
-    .split("\n")
-    .filter((line) => line.startsWith("- "));
+  return content.split("\n").filter((line) => line.startsWith("- "));
 }
 
 /** Case-insensitive highlight of a search term using bold. */

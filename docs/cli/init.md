@@ -25,8 +25,9 @@ The `init` command performs these steps in order:
 5. **Generate `config.json`** -- writes default configuration with detected GitHub values. On re-init, existing AI, agent, sprint, and logging settings are preserved.
 6. **Generate `LOCUS.md`** -- creates a template for project context that AI agents read before every task. Skipped if the file already exists.
 7. **Generate `LEARNINGS.md`** -- creates a file for capturing lessons and corrections. Skipped if the file already exists.
-8. **Create GitHub labels** -- ensures all Locus labels exist on the repository (priority, type, status, and `agent:managed`).
-9. **Update `.gitignore`** -- adds entries for Locus runtime files (config, sessions, logs, worktrees).
+8. **Create `.locus/memory/` directory** -- creates the structured memory system with category files (`architecture.md`, `conventions.md`, `decisions.md`, `preferences.md`, `debugging.md`). If `LEARNINGS.md` exists and the memory directory is new, entries are automatically migrated to the appropriate category files.
+9. **Create GitHub labels** -- ensures all Locus labels exist on the repository (priority, type, status, and `agent:managed`).
+10. **Update `.gitignore`** -- adds entries for Locus runtime files (config, sessions, logs, worktrees).
 
 ## Directory Structure
 
@@ -36,7 +37,13 @@ After initialization, the `.locus/` directory looks like this:
 .locus/
   config.json          # Project configuration (gitignored)
   LOCUS.md             # Project context for AI agents (committed)
-  LEARNINGS.md         # Lessons and corrections (committed)
+  LEARNINGS.md         # Legacy lessons file (committed, migrated to memory/)
+  memory/              # Structured memory system (committed)
+    architecture.md    # Package ownership, module boundaries, data flow
+    conventions.md     # Code style, naming, patterns
+    decisions.md       # Trade-off rationale
+    preferences.md     # User corrections, rejected approaches
+    debugging.md       # Non-obvious gotchas, environment quirks
   sessions/            # REPL session data (gitignored)
   discussions/         # Architectural discussions
   artifacts/           # Generated artifacts

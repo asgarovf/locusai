@@ -453,7 +453,7 @@ function loadPastMemory(projectRoot: string): string {
     const content = readAllMemorySync(projectRoot);
     if (content.trim()) {
       return content.length > MEMORY_MAX_CHARS
-        ? content.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+        ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
         : content;
     }
   }
@@ -462,7 +462,7 @@ function loadPastMemory(projectRoot: string): string {
   if (existsSync(learningsPath)) {
     const content = readFileSync(learningsPath, "utf-8");
     return content.length > MEMORY_MAX_CHARS
-      ? content.slice(0, MEMORY_MAX_CHARS) + "\n\n...(truncated)"
+      ? `${content.slice(0, MEMORY_MAX_CHARS)}\n\n...(truncated)`
       : content;
   }
   return "";
@@ -493,9 +493,7 @@ function buildDiscussionPrompt(
   // Include structured memory (or fallback to LEARNINGS.md)
   const memoryContent = loadPastMemory(projectRoot);
   if (memoryContent) {
-    parts.push(
-      `<past-learnings>\n${memoryContent}\n</past-learnings>`
-    );
+    parts.push(`<past-learnings>\n${memoryContent}\n</past-learnings>`);
   }
 
   parts.push(`<discussion-topic>\n${topic}\n</discussion-topic>`);

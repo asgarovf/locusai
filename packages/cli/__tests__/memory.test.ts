@@ -3,11 +3,11 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  MEMORY_CATEGORIES,
   appendMemoryEntries,
   ensureMemoryDir,
   getMemoryDir,
   getMemoryStats,
+  MEMORY_CATEGORIES,
   migrateFromLearnings,
   readAllMemory,
   readMemoryFile,
@@ -108,7 +108,9 @@ describe("memory", () => {
       expect(arch).toContain("- **[Architecture]**: SDK exports shared types");
 
       const debug = await readMemoryFile(TEST_DIR, "debugging");
-      expect(debug).toContain("- **[Debugging]**: Bun needs --watch for hot reload");
+      expect(debug).toContain(
+        "- **[Debugging]**: Bun needs --watch for hot reload"
+      );
     });
 
     it("skips unknown categories without error", async () => {
@@ -159,13 +161,15 @@ describe("memory", () => {
     });
 
     it("migrates entries to correct category files", async () => {
-      writeLearnings([
-        "# Learnings",
-        "- **[Architecture]**: SDK exports shared types",
-        "- **[Debugging]**: Bun needs --watch for hot reload",
-        "- **[Conventions]**: Use camelCase everywhere",
-        "- **[User Preferences]**: Prefer slash commands over shortcuts",
-      ].join("\n"));
+      writeLearnings(
+        [
+          "# Learnings",
+          "- **[Architecture]**: SDK exports shared types",
+          "- **[Debugging]**: Bun needs --watch for hot reload",
+          "- **[Conventions]**: Use camelCase everywhere",
+          "- **[User Preferences]**: Prefer slash commands over shortcuts",
+        ].join("\n")
+      );
 
       const result = await migrateFromLearnings(TEST_DIR);
       expect(result.migrated).toBe(4);
@@ -185,7 +189,9 @@ describe("memory", () => {
     });
 
     it("maps [Packages] entries to architecture.md", async () => {
-      writeLearnings("- **[Packages]**: Never use workspace:* in published deps\n");
+      writeLearnings(
+        "- **[Packages]**: Never use workspace:* in published deps\n"
+      );
 
       const result = await migrateFromLearnings(TEST_DIR);
       expect(result.migrated).toBe(1);
@@ -218,10 +224,12 @@ describe("memory", () => {
     });
 
     it("skips duplicates within the same batch", async () => {
-      writeLearnings([
-        "- **[Architecture]**: Same entry",
-        "- **[Architecture]**: Same entry",
-      ].join("\n"));
+      writeLearnings(
+        [
+          "- **[Architecture]**: Same entry",
+          "- **[Architecture]**: Same entry",
+        ].join("\n")
+      );
 
       const result = await migrateFromLearnings(TEST_DIR);
       expect(result.migrated).toBe(1);
@@ -234,16 +242,21 @@ describe("memory", () => {
 
       await migrateFromLearnings(TEST_DIR);
 
-      const after = readFileSync(join(TEST_DIR, ".locus", "LEARNINGS.md"), "utf-8");
+      const after = readFileSync(
+        join(TEST_DIR, ".locus", "LEARNINGS.md"),
+        "utf-8"
+      );
       expect(after).toBe(original);
     });
 
     it("handles multi-line entries", async () => {
-      writeLearnings([
-        "- **[Architecture]**: First line of entry",
-        "  continuation of the entry on next line",
-        "- **[Debugging]**: Single line entry",
-      ].join("\n"));
+      writeLearnings(
+        [
+          "- **[Architecture]**: First line of entry",
+          "  continuation of the entry on next line",
+          "- **[Debugging]**: Single line entry",
+        ].join("\n")
+      );
 
       const result = await migrateFromLearnings(TEST_DIR);
       expect(result.migrated).toBe(2);

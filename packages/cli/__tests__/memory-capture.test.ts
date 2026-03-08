@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { prepareTranscript } from "../src/core/memory-capture.js";
 import {
   appendMemoryEntries,
   ensureMemoryDir,
   readMemoryFile,
 } from "../src/core/memory.js";
+import { prepareTranscript } from "../src/core/memory-capture.js";
 
 const TEST_DIR = join(tmpdir(), `locus-test-capture-${Date.now()}`);
 

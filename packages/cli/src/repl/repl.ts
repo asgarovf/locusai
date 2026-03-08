@@ -9,7 +9,10 @@ import { runAI } from "../ai/run-ai.js";
 import { createUserManagedSandboxRunner } from "../ai/runner.js";
 import { inferProviderFromModel } from "../core/ai-models.js";
 import { getLogger } from "../core/logger.js";
-import { captureMemoryFromSession, prepareTranscript } from "../core/memory-capture.js";
+import {
+  captureMemoryFromSession,
+  prepareTranscript,
+} from "../core/memory-capture.js";
 import { buildReplPrompt } from "../core/prompt-builder.js";
 import {
   checkProviderSandboxMismatch,
@@ -107,11 +110,16 @@ export async function startRepl(options: ReplOptions): Promise<void> {
     if (session.messages.length >= 2) {
       const log = getLogger();
       const transcript = prepareTranscript(session.messages);
-      captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
+      captureMemoryFromSession(projectRoot, transcript, {
+        model: config.ai?.model,
+      })
         .then((result) => {
-          if (result.captured > 0) log.info(`Captured ${result.captured} memory entries`);
+          if (result.captured > 0)
+            log.info(`Captured ${result.captured} memory entries`);
         })
-        .catch(() => {});
+        .catch(() => {
+          /* fire-and-forget */
+        });
     }
 
     return;
@@ -412,11 +420,16 @@ async function runInteractiveRepl(
   if (!wasInterrupted && session.messages.length >= 2) {
     const log = getLogger();
     const transcript = prepareTranscript(session.messages);
-    captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
+    captureMemoryFromSession(projectRoot, transcript, {
+      model: config.ai?.model,
+    })
       .then((result) => {
-        if (result.captured > 0) log.info(`Captured ${result.captured} memory entries`);
+        if (result.captured > 0)
+          log.info(`Captured ${result.captured} memory entries`);
       })
-      .catch(() => {});
+      .catch(() => {
+        /* fire-and-forget */
+      });
   }
 
   const shouldPersistOnExit =

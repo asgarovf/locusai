@@ -27,7 +27,11 @@ import {
 } from "../core/ecosystem.js";
 import { ensureLabels } from "../core/github.js";
 import { getLogger } from "../core/logger.js";
-import { ensureMemoryDir, getMemoryDir, migrateFromLearnings } from "../core/memory.js";
+import {
+  ensureMemoryDir,
+  getMemoryDir,
+  migrateFromLearnings,
+} from "../core/memory.js";
 import {
   bold,
   cyan,
@@ -233,7 +237,13 @@ It is read by AI agents before every task to avoid repeating mistakes and to fol
 <!-- Add learnings below this line. Format: - **[Category]**: Description -->
 `;
 
-const GITIGNORE_ENTRIES = ["", "# Locus", ".locus/", "!.locus/LEARNINGS.md", "!.locus/memory/"];
+const GITIGNORE_ENTRIES = [
+  "",
+  "# Locus",
+  ".locus/",
+  "!.locus/LEARNINGS.md",
+  "!.locus/memory/",
+];
 
 // ─── Command ─────────────────────────────────────────────────────────────────
 
@@ -300,9 +310,13 @@ export async function initCommand(cwd: string): Promise<void> {
   const memoryDirExists = existsSync(getMemoryDir(cwd));
   await ensureMemoryDir(cwd);
   if (!memoryDirExists) {
-    process.stderr.write(`${green("✓")} Created .locus/memory/ with category files\n`);
+    process.stderr.write(
+      `${green("✓")} Created .locus/memory/ with category files\n`
+    );
   } else {
-    process.stderr.write(`${dim("○")} .locus/memory/ already exists (preserved)\n`);
+    process.stderr.write(
+      `${dim("○")} .locus/memory/ already exists (preserved)\n`
+    );
   }
 
   // 4c. Migrate LEARNINGS.md → memory/ if applicable
