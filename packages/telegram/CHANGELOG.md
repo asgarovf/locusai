@@ -1,5 +1,18 @@
 # @locusai/locus-telegram
 
+## 0.26.0
+
+### Minor Changes
+
+- Memory improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/locus-gateway@0.26.0
+  - @locusai/locus-pm2@0.26.0
+  - @locusai/sdk@0.26.0
+
 ## 0.25.6
 
 ### Patch Changes

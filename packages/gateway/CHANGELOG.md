@@ -1,5 +1,16 @@
 # @locusai/locus-gateway
 
+## 0.26.0
+
+### Minor Changes
+
+- Memory improvements
+
+### Patch Changes
+
+- Updated dependencies
+  - @locusai/sdk@0.26.0
+
 ## 0.25.6
 
 ### Patch Changes

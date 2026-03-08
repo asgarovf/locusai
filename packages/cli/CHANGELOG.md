@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.26.0
+
+### Minor Changes
+
+- Memory improvements
+
 ## 0.25.6
 
 ### Patch Changes
