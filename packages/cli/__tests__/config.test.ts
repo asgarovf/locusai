@@ -118,6 +118,17 @@ describe("config", () => {
       expect(config.ai.provider).toBe("codex");
       expect(config.ai.model).toBe("gpt-5.3-codex");
     });
+
+    it("infers codex provider from gpt-5.4 model on load", () => {
+      setupProject({
+        version: "3.0.0",
+        github: { owner: "custom", repo: "mine", defaultBranch: "develop" },
+        ai: { provider: "claude", model: "gpt-5.4" },
+      });
+      const config = loadConfig(TEST_DIR);
+      expect(config.ai.provider).toBe("codex");
+      expect(config.ai.model).toBe("gpt-5.4");
+    });
   });
 
   describe("saveConfig", () => {
@@ -172,6 +183,20 @@ describe("config", () => {
       setupProject();
       const updated = updateConfigValue(TEST_DIR, "ai.model", "gpt-5.3-codex");
       expect(updated.ai.model).toBe("gpt-5.3-codex");
+      expect(updated.ai.provider).toBe("codex");
+    });
+
+    it("updates provider when model changes to gpt-5.4", () => {
+      setupProject();
+      const updated = updateConfigValue(TEST_DIR, "ai.model", "gpt-5.4");
+      expect(updated.ai.model).toBe("gpt-5.4");
+      expect(updated.ai.provider).toBe("codex");
+    });
+
+    it("updates provider when model changes to gpt-5.4-pro", () => {
+      setupProject();
+      const updated = updateConfigValue(TEST_DIR, "ai.model", "gpt-5.4-pro");
+      expect(updated.ai.model).toBe("gpt-5.4-pro");
       expect(updated.ai.provider).toBe("codex");
     });
 

@@ -43,4 +43,17 @@ describe("repl model config persistence", () => {
     expect(reloaded.ai.model).toBe("gpt-5.3-codex");
     expect(reloaded.ai.provider).toBe("codex");
   });
+
+  it("persists gpt-5.4 model and infers codex provider", () => {
+    const inMemoryConfig = loadConfig(TEST_DIR);
+
+    persistReplModelSelection(TEST_DIR, inMemoryConfig, "gpt-5.4");
+
+    expect(inMemoryConfig.ai.model).toBe("gpt-5.4");
+    expect(inMemoryConfig.ai.provider).toBe("codex");
+
+    const reloaded = loadConfig(TEST_DIR);
+    expect(reloaded.ai.model).toBe("gpt-5.4");
+    expect(reloaded.ai.provider).toBe("codex");
+  });
 });

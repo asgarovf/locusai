@@ -20,4 +20,20 @@ describe("buildCodexArgs", () => {
     expect(args).not.toContain("--approval-mode");
     expect(args.at(-1)).toBe("-");
   });
+
+  test("includes gpt-5.4 model", () => {
+    const args = buildCodexArgs("gpt-5.4");
+
+    expect(args).toContain("--model");
+    expect(args).toContain("gpt-5.4");
+    expect(args.at(-1)).toBe("-");
+  });
+
+  test("includes gpt-5.4-pro model", () => {
+    const args = buildCodexArgs("gpt-5.4-pro");
+
+    expect(args).toContain("--model");
+    expect(args).toContain("gpt-5.4-pro");
+    expect(args.at(-1)).toBe("-");
+  });
 });
