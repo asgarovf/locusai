@@ -266,17 +266,15 @@ async function runPlanConversion(
   projectRoot: string,
   artifactName: string
 ): Promise<void> {
-  const { execCommand } = await import("./exec.js");
+  const { planCommand } = await import("./plan.js");
 
   process.stderr.write(
     `\n${bold("Converting artifact to plan:")} ${cyan(artifactName)}\n\n`
   );
 
-  await execCommand(
-    projectRoot,
-    [`Create a plan according to ${artifactName}`],
-    {}
-  );
+  await planCommand(projectRoot, [
+    `Create a plan according to ${artifactName}`,
+  ]);
 }
 
 // Re-export utilities for use elsewhere
