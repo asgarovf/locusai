@@ -280,6 +280,7 @@ ${bold("Commands:")}
   ${cyan("packages")}          Manage installed packages (list, outdated)
   ${cyan("pkg")} ${dim("<name> [cmd]")}   Run a command from an installed package
   ${cyan("skills")}            Discover and manage agent skills
+  ${cyan("memory")}            Inspect, search, and manage memory
   ${cyan("sandbox")}           Manage Docker sandbox lifecycle
   ${cyan("upgrade")}           Check for and install updates
 
@@ -689,6 +690,13 @@ async function main(): Promise<void> {
       const { sandboxCommand } = await import("./commands/sandbox.js");
       const sandboxArgs = parsed.flags.help ? ["help"] : parsed.args;
       await sandboxCommand(projectRoot, sandboxArgs);
+      break;
+    }
+
+    case "memory": {
+      const { memoryCommand } = await import("./commands/memory.js");
+      const memoryArgs = parsed.flags.help ? ["help"] : parsed.args;
+      await memoryCommand(projectRoot, memoryArgs);
       break;
     }
 
