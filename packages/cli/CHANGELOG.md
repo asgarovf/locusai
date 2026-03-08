@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.25.4
+
+### Patch Changes
+
+- use effective workdir in createIssuePR for worktree runs
+
 ## 0.25.3
 
 ### Patch Changes

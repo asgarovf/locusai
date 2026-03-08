@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.25.4
+
+### Patch Changes
+
+- use effective workdir in createIssuePR for worktree runs
+- Updated dependencies
+  - @locusai/locus-gateway@0.25.4
+  - @locusai/locus-pm2@0.25.4
+  - @locusai/sdk@0.25.4
+
 ## 0.25.3
 
 ### Patch Changes

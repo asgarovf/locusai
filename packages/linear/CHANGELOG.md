@@ -1,5 +1,13 @@
 # @locusai/locus-linear
 
+## 0.25.4
+
+### Patch Changes
+
+- use effective workdir in createIssuePR for worktree runs
+- Updated dependencies
+  - @locusai/sdk@0.25.4
+
 ## 0.25.3
 
 ### Patch Changes

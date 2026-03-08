@@ -1,6 +1,6 @@
 {
   "name": "@locusai/sdk",
-  "version": "0.25.3",
+  "version": "0.25.4",
   "description": "SDK for building Locus-compatible community packages",
   "type": "module",
   "main": "./dist/index.cjs",

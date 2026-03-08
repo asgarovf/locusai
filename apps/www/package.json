@@ -1,6 +1,6 @@
 {
   "name": "@locusai/www",
-  "version": "0.25.3",
+  "version": "0.25.4",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
