@@ -22,6 +22,7 @@ import {
   pm2Start,
   pm2Status,
   pm2Stop,
+  startHeartbeat,
 } from "@locusai/locus-pm2";
 import { createLogger } from "@locusai/sdk";
 import { getTelegramPm2Config, loadTelegramConfig } from "./config.js";
@@ -157,9 +158,15 @@ async function handleBot(): Promise<void> {
 
   const runner = run(bot);
 
+  const stopHeartbeat = startHeartbeat({
+    processName: "locus-telegram",
+    logger,
+  });
+
   // Graceful shutdown
   const shutdown = () => {
     logger.info("Shutting down bot...");
+    stopHeartbeat();
     runner.stop();
     process.exit(0);
   };

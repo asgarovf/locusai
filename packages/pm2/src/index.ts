@@ -1,3 +1,5 @@
+export type { HeartbeatLogger, HeartbeatOptions } from "./heartbeat.js";
+export { startHeartbeat } from "./heartbeat.js";
 export type { Pm2Config, Pm2Status } from "./pm2.js";
 export {
   pm2Delete,

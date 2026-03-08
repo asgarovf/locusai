@@ -4,6 +4,7 @@
  * Reads cron config, starts the scheduler, writes output to .locus/cron/.
  */
 
+import { startHeartbeat } from "@locusai/locus-pm2";
 import { createLogger } from "@locusai/sdk";
 import { loadCronConfig } from "./config.js";
 import { CronScheduler } from "./scheduler.js";
@@ -30,11 +31,17 @@ export async function runWorker(): Promise<void> {
   const scheduler = new CronScheduler(config, process.cwd());
   scheduler.start();
 
+  const stopHeartbeat = startHeartbeat({
+    processName: "locus-cron",
+    logger,
+  });
+
   logger.info(`Cron worker started with ${config.crons.length} job(s)`);
 
   // Graceful shutdown
   const shutdown = () => {
     logger.info("Shutting down cron worker...");
+    stopHeartbeat();
     scheduler.stop();
     process.exit(0);
   };
