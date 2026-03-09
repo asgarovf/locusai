@@ -5,6 +5,7 @@
  *   locus skills              # alias for `locus skills list`
  *   locus skills list         # list available skills from remote registry
  *   locus skills list --installed  # list locally installed skills
+ *   locus skills search <query>   # search skills by name, description, or tags
  *   locus skills install <name>   # install a skill from the registry
  *   locus skills remove <name>    # remove an installed skill
  *   locus skills update [name]    # update installed skill(s) from registry
@@ -390,6 +391,95 @@ async function infoSkill(name: string): Promise<void> {
   process.stderr.write("\n");
 }
 
+// ─── Search ──────────────────────────────────────────────────────────────────
+
+async function searchSkills(
+  query: string,
+  flags: Record<string, string>
+): Promise<void> {
+  if (!query && !flags.tag) {
+    process.stderr.write(`${red("✗")} Please provide a search query.\n`);
+    process.stderr.write(
+      `  Usage: ${bold("locus skills search <query>")} or ${bold("locus skills search --tag <tag>")}\n`
+    );
+    process.exit(1);
+  }
+
+  let registry: RemoteSkillRegistry;
+  try {
+    registry = await fetchRegistry();
+  } catch (err) {
+    process.stderr.write(
+      `${red("✗")} Failed to fetch skills registry. Check your internet connection.\n`
+    );
+    process.stderr.write(`  ${dim((err as Error).message)}\n`);
+    process.exit(1);
+  }
+
+  const tagFilter = flags.tag?.toLowerCase();
+  const queryLower = query?.toLowerCase() ?? "";
+
+  const matches = registry.skills.filter((s) => {
+    // Tag filter (exact match)
+    if (tagFilter) {
+      return s.tags.some((t) => t.toLowerCase() === tagFilter);
+    }
+
+    // Text search: name, description, tags
+    const nameMatch = s.name.toLowerCase().includes(queryLower);
+    const descMatch = s.description.toLowerCase().includes(queryLower);
+    const tagMatch = s.tags.some((t) => t.toLowerCase().includes(queryLower));
+    return nameMatch || descMatch || tagMatch;
+  });
+
+  if (matches.length === 0) {
+    process.stderr.write(
+      `\n${yellow("⚠")}  No skills found matching "${bold(tagFilter || query)}"\n`
+    );
+    process.stderr.write(
+      `  Run ${bold("locus skills list")} to see all available skills.\n\n`
+    );
+    return;
+  }
+
+  const cwd = process.cwd();
+  const lockFile = readLockFile(cwd);
+
+  process.stderr.write(
+    `\n${bold("Search Results")} for "${cyan(tagFilter || query)}"\n\n`
+  );
+
+  const columns: Column[] = [
+    { key: "name", header: "Name", minWidth: 12, maxWidth: 24 },
+    { key: "description", header: "Description", minWidth: 20, maxWidth: 44 },
+    {
+      key: "tags",
+      header: "Tags",
+      minWidth: 10,
+      maxWidth: 30,
+      format: (val) => dim((val as string[]).join(", ")),
+    },
+    {
+      key: "status",
+      header: "Status",
+      minWidth: 8,
+      maxWidth: 12,
+    },
+  ];
+
+  const rows = matches.map((s) => ({
+    name: cyan(s.name),
+    description: s.description,
+    tags: s.tags,
+    status: s.name in lockFile.skills ? green("installed") : dim("available"),
+  }));
+
+  process.stderr.write(`${renderTable(columns, rows)}\n\n`);
+  process.stderr.write(
+    `  ${dim(`${matches.length} skill(s) found.`)} Install with: ${bold("locus skills install <name>")}\n\n`
+  );
+}
+
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
 function printSkillsHelp(): void {
@@ -400,6 +490,7 @@ ${bold("Usage:")}
 ${bold("Subcommands:")}
   ${cyan("list")}              List available skills from the registry
   ${cyan("list")} ${dim("--installed")}   List locally installed skills
+  ${cyan("search")} ${dim("<query>")}    Search skills by name, description, or tags
   ${cyan("install")} ${dim("<name>")}    Install a skill from the registry
   ${cyan("remove")} ${dim("<name>")}     Remove an installed skill (alias: ${cyan("uninstall")})
   ${cyan("update")} ${dim("[name]")}     Update installed skill(s) from registry
@@ -408,6 +499,8 @@ ${bold("Subcommands:")}
 ${bold("Examples:")}
   locus skills list                   ${dim("# Browse available skills")}
   locus skills list --installed       ${dim("# Show installed skills")}
+  locus skills search "code review"   ${dim("# Search by keyword")}
+  locus skills search --tag testing   ${dim("# Search by tag")}
   locus skills install code-review    ${dim("# Install a skill")}
   locus skills remove code-review     ${dim("# Remove a skill")}
   locus skills update                 ${dim("# Update all installed skills")}
@@ -471,12 +564,18 @@ export async function skillsCommand(
       break;
     }
 
+    case "search": {
+      const searchQuery = args.slice(1).join(" ");
+      await searchSkills(searchQuery, flags);
+      break;
+    }
+
     default:
       process.stderr.write(
         `${red("✗")} Unknown subcommand: ${bold(subcommand)}\n`
       );
       process.stderr.write(
-        `  Available: ${bold("list")}, ${bold("install")}, ${bold("remove")} (${bold("uninstall")}), ${bold("update")}, ${bold("info")}\n`
+        `  Available: ${bold("list")}, ${bold("search")}, ${bold("install")}, ${bold("remove")} (${bold("uninstall")}), ${bold("update")}, ${bold("info")}\n`
       );
       process.exit(1);
   }

@@ -7,6 +7,11 @@
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  type IssueContext,
+  matchRelevantSkills,
+  type SkillMeta,
+} from "../skills/matcher.js";
 import { CLAUDE_SKILLS_DIR } from "../skills/types.js";
 import type { Issue, LocusConfig } from "../types.js";
 import { getMemoryDir, readAllMemorySync } from "./memory.js";
@@ -44,8 +49,8 @@ export function buildExecutionPrompt(ctx: PromptContext): string {
   // System context
   sections.push(buildSystemContext(ctx.projectRoot));
 
-  // Installed skills (compact index — agent reads full content from disk if relevant)
-  const skills = buildSkillsContext(ctx.projectRoot);
+  // Installed skills (filtered by relevance to the current task)
+  const skills = buildSkillsContext(ctx.projectRoot, ctx.issue);
   if (skills) sections.push(skills);
 
   // Task context
@@ -74,8 +79,8 @@ export function buildFeedbackPrompt(ctx: FeedbackContext): string {
   // System context
   sections.push(buildSystemContext(ctx.projectRoot));
 
-  // Installed skills
-  const skills = buildSkillsContext(ctx.projectRoot);
+  // Installed skills (filtered by relevance to the task)
+  const skills = buildSkillsContext(ctx.projectRoot, ctx.issue);
   if (skills) sections.push(skills);
 
   // Original task
@@ -342,9 +347,10 @@ function buildFeedbackInstructions(): string {
 
 /**
  * Build a compact skills context listing installed skills by name + description.
+ * When an issue is provided, skills are filtered by relevance to reduce prompt size.
  * The agent is instructed to read the full SKILL.md from disk if relevant.
  */
-function buildSkillsContext(projectRoot: string): string | null {
+function buildSkillsContext(projectRoot: string, issue?: Issue): string | null {
   const skillsDir = join(projectRoot, CLAUDE_SKILLS_DIR);
   if (!existsSync(skillsDir)) return null;
 
@@ -359,29 +365,50 @@ function buildSkillsContext(projectRoot: string): string | null {
 
   if (dirs.length === 0) return null;
 
-  const entries: string[] = [];
+  // Parse all installed skills into structured metadata
+  let allSkills: (SkillMeta & { dir: string })[] = [];
   for (const dir of dirs) {
     const skillPath = join(skillsDir, dir, "SKILL.md");
     const content = readFileSafe(skillPath);
     if (!content) continue;
 
-    // Parse YAML frontmatter for name + description
     const fm = parseFrontmatter(content);
-    const name = fm.name || dir;
-    const description = fm.description || "";
-    entries.push(`- **${name}**: ${description}`);
+    allSkills.push({
+      dir,
+      name: fm.name || dir,
+      description: fm.description || "",
+      tags: fm.tags ? fm.tags.split(",").map((t: string) => t.trim()) : [],
+    });
   }
 
-  if (entries.length === 0) return null;
+  if (allSkills.length === 0) return null;
+
+  // Filter by relevance when issue context is available
+  let selectedSkills = allSkills;
+  if (issue) {
+    const issueCtx: IssueContext = {
+      title: issue.title,
+      body: issue.body || "",
+      labels: issue.labels,
+    };
+    const relevant = matchRelevantSkills(issueCtx, allSkills);
+    selectedSkills = allSkills.filter((s) =>
+      relevant.some((r) => r.name === s.name)
+    );
+  }
+
+  const entries = selectedSkills.map(
+    (s) => `- **${s.name}**: ${s.description}`
+  );
 
   return `<installed-skills>
-The following skills are installed in this project. If a skill is relevant to the current task, read its full instructions from \`.claude/skills/<name>/SKILL.md\` before starting work.
+The following skills are installed and relevant to this task. Read the full instructions from \`.claude/skills/<name>/SKILL.md\` before using a skill.
 
 ${entries.join("\n")}
 </installed-skills>`;
 }
 
-/** Extract name and description from YAML frontmatter in a SKILL.md file. */
+/** Extract key-value pairs from YAML frontmatter in a SKILL.md file. */
 function parseFrontmatter(content: string): Record<string, string> {
   const result: Record<string, string> = {};
   const match = content.match(/^---\n([\s\S]*?)\n---/);
@@ -391,8 +418,13 @@ function parseFrontmatter(content: string): Record<string, string> {
     const idx = line.indexOf(":");
     if (idx === -1) continue;
     const key = line.slice(0, idx).trim();
-    const val = line.slice(idx + 1).trim();
-    if (key && val) result[key] = val;
+    let val = line.slice(idx + 1).trim();
+    if (!key || !val) continue;
+    // Strip YAML array brackets: [a, b, c] → "a, b, c"
+    if (val.startsWith("[") && val.endsWith("]")) {
+      val = val.slice(1, -1);
+    }
+    result[key] = val;
   }
   return result;
 }
