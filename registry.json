@@ -34,7 +34,14 @@
     {
       "name": "conventional-commits",
       "description": "Write well-structured conventional commit messages. Use when committing code changes to ensure consistent, parseable commit history that enables automated changelogs and semantic versioning.",
-      "tags": ["git", "commits", "conventional-commits", "changelog", "versioning", "release"],
+      "tags": [
+        "git",
+        "commits",
+        "conventional-commits",
+        "changelog",
+        "versioning",
+        "release"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/conventional-commits/SKILL.md",
       "author": "locusai"
@@ -42,7 +49,15 @@
     {
       "name": "git-essentials",
       "description": "Expert Git workflow assistance for branching, merging, rebasing, conflict resolution, and history management. Use when working with Git operations beyond simple commits.",
-      "tags": ["git", "branching", "merging", "rebasing", "conflicts", "version-control", "workflow"],
+      "tags": [
+        "git",
+        "branching",
+        "merging",
+        "rebasing",
+        "conflicts",
+        "version-control",
+        "workflow"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/git-essentials/SKILL.md",
       "author": "locusai"
@@ -50,7 +65,17 @@
     {
       "name": "github-cli",
       "description": "Automate GitHub workflows using the gh CLI for pull requests, issues, releases, actions, and repository management. Use when interacting with GitHub beyond basic git operations.",
-      "tags": ["github", "gh", "pull-request", "issues", "actions", "releases", "ci-cd", "pr", "workflow"],
+      "tags": [
+        "github",
+        "gh",
+        "pull-request",
+        "issues",
+        "actions",
+        "releases",
+        "ci-cd",
+        "pr",
+        "workflow"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/github-cli/SKILL.md",
       "author": "locusai"
@@ -58,7 +83,15 @@
     {
       "name": "context-builder",
       "description": "Gather comprehensive project context before starting implementation. Use at the beginning of complex tasks to understand codebase structure, dependencies, patterns, and conventions before writing code.",
-      "tags": ["context", "codebase", "analysis", "exploration", "architecture", "onboarding", "understanding"],
+      "tags": [
+        "context",
+        "codebase",
+        "analysis",
+        "exploration",
+        "architecture",
+        "onboarding",
+        "understanding"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/context-builder/SKILL.md",
       "author": "locusai"
@@ -66,7 +99,16 @@
     {
       "name": "test-generator",
       "description": "Generate comprehensive unit, integration, and end-to-end tests. Use when adding test coverage, writing tests for new features, or improving existing test suites.",
-      "tags": ["testing", "unit-tests", "integration-tests", "e2e", "jest", "vitest", "pytest", "coverage"],
+      "tags": [
+        "testing",
+        "unit-tests",
+        "integration-tests",
+        "e2e",
+        "jest",
+        "vitest",
+        "pytest",
+        "coverage"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/test-generator/SKILL.md",
       "author": "locusai"
@@ -74,7 +116,15 @@
     {
       "name": "docker-essentials",
       "description": "Create and optimize Dockerfiles, docker-compose configurations, and container workflows. Use when containerizing applications, setting up development environments, or optimizing Docker builds.",
-      "tags": ["docker", "containers", "dockerfile", "docker-compose", "devops", "deployment", "containerization"],
+      "tags": [
+        "docker",
+        "containers",
+        "dockerfile",
+        "docker-compose",
+        "devops",
+        "deployment",
+        "containerization"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/docker-essentials/SKILL.md",
       "author": "locusai"
@@ -82,7 +132,16 @@
     {
       "name": "api-design",
       "description": "Design and implement RESTful APIs with proper routing, validation, error handling, and documentation. Use when building new API endpoints, designing API architecture, or improving existing APIs.",
-      "tags": ["api", "rest", "graphql", "endpoints", "http", "routing", "validation", "openapi"],
+      "tags": [
+        "api",
+        "rest",
+        "graphql",
+        "endpoints",
+        "http",
+        "routing",
+        "validation",
+        "openapi"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/api-design/SKILL.md",
       "author": "locusai"
@@ -90,7 +149,15 @@
     {
       "name": "debugging",
       "description": "Systematically diagnose and fix bugs using structured debugging techniques. Use when investigating errors, unexpected behavior, failing tests, or production issues.",
-      "tags": ["debugging", "errors", "troubleshooting", "logs", "stack-trace", "bugs", "diagnostics"],
+      "tags": [
+        "debugging",
+        "errors",
+        "troubleshooting",
+        "logs",
+        "stack-trace",
+        "bugs",
+        "diagnostics"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/debugging/SKILL.md",
       "author": "locusai"
@@ -98,7 +165,14 @@
     {
       "name": "refactoring",
       "description": "Improve code structure without changing behavior using proven refactoring patterns. Use when cleaning up code, reducing duplication, improving readability, or restructuring modules.",
-      "tags": ["refactoring", "clean-code", "code-quality", "design-patterns", "maintainability", "technical-debt"],
+      "tags": [
+        "refactoring",
+        "clean-code",
+        "code-quality",
+        "design-patterns",
+        "maintainability",
+        "technical-debt"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/refactoring/SKILL.md",
       "author": "locusai"
@@ -106,7 +180,16 @@
     {
       "name": "performance-optimizer",
       "description": "Profile, diagnose, and fix performance bottlenecks in applications. Use when optimizing slow queries, reducing load times, improving runtime performance, or reducing memory usage.",
-      "tags": ["performance", "optimization", "profiling", "caching", "database", "memory", "latency", "speed"],
+      "tags": [
+        "performance",
+        "optimization",
+        "profiling",
+        "caching",
+        "database",
+        "memory",
+        "latency",
+        "speed"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/performance-optimizer/SKILL.md",
       "author": "locusai"
@@ -114,7 +197,17 @@
     {
       "name": "dependency-manager",
       "description": "Manage project dependencies — update packages, audit vulnerabilities, resolve conflicts, and keep dependencies healthy. Use when updating packages, fixing vulnerability alerts, or resolving dependency issues.",
-      "tags": ["dependencies", "npm", "yarn", "pip", "packages", "vulnerabilities", "security", "updates", "audit"],
+      "tags": [
+        "dependencies",
+        "npm",
+        "yarn",
+        "pip",
+        "packages",
+        "vulnerabilities",
+        "security",
+        "updates",
+        "audit"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/dependency-manager/SKILL.md",
       "author": "locusai"
@@ -122,7 +215,16 @@
     {
       "name": "ci-cd-pipeline",
       "description": "Create and optimize CI/CD pipelines with GitHub Actions, automated testing, deployment, and release workflows. Use when setting up continuous integration, deployment automation, or improving build pipelines.",
-      "tags": ["ci-cd", "github-actions", "deployment", "automation", "pipeline", "testing", "release", "devops"],
+      "tags": [
+        "ci-cd",
+        "github-actions",
+        "deployment",
+        "automation",
+        "pipeline",
+        "testing",
+        "release",
+        "devops"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/ci-cd-pipeline/SKILL.md",
       "author": "locusai"
@@ -130,7 +232,15 @@
     {
       "name": "error-handling",
       "description": "Implement robust error handling with custom error types, proper propagation, user-friendly messages, and logging. Use when adding error handling to APIs, libraries, or applications.",
-      "tags": ["errors", "error-handling", "exceptions", "logging", "validation", "resilience", "fault-tolerance"],
+      "tags": [
+        "errors",
+        "error-handling",
+        "exceptions",
+        "logging",
+        "validation",
+        "resilience",
+        "fault-tolerance"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/error-handling/SKILL.md",
       "author": "locusai"
@@ -138,7 +248,16 @@
     {
       "name": "security-audit",
       "description": "Audit code and infrastructure for security vulnerabilities. Use when performing security reviews, checking for OWASP Top 10 issues, auditing dependencies, or hardening applications.",
-      "tags": ["security", "audit", "vulnerabilities", "owasp", "xss", "sql-injection", "authentication", "secrets"],
+      "tags": [
+        "security",
+        "audit",
+        "vulnerabilities",
+        "owasp",
+        "xss",
+        "sql-injection",
+        "authentication",
+        "secrets"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/security-audit/SKILL.md",
       "author": "locusai"
@@ -146,7 +265,15 @@
     {
       "name": "documentation-writer",
       "description": "Write clear technical documentation including READMEs, API docs, architecture guides, and inline documentation. Use when creating or improving project documentation.",
-      "tags": ["documentation", "readme", "api-docs", "technical-writing", "jsdoc", "docstrings", "guides"],
+      "tags": [
+        "documentation",
+        "readme",
+        "api-docs",
+        "technical-writing",
+        "jsdoc",
+        "docstrings",
+        "guides"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/documentation-writer/SKILL.md",
       "author": "locusai"
@@ -154,7 +281,17 @@
     {
       "name": "database-sql",
       "description": "Design database schemas, write efficient SQL queries, create migrations, and optimize database performance. Use when working with databases, writing queries, or designing data models.",
-      "tags": ["database", "sql", "postgresql", "mysql", "migrations", "schema", "queries", "orm", "data-modeling"],
+      "tags": [
+        "database",
+        "sql",
+        "postgresql",
+        "mysql",
+        "migrations",
+        "schema",
+        "queries",
+        "orm",
+        "data-modeling"
+      ],
       "platforms": ["Claude", "ChatGPT", "Gemini"],
       "path": "skills/database-sql/SKILL.md",
       "author": "locusai"

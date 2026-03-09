@@ -163,7 +163,7 @@ function tokenize(text: string): string[] {
   if (!text) return [];
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9\-]/g, " ")
+    .replace(/[^a-z0-9-]/g, " ")
     .split(/\s+/)
     .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
 }

@@ -366,7 +366,7 @@ function buildSkillsContext(projectRoot: string, issue?: Issue): string | null {
   if (dirs.length === 0) return null;
 
   // Parse all installed skills into structured metadata
-  let allSkills: (SkillMeta & { dir: string })[] = [];
+  const allSkills: (SkillMeta & { dir: string })[] = [];
   for (const dir of dirs) {
     const skillPath = join(skillsDir, dir, "SKILL.md");
     const content = readFileSafe(skillPath);
