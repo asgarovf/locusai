@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.26.1
+
+### Patch Changes
+
+- New skills & skills search
+- Updated dependencies
+  - @locusai/locus-pm2@0.26.1
+  - @locusai/sdk@0.26.1
+
 ## 0.26.0
 
 ### Minor Changes

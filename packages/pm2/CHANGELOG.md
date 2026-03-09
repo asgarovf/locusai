@@ -1,5 +1,11 @@
 # @locusai/locus-pm2
 
+## 0.26.1
+
+### Patch Changes
+
+- New skills & skills search
+
 ## 0.26.0
 
 ### Minor Changes
