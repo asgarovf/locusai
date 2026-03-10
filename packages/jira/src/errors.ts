@@ -44,6 +44,15 @@ export class JiraRateLimitError extends Error {
   }
 }
 
+export class JiraApiGoneError extends Error {
+  constructor(
+    message = "Jira API endpoint has been removed (410 Gone). The endpoint you are using has been deprecated and is no longer available."
+  ) {
+    super(message);
+    this.name = "JiraApiGoneError";
+  }
+}
+
 // ─── Error Handler ──────────────────────────────────────────────────────────
 
 /**
@@ -65,6 +74,10 @@ export function handleJiraError(error: AxiosError): never {
       throw new JiraPermissionError(`Jira permission denied (403): ${detail}`);
     case 404:
       throw new JiraNotFoundError(`Jira resource not found (404): ${detail}`);
+    case 410:
+      throw new JiraApiGoneError(
+        `Jira API endpoint has been removed (410 Gone): ${detail}`
+      );
     case 429:
       throw new JiraRateLimitError(
         `Jira API rate limit exceeded (429): ${detail}`
@@ -115,6 +128,16 @@ export function handleCommandError(err: unknown): never {
   if (err instanceof JiraRateLimitError) {
     process.stderr.write(
       "\n  Jira API rate limit exceeded. Wait a moment and try again.\n\n"
+    );
+    process.exit(1);
+  }
+
+  if (err instanceof JiraApiGoneError) {
+    process.stderr.write(
+      "\n  A Jira API endpoint has been removed (410 Gone).\n" +
+        "  This usually means the endpoint was deprecated by Atlassian.\n" +
+        "  Update your package to get the latest API support:\n" +
+        "    npm update @locusai/locus-jira\n\n"
     );
     process.exit(1);
   }
