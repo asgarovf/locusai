@@ -2,12 +2,13 @@
  * Auth command for locus-jira.
  *
  * Handles:
- *   - Default: prompt user to choose API Token or PAT, run flow, store credentials
+ *   - Default: prompt user to choose OAuth, API Token, or PAT, run flow, store credentials
  *   - --status: display current auth status
  *   - --revoke: clear stored credentials
  */
 
 import { promptForApiToken } from "../auth/api-token.js";
+import { promptForOAuth } from "../auth/oauth.js";
 import { promptForPAT } from "../auth/pat.js";
 import { prompt } from "../auth/prompt.js";
 import {
@@ -52,33 +53,39 @@ async function handleAuthFlow(method?: string): Promise<void> {
 
   let choice: string;
 
-  if (method === "api-token") {
+  if (method === "oauth") {
     choice = "1";
-  } else if (method === "pat") {
+  } else if (method === "api-token") {
     choice = "2";
+  } else if (method === "pat") {
+    choice = "3";
   } else if (method) {
     process.stderr.write(
-      `  Unknown method: ${method}\n  Valid methods: api-token, pat\n\n`
+      `  Unknown method: ${method}\n  Valid methods: oauth, api-token, pat\n\n`
     );
     process.exit(1);
   } else {
     process.stderr.write("\n  Choose authentication method:\n");
-    process.stderr.write("    1) API Token  (Jira Cloud — email + token)\n");
-    process.stderr.write("    2) PAT        (Jira Server / Data Center)\n\n");
+    process.stderr.write("    1) OAuth 2.0  (Jira Cloud — recommended)\n");
+    process.stderr.write("    2) API Token  (Jira Cloud — email + token)\n");
+    process.stderr.write("    3) PAT        (Jira Server / Data Center)\n\n");
 
-    choice = await prompt("  Enter 1 or 2: ");
+    choice = await prompt("  Enter 1, 2, or 3: ");
   }
 
   let credentials:
+    | Awaited<ReturnType<typeof promptForOAuth>>
     | Awaited<ReturnType<typeof promptForApiToken>>
     | Awaited<ReturnType<typeof promptForPAT>>;
 
   if (choice === "1") {
-    credentials = await promptForApiToken();
+    credentials = await promptForOAuth();
   } else if (choice === "2") {
+    credentials = await promptForApiToken();
+  } else if (choice === "3") {
     credentials = await promptForPAT();
   } else {
-    process.stderr.write("  Invalid choice. Please enter 1 or 2.\n\n");
+    process.stderr.write("  Invalid choice. Please enter 1, 2, or 3.\n\n");
     process.exit(1);
   }
 
@@ -108,6 +115,11 @@ function showStatus(): void {
     process.stderr.write(`  Instance:   ${creds.baseUrl}\n`);
   } else if (creds.method === "oauth") {
     process.stderr.write(`  Cloud ID:   ${creds.cloudId}\n`);
+    const expiresAt = new Date(creds.expiresAt);
+    const isExpired = expiresAt.getTime() < Date.now();
+    process.stderr.write(
+      `  Token:      ${isExpired ? "expired" : `expires ${expiresAt.toLocaleString()}`}\n`
+    );
   }
 
   process.stderr.write("\n");

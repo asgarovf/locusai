@@ -25,9 +25,32 @@ const DEFAULT_JIRA_CONFIG: JiraConfig = {
 
 /**
  * Apply environment variable overrides to credentials.
- * Supports JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN, and JIRA_PAT.
+ * Supports OAuth (JIRA_OAUTH_*), API Token (JIRA_EMAIL + JIRA_API_TOKEN),
+ * and PAT (JIRA_PAT) overrides. OAuth takes highest precedence.
  */
 function applyEnvOverrides(config: JiraConfig): JiraConfig {
+  // OAuth env vars (highest precedence — for CI/CD with pre-obtained tokens)
+  const oauthAccessToken = process.env.JIRA_OAUTH_ACCESS_TOKEN;
+  const oauthRefreshToken = process.env.JIRA_OAUTH_REFRESH_TOKEN;
+  const oauthClientId = process.env.JIRA_OAUTH_CLIENT_ID;
+  const oauthClientSecret = process.env.JIRA_OAUTH_CLIENT_SECRET;
+  const cloudId = process.env.JIRA_CLOUD_ID;
+
+  if (oauthAccessToken && oauthClientId && oauthClientSecret && cloudId) {
+    return {
+      ...config,
+      auth: {
+        method: "oauth",
+        accessToken: oauthAccessToken,
+        refreshToken: oauthRefreshToken ?? "",
+        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+        cloudId,
+        clientId: oauthClientId,
+        clientSecret: oauthClientSecret,
+      },
+    };
+  }
+
   const baseUrl = process.env.JIRA_BASE_URL;
   const email = process.env.JIRA_EMAIL;
   const apiToken = process.env.JIRA_API_TOKEN;
