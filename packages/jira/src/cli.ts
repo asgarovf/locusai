@@ -2,8 +2,8 @@
 export {};
 
 const { main } = await import("./index.js");
+const { handleCommandError } = await import("./errors.js");
 
 main(process.argv.slice(2)).catch((error) => {
-  console.error(error);
-  process.exit(1);
+  handleCommandError(error);
 });

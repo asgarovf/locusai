@@ -1,3 +1,41 @@
+export { handleCommandError, handleJiraError } from "./errors.js";
+export {
+  JiraAuthError,
+  JiraTokenExpiredError,
+  JiraPermissionError,
+  JiraNotFoundError,
+  JiraRateLimitError,
+} from "./errors.js";
+export {
+  loadJiraConfig,
+  saveJiraConfig,
+  validateJiraConfig,
+  saveCredentials,
+  clearCredentials,
+  loadCredentials,
+} from "./config.js";
+export type {
+  JiraConfig,
+  JiraCredentials,
+  JiraOAuthCredentials,
+  JiraApiTokenCredentials,
+  JiraPatCredentials,
+  JiraAuthMethod,
+} from "./types.js";
+export type {
+  JiraIssue,
+  JiraIssueFields,
+  JiraSearchResult,
+  JiraTransition,
+  JiraSprint,
+  JiraBoard,
+  JiraProject,
+  JiraUser,
+  JiraComment,
+  ADFNode,
+  ADFMark,
+} from "./client/types.js";
+
 export async function main(args: string[]): Promise<void> {
   const command = args[0];
 
