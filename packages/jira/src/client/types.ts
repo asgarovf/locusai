@@ -68,9 +68,11 @@ export interface JiraIssue {
 
 export interface JiraSearchResult {
   issues: JiraIssue[];
-  total: number;
-  startAt: number;
-  maxResults: number;
+  nextPageToken?: string;
+  isLast?: boolean;
+  total?: number;
+  startAt?: number;
+  maxResults?: number;
 }
 
 // ─── Transitions ────────────────────────────────────────────────────────────
