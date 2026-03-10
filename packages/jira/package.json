@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-jira",
-  "version": "0.1.1",
+  "version": "0.26.2",
   "description": "Fetch and execute Jira issues with Locus",
   "type": "module",
   "bin": {
