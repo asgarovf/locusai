@@ -23,8 +23,6 @@ export {
   saveJiraConfig,
   validateJiraConfig,
 } from "./config.js";
-export { mapJiraIssue, mapJiraIssueBatch } from "./mapper.js";
-export type { LocusIssue } from "./mapper.js";
 export {
   handleCommandError,
   handleJiraError,
@@ -34,6 +32,8 @@ export {
   JiraRateLimitError,
   JiraTokenExpiredError,
 } from "./errors.js";
+export type { LocusIssue } from "./mapper.js";
+export { mapJiraIssue, mapJiraIssueBatch } from "./mapper.js";
 export type {
   JiraApiTokenCredentials,
   JiraAuthMethod,
@@ -68,6 +68,14 @@ export async function main(args: string[]): Promise<void> {
         const { issueCommand } = await import("./commands/issue.js");
         return await issueCommand(args.slice(1));
       }
+      case "run": {
+        const { runCommand } = await import("./commands/run.js");
+        return await runCommand(args.slice(1));
+      }
+      case "sprint": {
+        const { sprintCommand } = await import("./commands/sprint.js");
+        return await sprintCommand(args.slice(1));
+      }
       case "help":
       case "--help":
       case "-h":
@@ -99,6 +107,8 @@ Commands:
   board         Select active Jira board
   issues        List issues (tabular view)
   issue         Show detailed view of a single issue
+  run           Fetch and execute Jira issues via Locus
+  sprint        Run active sprint issues (shorthand for run --sprint)
   help          Show this help message
 
 Auth Options:
@@ -110,6 +120,19 @@ Issues Options:
   --jql <query> Custom JQL filter
   --sprint      Show issues from active sprint
   --limit <n>   Limit results (default: 25)
+
+Run Options:
+  --jql <query> Fetch issues by JQL query
+  --sprint      Fetch issues from active sprint
+  --status <s>  Filter by Jira status (e.g., "To Do")
+  --dry-run     Show issues without executing
+  --sync        Sync status back to Jira after execution
+
+Sprint Options:
+  --status <s>  Filter sprint issues by status (default: "To Do")
+  --info        Show sprint details without running
+  --dry-run     Preview without executing
+  --sync        Sync status back to Jira after execution
 
 Options:
   -h, --help    Show help
