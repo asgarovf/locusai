@@ -60,20 +60,14 @@ export function handleJiraError(error: AxiosError): never {
 
   switch (status) {
     case 401:
-      throw new JiraAuthError(
-        `Jira authentication failed (401): ${detail}`,
-      );
+      throw new JiraAuthError(`Jira authentication failed (401): ${detail}`);
     case 403:
-      throw new JiraPermissionError(
-        `Jira permission denied (403): ${detail}`,
-      );
+      throw new JiraPermissionError(`Jira permission denied (403): ${detail}`);
     case 404:
-      throw new JiraNotFoundError(
-        `Jira resource not found (404): ${detail}`,
-      );
+      throw new JiraNotFoundError(`Jira resource not found (404): ${detail}`);
     case 429:
       throw new JiraRateLimitError(
-        `Jira API rate limit exceeded (429): ${detail}`,
+        `Jira API rate limit exceeded (429): ${detail}`
       );
     default:
       throw new Error(`Jira API error (${status ?? "unknown"}): ${detail}`);
@@ -91,7 +85,7 @@ export function handleCommandError(err: unknown): never {
 
   if (err instanceof JiraAuthError || msg.includes("Not authenticated")) {
     process.stderr.write(
-      "\n  Not authenticated. Run:\n    locus jira auth\n\n",
+      "\n  Not authenticated. Run:\n    locus jira auth\n\n"
     );
     process.exit(1);
   }
@@ -99,7 +93,7 @@ export function handleCommandError(err: unknown): never {
   if (err instanceof JiraTokenExpiredError) {
     process.stderr.write(
       "\n  Your Jira OAuth token has expired and could not be refreshed.\n" +
-        "  Run:\n    locus jira auth --revoke\n    locus jira auth\n\n",
+        "  Run:\n    locus jira auth --revoke\n    locus jira auth\n\n"
     );
     process.exit(1);
   }
@@ -108,7 +102,7 @@ export function handleCommandError(err: unknown): never {
     process.stderr.write(
       "\n  Jira permission denied (403).\n" +
         "  Your token may lack required scopes. Run:\n" +
-        "    locus jira auth --revoke\n    locus jira auth\n\n",
+        "    locus jira auth --revoke\n    locus jira auth\n\n"
     );
     process.exit(1);
   }
@@ -120,7 +114,7 @@ export function handleCommandError(err: unknown): never {
 
   if (err instanceof JiraRateLimitError) {
     process.stderr.write(
-      "\n  Jira API rate limit exceeded. Wait a moment and try again.\n\n",
+      "\n  Jira API rate limit exceeded. Wait a moment and try again.\n\n"
     );
     process.exit(1);
   }
@@ -135,7 +129,7 @@ export function handleCommandError(err: unknown): never {
     process.stderr.write(
       "\n  Network error — could not reach the Jira API.\n" +
         "  Check your internet connection and try again.\n\n" +
-        `  Details: ${msg}\n\n`,
+        `  Details: ${msg}\n\n`
     );
     process.exit(1);
   }

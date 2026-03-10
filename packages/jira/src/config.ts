@@ -76,8 +76,10 @@ export function loadJiraConfig(cwd?: string): JiraConfig {
     syncBack: pkg?.syncBack ?? DEFAULT_JIRA_CONFIG.syncBack,
     transitionOnPR: pkg?.transitionOnPR ?? DEFAULT_JIRA_CONFIG.transitionOnPR,
     userMapping: pkg?.userMapping ?? DEFAULT_JIRA_CONFIG.userMapping,
-    includeComments: pkg?.includeComments ?? DEFAULT_JIRA_CONFIG.includeComments,
-    maxIssuesPerRun: pkg?.maxIssuesPerRun ?? DEFAULT_JIRA_CONFIG.maxIssuesPerRun,
+    includeComments:
+      pkg?.includeComments ?? DEFAULT_JIRA_CONFIG.includeComments,
+    maxIssuesPerRun:
+      pkg?.maxIssuesPerRun ?? DEFAULT_JIRA_CONFIG.maxIssuesPerRun,
   };
 
   return applyEnvOverrides(config);
@@ -111,14 +113,14 @@ function readProjectConfig(cwd?: string): Record<string, unknown> {
 
 function writeProjectConfig(
   config: Record<string, unknown>,
-  cwd?: string,
+  cwd?: string
 ): void {
   const configPath = join(cwd ?? process.cwd(), ".locus", "config.json");
   writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 }
 
 function getJiraSection(
-  config: Record<string, unknown>,
+  config: Record<string, unknown>
 ): Record<string, unknown> {
   if (!config.packages || typeof config.packages !== "object") {
     config.packages = {};
@@ -138,7 +140,7 @@ function getJiraSection(
  */
 export function saveJiraConfig(
   update: Partial<JiraConfig>,
-  cwd?: string,
+  cwd?: string
 ): void {
   const config = readProjectConfig(cwd);
   const jira = getJiraSection(config);
@@ -157,7 +159,7 @@ export function saveJiraConfig(
  */
 export function saveCredentials(
   credentials: JiraCredentials,
-  cwd?: string,
+  cwd?: string
 ): void {
   const config = readProjectConfig(cwd);
   const jira = getJiraSection(config);
