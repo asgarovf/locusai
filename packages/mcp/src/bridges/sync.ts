@@ -75,7 +75,7 @@ export async function syncProvider(
  *
  * Disabled servers are excluded.
  */
-function filterServersForProvider(
+export function filterServersForProvider(
   servers: Record<string, McpServerConfig>,
   provider: string
 ): Record<string, McpServerConfig> {

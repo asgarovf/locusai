@@ -28,6 +28,7 @@ export { ClaudeBridge } from "./bridges/claude.js";
 export { CodexBridge } from "./bridges/codex.js";
 export type { ProviderName } from "./bridges/sync.js";
 export {
+  filterServersForProvider,
   getBridge,
   printSyncResults,
   syncAll,
@@ -83,6 +84,10 @@ export { addCommand } from "./commands/add.js";
 export { addCustomCommand } from "./commands/add-custom.js";
 export { listCommand } from "./commands/list.js";
 export { removeCommand } from "./commands/remove.js";
+export { statusCommand } from "./commands/status.js";
+export { syncCommand } from "./commands/sync.js";
+export { testCommand } from "./commands/test.js";
+export { disableCommand, enableCommand } from "./commands/toggle.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
@@ -106,15 +111,40 @@ export async function main(args: string[]): Promise<void> {
         break;
       }
       case "remove": {
-        const { removeCommand: remove } = await import(
-          "./commands/remove.js"
-        );
+        const { removeCommand: remove } = await import("./commands/remove.js");
         await remove(projectRoot, subArgs);
         break;
       }
       case "list": {
         const { listCommand: list } = await import("./commands/list.js");
         await list(projectRoot, subArgs);
+        break;
+      }
+      case "sync": {
+        const { syncCommand: sync } = await import("./commands/sync.js");
+        await sync(projectRoot, subArgs);
+        break;
+      }
+      case "test": {
+        const { testCommand: test } = await import("./commands/test.js");
+        await test(projectRoot, subArgs);
+        break;
+      }
+      case "status": {
+        const { statusCommand: status } = await import("./commands/status.js");
+        await status(projectRoot, subArgs);
+        break;
+      }
+      case "enable": {
+        const { enableCommand: enable } = await import("./commands/toggle.js");
+        await enable(projectRoot, subArgs);
+        break;
+      }
+      case "disable": {
+        const { disableCommand: disable } = await import(
+          "./commands/toggle.js"
+        );
+        await disable(projectRoot, subArgs);
         break;
       }
       case "help":
@@ -143,6 +173,11 @@ function printHelp(): void {
     add-custom                    Add a custom MCP server
     remove <name>                 Remove an MCP server
     list                          List configured servers
+    sync                          Sync config to provider-specific formats
+    test <name>                   Test an MCP server connection
+    status                        Show config and provider sync status
+    enable <name>                 Enable a server
+    disable <name>                Disable a server
 
   Options:
     --help, -h                    Show this help
@@ -154,5 +189,11 @@ function printHelp(): void {
     locus mcp remove mydb
     locus mcp list
     locus mcp list --json
+    locus mcp sync --dry-run
+    locus mcp sync --provider claude
+    locus mcp test mydb
+    locus mcp status
+    locus mcp disable mydb
+    locus mcp enable mydb
 \n`);
 }
