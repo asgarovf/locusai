@@ -1,5 +1,6 @@
 export { promptForApiToken } from "./auth/api-token.js";
 export { promptForPAT } from "./auth/pat.js";
+export { adfToMarkdown } from "./client/adf-to-md.js";
 export { JiraClient } from "./client/client.js";
 export type {
   ADFMark,
