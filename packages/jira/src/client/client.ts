@@ -267,25 +267,46 @@ export class JiraClient {
   }
 
   /**
-   * GET /rest/api/3/search?jql={jql}&startAt={}&maxResults={}
+   * Search issues via JQL.
+   * Cloud (OAuth / API Token): GET /rest/api/3/search/jql with token-based pagination.
+   * Server/DC (PAT):           GET /rest/api/2/search with offset-based pagination.
    * When fetchAll is true, paginates through all results.
    */
   async searchIssues(
     jql: string,
     opts?: { startAt?: number; maxResults?: number; fetchAll?: boolean }
   ): Promise<JiraSearchResult> {
+    const isCloud = this.credentials.method !== "pat";
+
     if (opts?.fetchAll) {
+      if (isCloud) {
+        const issues = await fetchAllPagesTokenBased<JiraIssue>(
+          (nextPageToken, maxResults) =>
+            this.api
+              .get("/search/jql", {
+                params: { jql, maxResults, nextPageToken },
+              })
+              .then((r) => r.data as TokenPaginatedResponse<JiraIssue>)
+        );
+        return { issues };
+      }
+
       const issues = await fetchAllPages<JiraIssue>((startAt, maxResults) =>
         this.api
           .get("/search", { params: { jql, startAt, maxResults } })
           .then((r) => r.data as PaginatedResponse<JiraIssue>)
       );
-      return {
-        issues,
-        total: issues.length,
-        startAt: 0,
-        maxResults: issues.length,
-      };
+      return { issues, total: issues.length, startAt: 0, maxResults: issues.length };
+    }
+
+    if (isCloud) {
+      const response = await this.api.get("/search/jql", {
+        params: {
+          jql,
+          maxResults: opts?.maxResults ?? PAGE_SIZE,
+        },
+      });
+      return response.data as JiraSearchResult;
     }
 
     const response = await this.api.get("/search", {
