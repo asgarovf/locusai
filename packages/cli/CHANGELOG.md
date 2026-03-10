@@ -1,5 +1,11 @@
 # @locusai/cli
 
+## 0.26.6
+
+### Patch Changes
+
+- Jira package data fixes
+
 ## 0.26.5
 
 ### Patch Changes

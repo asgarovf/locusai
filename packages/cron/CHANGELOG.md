@@ -1,5 +1,14 @@
 # @locusai/locus-cron
 
+## 0.26.6
+
+### Patch Changes
+
+- Jira package data fixes
+- Updated dependencies
+  - @locusai/locus-pm2@0.26.6
+  - @locusai/sdk@0.26.6
+
 ## 0.26.5
 
 ### Patch Changes
