@@ -7,7 +7,7 @@ import {
   loadRunState,
   saveRunState,
 } from "../src/core/run-state.js";
-import type { RunState } from "../src/types.js";
+import type { RunState } from "../src/core/run-state.js";
 
 const testDir = join(tmpdir(), `locus-shutdown-test-${Date.now()}`);
 const INTERRUPT_ERROR = "Interrupted by user";
@@ -40,13 +40,13 @@ describe("shutdown state preservation", () => {
       startedAt: new Date().toISOString(),
       tasks: [
         {
-          issue: 1,
+          taskId: "1",
           order: 1,
           status: "done",
           completedAt: new Date().toISOString(),
         },
-        { issue: 2, order: 2, status: "in_progress" },
-        { issue: 3, order: 3, status: "pending" },
+        { taskId: "2", order: 2, status: "in_progress" },
+        { taskId: "3", order: 3, status: "pending" },
       ],
     };
 
@@ -71,8 +71,8 @@ describe("shutdown state preservation", () => {
       type: "parallel",
       startedAt: new Date().toISOString(),
       tasks: [
-        { issue: 10, order: 1, status: "in_progress" },
-        { issue: 11, order: 2, status: "pending" },
+        { taskId: "10", order: 1, status: "in_progress" },
+        { taskId: "11", order: 2, status: "pending" },
       ],
     };
 
@@ -81,7 +81,7 @@ describe("shutdown state preservation", () => {
     // File should be valid JSON
     const raw = readFileSync(
       join(testDir, ".locus", "run-state", "_parallel.json"),
-      "utf-8"
+      "utf-8",
     );
     const parsed = JSON.parse(raw);
     expect(parsed.runId).toBe("run-test-002");
@@ -96,9 +96,9 @@ describe("shutdown state preservation", () => {
       type: "parallel",
       startedAt: new Date().toISOString(),
       tasks: [
-        { issue: 20, order: 1, status: "in_progress" },
-        { issue: 21, order: 2, status: "in_progress" },
-        { issue: 22, order: 3, status: "in_progress" },
+        { taskId: "20", order: 1, status: "in_progress" },
+        { taskId: "21", order: 2, status: "in_progress" },
+        { taskId: "22", order: 3, status: "in_progress" },
       ],
     };
 
@@ -122,21 +122,21 @@ describe("shutdown state preservation", () => {
       startedAt: new Date().toISOString(),
       tasks: [
         {
-          issue: 30,
+          taskId: "30",
           order: 1,
           status: "done",
           completedAt: "2026-01-01T00:00:00Z",
           pr: 100,
         },
         {
-          issue: 31,
+          taskId: "31",
           order: 2,
           status: "failed",
           failedAt: "2026-01-01T01:00:00Z",
           error: "API limit",
         },
-        { issue: 32, order: 3, status: "in_progress" },
-        { issue: 33, order: 4, status: "pending" },
+        { taskId: "32", order: 3, status: "in_progress" },
+        { taskId: "33", order: 4, status: "pending" },
       ],
     };
 
@@ -182,13 +182,13 @@ describe("shutdown state preservation", () => {
       startedAt: new Date().toISOString(),
       tasks: [
         {
-          issue: 40,
+          taskId: "40",
           order: 1,
           status: "done",
           completedAt: "2026-01-01T00:00:00Z",
         },
-        { issue: 41, order: 2, status: "in_progress" },
-        { issue: 42, order: 3, status: "pending" },
+        { taskId: "41", order: 2, status: "in_progress" },
+        { taskId: "42", order: 3, status: "pending" },
       ],
     };
 
@@ -199,7 +199,7 @@ describe("shutdown state preservation", () => {
     // Simulate resume — failed interrupted task should be retried first.
     const loaded = loadRunState(testDir, "resume-test");
     const next = loaded ? getNextTask(loaded) : null;
-    expect(next?.issue).toBe(41); // The one that was in_progress
+    expect(next?.taskId).toBe("41"); // The one that was in_progress
     expect(next?.status).toBe("failed");
     expect(next?.error).toBe(INTERRUPT_ERROR);
   });

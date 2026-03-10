@@ -29,16 +29,16 @@ describe("run-state", () => {
   describe("createSprintRunState", () => {
     it("creates state with correct structure", () => {
       const state = createSprintRunState("Sprint 1", "feat/sprint-1", [
-        { number: 10, order: 1 },
-        { number: 11, order: 2 },
-        { number: 12, order: 3 },
+        { taskId: "10", order: 1 },
+        { taskId: "11", order: 2 },
+        { taskId: "12", order: 3 },
       ]);
 
       expect(state.type).toBe("sprint");
       expect(state.sprint).toBe("Sprint 1");
       expect(state.branch).toBe("feat/sprint-1");
       expect(state.tasks.length).toBe(3);
-      expect(state.tasks[0].issue).toBe(10);
+      expect(state.tasks[0].taskId).toBe("10");
       expect(state.tasks[0].order).toBe(1);
       expect(state.tasks[0].status).toBe("pending");
       expect(state.runId).toMatch(/^run-/);
@@ -48,11 +48,11 @@ describe("run-state", () => {
 
   describe("createParallelRunState", () => {
     it("creates state with correct structure", () => {
-      const state = createParallelRunState([5, 6, 7]);
+      const state = createParallelRunState(["5", "6", "7"]);
 
       expect(state.type).toBe("parallel");
       expect(state.tasks.length).toBe(3);
-      expect(state.tasks[0].issue).toBe(5);
+      expect(state.tasks[0].taskId).toBe("5");
       expect(state.tasks[0].order).toBe(1);
       expect(state.tasks[2].order).toBe(3);
     });
@@ -60,13 +60,15 @@ describe("run-state", () => {
 
   describe("save/load/clear", () => {
     it("round-trips state through save and load", () => {
-      const state = createSprintRunState("S1", "b", [{ number: 1, order: 1 }]);
+      const state = createSprintRunState("S1", "b", [
+        { taskId: "1", order: 1 },
+      ]);
       saveRunState(TEST_DIR, state);
 
       const loaded = loadRunState(TEST_DIR, "S1");
       expect(loaded).not.toBeNull();
       expect(loaded?.runId).toBe(state.runId);
-      expect(loaded?.tasks[0].issue).toBe(1);
+      expect(loaded?.tasks[0].taskId).toBe("1");
     });
 
     it("returns null when no state file exists", () => {
@@ -74,7 +76,9 @@ describe("run-state", () => {
     });
 
     it("clears state file", () => {
-      const state = createSprintRunState("S1", "b", [{ number: 1, order: 1 }]);
+      const state = createSprintRunState("S1", "b", [
+        { taskId: "1", order: 1 },
+      ]);
       saveRunState(TEST_DIR, state);
       expect(loadRunState(TEST_DIR, "S1")).not.toBeNull();
 
@@ -91,35 +95,41 @@ describe("run-state", () => {
   describe("task mutations", () => {
     it("markTaskInProgress", () => {
       const state = createSprintRunState("S", "b", [
-        { number: 1, order: 1 },
-        { number: 2, order: 2 },
+        { taskId: "1", order: 1 },
+        { taskId: "2", order: 2 },
       ]);
-      markTaskInProgress(state, 1);
+      markTaskInProgress(state, "1");
       expect(state.tasks[0].status).toBe("in_progress");
       expect(state.tasks[1].status).toBe("pending");
     });
 
     it("markTaskDone", () => {
-      const state = createSprintRunState("S", "b", [{ number: 1, order: 1 }]);
-      markTaskInProgress(state, 1);
-      markTaskDone(state, 1, 42);
+      const state = createSprintRunState("S", "b", [
+        { taskId: "1", order: 1 },
+      ]);
+      markTaskInProgress(state, "1");
+      markTaskDone(state, "1", 42);
       expect(state.tasks[0].status).toBe("done");
       expect(state.tasks[0].pr).toBe(42);
       expect(state.tasks[0].completedAt).toBeTruthy();
     });
 
     it("markTaskFailed", () => {
-      const state = createSprintRunState("S", "b", [{ number: 1, order: 1 }]);
-      markTaskInProgress(state, 1);
-      markTaskFailed(state, 1, "Build failed");
+      const state = createSprintRunState("S", "b", [
+        { taskId: "1", order: 1 },
+      ]);
+      markTaskInProgress(state, "1");
+      markTaskFailed(state, "1", "Build failed");
       expect(state.tasks[0].status).toBe("failed");
       expect(state.tasks[0].error).toBe("Build failed");
       expect(state.tasks[0].failedAt).toBeTruthy();
     });
 
-    it("handles non-existent issue gracefully", () => {
-      const state = createSprintRunState("S", "b", [{ number: 1, order: 1 }]);
-      markTaskInProgress(state, 999); // Should not throw
+    it("handles non-existent task gracefully", () => {
+      const state = createSprintRunState("S", "b", [
+        { taskId: "1", order: 1 },
+      ]);
+      markTaskInProgress(state, "999"); // Should not throw
       expect(state.tasks[0].status).toBe("pending");
     });
   });
@@ -127,14 +137,14 @@ describe("run-state", () => {
   describe("getRunStats", () => {
     it("returns correct counts", () => {
       const state = createSprintRunState("S", "b", [
-        { number: 1, order: 1 },
-        { number: 2, order: 2 },
-        { number: 3, order: 3 },
-        { number: 4, order: 4 },
+        { taskId: "1", order: 1 },
+        { taskId: "2", order: 2 },
+        { taskId: "3", order: 3 },
+        { taskId: "4", order: 4 },
       ]);
-      markTaskDone(state, 1);
-      markTaskInProgress(state, 2);
-      markTaskFailed(state, 3, "error");
+      markTaskDone(state, "1");
+      markTaskInProgress(state, "2");
+      markTaskFailed(state, "3", "error");
 
       const stats = getRunStats(state);
       expect(stats.total).toBe(4);
@@ -148,33 +158,35 @@ describe("run-state", () => {
   describe("getNextTask", () => {
     it("returns first pending task", () => {
       const state = createSprintRunState("S", "b", [
-        { number: 1, order: 1 },
-        { number: 2, order: 2 },
+        { taskId: "1", order: 1 },
+        { taskId: "2", order: 2 },
       ]);
-      markTaskDone(state, 1);
+      markTaskDone(state, "1");
 
       const next = getNextTask(state);
-      expect(next?.issue).toBe(2);
+      expect(next?.taskId).toBe("2");
       expect(next?.status).toBe("pending");
     });
 
     it("prioritizes failed tasks for retry", () => {
       const state = createSprintRunState("S", "b", [
-        { number: 1, order: 1 },
-        { number: 2, order: 2 },
-        { number: 3, order: 3 },
+        { taskId: "1", order: 1 },
+        { taskId: "2", order: 2 },
+        { taskId: "3", order: 3 },
       ]);
-      markTaskDone(state, 1);
-      markTaskFailed(state, 2, "error");
+      markTaskDone(state, "1");
+      markTaskFailed(state, "2", "error");
 
       const next = getNextTask(state);
-      expect(next?.issue).toBe(2);
+      expect(next?.taskId).toBe("2");
       expect(next?.status).toBe("failed");
     });
 
     it("returns null when all tasks are done", () => {
-      const state = createSprintRunState("S", "b", [{ number: 1, order: 1 }]);
-      markTaskDone(state, 1);
+      const state = createSprintRunState("S", "b", [
+        { taskId: "1", order: 1 },
+      ]);
+      markTaskDone(state, "1");
 
       expect(getNextTask(state)).toBeNull();
     });

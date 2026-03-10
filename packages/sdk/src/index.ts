@@ -27,3 +27,36 @@ export type {
   LocusConfig,
   LocusPackageManifest,
 } from "./types.js";
+// Task Provider
+export type {
+  AuthResult,
+  IssueFilters,
+  ProviderComment,
+  ProviderIssue,
+  ProviderSprint,
+  TaskProvider,
+} from "./task-provider.js";
+// Execution Engine
+export type {
+  RunState,
+  RunTask,
+  RunTaskStatus,
+  RunStats,
+  TaskResult,
+  ExecutionOptions,
+  RunResult,
+} from "./execution/index.js";
+export {
+  loadRunState,
+  saveRunState,
+  clearRunState,
+  createSprintRunState,
+  createParallelRunState,
+  markTaskInProgress,
+  markTaskDone,
+  markTaskFailed,
+  getRunStats,
+  getNextTask,
+  sprintSlug,
+  executeTaskRun,
+} from "./execution/index.js";

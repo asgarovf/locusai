@@ -173,26 +173,9 @@ export const ALL_LABELS: LabelDef[] = [
   AGENT_LABEL,
 ];
 
-// ─── Run State ───────────────────────────────────────────────────────────────
-
-export interface RunState {
-  runId: string;
-  type: "sprint" | "parallel";
-  sprint?: string;
-  branch?: string;
-  startedAt: string;
-  tasks: RunTask[];
-}
-
-export interface RunTask {
-  issue: number;
-  order: number;
-  status: "pending" | "in_progress" | "done" | "failed";
-  pr?: number;
-  completedAt?: string;
-  failedAt?: string;
-  error?: string;
-}
+// ─── Run State (re-exported from @locusai/sdk) ──────────────────────────────
+// RunState and RunTask are now defined in the SDK execution module.
+// Import them from "../core/run-state.js" which re-exports from the SDK.
 
 // ─── AI Runner ───────────────────────────────────────────────────────────────
 
