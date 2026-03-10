@@ -1,5 +1,11 @@
 # @locusai/sdk
 
+## 0.26.5
+
+### Patch Changes
+
+- Nullable field fixes on jira package
+
 ## 0.26.4
 
 ### Patch Changes

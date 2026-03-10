@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-jira",
-  "version": "0.26.5",
+  "version": "0.26.6",
   "description": "Fetch and execute Jira issues with Locus",
   "type": "module",
   "bin": {
@@ -27,7 +27,7 @@
     "clean": "rm -rf dist bin node_modules"
   },
   "dependencies": {
-    "@locusai/sdk": "^0.26.4",
+    "@locusai/sdk": "^0.26.5",
     "axios": "^1.7.0",
     "open": "^10.0.0"
   },
