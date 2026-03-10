@@ -1,0 +1,47 @@
+{
+  "name": "@locusai/locus-jira",
+  "version": "0.1.0",
+  "description": "Fetch and execute Jira issues with Locus",
+  "type": "module",
+  "bin": {
+    "locus-jira": "./bin/locus-jira.js"
+  },
+  "files": [
+    "bin",
+    "package.json",
+    "README.md"
+  ],
+  "locus": {
+    "displayName": "Jira",
+    "description": "Fetch and execute Jira issues with Locus",
+    "commands": [
+      "jira"
+    ],
+    "version": "0.1.0"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --outfile bin/locus-jira.js --target node",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "clean": "rm -rf dist bin node_modules"
+  },
+  "dependencies": {
+    "@locusai/sdk": "^0.26.1",
+    "axios": "^1.7.0",
+    "open": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "locusai-package",
+    "locus",
+    "jira"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
