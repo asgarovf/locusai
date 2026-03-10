@@ -9,7 +9,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLocusConfig } from "@locusai/sdk";
-import type { JiraConfig, JiraCredentials } from "./types.js";
+import type {
+  JiraConfig,
+  JiraCredentials,
+  TransitionOnPR,
+} from "./types.js";
 
 const DEFAULT_JIRA_CONFIG: JiraConfig = {
   auth: null,
@@ -17,7 +21,7 @@ const DEFAULT_JIRA_CONFIG: JiraConfig = {
   boardId: null,
   defaultJql: null,
   syncBack: false,
-  transitionOnPR: false,
+  transitionOnPR: {},
   userMapping: {},
   includeComments: true,
   maxIssuesPerRun: 20,
@@ -97,7 +101,9 @@ export function loadJiraConfig(cwd?: string): JiraConfig {
     boardId: pkg?.boardId ?? DEFAULT_JIRA_CONFIG.boardId,
     defaultJql: pkg?.defaultJql ?? DEFAULT_JIRA_CONFIG.defaultJql,
     syncBack: pkg?.syncBack ?? DEFAULT_JIRA_CONFIG.syncBack,
-    transitionOnPR: pkg?.transitionOnPR ?? DEFAULT_JIRA_CONFIG.transitionOnPR,
+    transitionOnPR:
+      (pkg?.transitionOnPR as TransitionOnPR) ??
+      DEFAULT_JIRA_CONFIG.transitionOnPR,
     userMapping: pkg?.userMapping ?? DEFAULT_JIRA_CONFIG.userMapping,
     includeComments:
       pkg?.includeComments ?? DEFAULT_JIRA_CONFIG.includeComments,

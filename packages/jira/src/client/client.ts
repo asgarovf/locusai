@@ -324,6 +324,22 @@ export class JiraClient {
     return response.data as JiraUser;
   }
 
+  /**
+   * POST /rest/api/3/issue/{key}/remotelink
+   */
+  async addRemoteLink(
+    key: string,
+    title: string,
+    url: string
+  ): Promise<void> {
+    await this.api.post(`/issue/${encodeURIComponent(key)}/remotelink`, {
+      object: {
+        url,
+        title,
+      },
+    });
+  }
+
   // ─── Agile API Methods ────────────────────────────────────────────────
 
   /**

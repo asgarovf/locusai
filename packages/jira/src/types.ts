@@ -37,6 +37,15 @@ export type JiraCredentials =
   | JiraApiTokenCredentials
   | JiraPatCredentials;
 
+// ─── Sync Configuration ─────────────────────────────────────────────────────
+
+export interface TransitionOnPR {
+  /** Status to transition to when a PR is created (e.g., "In Review"). */
+  created?: string;
+  /** Status to transition to when a PR is merged (e.g., "Done"). */
+  merged?: string;
+}
+
 // ─── Configuration ──────────────────────────────────────────────────────────
 
 export interface JiraConfig {
@@ -45,7 +54,7 @@ export interface JiraConfig {
   boardId: number | null;
   defaultJql: string | null;
   syncBack: boolean;
-  transitionOnPR: boolean;
+  transitionOnPR: TransitionOnPR;
   userMapping: Record<string, string>;
   includeComments: boolean;
   maxIssuesPerRun: number;

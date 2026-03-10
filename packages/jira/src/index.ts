@@ -41,6 +41,7 @@ export type {
   JiraCredentials,
   JiraOAuthCredentials,
   JiraPatCredentials,
+  TransitionOnPR,
 } from "./types.js";
 
 export async function main(args: string[]): Promise<void> {
@@ -76,6 +77,10 @@ export async function main(args: string[]): Promise<void> {
         const { sprintCommand } = await import("./commands/sprint.js");
         return await sprintCommand(args.slice(1));
       }
+      case "sync": {
+        const { syncCommand } = await import("./commands/sync.js");
+        return await syncCommand(args.slice(1));
+      }
       case "help":
       case "--help":
       case "-h":
@@ -109,6 +114,7 @@ Commands:
   issue         Show detailed view of a single issue
   run           Fetch and execute Jira issues via Locus
   sprint        Run active sprint issues (shorthand for run --sprint)
+  sync          Sync execution results back to Jira
   help          Show this help message
 
 Auth Options:
@@ -133,6 +139,12 @@ Sprint Options:
   --info        Show sprint details without running
   --dry-run     Preview without executing
   --sync        Sync status back to Jira after execution
+
+Sync Options:
+  --jql <query> Sync issues matching JQL query
+  --sprint      Sync active sprint issues
+  --comments    Post execution summary as Jira comment
+  --dry-run     Show planned changes without executing
 
 Options:
   -h, --help    Show help
