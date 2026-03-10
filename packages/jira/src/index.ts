@@ -23,6 +23,8 @@ export {
   saveJiraConfig,
   validateJiraConfig,
 } from "./config.js";
+export { mapJiraIssue, mapJiraIssueBatch } from "./mapper.js";
+export type { LocusIssue } from "./mapper.js";
 export {
   handleCommandError,
   handleJiraError,
