@@ -63,6 +63,43 @@ async function fetchAllPages<T>(fetcher: PageFetcher<T>): Promise<T[]> {
   return all;
 }
 
+// ─── Token-based Pagination ─────────────────────────────────────────────────
+
+interface TokenPaginatedResponse<T> {
+  issues?: T[];
+  nextPageToken?: string;
+  isLast?: boolean;
+}
+
+type TokenPageFetcher<T> = (
+  nextPageToken: string | undefined,
+  maxResults: number
+) => Promise<TokenPaginatedResponse<T>>;
+
+/**
+ * Generic token-based pagination helper for endpoints like /search/jql.
+ * Fetches all pages until `nextPageToken` is absent or `isLast` is true.
+ */
+async function fetchAllPagesTokenBased<T>(
+  fetcher: TokenPageFetcher<T>
+): Promise<T[]> {
+  const all: T[] = [];
+  let nextPageToken: string | undefined;
+
+  do {
+    const page = await fetcher(nextPageToken, PAGE_SIZE);
+    const items = page.issues ?? [];
+    all.push(...items);
+
+    if (!page.nextPageToken || page.isLast || items.length === 0) {
+      break;
+    }
+    nextPageToken = page.nextPageToken;
+  } while (true);
+
+  return all;
+}
+
 // ─── Base URL Resolution ────────────────────────────────────────────────────
 
 function resolveBaseUrl(credentials: JiraCredentials): string {
