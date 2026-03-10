@@ -4,4 +4,8 @@
  * Import from here when working within the registry subsystem.
  */
 
-export type { EnvPrompt, McpServerConfig, McpServerTemplate } from "../types.js";
+export type {
+  EnvPrompt,
+  McpServerConfig,
+  McpServerTemplate,
+} from "../types.js";

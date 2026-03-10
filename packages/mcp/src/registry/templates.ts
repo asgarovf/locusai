@@ -22,7 +22,8 @@ const postgresTemplate: McpServerTemplate = {
   envPrompts: [
     {
       key: "POSTGRES_CONNECTION",
-      description: "PostgreSQL connection string (e.g. postgresql://user:pass@localhost:5432/db)",
+      description:
+        "PostgreSQL connection string (e.g. postgresql://user:pass@localhost:5432/db)",
       required: true,
       sensitive: true,
     },
@@ -45,7 +46,8 @@ const filesystemTemplate: McpServerTemplate = {
 const githubTemplate: McpServerTemplate = {
   name: "github",
   displayName: "GitHub",
-  description: "Interact with GitHub repositories, issues, and pull requests via MCP",
+  description:
+    "Interact with GitHub repositories, issues, and pull requests via MCP",
   transport: "stdio",
   command: "npx",
   args: ["-y", "@modelcontextprotocol/server-github"],
@@ -120,7 +122,7 @@ export function listTemplates(): McpServerTemplate[] {
  */
 export function resolveTemplate(
   template: McpServerTemplate,
-  userInputs: Record<string, string | string[]>,
+  userInputs: Record<string, string | string[]>
 ): McpServerConfig {
   const env: Record<string, string> = {};
 
@@ -130,7 +132,7 @@ export function resolveTemplate(
       env[prompt.key] = value;
     } else if (prompt.required && !prompt.default) {
       throw new Error(
-        `Missing required environment variable: ${prompt.key} (${prompt.description})`,
+        `Missing required environment variable: ${prompt.key} (${prompt.description})`
       );
     } else if (prompt.default) {
       env[prompt.key] = prompt.default;

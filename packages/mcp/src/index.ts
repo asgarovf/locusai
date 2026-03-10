@@ -51,6 +51,21 @@ export {
   listTemplates,
   resolveTemplate,
 } from "./registry/templates.js";
+export {
+  fromLocusName,
+  isLocusManaged,
+  LOCUS_SERVER_PREFIX,
+  toLocusName,
+} from "./bridges/bridge.js";
+export { ClaudeBridge } from "./bridges/claude.js";
+export { CodexBridge } from "./bridges/codex.js";
+export {
+  getBridge,
+  printSyncResults,
+  syncAll,
+  syncProvider,
+} from "./bridges/sync.js";
+export type { ProviderName } from "./bridges/sync.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";

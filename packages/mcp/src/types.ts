@@ -92,10 +92,14 @@ export interface SyncResult {
   provider: string;
   /** Number of servers written to the provider config. */
   serversWritten: number;
+  /** Server names that were removed from the provider config. */
+  serversRemoved: string[];
   /** Absolute path of the provider config file that was written. */
   configPath: string;
   /** Whether the sync introduced changes compared to the previous state. */
   changed: boolean;
+  /** Warnings/errors for servers that were skipped (e.g. incompatible transport). */
+  errors: string[];
 }
 
 /**
@@ -112,7 +116,7 @@ export interface ProviderBridge {
   /** Write the canonical server configs into the provider-specific file. */
   sync(
     projectRoot: string,
-    servers: Record<string, McpServerConfig>,
+    servers: Record<string, McpServerConfig>
   ): Promise<SyncResult>;
 }
 
