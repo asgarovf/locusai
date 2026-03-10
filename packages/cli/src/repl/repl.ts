@@ -115,7 +115,9 @@ export async function startRepl(options: ReplOptions): Promise<void> {
       })
         .then((result) => {
           if (result.captured > 0)
-            log.info(`Captured ${result.captured} memory entries`);
+            log.info(
+              `\n${green("✓")} Captured ${result.captured} memory entries`
+            );
         })
         .catch(() => {
           /* fire-and-forget */
@@ -425,7 +427,9 @@ async function runInteractiveRepl(
     })
       .then((result) => {
         if (result.captured > 0)
-          log.info(`Captured ${result.captured} memory entries`);
+          log.info(
+            `\n${green("✓")} Captured ${result.captured} memory entries`
+          );
       })
       .catch(() => {
         /* fire-and-forget */

@@ -285,13 +285,19 @@ export class JiraClient {
   ): Promise<JiraSearchResult> {
     const isCloud = this.credentials.method !== "pat";
 
+    // Cloud /search/jql returns only `id` by default (unlike the old
+    // /search endpoint which returned *navigable).  Restore that default
+    // so every caller gets field data without having to opt-in.
+    const fieldsParam =
+      opts?.fields?.join(",") ?? (isCloud ? "*navigable" : undefined);
+
     if (opts?.fetchAll) {
       if (isCloud) {
         const issues = await fetchAllPagesTokenBased<JiraIssue>(
           (nextPageToken, maxResults) =>
             this.api
               .get("/search/jql", {
-                params: { jql, maxResults, nextPageToken },
+                params: { jql, maxResults, nextPageToken, fields: fieldsParam },
               })
               .then((r) => r.data as TokenPaginatedResponse<JiraIssue>)
         );
@@ -300,7 +306,9 @@ export class JiraClient {
 
       const issues = await fetchAllPages<JiraIssue>((startAt, maxResults) =>
         this.api
-          .get("/search", { params: { jql, startAt, maxResults } })
+          .get("/search", {
+            params: { jql, startAt, maxResults, fields: fieldsParam },
+          })
           .then((r) => r.data as PaginatedResponse<JiraIssue>)
       );
       return {
@@ -316,7 +324,7 @@ export class JiraClient {
         params: {
           jql,
           maxResults: opts?.maxResults ?? PAGE_SIZE,
-          fields: opts?.fields?.join(","),
+          fields: fieldsParam,
         },
       });
       return response.data as JiraSearchResult;
@@ -327,7 +335,7 @@ export class JiraClient {
         jql,
         startAt: opts?.startAt ?? 0,
         maxResults: opts?.maxResults ?? PAGE_SIZE,
-        fields: opts?.fields?.join(","),
+        fields: fieldsParam,
       },
     });
     return response.data as JiraSearchResult;

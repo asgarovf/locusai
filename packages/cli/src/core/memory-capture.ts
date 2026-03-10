@@ -7,6 +7,7 @@
  */
 
 import { spawn } from "node:child_process";
+import { yellow } from "../display/terminal.js";
 import { getLogger } from "./logger.js";
 import {
   appendMemoryEntries,
@@ -271,7 +272,7 @@ export async function captureMemoryFromSession(
 
     return { captured: validEntries.length };
   } catch (e) {
-    log.warn("Memory capture: unexpected error", {
+    log.warn(`\n${yellow("⚠")} Memory capture: unexpected error`, {
       error: e instanceof Error ? e.message : String(e),
     });
     return { captured: 0 };

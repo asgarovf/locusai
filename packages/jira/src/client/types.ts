@@ -59,7 +59,12 @@ export interface JiraIssueFields {
   updated: string;
   sprint?: JiraSprint | null;
   parent?: { id: string; key: string } | null;
-  comment?: { comments: JiraComment[]; total: number; startAt?: number; maxResults?: number };
+  comment?: {
+    comments: JiraComment[];
+    total: number;
+    startAt?: number;
+    maxResults?: number;
+  };
 }
 
 export interface JiraIssue {
@@ -87,7 +92,16 @@ export interface JiraSearchResult {
 export interface JiraTransition {
   id: string;
   name: string;
-  to: { id: string; name: string; statusCategory?: { id: number; key: string; name: string; colorName?: string } };
+  to: {
+    id: string;
+    name: string;
+    statusCategory?: {
+      id: number;
+      key: string;
+      name: string;
+      colorName?: string;
+    };
+  };
   hasScreen?: boolean;
   isGlobal?: boolean;
   isInitial?: boolean;

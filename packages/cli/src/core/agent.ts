@@ -229,7 +229,7 @@ export async function executeIssue(
   captureMemoryFromSession(projectRoot, transcript, { model: config.ai?.model })
     .then((result) => {
       if (result.captured > 0)
-        log.info(`Captured ${result.captured} memory entries`);
+        log.info(`\n${green("✓")} Captured ${result.captured} memory entries`);
     })
     .catch(() => {
       /* fire-and-forget */

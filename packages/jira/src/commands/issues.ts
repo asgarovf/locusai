@@ -101,9 +101,7 @@ export async function issuesCommand(args: string[]): Promise<void> {
     const key = issue.key ?? "-";
     const rawSummary = issue.fields?.summary ?? "(no summary)";
     const summary =
-      rawSummary.length > 36
-        ? `${rawSummary.slice(0, 33)}...`
-        : rawSummary;
+      rawSummary.length > 36 ? `${rawSummary.slice(0, 33)}...` : rawSummary;
     const status = issue.fields?.status?.name ?? "-";
     const priority = issue.fields?.priority?.name ?? "-";
     const assignee = issue.fields?.assignee?.displayName ?? "-";
