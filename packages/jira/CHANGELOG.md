@@ -1,5 +1,13 @@
 # @locusai/locus-jira
 
+## 0.26.5
+
+### Patch Changes
+
+- Jira package type fixes
+- Updated dependencies
+  - @locusai/sdk@0.26.4
+
 ## 0.26.4
 
 ### Patch Changes

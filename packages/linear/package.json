@@ -1,6 +1,6 @@
 {
   "name": "@locusai/locus-linear",
-  "version": "0.26.3",
+  "version": "0.26.4",
   "description": "Linear integration for Locus — sync issues, AI-powered workflows, and bidirectional project management",
   "type": "module",
   "bin": {
@@ -27,7 +27,7 @@
     "clean": "rm -rf dist bin node_modules"
   },
   "dependencies": {
-    "@locusai/sdk": "^0.26.3",
+    "@locusai/sdk": "^0.26.4",
     "@linear/sdk": "^29.0.0",
     "open": "^10.0.0"
   },

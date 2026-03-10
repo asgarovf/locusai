@@ -1,5 +1,15 @@
 # @locusai/locus-telegram
 
+## 0.26.4
+
+### Patch Changes
+
+- Jira package type fixes
+- Updated dependencies
+  - @locusai/locus-gateway@0.26.4
+  - @locusai/locus-pm2@0.26.4
+  - @locusai/sdk@0.26.4
+
 ## 0.26.3
 
 ### Patch Changes
