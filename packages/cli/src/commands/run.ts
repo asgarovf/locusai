@@ -66,7 +66,8 @@ import {
   renderTaskStatus,
 } from "../display/progress.js";
 import { bold, cyan, dim, green, red, yellow } from "../display/terminal.js";
-import type { Issue, LocusConfig, RunState } from "../types.js";
+import type { Issue, LocusConfig } from "../types.js";
+import type { RunState, RunTask } from "../core/run-state.js";
 
 function resolveExecutionContext(
   config: LocusConfig,
@@ -415,7 +416,7 @@ async function executeSingleSprint(
     sprintName,
     branchName,
     issues.map((issue, i) => ({
-      number: issue.number,
+      taskId: String(issue.number),
       order: getOrder(issue) ?? i + 1,
     }))
   );
@@ -425,10 +426,11 @@ async function executeSingleSprint(
 
   // Print task list
   for (const task of state.tasks) {
-    const issue = issues.find((i) => i.number === task.issue);
+    const issueNum = Number(task.taskId);
+    const issue = issues.find((i) => i.number === issueNum);
     process.stderr.write(
       `${renderTaskStatus(
-        task.issue,
+        issueNum,
         issue?.title ?? "Unknown",
         task.status,
         `order:${task.order}`
@@ -448,12 +450,13 @@ async function executeSingleSprint(
 
   for (let i = 0; i < state.tasks.length; i++) {
     const task = state.tasks[i];
-    const issue = issues.find((iss) => iss.number === task.issue);
+    const issueNum = Number(task.taskId);
+    const issue = issues.find((iss) => iss.number === issueNum);
 
     // Skip completed tasks
     if (task.status === "done") {
       process.stderr.write(
-        `${renderTaskStatus(task.issue, issue?.title ?? "", "done", "skipped")}\n`
+        `${renderTaskStatus(issueNum, issue?.title ?? "", "done", "skipped")}\n`
       );
       continue;
     }
@@ -473,10 +476,10 @@ async function executeSingleSprint(
 
         if (conflictResult.hasConflict) {
           // Mark task as failed but continue to next task
-          markTaskFailed(state, task.issue, "Merge conflict with base branch");
+          markTaskFailed(state, task.taskId, "Merge conflict with base branch");
           saveRunState(projectRoot, state);
           process.stderr.write(
-            `  ${red("✗")} Task #${task.issue} skipped due to conflicts.\n`
+            `  ${red("✗")} Task #${task.taskId} skipped due to conflicts.\n`
           );
 
           if (config.sprint.stopOnFailure) {
@@ -494,10 +497,10 @@ async function executeSingleSprint(
         // Auto-rebase
         const rebaseResult = attemptRebase(workDir, config.agent.baseBranch);
         if (!rebaseResult.success) {
-          markTaskFailed(state, task.issue, "Rebase failed");
+          markTaskFailed(state, task.taskId, "Rebase failed");
           saveRunState(projectRoot, state);
           process.stderr.write(
-            `  ${red("✗")} Auto-rebase failed for task #${task.issue}.\n`
+            `  ${red("✗")} Auto-rebase failed for task #${task.taskId}.\n`
           );
 
           if (config.sprint.stopOnFailure) {
@@ -534,12 +537,12 @@ async function executeSingleSprint(
     );
 
     // Mark in-progress
-    markTaskInProgress(state, task.issue);
+    markTaskInProgress(state, task.taskId);
     saveRunState(projectRoot, state);
 
     // Execute (skip per-task PR — a single sprint PR is created after all tasks).
     const result = await executeIssue(workDir, {
-      issueNumber: task.issue,
+      issueNumber: issueNum,
       provider: execution.provider,
       model: execution.model,
       dryRun: flags.dryRun,
@@ -554,7 +557,7 @@ async function executeSingleSprint(
       // Ensure all changes are committed before moving to the next task
       if (!flags.dryRun) {
         const issueTitle = issue?.title ?? "";
-        ensureTaskCommit(workDir, task.issue, issueTitle);
+        ensureTaskCommit(workDir, issueNum, issueTitle);
 
         // Sandbox sync is bidirectional with the host workspace, so each task
         // sees the latest committed state.
@@ -564,21 +567,21 @@ async function executeSingleSprint(
           );
         }
       }
-      markTaskDone(state, task.issue, result.prNumber);
+      markTaskDone(state, task.taskId, result.prNumber);
     } else {
-      markTaskFailed(state, task.issue, result.error ?? "Unknown error");
+      markTaskFailed(state, task.taskId, result.error ?? "Unknown error");
       saveRunState(projectRoot, state);
 
       if (config.sprint.stopOnFailure) {
         process.stderr.write(
-          `\n${red("✗")} Sprint "${sprintName}" stopped: task #${task.issue} failed.\n`
+          `\n${red("✗")} Sprint "${sprintName}" stopped: task #${task.taskId} failed.\n`
         );
         process.stderr.write(`  Resume with: ${bold("locus run --resume")}\n`);
         break;
       }
       // When stopOnFailure is false, log and continue to next task
       process.stderr.write(
-        `  ${yellow("⚠")} Task #${task.issue} failed, continuing to next task.\n`
+        `  ${yellow("⚠")} Task #${task.taskId} failed, continuing to next task.\n`
       );
     }
 
@@ -598,10 +601,10 @@ async function executeSingleSprint(
   // Create a single PR for the entire sprint
   if (!flags.dryRun && stats.done > 0) {
     const completedTasks = state.tasks
-      .filter((t) => t.status === "done")
-      .map((t) => ({
-        issue: t.issue,
-        title: issues.find((i) => i.number === t.issue)?.title,
+      .filter((t: RunTask) => t.status === "done")
+      .map((t: RunTask) => ({
+        issue: Number(t.taskId),
+        title: issues.find((i) => i.number === Number(t.taskId))?.title,
       }));
 
     await createSprintPR(
@@ -782,7 +785,7 @@ async function handleParallelRun(
     }
   }
 
-  const state = createParallelRunState(issueNumbers);
+  const state = createParallelRunState(issueNumbers.map(String));
   saveRunState(projectRoot, state);
 
   // Track worktrees created so we can clean them up
@@ -794,7 +797,8 @@ async function handleParallelRun(
   for (let i = 0; i < issueNumbers.length; i += maxConcurrent) {
     const batch = issueNumbers.slice(i, i + maxConcurrent);
     const promises = batch.map(async (issueNumber) => {
-      markTaskInProgress(state, issueNumber);
+      const taskId = String(issueNumber);
+      markTaskInProgress(state, taskId);
       saveRunState(projectRoot, state);
 
       // Create worktree for this issue
@@ -828,14 +832,14 @@ async function handleParallelRun(
       });
 
       if (result.success) {
-        markTaskDone(state, issueNumber, result.prNumber);
+        markTaskDone(state, taskId, result.prNumber);
         // Clean up worktree on success
         if (worktreePath) {
           removeWorktree(projectRoot, issueNumber);
           worktreeMap.delete(issueNumber);
         }
       } else {
-        markTaskFailed(state, issueNumber, result.error ?? "Unknown error");
+        markTaskFailed(state, taskId, result.error ?? "Unknown error");
         // Preserve worktree on failure for debugging
       }
       saveRunState(projectRoot, state);
@@ -1029,11 +1033,12 @@ async function resumeSingleRun(
       task.failedAt = undefined;
     }
 
-    markTaskInProgress(state, task.issue);
+    const issueNum = Number(task.taskId);
+    markTaskInProgress(state, task.taskId);
     saveRunState(projectRoot, state);
 
     const result = await executeIssue(workDir, {
-      issueNumber: task.issue,
+      issueNumber: issueNum,
       provider: execution.provider,
       model: execution.model,
       skipPR: isSprintRun,
@@ -1047,12 +1052,12 @@ async function resumeSingleRun(
         // Fetch issue title for the commit message if possible
         let issueTitle = "";
         try {
-          const iss = getIssue(task.issue, { cwd: projectRoot });
+          const iss = getIssue(issueNum, { cwd: projectRoot });
           issueTitle = iss.title;
         } catch {
           // Non-fatal
         }
-        ensureTaskCommit(workDir, task.issue, issueTitle);
+        ensureTaskCommit(workDir, issueNum, issueTitle);
 
         // Sandbox sync is bidirectional with the host workspace.
         if (sandboxed) {
@@ -1061,19 +1066,19 @@ async function resumeSingleRun(
           );
         }
       }
-      markTaskDone(state, task.issue, result.prNumber);
+      markTaskDone(state, task.taskId, result.prNumber);
     } else {
-      markTaskFailed(state, task.issue, result.error ?? "Unknown error");
+      markTaskFailed(state, task.taskId, result.error ?? "Unknown error");
       saveRunState(projectRoot, state);
 
       if (config.sprint.stopOnFailure && isSprintRun) {
         process.stderr.write(
-          `\n${red("✗")} Sprint stopped: task #${task.issue} failed.\n`
+          `\n${red("✗")} Sprint stopped: task #${task.taskId} failed.\n`
         );
         return;
       }
       process.stderr.write(
-        `  ${yellow("⚠")} Task #${task.issue} failed, continuing to next task.\n`
+        `  ${yellow("⚠")} Task #${task.taskId} failed, continuing to next task.\n`
       );
     }
 
@@ -1089,8 +1094,8 @@ async function resumeSingleRun(
   // Create sprint PR if this was a sprint run and there were completed tasks
   if (isSprintRun && state.branch && state.sprint && finalStats.done > 0) {
     const completedTasks = state.tasks
-      .filter((t) => t.status === "done")
-      .map((t) => ({ issue: t.issue }));
+      .filter((t: RunTask) => t.status === "done")
+      .map((t: RunTask) => ({ issue: Number(t.taskId) }));
 
     await createSprintPR(
       workDir,

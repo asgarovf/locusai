@@ -1,0 +1,243 @@
+/**
+ * Run state persistence — tracks sprint/parallel execution progress.
+ * Enables resume after failure with `--resume`.
+ *
+ * State is stored per-sprint in `.locus/run-state/<sprint-slug>.json`,
+ * allowing independent pause/resume of multiple sprints.
+ * Parallel (non-sprint) runs use `.locus/run-state/_parallel.json`.
+ *
+ * This module is provider-agnostic — it uses string task IDs instead of
+ * GitHub issue numbers, allowing any TaskProvider to plug in.
+ */
+
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+/** Status of a single task within a run. */
+export type RunTaskStatus = "pending" | "in_progress" | "done" | "failed";
+
+/** A single task within a run. */
+export interface RunTask {
+  /** Provider-agnostic task ID (GitHub issue number as string, Jira KEY-123, etc.). */
+  taskId: string;
+  /** Execution order (1-based). */
+  order: number;
+  /** Current status. */
+  status: RunTaskStatus;
+  /** PR number or URL created for this task. */
+  pr?: number;
+  /** ISO timestamp when the task completed. */
+  completedAt?: string;
+  /** ISO timestamp when the task failed. */
+  failedAt?: string;
+  /** Error message if the task failed. */
+  error?: string;
+}
+
+/** Persisted state for an entire run (sprint or parallel). */
+export interface RunState {
+  /** Unique run identifier. */
+  runId: string;
+  /** Run type. */
+  type: "sprint" | "parallel";
+  /** Sprint/milestone/cycle name (undefined for parallel runs). */
+  sprint?: string;
+  /** Git branch name for this run. */
+  branch?: string;
+  /** ISO timestamp when the run started. */
+  startedAt: string;
+  /** Tasks in this run. */
+  tasks: RunTask[];
+}
+
+/** Aggregated statistics for a run. */
+export interface RunStats {
+  total: number;
+  done: number;
+  failed: number;
+  pending: number;
+  inProgress: number;
+}
+
+// ─── Paths ──────────────────────────────────────────────────────────────────
+
+function getRunStateDir(projectRoot: string): string {
+  return join(projectRoot, ".locus", "run-state");
+}
+
+/** Slugify a sprint name for use as a filename. */
+export function sprintSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Get the path to the run state file.
+ * - With sprintName: `.locus/run-state/<slug>.json`
+ * - Without: `.locus/run-state/_parallel.json`
+ */
+function getRunStatePath(projectRoot: string, sprintName?: string): string {
+  const dir = getRunStateDir(projectRoot);
+  if (sprintName) {
+    return join(dir, `${sprintSlug(sprintName)}.json`);
+  }
+  return join(dir, "_parallel.json");
+}
+
+// ─── Load / Save ────────────────────────────────────────────────────────────
+
+/**
+ * Load run state for a specific sprint, or parallel state if no sprint given.
+ */
+export function loadRunState(
+  projectRoot: string,
+  sprintName?: string,
+): RunState | null {
+  const path = getRunStatePath(projectRoot, sprintName);
+  if (!existsSync(path)) return null;
+
+  try {
+    return JSON.parse(readFileSync(path, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
+/** Save run state to disk. Path is derived from `state.sprint`. */
+export function saveRunState(projectRoot: string, state: RunState): void {
+  const path = getRunStatePath(projectRoot, state.sprint);
+  const dir = dirname(path);
+
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
+}
+
+/**
+ * Clear run state for a specific sprint, or parallel state if no sprint given.
+ */
+export function clearRunState(
+  projectRoot: string,
+  sprintName?: string,
+): void {
+  const path = getRunStatePath(projectRoot, sprintName);
+  if (existsSync(path)) {
+    unlinkSync(path);
+  }
+}
+
+// ─── State Creation ─────────────────────────────────────────────────────────
+
+/** Generate a unique run ID based on the current timestamp. */
+function generateRunId(): string {
+  return `run-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-")}`;
+}
+
+/** Create a new run state for a sprint. */
+export function createSprintRunState(
+  sprint: string,
+  branch: string,
+  tasks: { taskId: string; order: number }[],
+): RunState {
+  return {
+    runId: generateRunId(),
+    type: "sprint",
+    sprint,
+    branch,
+    startedAt: new Date().toISOString(),
+    tasks: tasks.map(({ taskId, order }) => ({
+      taskId,
+      order,
+      status: "pending" as const,
+    })),
+  };
+}
+
+/** Create a new run state for parallel execution. */
+export function createParallelRunState(taskIds: string[]): RunState {
+  return {
+    runId: generateRunId(),
+    type: "parallel",
+    startedAt: new Date().toISOString(),
+    tasks: taskIds.map((taskId, i) => ({
+      taskId,
+      order: i + 1,
+      status: "pending" as const,
+    })),
+  };
+}
+
+// ─── State Mutations ────────────────────────────────────────────────────────
+
+/** Mark a task as in-progress. */
+export function markTaskInProgress(state: RunState, taskId: string): void {
+  const task = state.tasks.find((t) => t.taskId === taskId);
+  if (task) {
+    task.status = "in_progress";
+  }
+}
+
+/** Mark a task as done with an optional PR number. */
+export function markTaskDone(
+  state: RunState,
+  taskId: string,
+  prNumber?: number,
+): void {
+  const task = state.tasks.find((t) => t.taskId === taskId);
+  if (task) {
+    task.status = "done";
+    task.completedAt = new Date().toISOString();
+    if (prNumber) task.pr = prNumber;
+  }
+}
+
+/** Mark a task as failed with an error message. */
+export function markTaskFailed(
+  state: RunState,
+  taskId: string,
+  error: string,
+): void {
+  const task = state.tasks.find((t) => t.taskId === taskId);
+  if (task) {
+    task.status = "failed";
+    task.failedAt = new Date().toISOString();
+    task.error = error;
+  }
+}
+
+// ─── Queries ────────────────────────────────────────────────────────────────
+
+/** Get summary stats from a run state. */
+export function getRunStats(state: RunState): RunStats {
+  const tasks = state.tasks;
+  return {
+    total: tasks.length,
+    done: tasks.filter((t) => t.status === "done").length,
+    failed: tasks.filter((t) => t.status === "failed").length,
+    pending: tasks.filter((t) => t.status === "pending").length,
+    inProgress: tasks.filter((t) => t.status === "in_progress").length,
+  };
+}
+
+/** Get the next pending or failed task (for resume). */
+export function getNextTask(state: RunState): RunTask | null {
+  // First try to find a failed task (retry)
+  const failed = state.tasks.find((t) => t.status === "failed");
+  if (failed) return failed;
+
+  // Then find the next pending task
+  return state.tasks.find((t) => t.status === "pending") ?? null;
+}

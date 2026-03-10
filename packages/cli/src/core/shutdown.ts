@@ -6,7 +6,7 @@
  * Docker sandboxes are intentionally preserved across sessions.
  */
 
-import type { RunState } from "../types.js";
+import type { RunState } from "./run-state.js";
 import { saveRunState } from "./run-state.js";
 
 export interface ShutdownContext {
