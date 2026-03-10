@@ -26,6 +26,7 @@ export {
 export {
   handleCommandError,
   handleJiraError,
+  JiraApiGoneError,
   JiraAuthError,
   JiraNotFoundError,
   JiraPermissionError,

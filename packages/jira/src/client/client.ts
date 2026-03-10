@@ -5,7 +5,7 @@
  * and error handling. Supports OAuth, API Token (Cloud), and PAT (Server/DC).
  */
 
-import axios, { type AxiosInstance, type AxiosError } from "axios";
+import axios, { type AxiosError, type AxiosInstance } from "axios";
 import {
   loadJiraConfig,
   saveCredentials,
@@ -58,6 +58,45 @@ async function fetchAllPages<T>(fetcher: PageFetcher<T>): Promise<T[]> {
 
     startAt += items.length;
     hasMore = all.length < page.total && items.length > 0;
+  }
+
+  return all;
+}
+
+// ─── Token-based Pagination ─────────────────────────────────────────────────
+
+interface TokenPaginatedResponse<T> {
+  issues?: T[];
+  nextPageToken?: string;
+  isLast?: boolean;
+}
+
+type TokenPageFetcher<T> = (
+  nextPageToken: string | undefined,
+  maxResults: number
+) => Promise<TokenPaginatedResponse<T>>;
+
+/**
+ * Generic token-based pagination helper for endpoints like /search/jql.
+ * Fetches all pages until `nextPageToken` is absent or `isLast` is true.
+ */
+async function fetchAllPagesTokenBased<T>(
+  fetcher: TokenPageFetcher<T>
+): Promise<T[]> {
+  const all: T[] = [];
+  let nextPageToken: string | undefined;
+
+  let hasMore = true;
+  while (hasMore) {
+    const page = await fetcher(nextPageToken, PAGE_SIZE);
+    const items = page.issues ?? [];
+    all.push(...items);
+
+    if (!page.nextPageToken || page.isLast || items.length === 0) {
+      hasMore = false;
+    } else {
+      nextPageToken = page.nextPageToken;
+    }
   }
 
   return all;
@@ -230,14 +269,30 @@ export class JiraClient {
   }
 
   /**
-   * GET /rest/api/3/search?jql={jql}&startAt={}&maxResults={}
+   * Search issues via JQL.
+   * Cloud (OAuth / API Token): GET /rest/api/3/search/jql with token-based pagination.
+   * Server/DC (PAT):           GET /rest/api/2/search with offset-based pagination.
    * When fetchAll is true, paginates through all results.
    */
   async searchIssues(
     jql: string,
     opts?: { startAt?: number; maxResults?: number; fetchAll?: boolean }
   ): Promise<JiraSearchResult> {
+    const isCloud = this.credentials.method !== "pat";
+
     if (opts?.fetchAll) {
+      if (isCloud) {
+        const issues = await fetchAllPagesTokenBased<JiraIssue>(
+          (nextPageToken, maxResults) =>
+            this.api
+              .get("/search/jql", {
+                params: { jql, maxResults, nextPageToken },
+              })
+              .then((r) => r.data as TokenPaginatedResponse<JiraIssue>)
+        );
+        return { issues };
+      }
+
       const issues = await fetchAllPages<JiraIssue>((startAt, maxResults) =>
         this.api
           .get("/search", { params: { jql, startAt, maxResults } })
@@ -249,6 +304,16 @@ export class JiraClient {
         startAt: 0,
         maxResults: issues.length,
       };
+    }
+
+    if (isCloud) {
+      const response = await this.api.get("/search/jql", {
+        params: {
+          jql,
+          maxResults: opts?.maxResults ?? PAGE_SIZE,
+        },
+      });
+      return response.data as JiraSearchResult;
     }
 
     const response = await this.api.get("/search", {
@@ -327,11 +392,7 @@ export class JiraClient {
   /**
    * POST /rest/api/3/issue/{key}/remotelink
    */
-  async addRemoteLink(
-    key: string,
-    title: string,
-    url: string
-  ): Promise<void> {
+  async addRemoteLink(key: string, title: string, url: string): Promise<void> {
     await this.api.post(`/issue/${encodeURIComponent(key)}/remotelink`, {
       object: {
         url,

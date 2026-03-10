@@ -40,6 +40,15 @@ export type {
   McpTestClientOptions,
 } from "./client/test-client.js";
 export { McpTestClient } from "./client/test-client.js";
+// Re-export command handlers for use by locus CLI
+export { addCommand } from "./commands/add.js";
+export { addCustomCommand } from "./commands/add-custom.js";
+export { listCommand } from "./commands/list.js";
+export { removeCommand } from "./commands/remove.js";
+export { statusCommand } from "./commands/status.js";
+export { syncCommand } from "./commands/sync.js";
+export { testCommand } from "./commands/test.js";
+export { disableCommand, enableCommand } from "./commands/toggle.js";
 export {
   McpConfigSchema,
   McpHttpServerSchema,
@@ -78,16 +87,6 @@ export type {
   ServerProcess,
   SyncResult,
 } from "./types.js";
-
-// Re-export command handlers for use by locus CLI
-export { addCommand } from "./commands/add.js";
-export { addCustomCommand } from "./commands/add-custom.js";
-export { listCommand } from "./commands/list.js";
-export { removeCommand } from "./commands/remove.js";
-export { statusCommand } from "./commands/status.js";
-export { syncCommand } from "./commands/sync.js";
-export { testCommand } from "./commands/test.js";
-export { disableCommand, enableCommand } from "./commands/toggle.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
