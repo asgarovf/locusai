@@ -98,13 +98,14 @@ export async function issuesCommand(args: string[]): Promise<void> {
   );
 
   for (const issue of issues) {
+    const rawSummary = issue.fields?.summary ?? "(no summary)";
     const summary =
-      issue.fields.summary.length > 36
-        ? `${issue.fields.summary.slice(0, 33)}...`
-        : issue.fields.summary;
-    const status = issue.fields.status.name;
-    const priority = issue.fields.priority?.name ?? "-";
-    const assignee = issue.fields.assignee?.displayName ?? "-";
+      rawSummary.length > 36
+        ? `${rawSummary.slice(0, 33)}...`
+        : rawSummary;
+    const status = issue.fields?.status?.name ?? "-";
+    const priority = issue.fields?.priority?.name ?? "-";
+    const assignee = issue.fields?.assignee?.displayName ?? "-";
     const assigneeDisplay =
       assignee.length > 12 ? `${assignee.slice(0, 9)}...` : assignee;
 

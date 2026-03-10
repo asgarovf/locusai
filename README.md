@@ -189,6 +189,20 @@ Install community packages via `locus install <package>`. Build your own with th
 | `locus pkg <name> [cmd]` | | Run a package-provided command |
 | `locus create <name>` | | Scaffold a new community package |
 
+### MCP Server Management
+
+| Command | Description |
+|---------|-------------|
+| `locus mcp add <template>` | Add a server from a built-in template (github, postgres, filesystem, etc.) |
+| `locus mcp add-custom` | Add a custom MCP server |
+| `locus mcp remove <name>` | Remove an MCP server |
+| `locus mcp list` | List configured servers |
+| `locus mcp sync` | Sync config to provider-specific formats (Claude, Codex) |
+| `locus mcp test <name>` | Test an MCP server connection |
+| `locus mcp status` | Show config and provider sync status |
+| `locus mcp enable <name>` | Enable a server |
+| `locus mcp disable <name>` | Disable a server |
+
 ### Sandbox Management
 
 | Command | Description |
@@ -261,6 +275,7 @@ Installable via `locus install <name>`. Each package runs independently — no o
 | [`@locusai/locus-telegram`](./packages/telegram) | [![npm](https://img.shields.io/npm/v/@locusai/locus-telegram?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-telegram) | `locus install telegram` | Remote-control Locus via Telegram bot |
 | [`@locusai/locus-cron`](./packages/cron) | [![npm](https://img.shields.io/npm/v/@locusai/locus-cron?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-cron) | `locus install cron` | Recurring tasks with output routing (local, Telegram, webhooks) |
 | [`@locusai/locus-linear`](./packages/linear) | [![npm](https://img.shields.io/npm/v/@locusai/locus-linear?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-linear) | `locus install linear` | Linear integration — sync issues, AI workflows, bidirectional management |
+| [`@locusai/locus-jira`](./packages/jira) | [![npm](https://img.shields.io/npm/v/@locusai/locus-jira?color=blue&label=)](https://www.npmjs.com/package/@locusai/locus-jira) | `locus install jira` | Jira integration — fetch, execute, and sync issues |
 
 ### Building Your Own
 

@@ -102,7 +102,7 @@ export async function issueCommand(args: string[]): Promise<void> {
 
 function formatComment(comment: JiraComment): void {
   const date = comment.created.split("T")[0] ?? comment.created;
-  const author = comment.author.displayName;
+  const author = comment.author?.displayName ?? "System";
 
   const body =
     typeof comment.body === "string"

@@ -95,7 +95,7 @@ async function showSprintInfo(boardId: number): Promise<void> {
   const issues = await client.getSprintIssues(boardId, sprint.id);
   const statusCounts = new Map<string, number>();
   for (const issue of issues) {
-    const status = issue.fields.status.name;
+    const status = issue.fields?.status?.name ?? "Unknown";
     statusCounts.set(status, (statusCounts.get(status) ?? 0) + 1);
   }
 

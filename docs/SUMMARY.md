@@ -45,4 +45,5 @@
 * [locus logs](cli/logs.md)
 * [locus memory](cli/memory.md)
 * [locus commit](cli/commit.md)
+* [locus mcp](cli/mcp.md)
 * [locus upgrade](cli/upgrade.md)

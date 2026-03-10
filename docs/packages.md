@@ -100,6 +100,11 @@ See the complete [Package Author Guide](https://github.com/asgarovf/locusai/blob
 - SDK usage examples (config, invocation, logging)
 - Pre-submission checklist
 
-### Reference implementation
+### Reference implementations
 
-Study the [Telegram package](https://github.com/asgarovf/locusai/tree/master/packages/telegram) for a complete real-world example.
+Study these packages for complete real-world examples:
+
+- [Telegram package](https://github.com/asgarovf/locusai/tree/master/packages/telegram) — remote control via Telegram bot
+- [Linear package](https://github.com/asgarovf/locusai/tree/master/packages/linear) — bidirectional Linear integration
+- [Jira package](https://github.com/asgarovf/locusai/tree/master/packages/jira) — Jira issue sync and execution
+- [Cron package](https://github.com/asgarovf/locusai/tree/master/packages/cron) — recurring task scheduling

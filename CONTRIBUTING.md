@@ -7,6 +7,12 @@ Thank you for your interest in contributing to Locus! Locus is a GitHub-native A
 - `packages/cli`: The unified CLI entry point (`@locusai/cli`)
 - `packages/sdk`: SDK for building community packages (`@locusai/sdk`)
 - `packages/telegram`: Telegram integration package (`@locusai/locus-telegram`)
+- `packages/linear`: Linear integration package (`@locusai/locus-linear`)
+- `packages/jira`: Jira integration package (`@locusai/locus-jira`)
+- `packages/cron`: Cron scheduler package (`@locusai/locus-cron`)
+- `packages/mcp`: MCP server management (`@locusai/locus-mcp`)
+- `packages/gateway`: Channel-agnostic message gateway (`@locusai/locus-gateway`)
+- `packages/pm2`: PM2 process management (`@locusai/locus-pm2`)
 - `packages/shared`: Shared types and utilities
 - `apps/www`: The marketing and documentation website
 

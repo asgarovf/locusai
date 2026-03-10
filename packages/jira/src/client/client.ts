@@ -276,7 +276,12 @@ export class JiraClient {
    */
   async searchIssues(
     jql: string,
-    opts?: { startAt?: number; maxResults?: number; fetchAll?: boolean }
+    opts?: {
+      startAt?: number;
+      maxResults?: number;
+      fetchAll?: boolean;
+      fields?: string[];
+    }
   ): Promise<JiraSearchResult> {
     const isCloud = this.credentials.method !== "pat";
 
@@ -311,6 +316,7 @@ export class JiraClient {
         params: {
           jql,
           maxResults: opts?.maxResults ?? PAGE_SIZE,
+          fields: opts?.fields?.join(","),
         },
       });
       return response.data as JiraSearchResult;
@@ -321,6 +327,7 @@ export class JiraClient {
         jql,
         startAt: opts?.startAt ?? 0,
         maxResults: opts?.maxResults ?? PAGE_SIZE,
+        fields: opts?.fields?.join(","),
       },
     });
     return response.data as JiraSearchResult;

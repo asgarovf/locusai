@@ -52,9 +52,35 @@ Locus built-in tools add:
 | [`locus exec`](exec.md) | Interactive or one-shot coding session | `locus exec "Add retry guard to webhook handler"` |
 | [`locus discuss`](discuss.md) | Architecture discussion and planning prompts | `locus discuss "Should we split webhook processing into a queue worker?"` |
 | [`locus memory`](memory.md) | List, search, and manage structured project memory | `locus memory list --category architecture` |
+| [`locus commit`](commit.md) | AI-powered commit message generation from staged changes | `locus commit --dry-run` |
 | `locus artifacts` | Inspect and convert AI-generated artifacts in `.locus/artifacts/` | `locus artifacts plan webhook-reliability-prd` |
 
-### 5) Package Ecosystem Tools
+### 5) Skills
+
+| Tool | Purpose | Example |
+|---|---|---|
+| `locus skills list` | List available agent skills from registry | `locus skills list` |
+| `locus skills search` | Search skills by name, description, or tags | `locus skills search "deploy"` |
+| `locus skills install` | Install a skill from the registry | `locus skills install code-review` |
+| `locus skills remove` | Remove an installed skill | `locus skills remove code-review` |
+| `locus skills update` | Update installed skill(s) from registry | `locus skills update` |
+| `locus skills info` | Show skill metadata and install status | `locus skills info code-review` |
+
+### 6) MCP Server Management
+
+| Tool | Purpose | Example |
+|---|---|---|
+| [`locus mcp add`](mcp.md) | Add a server from a built-in template | `locus mcp add github` |
+| [`locus mcp add-custom`](mcp.md) | Add a custom MCP server | `locus mcp add-custom --name api --transport stdio --command node --args server.js` |
+| [`locus mcp remove`](mcp.md) | Remove an MCP server | `locus mcp remove mydb` |
+| [`locus mcp list`](mcp.md) | List configured servers | `locus mcp list --json` |
+| [`locus mcp sync`](mcp.md) | Sync config to provider-specific formats | `locus mcp sync --provider claude` |
+| [`locus mcp test`](mcp.md) | Test an MCP server connection | `locus mcp test mydb` |
+| [`locus mcp status`](mcp.md) | Show config and provider sync status | `locus mcp status` |
+| [`locus mcp enable`](mcp.md) | Enable a server | `locus mcp enable mydb` |
+| [`locus mcp disable`](mcp.md) | Disable a server | `locus mcp disable mydb` |
+
+### 7) Package Ecosystem Tools
 
 | Tool | Purpose | Example |
 |---|---|---|
@@ -63,7 +89,7 @@ Locus built-in tools add:
 | `locus packages` | List installed packages / check outdated | `locus packages outdated` |
 | `locus pkg` | Run package-provided commands | `locus pkg telegram start` |
 
-### 6) Sandbox Management Tools
+### 8) Sandbox Management Tools
 
 | Tool | Purpose | Example |
 |---|---|---|

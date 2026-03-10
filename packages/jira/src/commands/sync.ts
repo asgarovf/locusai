@@ -202,7 +202,7 @@ async function buildSyncPlan(
 
   for (const issue of issues) {
     const key = issue.key;
-    const currentStatus = issue.fields.status.name;
+    const currentStatus = issue.fields?.status?.name ?? "Unknown";
 
     // Find associated GitHub PR
     process.stderr.write(`  Checking PR for ${key}...\n`);

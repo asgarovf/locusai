@@ -68,8 +68,12 @@ function resolveAssignee(
   userMapping: Record<string, string>
 ): string | undefined {
   if (!assignee) return undefined;
-  const mapped = userMapping[assignee.accountId];
-  if (mapped) return mapped;
+  // Cloud uses accountId, Server/DC uses name
+  const lookupKey = assignee.accountId ?? assignee.name;
+  if (lookupKey) {
+    const mapped = userMapping[lookupKey];
+    if (mapped) return mapped;
+  }
   return assignee.displayName;
 }
 
@@ -101,7 +105,7 @@ function buildIssueUrl(issueKey: string, config: JiraConfig): string {
  */
 function formatComment(comment: JiraComment): string {
   const date = comment.created.split("T")[0] ?? comment.created;
-  const author = comment.author.displayName;
+  const author = comment.author?.displayName ?? "System";
   const body =
     typeof comment.body === "string"
       ? comment.body
@@ -119,7 +123,7 @@ function extractComments(
   issue: JiraIssue,
   maxComments: number
 ): string[] | undefined {
-  const commentData = issue.fields.comment;
+  const commentData = issue.fields?.comment;
   if (!commentData?.comments?.length) return undefined;
 
   const comments = commentData.comments;
@@ -145,16 +149,18 @@ function extractComments(
 export function mapJiraIssue(issue: JiraIssue, config: JiraConfig): LocusIssue {
   const maxComments = config.includeComments ? DEFAULT_COMMENT_COUNT : 0;
 
+  const f = issue.fields;
+
   const result: LocusIssue = {
     id: issue.key,
-    title: issue.fields.summary,
-    description: convertDescription(issue.fields.description),
-    labels: [...issue.fields.labels],
-    priority: mapPriority(issue.fields.priority?.name),
+    title: f?.summary ?? "(no summary)",
+    description: convertDescription(f?.description),
+    labels: [...(f?.labels ?? [])],
+    priority: mapPriority(f?.priority?.name),
     url: buildIssueUrl(issue.key, config),
   };
 
-  const assignee = resolveAssignee(issue.fields.assignee, config.userMapping);
+  const assignee = resolveAssignee(f?.assignee, config.userMapping);
   if (assignee) {
     result.assignee = assignee;
   }

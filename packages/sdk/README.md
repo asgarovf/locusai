@@ -145,6 +145,8 @@ locus create my-package
 | [`@locusai/locus-telegram`](../telegram) | Telegram adapter — reference implementation |
 | [`@locusai/locus-cron`](../cron) | Cron scheduler package |
 | [`@locusai/locus-linear`](../linear) | Linear integration package |
+| [`@locusai/locus-jira`](../jira) | Jira integration package |
+| [`@locusai/locus-mcp`](../mcp) | MCP server management |
 
 ## License
 

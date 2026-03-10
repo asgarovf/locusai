@@ -24,8 +24,12 @@ export interface ADFNode {
 
 export interface JiraUser {
   accountId: string;
+  /** Username — present on Server/DC (PAT auth), absent on Cloud. */
+  name?: string;
   displayName: string;
   emailAddress?: string;
+  active?: boolean;
+  accountType?: string;
 }
 
 // ─── Comments ───────────────────────────────────────────────────────────────
@@ -33,8 +37,10 @@ export interface JiraUser {
 export interface JiraComment {
   id: string;
   body: ADFNode | string;
-  author: JiraUser;
+  /** May be null for system-generated or anonymous comments. */
+  author: JiraUser | null;
   created: string;
+  updated?: string;
 }
 
 // ─── Issues ─────────────────────────────────────────────────────────────────
@@ -53,13 +59,14 @@ export interface JiraIssueFields {
   updated: string;
   sprint?: JiraSprint | null;
   parent?: { id: string; key: string } | null;
-  comment?: { comments: JiraComment[]; total: number };
+  comment?: { comments: JiraComment[]; total: number; startAt?: number; maxResults?: number };
 }
 
 export interface JiraIssue {
   id: string;
   key: string;
   self: string;
+  /** May be absent if the search endpoint omits fields or the issue is restricted. */
   fields: JiraIssueFields;
   renderedFields?: Record<string, unknown>;
 }
@@ -80,7 +87,12 @@ export interface JiraSearchResult {
 export interface JiraTransition {
   id: string;
   name: string;
-  to: { id: string; name: string };
+  to: { id: string; name: string; statusCategory?: { id: number; key: string; name: string; colorName?: string } };
+  hasScreen?: boolean;
+  isGlobal?: boolean;
+  isInitial?: boolean;
+  isConditional?: boolean;
+  isLooped?: boolean;
 }
 
 // ─── Sprints ────────────────────────────────────────────────────────────────
@@ -91,7 +103,11 @@ export interface JiraSprint {
   state: "active" | "closed" | "future";
   startDate?: string;
   endDate?: string;
+  completeDate?: string;
+  createdDate?: string;
+  originBoardId?: number;
   goal?: string;
+  self?: string;
 }
 
 // ─── Boards ─────────────────────────────────────────────────────────────────
@@ -99,7 +115,8 @@ export interface JiraSprint {
 export interface JiraBoard {
   id: number;
   name: string;
-  type: "scrum" | "kanban";
+  type: "scrum" | "kanban" | "agility";
+  self?: string;
   location?: { projectId: number; projectKey: string; projectName: string };
 }
 
@@ -109,5 +126,8 @@ export interface JiraProject {
   id: string;
   key: string;
   name: string;
-  style: string;
+  style?: string;
+  projectTypeKey?: string;
+  simplified?: boolean;
+  self?: string;
 }

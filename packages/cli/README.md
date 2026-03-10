@@ -102,6 +102,7 @@ locus iterate             →  Agents address review feedback until ready to mer
 | `locus review` | | AI code review on pull requests |
 | `locus iterate` | | Re-execute tasks with PR feedback context |
 | `locus discuss` | | AI-powered architectural discussions |
+| `locus memory` | | List, search, and manage structured project memory |
 | `locus commit` | | AI-powered commit message generation |
 
 ### Visibility
@@ -133,6 +134,20 @@ locus iterate             →  Agents address review feedback until ready to mer
 | `locus packages` | List installed packages |
 | `locus pkg <name> [cmd]` | Run a package-provided command |
 | `locus create <name>` | Scaffold a new community package |
+
+### MCP Server Management
+
+| Command | Description |
+|---------|-------------|
+| `locus mcp add <template>` | Add a server from a built-in template |
+| `locus mcp add-custom` | Add a custom MCP server |
+| `locus mcp remove <name>` | Remove an MCP server |
+| `locus mcp list` | List configured servers |
+| `locus mcp sync` | Sync config to provider-specific formats |
+| `locus mcp test <name>` | Test an MCP server connection |
+| `locus mcp status` | Show config and provider sync status |
+| `locus mcp enable <name>` | Enable a server |
+| `locus mcp disable <name>` | Disable a server |
 
 ### Sandbox Management
 
@@ -203,6 +218,39 @@ locus commit                # Generate and commit
 locus commit --dry-run      # Preview message without committing
 locus commit --model <name> # Override AI model
 ```
+
+### `locus memory`
+
+Inspect, search, and manage structured project memory:
+
+```bash
+locus memory list                        # List all memory entries
+locus memory list --category architecture  # Filter by category
+locus memory search "auth"               # Search entries by keyword
+locus memory stats                       # Show per-category statistics
+locus memory reset --confirm             # Clear all entries
+```
+
+### `locus mcp`
+
+Multi-provider MCP server management — configure, sync, and manage MCP servers across AI coding agents:
+
+```bash
+locus mcp add github                     # Add from built-in template
+locus mcp add postgres --name mydb       # Add with custom name
+locus mcp add-custom --name api --transport stdio --command node --args server.js
+locus mcp remove mydb                    # Remove a server
+locus mcp list                           # List configured servers
+locus mcp list --json                    # JSON output
+locus mcp sync                           # Sync to provider configs
+locus mcp sync --provider claude         # Sync to specific provider
+locus mcp test mydb                      # Test server connection
+locus mcp status                         # Show config and sync status
+locus mcp enable mydb                    # Enable a server
+locus mcp disable mydb                   # Disable a server
+```
+
+Built-in templates: `github`, `postgres`, `filesystem`, `fetch`, `memory`.
 
 ### `locus skills`
 
