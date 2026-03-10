@@ -98,6 +98,7 @@ export async function issuesCommand(args: string[]): Promise<void> {
   );
 
   for (const issue of issues) {
+    const key = issue.key ?? "-";
     const rawSummary = issue.fields?.summary ?? "(no summary)";
     const summary =
       rawSummary.length > 36
@@ -110,7 +111,7 @@ export async function issuesCommand(args: string[]): Promise<void> {
       assignee.length > 12 ? `${assignee.slice(0, 9)}...` : assignee;
 
     process.stderr.write(
-      `  ${issue.key.padEnd(14)} ${summary.padEnd(38)} ${status.padEnd(14)} ${priority.padEnd(10)} ${assigneeDisplay}\n`
+      `  ${key.padEnd(14)} ${summary.padEnd(38)} ${status.padEnd(14)} ${priority.padEnd(10)} ${assigneeDisplay}\n`
     );
   }
 
