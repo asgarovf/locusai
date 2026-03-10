@@ -1,6 +1,6 @@
 {
   "name": "@locusai/cli",
-  "version": "0.26.1",
+  "version": "0.26.2",
   "description": "GitHub-native AI engineering assistant",
   "type": "module",
   "bin": {
@@ -36,8 +36,8 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "@locusai/locus-mcp": "^0.26.1",
-    "@locusai/sdk": "^0.26.1",
+    "@locusai/locus-mcp": "^0.26.2",
+    "@locusai/sdk": "^0.26.2",
     "@types/bun": "latest",
     "typescript": "^5.8.3"
   },

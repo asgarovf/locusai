@@ -1,5 +1,12 @@
 # @locusai/locus-pm2
 
+## 0.26.2
+
+### Patch Changes
+
+- Built in MCP integration
+  Jira package
+
 ## 0.26.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @locusai/locus-telegram
 
+## 0.26.2
+
+### Patch Changes
+
+- Built in MCP integration
+  Jira package
+- Updated dependencies
+  - @locusai/locus-gateway@0.26.2
+  - @locusai/locus-pm2@0.26.2
+  - @locusai/sdk@0.26.2
+
 ## 0.26.1
 
 ### Patch Changes
