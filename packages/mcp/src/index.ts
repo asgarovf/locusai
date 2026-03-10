@@ -78,17 +78,51 @@ export type {
   SyncResult,
 } from "./types.js";
 
+// Re-export command handlers for use by locus CLI
+export { addCommand } from "./commands/add.js";
+export { addCustomCommand } from "./commands/add-custom.js";
+export { listCommand } from "./commands/list.js";
+export { removeCommand } from "./commands/remove.js";
+
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
+  const subArgs = args.slice(1);
+
+  // Determine project root (cwd by default)
+  const projectRoot = process.cwd();
 
   try {
     switch (command) {
+      case "add": {
+        const { addCommand: add } = await import("./commands/add.js");
+        await add(projectRoot, subArgs);
+        break;
+      }
+      case "add-custom": {
+        const { addCustomCommand: addCustom } = await import(
+          "./commands/add-custom.js"
+        );
+        await addCustom(projectRoot, subArgs);
+        break;
+      }
+      case "remove": {
+        const { removeCommand: remove } = await import(
+          "./commands/remove.js"
+        );
+        await remove(projectRoot, subArgs);
+        break;
+      }
+      case "list": {
+        const { listCommand: list } = await import("./commands/list.js");
+        await list(projectRoot, subArgs);
+        break;
+      }
       case "help":
       case "--help":
       case "-h":
         return printHelp();
       default:
-        console.error(`Unknown command: ${command}`);
+        process.stderr.write(`  Unknown command: ${command}\n`);
         printHelp();
         process.exit(1);
     }
@@ -98,27 +132,27 @@ export async function main(args: string[]): Promise<void> {
 }
 
 function printHelp(): void {
-  console.log(`
-  locus-mcp — Multi-provider MCP server management for Locus
+  process.stderr.write(`
+  locus mcp — Multi-provider MCP server management
 
   Usage:
-    locus pkg mcp <command>
+    locus mcp <command> [options]
 
   Commands:
-    init                          Create default .locus/mcp.json config
-    add <name>                    Add an MCP server
+    add <template>                Add a server from a built-in template
+    add-custom                    Add a custom MCP server
     remove <name>                 Remove an MCP server
     list                          List configured servers
-    enable <name>                 Enable a server
-    disable <name>                Disable a server
-    sync                          Sync config to provider-specific formats
-    health                        Health-check all configured servers
+
+  Options:
+    --help, -h                    Show this help
 
   Examples:
-    locus pkg mcp init
-    locus pkg mcp add github --transport stdio --command npx --args @modelcontextprotocol/server-github
-    locus pkg mcp list
-    locus pkg mcp sync
-    locus pkg mcp health
-  `);
+    locus mcp add github
+    locus mcp add postgres --name mydb --env POSTGRES_CONNECTION=postgresql://...
+    locus mcp add-custom --name api --transport stdio --command node --args server.js
+    locus mcp remove mydb
+    locus mcp list
+    locus mcp list --json
+\n`);
 }
