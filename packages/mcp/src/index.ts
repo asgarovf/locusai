@@ -19,6 +19,27 @@
 import { handleCommandError } from "./errors.js";
 
 export {
+  fromLocusName,
+  isLocusManaged,
+  LOCUS_SERVER_PREFIX,
+  toLocusName,
+} from "./bridges/bridge.js";
+export { ClaudeBridge } from "./bridges/claude.js";
+export { CodexBridge } from "./bridges/codex.js";
+export type { ProviderName } from "./bridges/sync.js";
+export {
+  getBridge,
+  printSyncResults,
+  syncAll,
+  syncProvider,
+} from "./bridges/sync.js";
+export type {
+  CallToolResult,
+  ListToolsResult,
+  McpTestClientOptions,
+} from "./client/test-client.js";
+export { McpTestClient } from "./client/test-client.js";
+export {
   McpConfigSchema,
   McpHttpServerSchema,
   McpServerConfigSchema,
@@ -32,6 +53,16 @@ export {
   McpProviderError,
   McpServerError,
 } from "./errors.js";
+export type { HealthCheckOptions } from "./lifecycle/health.js";
+export {
+  checkAllServersHealth,
+  checkServerHealth,
+} from "./lifecycle/health.js";
+export {
+  getTemplate,
+  listTemplates,
+  resolveTemplate,
+} from "./registry/templates.js";
 // Re-export public API
 export type {
   EnvPrompt,
@@ -46,26 +77,6 @@ export type {
   ServerProcess,
   SyncResult,
 } from "./types.js";
-export {
-  getTemplate,
-  listTemplates,
-  resolveTemplate,
-} from "./registry/templates.js";
-export {
-  fromLocusName,
-  isLocusManaged,
-  LOCUS_SERVER_PREFIX,
-  toLocusName,
-} from "./bridges/bridge.js";
-export { ClaudeBridge } from "./bridges/claude.js";
-export { CodexBridge } from "./bridges/codex.js";
-export {
-  getBridge,
-  printSyncResults,
-  syncAll,
-  syncProvider,
-} from "./bridges/sync.js";
-export type { ProviderName } from "./bridges/sync.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";

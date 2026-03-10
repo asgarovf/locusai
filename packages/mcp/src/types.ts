@@ -146,6 +146,10 @@ export interface HealthCheckResult {
   healthy: boolean;
   /** Round-trip latency in milliseconds (undefined if unhealthy). */
   latencyMs?: number;
+  /** Number of tools the server exposes (undefined if unhealthy). */
+  toolCount?: number;
+  /** Names of tools the server exposes (undefined if unhealthy). */
+  toolNames?: string[];
   /** Error message if the check failed. */
   error?: string;
 }
