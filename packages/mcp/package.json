@@ -3,6 +3,9 @@
   "version": "0.26.1",
   "description": "Multi-provider MCP server management for Locus — configure, sync, and manage MCP servers across AI coding agents",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "bin": {
     "locus-mcp": "./bin/locus-mcp.js"
   },
