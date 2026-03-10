@@ -18,6 +18,20 @@
 
 import { handleCommandError } from "./errors.js";
 
+export {
+  McpConfigSchema,
+  McpHttpServerSchema,
+  McpServerConfigSchema,
+  McpStdioServerSchema,
+} from "./config/schema.js";
+export type { McpConfig } from "./config/store.js";
+export { McpConfigStore } from "./config/store.js";
+export {
+  handleCommandError,
+  McpConfigError,
+  McpProviderError,
+  McpServerError,
+} from "./errors.js";
 // Re-export public API
 export type {
   EnvPrompt,
@@ -32,20 +46,6 @@ export type {
   ServerProcess,
   SyncResult,
 } from "./types.js";
-
-export {
-  McpConfigError,
-  McpProviderError,
-  McpServerError,
-  handleCommandError,
-} from "./errors.js";
-
-export {
-  McpConfigSchema,
-  McpHttpServerSchema,
-  McpServerConfigSchema,
-  McpStdioServerSchema,
-} from "./config/schema.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
