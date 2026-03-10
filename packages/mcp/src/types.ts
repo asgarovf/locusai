@@ -54,22 +54,32 @@ export interface EnvPrompt {
   description: string;
   /** Whether this variable is required. */
   required: boolean;
+  /** Whether the value should be treated as sensitive (e.g. tokens, passwords). */
+  sensitive?: boolean;
   /** Default value if the user provides none. */
   default?: string;
 }
 
 /** A reusable template for quickly adding well-known MCP servers. */
 export interface McpServerTemplate {
-  /** Template identifier (e.g. "github", "filesystem"). */
-  id: string;
-  /** Human-readable name. */
+  /** Template identifier used in `getTemplate()` (e.g. "github", "postgres"). */
   name: string;
+  /** Human-readable display name (e.g. "GitHub", "PostgreSQL"). */
+  displayName: string;
   /** Short description of what the server provides. */
   description: string;
-  /** Base server configuration (user values are merged on top). */
-  config: McpServerConfig;
-  /** Environment variables the template requires. */
+  /** Transport type for this template. */
+  transport: "stdio" | "http";
+  /** Executable command (e.g. "npx"). */
+  command: string;
+  /** Arguments passed to `command` (should include `-y` flag for npx). */
+  args: string[];
+  /** npm package name for the MCP server. */
+  npmPackage: string;
+  /** Environment variables the template requires from the user. */
   envPrompts: EnvPrompt[];
+  /** AI coding agent providers this template is compatible with. */
+  defaultProviders: string[];
 }
 
 // ---------------------------------------------------------------------------

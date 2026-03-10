@@ -46,6 +46,11 @@ export type {
   ServerProcess,
   SyncResult,
 } from "./types.js";
+export {
+  getTemplate,
+  listTemplates,
+  resolveTemplate,
+} from "./registry/templates.js";
 
 export async function main(args: string[]): Promise<void> {
   const command = args[0] ?? "help";
