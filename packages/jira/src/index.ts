@@ -44,27 +44,45 @@ export type {
 } from "./types.js";
 
 export async function main(args: string[]): Promise<void> {
-  const command = args[0];
+  const command = args[0] ?? "help";
 
-  if (
-    !command ||
-    command === "help" ||
-    command === "--help" ||
-    command === "-h"
-  ) {
-    printHelp();
-    return;
+  try {
+    switch (command) {
+      case "auth": {
+        const { authCommand } = await import("./commands/auth.js");
+        return await authCommand(args.slice(1));
+      }
+      case "project": {
+        const { projectCommand } = await import("./commands/project.js");
+        return await projectCommand(args.slice(1));
+      }
+      case "board": {
+        const { boardCommand } = await import("./commands/board.js");
+        return await boardCommand(args.slice(1));
+      }
+      case "issues": {
+        const { issuesCommand } = await import("./commands/issues.js");
+        return await issuesCommand(args.slice(1));
+      }
+      case "issue": {
+        const { issueCommand } = await import("./commands/issue.js");
+        return await issueCommand(args.slice(1));
+      }
+      case "help":
+      case "--help":
+      case "-h":
+        printHelp();
+        return;
+      default:
+        console.error(
+          `Unknown command: ${command}\nRun "locus jira help" for usage.`
+        );
+        process.exit(1);
+    }
+  } catch (err) {
+    const { handleCommandError } = await import("./errors.js");
+    handleCommandError(err);
   }
-
-  if (command === "auth") {
-    const { authCommand } = await import("./commands/auth.js");
-    return authCommand(args.slice(1));
-  }
-
-  console.error(
-    `Unknown command: ${command}\nRun "locus jira help" for usage.`
-  );
-  process.exit(1);
 }
 
 function printHelp(): void {
@@ -77,11 +95,21 @@ Usage:
 
 Commands:
   auth          Authenticate with Jira (API Token or PAT)
+  project       Select active Jira project
+  board         Select active Jira board
+  issues        List issues (tabular view)
+  issue         Show detailed view of a single issue
   help          Show this help message
 
 Auth Options:
   --status      Show current authentication status
   --revoke      Clear stored credentials
+  --method      Skip interactive selection (api-token or pat)
+
+Issues Options:
+  --jql <query> Custom JQL filter
+  --sprint      Show issues from active sprint
+  --limit <n>   Limit results (default: 25)
 
 Options:
   -h, --help    Show help

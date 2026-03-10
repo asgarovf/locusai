@@ -50,7 +50,7 @@ function mapPriority(priorityName: string | null | undefined): string {
  * Handles ADF objects, raw strings, and null/undefined.
  */
 function convertDescription(
-  description: ADFNode | string | null | undefined,
+  description: ADFNode | string | null | undefined
 ): string {
   if (!description) return "";
   if (typeof description === "string") return description;
@@ -65,7 +65,7 @@ function convertDescription(
  */
 function resolveAssignee(
   assignee: JiraIssue["fields"]["assignee"],
-  userMapping: Record<string, string>,
+  userMapping: Record<string, string>
 ): string | undefined {
   if (!assignee) return undefined;
   const mapped = userMapping[assignee.accountId];
@@ -117,7 +117,7 @@ function formatComment(comment: JiraComment): string {
  */
 function extractComments(
   issue: JiraIssue,
-  maxComments: number,
+  maxComments: number
 ): string[] | undefined {
   const commentData = issue.fields.comment;
   if (!commentData?.comments?.length) return undefined;
@@ -142,10 +142,7 @@ function extractComments(
  * - url ← {baseUrl}/browse/{key}
  * - comments ← last N comments formatted as "[date] author: body"
  */
-export function mapJiraIssue(
-  issue: JiraIssue,
-  config: JiraConfig,
-): LocusIssue {
+export function mapJiraIssue(issue: JiraIssue, config: JiraConfig): LocusIssue {
   const maxComments = config.includeComments ? DEFAULT_COMMENT_COUNT : 0;
 
   const result: LocusIssue = {
@@ -157,10 +154,7 @@ export function mapJiraIssue(
     url: buildIssueUrl(issue.key, config),
   };
 
-  const assignee = resolveAssignee(
-    issue.fields.assignee,
-    config.userMapping,
-  );
+  const assignee = resolveAssignee(issue.fields.assignee, config.userMapping);
   if (assignee) {
     result.assignee = assignee;
   }
@@ -180,7 +174,7 @@ export function mapJiraIssue(
  */
 export function mapJiraIssueBatch(
   issues: JiraIssue[],
-  config: JiraConfig,
+  config: JiraConfig
 ): LocusIssue[] {
   return issues.map((issue) => mapJiraIssue(issue, config));
 }

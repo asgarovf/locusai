@@ -27,12 +27,21 @@ export async function authCommand(args: string[]): Promise<void> {
     return handleRevoke();
   }
 
-  return handleAuthFlow();
+  // Check for --method flag
+  let method: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--method" && args[i + 1]) {
+      method = args[i + 1];
+      break;
+    }
+  }
+
+  return handleAuthFlow(method);
 }
 
 // ─── Auth Flow ──────────────────────────────────────────────────────────────
 
-async function handleAuthFlow(): Promise<void> {
+async function handleAuthFlow(method?: string): Promise<void> {
   const existing = loadCredentials();
   if (existing) {
     process.stderr.write(
@@ -41,11 +50,24 @@ async function handleAuthFlow(): Promise<void> {
     return;
   }
 
-  process.stderr.write("\n  Choose authentication method:\n");
-  process.stderr.write("    1) API Token  (Jira Cloud — email + token)\n");
-  process.stderr.write("    2) PAT        (Jira Server / Data Center)\n\n");
+  let choice: string;
 
-  const choice = await prompt("  Enter 1 or 2: ");
+  if (method === "api-token") {
+    choice = "1";
+  } else if (method === "pat") {
+    choice = "2";
+  } else if (method) {
+    process.stderr.write(
+      `  Unknown method: ${method}\n  Valid methods: api-token, pat\n\n`
+    );
+    process.exit(1);
+  } else {
+    process.stderr.write("\n  Choose authentication method:\n");
+    process.stderr.write("    1) API Token  (Jira Cloud — email + token)\n");
+    process.stderr.write("    2) PAT        (Jira Server / Data Center)\n\n");
+
+    choice = await prompt("  Enter 1 or 2: ");
+  }
 
   let credentials:
     | Awaited<ReturnType<typeof promptForApiToken>>

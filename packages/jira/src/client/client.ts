@@ -6,12 +6,13 @@
  */
 
 import axios, { type AxiosInstance, type AxiosError } from "axios";
-import { loadJiraConfig, saveCredentials, validateJiraConfig } from "../config.js";
+import {
+  loadJiraConfig,
+  saveCredentials,
+  validateJiraConfig,
+} from "../config.js";
 import { handleJiraError, JiraTokenExpiredError } from "../errors.js";
-import type {
-  JiraCredentials,
-  JiraOAuthCredentials,
-} from "../types.js";
+import type { JiraCredentials, JiraOAuthCredentials } from "../types.js";
 import type {
   JiraBoard,
   JiraIssue,
@@ -200,9 +201,7 @@ export class JiraClient {
         ...oauth,
         accessToken: data.access_token,
         refreshToken: data.refresh_token ?? oauth.refreshToken,
-        expiresAt: new Date(
-          Date.now() + data.expires_in * 1000
-        ).toISOString(),
+        expiresAt: new Date(Date.now() + data.expires_in * 1000).toISOString(),
       };
 
       this.credentials = updated;
