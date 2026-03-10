@@ -11,12 +11,12 @@
  * Also provides token refresh with rotating refresh token support.
  */
 
+import { randomBytes } from "node:crypto";
 import {
   createServer,
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { randomBytes } from "node:crypto";
 import axios from "axios";
 import open from "open";
 import type { JiraOAuthCredentials } from "../types.js";
@@ -115,7 +115,7 @@ export async function startOAuthFlow(
   process.stderr.write("  Opening browser for authorization...\n");
   await open(authUrl);
   process.stderr.write(
-    "  If the browser did not open, visit:\n" + `  ${authUrl}\n\n`
+    `  If the browser did not open, visit:\n  ${authUrl}\n\n`
   );
 
   const code = await waitForCallback(config.callbackPort, state);

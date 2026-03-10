@@ -6,12 +6,12 @@
  * changes, and `--force` to overwrite even if no changes are detected.
  */
 
-import type { ProviderBridge } from "../types.js";
 import { ClaudeBridge } from "../bridges/claude.js";
 import { CodexBridge } from "../bridges/codex.js";
 import type { ProviderName } from "../bridges/sync.js";
 import { filterServersForProvider, syncProvider } from "../bridges/sync.js";
 import { McpConfigStore } from "../config/store.js";
+import type { ProviderBridge } from "../types.js";
 
 // ─── Arg parsing ────────────────────────────────────────────────────────────
 

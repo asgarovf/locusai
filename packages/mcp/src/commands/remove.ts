@@ -5,8 +5,8 @@
  * the corresponding `locus-<name>` entries from provider configs.
  */
 
-import { McpConfigStore } from "../config/store.js";
 import { syncAll } from "../bridges/sync.js";
+import { McpConfigStore } from "../config/store.js";
 
 // ─── Command ────────────────────────────────────────────────────────────────
 

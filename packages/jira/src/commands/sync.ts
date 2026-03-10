@@ -300,9 +300,7 @@ function buildComment(pr: GitHubPR): string {
 // ─── Dry Run ────────────────────────────────────────────────────────────────
 
 function printDryRun(actions: SyncAction[]): void {
-  process.stderr.write(
-    `\n  Dry run — ${actions.length} issue(s) analyzed:\n`
-  );
+  process.stderr.write(`\n  Dry run — ${actions.length} issue(s) analyzed:\n`);
   process.stderr.write(`  ${"═".repeat(70)}\n`);
 
   for (const action of actions) {

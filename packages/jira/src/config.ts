@@ -9,11 +9,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLocusConfig } from "@locusai/sdk";
-import type {
-  JiraConfig,
-  JiraCredentials,
-  TransitionOnPR,
-} from "./types.js";
+import type { JiraConfig, JiraCredentials, TransitionOnPR } from "./types.js";
 
 const DEFAULT_JIRA_CONFIG: JiraConfig = {
   auth: null,

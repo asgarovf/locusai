@@ -5,7 +5,7 @@
  * and error handling. Supports OAuth, API Token (Cloud), and PAT (Server/DC).
  */
 
-import axios, { type AxiosInstance, type AxiosError } from "axios";
+import axios, { type AxiosError, type AxiosInstance } from "axios";
 import {
   loadJiraConfig,
   saveCredentials,
@@ -86,16 +86,18 @@ async function fetchAllPagesTokenBased<T>(
   const all: T[] = [];
   let nextPageToken: string | undefined;
 
-  do {
+  let hasMore = true;
+  while (hasMore) {
     const page = await fetcher(nextPageToken, PAGE_SIZE);
     const items = page.issues ?? [];
     all.push(...items);
 
     if (!page.nextPageToken || page.isLast || items.length === 0) {
-      break;
+      hasMore = false;
+    } else {
+      nextPageToken = page.nextPageToken;
     }
-    nextPageToken = page.nextPageToken;
-  } while (true);
+  }
 
   return all;
 }
@@ -296,7 +298,12 @@ export class JiraClient {
           .get("/search", { params: { jql, startAt, maxResults } })
           .then((r) => r.data as PaginatedResponse<JiraIssue>)
       );
-      return { issues, total: issues.length, startAt: 0, maxResults: issues.length };
+      return {
+        issues,
+        total: issues.length,
+        startAt: 0,
+        maxResults: issues.length,
+      };
     }
 
     if (isCloud) {
@@ -385,11 +392,7 @@ export class JiraClient {
   /**
    * POST /rest/api/3/issue/{key}/remotelink
    */
-  async addRemoteLink(
-    key: string,
-    title: string,
-    url: string
-  ): Promise<void> {
+  async addRemoteLink(key: string, title: string, url: string): Promise<void> {
     await this.api.post(`/issue/${encodeURIComponent(key)}/remotelink`, {
       object: {
         url,

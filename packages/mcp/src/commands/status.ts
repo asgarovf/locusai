@@ -10,9 +10,9 @@ import { join } from "node:path";
 import { fromLocusName } from "../bridges/bridge.js";
 import { ClaudeBridge } from "../bridges/claude.js";
 import { CodexBridge } from "../bridges/codex.js";
-import type { ProviderBridge } from "../types.js";
 import { filterServersForProvider } from "../bridges/sync.js";
 import { McpConfigStore } from "../config/store.js";
+import type { ProviderBridge } from "../types.js";
 
 // ─── Command ────────────────────────────────────────────────────────────────
 

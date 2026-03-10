@@ -13,14 +13,15 @@
  */
 
 import { createInterface } from "node:readline";
-import { McpConfigStore } from "../config/store.js";
-import { McpTestClient } from "../client/test-client.js";
 import { syncAll } from "../bridges/sync.js";
+import { McpTestClient } from "../client/test-client.js";
+import { McpConfigStore } from "../config/store.js";
 import {
   getTemplate,
   listTemplates,
   resolveTemplate,
 } from "../registry/templates.js";
+
 // ─── Arg parsing ────────────────────────────────────────────────────────────
 
 interface AddFlags {
