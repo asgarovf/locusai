@@ -27,3 +27,12 @@ export type {
   LocusConfig,
   LocusPackageManifest,
 } from "./types.js";
+// Task Provider
+export type {
+  AuthResult,
+  IssueFilters,
+  ProviderComment,
+  ProviderIssue,
+  ProviderSprint,
+  TaskProvider,
+} from "./task-provider.js";
